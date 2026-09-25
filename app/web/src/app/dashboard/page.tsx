@@ -27,22 +27,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { QueryState } from "@/components/QueryState";
-import { formatWhen } from "@/lib/utils";
 
 // The API stamps UTC; the chip should show the viewer's calendar day.
-function localDate(iso: string): string {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return "—";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
-}
-
 export default function DashboardPage() {
   const posture = usePosture();
   const tests = useControlTests();
   const ingestion = useIngestionStatus();
   const registeredFrameworks = useFrameworks();
-  const { connected } = usePostureStream();
+  usePostureStream();
   const data = posture.data;
   const p = data?.posture;
   const frameworks = data?.frameworks ?? [];
@@ -63,24 +55,6 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="min-w-0">
           <h1 className="ui-page-title">Dashboard</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1 text-xs font-medium ${connected ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-amber-500"}`}
-            />
-            {connected ? "Updates connected" : "Polling updates"}
-          </span>
-          {data?.evaluated_at ? (
-            <span
-              className="rounded-md border border-line bg-surface px-2 py-1 text-xs text-muted"
-              title={`Evaluated ${formatWhen(data.evaluated_at)}`}
-            >
-              {localDate(data.evaluated_at)}
-            </span>
-          ) : null}
         </div>
       </div>
 

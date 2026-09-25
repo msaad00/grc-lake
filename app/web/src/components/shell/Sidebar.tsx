@@ -23,8 +23,6 @@ import {
   Zap,
 } from "lucide-react";
 import { SidebarFooter } from "./SidebarFooter";
-import { TrustOpsLogo } from "@/components/brand/TrustOpsLogo";
-import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { usePersistentState } from "@/lib/state/preferences";
 
@@ -176,43 +174,10 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-[52px] grid h-[calc(100dvh-52px)] grid-rows-[auto_1fr_auto] self-start border-r border-railLine bg-rail text-slate-300 transition-[width]",
+        "sticky top-[52px] grid h-[calc(100dvh-52px)] grid-rows-[1fr_auto] self-start border-r border-railLine bg-rail text-slate-300 transition-[width]",
         effectiveCollapsed ? "w-[64px]" : "w-[248px]",
       )}
     >
-      <div className="flex items-center justify-between border-b border-railLine p-2.5">
-        {!effectiveCollapsed && (
-          <TrustOpsLogo
-            href="/dashboard"
-            inverted
-            markSize="lg"
-            subtitle={BRAND.consoleSubtitle}
-            wordmarkClassName="max-w-[140px]"
-            gradientId="trustops-sidebar-gradient"
-          />
-        )}
-        <button
-          type="button"
-          onClick={() => {
-            if (!compactViewport) setCollapsed(!collapsed);
-          }}
-          aria-label={
-            compactViewport
-              ? "Sidebar is compact on small screens"
-              : effectiveCollapsed
-                ? "Expand sidebar"
-                : "Collapse sidebar"
-          }
-          className="ml-auto grid h-7 w-7 place-items-center rounded-md text-[#9aa9bc] hover:bg-[#152030]"
-        >
-          {effectiveCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </button>
-      </div>
-
       <div className="overflow-y-auto p-2.5">
         {GROUPS.map((group) => {
           const isClosed =
@@ -235,9 +200,10 @@ export function Sidebar() {
                   )}
                 </button>
               ) : (
-                <div className="mb-2 px-1 text-center text-[9px] font-black uppercase tracking-[0.12em] text-[#5b6a7e]">
-                  {group.charAt(0)}
-                </div>
+                <div
+                  aria-hidden="true"
+                  className="mx-3 mb-2 border-t border-railLine"
+                />
               )}
               {!isClosed && (
                 <div className="grid gap-1">
@@ -288,7 +254,31 @@ export function Sidebar() {
         })}
       </div>
 
-      <SidebarFooter collapsed={effectiveCollapsed} />
+      <SidebarFooter
+        collapsed={effectiveCollapsed}
+        toggle={
+          <button
+            type="button"
+            onClick={() => {
+              if (!compactViewport) setCollapsed(!collapsed);
+            }}
+            aria-label={
+              compactViewport
+                ? "Sidebar is compact on small screens"
+                : effectiveCollapsed
+                  ? "Expand sidebar"
+                  : "Collapse sidebar"
+            }
+            className="ml-auto grid h-7 w-7 place-items-center rounded-md text-[#9aa9bc] hover:bg-[#152030]"
+          >
+            {effectiveCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </button>
+        }
+      />
     </aside>
   );
 }

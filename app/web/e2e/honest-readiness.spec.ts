@@ -149,10 +149,10 @@ test.describe("dashboard honesty", () => {
     await expect(iso).not.toContainText("95");
     await expect(iso).not.toContainText("Ready");
 
-    await expect(page.getByText("2026-09-24", { exact: true })).toBeVisible();
+    // Never show the UTC evaluation date; the header reads relative time.
     await expect(page.getByText("2026-09-25", { exact: true })).toHaveCount(0);
-
-    await expect(page.getByText("score out of 100")).toBeVisible();
+    await expect(page.getByText(/^Evaluated /)).toBeVisible();
+    await expect(page.getByText("/ 100", { exact: true })).toBeVisible();
   });
 
   test("priority findings lead with the control title", async ({ page }) => {

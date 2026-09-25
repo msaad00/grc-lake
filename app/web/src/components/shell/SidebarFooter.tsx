@@ -1,16 +1,17 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { BookText, ExternalLink, MessageCircleQuestion } from "lucide-react";
-import { TrustOpsMark } from "@/components/brand/TrustOpsMark";
 import { BRAND } from "@/lib/brand";
 
 const VERSION = BRAND.version;
 
 interface Props {
   collapsed: boolean;
+  toggle: ReactNode;
 }
 
-export function SidebarFooter({ collapsed }: Props) {
+export function SidebarFooter({ collapsed, toggle }: Props) {
   return (
     <div className="mt-auto grid gap-1 border-t border-railLine p-3 text-[11px] text-[#9aa9bc]">
       {!collapsed ? (
@@ -37,12 +38,9 @@ export function SidebarFooter({ collapsed }: Props) {
             </span>
             <ExternalLink className="h-3 w-3 opacity-60" />
           </a>
-          <div className="mt-1 flex items-center justify-between px-2 text-[10px] text-[#5b6a7e]">
-            <span className="inline-flex items-center gap-1.5">
-              <TrustOpsMark size="xs" gradientId="trustops-footer-gradient" />
-              {BRAND.name}
-            </span>
+          <div className="mt-1 flex items-center justify-between pl-2 text-[10px] text-[#5b6a7e]">
             <span>v{VERSION}</span>
+            {toggle}
           </div>
         </>
       ) : (
@@ -57,6 +55,7 @@ export function SidebarFooter({ collapsed }: Props) {
             <BookText className="h-3.5 w-3.5" />
           </a>
           <div className="text-[9px] text-[#5b6a7e]">v{VERSION}</div>
+          {toggle}
         </div>
       )}
     </div>

@@ -1,22 +1,126 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   ArrowUpRight,
-  ChevronDown,
-  FileCheck2,
-  ArrowRight,
-  Clock3,
-  CircleCheck,
   ChartNoAxesCombined,
+  CircleCheck,
+  Clock3,
+  FileCheck2,
   ListChecks,
   ShieldAlert,
 } from "lucide-react";
 import type { Assessment, IngestionStatus } from "@/lib/api/types";
-import { PostureRing } from "./PostureRing";
+import { formatRelative } from "@/lib/format";
 
-const METRIC_SURFACE =
-  "rounded-xl border border-slate-700 bg-[radial-gradient(ellipse_at_top_right,#164e63_0%,#142239_55%,#101b2e_100%)] p-4 text-white";
+type Segment = { label: string; count: number; color: string };
+
+const STATE_TONE = {
+  ready: "text-emerald-600 dark:text-emerald-400",
+  attention_required: "text-amber-600 dark:text-amber-400",
+  critical: "text-rose-600 dark:text-rose-400",
+} as const;
+
+const STATE_BAR = {
+  ready: "bg-emerald-500",
+  attention_required: "bg-amber-500",
+  critical: "bg-rose-500",
+} as const;
+
+function StackedBar({
+  segments,
+  total,
+  label,
+  omitFromLegend = [],
+}: {
+  segments: Segment[];
+  total: number;
+  label: string;
+  omitFromLegend?: string[];
+}) {
+  const visible = segments.filter((item) => item.count > 0);
+  const legend = visible.filter((item) => !omitFromLegend.includes(item.label));
+  return (
+    <>
+      <div
+        role="img"
+        aria-label={`${label}: ${visible.map((item) => `${item.count} ${item.label.toLowerCase()}`).join(", ")}`}
+        className="flex h-1.5 gap-0.5 overflow-hidden rounded-full bg-surfaceMuted"
+      >
+        {visible.map((item) => (
+          <span
+            key={item.label}
+            className={item.color}
+            style={{ width: `${total ? (item.count / total) * 100 : 0}%` }}
+          />
+        ))}
+      </div>
+      <div className="hidden flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted sm:flex">
+        {legend.map((item) => (
+          <span key={item.label} className="inline-flex items-center gap-1">
+            <span
+              aria-hidden="true"
+              className={`h-1.5 w-1.5 rounded-full ${item.color}`}
+            />
+            <strong className="font-semibold text-ink">{item.count}</strong>
+            {item.label}
+          </span>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function Tile({
+  href,
+  label,
+  icon,
+  value,
+  suffix,
+  valueTone = "text-ink",
+  detail,
+  children,
+}: {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  value: ReactNode;
+  suffix?: string;
+  valueTone?: string;
+  detail: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex min-w-0 flex-col gap-2 rounded-xl border border-line bg-surface p-3 transition-colors sm:p-4 hover:border-brand/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+    >
+      <div className="flex items-center justify-between gap-2 text-xs font-medium text-muted">
+        <span>{label}</span>
+        <span className="flex items-center gap-1.5">
+          {icon}
+          <ArrowUpRight
+            aria-hidden="true"
+            className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100"
+          />
+        </span>
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span
+          className={`text-2xl font-semibold leading-none tracking-tight tabular-nums sm:text-3xl ${valueTone}`}
+        >
+          {value}
+        </span>
+        {suffix ? (
+          <span className="text-sm font-medium text-muted">{suffix}</span>
+        ) : null}
+      </div>
+      <div className="text-xs text-muted">{detail}</div>
+      {children ? <div className="mt-auto grid gap-2">{children}</div> : null}
+    </Link>
+  );
+}
 
 export function AssessmentOverview({
   assessment,
@@ -29,8 +133,9 @@ export function AssessmentOverview({
 }) {
   const posture = assessment?.posture;
   const state = posture?.state;
-  const evaluated = Boolean(ingestion?.eval_accuracy?.has_tests);
-  const rate = ingestion?.eval_accuracy?.pass_rate;
+  const accuracy = ingestion?.eval_accuracy;
+  const evaluated = Boolean(accuracy?.has_tests);
+  const rate = accuracy?.pass_rate;
   const passPercent =
     evaluated && rate != null && Number.isFinite(rate)
       ? Math.round(rate * 100)
@@ -42,296 +147,187 @@ export function AssessmentOverview({
       : state === "critical"
         ? "Needs attention"
         : "Review required";
-  const exportReady = Boolean(ingestion?.proof.proof_pack_exists);
-  const critical = posture?.critical_violation_count ?? 0;
   const StatusIcon = state === "ready" ? CircleCheck : ShieldAlert;
-  const statusTone = !posture
-    ? "text-muted"
-    : state === "ready"
-      ? "text-emerald-600 dark:text-emerald-400"
-      : state === "critical"
-        ? "text-rose-600 dark:text-rose-400"
-        : "text-amber-600 dark:text-amber-400";
+  const statusTone = state ? STATE_TONE[state] : "text-muted";
+  const exportReady = Boolean(ingestion?.proof.proof_pack_exists);
 
-  const accuracy = ingestion?.eval_accuracy;
-  const outcomes = [
-    { label: "Pass", count: accuracy?.passing ?? 0, color: "bg-indigo-500" },
-    { label: "Fail", count: accuracy?.failing ?? 0, color: "bg-rose-500" },
-    { label: "Warning", count: accuracy?.warning ?? 0, color: "bg-amber-400" },
+  const total = accuracy?.total_tests ?? 0;
+  const passing = accuracy?.passing ?? 0;
+  const failing = accuracy?.failing ?? 0;
+  const warning = accuracy?.warning ?? 0;
+  const needsEvidence = accuracy?.needs_evidence ?? 0;
+  const outcomes: Segment[] = [
+    { label: "Pass", count: passing, color: "bg-emerald-500" },
+    { label: "Fail", count: failing, color: "bg-rose-500" },
+    { label: "Warning", count: warning, color: "bg-amber-400" },
+    { label: "Needs evidence", count: needsEvidence, color: "bg-sky-400" },
     {
       label: "Other",
-      count: Math.max(
-        0,
-        (accuracy?.total_tests ?? 0) -
-          (accuracy?.passing ?? 0) -
-          (accuracy?.failing ?? 0) -
-          (accuracy?.warning ?? 0),
-      ),
-      color: "bg-slate-300",
+      count: Math.max(0, total - passing - failing - warning - needsEvidence),
+      color: "bg-slate-400",
     },
   ];
+
   const findings = posture?.open_violation_count ?? 0;
-  const severity = [
+  const critical = posture?.critical_violation_count ?? 0;
+  const high = posture?.high_violation_count ?? 0;
+  const severity: Segment[] = [
     { label: "Critical", count: critical, color: "bg-rose-600" },
+    { label: "High", count: high, color: "bg-orange-400" },
     {
-      label: "High",
-      count: posture?.high_violation_count ?? 0,
-      color: "bg-orange-400",
-    },
-    {
-      label: "Other",
-      count: Math.max(
-        0,
-        findings - critical - (posture?.high_violation_count ?? 0),
-      ),
-      color: "bg-slate-300",
+      label: "Medium or low",
+      count: Math.max(0, findings - critical - high),
+      color: "bg-slate-400",
     },
   ];
+
+  const assessed = assessment?.frameworks.length ?? 0;
+  const staleRows = posture?.stale_evidence_count ?? 0;
+  const staleControls = posture?.stale_control_count ?? 0;
 
   return (
-    <section
-      aria-label="Current assessment"
-      className="min-w-0 overflow-hidden rounded-xl border border-line bg-surface shadow-card"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-4 sm:px-5">
-        <p className="text-sm font-semibold text-ink">Overall posture</p>
-        <div className="flex items-center gap-1.5 rounded-full border border-line bg-surfaceMuted/60 px-2.5 py-1">
-          <StatusIcon
-            aria-hidden="true"
-            className={`h-3.5 w-3.5 ${statusTone}`}
-          />
-          <h2 className="text-xs font-medium text-ink">{status}</h2>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3 p-3 min-[640px]:grid-cols-3 sm:p-4">
-        <div
-          className={`relative col-span-2 flex min-w-0 flex-col overflow-hidden ${METRIC_SURFACE} min-[640px]:col-span-1`}
+    <section aria-label="Current assessment" className="grid min-w-0 gap-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
+        <span
+          className={`inline-flex items-center gap-1.5 font-semibold ${statusTone}`}
         >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-slate-200">
-              Assessment score
-            </span>
-            <ChartNoAxesCombined
-              aria-hidden="true"
-              className="h-4 w-4 text-cyan-300"
-            />
-          </div>
-          <div className="my-3 flex items-center gap-3 min-[640px]:justify-center">
-            <div className="shrink-0">
-              {posture ? (
-                <PostureRing
-                  score={posture.score}
-                  state={posture.state}
-                  size="summary"
-                  dark
-                />
-              ) : (
-                <span className="text-5xl text-slate-300">—</span>
-              )}
-            </div>
-            <p className="text-xs leading-5 text-slate-300">
-              Weighted framework
-              <br />
-              score out of 100
-            </p>
-          </div>
-          <Link
-            href="/frameworks"
-            className="mt-auto flex items-center justify-between gap-2 border-t border-white/15 pt-3 text-xs text-slate-200 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
-          >
-            <span>
-              <strong className="font-semibold text-white">
-                {assessment?.frameworks.length ?? 0}/{frameworkCount}
-              </strong>{" "}
-              frameworks assessed
-            </span>
-            <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-          </Link>
-        </div>
-        <Link
-          href="/controls"
-          className={`group flex min-w-0 flex-col ${METRIC_SURFACE} transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300`}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-white">
-              Control pass rate
-            </span>
-            <ListChecks
-              aria-hidden="true"
-              className="h-4 w-4 shrink-0 text-cyan-300"
-            />
-          </div>
-          <span className="mt-5 text-[42px] font-semibold leading-none tracking-tight text-white tabular-nums sm:text-5xl">
-            {passPercent != null ? (
-              <>
-                {passPercent}
-                <span className="ml-1 text-xl font-medium text-slate-300">
-                  %
-                </span>
-              </>
-            ) : (
-              "—"
-            )}
-          </span>
-          <span className="mt-2 text-[11px] leading-4 text-slate-300">
-            {passPercent != null
-              ? `${accuracy?.passing ?? 0} of ${accuracy?.total_tests ?? 0} tests passing`
-              : "Not evaluated"}
-          </span>
-          {passPercent != null && (
-            <>
-              <div
-                role="progressbar"
-                aria-label="Control pass rate"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={passPercent}
-                className="mt-4 flex h-2 gap-0.5 overflow-hidden rounded-full bg-white/10"
-              >
-                {outcomes.map((item) => (
-                  <span
-                    key={item.label}
-                    className={item.color}
-                    style={{
-                      width: `${accuracy?.total_tests ? (item.count / accuracy.total_tests) * 100 : 0}%`,
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="mb-4 mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-slate-300">
-                {outcomes.map((item) => (
-                  <span
-                    key={item.label}
-                    className="inline-flex items-center gap-1"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`h-1.5 w-1.5 rounded-full ${item.color}`}
-                    />
-                    <strong className="font-semibold text-white">
-                      {item.count}
-                    </strong>{" "}
-                    {item.label}
-                  </span>
-                ))}
-              </div>
-            </>
-          )}
-          <span className="mt-auto inline-flex items-center gap-1.5 border-t border-white/15 pt-3 text-xs font-semibold text-cyan-200">
-            View controls <ArrowRight aria-hidden="true" className="h-3 w-3" />
-          </span>
-        </Link>
-        <Link
-          href="/violations"
-          className={`group flex min-w-0 flex-col ${METRIC_SURFACE} transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300`}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-white">
-              Open findings
-            </span>
-            <ShieldAlert
-              aria-hidden="true"
-              className="h-4 w-4 shrink-0 text-rose-300"
-            />
-          </div>
-          <span className="mt-5 text-[42px] font-semibold leading-none tracking-tight text-white tabular-nums sm:text-5xl">
-            {posture?.open_violation_count ?? "—"}
-          </span>
-          <span className="mt-2 text-[11px] leading-4 font-medium text-rose-300">
-            {posture ? `${critical} critical` : "Awaiting assessment"}
-          </span>
-          {posture && (
-            <>
-              <div
-                role="img"
-                aria-label={`Finding severity: ${severity.map((item) => `${item.count} ${item.label.toLowerCase()}`).join(", ")}`}
-                className="mt-4 flex h-2 gap-0.5 overflow-hidden rounded-full bg-white/10"
-              >
-                {severity.map((item) => (
-                  <span
-                    key={item.label}
-                    className={item.color}
-                    style={{
-                      width: `${findings ? (item.count / findings) * 100 : 0}%`,
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="mb-4 mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-slate-300">
-                {severity.map((item) => (
-                  <span
-                    key={item.label}
-                    className="inline-flex items-center gap-1"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`h-1.5 w-1.5 rounded-full ${item.color}`}
-                    />
-                    <strong className="font-semibold text-white">
-                      {item.count}
-                    </strong>{" "}
-                    {item.label}
-                  </span>
-                ))}
-              </div>
-            </>
-          )}
-          <span className="mt-auto inline-flex items-center gap-1.5 border-t border-white/15 pt-3 text-xs font-semibold text-cyan-200">
-            Review findings{" "}
-            <ArrowRight aria-hidden="true" className="h-3 w-3" />
-          </span>
-        </Link>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-line bg-surfaceMuted/50 px-5 py-3 text-xs sm:px-6">
-        <span className="inline-flex items-center gap-2 text-muted">
-          <Clock3 aria-hidden="true" className="h-4 w-4" />
-          {posture
-            ? `${posture.stale_evidence_count} stale evidence rows`
-            : "Evidence freshness unavailable"}
+          <StatusIcon aria-hidden="true" className="h-3.5 w-3.5" />
+          <h2>{status}</h2>
         </span>
+        {assessment?.evaluated_at ? (
+          <span title={assessment.assessment_hash || undefined}>
+            Evaluated {formatRelative(assessment.evaluated_at)}
+          </span>
+        ) : null}
         <Link
           href="/audit-room"
-          className="inline-flex items-center gap-2 text-muted hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+          className="inline-flex items-center gap-1.5 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
         >
-          <FileCheck2 aria-hidden="true" className="h-4 w-4" />
-          <span>Assessment export</span>
-          <span className="rounded-md border border-line bg-surface px-2 py-0.5 font-medium text-ink">
-            {exportReady ? "Available" : "Pending"}
-          </span>
-          <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
+          <FileCheck2 aria-hidden="true" className="h-3.5 w-3.5" />
+          Assessment export: {exportReady ? "available" : "pending"}
         </Link>
       </div>
-      <details className="group border-t border-line">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-2 text-xs text-muted hover:bg-surfaceMuted focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand">
-          <span>Assessment details</span>
-          <ChevronDown
-            aria-hidden="true"
-            className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <dl className="grid gap-x-6 gap-y-3 border-t border-line bg-surfaceMuted px-4 py-3 text-xs sm:grid-cols-3">
-          <div>
-            <dt className="text-muted">Last evaluated</dt>
-            <dd className="mt-1 text-ink">
-              {assessment?.evaluated_at
-                ? new Date(assessment.evaluated_at).toLocaleString()
-                : "Not evaluated"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted">Stale evidence</dt>
-            <dd className="mt-1 text-ink">
-              {posture?.stale_evidence_count ?? "—"} rows
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted">Assessment ID</dt>
-            <dd className="mt-1 break-all font-mono text-ink">
-              {assessment?.assessment_hash || "Not available"}
-            </dd>
-          </div>
-        </dl>
-      </details>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
+        <Tile
+          href="/frameworks"
+          label="Assessment score"
+          icon={<ChartNoAxesCombined aria-hidden="true" className="h-4 w-4" />}
+          value={posture ? Math.round(posture.score) : "—"}
+          suffix={posture ? "/ 100" : undefined}
+          valueTone={statusTone === "text-muted" ? "text-ink" : statusTone}
+          detail={
+            <>
+              <strong className="font-semibold text-ink">
+                {assessed} of {frameworkCount}
+              </strong>{" "}
+              frameworks assessed
+            </>
+          }
+        >
+          {posture ? (
+            <div
+              role="progressbar"
+              aria-label="Assessment score"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(posture.score)}
+              className="h-1.5 overflow-hidden rounded-full bg-surfaceMuted"
+            >
+              <span
+                className={`block h-full rounded-full ${state ? STATE_BAR[state] : "bg-slate-400"}`}
+                style={{
+                  width: `${Math.max(2, Math.min(100, posture.score))}%`,
+                }}
+              />
+            </div>
+          ) : null}
+        </Tile>
+        <Tile
+          href="/controls"
+          label="Control pass rate"
+          icon={<ListChecks aria-hidden="true" className="h-4 w-4" />}
+          value={passPercent ?? "—"}
+          suffix={passPercent != null ? "%" : undefined}
+          detail={
+            passPercent != null ? (
+              <>
+                <strong className="font-semibold text-ink">
+                  {passing} of {total}
+                </strong>{" "}
+                tests passing
+              </>
+            ) : (
+              "Not evaluated yet"
+            )
+          }
+        >
+          {passPercent != null ? (
+            <StackedBar
+              segments={outcomes}
+              total={total}
+              label="Control test results"
+              omitFromLegend={["Pass"]}
+            />
+          ) : null}
+        </Tile>
+        <Tile
+          href="/violations"
+          label="Open findings"
+          icon={<ShieldAlert aria-hidden="true" className="h-4 w-4" />}
+          value={posture ? findings : "—"}
+          detail={
+            posture ? (
+              critical > 0 ? (
+                <>
+                  <span className="font-semibold text-rose-600 dark:text-rose-400">
+                    {critical} critical
+                  </span>
+                  {high > 0 ? ` · ${high} high` : null}
+                </>
+              ) : (
+                "No critical findings"
+              )
+            ) : (
+              "Awaiting assessment"
+            )
+          }
+        >
+          {posture && findings > 0 ? (
+            <StackedBar
+              segments={severity}
+              total={findings}
+              label="Finding severity"
+              omitFromLegend={["Critical", "High"]}
+            />
+          ) : null}
+        </Tile>
+        <Tile
+          href="/evidence/"
+          label="Stale evidence"
+          icon={<Clock3 aria-hidden="true" className="h-4 w-4" />}
+          value={posture ? staleRows : "—"}
+          valueTone={
+            staleRows > 0 ? "text-amber-600 dark:text-amber-400" : "text-ink"
+          }
+          detail={
+            posture ? (
+              staleRows > 0 ? (
+                <>
+                  Past their freshness SLA ·{" "}
+                  <strong className="font-semibold text-ink">
+                    {staleControls}
+                  </strong>{" "}
+                  {staleControls === 1 ? "control" : "controls"} affected
+                </>
+              ) : (
+                "All evidence within its freshness SLA"
+              )
+            ) : (
+              "Freshness unavailable"
+            )
+          }
+        />
+      </div>
     </section>
   );
 }

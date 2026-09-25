@@ -43,11 +43,15 @@ def test_dashboard_framework_posture_uses_compact_two_row_tray() -> None:
     assert ".slice(0, 6)" not in overview
 
 
-def test_dashboard_sizes_the_summary_score_and_passes_the_framework_catalog() -> None:
+def test_dashboard_kpis_are_flat_theme_tiles_and_pass_the_framework_catalog() -> None:
     dashboard = DASHBOARD.read_text(encoding="utf-8")
+    assessment = ASSESSMENT.read_text(encoding="utf-8")
 
-    assert 'size="summary"' in ASSESSMENT.read_text(encoding="utf-8")
     assert "catalog={registeredFrameworks.data ?? []}" in dashboard
+    assert "Stale evidence" in assessment
+    assert "Needs evidence" in assessment
+    for hardcoded in ("bg-[radial-gradient", "text-white", "border-slate-700"):
+        assert hardcoded not in assessment
 
 
 def test_dashboard_readiness_cards_keep_framework_marks_legible() -> None:

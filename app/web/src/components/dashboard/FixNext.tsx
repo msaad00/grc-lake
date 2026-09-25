@@ -111,7 +111,7 @@ export function FixNext({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-5 py-3">
         <span className="text-xs text-muted">
-          {violations.length} open findings
+          Highest risk first · {top.length} of {violations.length}
         </span>
         <Link
           href="/violations"

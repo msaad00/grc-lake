@@ -8,12 +8,14 @@ SIDEBAR = ROOT / "app/web/src/components/shell/Sidebar.tsx"
 TOPBAR = ROOT / "app/web/src/components/shell/TopBar.tsx"
 
 
-def test_shell_trustops_mark_fits_sidebar_and_compact_header() -> None:
+def test_shell_shows_the_brand_once_in_the_top_bar() -> None:
     sidebar = SIDEBAR.read_text(encoding="utf-8")
     topbar = TOPBAR.read_text(encoding="utf-8")
+    crumbs = (ROOT / "app/web/src/components/shell/Breadcrumbs.tsx").read_text(encoding="utf-8")
 
-    assert 'markSize="lg"' in sidebar
     assert 'markSize="md"' in topbar
+    assert "TrustOpsLogo" not in sidebar
+    assert "TrustOpsMark" not in crumbs
 
 
 def test_shell_uses_document_scroll_not_fixed_canvas() -> None:

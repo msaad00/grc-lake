@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { TrustOpsMark } from "@/components/brand/TrustOpsMark";
-import { BRAND } from "@/lib/brand";
 
 const LABEL: Record<string, string> = {
   dashboard: "Dashboard",
@@ -50,7 +48,8 @@ export function Breadcrumbs() {
     }));
   }, [pathname]);
 
-  if (crumbs.length === 0) return null;
+  // A top-level page's only crumb would repeat its own heading.
+  if (crumbs.length < 2) return null;
 
   return (
     <nav
@@ -61,8 +60,7 @@ export function Breadcrumbs() {
         href="/dashboard"
         className="inline-flex items-center gap-1.5 rounded px-1 py-0.5 font-extrabold text-muted hover:bg-surfaceMuted hover:text-ink"
       >
-        <TrustOpsMark size="xs" gradientId="trustops-crumb-gradient" />
-        {BRAND.name}
+        Overview
       </Link>
       {crumbs.map((crumb, idx) => (
         <span key={crumb.href} className="inline-flex items-center gap-1.5">

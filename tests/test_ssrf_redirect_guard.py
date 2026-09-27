@@ -118,7 +118,7 @@ def test_okta_link_pivot_to_internal_is_blocked(monkeypatch: pytest.MonkeyPatch)
             # by open_guarded's validator before any opener call.
             return page1
 
-    monkeypatch.setattr(netguard, "guarded_opener", lambda _validate: _Opener())
+    monkeypatch.setattr(netguard, "guarded_opener", lambda _validate, **_kw: _Opener())
 
     with pytest.raises(ValueError, match="SSRF blocked"):
         OktaClient("https://org.okta.com", token="00ADMIN-SSWS").users()

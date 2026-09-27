@@ -149,10 +149,16 @@ RMF_STEP_SECTIONS = {
     "M": "3.7 (Monitor)",
 }
 
-# RMF tasks deliberately left unmapped here: P-3/P-14 belong on the existing risk
-# assessment safeguards, I-1 ("implement the controls") is every safeguard at
-# once, and M-7 (disposal) belongs on the existing retention/disposal safeguard.
-RMF_FLOOR = 43
+# RMF tasks the new safeguards leave to existing ones: P-3/P-14 sit on the
+# existing risk assessment safeguard and M-7 (disposal) on the existing
+# retention/disposal safeguard. I-1 ("implement the controls") is every
+# safeguard at once and stays unmapped.
+EXISTING_RMF_HOMES = {
+    ("SG-RISKMANAGEMENT-001", "NIST-RMF-P-3"),
+    ("SG-RISKMANAGEMENT-001", "NIST-RMF-P-14"),
+    ("SG-DATARETENTION-001", "NIST-RMF-M-7"),
+}
+RMF_FLOOR = 46
 
 
 def _entries() -> dict[str, dict]:
@@ -238,9 +244,21 @@ def test_nist_rmf_tasks_meet_the_mapping_floor() -> None:
         for member in entry["satisfies"]
         if member["framework_id"] == "nist-rmf-800-37r2"
     ]
-    assert {sid for sid, _ in rmf_members} <= set(NEW_SAFEGUARDS)
+    on_existing = {(sid, member["control_id"]) for sid, member in rmf_members if sid not in NEW_SAFEGUARDS}
+    assert on_existing == EXISTING_RMF_HOMES
+    for sid, member in rmf_members:
+        if (sid, member["control_id"]) in EXISTING_RMF_HOMES:
+            task = member["control_id"].removeprefix("NIST-RMF-")
+            assert member["review_status"] == "proposed"
+            assert member["mapping_source"] == {
+                "name": "NIST SP 800-37 Rev. 2",
+                "url": RMF_MANIFEST["source"]["pdf"],
+                "sha256": RMF_MANIFEST["source"]["pdf_sha256"],
+                "locator": f"Chapter 3, Section {RMF_STEP_SECTIONS[task[0]]}, Task {task}",
+            }
     # Governance and risk-management safeguards carry the RMF lane.
-    assert {NEW_SAFEGUARDS[sid] for sid, _ in rmf_members} <= {"governance", "risk-management", "secure-architecture"}
+    new_homes = {NEW_SAFEGUARDS[sid] for sid, _ in rmf_members if sid in NEW_SAFEGUARDS}
+    assert new_homes <= {"governance", "risk-management", "secure-architecture"}
     report = mapping_review_report(framework_id="nist-rmf-800-37r2")
     assert report["unsourced_mapping_count"] == 0
 

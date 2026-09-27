@@ -100,7 +100,7 @@ family ledger.
 
 ```
 $ security-lakehouse frameworks safeguards --format table
-78 safeguards map 991 of 2021 requirements (49.0%) — 350 reviewed (17.3%), 641 proposed
+78 safeguards map 1174 of 2021 requirements (58.1%) — 350 reviewed (17.3%), 824 proposed
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -127,17 +127,17 @@ cannot become a false certification claim.
 | hipaa-security-rule |           18 |     18 | 100.0% |
 | pci-dss-v4          |           12 |     12 | 100.0% |
 | soc2                |           61 |     61 | 100.0% |
-| nist-rmf-800-37r2   |           47 |     43 |  91.5% |
-| gdpr-2016-679       |           20 |     18 |  90.0% |
+| nist-rmf-800-37r2   |           47 |     46 |  97.9% |
+| nist-csf-2.0        |          106 |    101 |  95.3% |
+| gdpr-2016-679       |           20 |     19 |  95.0% |
+| iso-27017-2015      |           47 |     44 |  93.6% |
+| fedramp-moderate    |          287 |    262 |  91.3% |
+| iso-27001-2022      |           93 |     81 |  87.1% |
 | cis-controls-v8.1   |           18 |     15 |  83.3% |
 | cis_aws             |           62 |     51 |  82.3% |
-| nist-csf-2.0        |          106 |     79 |  74.5% |
-| fedramp-moderate    |          287 |    207 |  72.1% |
 | iso-42001-2023      |           39 |     26 |  66.7% |
-| iso-27017-2015      |           47 |     29 |  61.7% |
-| iso-27001-2022      |           93 |     57 |  61.3% |
-| nist-ai-rmf         |           72 |     20 |  27.8% |
-| nist-800-53-rev5    |         1014 |    230 |  22.7% |
+| nist-ai-rmf         |           72 |     28 |  38.9% |
+| nist-800-53-rev5    |         1014 |    285 |  28.1% |
 
 ### What a safeguard applies to
 

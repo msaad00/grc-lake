@@ -86,6 +86,11 @@ iceberg = [
 analytics = [
     "duckdb>=1.0",
 ]
+# Optional BigQuery lake reader; authenticates with Application Default
+# Credentials (workload identity, attached service account, or gcloud ADC).
+bigquery = [
+    "google-cloud-bigquery>=3.45,<4",
+]
 # Live cloud connector SDKs. The core package stays dependency-free; install
 # this extra only when running AWS, Azure, GCP, or Snowflake collection locally.
 cloud = [
@@ -147,6 +152,7 @@ where = ["src"]
     "static/*.svg",
     "migrations/script.py.mako",
     "migrations/versions/*.py",
+    "lake_presets/*/*.json",
 ]
 
 [tool.setuptools.data-files]

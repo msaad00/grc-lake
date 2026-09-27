@@ -43,8 +43,17 @@ REAL_ADAPTERS = {
     "crowdstrike-falcon",
     "kubernetes-cluster",
     "knowbe4-training",
+    "iceberg-parquet-lake",
+    "bigquery-evidence-lake",
 }
-PREVIEW_CONNECTORS = {"jamf-devices", "crowdstrike-falcon", "kubernetes-cluster", "knowbe4-training"}
+PREVIEW_CONNECTORS = {
+    "jamf-devices",
+    "crowdstrike-falcon",
+    "kubernetes-cluster",
+    "knowbe4-training",
+    "iceberg-parquet-lake",
+    "bigquery-evidence-lake",
+}
 FIXTURES = Path(__file__).parent / "fixtures"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

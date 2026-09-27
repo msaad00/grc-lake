@@ -1,0 +1,155 @@
+[
+  {
+    "metadata": {
+      "uid": "arn:aws:guardduty:us-east-1:111122223333:detector/abc/finding/f1",
+      "version": "1.1.0",
+      "product": {
+        "name": "GuardDuty",
+        "vendor_name": "Amazon",
+        "uid": "arn:aws:securityhub:us-east-1::product/aws/guardduty"
+      }
+    },
+    "time": 1789990000000,
+    "time_dt": "2026-09-21T11:26:40.000Z",
+    "class_uid": 2004,
+    "class_name": "Detection Finding",
+    "category_uid": 2,
+    "activity_id": 1,
+    "severity_id": 4,
+    "severity": "High",
+    "status_id": 1,
+    "status": "New",
+    "finding_info": {
+      "uid": "arn:aws:guardduty:us-east-1:111122223333:detector/abc/finding/f1",
+      "title": "EC2 instance is querying a domain associated with cryptocurrency mining",
+      "types": ["TTPs/Impact/CryptoCurrency:EC2-BitcoinTool.B!DNS"],
+      "src_url": "https://console.aws.amazon.com/guardduty/home?region=us-east-1#/findings?search=id%3Df1"
+    },
+    "resources": [
+      {
+        "uid": "arn:aws:ec2:us-east-1:111122223333:instance/i-0abc1234def567890",
+        "type": "AwsEc2Instance"
+      }
+    ],
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  },
+  {
+    "metadata": {
+      "uid": "arn:aws:inspector2:us-east-1:111122223333:finding/v1",
+      "version": "1.1.0",
+      "product": { "name": "Inspector", "vendor_name": "Amazon" }
+    },
+    "time": 1789990100000,
+    "time_dt": "2026-09-21T11:28:20.000Z",
+    "class_uid": 2002,
+    "class_name": "Vulnerability Finding",
+    "category_uid": 2,
+    "activity_id": 2,
+    "severity_id": 5,
+    "severity": "Critical",
+    "status_id": 1,
+    "status": "New",
+    "finding_info": {
+      "uid": "arn:aws:inspector2:us-east-1:111122223333:finding/v1",
+      "title": "CVE-2024-3094 - xz-utils"
+    },
+    "vulnerabilities": [
+      {
+        "cve": { "uid": "CVE-2024-3094" },
+        "severity": "Critical",
+        "is_fix_available": true
+      }
+    ],
+    "resource": {
+      "uid": "arn:aws:ecr:us-east-1:111122223333:repository/api/sha256:abc",
+      "type": "AwsEcrContainerImage"
+    },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  },
+  {
+    "metadata": {
+      "uid": "arn:aws:securityhub:us-east-1:111122223333:subscription/aws-foundational-security-best-practices/v/1.0.0/IAM.6/finding/c1",
+      "version": "1.1.0",
+      "product": { "name": "Security Hub", "vendor_name": "AWS" }
+    },
+    "time": 1789990200000,
+    "time_dt": "2026-09-21T11:30:00.000Z",
+    "class_uid": 2003,
+    "class_name": "Compliance Finding",
+    "category_uid": 2,
+    "activity_id": 2,
+    "severity_id": 5,
+    "severity": "Critical",
+    "status_id": 1,
+    "status": "New",
+    "finding_info": {
+      "uid": "arn:aws:securityhub:us-east-1:111122223333:subscription/aws-foundational-security-best-practices/v/1.0.0/IAM.6/finding/c1",
+      "title": "Hardware MFA should be enabled for the root user"
+    },
+    "compliance": {
+      "control": "IAM.6",
+      "status": "Fail",
+      "status_id": 3,
+      "standards": [
+        "standards/aws-foundational-security-best-practices/v/1.0.0"
+      ]
+    },
+    "resource": { "uid": "AWS::::Account:111122223333", "type": "AwsAccount" },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  },
+  {
+    "metadata": {
+      "uid": "arn:aws:securityhub:us-east-1:111122223333:subscription/aws-foundational-security-best-practices/v/1.0.0/S3.1/finding/c2",
+      "version": "1.1.0",
+      "product": { "name": "Security Hub", "vendor_name": "AWS" }
+    },
+    "time": 1789990300000,
+    "time_dt": "2026-09-21T11:31:40.000Z",
+    "class_uid": 2003,
+    "class_name": "Compliance Finding",
+    "category_uid": 2,
+    "activity_id": 2,
+    "severity_id": 3,
+    "severity": "Medium",
+    "status_id": 4,
+    "status": "Resolved",
+    "finding_info": {
+      "uid": "arn:aws:securityhub:us-east-1:111122223333:subscription/aws-foundational-security-best-practices/v/1.0.0/S3.1/finding/c2",
+      "title": "S3 general purpose buckets should have block public access settings enabled"
+    },
+    "compliance": {
+      "control": "S3.1",
+      "status": "Pass",
+      "status_id": 1,
+      "standards": [
+        "standards/aws-foundational-security-best-practices/v/1.0.0"
+      ]
+    },
+    "resource": { "uid": "AWS::::Account:111122223333", "type": "AwsAccount" },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  }
+]

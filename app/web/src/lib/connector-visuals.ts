@@ -31,6 +31,20 @@ export const CONNECTOR_VISUALS: Record<string, ConnectorVisual> = {
     bg: "#ecfeff",
     categoryLabel: "Data warehouse",
   },
+  "bigquery-evidence-lake": {
+    vendor: "Google BigQuery",
+    mark: "BQ",
+    accent: "#4285F4",
+    bg: "#eef4ff",
+    categoryLabel: "Data warehouse",
+  },
+  "iceberg-parquet-lake": {
+    vendor: "Apache Iceberg",
+    mark: "ICE",
+    accent: "#2E6FD8",
+    bg: "#eef4ff",
+    categoryLabel: "Analytics lake",
+  },
   "clickhouse-telemetry-lake": {
     vendor: "ClickHouse",
     mark: "CH",

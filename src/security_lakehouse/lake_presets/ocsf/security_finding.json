@@ -1,0 +1,124 @@
+{
+  "spec_version": 1,
+  "name": "ocsf_security_finding",
+  "description": "OCSF Security Finding (class_uid 2001, legacy), OCSF 1.0.0-rc.2 (Amazon Security Lake source version 1 Security Hub findings). state_id drives pass/open; time is epoch milliseconds.",
+  "source": {
+    "table": "ocsf_table",
+    "incremental": true,
+    "lookback_minutes": 60
+  },
+  "filters": [
+    {
+      "column": "class_uid",
+      "op": "eq",
+      "value": 2001
+    }
+  ],
+  "fields": {
+    "id": {
+      "column": "finding.uid"
+    },
+    "observed_at": {
+      "column": "time",
+      "format": "epoch_ms"
+    },
+    "source": {
+      "coalesce": [
+        {
+          "column": "metadata.product.name"
+        },
+        {
+          "const": "ocsf"
+        }
+      ]
+    },
+    "severity": {
+      "column": "severity_id",
+      "map": {
+        "0": "info",
+        "1": "info",
+        "2": "low",
+        "3": "medium",
+        "4": "high",
+        "5": "critical",
+        "6": "critical",
+        "99": "info"
+      },
+      "default": "info"
+    },
+    "event_type": {
+      "const": "ocsf.security_finding"
+    },
+    "asset_id": {
+      "coalesce": [
+        {
+          "column": "resources[0].uid"
+        },
+        {
+          "column": "cloud.account_uid"
+        }
+      ]
+    },
+    "asset_type": {
+      "coalesce": [
+        {
+          "column": "resources[0].type"
+        },
+        {
+          "const": "cloud_resource"
+        }
+      ]
+    },
+    "status": {
+      "column": "state_id",
+      "map": {
+        "1": "open",
+        "2": "open",
+        "3": "observed",
+        "4": "pass"
+      },
+      "default": "observed"
+    },
+    "evidence_ref": {
+      "column": "finding.src_url"
+    },
+    "controls": {
+      "const": ["SOC2-CC7.2", "ISO27001-A.8.16", "NIST-800-53-SI-4"]
+    }
+  },
+  "attributes": {
+    "ocsf_class_uid": {
+      "column": "class_uid"
+    },
+    "ocsf_activity_id": {
+      "column": "activity_id"
+    },
+    "ocsf_version": {
+      "column": "metadata.version"
+    },
+    "product": {
+      "column": "metadata.product.name"
+    },
+    "vendor": {
+      "column": "metadata.product.vendor_name"
+    },
+    "cloud_account": {
+      "column": "cloud.account_uid"
+    },
+    "cloud_region": {
+      "column": "cloud.region"
+    },
+    "finding_uid": {
+      "column": "finding.uid"
+    },
+    "finding_title": {
+      "column": "finding.title"
+    },
+    "finding_state": {
+      "column": "state"
+    },
+    "compliance_status": {
+      "column": "compliance.status"
+    }
+  }
+}

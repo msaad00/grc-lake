@@ -1,0 +1,132 @@
+{
+  "spec_version": 1,
+  "name": "ocsf_api_activity",
+  "description": "OCSF API Activity (class_uid 6003), OCSF 1.1.0 (Amazon Security Lake source version 2). Control-plane audit trail for logging and monitoring controls. OCSF 1.0.0-rc.2 (source version 1) used class_uid 3005.",
+  "source": {
+    "table": "ocsf_table",
+    "incremental": true,
+    "lookback_minutes": 60
+  },
+  "filters": [
+    {
+      "column": "class_uid",
+      "op": "eq",
+      "value": 6003
+    }
+  ],
+  "fields": {
+    "id": {
+      "columns": [
+        "metadata.uid",
+        "time",
+        "api.operation",
+        "actor.user.uid",
+        "src_endpoint.ip"
+      ]
+    },
+    "observed_at": {
+      "column": "time_dt",
+      "format": "timestamp"
+    },
+    "source": {
+      "coalesce": [
+        {
+          "column": "metadata.product.name"
+        },
+        {
+          "const": "ocsf"
+        }
+      ]
+    },
+    "severity": {
+      "column": "severity_id",
+      "map": {
+        "0": "info",
+        "1": "info",
+        "2": "low",
+        "3": "medium",
+        "4": "high",
+        "5": "critical",
+        "6": "critical",
+        "99": "info"
+      },
+      "default": "info"
+    },
+    "event_type": {
+      "const": "ocsf.api_activity"
+    },
+    "asset_id": {
+      "coalesce": [
+        {
+          "column": "resources[0].uid"
+        },
+        {
+          "column": "api.service.name"
+        },
+        {
+          "column": "cloud.account.uid"
+        }
+      ]
+    },
+    "asset_type": {
+      "coalesce": [
+        {
+          "column": "resources[0].type"
+        },
+        {
+          "const": "cloud_api"
+        }
+      ]
+    },
+    "controls": {
+      "const": [
+        "SOC2-CC7.2",
+        "ISO27001-A.8.15",
+        "ISO27001-A.8.16",
+        "NIST-800-53-AU-2",
+        "NIST-800-53-AU-12"
+      ]
+    }
+  },
+  "attributes": {
+    "ocsf_class_uid": {
+      "column": "class_uid"
+    },
+    "ocsf_activity_id": {
+      "column": "activity_id"
+    },
+    "ocsf_version": {
+      "column": "metadata.version"
+    },
+    "product": {
+      "column": "metadata.product.name"
+    },
+    "vendor": {
+      "column": "metadata.product.vendor_name"
+    },
+    "cloud_account": {
+      "column": "cloud.account.uid"
+    },
+    "cloud_region": {
+      "column": "cloud.region"
+    },
+    "outcome": {
+      "column": "status"
+    },
+    "api_operation": {
+      "column": "api.operation"
+    },
+    "api_service": {
+      "column": "api.service.name"
+    },
+    "actor": {
+      "column": "actor.user.name"
+    },
+    "actor_uid": {
+      "column": "actor.user.uid"
+    },
+    "src_ip": {
+      "column": "src_endpoint.ip"
+    }
+  }
+}

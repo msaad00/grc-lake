@@ -8,6 +8,7 @@ import os
 import sqlite3
 import sys
 from pathlib import Path
+from typing import Any
 
 from security_lakehouse.dashboard import render_dashboard
 from security_lakehouse.io import read_jsonl
@@ -200,6 +201,37 @@ def _parser() -> argparse.ArgumentParser:
         help="collect raw evidence only; do not rebuild bronze/silver/gold outputs",
     )
     connectors_sync.set_defaults(func=_connectors_sync)
+
+    lake = sub.add_parser("lake", help="bring-your-own-lake mapping commands (experimental)")
+    lake_sub = lake.add_subparsers(dest="lake_command", required=True)
+    lake_map = lake_sub.add_parser(
+        "map",
+        help="validate a lake mapping and preview mapped rows (--dry-run; writes nothing)",
+    )
+    lake_map_source = lake_map.add_mutually_exclusive_group(required=True)
+    lake_map_source.add_argument("--mapping", default=None, help="mapping spec file (.json, .yaml, .yml)")
+    lake_map_source.add_argument("--preset", default=None, help="built-in preset, for example ocsf/api_activity")
+    lake_map_source.add_argument(
+        "--connector-id", default=None, help="preview the mapping(s) configured on this connector in --lake"
+    )
+    lake_map.add_argument("--table", default=None, help="source table for --preset (namespace.table)")
+    lake_map.add_argument("--input", default=None, help="sample source rows (.json list, .jsonl, or .parquet)")
+    lake_map.add_argument("--lake", default=None, help="security data lake directory (with --connector-id)")
+    lake_map.add_argument(
+        "--fixture-dir", default=None, help="fixture directory for --connector-id instead of the live source"
+    )
+    lake_map.add_argument(
+        "--dialect",
+        default="snowflake",
+        choices=["snowflake", "databricks", "clickhouse", "bigquery"],
+        help="SQL dialect for the compiled query shown in the preview (default snowflake)",
+    )
+    lake_map.add_argument("--since", default=None, help="ISO-8601 watermark to preview an incremental read from")
+    lake_map.add_argument("--limit", type=int, default=5, help="mapped rows to show (default 5)")
+    lake_map.add_argument("--dry-run", action="store_true", help="preview only; required in this version")
+    lake_map.set_defaults(func=_lake_map)
+    lake_presets = lake_sub.add_parser("presets", help="list built-in mapping presets")
+    lake_presets.set_defaults(func=_lake_presets)
 
     ingestion = sub.add_parser("ingestion", help="ingestion strategy commands")
     ingestion_sub = ingestion.add_subparsers(dest="ingestion_command", required=True)
@@ -1001,6 +1033,126 @@ def _connectors_sync(args: argparse.Namespace) -> int:
     )
     print(json.dumps(result.__dict__, indent=2, sort_keys=True))
     return 0
+
+
+def _lake_presets(args: argparse.Namespace) -> int:
+    from security_lakehouse.lake_mapping import list_presets, load_preset
+
+    rows = [{"preset": name, "description": load_preset(name).get("description", "")} for name in list_presets()]
+    print(json.dumps({"presets": rows}, indent=2, sort_keys=True))
+    return 0
+
+
+def _lake_map(args: argparse.Namespace) -> int:
+    from security_lakehouse import lake_mapping as lm
+
+    if not args.dry_run:
+        print(
+            "error: lake map only previews in this version; pass --dry-run. Ingest by configuring "
+            "options.mapping on a lake connector and running 'connectors sync'.",
+            file=sys.stderr,
+        )
+        return 1
+    if args.limit < 0:
+        raise ValueError("--limit must be zero or positive")
+    if args.connector_id:
+        return _lake_map_connector(args)
+    try:
+        if args.mapping:
+            spec = lm.load_mapping_file(args.mapping)
+        else:
+            ref: dict[str, Any] = {"preset": args.preset}
+            if args.table:
+                ref["source"] = {"table": args.table}
+            spec = lm.resolve_mapping_ref(ref)
+        query = lm.compile_select(spec, args.dialect, since=args.since, limit=lm.DEFAULT_MAX_ROWS)
+    except lm.MappingError as exc:
+        print(json.dumps({"valid": False, "errors": exc.errors}, indent=2, sort_keys=True))
+        return 1
+    rows = _read_sample_rows(args.input) if args.input else []
+    result = lm.map_rows(spec, rows, since=args.since)
+    report = {
+        "valid": True,
+        "dry_run": True,
+        "mapping": spec.name,
+        "preset": spec.preset,
+        "table": spec.source_table,
+        "incremental": spec.incremental,
+        "query": {"dialect": query.dialect, "sql": query.sql, "params": query.params},
+        "rows_read": len(rows),
+        "mapped_count": len(result.events),
+        "filtered": result.filtered,
+        "errors": result.errors,
+        "preview": result.events[: args.limit],
+    }
+    print(json.dumps(report, indent=2, sort_keys=True, default=str))
+    return 2 if result.errors else 0
+
+
+def _lake_map_connector(args: argparse.Namespace) -> int:
+    from security_lakehouse import lake_mapping as lm
+    from security_lakehouse.connector_runner import DEFAULT_TOKEN_ENV, SyncInputs, effective_registry
+    from security_lakehouse.connector_state import latest_config
+
+    if not args.lake:
+        raise ValueError("--connector-id previews need --lake")
+    config = latest_config(args.lake, args.connector_id) or {}
+    options = dict(config.get("options") or {})
+    try:
+        specs = lm.resolve_mappings(options)
+    except lm.MappingError as exc:
+        print(json.dumps({"valid": False, "errors": exc.errors}, indent=2, sort_keys=True))
+        return 1
+    if not specs:
+        raise ValueError(f"{args.connector_id} has no options.mapping or options.mappings configured in {args.lake}")
+    builder = effective_registry().get(args.connector_id)
+    if builder is None:
+        raise ValueError(f"no reader registered for connector_id {args.connector_id!r}")
+    inputs = SyncInputs(
+        repo=None,
+        fixture_dir=args.fixture_dir,
+        token_env=DEFAULT_TOKEN_ENV,
+        env=dict(os.environ),
+        since=args.since,
+        credentials=dict(config.get("credentials") or {}),
+        options={**options, "max_rows_per_sync": max(args.limit, 1) * 20},
+    )
+    with lm.capture_mapping_stats() as stats:
+        events = builder(inputs)
+    errors = [dict(error, mapping=item["mapping"]) for item in stats for error in item["errors"]]
+    report = {
+        "valid": True,
+        "dry_run": True,
+        "connector_id": args.connector_id,
+        "mappings": [{key: value for key, value in item.items() if key != "errors"} for item in stats],
+        "rows_read": sum(item["rows_read"] for item in stats),
+        "mapped_count": len(events),
+        "filtered": sum(item["filtered"] for item in stats),
+        "errors": errors,
+        "preview": events[: args.limit],
+    }
+    print(json.dumps(report, indent=2, sort_keys=True, default=str))
+    return 2 if errors else 0
+
+
+def _read_sample_rows(path: str) -> list[dict[str, Any]]:
+    target = Path(path)
+    suffix = target.suffix.lower()
+    if suffix == ".parquet":
+        try:
+            import pyarrow.parquet as pq  # type: ignore[import-untyped]
+        except ImportError as exc:
+            raise ValueError("reading .parquet samples requires the 'parquet' extra (pyarrow)") from exc
+        return [row for row in pq.read_table(target).to_pylist() if isinstance(row, dict)]
+    text = target.read_text(encoding="utf-8")
+    if suffix in {".jsonl", ".ndjson"}:
+        return [
+            row for row in (json.loads(line) for line in text.splitlines() if line.strip()) if isinstance(row, dict)
+        ]
+    payload = json.loads(text)
+    if not isinstance(payload, list):
+        raise ValueError("--input JSON must be a list of row objects")
+    return [row for row in payload if isinstance(row, dict)]
 
 
 def _ingestion_plan(args: argparse.Namespace) -> int:

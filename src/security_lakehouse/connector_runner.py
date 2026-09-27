@@ -40,6 +40,11 @@ from security_lakehouse.connectors_bamboohr import (
     BambooHRFixtureClient,
     collect_bamboohr_evidence,
 )
+from security_lakehouse.connectors_bigquery import (
+    BigQueryFixtureClient,
+    client_from_config,
+    collect_bigquery_evidence,
+)
 from security_lakehouse.connectors_clickhouse import (
     DEFAULT_DATABASE as CLICKHOUSE_DEFAULT_DATABASE,
 )
@@ -71,6 +76,12 @@ from security_lakehouse.connectors_google_workspace import (
     GoogleWorkspaceClient,
     GoogleWorkspaceFixtureClient,
     collect_google_workspace_evidence,
+)
+from security_lakehouse.connectors_iceberg import (
+    IcebergFixtureClient,
+    build_reader,
+    collect_iceberg_evidence,
+    resolve_iceberg_mappings,
 )
 from security_lakehouse.connectors_intune import (
     IntuneClient,
@@ -140,6 +151,12 @@ from security_lakehouse.connectors_workday import (
 from security_lakehouse.ingestion.merge import dedupe_by_key
 from security_lakehouse.ingestion.watermark import read_watermark, write_watermark
 from security_lakehouse.io import read_jsonl, write_jsonl
+from security_lakehouse.lake_mapping import (
+    DEFAULT_MAX_ROWS,
+    collect_mapped_evidence,
+    resolve_mappings,
+    write_mode_for_options,
+)
 from security_lakehouse.lake_scale import resolve_materialize_strategy, write_lake_scale_state
 from security_lakehouse.offboarding import (
     OFFBOARDING_CONNECTOR_ID,
@@ -328,11 +345,11 @@ def run_connector_sync(
     """Run one configured connector and persist its evidence + run event."""
     lake = Path(lake_dir)
     start = time.perf_counter()
-    write_mode = _write_mode(connector_id)
     try:
         config = _require_enabled(lake, connector_id)
         credentials = dict(config.get("credentials") or {})
         options = dict(config.get("options") or {})
+        write_mode = _write_mode(connector_id, options)
         effective_repo = repo or str(options.get("repo") or "").strip() or None
         effective_fixture = fixture_dir or options.get("fixture_dir")
         effective_token_env = token_env
@@ -631,7 +648,13 @@ def _build_workday(inputs: SyncInputs) -> list[dict[str, Any]]:
 
 
 def _build_databricks(inputs: SyncInputs) -> list[dict[str, Any]]:
-    return _collect_databricks(fixture_dir=inputs.fixture_dir, env=inputs.env, credentials=inputs.credentials)
+    return _collect_databricks(
+        fixture_dir=inputs.fixture_dir,
+        env=inputs.env,
+        credentials=inputs.credentials,
+        options=inputs.options,
+        since=inputs.since,
+    )
 
 
 def _build_jamf(inputs: SyncInputs) -> list[dict[str, Any]]:
@@ -666,6 +689,7 @@ def _build_snowflake(inputs: SyncInputs) -> list[dict[str, Any]]:
         env=inputs.env,
         credentials=inputs.credentials,
         options=inputs.options,
+        since=inputs.since,
     )
 
 
@@ -708,6 +732,28 @@ def _build_runtime_gateway(inputs: SyncInputs) -> list[dict[str, Any]]:
     )
 
 
+def _build_iceberg(inputs: SyncInputs) -> list[dict[str, Any]]:
+    specs = resolve_iceberg_mappings(inputs.credentials, inputs.options)
+    reader: Any = (
+        IcebergFixtureClient(inputs.fixture_dir)
+        if inputs.fixture_dir
+        else build_reader(inputs.credentials, inputs.options, env=inputs.env)
+    )
+    return collect_iceberg_evidence(reader, specs, since=inputs.since, max_rows=_max_rows_per_sync(inputs.options))
+
+
+def _build_bigquery(inputs: SyncInputs) -> list[dict[str, Any]]:
+    specs = resolve_mappings(inputs.options)
+    if not specs:
+        raise ValueError("bigquery-evidence-lake needs options.mapping or options.mappings")
+    client: Any = (
+        BigQueryFixtureClient(inputs.fixture_dir)
+        if inputs.fixture_dir
+        else client_from_config(inputs.credentials, inputs.options)
+    )
+    return collect_bigquery_evidence(client, specs, since=inputs.since, max_rows=_max_rows_per_sync(inputs.options))
+
+
 REGISTRY: dict[str, ConnectorBuilder] = {
     "snowflake-evidence-lake": _build_snowflake,
     "clickhouse-telemetry-lake": _build_clickhouse,
@@ -732,6 +778,8 @@ REGISTRY: dict[str, ConnectorBuilder] = {
     "crowdstrike-falcon": _build_crowdstrike,
     "kubernetes-cluster": _build_kubernetes,
     "knowbe4-training": _build_knowbe4,
+    "iceberg-parquet-lake": _build_iceberg,
+    "bigquery-evidence-lake": _build_bigquery,
 }
 
 
@@ -1128,11 +1176,15 @@ def _collect_databricks(
     fixture_dir: str | Path | None,
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
+    since: str | None = None,
 ) -> list[dict[str, Any]]:
     creds = credentials or {}
     host = str(creds.get("host") or env.get("DATABRICKS_HOST") or "").strip()
     if fixture_dir:
-        return collect_databricks_evidence(DatabricksFixtureClient(fixture_dir, host=host))
+        fixture_client = DatabricksFixtureClient(fixture_dir, host=host)
+        mapped = _collect_mapped(fixture_client, options or {}, since=since, source="databricks")
+        return mapped if mapped is not None else collect_databricks_evidence(fixture_client)
     fields = {name: str(creds.get(name) or "").strip() for name in ("warehouse_id", "catalog", "schema", "client_id")}
     secret = _resolve_provider_secret(str(creds.get("client_secret_ref") or ""), "DATABRICKS_CLIENT_SECRET", env)
     if not host or not secret or not all(fields.values()):
@@ -1141,7 +1193,9 @@ def _collect_databricks(
             "schema, and service-principal client_id plus its OAuth secret (client_secret_ref or "
             "DATABRICKS_CLIENT_SECRET)"
         )
-    return collect_databricks_evidence(DatabricksClient(host, client_secret=secret, **fields))
+    client = DatabricksClient(host, client_secret=secret, **fields)
+    mapped = _collect_mapped(client, options or {}, since=since, source="databricks")
+    return mapped if mapped is not None else collect_databricks_evidence(client)
 
 
 def _collect_jamf(
@@ -1307,6 +1361,9 @@ def _collect_clickhouse(
 
         netguard.assert_url_is_public(host, label="clickhouse host")
         client = ClickHouseClient(host, user=user, password=password, database=database)
+    mapped = _collect_mapped(client, options, since=since, source="clickhouse")
+    if mapped is not None:
+        return mapped
     return collect_clickhouse_evidence(client, table=table, since=since)
 
 
@@ -1397,6 +1454,7 @@ def _collect_snowflake(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
+    since: str | None = None,
 ) -> list[dict[str, Any]]:
     client: SnowflakeClient | SnowflakeFixtureClient
     credentials = credentials or {}
@@ -1447,7 +1505,43 @@ def _collect_snowflake(
             for key, default in SNOWFLAKE_DEFAULT_VIEWS.items()
         }
         client = SnowflakeClient(query_params=params, views=views)
+    mapped = _collect_mapped(client, options, since=since, source="snowflake")
+    if mapped is not None:
+        return mapped
     return collect_snowflake_evidence(client, account=account)
+
+
+def _collect_mapped(
+    client: Any, options: dict[str, Any], *, since: str | None, source: str
+) -> list[dict[str, Any]] | None:
+    """Collect through ``options.mapping``/``options.mappings`` when configured, else ``None``.
+
+    ``None`` keeps the reader on its TrustOps-shaped view contract, so existing
+    configurations behave exactly as before.
+    """
+    specs = resolve_mappings(options)
+    if not specs:
+        return None
+    return collect_mapped_evidence(
+        lambda spec, bound, limit: client.fetch_mapping_rows(spec, since=bound, limit=limit),
+        specs,
+        since=since,
+        max_rows=_max_rows_per_sync(options),
+        default_source=source,
+    )
+
+
+def _max_rows_per_sync(options: dict[str, Any]) -> int:
+    raw = options.get("max_rows_per_sync")
+    if raw is None or raw == "":
+        return DEFAULT_MAX_ROWS
+    try:
+        value = int(str(raw))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("options.max_rows_per_sync must be an integer") from exc
+    if not 1 <= value <= 1_000_000:
+        raise ValueError("options.max_rows_per_sync must be between 1 and 1000000")
+    return value
 
 
 # A connector whose evidence describes current state (IAM, config, inventory)
@@ -1457,13 +1551,18 @@ def _collect_snowflake(
 SNAPSHOT_DATA_SHAPE = "current_state"
 
 
-def _write_mode(connector_id: str) -> str:
+def _write_mode(connector_id: str, options: dict[str, Any] | None = None) -> str:
     """Resolve the raw-write mode for ``connector_id`` from its catalog data shape.
 
     ``current_state`` → ``snapshot`` (replace this connector's prior rows so
     deletions propagate); anything else → ``append`` (the non-destructive default,
     used for event-log sources and any connector that does not declare a shape).
+    A configured lake mapping overrides the catalog shape: incremental mappings
+    read event logs (append), full re-read mappings replace (snapshot).
     """
+    mapped_mode = write_mode_for_options(options or {})
+    if mapped_mode is not None:
+        return mapped_mode
     entry = load_connector_catalog().get(connector_id) or {}
     return "snapshot" if entry.get("data_shape") == SNAPSHOT_DATA_SHAPE else "append"
 

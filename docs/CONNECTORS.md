@@ -854,6 +854,17 @@ and phish-prone percentage are kept. Names, job titles, phone numbers, locations
 divisions, manager details, aliases, and custom fields are dropped before anything is
 stored. The key is only ever sent to the configured regional host.
 
+## Existing lakes: mappings, Iceberg/Parquet, BigQuery (preview)
+
+The Snowflake, Databricks, and ClickHouse readers can read existing tables
+through a lake mapping (`options.mapping` / `options.mappings`) instead of the
+TrustOps views. `iceberg-parquet-lake` reads Iceberg tables through AWS Glue
+(including Amazon Security Lake, with OCSF presets by default) or an Iceberg REST
+catalog, and Parquet on S3 or an allowed local root. `bigquery-evidence-lake` reads
+BigQuery tables with Application Default Credentials. The spec, the OCSF presets,
+`lake map --dry-run`, and per-backend least-privilege setup are in
+[BRING_YOUR_OWN_LAKE.md](BRING_YOUR_OWN_LAKE.md).
+
 ## Offboarding check: HR terminations ↔ IdP accounts
 
 After any sync that writes HR employment rows (`hris.personnel.employment`, from

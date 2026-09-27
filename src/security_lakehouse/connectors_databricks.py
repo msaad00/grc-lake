@@ -40,6 +40,7 @@ from security_lakehouse.connectors_snowflake import DEFAULT_VIEWS, collect_snowf
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.paginate import paginate
 from security_lakehouse.io import read_json
+from security_lakehouse.lake_mapping import MappingSpec, compile_select, read_fixture_table
 
 CONNECTOR_ID = "databricks-evidence-lake"
 SOURCE = "databricks"
@@ -109,21 +110,32 @@ class DatabricksClient:
     def evidence_bundles(self) -> list[dict[str, Any]]:
         return self._select_view("evidence_bundles")
 
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        """Read a customer table through a mapping spec with named ``:param`` markers.
+
+        A one-part table name is qualified with the configured catalog and schema.
+        """
+        query = compile_select(
+            spec, "databricks", since=since, limit=limit, default_namespace=(self.catalog, self.schema)
+        )
+        return self._execute(query.sql, query.databricks_parameters())
+
     def _select_view(self, key: str) -> list[dict[str, Any]]:
         statement = f"SELECT * FROM `{self.catalog}`.`{self.schema}`.`{self.views[key]}`"  # noqa: S608
-        response = self._request(
-            "POST",
-            "/api/2.0/sql/statements",
-            {
-                "statement": statement,
-                "warehouse_id": self.warehouse_id,
-                "wait_timeout": WAIT_TIMEOUT,
-                "on_wait_timeout": "CONTINUE",
-                "disposition": "INLINE",
-                "format": "JSON_ARRAY",
-            },
-        )
-        response = self._await(response)
+        return self._execute(statement, [])
+
+    def _execute(self, statement: str, parameters: list[dict[str, str]]) -> list[dict[str, Any]]:
+        body: dict[str, Any] = {
+            "statement": statement,
+            "warehouse_id": self.warehouse_id,
+            "wait_timeout": WAIT_TIMEOUT,
+            "on_wait_timeout": "CONTINUE",
+            "disposition": "INLINE",
+            "format": "JSON_ARRAY",
+        }
+        if parameters:
+            body["parameters"] = parameters
+        response = self._await(self._request("POST", "/api/2.0/sql/statements", body))
         columns = [
             str(col.get("name")) for col in ((response.get("manifest") or {}).get("schema") or {}).get("columns", [])
         ]
@@ -222,6 +234,10 @@ class DatabricksFixtureClient:
 
     def evidence_bundles(self) -> list[dict[str, Any]]:
         return self._read("evidence_bundles.json")
+
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        _ = since, limit  # fixtures return the whole table; map_rows applies the same bound
+        return read_fixture_table(self.fixture, spec.source_table)
 
     def _read(self, name: str) -> list[dict[str, Any]]:
         path = self.fixture / name

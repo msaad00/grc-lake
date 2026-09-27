@@ -19,6 +19,13 @@ from typing import Any
 from security_lakehouse import netguard
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json
+from security_lakehouse.lake_mapping import (
+    MappingSpec,
+    compile_select,
+    probe_mappings,
+    read_fixture_table,
+    resolve_mappings,
+)
 from security_lakehouse.models import parse_event_time, utc_iso
 
 CONNECTOR_ID = "clickhouse-telemetry-lake"
@@ -103,6 +110,13 @@ class ClickHouseClient:
                 # Cannot form a safe cursor — stop rather than risk a loop or dupes.
                 break
         return rows
+
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        """Read a customer table through a mapping spec with typed ``{name:Type}`` parameters."""
+        query = compile_select(
+            spec, "clickhouse", since=since, limit=limit, default_namespace=(safe_identifier(self.database),)
+        )
+        return self._query_json_each_row(query.sql, params=query.clickhouse_parameters())
 
     def show_tables(self) -> list[str]:
         rows = self._query_json_each_row(f"SHOW TABLES FROM {safe_identifier(self.database)} FORMAT JSONEachRow")
@@ -199,6 +213,10 @@ class ClickHouseFixtureClient:
             return rows
         return [row for row in rows if str(row.get("event_time") or "") > since]
 
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        _ = since, limit  # fixtures return the whole table; map_rows applies the same bound
+        return read_fixture_table(self.fixture, spec.source_table)
+
     def show_tables(self) -> list[str]:
         return [path.stem for path in self.fixture.glob("*.json")]
 
@@ -270,7 +288,19 @@ def probe_clickhouse_access(
     host, user, password, database, table = _connection_params(credentials, options, env=env)
     if not host:
         raise ValueError("clickhouse-telemetry-lake probe requires host")
-    return ClickHouseClient(host, user=user, password=password, database=database).probe(table=table)
+    client = ClickHouseClient(host, user=user, password=password, database=database)
+    specs = resolve_mappings(options)
+    if specs:
+        mapped = probe_mappings(client, specs)
+        failed = next((check for check in mapped["mappings"] if not check["ok"]), None)
+        return {
+            "ok": mapped["ok"],
+            "table": ", ".join(check["table"] for check in mapped["mappings"]),
+            "row_count": sum(check["sample_rows"] or 0 for check in mapped["mappings"]),
+            "error": failed["error"] if failed else None,
+            "mappings": mapped["mappings"],
+        }
+    return client.probe(table=table)
 
 
 def discover_clickhouse_scope(

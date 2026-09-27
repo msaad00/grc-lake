@@ -1,0 +1,132 @@
+[
+  {
+    "metadata": {
+      "uid": "7f1d8c3e-1a2b-4c5d-9e0f-1234567890ab",
+      "version": "1.1.0",
+      "product": {
+        "name": "CloudTrail",
+        "vendor_name": "AWS",
+        "version": "1.09",
+        "feature": { "name": "Management" }
+      },
+      "profiles": ["cloud", "datetime"]
+    },
+    "time": 1789999391000,
+    "time_dt": "2026-09-21T14:03:11.000Z",
+    "class_uid": 3002,
+    "class_name": "Authentication",
+    "category_uid": 3,
+    "activity_id": 1,
+    "activity_name": "Logon",
+    "severity_id": 1,
+    "severity": "Informational",
+    "status_id": 2,
+    "status": "Failure",
+    "status_detail": "Failed authentication",
+    "is_mfa": false,
+    "auth_protocol": "Other",
+    "user": {
+      "type": "IAMUser",
+      "name": "alice",
+      "uid": "AIDAEXAMPLEALICE",
+      "account": { "uid": "111122223333" }
+    },
+    "src_endpoint": { "ip": "203.0.113.24" },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  },
+  {
+    "metadata": {
+      "uid": "0c9e2b44-58aa-4f6b-a1d0-abcdefabcdef",
+      "version": "1.1.0",
+      "product": {
+        "name": "CloudTrail",
+        "vendor_name": "AWS",
+        "version": "1.09",
+        "feature": { "name": "Management" }
+      }
+    },
+    "time": 1789999500000,
+    "time_dt": "2026-09-21T14:05:00.000Z",
+    "class_uid": 3001,
+    "class_name": "Account Change",
+    "category_uid": 3,
+    "activity_id": 7,
+    "activity_name": "Attach Policy",
+    "severity_id": 1,
+    "severity": "Informational",
+    "status_id": 1,
+    "status": "Success",
+    "user": { "name": "build-bot", "uid": "AIDAEXAMPLEBOT" },
+    "actor": {
+      "user": {
+        "type": "AssumedRole",
+        "name": "platform-admin",
+        "uid": "AROAEXAMPLEADMIN:ops"
+      }
+    },
+    "src_endpoint": { "ip": "198.51.100.7" },
+    "api": {
+      "operation": "AttachUserPolicy",
+      "service": { "name": "iam.amazonaws.com" }
+    },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  },
+  {
+    "metadata": {
+      "uid": "5b6c7d8e-9f00-4a1b-8c2d-3e4f5a6b7c8d",
+      "version": "1.1.0",
+      "product": {
+        "name": "CloudTrail",
+        "vendor_name": "AWS",
+        "version": "1.09",
+        "feature": { "name": "Management" }
+      }
+    },
+    "time": 1789999620000,
+    "time_dt": "2026-09-21T14:07:00.000Z",
+    "class_uid": 6003,
+    "class_name": "API Activity",
+    "category_uid": 6,
+    "activity_id": 3,
+    "activity_name": "Update",
+    "severity_id": 1,
+    "severity": "Informational",
+    "status_id": 1,
+    "status": "Success",
+    "actor": {
+      "user": {
+        "type": "AssumedRole",
+        "name": "platform-admin",
+        "uid": "AROAEXAMPLEADMIN:ops"
+      }
+    },
+    "src_endpoint": { "ip": "198.51.100.7" },
+    "api": {
+      "operation": "PutBucketPolicy",
+      "service": { "name": "s3.amazonaws.com" },
+      "request": { "uid": "REQ123" }
+    },
+    "resources": [
+      { "uid": "arn:aws:s3:::acme-audit-logs", "type": "AWS::S3::Bucket" }
+    ],
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  }
+]

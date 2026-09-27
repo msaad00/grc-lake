@@ -1,0 +1,125 @@
+{
+  "spec_version": 1,
+  "name": "ocsf_authentication",
+  "description": "OCSF Authentication (class_uid 3002), OCSF 1.1.0 (Amazon Security Lake source version 2). Sign-in evidence for access-control and authentication controls.",
+  "source": {
+    "table": "ocsf_table",
+    "incremental": true,
+    "lookback_minutes": 60
+  },
+  "filters": [
+    {
+      "column": "class_uid",
+      "op": "eq",
+      "value": 3002
+    }
+  ],
+  "fields": {
+    "id": {
+      "columns": [
+        "metadata.uid",
+        "time",
+        "user.uid",
+        "user.name",
+        "src_endpoint.ip"
+      ]
+    },
+    "observed_at": {
+      "column": "time_dt",
+      "format": "timestamp"
+    },
+    "source": {
+      "coalesce": [
+        {
+          "column": "metadata.product.name"
+        },
+        {
+          "const": "ocsf"
+        }
+      ]
+    },
+    "severity": {
+      "column": "severity_id",
+      "map": {
+        "0": "info",
+        "1": "info",
+        "2": "low",
+        "3": "medium",
+        "4": "high",
+        "5": "critical",
+        "6": "critical",
+        "99": "info"
+      },
+      "default": "info"
+    },
+    "event_type": {
+      "const": "ocsf.authentication"
+    },
+    "asset_id": {
+      "coalesce": [
+        {
+          "column": "user.uid"
+        },
+        {
+          "column": "user.name"
+        },
+        {
+          "column": "cloud.account.uid"
+        }
+      ]
+    },
+    "asset_type": {
+      "const": "identity"
+    },
+    "controls": {
+      "const": [
+        "SOC2-CC6.1",
+        "ISO27001-A.8.5",
+        "ISO27001-A.8.15",
+        "NIST-800-53-IA-2",
+        "NIST-800-53-AU-2"
+      ]
+    }
+  },
+  "attributes": {
+    "ocsf_class_uid": {
+      "column": "class_uid"
+    },
+    "ocsf_activity_id": {
+      "column": "activity_id"
+    },
+    "ocsf_version": {
+      "column": "metadata.version"
+    },
+    "product": {
+      "column": "metadata.product.name"
+    },
+    "vendor": {
+      "column": "metadata.product.vendor_name"
+    },
+    "cloud_account": {
+      "column": "cloud.account.uid"
+    },
+    "cloud_region": {
+      "column": "cloud.region"
+    },
+    "outcome": {
+      "column": "status"
+    },
+    "user": {
+      "column": "user.name"
+    },
+    "actor": {
+      "column": "actor.user.name"
+    },
+    "src_ip": {
+      "column": "src_endpoint.ip"
+    },
+    "is_mfa": {
+      "column": "is_mfa"
+    },
+    "auth_protocol": {
+      "column": "auth_protocol"
+    }
+  }
+}

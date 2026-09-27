@@ -76,31 +76,31 @@ family ledger.
 | ------------------------- | -------------------------- | ---------: | ----------------------- | ------------ |
 | AI governance             | `ai-governance`            |          6 | —                       | —            |
 | Availability and recovery | `availability`             |          1 | CP                      | 11           |
-| Change management         | `change-management`        |          1 | CM                      | —            |
-| Configuration management  | `configuration-management` |          2 | CM                      | 2, 4         |
+| Change management         | `change-management`        |          3 | CM                      | —            |
+| Configuration management  | `configuration-management` |          4 | CM                      | 2, 4         |
 | Data protection           | `data-protection`          |          3 | SC, MP                  | 1, 3         |
 | Detection                 | `detection`                |          2 | SI                      | 10, 13       |
-| Governance                | `governance`               |          1 | PL, PM                  | —            |
+| Governance                | `governance`               |          8 | PL, PM                  | —            |
 | Identity and access       | `identity`                 |          5 | AC, IA                  | 5, 6         |
-| Incident response         | `incident-response`        |          1 | IR                      | 17           |
+| Incident response         | `incident-response`        |          4 | IR                      | 17           |
 | Audit logging             | `logging`                  |          2 | AU                      | 8            |
 | Network security          | `network-security`         |          1 | SC                      | 12           |
 | People security           | `people-security`          |          2 | AT, PS                  | 14           |
 | Physical security         | `physical-security`        |          2 | PE                      | —            |
-| Privacy                   | `privacy`                  |          1 | PT                      | —            |
-| Processing integrity      | `processing-integrity`     |          1 | SI                      | —            |
-| Risk management           | `risk-management`          |          5 | RA, CA, PM              | 18           |
-| Secure architecture       | `secure-architecture`      |          3 | SA, SC                  | —            |
-| Secure development        | `secure-development`       |          1 | SA                      | 16           |
-| System maintenance        | `system-maintenance`       |          2 | MA                      | —            |
-| Third-party risk          | `third-party-risk`         |          1 | SR, SA                  | 15           |
-| Vulnerability management  | `vulnerability-management` |          1 | RA, SI                  | 7            |
+| Privacy                   | `privacy`                  |          5 | PT                      | —            |
+| Processing integrity      | `processing-integrity`     |          3 | SI                      | —            |
+| Risk management           | `risk-management`          |         10 | RA, CA, PM              | 18           |
+| Secure architecture       | `secure-architecture`      |          4 | SA, SC                  | —            |
+| Secure development        | `secure-development`       |          3 | SA                      | 16           |
+| System maintenance        | `system-maintenance`       |          4 | MA                      | —            |
+| Third-party risk          | `third-party-risk`         |          3 | SR, SA                  | 15           |
+| Vulnerability management  | `vulnerability-management` |          3 | RA, SI                  | 7            |
 
 ## Where it stands
 
 ```
 $ security-lakehouse frameworks safeguards --format table
-44 safeguards map 813 of 2021 requirements (40.2%) — 350 reviewed (17.3%), 463 proposed
+78 safeguards map 991 of 2021 requirements (49.0%) — 350 reviewed (17.3%), 641 proposed
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -127,17 +127,17 @@ cannot become a false certification claim.
 | hipaa-security-rule |           18 |     18 | 100.0% |
 | pci-dss-v4          |           12 |     12 | 100.0% |
 | soc2                |           61 |     61 | 100.0% |
-| cis_aws             |           62 |     49 |  79.0% |
-| cis-controls-v8.1   |           18 |     13 |  72.2% |
+| nist-rmf-800-37r2   |           47 |     43 |  91.5% |
+| gdpr-2016-679       |           20 |     18 |  90.0% |
+| cis-controls-v8.1   |           18 |     15 |  83.3% |
+| cis_aws             |           62 |     51 |  82.3% |
+| nist-csf-2.0        |          106 |     79 |  74.5% |
+| fedramp-moderate    |          287 |    207 |  72.1% |
 | iso-42001-2023      |           39 |     26 |  66.7% |
-| fedramp-moderate    |          287 |    182 |  63.4% |
-| gdpr-2016-679       |           20 |     12 |  60.0% |
-| iso-27017-2015      |           47 |     24 |  51.1% |
-| iso-27001-2022      |           93 |     43 |  46.2% |
-| nist-csf-2.0        |          106 |     46 |  43.4% |
+| iso-27017-2015      |           47 |     29 |  61.7% |
+| iso-27001-2022      |           93 |     57 |  61.3% |
 | nist-ai-rmf         |           72 |     20 |  27.8% |
-| nist-800-53-rev5    |         1014 |    182 |  17.9% |
-| nist-rmf-800-37r2   |           47 |      0 |   0.0% |
+| nist-800-53-rev5    |         1014 |    230 |  22.7% |
 
 ### What a safeguard applies to
 

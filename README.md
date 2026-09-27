@@ -101,9 +101,9 @@ Models may summarize or propose actions; deterministic rules decide control resu
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**16 framework packs · 44 reusable safeguards · 21 control families · 2,021 catalogued requirements.**
+**16 framework packs · 78 reusable safeguards · 21 control families · 2,021 catalogued requirements.**
 
-813 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
+991 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 
 Control families: Identity and access · Data protection · Detection · Audit logging · Change management · Configuration management · Secure development · Secure architecture · Vulnerability management · Third-party risk · Risk management · Availability and recovery · Incident response · Governance · People security · Physical security · Network security · System maintenance · Processing integrity · Privacy · AI governance.
 

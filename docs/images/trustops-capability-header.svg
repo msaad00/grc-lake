@@ -99,7 +99,7 @@
     <g transform="translate(704 246)">
       <text x="0" y="10" font-size="11" font-weight="780" letter-spacing="1.5" fill="#6bd5df">COMMON CONTROL FRAMEWORK</text>
       <text x="0" y="52" font-size="31" font-weight="840" fill="#f8fafc">16<tspan dx="8" font-size="15" font-weight="650" fill="#94a3b8">framework packs</tspan></text>
-      <text x="0" y="79" font-size="13" font-weight="650" fill="#cbd5e1">44 safeguards · 2021 catalogued requirements</text>
+      <text x="0" y="79" font-size="13" font-weight="650" fill="#cbd5e1">78 safeguards · 2021 catalogued requirements</text>
       <text x="0" y="106" font-size="11.5" font-weight="650" fill="#90a4bd">SOC 2 · ISO 27001 · NIST 800-53 · NIST RMF · FedRAMP · CMMC · NIST CSF</text>
       <text x="0" y="126" font-size="11" font-weight="620" fill="#64748b">CIS Controls · CIS AWS · HIPAA · PCI DSS · GDPR · EU AI Act · ISO 27017 · ISO 42001 · NIST AI RMF</text>
     </g>

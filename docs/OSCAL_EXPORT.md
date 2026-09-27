@@ -40,7 +40,7 @@ curl -s "http://127.0.0.1:8787/api/v1/oscal/assessment-results?snapshot_id=<id>"
 
 ## Component Definition: safeguard → implemented-requirement
 
-Each of the 44 CCF safeguards becomes one OSCAL `component` (type
+Each CCF safeguard becomes one OSCAL `component` (type
 `process-procedure`, since a safeguard is an operated control, not shipped
 software). A safeguard's `satisfies` entries are grouped by `framework_id`
 into one `control-implementation` per framework, each carrying the

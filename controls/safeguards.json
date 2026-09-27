@@ -6906,6 +6906,3878 @@
         }
       ],
       "asset_types": ["ai_agent", "ai_model", "data_store", "service"]
+    },
+    {
+      "safeguard_id": "SG-POLICYMANAGEMENT-001",
+      "title": "Security policy set approved, published, and reviewed",
+      "risk_domain": "governance",
+      "objective": "Maintain a management-approved information security policy and topic-specific policies and procedures, publish them to the people they apply to, and review them on a defined cycle or after significant change.",
+      "evidence_requirement": "Attested evidence: the current policy register lists each policy and procedure with its owner, approval record, publication location, and last and next review dates. A policy past its review date, or without an approval record, is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "ISO27001-A.5.1",
+          "framework_id": "iso-27001-2022",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27017-5.1.1",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27017-5.1.2",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-GV.PO-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.PO-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.PO-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.PO-02"
+          }
+        },
+        {
+          "control_id": "SOC2-CC5.3",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "PCI-DSS-12",
+          "framework_id": "pci-dss-v4",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-AC-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-AC-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-AT-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-AT-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-AU-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-AU-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CA-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CA-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CM-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CP-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CP-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IA-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IA-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-MA-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-MA-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-MP-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-MP-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-PE-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PE-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-PL-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PL-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-PS-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PS-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-RA-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-RA-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SA-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SA-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SC-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SC-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SI-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SI-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SR-1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SR-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PT-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "container_image",
+        "data_store",
+        "host",
+        "iam_role",
+        "identity_group",
+        "identity_user",
+        "okta_user",
+        "repo",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-ROLESRESPONSIBILITIES-001",
+      "title": "Security, privacy, and risk roles assigned",
+      "risk_domain": "governance",
+      "objective": "Define, assign, and communicate security, privacy, and risk management roles, responsibilities, and authorities, including the senior security official, the privacy official or DPO where required, and system owners.",
+      "evidence_requirement": "Attested evidence: a current role register names the holder of each defined security, privacy, and risk role with the approving authority. Where `bamboohr-personnel`, `workday-personnel`, or `rippling-personnel` is connected, a named holder who is no longer an active worker is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "ISO27001-A.5.2",
+          "framework_id": "iso-27001-2022",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-GV.RR-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RR-02"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.RR-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RR-01"
+          }
+        },
+        {
+          "control_id": "SOC2-CC1.3",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "HIPAA-164.308(a)(2)",
+          "framework_id": "hipaa-security-rule",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27017-6.1.1",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.37",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-PS-9",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PS-9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-19",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-29",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-P-1",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-1"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "service"]
+    },
+    {
+      "safeguard_id": "SG-MANAGEMENTREVIEW-001",
+      "title": "Leadership review of security posture and strategy",
+      "risk_domain": "governance",
+      "objective": "Report security and privacy posture and risk management performance to leadership, which reviews the outcomes and adjusts strategy and direction.",
+      "evidence_requirement": "Attested evidence: minutes or decision records of the most recent leadership or board review show the posture and performance measures presented, the decisions taken, and the follow-up owners. No review within the defined cycle is stale evidence.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-GV.OV-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.OV-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.OV-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.OV-02"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.OV-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.OV-03"
+          }
+        },
+        {
+          "control_id": "SOC2-CC1.2",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-6",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-M-5",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.7 (Monitor), Task M-5"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-COMPLIANCEOBLIGATIONS-001",
+      "title": "Legal, regulatory, and contractual obligations tracked",
+      "risk_domain": "governance",
+      "objective": "Identify and document the legal, statutory, regulatory, and contractual requirements that apply to information security and privacy, and periodically review compliance with them and with internal policy.",
+      "evidence_requirement": "Attested evidence: an obligations register maps each applicable law, regulation, and contract clause to an owner and the policies or safeguards that meet it, with the date and outcome of the latest compliance review.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "ISO27001-A.5.31",
+          "framework_id": "iso-27001-2022",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.5.36",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-GV.OC-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.OC-03"
+          }
+        },
+        {
+          "control_id": "ISO27017-18.1.1",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "service"]
+    },
+    {
+      "safeguard_id": "SG-RISKSTRATEGY-001",
+      "title": "Risk management strategy and risk tolerance",
+      "risk_domain": "governance",
+      "objective": "Establish and communicate an organization-wide risk management strategy: risk management objectives, risk appetite and tolerance statements, a standard method for calculating and prioritizing risk, and the allowed risk response options.",
+      "evidence_requirement": "Attested evidence: the approved risk management strategy states objectives, appetite and tolerance, the risk scoring method, response options, and escalation lines, with its approval and last review date.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "risk-owner",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-GV.RM-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RM-02"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.RM-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RM-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.RM-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RM-03"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.RM-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RM-04"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.RM-05",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RM-05"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.RM-06",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RM-06"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.RM-07",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.RM-07"
+          }
+        },
+        {
+          "control_id": "NIST-800-53-PM-9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-28",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-P-2",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-2"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "service"]
+    },
+    {
+      "safeguard_id": "SG-SECURITYPLAN-001",
+      "title": "Control selection, tailoring, and security plan",
+      "risk_domain": "governance",
+      "objective": "Select and tailor a control baseline, identify common and inherited controls, allocate requirements to the system, and document the as-implemented controls in an approved system security and privacy plan kept current with changes.",
+      "evidence_requirement": "Attested evidence: the approved system security and privacy plan describes the boundary, the selected and tailored baseline, common and inherited controls, and how each control is implemented, with its approval and last update dates.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-PL-2",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PL-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-PL-10",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PL-10",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-PL-11",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PL-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.12.4",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-S-4",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.3 (Select), Task S-4"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-4",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-4"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-5",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-5"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-15",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-15"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-17",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-17"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-S-1",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.3 (Select), Task S-1"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-S-2",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.3 (Select), Task S-2"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-S-3",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.3 (Select), Task S-3"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-S-6",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.3 (Select), Task S-6"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-I-2",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.4 (Implement), Task I-2"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "cloud_policy", "cloud_resource", "service"]
+    },
+    {
+      "safeguard_id": "SG-AUTHORIZATION-001",
+      "title": "Authorization and risk acceptance decision",
+      "risk_domain": "governance",
+      "objective": "A named senior official reviews the security package, determines whether residual risk is acceptable, chooses a course of action, records the authorization decision, and keeps it current through ongoing review.",
+      "evidence_requirement": "Attested evidence: the current authorization decision names the authorizing official, the package reviewed, the residual risks accepted, conditions and expiry, and significant control deficiencies reported. An expired or missing decision fails the safeguard.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "risk-owner",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-CA-6",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CA-6",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-10",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-R-4",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.6 (Authorize), Task R-4"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-R-1",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.6 (Authorize), Task R-1"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-R-2",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.6 (Authorize), Task R-2"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-R-3",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.6 (Authorize), Task R-3"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-R-5",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.6 (Authorize), Task R-5"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-M-6",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.7 (Monitor), Task M-6"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-INCIDENTPLAN-001",
+      "title": "Incident response plan maintained and exercised",
+      "risk_domain": "incident-response",
+      "objective": "Maintain an approved incident response plan that covers roles, suppliers, and coordination with related plans, train responders on it, and test it on a defined cycle with improvements recorded.",
+      "evidence_requirement": "Attested evidence: the current incident response plan with approval date, responder training records, and the latest tabletop or functional exercise report with its tracked improvement actions.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "detection-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-ID.IM-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.IM-04"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-ID.IM-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.IM-02"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.SC-08",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.SC-08"
+          }
+        },
+        {
+          "control_id": "ISO27001-A.5.24",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CIS-CONTROLS-17",
+          "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-8",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-8",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-3.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-3.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.6.3",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "HIPAA-164.308(a)(6)",
+          "framework_id": "hipaa-security-rule",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "data_store", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-INCIDENTHANDLING-001",
+      "title": "Incidents triaged, contained, and closed",
+      "risk_domain": "incident-response",
+      "objective": "Declare incidents against defined criteria, then triage, categorize, escalate, contain, eradicate, and close them with root cause, preserved evidence, and lessons learned.",
+      "evidence_requirement": "Derived from `siem-alerts` incident signals joined to `ticketing` or `jira-ticketing` incident records. An incident without an owner, past its triage or containment SLA, or closed without root cause is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "detection-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-RS.MA-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.MA-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-DE.AE-08",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, DE.AE-08"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.MA-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.MA-02"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.MA-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.MA-03"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.MA-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.MA-04"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.MI-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.MI-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.MI-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.MI-02"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.AN-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.AN-03"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.AN-06",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.AN-06"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.AN-07",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.AN-07"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.AN-08",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.AN-08"
+          }
+        },
+        {
+          "control_id": "ISO27001-A.5.25",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.5.26",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.5.27",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.5.28",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.6.8",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-CC7.4",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-4.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-4.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-5",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-7",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-7",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-7.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-7.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.6.1",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-INCIDENTNOTIFICATION-001",
+      "title": "Incident and breach notification within deadlines",
+      "risk_domain": "incident-response",
+      "objective": "Notify authorities, customers, affected individuals, and upstream suppliers of reportable incidents and personal-data breaches within legal and contractual deadlines, and keep a record of every notification decision.",
+      "evidence_requirement": "Derived from `ticketing` or `jira-ticketing` incident records carrying the notification decision, the deadline, and the sent timestamp. A reportable incident past its notification deadline without a recorded notification is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "privacy-office",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "GDPR-Art.33",
+          "framework_id": "gdpr-2016-679",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.34",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-RS.CO-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.CO-02"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RS.CO-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RS.CO-03"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RC.CO-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RC.CO-03"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-RC.CO-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, RC.CO-04"
+          }
+        },
+        {
+          "control_id": "FEDRAMP-IR-6",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-6",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-6.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-6.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-IR-6.3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-IR-6.3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.6.2",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P6.4",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.5.5",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27017-6.1.3",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-8.4",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "container_image",
+        "data_store",
+        "host",
+        "identity_user",
+        "repo",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-DATASUBJECTRIGHTS-001",
+      "title": "Data subject requests fulfilled on time",
+      "risk_domain": "privacy",
+      "objective": "Receive, verify, and fulfil data subject access, correction, and erasure requests within statutory deadlines, and record the outcome of each request.",
+      "evidence_requirement": "Derived from `ticketing` or `jira-ticketing` request records carrying the request type, received date, statutory deadline, and closure. A request open past its deadline is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "privacy-office",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "GDPR-Art.15",
+          "framework_id": "gdpr-2016-679",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.17",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P5.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P5.2",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P7.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "data_store", "identity_user", "service"]
+    },
+    {
+      "safeguard_id": "SG-PRIVACYNOTICE-001",
+      "title": "Privacy notices and consent records",
+      "risk_domain": "privacy",
+      "objective": "Publish privacy notices at collection and on change, and obtain and record valid consent wherever consent is the basis for processing.",
+      "evidence_requirement": "Attested evidence: the current published privacy notices with version history and change notifications, plus consent records showing what was consented to, when, and how withdrawal is honoured.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "privacy-office",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "GDPR-Art.13",
+          "framework_id": "gdpr-2016-679",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.12",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.14",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.7",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P1.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P2.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P6.3",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PT-4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PT-5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-20",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "data_store", "identity_user", "service"]
+    },
+    {
+      "safeguard_id": "SG-PROCESSINGRECORDS-001",
+      "title": "Records of processing and lawful basis",
+      "risk_domain": "privacy",
+      "objective": "Maintain records of processing activities that state each purpose, lawful basis, data categories, recipients, and retention, and limit collection and use of personal information to those stated purposes.",
+      "evidence_requirement": "Attested evidence: the current records of processing activities list, per processing activity, purpose, lawful basis or authority, data categories, recipients, and retention, with the date of last review.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "privacy-office",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "GDPR-Art.30",
+          "framework_id": "gdpr-2016-679",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.6",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P3.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P4.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PT-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PT-3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "audit_log",
+        "data_store",
+        "identity_user",
+        "repo",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-CROSSBORDERTRANSFER-001",
+      "title": "Cross-border transfer safeguards",
+      "risk_domain": "privacy",
+      "objective": "Transfer personal data across borders only under a documented mechanism, such as an adequacy decision, standard contractual clauses, or binding corporate rules.",
+      "evidence_requirement": "Attested evidence: a transfer register lists each cross-border flow with destination, recipient, and the transfer mechanism and its signed instrument or adequacy reference.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "privacy-office",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "GDPR-Art.44",
+          "framework_id": "gdpr-2016-679",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.45",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.46",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-P6.5",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "data_store", "identity_user", "service"]
+    },
+    {
+      "safeguard_id": "SG-VULNSCANNING-001",
+      "title": "Vulnerability scanning coverage and cadence",
+      "risk_domain": "vulnerability-management",
+      "objective": "Scan systems, code dependencies, and images for vulnerabilities on a defined cadence and when new vulnerabilities are announced, and accept externally reported vulnerabilities through a disclosure channel.",
+      "evidence_requirement": "Derived from `github-security` or `gitlab-security` dependency and code-scanning results with their last-scan times. A repository or asset without a scan inside the cadence is stale evidence.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "security-platform",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-ID.RA-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.RA-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-ID.RA-08",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.RA-08"
+          }
+        },
+        {
+          "control_id": "CIS-CONTROLS-7",
+          "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.8",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-RA-5",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-RA-5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-RA-5.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-RA-5.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-RA-5.11",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-RA-5.11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.11.2",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "PCI-DSS-11",
+          "framework_id": "pci-dss-v4",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "container_image",
+        "host",
+        "repo",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-VULNREMEDIATION-001",
+      "title": "Vulnerabilities remediated within severity SLAs",
+      "risk_domain": "vulnerability-management",
+      "objective": "Remediate identified vulnerabilities and flaws within severity-based deadlines, or record a time-bound, approved exception.",
+      "evidence_requirement": "Derived from `github-security` or `gitlab-security` alert ages and `ticketing` or `jira-ticketing` remediation SLAs and exceptions. An alert open past its severity SLA without an approved exception is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "security-platform",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-SI-2",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SI-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SI-2.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SI-2.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.11.3",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.14.1",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-CC7.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-PR.PS-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, PR.PS-02"
+          }
+        }
+      ],
+      "asset_types": [
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "host",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-CHANGEAPPROVAL-001",
+      "title": "Changes reviewed, impact-assessed, and approved",
+      "risk_domain": "change-management",
+      "objective": "Review, assess the security impact of, test, and approve every change to production systems before it is deployed, and verify affected controls afterwards.",
+      "evidence_requirement": "Derived from `github-security` or `gitlab-security` repository and branch-protection settings; impact-analysis, test, and post-change verification records are attested in the change record. A production branch that allows merging without an approving review is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "SOC2-CC8.1",
+          "framework_id": "soc2",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CM-3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CM-3.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-3.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CM-3.4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-3.4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CM-4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CM-4.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-4.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.32",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27017-12.1.2",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.4.3",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.4.4",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-ID.RA-07",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.RA-07"
+          }
+        }
+      ],
+      "asset_types": [
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "container_image",
+        "host",
+        "repo",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-CHANGESEGREGATION-001",
+      "title": "Change access restricted and environments separated",
+      "risk_domain": "change-management",
+      "objective": "Restrict who can change production systems and source code, keep the author of a change from approving it, and separate development, test, and production environments.",
+      "evidence_requirement": "Derived from `github-security` or `gitlab-security` repository permissions and branch-protection settings. Direct pushes to a protected production branch, or self-approval of a change, are open violations.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-CM-5",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.4.5",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.31",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.4",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["cloud_policy", "cloud_resource", "service"]
+    },
+    {
+      "safeguard_id": "SG-CODESCANNING-001",
+      "title": "Static, secret, and dependency scanning in CI",
+      "risk_domain": "secure-development",
+      "objective": "Run static analysis, secret scanning, and dependency scanning on application code during development, and resolve findings before release.",
+      "evidence_requirement": "Derived from `github-security` or `gitlab-security` code-scanning, secret-scanning, and dependency summaries. A repository without scanning enabled, or with an unresolved critical secret or code-scanning finding, is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-SA-11",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SA-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SA-11.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.28",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.29",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CIS-CONTROLS-16",
+          "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "PCI-DSS-6",
+          "framework_id": "pci-dss-v4",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-PR.PS-06",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, PR.PS-06"
+          }
+        }
+      ],
+      "asset_types": [
+        "cloud_policy",
+        "cloud_resource",
+        "container_image",
+        "repo",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-SECURESDLC-001",
+      "title": "Secure development life cycle",
+      "risk_domain": "secure-development",
+      "objective": "Define a secure development life cycle with security and privacy requirements, design review, and development standards, applied to in-house and outsourced development.",
+      "evidence_requirement": "Attested evidence: the approved secure development standard, and for each in-scope application the recorded security and privacy requirements and design review, including requirements placed on outsourced developers.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-SA-3",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SA-3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SA-15",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SA-15",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.25",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.26",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.30",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.25",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "cloud_policy",
+        "cloud_resource",
+        "container_image",
+        "data_store",
+        "s3_bucket",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-CONFIGBASELINE-001",
+      "title": "Hardened configuration baselines",
+      "risk_domain": "configuration-management",
+      "objective": "Define and apply hardened configuration baselines and security settings for cloud accounts, hosts, images, and software, with stricter settings for high-risk areas.",
+      "evidence_requirement": "Derived from `aws-posture`, `azure-posture`, or `gcp-posture` configuration findings measured against the defined baseline. A resource that fails a baseline setting without an approved exception is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-CM-2",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CM-6",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-6",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.9",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CIS-CONTROLS-4",
+          "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "PCI-DSS-2",
+          "framework_id": "pci-dss-v4",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-PR.PS-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, PR.PS-01"
+          }
+        },
+        {
+          "control_id": "CMMC-3.4.1",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.4.2",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27017-CLD.9.5.2",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["cloud_policy", "cloud_resource", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-CONFIGDRIFT-001",
+      "title": "Configuration drift detected and corrected",
+      "risk_domain": "configuration-management",
+      "objective": "Record configuration state continuously, detect drift from the approved baseline, and correct or approve each drift.",
+      "evidence_requirement": "Derived from configuration-recorder or policy-compliance results imported through `object-storage-evidence`. A region without a configuration recorder, or unapproved drift left open, is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-CM-2.2",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-2.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CM-6.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CIS-AWS-3.3",
+          "framework_id": "cis_aws",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "cloud_policy",
+        "cloud_resource",
+        "iam_role",
+        "identity_account",
+        "s3_bucket",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-ARCHITECTUREREVIEW-001",
+      "title": "Security architecture documented and reviewed",
+      "risk_domain": "secure-architecture",
+      "objective": "Document the security and privacy architecture of each system and its place in the enterprise architecture, and review it when the system changes significantly.",
+      "evidence_requirement": "Attested evidence: the current architecture description for each in-scope system, showing trust boundaries, data flows, and security mechanisms, with its last review date.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-PL-8",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PL-8",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SA-17",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-7",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.27",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-P-16",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-16"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "cloud_policy", "cloud_resource", "service"]
+    },
+    {
+      "safeguard_id": "SG-INPUTVALIDATION-001",
+      "title": "Input validation and error handling",
+      "risk_domain": "processing-integrity",
+      "objective": "Validate system inputs for completeness, accuracy, and authorization, and handle errors without exposing sensitive information.",
+      "evidence_requirement": "Attested evidence: validation rules for each in-scope input path and the error-handling standard, with test results showing rejected malformed input and generic error responses.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-SI-10",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SI-10",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SI-11",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SI-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-PI1.2",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "data_store", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-INTEGRITYVERIFICATION-001",
+      "title": "Software and data integrity verification",
+      "risk_domain": "processing-integrity",
+      "objective": "Verify the integrity of software, firmware, and stored information with checksums or signatures, and assess the authenticity of acquired software before use.",
+      "evidence_requirement": "Attested evidence or signed provenance imported through `object-storage-evidence`: integrity-check results for in-scope software and data stores. A failed or missing integrity check is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "security-platform",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-SI-7",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SI-7",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SI-7.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SI-7.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-PI1.5",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-ID.RA-09",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.RA-09"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "data_store", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-SECURITYCATEGORIZATION-001",
+      "title": "Security categorization and criticality",
+      "risk_domain": "risk-management",
+      "objective": "Categorize each system by the impact of loss of confidentiality, integrity, and availability, analyze its critical components, have the categorization approved, and prioritize systems of the same impact level.",
+      "evidence_requirement": "Attested evidence: the approved security categorization for each in-scope system, with the information types considered, the resulting impact level, critical components, and the approving official.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "risk-owner",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-RA-2",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-RA-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-RA-9",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-RA-9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-ID.AM-05",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.AM-05"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-C-2",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.2 (Categorize), Task C-2"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-C-3",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.2 (Categorize), Task C-3"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-6",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-6"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "cloud_policy", "cloud_resource", "service"]
+    },
+    {
+      "safeguard_id": "SG-SYSTEMCHARACTERIZATION-001",
+      "title": "System boundary and characterization",
+      "risk_domain": "risk-management",
+      "objective": "Document each system's missions and business functions, stakeholders, authorization boundary, assets requiring protection, information types and their life cycle, and register the system with the program office.",
+      "evidence_requirement": "Attested evidence: the system description records the supported missions, stakeholders, boundary, protected assets, information types and life cycle, and the system's registration in the organizational inventory.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "risk-owner",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-RMF-C-1",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.2 (Categorize), Task C-1"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-8",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-8"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-9",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-9"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-10",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-10"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-11",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-11"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-12",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-12"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-13",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-13"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-18",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-18"
+          }
+        },
+        {
+          "control_id": "NIST-800-53-PM-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-GV.OC-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.OC-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.OC-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.OC-02"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "service"]
+    },
+    {
+      "safeguard_id": "SG-CONTINUOUSMONITORING-001",
+      "title": "Continuous monitoring strategy",
+      "risk_domain": "risk-management",
+      "objective": "Define organization-wide and system-level strategies for monitoring control effectiveness and changes to systems and their environment, and run monitoring at the defined frequencies.",
+      "evidence_requirement": "Attested evidence: the continuous monitoring strategy sets the metrics, frequencies, and responsible roles; `managed-local-evidence` control-posture snapshots show monitoring ran at those frequencies. A control not assessed within its frequency is stale evidence.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "risk-owner",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-CA-7",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CA-7",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-31",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.12.3",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-P-7",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-7"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-S-5",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.3 (Select), Task S-5"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-M-1",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.7 (Monitor), Task M-1"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-M-2",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.7 (Monitor), Task M-2"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-CONTROLASSESSMENT-001",
+      "title": "Independent control assessment",
+      "risk_domain": "risk-management",
+      "objective": "Assess controls with an appropriately independent assessor against an approved assessment plan, and report the findings and recommendations.",
+      "evidence_requirement": "Attested evidence: the approved assessment plan, the assessor's independence statement, and the latest assessment report with findings. No assessment within the defined cycle is stale evidence.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-CA-2.1",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CA-2.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-CA-7.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CA-7.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.5.35",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "HIPAA-164.308(a)(8)",
+          "framework_id": "hipaa-security-rule",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-CC4.1",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-A-3",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.5 (Assess), Task A-3"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-A-1",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.5 (Assess), Task A-1"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-A-2",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.5 (Assess), Task A-2"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-A-4",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.5 (Assess), Task A-4"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "service"]
+    },
+    {
+      "safeguard_id": "SG-POAM-001",
+      "title": "Plan of action and milestones tracked to closure",
+      "risk_domain": "risk-management",
+      "objective": "Record every control deficiency in a plan of action and milestones with an owner and due date, communicate it to those responsible, remediate and reassess, and keep the plan current with monitoring results.",
+      "evidence_requirement": "Derived from `ticketing` or `jira-ticketing` deficiency items carrying owner, milestone, and due date. A deficiency past its milestone without an approved extension is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-CA-5",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-CA-5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.12.2",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "SOC2-CC4.2",
+          "framework_id": "soc2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-RMF-A-6",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.5 (Assess), Task A-6"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-A-5",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.5 (Assess), Task A-5"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-M-3",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.7 (Monitor), Task M-3"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-M-4",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.7 (Monitor), Task M-4"
+          }
+        }
+      ],
+      "asset_types": ["audit_log", "host", "service"]
+    },
+    {
+      "safeguard_id": "SG-SUPPLYCHAINPROGRAM-001",
+      "title": "Supply chain risk management program",
+      "risk_domain": "third-party-risk",
+      "objective": "Establish a supply chain risk management strategy, plan, team, and processes integrated with enterprise risk management, including supplier notification agreements and provisions for the end of a relationship.",
+      "evidence_requirement": "Attested evidence: the approved supply chain risk management strategy and plan, the named team, and the standard supplier contract clauses for notification and offboarding.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "annually",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-GV.SC-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.SC-01"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.SC-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.SC-03"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.SC-09",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.SC-09"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-GV.SC-10",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.SC-10"
+          }
+        },
+        {
+          "control_id": "FEDRAMP-SR-2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SR-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SR-2.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SR-2.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SR-3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SR-3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SR-8",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SR-8",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-PM-30",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["audit_log", "data_store", "service"]
+    },
+    {
+      "safeguard_id": "SG-SUPPLIERINVENTORY-001",
+      "title": "Supplier inventory and criticality tiers",
+      "risk_domain": "third-party-risk",
+      "objective": "Keep an inventory of suppliers and the services they provide, and tier each supplier by criticality so assessment depth follows risk.",
+      "evidence_requirement": "Attested evidence: the supplier inventory lists each supplier, the services and data it handles, its criticality tier, and the owner, with the date of last reconciliation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "grc",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-GV.SC-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, GV.SC-04"
+          }
+        },
+        {
+          "control_id": "NIST-CSF-ID.AM-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, ID.AM-04"
+          }
+        }
+      ],
+      "asset_types": ["cloud_policy", "cloud_resource", "data_store", "service"]
+    },
+    {
+      "safeguard_id": "SG-NONLOCALMAINTENANCE-001",
+      "title": "Remote maintenance sessions authorized and strongly authenticated",
+      "risk_domain": "system-maintenance",
+      "objective": "Authorize, monitor, and log nonlocal maintenance and diagnostic sessions, require multifactor authentication to establish them, and terminate them when maintenance ends.",
+      "evidence_requirement": "Derived from `okta-system-log` or `identity-provider` session and MFA evidence for administrative access paths. A maintenance session established without MFA is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-MA-4",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-MA-4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "CMMC-3.7.5",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "cloud_policy",
+        "cloud_resource",
+        "container_image",
+        "repo",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-TIMELYMAINTENANCE-001",
+      "title": "Timely maintenance and end-of-life replacement",
+      "risk_domain": "system-maintenance",
+      "objective": "Keep systems and components under timely maintenance and support, apply vendor maintenance updates, and replace or isolate components that are no longer supported.",
+      "evidence_requirement": "Attested evidence of maintenance and support status per component; for managed databases, `aws-posture` configuration shows automatic minor version upgrades. An unsupported component in production without an approved exception is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "FEDRAMP-MA-6",
+          "framework_id": "fedramp-moderate",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-MA-6",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "FEDRAMP-SA-22",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-53-SA-22",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.7.13",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-PR.PS-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, PR.PS-03"
+          }
+        },
+        {
+          "control_id": "CIS-AWS-2.3.2",
+          "framework_id": "cis_aws",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "cloud_policy",
+        "cloud_resource",
+        "container_image",
+        "iam_role",
+        "identity_account",
+        "repo",
+        "s3_bucket",
+        "service"
+      ]
     }
   ]
 }

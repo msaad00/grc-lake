@@ -31,6 +31,13 @@ export const CONNECTOR_VISUALS: Record<string, ConnectorVisual> = {
     bg: "#ecfeff",
     categoryLabel: "Data warehouse",
   },
+  "bigquery-evidence-lake": {
+    vendor: "Google BigQuery",
+    mark: "BQ",
+    accent: "#4285F4",
+    bg: "#eef4ff",
+    categoryLabel: "Data warehouse",
+  },
   "iceberg-parquet-lake": {
     vendor: "Apache Iceberg",
     mark: "ICE",

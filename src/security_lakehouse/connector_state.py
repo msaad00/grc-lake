@@ -528,6 +528,10 @@ def _missing_required_config(
             missing.append("credential_ref")
         return missing
 
+    if connector_id == "bigquery-evidence-lake":
+        missing = [] if _has_value(credentials, "project_id") else ["project_id"]
+        return missing if _has_mapping(options) else [*missing, "mapping"]
+
     if connector_id == "iceberg-parquet-lake":
         return _iceberg_missing_config(credentials, options)
 

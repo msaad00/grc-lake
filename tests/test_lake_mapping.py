@@ -244,8 +244,8 @@ def test_bigquery_compile_allows_project_hyphen_and_uses_at_params() -> None:
     spec = parse_mapping(_spec(source={"table": "my-proj.security.okta_events"}))
     query = compile_select(spec, "bigquery", since="2026-08-30T10:00:00Z", limit=5)
     assert "FROM `my-proj`.`security`.`okta_events`" in query.sql
-    assert "`published` >= TIMESTAMP(@since)" in query.sql
-    assert query.bigquery_parameters() == [("since", "STRING", "2026-08-30T10:00:00Z")]
+    assert "`published` >= @since" in query.sql
+    assert query.bigquery_parameters() == [("since", "TIMESTAMP", datetime(2026, 8, 30, 10, tzinfo=UTC))]
 
 
 def test_hyphenated_table_is_rejected_outside_bigquery_project_position() -> None:

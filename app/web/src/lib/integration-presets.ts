@@ -209,6 +209,23 @@ const PRESETS: Record<string, IntegrationPreset> = {
       "OAuth tokens last one hour and are minted per sync; nothing is written to the workspace.",
     ],
   },
+  "bigquery-evidence-lake": {
+    connectorId: "bigquery-evidence-lake",
+    title: "BigQuery evidence lake (preview)",
+    authLabel: "Workload identity / ADC",
+    badges: ["Read-only queries", "Bytes-billed cap"],
+    summary:
+      "Read security tables you already keep in BigQuery. Grant the runtime identity BigQuery Job User on the query project and Data Viewer on the dataset, then supply a mapping through the API or CLI.",
+    providerSetup:
+      "Attach a service account (or workload identity) with roles/bigquery.jobUser on the query project and roles/bigquery.dataViewer on the source dataset.",
+    trustOpsInput:
+      "Query project ID, optional default dataset and location, and a mapping (a preset such as ocsf/api_activity or your own spec).",
+    advancedTitle: "How reads work",
+    advancedDetails: [
+      "Each mapping runs one parameterized SELECT; values are bound as query parameters.",
+      "Every query sets maximum_bytes_billed, so an oversized scan fails instead of running.",
+    ],
+  },
   "iceberg-parquet-lake": {
     connectorId: "iceberg-parquet-lake",
     title: "Iceberg / Parquet lake (preview)",

@@ -169,7 +169,7 @@ class MapResult:
 class QueryParam:
     name: str
     value: Any
-    kind: str  # "string" | "int" | "bool"
+    kind: str  # "string" | "int" | "bool" | "timestamp" (BigQuery watermark only)
 
 
 @dataclass(frozen=True)
@@ -192,7 +192,7 @@ class CompiledQuery:
         return {p.name: _param_text(p.value) for p in self.bound}
 
     def bigquery_parameters(self) -> list[tuple[str, str, Any]]:
-        types = {"string": "STRING", "int": "INT64", "bool": "BOOL"}
+        types = {"string": "STRING", "int": "INT64", "bool": "BOOL", "timestamp": "TIMESTAMP"}
         return [(p.name, types[p.kind], p.value) for p in self.bound]
 
 
@@ -1032,6 +1032,9 @@ def compile_select(
     lower = lower_bound(spec, since)
     if lower is not None:
         bound_param = watermark_param(spec, lower)
+        if dialect == "bigquery" and bound_param.kind == "string":
+            # A typed TIMESTAMP parameter needs no string parsing on the server.
+            bound_param = QueryParam("since", lower, "timestamp")
         bound.append(bound_param)
         conditions.append(f"{observed} >= {_watermark_expr(dialect, bound_param, spec.observed_format)}")
 
@@ -1063,7 +1066,7 @@ def _watermark_expr(dialect: str, param: QueryParam, fmt: str) -> str:
         "snowflake": f"TO_TIMESTAMP_TZ({marker})",
         "databricks": f"CAST({marker} AS TIMESTAMP)",
         "clickhouse": f"parseDateTime64BestEffort({marker})",
-        "bigquery": f"TIMESTAMP({marker})",
+        "bigquery": marker,
     }[dialect]
 
 

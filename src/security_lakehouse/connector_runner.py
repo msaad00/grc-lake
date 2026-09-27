@@ -40,6 +40,11 @@ from security_lakehouse.connectors_bamboohr import (
     BambooHRFixtureClient,
     collect_bamboohr_evidence,
 )
+from security_lakehouse.connectors_bigquery import (
+    BigQueryFixtureClient,
+    client_from_config,
+    collect_bigquery_evidence,
+)
 from security_lakehouse.connectors_clickhouse import (
     DEFAULT_DATABASE as CLICKHOUSE_DEFAULT_DATABASE,
 )
@@ -737,6 +742,18 @@ def _build_iceberg(inputs: SyncInputs) -> list[dict[str, Any]]:
     return collect_iceberg_evidence(reader, specs, since=inputs.since, max_rows=_max_rows_per_sync(inputs.options))
 
 
+def _build_bigquery(inputs: SyncInputs) -> list[dict[str, Any]]:
+    specs = resolve_mappings(inputs.options)
+    if not specs:
+        raise ValueError("bigquery-evidence-lake needs options.mapping or options.mappings")
+    client: Any = (
+        BigQueryFixtureClient(inputs.fixture_dir)
+        if inputs.fixture_dir
+        else client_from_config(inputs.credentials, inputs.options)
+    )
+    return collect_bigquery_evidence(client, specs, since=inputs.since, max_rows=_max_rows_per_sync(inputs.options))
+
+
 REGISTRY: dict[str, ConnectorBuilder] = {
     "snowflake-evidence-lake": _build_snowflake,
     "clickhouse-telemetry-lake": _build_clickhouse,
@@ -762,6 +779,7 @@ REGISTRY: dict[str, ConnectorBuilder] = {
     "kubernetes-cluster": _build_kubernetes,
     "knowbe4-training": _build_knowbe4,
     "iceberg-parquet-lake": _build_iceberg,
+    "bigquery-evidence-lake": _build_bigquery,
 }
 
 

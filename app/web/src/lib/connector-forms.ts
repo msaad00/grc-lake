@@ -31,6 +31,26 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         hint: "Environment variable name holding the read-only token.",
       },
     ],
+    "bigquery-evidence-lake": [
+      {
+        name: "project_id",
+        label: "Query project ID",
+        placeholder: "acme-security-prod",
+        required: true,
+        hint: "Project that runs the read-only queries; credentials come from workload identity or ADC.",
+      },
+      {
+        name: "dataset",
+        label: "Default dataset (optional)",
+        placeholder: "security_lake",
+        hint: "Qualifies one-part table names in mappings.",
+      },
+      {
+        name: "location",
+        label: "Location (optional)",
+        placeholder: "US",
+      },
+    ],
     "iceberg-parquet-lake": [
       {
         name: "catalog_type",
@@ -528,6 +548,14 @@ export const CONNECTOR_SCOPE_FIELDS: Record<string, ConnectorFieldDef[]> = {
       label: "GitLab API URL (optional)",
       placeholder: "https://gitlab.com/api/v4",
       hint: "Self-managed GitLab base API URL; defaults to gitlab.com.",
+    },
+  ],
+  "bigquery-evidence-lake": [
+    {
+      name: "maximum_bytes_billed",
+      label: "Max bytes billed per query",
+      placeholder: "10737418240",
+      hint: "Queries that would scan more fail instead of running; defaults to 10 GiB.",
     },
   ],
   "iceberg-parquet-lake": [

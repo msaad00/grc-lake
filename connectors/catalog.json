@@ -676,6 +676,30 @@
       "vendor": "Apache Iceberg / Parquet",
       "description": "Read-only, incremental reads of Iceberg tables (AWS Glue or Iceberg REST catalogs) and Parquet datasets through lake mappings; defaults to the OCSF presets for Amazon Security Lake.",
       "setup_hint": "Read-only IAM role (or Security Lake subscriber with data access) for Glue + S3, or a short-lived REST catalog bearer token reference."
+    },
+    {
+      "connector_id": "bigquery-evidence-lake",
+      "name": "BigQuery Evidence Lake",
+      "category": "warehouse",
+      "collection_mode": "existing_lake_read",
+      "access_boundary": "read_only_role",
+      "credential_type": "gcp_application_default_credentials",
+      "minimum_permissions": [
+        "roles/bigquery.jobUser on the project that runs the queries",
+        "roles/bigquery.dataViewer on the source dataset or tables"
+      ],
+      "evidence_types": ["security_event", "finding", "audit_event"],
+      "default_route": "dual",
+      "freshness_slo_minutes": 60,
+      "is_implemented": true,
+      "production_status": "supported_connector",
+      "release_stage": "preview",
+      "velocity": "medium_api",
+      "native_connector": false,
+      "data_shape": "event_log",
+      "vendor": "Google BigQuery",
+      "description": "Read-only, parameterized SELECTs over existing BigQuery tables through lake mappings, with a per-query bytes-billed cap.",
+      "setup_hint": "Workload identity or an attached service account with BigQuery Job User on the query project and Data Viewer on the dataset."
     }
   ]
 }

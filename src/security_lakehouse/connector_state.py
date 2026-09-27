@@ -285,6 +285,19 @@ def configure_payload_error(
     )
     if missing:
         return "missing required connector configuration: " + ", ".join(missing)
+    return _mapping_error(opts)
+
+
+def _mapping_error(options: dict[str, Any]) -> str | None:
+    """Validate ``options.mapping``/``options.mappings`` so a bad spec is rejected before it is stored."""
+    if options.get("mapping") in (None, "", {}) and options.get("mappings") in (None, "", []):
+        return None
+    from security_lakehouse.lake_mapping import MappingError, write_mode_for_options  # noqa: PLC0415
+
+    try:
+        write_mode_for_options(options)
+    except MappingError as exc:
+        return str(exc)
     return None
 
 

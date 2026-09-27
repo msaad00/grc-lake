@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.io import read_json
+from security_lakehouse.lake_mapping import MappingSpec, compile_select, json_safe_row, read_fixture_table
 from security_lakehouse.models import utc_iso
 
 CONNECTOR_ID = "snowflake-evidence-lake"
@@ -133,6 +134,18 @@ class SnowflakeClient:
             finally:
                 cursor.close()
 
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        """Read a customer table through a mapping spec; values are bound client-side by the driver."""
+        query = compile_select(spec, "snowflake", since=since, limit=limit)
+        with self._connector.connect(**self.query_params) as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(query.sql, query.params)
+                names = [str(col[0]) for col in cursor.description or []]
+                return [json_safe_row(dict(zip(names, row, strict=False))) for row in cursor.fetchall()]
+            finally:
+                cursor.close()
+
     def _select_view(self, key: str) -> list[dict[str, Any]]:
         view = _safe_identifier(self.views[key])
         with self._connector.connect(**self.query_params) as conn:  # pragma: no cover - live Snowflake only
@@ -166,6 +179,10 @@ class SnowflakeFixtureClient:
 
     def evidence_bundles(self) -> list[dict[str, Any]]:
         return self._read_list("evidence_bundles.json")
+
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        _ = since, limit  # fixtures return the whole table; map_rows applies the same bound
+        return read_fixture_table(self.fixture, spec.source_table)
 
     def _read_list(self, name: str) -> list[dict[str, Any]]:
         path = self.fixture / name

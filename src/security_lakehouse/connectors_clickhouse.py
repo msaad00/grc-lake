@@ -19,6 +19,7 @@ from typing import Any
 from security_lakehouse import netguard
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json
+from security_lakehouse.lake_mapping import MappingSpec, compile_select, read_fixture_table
 from security_lakehouse.models import parse_event_time, utc_iso
 
 CONNECTOR_ID = "clickhouse-telemetry-lake"
@@ -103,6 +104,13 @@ class ClickHouseClient:
                 # Cannot form a safe cursor — stop rather than risk a loop or dupes.
                 break
         return rows
+
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        """Read a customer table through a mapping spec with typed ``{name:Type}`` parameters."""
+        query = compile_select(
+            spec, "clickhouse", since=since, limit=limit, default_namespace=(safe_identifier(self.database),)
+        )
+        return self._query_json_each_row(query.sql, params=query.clickhouse_parameters())
 
     def show_tables(self) -> list[str]:
         rows = self._query_json_each_row(f"SHOW TABLES FROM {safe_identifier(self.database)} FORMAT JSONEachRow")
@@ -198,6 +206,10 @@ class ClickHouseFixtureClient:
         if not since:
             return rows
         return [row for row in rows if str(row.get("event_time") or "") > since]
+
+    def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        _ = since, limit  # fixtures return the whole table; map_rows applies the same bound
+        return read_fixture_table(self.fixture, spec.source_table)
 
     def show_tables(self) -> list[str]:
         return [path.stem for path in self.fixture.glob("*.json")]

@@ -9402,6 +9402,156 @@
       ]
     },
     {
+      "control_id": "ISO27701-A.1.2.8",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.1.2.8",
+          "title": "Joint PII controller",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.1.4.7",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.1.4.7",
+          "title": "Temporary files",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.1.5.2",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.1.5.2",
+          "title": "Identify basis for PII transfer between jurisdictions",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.1.5.5",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.1.5.5",
+          "title": "Records of PII disclosure to third parties",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.2.2.5",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.2.2.5",
+          "title": "Infringing instruction",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.2.4.2",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.2.4.2",
+          "title": "Temporary files",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.2.5.2",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.2.5.2",
+          "title": "Basis for PII transfer between jurisdictions",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.2.5.4",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.2.5.4",
+          "title": "Records of PII disclosure to third parties",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.2.5.7",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.2.5.7",
+          "title": "Disclosure of subcontractors used to process PII",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
+      "control_id": "ISO27701-A.2.5.9",
+      "framework_id": "iso-27701-2025",
+      "articles": [
+        {
+          "article_id": "A.2.5.9",
+          "title": "Change of subcontractor to process PII",
+          "official_source_url": "https://www.iso.org/standard/27701",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-27",
+          "rationale": "Annex A identifier and short title agree across BSI and Schellman; source verification does not attest equivalence."
+        }
+      ]
+    },
+    {
       "control_id": "ISO42001-10.2",
       "framework_id": "iso-42001-2023",
       "articles": [

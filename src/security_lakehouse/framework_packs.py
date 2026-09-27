@@ -603,6 +603,7 @@ def pack_control_row(spec: PackControlSpec) -> JsonObject:
         "signal_source": "silver/normalized_events.jsonl",
         "asset_types": list(spec.asset_types),
         **({"nist_baselines": list(spec.baselines)} if spec.framework_id == "nist-800-53-rev5" else {}),
+        **({"required_evidence_types": list(spec.required_evidence_types)} if spec.required_evidence_types else {}),
     }
 
 

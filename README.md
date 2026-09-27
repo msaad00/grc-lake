@@ -101,9 +101,9 @@ Models may summarize or propose actions; deterministic rules decide control resu
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**16 framework packs · 78 reusable safeguards · 21 control families · 2,021 catalogued requirements.**
+**17 framework packs · 78 reusable safeguards · 21 control families · 2,031 catalogued requirements.**
 
-1,174 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
+1,182 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 
 Control families: Identity and access · Data protection · Detection · Audit logging · Change management · Configuration management · Secure development · Secure architecture · Vulnerability management · Third-party risk · Risk management · Availability and recovery · Incident response · Governance · People security · Physical security · Network security · System maintenance · Processing integrity · Privacy · AI governance.
 
@@ -112,7 +112,7 @@ Control families: Identity and access · Data protection · Detection · Audit l
 <table>
 <tr>
 <td align="center"><img src="app/web/public/frameworks/badges/soc2.svg" width="38" alt="SOC 2"><br><strong>SOC 2</strong></td>
-<td align="center"><img src="app/web/public/frameworks/badges/iso.svg" width="38" alt="ISO framework family"><br><strong>ISO 27001 · 27017 · 42001</strong></td>
+<td align="center"><img src="app/web/public/frameworks/badges/iso.svg" width="38" alt="ISO framework family"><br><strong>ISO 27001 · 27017 · 27701 · 42001</strong></td>
 <td align="center"><img src="app/web/public/frameworks/badges/nist-csf.svg" width="38" alt="NIST CSF"><br><strong>NIST CSF 2.0</strong></td>
 <td align="center"><img src="app/web/public/frameworks/badges/nist-ai-rmf.svg" width="38" alt="NIST AI RMF"><br><strong>NIST AI RMF</strong></td>
 </tr>
@@ -128,7 +128,8 @@ Framework identities show catalog scope. A pack may be a limited mapping;
 see the [coverage matrix](docs/FRAMEWORK_COVERAGE.md) for the exact boundary.
 **NIST RMF (SP 800-37 Rev. 2) is catalogued but not yet mapped** to safeguards, and
 the **PCI DSS v4.0.1 pack covers its 12 principal requirements**, not every
-sub-requirement. **SOC 1 and ISO 27701 are planned**, with no catalogued controls yet.
+sub-requirement. **ISO/IEC 27701:2025 seeds 10 of its 78 Annex A controls** (those two
+independent non-vendor sources verify). **SOC 1 is planned**, with no catalogued controls yet.
 
 | CCF layer              | What it represents                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------ |

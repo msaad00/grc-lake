@@ -5,10 +5,10 @@ Regenerate with `make coverage-doc`. `Attestable` is the auditor-defensible
 coverage (reviewed safeguard mappings); the gap to `Evaluatable` is the
 review backlog.
 
-Frameworks: 18 (16 implemented, 2 planned)
-Requirements catalogued: 2021 (all source-cited)
-Evaluatable (touched by a safeguard): 1174 (58.1%)
-**Attestable (reviewed safeguard mapping — what an auditor accepts): 350 (17.3%)**
+Frameworks: 19 (17 implemented, 2 planned)
+Requirements catalogued: 2031 (all source-cited)
+Evaluatable (touched by a safeguard): 1182 (58.2%)
+**Attestable (reviewed safeguard mapping — what an auditor accepts): 350 (17.2%)**
 Asset types modeled: 20
 
 > `Source-cited` = the requirement has an official source link (always 100%). `Evaluatable` = a safeguard claims it (reviewed or proposed). `Attestable` = a human has confirmed the safeguard→requirement mapping — the only coverage an audit accepts. The gap between Evaluatable and Attestable is the review backlog.
@@ -25,6 +25,7 @@ Asset types modeled: 20
 | ISO/IEC 27001:2022 Information security management systems | [ISO/IEC 27001:2022](https://www.iso.org/standard/27001) | implemented_full_pack | 93 | 93 | 81 | 10 | 10.8% | never pulled |
 | ISO/IEC 27017:2015 Cloud security controls | [ISO/IEC 27017:2015](https://www.iso.org/standard/43757.html) | implemented_full_pack | 47 | 47 | 44 | 18 | 38.3% | never pulled |
 | ISO/IEC 27701:2019 Privacy information management | [ISO/IEC 27701:2019](https://www.iso.org/standard/71670.html) | planned | 0 | 0 | 0 | 0 | 0.0% | never pulled |
+| ISO/IEC 27701:2025 Privacy information management | [ISO/IEC 27701:2025](https://www.iso.org/standard/27701) | implemented_limited_mapping | 10 | 10 | 8 | 0 | 0.0% | fresh |
 | ISO/IEC 42001:2023 AI management system | [ISO/IEC 42001:2023](https://www.iso.org/standard/42001) | implemented_full_pack | 39 | 39 | 26 | 9 | 23.1% | never pulled |
 | NIST SP 800-53 Rev 5 Security and Privacy Controls | [NIST SP 800-53 Rev 5 (OSCAL catalog, usnistgov/oscal-content)](https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final) | implemented_limited_mapping | 1014 | 1014 | 285 | 96 | 9.5% | fresh |
 | NIST AI Risk Management Framework | [NIST Artificial Intelligence Risk Management Framework (AI RMF 1.0)](https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-ai-rmf-10) | implemented_full_pack | 72 | 72 | 28 | 1 | 1.4% | never pulled |
@@ -40,7 +41,7 @@ Every seeded control declares the asset types it applies to. The pipeline joins 
 
 | Asset type | Applicable controls |
 | --- | ---: |
-| `service` | 1600 |
+| `service` | 1606 |
 | `audit_log` | 719 |
 | `cloud_resource` | 604 |
 | `cloud_policy` | 597 |
@@ -49,7 +50,7 @@ Every seeded control declares the asset types it applies to. The pipeline joins 
 | `host` | 323 |
 | `identity_group` | 317 |
 | `okta_user` | 317 |
-| `data_store` | 204 |
+| `data_store` | 210 |
 | `container_image` | 193 |
 | `repo` | 191 |
 | `ai_model` | 126 |

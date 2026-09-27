@@ -3647,6 +3647,20 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27701-A.2.5.7",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27701-A.2.5.9",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -6979,6 +6993,20 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27701-A.1.5.5",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27701-A.2.5.4",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -7140,6 +7168,20 @@
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.7 (Monitor), Task M-7"
           }
+        },
+        {
+          "control_id": "ISO27701-A.1.4.7",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27701-A.2.4.2",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -10141,6 +10183,20 @@
           "framework_id": "soc2",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27701-A.1.5.2",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27701-A.2.5.2",
+          "framework_id": "iso-27701-2025",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": ["audit_log", "data_store", "identity_user", "service"]

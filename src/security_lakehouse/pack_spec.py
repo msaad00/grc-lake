@@ -23,3 +23,5 @@ class PackControlSpec:
     # NIST SP 800-53 baseline membership (low/moderate/high/privacy); empty for
     # frameworks without baselines.
     baselines: tuple[str, ...] = ()
+    # Evidence types a control test expects; empty when a program config owns them.
+    required_evidence_types: tuple[str, ...] = ()

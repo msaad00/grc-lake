@@ -1,0 +1,799 @@
+{
+  "schema": "trustops.framework_pack_manifest.v1",
+  "source": {
+    "name": "ISO/IEC 27701:2025 Annex A",
+    "url": "https://www.iso.org/standard/27701",
+    "edition": "Second edition, published 2025-10-14; replaces ISO/IEC 27701:2019 (withdrawn)",
+    "copyright": "ISO/IEC standard text is licensed. This manifest stores control identifiers and short titles only; control text and guidance are never reproduced.",
+    "verification_rule": "A row is seeded only when its identifier and short title agree across at least two independent non-vendor sources (standards bodies or accredited certification bodies). Vendor pages corroborate but never count toward the two.",
+    "title_policy": "Short title as printed in the BSI Annex A tables, spelling normalized where the other sources agree."
+  },
+  "verification_sources": {
+    "bsi-27701-revision-webinar-2025-11": {
+      "publisher": "BSI Group",
+      "kind": "standards_body",
+      "name": "BSI ISO/IEC 27701 revision webinar (Nov 2025), Annex A.1-A.3 tables with ISO/IEC 27701:2019 correspondence",
+      "url": "https://www.bsigroup.com/siteassets/pdf/th-th/products-and-services/th-as-cross-lg-ict-dt-iso27701-mp-iso27701revisionwebinar-1125.pdf",
+      "sha256": "01d58c06fff7a714044f62ec6d65bc97ae5a78fa3b677ad011adedafa50a22fe",
+      "pulled_at": "2026-09-27",
+      "locator": "slides 24-32 (Annex A.1 1/4-4/4, A.2 1/2-2/2, A.3 1/3-3/3)",
+      "note": "BSI is the UK national standards body and an accredited ISO/IEC 27701 certification body."
+    },
+    "schellman-27701-2025-certification-problems": {
+      "publisher": "Schellman",
+      "kind": "certification_body",
+      "name": "Schellman, 5 Common Problems in ISO/IEC 27701:2025 Certification",
+      "url": "https://www.schellman.com/blog/iso-certifications/5-problems-in-iso-27701-certification",
+      "sha256": "3f06cae3a2aa5b028baecd4a9bf5d4f9f48e68934db7634a0c59f04d3cc56492",
+      "pulled_at": "2026-09-27",
+      "locator": "control headings citing A.1.2.8, A.1.4.7/A.2.4.2, A.1.5.2/A.2.5.2, A.2.2.5, A.1.5.5/A.2.5.4, A.2.5.7, A.2.5.9",
+      "note": "Accredited ISO/IEC 27701 certification body. Page is dynamic; sha256 is of the HTML as fetched."
+    },
+    "isms-online-27701-2025-annex-a": {
+      "publisher": "ISMS.online",
+      "kind": "vendor",
+      "name": "ISMS.online, ISO 27701:2025 Annex A controls",
+      "url": "https://www.isms.online/iso-27701/annex-a-2025/",
+      "sha256": "740200333cfe2e8958512cc6c089aab6d47a3eb85123e2fdcf06968f6600f835",
+      "pulled_at": "2026-09-27",
+      "locator": "Tables A.1, A.2, A.3",
+      "note": "Vendor page; third corroboration only, never counted toward the two-source rule."
+    }
+  },
+  "rows": [
+    {
+      "id": "A.1.2.8",
+      "title": "Joint PII controller",
+      "table": "A.1",
+      "risk_domain": "governance",
+      "owner": "privacy-office",
+      "asset_types": ["service"],
+      "required_evidence_types": ["privacy.agreement"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.1.4.7",
+      "title": "Temporary files",
+      "table": "A.1",
+      "risk_domain": "confidentiality",
+      "owner": "privacy-office",
+      "asset_types": ["data_store"],
+      "required_evidence_types": ["cloud.config", "compliance.evidence_bundle"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.1.5.2",
+      "title": "Identify basis for PII transfer between jurisdictions",
+      "table": "A.1",
+      "risk_domain": "privacy",
+      "owner": "privacy-office",
+      "asset_types": ["data_store", "service"],
+      "required_evidence_types": ["privacy.transfer_record"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.1.5.5",
+      "title": "Records of PII disclosure to third parties",
+      "table": "A.1",
+      "risk_domain": "privacy",
+      "owner": "privacy-office",
+      "asset_types": ["data_store"],
+      "required_evidence_types": ["privacy.disclosure_record"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.2.2.5",
+      "title": "Infringing instruction",
+      "table": "A.2",
+      "risk_domain": "governance",
+      "owner": "privacy-office",
+      "asset_types": ["service"],
+      "required_evidence_types": ["remediation.ticket"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.2.4.2",
+      "title": "Temporary files",
+      "table": "A.2",
+      "risk_domain": "confidentiality",
+      "owner": "privacy-office",
+      "asset_types": ["data_store"],
+      "required_evidence_types": ["cloud.config", "compliance.evidence_bundle"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.2.5.2",
+      "title": "Basis for PII transfer between jurisdictions",
+      "table": "A.2",
+      "risk_domain": "privacy",
+      "owner": "privacy-office",
+      "asset_types": ["data_store", "service"],
+      "required_evidence_types": ["privacy.transfer_record"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.2.5.4",
+      "title": "Records of PII disclosure to third parties",
+      "table": "A.2",
+      "risk_domain": "privacy",
+      "owner": "privacy-office",
+      "asset_types": ["data_store"],
+      "required_evidence_types": ["privacy.disclosure_record"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.2.5.7",
+      "title": "Disclosure of subcontractors used to process PII",
+      "table": "A.2",
+      "risk_domain": "vendor-risk",
+      "owner": "privacy-office",
+      "asset_types": ["service"],
+      "required_evidence_types": ["privacy.subprocessor_register"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    },
+    {
+      "id": "A.2.5.9",
+      "title": "Change of subcontractor to process PII",
+      "table": "A.2",
+      "risk_domain": "vendor-risk",
+      "owner": "privacy-office",
+      "asset_types": ["service"],
+      "required_evidence_types": ["privacy.subprocessor_register"],
+      "verified_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "schellman-27701-2025-certification-problems",
+        "isms-online-27701-2025-annex-a"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "id": "A.1.2.2",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.2.3",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.2.4",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.2.5",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.2.6",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.2.7",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.2.9",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.2",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.3",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.4",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.5",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.6",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.7",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.8",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.9",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.10",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.3.11",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.2",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.3",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.4",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.5",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.6",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.8",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.9",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.4.10",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.5.3",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.1.5.4",
+      "table": "A.1",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.2.2",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.2.3",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.2.4",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.2.6",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.2.7",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.3.2",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.4.3",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.4.4",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.5.3",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.5.5",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.5.6",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.2.5.8",
+      "table": "A.2",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.3",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.4",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.5",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.6",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.7",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.8",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.9",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.10",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.11",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.12",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.13",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.14",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.15",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.16",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.17",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.18",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.19",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.20",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.21",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.22",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.23",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.24",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.25",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.26",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.27",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.28",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.29",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.30",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    },
+    {
+      "id": "A.3.31",
+      "table": "A.3",
+      "listed_by": [
+        "bsi-27701-revision-webinar-2025-11",
+        "isms-online-27701-2025-annex-a"
+      ],
+      "reason": "Only one non-vendor source (BSI) lists this identifier; a second independent standards or certification body source is required before seeding."
+    }
+  ]
+}

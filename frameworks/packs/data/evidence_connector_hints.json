@@ -91,6 +91,32 @@
       "IR": ["siem-alerts", "ticketing"],
       "RA": ["siem-alerts", "managed-local-evidence"],
       "SC": ["aws-posture", "azure-posture"]
+    },
+    "iso-27701-2025": {
+      "A.1.2": ["managed-local-evidence", "object-storage-evidence"],
+      "A.1.4": [
+        "aws-posture",
+        "gcp-posture",
+        "azure-posture",
+        "object-storage-evidence"
+      ],
+      "A.1.5": [
+        "managed-local-evidence",
+        "object-storage-evidence",
+        "ticketing"
+      ],
+      "A.2.2": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "A.2.4": [
+        "aws-posture",
+        "gcp-posture",
+        "azure-posture",
+        "object-storage-evidence"
+      ],
+      "A.2.5": [
+        "managed-local-evidence",
+        "object-storage-evidence",
+        "ticketing"
+      ]
     }
   },
   "asset_type_connectors": {

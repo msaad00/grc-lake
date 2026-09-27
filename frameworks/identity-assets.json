@@ -130,6 +130,13 @@
       "asset_path": null,
       "restriction": "ISO prohibits third-party use or copying of its logo without written permission."
     },
+    "iso-27701-2025": {
+      "official_name": "ISO/IEC 27701:2025",
+      "official_source_url": "https://www.iso.org/standard/27701",
+      "display_mode": "neutral_icon",
+      "asset_path": null,
+      "restriction": "ISO prohibits third-party use or copying of its logo without written permission."
+    },
     "soc1": {
       "official_name": "SOC 1®",
       "official_source_url": "https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services",

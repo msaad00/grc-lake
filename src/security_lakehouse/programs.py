@@ -113,7 +113,12 @@ def build_control_tests(
         program, config = test_configs.get(control_id, ({}, {}))
         evidence_events = events_by_control.get(control_id, [])
         failing_events = [event for event in evidence_events if event["status"] in FAIL_STATUSES]
-        required_types = [str(item) for item in config.get("required_evidence_types", [])]
+        required_types = [
+            str(item)
+            for item in config.get("required_evidence_types")
+            or control_catalog.get(control_id, {}).get("required_evidence_types")
+            or []
+        ]
         observed_types = sorted(
             {str(evidence_type) for event in evidence_events for evidence_type in _event_evidence_types(event)}
         )

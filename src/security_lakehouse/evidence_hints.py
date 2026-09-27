@@ -44,6 +44,8 @@ def _family_key(framework_id: str, article_ids: list[str]) -> str | None:
         return ".".join(parts[:2]) if len(parts) >= 2 else None
     if framework_id == "cis-aws" or framework_id == "cis_aws":
         return article_id.split(".", 1)[0]
+    if framework_id == "iso-27701-2025":
+        return ".".join(article_id.split(".")[:3])
     if framework_id == "fedramp-moderate":
         token = article_id.split("-", 1)[0].upper()
         return token if token.isalpha() else None

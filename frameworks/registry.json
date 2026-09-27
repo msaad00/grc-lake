@@ -250,20 +250,42 @@
       "name": "ISO/IEC 27701:2019 Privacy information management",
       "version": "2019 edition",
       "effective_date": "2019-08-06",
-      "superseded_by": null,
+      "superseded_by": "iso-27701-2025",
       "official_source_name": "ISO/IEC 27701:2019",
       "official_source_url": "https://www.iso.org/standard/71670.html",
       "source_sha256": null,
       "pulled_at": null,
       "implementation_status": "planned",
-      "copyright_guardrail": "ISO standard text is licensed. Planned pack will store clause identifiers and short internal titles only after customer license review.",
-      "coverage_boundary": "No controls seeded: ISO/IEC 27701 is licensed, and the local privacy pack is blocked on license review before source-linked control seeding.",
+      "copyright_guardrail": "ISO standard text is licensed. No controls are stored for the withdrawn 2019 edition.",
+      "coverage_boundary": "No controls seeded: ISO/IEC 27701:2019 was withdrawn when the 2025 edition was published on 2025-10-14; 2019 certificates remain valid until October 2028. Coverage lives on iso-27701-2025.",
       "evidence_focus": [
         "Privacy information management scope and roles",
         "PII processing inventory, purpose, and data-flow evidence",
         "Privacy risk, data-subject rights, and supplier evidence"
       ],
-      "next_step": "Complete license review and confirm permitted identifier/title use before seeding a source-linked privacy pack.",
+      "next_step": "Use iso-27701-2025. Seed 2019 identifiers only if an open source verifies them and a 2019-certified tenant needs them before October 2028.",
+      "sync_cadence_days": 90
+    },
+    {
+      "framework_id": "iso-27701-2025",
+      "family": "privacy",
+      "name": "ISO/IEC 27701:2025 Privacy information management",
+      "version": "2025 edition",
+      "effective_date": "2025-10-14",
+      "superseded_by": null,
+      "official_source_name": "ISO/IEC 27701:2025",
+      "official_source_url": "https://www.iso.org/standard/27701",
+      "source_sha256": null,
+      "pulled_at": "2026-09-27",
+      "implementation_status": "implemented_limited_mapping",
+      "copyright_guardrail": "ISO standard text is licensed; the pack stores Annex A identifiers and short titles only and links the official source. Customers must hold their own license for the standard.",
+      "coverage_boundary": "10 of the 78 Annex A controls are seeded: those whose identifier and short title agree across two independent non-vendor sources (BSI and Schellman). The other 68 are listed as gaps in frameworks/packs/data/iso_27701_2025.json until a second source verifies them. Clauses 4-10 are not seeded.",
+      "evidence_focus": [
+        "Joint-controller and processor agreements",
+        "Cross-border transfer basis and disclosure records",
+        "Subprocessor register, notices, and temporary-file disposal"
+      ],
+      "next_step": "Verify the remaining 68 Annex A identifiers against a second standards or certification body source, or a licensed copy, then seed them.",
       "sync_cadence_days": 90
     },
     {

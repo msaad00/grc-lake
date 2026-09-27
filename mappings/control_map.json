@@ -4565,6 +4565,76 @@
       "owner": "security-platform"
     },
     {
+      "control_id": "ISO27701-A.1.2.8",
+      "framework": "ISO 27701:2025",
+      "title": "Joint PII controller",
+      "risk_domain": "governance",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.1.4.7",
+      "framework": "ISO 27701:2025",
+      "title": "Temporary files",
+      "risk_domain": "confidentiality",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.1.5.2",
+      "framework": "ISO 27701:2025",
+      "title": "Identify basis for PII transfer between jurisdictions",
+      "risk_domain": "privacy",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.1.5.5",
+      "framework": "ISO 27701:2025",
+      "title": "Records of PII disclosure to third parties",
+      "risk_domain": "privacy",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.2.2.5",
+      "framework": "ISO 27701:2025",
+      "title": "Infringing instruction",
+      "risk_domain": "governance",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.2.4.2",
+      "framework": "ISO 27701:2025",
+      "title": "Temporary files",
+      "risk_domain": "confidentiality",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.2",
+      "framework": "ISO 27701:2025",
+      "title": "Basis for PII transfer between jurisdictions",
+      "risk_domain": "privacy",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.4",
+      "framework": "ISO 27701:2025",
+      "title": "Records of PII disclosure to third parties",
+      "risk_domain": "privacy",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.7",
+      "framework": "ISO 27701:2025",
+      "title": "Disclosure of subcontractors used to process PII",
+      "risk_domain": "vendor-risk",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.9",
+      "framework": "ISO 27701:2025",
+      "title": "Change of subcontractor to process PII",
+      "risk_domain": "vendor-risk",
+      "owner": "privacy-office"
+    },
+    {
       "control_id": "ISO42001-10.2",
       "framework": "ISO 42001:2023",
       "title": "Allocation of responsibilities",

@@ -14,9 +14,9 @@ between them is the mapping-review backlog.
 
 ## Why the catalog alone is not a CCF
 
-`controls/catalog.json` is framework-first: 2021 requirements, each carrying its
-own `framework_id` **and its own `evidence_requirement`** — 2021 distinct evidence
-statements for 2021 controls, none shared.
+`controls/catalog.json` is framework-first: 2031 requirements, each carrying its
+own `framework_id` **and its own `evidence_requirement`** — 2031 distinct evidence
+statements for 2031 controls, none shared.
 
 That last number is the whole problem. Because no two requirements share an
 evidence statement, answering SOC 2, ISO 27001, and FedRAMP means answering the
@@ -100,7 +100,7 @@ family ledger.
 
 ```
 $ security-lakehouse frameworks safeguards --format table
-78 safeguards map 1174 of 2021 requirements (58.1%) — 350 reviewed (17.3%), 824 proposed
+78 safeguards map 1182 of 2031 requirements (58.2%) — 350 reviewed (17.2%), 832 proposed
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -135,6 +135,7 @@ cannot become a false certification claim.
 | iso-27001-2022      |           93 |     81 |  87.1% |
 | cis-controls-v8.1   |           18 |     15 |  83.3% |
 | cis_aws             |           62 |     51 |  82.3% |
+| iso-27701-2025      |           10 |      8 |  80.0% |
 | iso-42001-2023      |           39 |     26 |  66.7% |
 | nist-ai-rmf         |           72 |     28 |  38.9% |
 | nist-800-53-rev5    |         1014 |    285 |  28.1% |
@@ -142,7 +143,7 @@ cannot become a false certification claim.
 ### What a safeguard applies to
 
 Evaluation targets resources, not frameworks. The catalog already records
-`asset_types` on all 2021 requirements — `iam_role`, `data_store`, `ai_model`,
+`asset_types` on all 2031 requirements — `iam_role`, `data_store`, `ai_model`,
 `audit_log`, `cloud_resource` and 15 more — and a safeguard carries the union of
 what its members apply to. `safeguards_for_asset_type("iam_role")` returns the
 11 safeguards that bear on IAM roles.
@@ -154,7 +155,7 @@ drifting as curation moves.
 
 ## The real ceiling is the catalog, not the curation
 
-90 of 2021 titles still contain identifier-only or boilerplate descriptions,
+90 of 2031 titles still contain identifier-only or boilerplate descriptions,
 all ISO 27001 Annex A entries. ISO text is licensed: those need short internal
 summaries or licensed access, and must not be copied into this public
 repository. The NIST AI RMF titles now use the official subcategory statements

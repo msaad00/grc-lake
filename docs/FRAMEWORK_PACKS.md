@@ -137,7 +137,7 @@ security-lakehouse catalog verify
 Full packs should show **100% seeded mapping coverage** with `seeded_control_count`
 equal to the pack sizes above.
 
-## Limited-mapping packs (GDPR, HIPAA, PCI, EU AI Act, CIS Controls)
+## Limited-mapping packs (GDPR, HIPAA, PCI, EU AI Act, CIS Controls, ISO 27701)
 
 Run `frameworks sync-packs --pack gdpr --pack hipaa --pack pci-dss --pack eu-ai-act`
 to merge expanded honest subsets (20 GDPR articles, 18 HIPAA sections, 12 PCI
@@ -158,9 +158,49 @@ The 153 safeguards are not seeded: CIS distributes them only in a
 registration-gated download, so there is no open source to verify identifiers
 against. Rows are source-reconciled and `proposed`.
 
+### ISO/IEC 27701:2025 (`iso-27701-2025`, `--pack iso-27701`)
+
+The 2025 edition (published 2025-10-14) is a standalone privacy management
+system standard and replaced ISO/IEC 27701:2019, which is withdrawn (2019
+certificates stay valid until October 2028). `iso-27701-2019` stays `planned`
+with zero controls and `superseded_by: iso-27701-2025`.
+
+ISO publishes no open list of the Annex A identifiers, so each seeded control
+must have its identifier and short title agree across **two independent
+non-vendor sources** (a standards body or an accredited certification body).
+Vendor pages corroborate but never count toward the two. Every source is pinned
+in `frameworks/packs/data/iso_27701_2025.json` under `verification_sources`
+(URL, publisher, kind, sha256, pulled_at, locator), and every row lists the
+sources that verify it in `verified_by`.
+
+Today 10 of the 78 Annex A controls meet that rule: BSI's Annex A tables and
+Schellman's certification guidance both name them. The other 68 are listed
+under `gaps` by identifier only, with no title, and stay unseeded until a
+second source verifies them. Clauses 4–10 are not seeded. Titles follow the
+same copyright approach as the ISO 27001, 27017 and 42001 packs: identifiers
+and short titles only, never control text or guidance.
+
+Each control carries `required_evidence_types`, which control tests use when
+no program configures that control. Connector hints come from
+`evidence_connector_hints.json` (`framework_family_connectors["iso-27701-2025"]`,
+keyed by Annex A subsection):
+
+| Controls                                              | Evidence types                               | Connector hints                                            |
+| ----------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| A.1.2.8 Joint PII controller                          | `privacy.agreement`                          | managed-local-evidence, object-storage-evidence            |
+| A.1.4.7, A.2.4.2 Temporary files                      | `cloud.config`, `compliance.evidence_bundle` | aws/gcp/azure-posture, object-storage-evidence             |
+| A.1.5.2, A.2.5.2 Basis for PII transfer               | `privacy.transfer_record`                    | managed-local-evidence, object-storage-evidence, ticketing |
+| A.1.5.5, A.2.5.4 Records of PII disclosure            | `privacy.disclosure_record`                  | managed-local-evidence, object-storage-evidence, ticketing |
+| A.2.2.5 Infringing instruction                        | `remediation.ticket`                         | ticketing, jira-ticketing, managed-local-evidence          |
+| A.2.5.7, A.2.5.9 Subcontractor disclosure and changes | `privacy.subprocessor_register`              | managed-local-evidence, object-storage-evidence, ticketing |
+
+Eight controls map to existing CCF safeguards as `proposed` (data retention,
+data inventory, third-party risk, cross-border transfer). The joint-controller
+and infringing-instruction controls have no matching safeguard yet.
+
 ## Other frameworks (add as you go)
 
-ISO 27701 and SOC 1 remain **planned** in the registry. Expand additional
+SOC 1 remains **planned** in the registry. Expand additional
 frameworks incrementally using the same control schema. SOC 1 has no official
 control catalog to seed from (see
 [Framework expansion plan](FRAMEWORK_EXPANSION_PLAN.md#soc-1-why-it-stays-planned)).

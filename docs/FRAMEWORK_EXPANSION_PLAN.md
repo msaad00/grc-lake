@@ -13,7 +13,7 @@ TrustOps ships **source-linked** framework packs: local control IDs, short inter
 
 Validation lives in `validate_catalog()` (`src/security_lakehouse/catalog.py`) and `tests/test_framework_implementation_status.py`.
 
-## Shipped today (16 implemented)
+## Shipped today (17 implemented)
 
 See [FRAMEWORK_COVERAGE.md](./FRAMEWORK_COVERAGE.md) for the live matrix. Current implemented frameworks:
 
@@ -21,12 +21,13 @@ See [FRAMEWORK_COVERAGE.md](./FRAMEWORK_COVERAGE.md) for the live matrix. Curren
 - NIST SP 800-53 Rev 5 (full catalog, baseline-tagged), NIST RMF (SP 800-37 Rev 2)
 - FedRAMP Moderate, CMMC 2 Level 2, CIS AWS Foundations, CIS Controls v8.1 (all 18 controls)
 - GDPR, HIPAA Security Rule, EU AI Act, PCI DSS v4.0.1 (limited mapping: all 12 principal requirements)
+- ISO/IEC 27701:2025 (limited mapping: 10 of 78 Annex A controls verified by two independent non-vendor sources)
 
 ## Planned next (registry only)
 
 | Framework ID     | Official source                                                                                        | Target stream       | Notes                                                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `iso-27701-2019` | [ISO/IEC 27701:2019](https://www.iso.org/standard/71670.html)                                          | Privacy pack        | Planned boundary is explicit in the registry; license review is required before seeding controls                |
+| `iso-27701-2019` | [ISO/IEC 27701:2019](https://www.iso.org/standard/71670.html)                                          | Privacy (withdrawn) | Withdrawn on publication of the 2025 edition (2025-10-14); `superseded_by: iso-27701-2025`, no controls seeded  |
 | `soc1`           | [AICPA SOC 1](https://www.aicpa-cima.com/topic/audit-assurance/audit-and-assurance-greater-than-soc-2) | Financial reporting | Planned boundary is explicit in the registry; requires service-specific ICFR objectives before seeding controls |
 
 ### ISO/IEC 27001 clauses 4–10
@@ -43,6 +44,17 @@ identifiers against.
 CIS Microsoft Azure and Google Cloud Platform Foundations Benchmarks are not
 catalogued. Like CIS AWS, their recommendation IDs come from registration-gated
 PDFs; add them when those are available to verify against.
+
+### ISO/IEC 27701:2025: why only 10 of 78 controls
+
+ISO publishes no open list of the 2025 Annex A identifiers. The pack seeds a
+control only when two independent non-vendor sources (standards bodies or
+accredited certification bodies) agree on its identifier and short title; vendor
+pages count only as extra corroboration. BSI's Annex A tables and Schellman's
+certification guidance agree on 10 controls. The other 68 are listed as gaps
+in `frameworks/packs/data/iso_27701_2025.json` and get seeded once a second
+source, or a licensed copy, verifies them. See
+[FRAMEWORK_PACKS.md](./FRAMEWORK_PACKS.md#isoiec-277012025-iso-27701-2025---pack-iso-27701).
 
 ### SOC 1: why it stays planned
 

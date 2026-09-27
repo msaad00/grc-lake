@@ -1,14 +1,14 @@
 {
   "schema_version": "trustops.catalog_bundle.v1",
   "as_of": null,
-  "framework_count": 18,
-  "control_count": 2021,
-  "crosswalk_count": 2021,
+  "framework_count": 19,
+  "control_count": 2031,
+  "crosswalk_count": 2031,
   "components": {
-    "frameworks": "4225d52be22a8f04e55b3ab8d1c9b97a8a0810e34ff5bd22d303cf435ee3b0ed",
-    "controls": "4ce36170624d4405b0e3fde5fac332a4cc4a96e462725da8b4982199514caf69",
-    "crosswalk": "a09ffc41e5083eb8154ca6eadfec15db8a661c7c3e8a3cc79a2698f29324a4b7",
-    "safeguards": "a396e750164e420a6b7635d05e2cdce59accb40e3c40852e45ef05b76e352f06"
+    "frameworks": "4334f6df92ae7cd15f907a53126c219a0678a94573d90bb5df681dfc0c1f683c",
+    "controls": "daf40f2001b233c1c3839dc6428bddaa4829a8ce7c92a7c32de11a1b3e656472",
+    "crosswalk": "90b0495ff082338763188dfe1864d71f9a25ad8c687085da677bf7e03aa66437",
+    "safeguards": "8326999931cedb6f4a49331c1e9a014321e4320bc30e7f4a9ed561cd3afaf3ae"
   },
   "framework_versions": [
     {
@@ -78,6 +78,13 @@
       "framework_id": "iso-27701-2019",
       "version": "2019 edition",
       "effective_date": "2019-08-06",
+      "superseded_by": "iso-27701-2025",
+      "source_sha256": null
+    },
+    {
+      "framework_id": "iso-27701-2025",
+      "version": "2025 edition",
+      "effective_date": "2025-10-14",
       "superseded_by": null,
       "source_sha256": null
     },
@@ -4827,6 +4834,76 @@
       "framework_id": "iso-27017-2015",
       "version": "1.0.0",
       "valid_from": "2026-06-30",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.1.2.8",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.1.4.7",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.1.5.2",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.1.5.5",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.2.2.5",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.2.4.2",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.2",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.4",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.7",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "ISO27701-A.2.5.9",
+      "framework_id": "iso-27701-2025",
+      "version": "1.0.0",
+      "valid_from": "2026-09-27",
       "lifecycle_status": "active"
     },
     {
@@ -14287,5 +14364,5 @@
       "lifecycle_status": "active"
     }
   ],
-  "bundle_sha256": "f8cc5a0e63376a57421403cc2b7cb38fae9dbcf8245a8b701b90f4d574ce869c"
+  "bundle_sha256": "031814d2c46a2acb42aa009134464e2651aacb4bb7ec4954de52d5685f0ff360"
 }

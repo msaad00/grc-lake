@@ -202,6 +202,16 @@ export const FRAMEWORK_VISUALS: Record<string, FrameworkVisual> = {
     gradient: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
     icon: "lock",
   },
+  "iso-27701-2025": {
+    badge: "/console/frameworks/badges/iso.svg",
+    label: "ISO/IEC 27701:2025",
+    mark: "27701",
+    accent: "#6d28d9",
+    bg: "#f5f3ff",
+    ring: "#ddd6fe",
+    gradient: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+    icon: "lock",
+  },
   soc1: {
     label: "SOC 1®",
     mark: "SOC 1",
@@ -240,6 +250,8 @@ const NAME_TO_ID: Record<string, string> = {
   "CMMC 2.0 Level 2": "cmmc-2-level2",
   "ISO/IEC 27017:2015": "iso-27017-2015",
   "ISO/IEC 27701:2019": "iso-27701-2019",
+  "ISO/IEC 27701:2025": "iso-27701-2025",
+  "ISO 27701:2025": "iso-27701-2025",
   "SOC 1": "soc1",
   "SOC 1®": "soc1",
 };

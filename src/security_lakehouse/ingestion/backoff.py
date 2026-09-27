@@ -9,10 +9,13 @@ never actually wait.
 
 from __future__ import annotations
 
+import email.utils
+import math
 import random
 import time
 import urllib.error
 from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Any, TypeVar
 
 T = TypeVar("T")
@@ -29,27 +32,27 @@ def is_retryable_http(exc: BaseException) -> bool:
 def http_retry_after(exc: BaseException) -> float | None:
     """Read a server ``Retry-After`` (seconds) from a 429 response, if present.
 
-    Accepts both delta-seconds (RFC 7231 integer form) and HTTP-date strings.
+    Accepts delta-seconds (integer, or decimal as some APIs send) and HTTP-date
+    strings; a date without a zone is read as UTC.
     """
-    import email.utils
-
-    if isinstance(exc, urllib.error.HTTPError) and exc.headers:
-        raw = exc.headers.get("Retry-After")
-        if not raw:
-            return None
-        raw = str(raw).strip()
-        if raw.isdigit():
-            return float(raw)
-        # HTTP-date form: "Wed, 01 Jan 2026 00:00:00 GMT"
-        try:
-            dt = email.utils.parsedate_to_datetime(raw)
-            import datetime as _dt
-
-            delta = (dt - _dt.datetime.now(_dt.UTC)).total_seconds()
-            return max(0.0, delta)
-        except Exception:
-            pass
-    return None
+    if not isinstance(exc, urllib.error.HTTPError) or not exc.headers:
+        return None
+    raw = str(exc.headers.get("Retry-After") or "").strip()
+    if not raw:
+        return None
+    try:
+        seconds = float(raw)
+    except ValueError:
+        seconds = None
+    if seconds is not None:
+        return seconds if math.isfinite(seconds) and seconds >= 0 else None
+    try:
+        when = email.utils.parsedate_to_datetime(raw)
+    except (TypeError, ValueError, IndexError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=UTC)
+    return max(0.0, (when - datetime.now(UTC)).total_seconds())
 
 
 def next_delay(

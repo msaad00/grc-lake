@@ -74,9 +74,7 @@ PUBLIC_IP = "93.184.216.34"
 HOP_IP = "93.184.216.35"
 PRIVATE_IP = "10.0.0.8"
 _OK = b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok"
-_REDIRECT = (
-    b"HTTP/1.1 302 Found\r\nLocation: http://hop.example/next\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-)
+_REDIRECT = b"HTTP/1.1 302 Found\r\nLocation: http://hop.example/next\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
 
 
 def _sequenced_dns(monkeypatch: pytest.MonkeyPatch, answers: dict[str, list[str]]) -> dict[str, int]:

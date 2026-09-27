@@ -65,7 +65,10 @@ def build_current_posture(
     controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True)
     control_tests = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True)
     assets = read_jsonl(lake / "gold" / "asset_risk.jsonl", missing_ok=True)
-    violations, violation_summary = build_violations(events, max_violations=max_violations)
+    asset_names = {
+        str(row["asset_id"]): str(row["asset_name"]) for row in assets if row.get("asset_id") and row.get("asset_name")
+    }
+    violations, violation_summary = build_violations(events, max_violations=max_violations, asset_names=asset_names)
     evidence_freshness = build_evidence_freshness(
         events,
         now=evaluated_at,
@@ -560,6 +563,7 @@ def build_violations(
     *,
     events_path: str | Path | None = None,
     max_violations: int | None = None,
+    asset_names: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Build violation rows plus aggregate counts for audit-scale lakes.
 
@@ -573,13 +577,14 @@ def build_violations(
         raise ValueError("pass only one of events or events_path")
 
     iterator = iter(events or []) if events is not None else iter_jsonl(events_path)  # type: ignore[arg-type]
-    return _build_violations_capped(iterator, max_violations=max_violations)
+    return _build_violations_capped(iterator, max_violations=max_violations, asset_names=asset_names)
 
 
 def _build_violations_capped(
     events: Iterable[dict[str, Any]],
     *,
     max_violations: int | None,
+    asset_names: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     total = 0
     critical = 0
@@ -619,6 +624,8 @@ def _build_violations_capped(
                 "raw_sha256": event["raw_sha256"],
                 "detected_at": event["event_time"],
             }
+            if asset_names and event["asset_id"] in asset_names:
+                row["asset_name"] = asset_names[event["asset_id"]]
             if max_violations is None:
                 retained.append(row)
                 continue

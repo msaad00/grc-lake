@@ -19,6 +19,8 @@ export interface Violation {
   control_id: string;
   event_id: string;
   asset_id: string;
+  /** Display name from the source, when it has one; asset_id stays the key. */
+  asset_name?: string;
   asset_owner: string;
   environment: string;
   source: string;
@@ -48,6 +50,7 @@ export interface PostureBlock {
 
 export interface AssetRisk {
   asset_id: string;
+  asset_name?: string;
   asset_owner: string;
   asset_type: string;
   environment: string;
@@ -99,6 +102,7 @@ export interface NormalizedEvent {
   status: string;
   severity: Severity;
   asset_id: string;
+  asset_name?: string;
   asset_owner: string;
   evidence_ref: string;
   evidence_id: string;
@@ -558,6 +562,7 @@ export interface AiGovernance {
 
 export interface AiInventoryItem {
   asset_id: string;
+  asset_name?: string;
   asset_type: string;
   owner: string;
   environment: string;

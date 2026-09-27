@@ -430,7 +430,7 @@ def _parser() -> argparse.ArgumentParser:
     fixtures_load.add_argument(
         "--rebase-times",
         action="store_true",
-        help="shift fixture timestamps so the newest event is one hour old (demo data reads as current)",
+        help="shift fixture timestamps so the newest event is three hours old (demo posture stays stable for about a day)",
     )
     fixtures_load.set_defaults(func=_fixtures_load)
     fixtures_write_golden = fixtures_sub.add_parser(
@@ -515,7 +515,7 @@ def _parser() -> argparse.ArgumentParser:
     frameworks = sub.add_parser("frameworks", help="framework registry commands")
     frameworks_sub = frameworks.add_subparsers(dest="frameworks_command", required=True)
     frameworks_sync = frameworks_sub.add_parser(
-        "sync", help="re-fetch official sources, recompute sha256, advance pulled_at"
+        "sync", help="re-fetch official sources, recompute sha256, record source changes"
     )
     frameworks_sync.add_argument(
         "--allow-network",

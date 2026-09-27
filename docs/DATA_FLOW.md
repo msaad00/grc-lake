@@ -134,6 +134,12 @@ Connectors should emit evidence records with:
 - `evidence.evidence_collected_at`
 - `evidence.raw_sha256`
 
+Optionally, `entity.asset_name` gives the asset a human-readable name. It is
+display data only: `asset_id` stays the key everywhere. The name is kept on the
+gold asset rows (`gold/asset_risk.jsonl`), not on normalized events, and the
+API adds it as `asset_name` to evidence, violations, assets, AI inventory, and
+graph asset labels.
+
 Connectors should not decide compliance. They only collect evidence. The
 assessment engine decides posture.
 

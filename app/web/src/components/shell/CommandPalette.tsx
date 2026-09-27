@@ -25,6 +25,7 @@ import type {
   Violation,
   Workflow as WorkflowRow,
 } from "@/lib/api/types";
+import { assetLabel } from "@/lib/format";
 
 interface PaletteItem {
   id: string;
@@ -139,7 +140,7 @@ export function CommandPalette({
         id: `v:${v.violation_id}`,
         group: "Findings",
         label: v.violation_id,
-        subtitle: `${v.severity} · ${v.asset_id}`,
+        subtitle: `${v.severity} · ${assetLabel(v)}`,
         href: `/violations?id=${encodeURIComponent(v.violation_id)}`,
         Icon: AlertOctagon,
       })),
@@ -147,7 +148,7 @@ export function CommandPalette({
         id: `e:${e.event_id}`,
         group: "Evidence",
         label: e.event_id,
-        subtitle: `${e.source} · ${e.asset_id}`,
+        subtitle: `${e.source} · ${assetLabel(e)}`,
         href: `/evidence?id=${encodeURIComponent(e.event_id)}`,
         Icon: FileSearch,
       })),

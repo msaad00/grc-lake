@@ -19,6 +19,10 @@
     "control_id": { "type": "string" },
     "event_id": { "type": "string" },
     "asset_id": { "type": "string" },
+    "asset_name": {
+      "type": "string",
+      "description": "Display name for the asset, when the source provides one; asset_id stays the key."
+    },
     "asset_owner": { "type": "string" },
     "environment": { "type": "string" },
     "source": { "type": "string" },

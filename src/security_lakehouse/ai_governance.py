@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.aibom import aibom_status, list_aibom_items
+from security_lakehouse.asset_names import load_asset_names, with_asset_names
 from security_lakehouse.io import read_jsonl
 
 INVENTORY_EVENT_TYPES = frozenset(
@@ -314,7 +315,7 @@ def list_ai_inventory(*, lake: Path, limit: int = 100, offset: int = 0) -> list[
     items = sorted(by_id.values(), key=lambda row: row["asset_id"])
     start = max(offset, 0)
     end = start + max(limit, 1)
-    return items[start:end]
+    return with_asset_names(items[start:end], load_asset_names(lake))
 
 
 __all__ = ["build_ai_governance_status", "list_ai_inventory"]

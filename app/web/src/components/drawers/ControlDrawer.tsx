@@ -10,6 +10,7 @@ import { FrameworkBadge } from "@/components/framework/FrameworkBadge";
 import { EntityTagsEditor } from "@/components/EntityTagsEditor";
 import { resolveFrameworkId } from "@/lib/framework-visuals";
 import type { ControlPosture } from "@/lib/api/types";
+import { assetLabel } from "@/lib/format";
 
 interface Props {
   control: ControlPosture | null;
@@ -110,8 +111,11 @@ export function ControlDrawer({ control, onClose, onOpenViolation }: Props) {
                   onClick={() => onOpenViolation(v.violation_id)}
                   className="rounded-lg border border-line p-3 text-left hover:border-brand hover:bg-blue-50/40 dark:hover:bg-blue-500/10"
                 >
-                  <div className="text-sm font-semibold text-ink">
-                    {v.asset_id || "Unknown asset"}
+                  <div
+                    className="text-sm font-semibold text-ink"
+                    title={v.asset_id || undefined}
+                  >
+                    {assetLabel(v) || "Unknown asset"}
                   </div>
                   <div className="mt-1 text-xs text-muted">
                     {v.event_type.replaceAll(/[._]/g, " ")}

@@ -175,10 +175,14 @@ signed, ten-minute `SameSite=None; Secure` cookie, so the deployment must be
 served over HTTPS (or `localhost`). The ACS accepts only a response whose
 `InResponseTo` matches that ID. IdP-initiated (unsolicited) responses are
 rejected unless `TRUSTOPS_SAML_ALLOW_IDP_INITIATED=true`. Consumed assertion
-IDs are cached until their `NotOnOrAfter` and a replay is rejected. That cache
-lives in each process's memory, so across multiple replicas a replay sent to a
-different replica is not caught
-([#732](https://github.com/msaad00/trustops-security-data-lake/issues/732)).
+IDs are recorded in the application database (`saml_assertion_replays`, unique
+on issuer + assertion ID) until their `NotOnOrAfter`, and a replay is rejected.
+Replicas that share one database (`TRUSTOPS_DATABASE_URL`, as every
+multi-replica deployment must) share that table, so a replay sent to a
+different replica is caught too; when two replicas race on one assertion,
+exactly one insert succeeds. Expired rows are swept every few minutes, and a database error
+rejects the login. The table comes from migration `0020`, which the server
+applies at startup.
 
 ## Roles
 

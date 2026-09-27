@@ -17,6 +17,12 @@ async function findingFor(request: APIRequestContext, controlId: string) {
   return match as Record<string, string | number>;
 }
 
+// Findings show the asset's name; the golden fixture names every asset.
+function assetShownFor(finding: Record<string, string | number>): string {
+  expect(finding.asset_name, "golden assets carry a display name").toBeTruthy();
+  return String(finding.asset_name);
+}
+
 async function expectNoHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth,
@@ -31,7 +37,7 @@ test("finding drawer says what is wrong and how to fix it", async ({
   const finding = await findingFor(request, CONTROL_ID);
   await page.goto("/console/violations/");
   const row = page.getByRole("row").filter({ hasText: CONTROL_TITLE }).first();
-  await row.getByText(String(finding.asset_id)).click();
+  await row.getByText(assetShownFor(finding), { exact: true }).click();
 
   const drawer = page.getByRole("dialog");
   await expect(
@@ -195,7 +201,7 @@ test("control drawer links evidence, labels findings, and traces in graph", asyn
     `/console/evidence/?control=${encodeURIComponent(CONTROL_ID)}`,
   );
   const findingButton = drawer.getByRole("button", {
-    name: new RegExp(String(finding.asset_id)),
+    name: new RegExp(assetShownFor(finding)),
   });
   await expect(findingButton).toBeVisible();
   await expect(findingButton).not.toContainText(String(finding.event_id));

@@ -488,6 +488,138 @@ def test_assertion_replay_cache_expires_and_is_bounded() -> None:
     assert len(cache) <= 2
 
 
+def test_saml_acs_rejects_a_replay_on_another_replica(tmp_path: Path, monkeypatch) -> None:
+    """Two app instances on one database stand in for two replicas behind a load balancer."""
+    replica_a, _seen = _saml_app(tmp_path, monkeypatch)
+    replica_b = create_app(tmp_path)
+    replica_b.state.saml_auth_factory = replica_a.state.saml_auth_factory
+    client_a = TestClient(replica_a)
+    client_b = TestClient(replica_b)
+
+    assert _post_acs(client_a, _login_request_cookie(client_a)).status_code == HTTPStatus.FOUND
+    replay = _post_acs(client_b, _login_request_cookie(client_b))
+    assert replay.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def _replay_store(tmp_path: Path):
+    from security_lakehouse.db import migrate
+    from security_lakehouse.db.base import create_engine_for, session_factory
+
+    migrate.upgrade(tmp_path)
+    return session_factory(create_engine_for(tmp_path))
+
+
+def _replay_rows(factory) -> list[tuple[str, str]]:
+    from sqlalchemy import select
+
+    from security_lakehouse.db.models import SamlAssertionReplay
+
+    with factory() as session:
+        return [
+            (row.issuer, row.assertion_id)
+            for row in session.scalars(select(SamlAssertionReplay).order_by(SamlAssertionReplay.assertion_id))
+        ]
+
+
+def test_database_replay_cache_rejects_a_consumed_assertion(tmp_path: Path) -> None:
+    from security_lakehouse.auth.saml import DatabaseAssertionReplayCache
+
+    factory = _replay_store(tmp_path)
+    cache = DatabaseAssertionReplayCache(factory)
+    assert cache.check_and_store("_a1", not_on_or_after=2000, issuer="https://idp.test", now=1000.0) is True
+    assert cache.check_and_store("_a1", not_on_or_after=2000, issuer="https://idp.test", now=1001.0) is False
+    # IDs are unique per issuer, so another IdP's identical id is a different assertion.
+    assert cache.check_and_store("_a1", not_on_or_after=2000, issuer="https://other-idp.test", now=1002.0) is True
+    assert _replay_rows(factory) == [("https://idp.test", "_a1"), ("https://other-idp.test", "_a1")]
+
+
+def test_database_replay_cache_is_shared_between_instances(tmp_path: Path) -> None:
+    from security_lakehouse.auth.saml import DatabaseAssertionReplayCache
+
+    factory = _replay_store(tmp_path)
+    replica_a = DatabaseAssertionReplayCache(factory)
+    replica_b = DatabaseAssertionReplayCache(factory)
+    assert replica_a.check_and_store("_a1", not_on_or_after=2000, issuer="idp", now=1000.0) is True
+    assert replica_b.check_and_store("_a1", not_on_or_after=2000, issuer="idp", now=1001.0) is False
+
+
+def test_database_replay_cache_forgets_expired_ids_and_cleans_up(tmp_path: Path) -> None:
+    from security_lakehouse.auth.saml import DatabaseAssertionReplayCache
+
+    factory = _replay_store(tmp_path)
+    cache = DatabaseAssertionReplayCache(factory, default_ttl_seconds=60, cleanup_interval_seconds=100)
+    assert cache.check_and_store("_old", not_on_or_after=1010, issuer="idp", now=1000.0) is True
+    assert cache.check_and_store("_ttl", not_on_or_after=None, issuer="idp", now=1000.0) is True
+    # Past NotOnOrAfter the assertion no longer validates, so its id may be reused.
+    assert cache.check_and_store("_old", not_on_or_after=1100, issuer="idp", now=1011.0) is True
+    # The default TTL applies when the assertion carries no NotOnOrAfter.
+    assert cache.check_and_store("_ttl", not_on_or_after=None, issuer="idp", now=1059.0) is False
+    # The periodic sweep drops every expired row, not only the one being checked.
+    assert cache.check_and_store("_new", not_on_or_after=5000, issuer="idp", now=1200.0) is True
+    assert _replay_rows(factory) == [("idp", "_new")]
+
+
+def test_database_replay_cache_concurrent_insert_admits_exactly_one(tmp_path: Path) -> None:
+    import threading
+
+    from security_lakehouse.auth.saml import DatabaseAssertionReplayCache
+
+    factory = _replay_store(tmp_path)
+    workers = 8
+    barrier = threading.Barrier(workers)
+    results: list[bool] = []
+    lock = threading.Lock()
+
+    def consume() -> None:
+        cache = DatabaseAssertionReplayCache(factory)  # one per "replica"
+        barrier.wait()
+        ok = cache.check_and_store("_race", not_on_or_after=None, issuer="idp")
+        with lock:
+            results.append(ok)
+
+    threads = [threading.Thread(target=consume) for _ in range(workers)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert sorted(results) == [False] * (workers - 1) + [True]
+    assert _replay_rows(factory) == [("idp", "_race")]
+
+
+def test_database_replay_cache_fails_closed_when_the_store_errors(tmp_path: Path) -> None:
+    from sqlalchemy.exc import OperationalError
+
+    from security_lakehouse.auth.saml import DatabaseAssertionReplayCache
+
+    def broken_factory():
+        raise OperationalError("INSERT", {}, Exception("database is unavailable"))
+
+    cache = DatabaseAssertionReplayCache(broken_factory)
+    assert cache.check_and_store("_a1", not_on_or_after=None, issuer="idp") is False
+
+
+def test_saml_replay_migration_adds_unique_table_and_downgrades(tmp_path: Path) -> None:
+    from alembic import command
+    from sqlalchemy import inspect
+
+    from security_lakehouse.db import migrate
+    from security_lakehouse.db.base import create_engine_for, database_url
+
+    migrate.upgrade(tmp_path)
+    engine = create_engine_for(tmp_path)
+    inspector = inspect(engine)
+    assert "saml_assertion_replays" in inspector.get_table_names()
+    uniques = inspector.get_unique_constraints("saml_assertion_replays")
+    assert any(sorted(u["column_names"]) == ["assertion_id", "issuer"] for u in uniques)
+    assert any(ix["column_names"] == ["expires_at"] for ix in inspector.get_indexes("saml_assertion_replays"))
+    engine.dispose()
+
+    command.downgrade(migrate._config(database_url(tmp_path)), "0019_task_resolution_note")
+    engine = create_engine_for(tmp_path)
+    assert "saml_assertion_replays" not in inspect(engine).get_table_names()
+    engine.dispose()
+
+
 def test_saml_acs_rejects_failed_response(tmp_path: Path, monkeypatch) -> None:
     app, _seen = _saml_app(tmp_path, monkeypatch, authenticated=False)
     client = TestClient(app)

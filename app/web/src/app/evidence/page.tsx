@@ -204,11 +204,18 @@ function EvidencePageContent() {
       header: "Asset",
       cell: (info) => {
         const [name, scope] = splitRef(info.getValue());
+        const displayName = info.row.original.asset_name?.trim();
         return (
           <div className="min-w-[160px] max-w-[240px]" title={info.getValue()}>
-            <div className="truncate font-mono text-xs font-semibold text-ink">
-              {name}
-            </div>
+            {displayName ? (
+              <div className="truncate text-xs font-semibold text-ink">
+                {displayName}
+              </div>
+            ) : (
+              <div className="truncate font-mono text-xs font-semibold text-ink">
+                {name}
+              </div>
+            )}
             <div className="truncate text-xs text-muted">
               {info.row.original.asset_owner || scope}
             </div>

@@ -9,11 +9,15 @@ same hashed browser session token used by all human SSO flows.
 from __future__ import annotations
 
 import os
+import threading
+import time
+from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs
 
+from itsdangerous import BadData, URLSafeTimedSerializer
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -28,6 +32,9 @@ _REQUIRED_ENV = {
     "TRUSTOPS_SAML_IDP_SSO_URL",
     "TRUSTOPS_SAML_IDP_X509_CERT",
 }
+SAML_REQUEST_COOKIE = "trustops_saml_request"
+SAML_REQUEST_MAX_AGE_SECONDS = 600
+_SAML_REQUEST_SALT = "trustops-saml-authn-request"
 _EMAIL_ATTRIBUTE_NAMES = (
     "email",
     "mail",
@@ -61,6 +68,7 @@ class SAMLConfig:
     name_id_format: str = "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
     role_attribute: str = "groups"
     role_map: dict[str, str] | None = None
+    allow_idp_initiated: bool = False
 
     def settings(self) -> dict[str, Any]:
         """Return OneLogin python3-saml settings."""
@@ -135,6 +143,7 @@ def load_saml_config() -> SAMLConfig | None:
         ),
         role_attribute=os.environ.get("TRUSTOPS_SAML_ROLE_ATTRIBUTE", "groups"),
         role_map=role_map,
+        allow_idp_initiated=os.environ.get("TRUSTOPS_SAML_ALLOW_IDP_INITIATED", "").lower() in _TRUTHY,
     )
 
 
@@ -233,3 +242,62 @@ def complete_saml_login(
         raise SAMLLoginError(f"user {email!r} is disabled")
     _row, token = repository.create_user_session(session, tenant_id=tenant.id, user_id=user.id, idp="saml", now=now)
     return user, token
+
+
+def _request_serializer() -> URLSafeTimedSerializer | None:
+    from security_lakehouse.auth.sessions import cookie_signing_key
+
+    key = cookie_signing_key()
+    return URLSafeTimedSerializer(key, salt=_SAML_REQUEST_SALT) if key else None
+
+
+def encode_saml_request_id(request_id: str) -> str:
+    """Sign the AuthnRequest ID for the short-lived login cookie."""
+    serializer = _request_serializer()
+    if serializer is None:
+        raise RuntimeError("TRUSTOPS_COOKIE_SIGNING_KEY is required for SAML login")
+    return serializer.dumps(request_id)
+
+
+def decode_saml_request_id(value: str | None) -> str | None:
+    """Return the AuthnRequest ID from a signed, unexpired login cookie, else ``None``."""
+    serializer = _request_serializer()
+    if not value or serializer is None:
+        return None
+    try:
+        data = serializer.loads(value, max_age=SAML_REQUEST_MAX_AGE_SECONDS)
+    except BadData:
+        return None
+    return data if isinstance(data, str) and data else None
+
+
+class AssertionReplayCache:
+    """Remembers consumed assertion IDs until their ``NotOnOrAfter`` passes.
+
+    In-process and bounded: each replica keeps its own cache, so a replay
+    routed to a different replica is not caught. The oldest entries are
+    evicted first when the cache is full.
+    """
+
+    def __init__(self, *, max_entries: int = 10_000, default_ttl_seconds: int = 3600) -> None:
+        self._entries: OrderedDict[str, float] = OrderedDict()
+        self._max = max_entries
+        self._default_ttl = default_ttl_seconds
+        self._lock = threading.Lock()
+
+    def __len__(self) -> int:
+        return len(self._entries)
+
+    def check_and_store(self, assertion_id: str, *, not_on_or_after: float | None, now: float | None = None) -> bool:
+        """Record ``assertion_id``; return ``False`` if it was already consumed and is still valid."""
+        moment = time.time() if now is None else now
+        expires = float(not_on_or_after) if not_on_or_after else moment + self._default_ttl
+        with self._lock:
+            for key in [k for k, exp in self._entries.items() if exp <= moment]:
+                del self._entries[key]
+            if assertion_id in self._entries:
+                return False
+            self._entries[assertion_id] = expires
+            while len(self._entries) > self._max:
+                self._entries.popitem(last=False)
+        return True

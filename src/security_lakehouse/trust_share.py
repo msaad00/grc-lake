@@ -18,9 +18,9 @@ the raw token returns once at create time.
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import secrets
+import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -110,12 +110,27 @@ def _share_by_idempotency_key(lake_dir: str | Path, idempotency_key: str) -> dic
     return matches[0] if matches else None
 
 
-def list_shares(lake_dir: str | Path, *, include_revoked: bool = False) -> list[dict[str, Any]]:
-    """Return current shares (latest record per share_id), optionally including revoked."""
-    path = _gold(lake_dir) / SHARES_FILE
-    if not path.is_file():
-        return []
-    latest: dict[str, dict[str, Any]] = {}
+def _parse_instant(value: object) -> datetime | None:
+    """Parse an ISO timestamp as an aware UTC instant; a naive value is UTC."""
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed.astimezone(UTC)
+
+
+def _is_expired(expires_at: object, now: datetime) -> bool:
+    if not expires_at:
+        return False
+    parsed = _parse_instant(expires_at)
+    return parsed is None or parsed < now
+
+
+def _read_share_rows(path: Path) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
@@ -123,18 +138,56 @@ def list_shares(lake_dir: str | Path, *, include_revoked: bool = False) -> list[
             row = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if isinstance(row, dict):
+            rows.append(row)
+    return rows
+
+
+# Per-lake parse of the share file, keyed on its (mtime, size) so an append by
+# any process (create or revoke) invalidates it. The public trust endpoint is
+# unauthenticated and probes every tenant lake, so an unchanged file must cost a
+# stat, not a full re-parse.
+_SHARE_CACHE: dict[str, tuple[tuple[int, int], list[dict[str, Any]], dict[str, dict[str, Any]]]] = {}
+_SHARE_CACHE_LOCK = threading.Lock()
+
+
+def _latest_shares(lake_dir: str | Path) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Return (latest record per share_id, token hash -> latest record)."""
+    path = _gold(lake_dir) / SHARES_FILE
+    try:
+        stat = path.stat()
+    except FileNotFoundError:
+        return [], {}
+    key = str(path.resolve())
+    version = (stat.st_mtime_ns, stat.st_size)
+    with _SHARE_CACHE_LOCK:
+        cached = _SHARE_CACHE.get(key)
+        if cached is not None and cached[0] == version:
+            return cached[1], cached[2]
+    latest: dict[str, dict[str, Any]] = {}
+    for row in _read_share_rows(path):
         sid = str(row.get("share_id") or "")
         if not sid:
             continue
         prev = latest.get(sid)
         if prev is None or str(row.get("created_at") or "") >= str(prev.get("created_at") or ""):
             latest[sid] = row
-    rows = list(latest.values())
+    records = list(latest.values())
+    by_token = {str(r["token_sha256"]): r for r in records if r.get("token_sha256")}
+    with _SHARE_CACHE_LOCK:
+        _SHARE_CACHE[key] = (version, records, by_token)
+    return records, by_token
+
+
+def list_shares(lake_dir: str | Path, *, include_revoked: bool = False) -> list[dict[str, Any]]:
+    """Return current shares (latest record per share_id), optionally including revoked."""
+    records, _by_token = _latest_shares(lake_dir)
+    rows = [dict(r) for r in records]
     if not include_revoked:
         rows = [r for r in rows if not r.get("revoked_at")]
-    now = _iso(_utc_now())
+    now = _utc_now()
     for row in rows:
-        row["expired"] = bool(row.get("expires_at") and row["expires_at"] < now)
+        row["expired"] = _is_expired(row.get("expires_at"), now)
     rows.sort(key=lambda r: str(r.get("created_at") or ""), reverse=True)
     return rows
 
@@ -195,18 +248,13 @@ def resolve_share(lake_dir: str | Path, token: str) -> dict[str, Any] | None:
     """
     if not token:
         return None
-    token_hash = _hash_token(token)
-    now = _iso(_utc_now())
-    for record in list_shares(lake_dir, include_revoked=False):
-        if not hmac.compare_digest(str(record.get("token_sha256") or ""), token_hash):
-            continue
-        if record.get("revoked_at"):
-            return None
-        expires_at = record.get("expires_at")
-        if expires_at and str(expires_at) < now:
-            return None
-        return record
-    return None
+    _records, by_token = _latest_shares(lake_dir)
+    record = by_token.get(_hash_token(token))
+    if record is None or record.get("revoked_at"):
+        return None
+    if _is_expired(record.get("expires_at"), _utc_now()):
+        return None
+    return {**record, "expired": False}
 
 
 def revoke_share(lake_dir: str | Path, share_id: str, *, actor: str = "console") -> dict[str, Any] | None:

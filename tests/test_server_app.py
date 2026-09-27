@@ -102,3 +102,23 @@ def test_server_mode_error_envelopes(client: TestClient) -> None:
     resp = client.get("/api/v1/not-real")
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json()["errors"][0]["code"] == "not_found"
+
+
+@pytest.mark.parametrize("route", ["/api/v1/snapshots", "/api/snapshots"])
+@pytest.mark.parametrize("payload", [[1, 2], "text", 7, None])
+def test_server_mode_non_object_json_body_is_a_bad_request(client: TestClient, route: str, payload: object) -> None:
+    import json as _json
+
+    resp = client.post(
+        route,
+        content=_json.dumps(payload),
+        headers={"content-type": "application/json", "Idempotency-Key": "k-1"},
+    )
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
+    assert resp.json()["errors"][0]["code"] == "bad_request"
+
+
+@pytest.mark.parametrize("route", ["/api/v1/snapshots", "/api/snapshots"])
+def test_server_mode_empty_body_is_still_accepted(client: TestClient, route: str) -> None:
+    resp = client.post(route, headers={"Idempotency-Key": "k-empty"})
+    assert resp.status_code == HTTPStatus.CREATED

@@ -92,6 +92,18 @@ def test_read_secret_file_first_missing_file_fails_closed(tmp_path: Path) -> Non
     assert _read_secret_file_first("REF", env) is None
 
 
+def test_unreadable_secret_file_logs_a_warning_without_secret_material(tmp_path: Path, caplog) -> None:
+    import logging
+
+    missing = tmp_path / "does-not-exist"
+    ref = "pasted-secret-value"
+    with caplog.at_level(logging.WARNING, logger="security_lakehouse.connector_runner"):
+        assert _read_secret_file_first(ref, {ref: "inline-secret", f"{ref}_FILE": str(missing)}) is None
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("_FILE secret mount is unreadable" in message for message in messages)
+    assert not any("inline-secret" in m or ref in m for m in messages)
+
+
 def test_resolve_provider_secret_prefers_explicit_ref(tmp_path: Path) -> None:
     ref_file = tmp_path / "explicit"
     ref_file.write_text("explicit-secret", encoding="utf-8")

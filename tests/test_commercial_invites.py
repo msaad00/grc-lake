@@ -166,3 +166,85 @@ def test_scim_users_when_enabled(env, monkeypatch: pytest.MonkeyPatch) -> None:
 
     missing = client.get("/api/v1/scim/v2/Users/does-not-exist", headers=scim_auth)
     assert missing.status_code == HTTPStatus.NOT_FOUND
+
+
+def _pending_invite(client, tenant_id: str, email: str, role: str = "contributor") -> str:
+    with session_scope(client.app.state.sessionmaker) as session:
+        _row, plaintext = invite_services.create_invite(
+            session, tenant_id=tenant_id, email=email, role=role, invited_by="admin@acme.test"
+        )
+    return plaintext
+
+
+def test_accept_invite_returns_and_records_the_created_user_id(env) -> None:
+    from sqlalchemy import select
+
+    from security_lakehouse.db.models import TenantInvite, User
+
+    client, tokens = env
+    plaintext = _pending_invite(client, tokens["tenant_id"], "ids@acme.test")
+
+    accepted = client.post("/api/v1/invites/accept", json={"token": plaintext})
+
+    assert accepted.status_code == HTTPStatus.OK
+    user_id = accepted.json()["data"]["user_id"]
+    assert user_id
+    with session_scope(client.app.state.sessionmaker) as session:
+        user = session.scalars(select(User).where(User.email == "ids@acme.test")).one()
+        invite = session.scalars(select(TenantInvite).where(TenantInvite.email == "ids@acme.test")).one()
+        assert user.id == user_id
+        assert invite.accepted_user_id == user_id
+        assert invite.status == "accepted"
+
+
+def test_accept_invite_for_existing_member_is_a_clean_conflict(env) -> None:
+    client, tokens = env
+    plaintext = _pending_invite(client, tokens["tenant_id"], "admin@acme.test")
+
+    resp = client.post("/api/v1/invites/accept", json={"token": plaintext})
+
+    assert resp.status_code == HTTPStatus.CONFLICT
+    assert resp.json()["errors"][0]["code"] == "conflict"
+
+
+def test_expired_invite_is_persisted_as_expired(env) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import select
+
+    from security_lakehouse.db.models import TenantInvite
+
+    client, tokens = env
+    plaintext = _pending_invite(client, tokens["tenant_id"], "late@acme.test")
+    with session_scope(client.app.state.sessionmaker) as session:
+        row = session.scalars(select(TenantInvite).where(TenantInvite.email == "late@acme.test")).one()
+        row.expires_at = datetime.now(UTC) - timedelta(hours=1)
+
+    resp = client.post("/api/v1/invites/accept", json={"token": plaintext})
+
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
+    assert "expired" in resp.json()["errors"][0]["detail"]
+    with session_scope(client.app.state.sessionmaker) as session:
+        row = session.scalars(select(TenantInvite).where(TenantInvite.email == "late@acme.test")).one()
+        assert row.status == "expired"
+
+
+@pytest.mark.parametrize("role", ["owner", "superuser", "ADMIN", ""])
+def test_create_invite_rejects_unknown_roles(env, role: str) -> None:
+    client, tokens = env
+    resp = client.post(
+        "/api/v1/invites",
+        json={"email": "role@acme.test", "role": role},
+        headers=_bearer(tokens["admin"]),
+    )
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    listed = client.get("/api/v1/invites", headers=_bearer(tokens["admin"])).json()["data"]
+    assert not any(row["email"] == "role@acme.test" for row in listed)
+
+
+def test_create_invite_service_rejects_unknown_roles(env) -> None:
+    client, tokens = env
+    with session_scope(client.app.state.sessionmaker) as session, pytest.raises(ValueError, match="role"):
+        invite_services.create_invite(
+            session, tenant_id=tokens["tenant_id"], email="svc@acme.test", role="owner", invited_by="a@acme.test"
+        )

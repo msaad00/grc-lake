@@ -40,6 +40,19 @@ def test_config_from_env_requires_host_and_defaults_to_secure() -> None:
     assert insecure is not None and insecure.secure is False
 
 
+@pytest.mark.parametrize("database", ["security; DROP TABLE x", "sec-urity", "1security", "security.events", ""])
+def test_config_rejects_unsafe_database_identifier(database: str) -> None:
+    with pytest.raises(ValueError, match="unsafe ClickHouse identifier"):
+        ClickHouseSinkConfig.from_env({"CLICKHOUSE_HOST": "h", "CLICKHOUSE_DATABASE": database or " "})
+    with pytest.raises(ValueError, match="unsafe ClickHouse identifier"):
+        ClickHouseSinkConfig(host="h", database=database)
+
+
+def test_delete_keys_sql_rejects_unsafe_database() -> None:
+    with pytest.raises(ValueError, match="unsafe ClickHouse identifier"):
+        delete_keys_sql(_spec("normalized_events"), "security; DROP TABLE x", [["e1"] * 20])
+
+
 def test_rows_for_spec_keeps_arrays_native_and_coerces_datetimes(tmp_path: Path) -> None:
     (tmp_path / "silver").mkdir()
     (tmp_path / "silver" / "normalized_events.jsonl").write_text(

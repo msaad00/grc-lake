@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connectors_clickhouse import safe_identifier
 from security_lakehouse.io import read_jsonl
 
 DEFAULT_DATABASE = "security"
@@ -49,6 +50,9 @@ class ClickHouseSinkConfig:
     user: str = "default"
     password: str = ""
     secure: bool = True
+
+    def __post_init__(self) -> None:
+        safe_identifier(self.database)
 
     @classmethod
     def from_env(cls, env: dict[str, str]) -> ClickHouseSinkConfig | None:
@@ -196,7 +200,7 @@ def delete_keys_sql(spec: CHTableSpec, database: str, rows: list[list[Any]]) -> 
         cols = ", ".join(spec.key)
         tuples = ", ".join("(" + ", ".join(_quote(r[i]) for i in key_idx) + ")" for r in rows)
         predicate = f"({cols}) IN ({tuples})"
-    return f"DELETE FROM {database}.{spec.table} WHERE {predicate}"
+    return f"DELETE FROM {safe_identifier(database)}.{spec.table} WHERE {predicate}"
 
 
 class ClickHouseSink:

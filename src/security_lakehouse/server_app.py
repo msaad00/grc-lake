@@ -22,7 +22,9 @@ import logging
 import math
 import os
 import secrets
+import threading
 import uuid
+from collections import OrderedDict
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
@@ -34,7 +36,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import Field
+from pydantic import Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -48,12 +50,17 @@ from security_lakehouse.auth.presentation import build_auth_methods_payload
 from security_lakehouse.auth.rate_limit import RateLimitConfig
 from security_lakehouse.auth.rate_limit_redis import RateLimiterBackend, build_rate_limiter
 from security_lakehouse.auth.rbac import Identity, scopes_for_role
-from security_lakehouse.auth.request_audit import append_request_audit
+from security_lakehouse.auth.request_audit import AnonymousAuditSampler, append_request_audit, should_audit_request
 from security_lakehouse.auth.saml import (
+    SAML_REQUEST_COOKIE,
+    SAML_REQUEST_MAX_AGE_SECONDS,
+    AssertionReplayCache,
     SAMLLoginError,
     build_saml_auth,
     complete_saml_login,
+    decode_saml_request_id,
     email_from_saml_assertion,
+    encode_saml_request_id,
     groups_from_saml_assertion,
     load_saml_config,
     saml_request_data,
@@ -72,7 +79,7 @@ from security_lakehouse.db import metrics as metrics_db
 from security_lakehouse.db import migrate, remediation, repository
 from security_lakehouse.db import tags as tags_db
 from security_lakehouse.db.base import DEFAULT_PAGE_LIMIT, clamp_limit, create_engine_for, session_factory
-from security_lakehouse.db.models import REMEDIATION_PRIORITIES, User
+from security_lakehouse.db.models import REMEDIATION_PRIORITIES, USER_ROLES, User
 from security_lakehouse.demo_links import build_demo_kit
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import resolve_path
@@ -88,26 +95,84 @@ from security_lakehouse.web import web_dist_dir, web_dist_index
 
 _COOKIE_SECURE = os.environ.get("TRUSTOPS_COOKIE_SECURE", "true").lower() in {"1", "true", "yes", "on"}
 
-_ERROR_CODES = {400: "bad_request", 401: "unauthorized", 403: "forbidden", 404: "not_found", 429: "rate_limited"}
+_ERROR_CODES = {
+    400: "bad_request",
+    401: "unauthorized",
+    403: "forbidden",
+    404: "not_found",
+    409: "conflict",
+    429: "rate_limited",
+}
 
 # Health probes are exempt from rate limiting so a limiter trip can never hide
 # liveness from an orchestrator.
 _RATE_LIMIT_EXEMPT = {"/api/healthz", "/api/v1/healthz"}
 
 
-def _rate_limit_key(request: Request) -> str:
-    """Bucket key for a request: the presented credential, else the client host.
+class _KnownCredentials:
+    """Bounded set of bearer-token digests that have authenticated successfully.
 
-    The bearer token is hashed so raw key material never lands in the limiter's
-    in-memory map; unauthenticated callers fall back to their source host.
+    Only these earn a per-credential rate-limit bucket; any other presented
+    token is charged to the client address, so rotating unauthenticated tokens
+    cannot mint fresh budgets or flood the limiter's key map.
     """
+
+    def __init__(self, max_entries: int = 10_000) -> None:
+        self._entries: OrderedDict[str, None] = OrderedDict()
+        self._max = max_entries
+        self._lock = threading.Lock()
+
+    def __contains__(self, digest: object) -> bool:
+        with self._lock:
+            return digest in self._entries
+
+    def add(self, digest: str) -> None:
+        with self._lock:
+            self._entries[digest] = None
+            self._entries.move_to_end(digest)
+            while len(self._entries) > self._max:
+                self._entries.popitem(last=False)
+
+    def discard(self, digest: str) -> None:
+        with self._lock:
+            self._entries.pop(digest, None)
+
+
+def _bearer_digest(request: Request) -> str | None:
     auth = request.headers.get("Authorization", "")
     if auth.lower().startswith("bearer "):
         token = auth[7:].strip()
         if token:
-            return "k:" + hashlib.sha256(token.encode("utf-8")).hexdigest()[:32]
+            return hashlib.sha256(token.encode("utf-8")).hexdigest()[:32]
+    return None
+
+
+def _rate_limit_key(request: Request, known: _KnownCredentials) -> str:
+    """Bucket key: an authenticated credential's own bucket, else the client host.
+
+    The bearer token is hashed so raw key material never lands in the limiter's
+    in-memory map. Behind a reverse proxy the client host is whatever uvicorn
+    resolves from its ``--forwarded-allow-ips`` / ``FORWARDED_ALLOW_IPS`` setting.
+    """
+    digest = _bearer_digest(request)
+    if digest is not None and digest in known:
+        return "k:" + digest
     client = request.client.host if request.client else "unknown"
     return "h:" + client
+
+
+async def _json_object_body(request: Request) -> dict[str, Any]:
+    """Parse a mutation body: empty or undecodable is no body; valid non-object JSON is a 400."""
+    raw = await request.body()
+    if not raw.strip():
+        return {}
+    try:
+        body = json.loads(raw)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="request body must be a JSON object")
+    return body
 
 
 _LEGACY_ERROR_REASONS = {
@@ -153,6 +218,13 @@ class EscalateFreshnessRequest(_StrictModel):
 class CreateInviteRequest(_StrictModel):
     email: str
     role: str = "contributor"
+
+    @field_validator("role")
+    @classmethod
+    def _known_role(cls, value: str) -> str:
+        if value not in USER_ROLES:
+            raise ValueError(f"role must be one of {list(USER_ROLES)}")
+        return value
 
 
 class AcceptInviteRequest(_StrictModel):
@@ -1028,6 +1100,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     if app.state.require_auth:
         ensure_cookie_signing_configured()
     app.state.rate_limiter = build_rate_limiter(RateLimitConfig.from_env(dict(os.environ)), dict(os.environ))
+    app.state.rate_limit_known_credentials = _KnownCredentials()
+    app.state.anonymous_audit_sampler = AnonymousAuditSampler()
 
     def lake_for(identity: Identity) -> Path:
         """Resolve the per-request lake for ``identity`` so one tenant can never
@@ -1053,6 +1127,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     app.state.oauth = None
     app.state.saml_config = load_saml_config()
     app.state.saml_auth_factory = build_saml_auth
+    app.state.saml_replay_cache = AssertionReplayCache()
     if app.state.oidc_config is not None:
         from starlette.middleware.sessions import SessionMiddleware
 
@@ -1079,7 +1154,18 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         response = await call_next(request)
         path = request.url.path
         # Audit authorization decisions on the secured API surfaces only; health is open.
-        if path.startswith("/api/") and path not in {"/api/healthz", "/api/v1/healthz"}:
+        identity = getattr(request.state, "identity", None)
+        if (
+            path.startswith("/api/")
+            and path not in {"/api/healthz", "/api/v1/healthz"}
+            and should_audit_request(
+                app.state.anonymous_audit_sampler,
+                identity=identity,
+                method=request.method,
+                status_code=response.status_code,
+                client_host=request.client.host if request.client else "unknown",
+            )
+        ):
             # Offload the synchronous append so the audit write never blocks the
             # event loop on every authenticated request.
             await run_in_threadpool(
@@ -1090,7 +1176,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 status_code=response.status_code,
                 decision="allow" if response.status_code < 400 else "deny",
                 correlation_id=correlation_id,
-                identity=getattr(request.state, "identity", None),
+                identity=identity,
             )
         response.headers["X-Correlation-ID"] = correlation_id
         return response
@@ -1100,9 +1186,10 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     @app.middleware("http")
     async def _rate_limit(request: Request, call_next):
         limiter: RateLimiterBackend = app.state.rate_limiter
+        known: _KnownCredentials = app.state.rate_limit_known_credentials
         path = request.url.path
         if limiter.enabled and path.startswith("/api/") and path not in _RATE_LIMIT_EXEMPT:
-            allowed, retry_after = limiter.check(_rate_limit_key(request))
+            allowed, retry_after = limiter.check(_rate_limit_key(request, known))
             if not allowed:
                 response = JSONResponse(
                     api_v1.error_envelope("rate_limited", "rate limit exceeded; slow down and retry"),
@@ -1110,7 +1197,15 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 )
                 response.headers["Retry-After"] = str(max(1, math.ceil(retry_after)))
                 return response
-        return await call_next(request)
+        response = await call_next(request)
+        digest = _bearer_digest(request)
+        if digest is not None:
+            identity = getattr(request.state, "identity", None)
+            if response.status_code == HTTPStatus.UNAUTHORIZED:
+                known.discard(digest)
+            elif identity is not None and getattr(identity, "api_key_id", None):
+                known.add(digest)
+        return response
 
     @app.exception_handler(StarletteHTTPException)
     async def _error_envelope(request: Request, exc: StarletteHTTPException) -> JSONResponse:
@@ -1350,7 +1445,18 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 query=dict(request.query_params),
             ),
         )
-        return RedirectResponse(url=auth.login(), status_code=status.HTTP_302_FOUND)
+        response = RedirectResponse(url=auth.login(), status_code=status.HTTP_302_FOUND)
+        # The IdP returns the user with a cross-site POST, which drops a Lax cookie.
+        response.set_cookie(
+            SAML_REQUEST_COOKIE,
+            encode_saml_request_id(auth.get_last_request_id()),
+            max_age=SAML_REQUEST_MAX_AGE_SECONDS,
+            httponly=True,
+            secure=True,
+            samesite="none",
+            path="/api/v1/auth/saml",
+        )
+        return response
 
     @app.get("/api/v1/auth/saml/metadata")
     def saml_metadata(request: Request):
@@ -1388,12 +1494,23 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 body=body,
             ),
         )
-        auth.process_response()
+        saml_config = app.state.saml_config
+        request_id = decode_saml_request_id(request.cookies.get(SAML_REQUEST_COOKIE))
+        if request_id is None and not saml_config.allow_idp_initiated:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
+        auth.process_response(request_id=request_id)
         errors = auth.get_errors()
         if errors or not auth.is_authenticated():
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
+        # python3-saml only compares InResponseTo when the response carries one.
+        if request_id is not None and auth.get_last_response_in_response_to() != request_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
+        assertion_id = auth.get_last_assertion_id()
+        if not assertion_id or not app.state.saml_replay_cache.check_and_store(
+            str(assertion_id), not_on_or_after=auth.get_last_assertion_not_on_or_after()
+        ):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
         try:
-            saml_config = app.state.saml_config
             claim_values = groups_from_saml_assertion(
                 auth,
                 attribute_name=saml_config.role_attribute,
@@ -1408,6 +1525,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="SAML login rejected") from None
         session.commit()
         response = RedirectResponse(url="/console", status_code=status.HTTP_302_FOUND)
+        response.delete_cookie(SAML_REQUEST_COOKIE, path="/api/v1/auth/saml", secure=True, samesite="none")
         response.set_cookie(
             SESSION_COOKIE,
             encode_session_cookie(sess_token),
@@ -1610,6 +1728,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         from security_lakehouse.commercial import signup as signup_services
 
+        if not signup_services.self_serve_signup_enabled():
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="self-serve signup requires TRUSTOPS_COMMERCIAL_HOSTED=1 and TRUSTOPS_SELF_SERVE_SIGNUP=1",
+            )
         secret = request.headers.get("X-TrustOps-Signup-Secret")
         if not signup_services.verify_signup_secret(secret):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="invalid signup secret")
@@ -1708,6 +1831,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             data = invite_services.accept_invite(session, token=body.token, display_name=body.display_name)
         except UsageLimitError as exc:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+        except invite_services.InviteConflictError as exc:
+            session.rollback()
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        except invite_services.InviteExpiredError as exc:
+            session.commit()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
         except ValueError as exc:
             detail = str(exc)
             if "TRUSTOPS_COMMERCIAL_HOSTED" in detail:
@@ -3171,10 +3300,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        try:
-            body = await request.json()
-        except Exception:  # noqa: BLE001 - empty/invalid body is treated as no body
-            body = {}
+        body = await _json_object_body(request)
         v1_path = f"/api/v1/{rest}"
         if request.headers.get("Idempotency-Key") and "idempotency_key" not in body:
             body = {**body, "idempotency_key": request.headers["Idempotency-Key"]}
@@ -3215,10 +3341,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        try:
-            body = await request.json()
-        except Exception:  # noqa: BLE001 - empty/invalid body is treated as no body
-            body = {}
+        body = await _json_object_body(request)
         legacy_path = f"/api/{rest}"
         required_scope = api_legacy.required_post_scope(legacy_path)
         if not identity.has_scope(required_scope):

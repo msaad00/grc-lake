@@ -184,3 +184,42 @@ def test_request_audit_is_explicit_not_default_activity(tmp_path: Path, env) -> 
 
     assert all(entry["category"] != "request" for entry in build_audit_log(tmp_path))
     assert build_audit_log(tmp_path, category="request")
+
+
+def _request_rows(lake: Path) -> list[dict]:
+    path = lake / "gold" / "request_audit.jsonl"
+    if not path.is_file():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def test_anonymous_request_floods_do_not_grow_the_audit_log_unbounded(tmp_path: Path, env) -> None:
+    client, _tokens = env
+    for _ in range(40):
+        client.get("/api/v1/controls")
+        client.get("/api/v1/platform/pricing")
+        client.post("/api/v1/snapshots", json={})
+    anonymous = [row for row in _request_rows(tmp_path) if row["actor"] == "anonymous"]
+    # Still visible: the first denial and the first anonymous read from this client.
+    assert {row["decision"] for row in anonymous} == {"allow", "deny"}
+    assert len(anonymous) <= 4
+
+
+def test_authenticated_requests_are_always_audited(tmp_path: Path, env) -> None:
+    client, tokens = env
+    for _ in range(5):
+        client.get("/api/v1/controls", headers=_bearer(tokens["admin"]))
+    authenticated = [row for row in _request_rows(tmp_path) if row["actor"] != "anonymous"]
+    assert len(authenticated) == 5
+
+
+def test_anonymous_request_sampler_windows_per_client() -> None:
+    from security_lakehouse.auth.request_audit import AnonymousAuditSampler
+
+    sampler = AnonymousAuditSampler(window_seconds=60, max_keys=2)
+    assert sampler.should_record("h1|deny", now=0.0) is True
+    assert sampler.should_record("h1|deny", now=30.0) is False
+    assert sampler.should_record("h2|deny", now=31.0) is True
+    assert sampler.should_record("h1|deny", now=61.0) is True
+    assert sampler.should_record("h3|deny", now=62.0) is True
+    assert len(sampler) <= 2

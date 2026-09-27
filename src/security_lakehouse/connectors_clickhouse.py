@@ -74,20 +74,26 @@ class ClickHouseClient:
         last_time: str | None = None
         last_id: str | None = None
         for _ in range(MAX_PAGES):
+            # Watermark and cursor values come from source rows, so they are
+            # bound as typed HTTP query parameters and never spliced into SQL.
             conditions: list[str] = []
+            params: dict[str, str] = {}
             if since:
-                conditions.append(f"event_time > parseDateTime64BestEffort({_quote_literal(since)})")
+                conditions.append("event_time > parseDateTime64BestEffort({since:String})")
+                params["since"] = since
             if last_time is not None and last_id is not None:
-                boundary = f"parseDateTime64BestEffort({_quote_literal(last_time)})"
+                boundary = "parseDateTime64BestEffort({cursor_time:String})"
                 conditions.append(
-                    f"(event_time > {boundary} OR (event_time = {boundary} AND event_id > {_quote_literal(last_id)}))"
+                    f"(event_time > {boundary} OR (event_time = {boundary} AND event_id > {{cursor_id:String}}))"
                 )
+                params["cursor_time"] = last_time
+                params["cursor_id"] = last_id
             where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
             query = (
                 f"SELECT * FROM {safe_table}{where} ORDER BY event_time, event_id "
                 f"LIMIT {int(page_size)} FORMAT JSONEachRow"
             )
-            page = self._query_json_each_row(query)
+            page = self._query_json_each_row(query, params=params)
             rows.extend(page)
             if len(page) < page_size:
                 break
@@ -99,7 +105,7 @@ class ClickHouseClient:
         return rows
 
     def show_tables(self) -> list[str]:
-        rows = self._query_json_each_row(f"SHOW TABLES FROM {_safe_identifier(self.database)} FORMAT JSONEachRow")
+        rows = self._query_json_each_row(f"SHOW TABLES FROM {safe_identifier(self.database)} FORMAT JSONEachRow")
         return [str(row.get("name") or "") for row in rows if row.get("name")]
 
     def probe(self, *, table: str = DEFAULT_TABLE) -> dict[str, Any]:
@@ -133,8 +139,11 @@ class ClickHouseClient:
             "recommended_options": {"database": self.database, "table": DEFAULT_TABLE},
         }
 
-    def _query_json_each_row(self, query: str) -> list[dict[str, Any]]:
-        url = f"{self.base_url}/?database={urllib.parse.quote(self.database)}"
+    def _query_json_each_row(self, query: str, *, params: dict[str, str] | None = None) -> list[dict[str, Any]]:
+        query_string: dict[str, str] = {"database": self.database, "readonly": "1"}
+        for name, value in (params or {}).items():
+            query_string[f"param_{name}"] = escape_query_parameter(value)
+        url = f"{self.base_url}/?{urllib.parse.urlencode(query_string)}"
         request = urllib.request.Request(
             url,
             data=query.encode("utf-8"),
@@ -349,7 +358,7 @@ def _event_time_iso(value: Any) -> str:
         return text.replace(" ", "T") + ("Z" if not text.endswith("Z") and "+" not in text else "")
 
 
-def _safe_identifier(value: str) -> str:
+def safe_identifier(value: str) -> str:
     text = str(value or "").strip()
     if not IDENTIFIER.fullmatch(text):
         raise ValueError(f"unsafe ClickHouse identifier {value!r}")
@@ -357,8 +366,17 @@ def _safe_identifier(value: str) -> str:
 
 
 def _safe_table_ref(database: str, table: str) -> str:
-    return f"{_safe_identifier(database)}.{_safe_identifier(table)}"
+    return f"{safe_identifier(database)}.{safe_identifier(table)}"
 
 
-def _quote_literal(value: str) -> str:
-    return "'" + str(value).replace("'", "''") + "'"
+_PARAMETER_ESCAPES = str.maketrans({"\\": "\\\\", "\t": "\\t", "\n": "\\n", "\r": "\\r", "\0": "\\0"})
+
+
+def escape_query_parameter(value: str) -> str:
+    """Encode an HTTP query-parameter value in ClickHouse's escaped (TSV) format.
+
+    ClickHouse decodes ``param_<name>`` values with backslash escapes and rejects
+    raw control characters, so a cursor taken from a row must be re-escaped to
+    compare equal to that row.
+    """
+    return str(value).translate(_PARAMETER_ESCAPES)

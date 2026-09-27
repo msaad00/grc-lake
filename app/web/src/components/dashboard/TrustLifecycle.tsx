@@ -31,7 +31,9 @@ export function TrustLifecycle({ posture, assessmentHash }: Props) {
       Icon: Database,
       detail: "Connect cloud, identity, code, vendor, or lake sources.",
       state:
-        staleEvidence > 0 ? `${staleEvidence} stale evidence` : "fresh enough",
+        staleEvidence > 0
+          ? `${staleEvidence} ${staleEvidence === 1 ? "record needs" : "records need"} refresh`
+          : "within freshness SLA",
       tone: staleEvidence > 0 ? "attention" : "ready",
     },
     {
@@ -39,7 +41,7 @@ export function TrustLifecycle({ posture, assessmentHash }: Props) {
       href: "/evidence",
       Icon: FileSearch,
       detail: "Normalize proof, verify hashes, and track freshness.",
-      state: `${staleEvidence} stale`,
+      state: `${staleEvidence} to refresh`,
       tone: staleEvidence > 0 ? "attention" : "ready",
     },
     {

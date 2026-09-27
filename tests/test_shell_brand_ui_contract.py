@@ -11,11 +11,10 @@ TOPBAR = ROOT / "app/web/src/components/shell/TopBar.tsx"
 def test_shell_shows_the_brand_once_in_the_top_bar() -> None:
     sidebar = SIDEBAR.read_text(encoding="utf-8")
     topbar = TOPBAR.read_text(encoding="utf-8")
-    crumbs = (ROOT / "app/web/src/components/shell/Breadcrumbs.tsx").read_text(encoding="utf-8")
 
     assert 'markSize="md"' in topbar
     assert "TrustOpsLogo" not in sidebar
-    assert "TrustOpsMark" not in crumbs
+    assert "TrustOpsMark" not in sidebar
 
 
 def test_shell_uses_document_scroll_not_fixed_canvas() -> None:
@@ -29,4 +28,4 @@ def test_shell_uses_document_scroll_not_fixed_canvas() -> None:
     assert 'id="main-content"' in shell
     assert "overflow-x-hidden" in shell
     assert "sticky top-0 z-40" in topbar
-    assert "sticky top-[52px]" in sidebar
+    assert "sticky top-[var(--topbar-h)]" in sidebar

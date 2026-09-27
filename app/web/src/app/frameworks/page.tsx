@@ -42,6 +42,8 @@ import type {
   FrameworkView,
   ReadinessStage,
 } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
+import { formatCount } from "@/lib/format";
 
 const TONE_TEXT: Record<FrameworkFreshness, string> = {
   fresh: "Source pulled recently",
@@ -115,8 +117,8 @@ function Row({
           <div className="flex items-center justify-between gap-3 text-xs">
             <span className="font-black text-ink">Mapped</span>
             <span className="text-muted">
-              <b className="text-ink">{evaluatablePct}%</b> · {evaluatableCount}
-              /{seededCount}
+              <b className="text-ink">{evaluatablePct}%</b> ·{" "}
+              {formatCount(evaluatableCount)}/{formatCount(seededCount)}
             </span>
           </div>
           <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surfaceMuted">
@@ -130,8 +132,8 @@ function Row({
           <div className="flex items-center justify-between gap-3 text-xs">
             <span className="font-black text-ink">Reviewed</span>
             <span className="text-muted">
-              <b className="text-ink">{attestablePct}%</b> · {attestableCount}/
-              {seededCount}
+              <b className="text-ink">{attestablePct}%</b> ·{" "}
+              {formatCount(attestableCount)}/{formatCount(seededCount)}
             </span>
           </div>
           <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surfaceMuted">
@@ -550,8 +552,8 @@ function FrameworksPageContent() {
   return (
     <div className="page-shell ui-page-canvas grid min-h-full gap-5">
       <PageHeader
-        eyebrow="Frameworks"
-        title="Framework coverage"
+        eyebrow="Framework coverage"
+        title={ROUTE_LABELS["/frameworks"]}
         description="Review requirement coverage, mapping status, readiness gates, and source records for each framework."
         actions={
           <div className="flex flex-wrap gap-2">
@@ -605,7 +607,7 @@ function FrameworksPageContent() {
               Catalogued requirements
             </div>
             <div className="mt-1 text-3xl font-black text-white">
-              {coverageSummary?.seeded_control_count ?? "—"}
+              {formatCount(coverageSummary?.seeded_control_count)}
             </div>
             <p className="mt-1 text-xs text-slate-400">
               Across {coverageSummary?.framework_count ?? "—"} framework packs
@@ -629,8 +631,8 @@ function FrameworksPageContent() {
               />
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              {coverageSummary?.evaluatable_requirement_count ?? "—"} mapped to
-              safeguards
+              {formatCount(coverageSummary?.evaluatable_requirement_count)}{" "}
+              mapped to safeguards
             </p>
           </div>
           <div className="bg-[#09182a]/95 p-4">
@@ -644,7 +646,7 @@ function FrameworksPageContent() {
                 : "—"}
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              {coverageSummary?.attestable_requirement_count ?? "—"}{" "}
+              {formatCount(coverageSummary?.attestable_requirement_count)}{" "}
               requirements with every mapping reviewed
             </p>
           </div>
@@ -654,8 +656,10 @@ function FrameworksPageContent() {
             </div>
             <div className="mt-1 text-3xl font-black text-white">
               {coverageSummary
-                ? coverageSummary.evaluatable_requirement_count -
-                  coverageSummary.attestable_requirement_count
+                ? formatCount(
+                    coverageSummary.evaluatable_requirement_count -
+                      coverageSummary.attestable_requirement_count,
+                  )
                 : "—"}
             </div>
             <p className="mt-1 text-xs text-slate-400">

@@ -25,14 +25,10 @@ async function expectPaletteDeepLink(
   await page.getByRole("button", { name: "Open command palette" }).click();
   const palette = page.getByRole("dialog", { name: "Search" });
   await expect(palette).toBeVisible();
-  await palette
-    .getByPlaceholder(
-      "Search controls, violations, evidence, workflows, routes…",
-    )
-    .fill(id);
+  await palette.getByRole("combobox", { name: "Search the console" }).fill(id);
   // Indexes arrive independently. A related evidence subtitle may contain
   // the control ID before the actual control result has loaded.
-  const result = palette.getByRole("button").filter({
+  const result = palette.getByRole("option").filter({
     has: page.getByText(id, { exact: true }),
   });
   await expect(result).toHaveCount(1, { timeout: 15_000 });

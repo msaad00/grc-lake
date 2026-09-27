@@ -28,6 +28,7 @@ import { FrameworkReadinessTrendChart } from "@/components/insights/FrameworkRea
 import { SlaHeatmapPanel } from "@/components/insights/SlaHeatmapPanel";
 import { QueryState } from "@/components/QueryState";
 import { docsUrl } from "@/lib/format";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -96,10 +97,10 @@ export default function InsightsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-[12px] font-black uppercase tracking-wider text-brand">
-            Insights
+            Metrics &amp; trends
           </div>
           <h1 className="mt-1 text-3xl font-black text-ink">
-            Metrics &amp; trends
+            {ROUTE_LABELS["/insights"]}
           </h1>
           <p className="mt-2 max-w-[720px] text-sm text-muted">
             Posture score, framework readiness, evidence freshness, mean time to

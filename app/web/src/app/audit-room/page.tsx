@@ -25,6 +25,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { QueryState } from "@/components/QueryState";
 import { KpiTile } from "@/components/ui/KpiTile";
 import { useAuditReadiness, usePlatformStream } from "@/lib/api/hooks";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const AUDIT_ROOM_TABS = ["Freshness", "Runs", "Snapshots", "Gaps"] as const;
 type AuditRoomTab = (typeof AUDIT_ROOM_TABS)[number];
@@ -52,7 +53,7 @@ export default function AuditRoomPage() {
     <div className="page-shell grid gap-2">
       <PageHeader
         eyebrow="Audit center"
-        title="Audit readiness room"
+        title={ROUTE_LABELS["/audit-room"]}
         description="Review posture, freshness, snapshots, and proof gaps without leaving the trust workflow."
       />
 

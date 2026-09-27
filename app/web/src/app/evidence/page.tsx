@@ -49,6 +49,8 @@ import type {
   NormalizedEvent,
   Severity,
 } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
+import { splitRef } from "@/lib/format";
 
 const SURFACE = "evidence";
 
@@ -200,14 +202,19 @@ function EvidencePageContent() {
     }),
     helper.accessor("asset_id", {
       header: "Asset",
-      cell: (info) => (
-        <div className="min-w-[160px] max-w-[260px]">
-          <code className="break-all text-xs text-ink">{info.getValue()}</code>
-          <div className="text-xs text-muted">
-            {info.row.original.asset_owner}
+      cell: (info) => {
+        const [name, scope] = splitRef(info.getValue());
+        return (
+          <div className="min-w-[160px] max-w-[240px]" title={info.getValue()}>
+            <div className="truncate font-mono text-xs font-semibold text-ink">
+              {name}
+            </div>
+            <div className="truncate text-xs text-muted">
+              {info.row.original.asset_owner || scope}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     }),
     helper.accessor("control_ids", {
       header: "Controls",
@@ -252,11 +259,17 @@ function EvidencePageContent() {
     }),
     helper.accessor("evidence_ref", {
       header: "Evidence ref",
-      cell: (info) => (
-        <code className="block min-w-[180px] max-w-[360px] break-all text-xs">
-          {info.getValue()}
-        </code>
-      ),
+      cell: (info) => {
+        const [file, location] = splitRef(info.getValue());
+        return (
+          <div className="min-w-[160px] max-w-[260px]" title={info.getValue()}>
+            <code className="block truncate text-xs text-ink">{file}</code>
+            {location ? (
+              <div className="truncate text-[11px] text-muted">{location}</div>
+            ) : null}
+          </div>
+        );
+      },
     }),
   ];
 
@@ -272,7 +285,7 @@ function EvidencePageContent() {
     <div className="page-shell grid gap-3">
       <PageHeader
         eyebrow="Evidence room"
-        title="Normalized evidence facts"
+        title={ROUTE_LABELS["/evidence"]}
         description="These rows are evidence facts, not reports. Click a row to verify its SHA-256 hash against the original, unaltered record."
         actions={
           <span className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-black text-muted">
@@ -332,7 +345,9 @@ function EvidencePageContent() {
             severity: (viewFilters.severity as Severity | "all") ?? "all",
             freshness:
               (viewFilters.freshness as
-                EvidenceFreshnessStatus | "all" | undefined) ?? "all",
+                | EvidenceFreshnessStatus
+                | "all"
+                | undefined) ?? "all",
             query: (viewFilters.query as string) ?? "",
           })
         }

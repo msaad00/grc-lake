@@ -51,6 +51,8 @@ import {
 import { GraphNodeDrawer } from "@/components/graph/GraphNodeDrawer";
 import { useComplianceGraph, useRepositoryGraph } from "@/lib/api/hooks";
 import type { GraphNode, GraphNodeKind } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
+import { formatCount } from "@/lib/format";
 
 const COMPLIANCE_KINDS: GraphNodeKind[] = [
   "framework",
@@ -611,12 +613,12 @@ function GraphPageContent() {
   return (
     <div className="page-shell grid gap-3">
       <PageHeader
-        eyebrow="Graph"
-        title={
+        eyebrow={
           graphMode === "compliance"
-            ? "Compliance mapping graph"
+            ? "Compliance mapping"
             : "Repository topology and governance"
         }
+        title={ROUTE_LABELS["/graph"]}
         description={
           graphMode === "compliance"
             ? "Focused framework slices show the control-to-evidence-to-asset path clearly. Expand to the wide map only when you need every framework at once."
@@ -626,7 +628,7 @@ function GraphPageContent() {
           <Badge tone="info">
             <Network className="mr-1 h-3 w-3" />{" "}
             {data
-              ? `${data.nodes.length} nodes / ${data.edges.length} edges`
+              ? `${formatCount(data.nodes.length)} nodes / ${formatCount(data.edges.length)} edges`
               : "loading"}
           </Badge>
         }
@@ -793,7 +795,8 @@ function GraphPageContent() {
                 : "Repository"}
             </div>
             <div className="mt-0.5 text-[11px] text-muted">
-              {visibleSummary.nodes} nodes / {visibleSummary.edges} edges
+              {formatCount(visibleSummary.nodes)} nodes /{" "}
+              {formatCount(visibleSummary.edges)} edges
             </div>
           </Card>
           <Card className="p-2.5">
@@ -890,7 +893,7 @@ function GraphPageContent() {
                         </span>
                         <span className="truncate">{KIND_LABEL[kind]}</span>
                         <Badge tone={KIND_TONE[kind]}>
-                          {counts[kind] ?? 0}
+                          {formatCount(counts[kind] ?? 0)}
                         </Badge>
                       </button>
                     );

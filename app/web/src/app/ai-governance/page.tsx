@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { QueryState } from "@/components/QueryState";
 import { AiGovernanceStrip } from "@/components/audit-room/AiGovernanceStrip";
 import { useAiInventory, usePlatformStream } from "@/lib/api/hooks";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 export default function AiGovernancePage() {
   const inventory = useAiInventory(50);
@@ -17,7 +18,7 @@ export default function AiGovernancePage() {
     <div className="page-shell grid gap-6">
       <PageHeader
         eyebrow="AI programs"
-        title="AI governance"
+        title={ROUTE_LABELS["/ai-governance"]}
         description="Model inventory, lineage, runtime signals, and framework mapping for NIST AI RMF, ISO 42001, and EU AI Act evidence loops."
         actions={
           <Badge tone={connected ? "ready" : "attention"}>

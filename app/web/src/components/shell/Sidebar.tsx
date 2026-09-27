@@ -1,284 +1,198 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ActivityIcon,
-  AlertOctagon,
-  BookOpen,
-  Bot,
-  BrainCircuit,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardCheck,
-  FileSearch,
-  Layers,
-  LayoutDashboard,
-  Plug,
-  ShieldAlert,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  Zap,
-} from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { SidebarFooter } from "./SidebarFooter";
 import { cn } from "@/lib/utils";
 import { usePersistentState } from "@/lib/state/preferences";
+import { NAV_GROUPS, NAV_ITEMS, isActiveRoute, type NavGroup } from "@/lib/nav";
 
-interface RailItem {
-  href: string;
-  label: string;
-  Icon: typeof LayoutDashboard;
-  group: "Overview" | "Collect" | "Evaluate" | "Resolve" | "Review & export";
-}
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-rail";
 
-const ITEMS: RailItem[] = [
-  // ── Overview ──
-  {
-    href: "/dashboard",
-    label: "Overview",
-    Icon: LayoutDashboard,
-    group: "Overview",
-  },
-  {
-    href: "/insights",
-    label: "Insights",
-    Icon: ActivityIcon,
-    group: "Overview",
-  },
-
-  // ── Collect ──
-  { href: "/connectors", label: "Connections", Icon: Plug, group: "Collect" },
-  { href: "/evidence", label: "Evidence", Icon: FileSearch, group: "Collect" },
-  {
-    href: "/access-reviews",
-    label: "Access reviews",
-    Icon: Users,
-    group: "Collect",
-  },
-  {
-    href: "/vendor-risk",
-    label: "Vendor risk",
-    Icon: ShieldAlert,
-    group: "Collect",
-  },
-
-  // ── Evaluate ──
-  {
-    href: "/controls",
-    label: "Controls",
-    Icon: ShieldCheck,
-    group: "Evaluate",
-  },
-  {
-    href: "/frameworks",
-    label: "Frameworks",
-    Icon: BookOpen,
-    group: "Evaluate",
-  },
-  {
-    href: "/violations",
-    label: "Findings",
-    Icon: AlertOctagon,
-    group: "Evaluate",
-  },
-  {
-    href: "/risks",
-    label: "Risk register",
-    Icon: ShieldAlert,
-    group: "Evaluate",
-  },
-  { href: "/policies", label: "Policies", Icon: BookOpen, group: "Evaluate" },
-  {
-    href: "/ai-governance",
-    label: "AI governance",
-    Icon: BrainCircuit,
-    group: "Evaluate",
-  },
-  { href: "/crosswalk", label: "Crosswalk", Icon: Layers, group: "Evaluate" },
-
-  // ── Resolve ──
-  {
-    href: "/remediation",
-    label: "Remediation",
-    Icon: ShieldCheck,
-    group: "Resolve",
-  },
-  { href: "/automation", label: "Workflows", Icon: Zap, group: "Resolve" },
-  { href: "/agents", label: "Agents", Icon: Bot, group: "Resolve" },
-
-  // ── Review & export ──
-  {
-    href: "/audit-room",
-    label: "Audit room",
-    Icon: ClipboardCheck,
-    group: "Review & export",
-  },
-  {
-    href: "/trust-center",
-    label: "Trust center",
-    Icon: Sparkles,
-    group: "Review & export",
-  },
-  {
-    href: "/audit-log",
-    label: "Audit log",
-    Icon: ActivityIcon,
-    group: "Review & export",
-  },
-];
-
-const GROUPS: RailItem["group"][] = [
-  "Overview",
-  "Collect",
-  "Evaluate",
-  "Resolve",
-  "Review & export",
-];
-
-function isGroupClosed(
-  group: RailItem["group"],
-  closedGroups: Record<string, boolean>,
-) {
-  if (closedGroups[group] !== undefined) return closedGroups[group];
-  return false;
-}
-
-export function Sidebar() {
+function NavLinks({
+  collapsed,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname() ?? "/dashboard";
-  const [collapsed, setCollapsed] = usePersistentState(
-    "trustops:sidebar:collapsed",
-    false,
-  );
-  const [compactViewport, setCompactViewport] = useState(false);
   const [closedGroups, setClosedGroups] = usePersistentState<
     Record<string, boolean>
   >("trustops:sidebar:closed-groups", {});
-  const effectiveCollapsed = collapsed || compactViewport;
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 767px)");
-    const update = () => setCompactViewport(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
 
-  const toggleGroup = (group: RailItem["group"]) => {
-    setClosedGroups({
-      ...closedGroups,
-      [group]: !isGroupClosed(group, closedGroups),
-    });
+  const toggleGroup = (group: NavGroup) => {
+    setClosedGroups({ ...closedGroups, [group]: !closedGroups[group] });
   };
 
   return (
-    <aside
-      className={cn(
-        "sticky top-[52px] grid h-[calc(100dvh-52px)] grid-rows-[1fr_auto] self-start border-r border-railLine bg-rail text-slate-300 transition-[width]",
-        effectiveCollapsed ? "w-[64px]" : "w-[248px]",
-      )}
-    >
-      <div className="overflow-y-auto p-2.5">
-        {GROUPS.map((group) => {
-          const isClosed =
-            isGroupClosed(group, closedGroups) && !effectiveCollapsed;
-          const groupItems = ITEMS.filter((i) => i.group === group);
-          return (
-            <div key={group} className="mb-3">
-              {!effectiveCollapsed ? (
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(group)}
-                  aria-expanded={!isClosed}
-                  className="flex w-full items-center justify-between px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#708198] hover:text-[#bcc8d8]"
-                >
-                  <span>{group}</span>
-                  {isClosed ? (
-                    <ChevronRight className="h-3 w-3" />
-                  ) : (
-                    <ChevronLeft className="h-3 w-3 rotate-180" />
-                  )}
-                </button>
-              ) : (
-                <div
-                  aria-hidden="true"
-                  className="mx-3 mb-2 border-t border-railLine"
-                />
-              )}
-              {!isClosed && (
-                <div className="grid gap-1">
-                  {groupItems.map(({ href, label, Icon }) => {
-                    const active =
-                      pathname === href || pathname.startsWith(href + "/");
+    <nav aria-label="Primary" className="overflow-y-auto p-2.5">
+      {NAV_GROUPS.map((group) => {
+        const isClosed = Boolean(closedGroups[group]) && !collapsed;
+        const groupId = `nav-group-${group.replace(/\W+/g, "-").toLowerCase()}`;
+        return (
+          <div key={group} className="mb-2">
+            {!collapsed ? (
+              <button
+                type="button"
+                onClick={() => toggleGroup(group)}
+                aria-expanded={!isClosed}
+                aria-controls={groupId}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-md px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-rail-heading hover:text-rail-heading-hover",
+                  FOCUS_RING,
+                )}
+              >
+                <span>{group}</span>
+                {isClosed ? (
+                  <ChevronRight aria-hidden="true" className="h-3 w-3" />
+                ) : (
+                  <ChevronDown aria-hidden="true" className="h-3 w-3" />
+                )}
+              </button>
+            ) : (
+              <div
+                aria-hidden="true"
+                className="mx-3 mb-2 border-t border-rail-line"
+              />
+            )}
+            {!isClosed && (
+              <ul id={groupId} className="grid gap-0.5">
+                {NAV_ITEMS.filter((item) => item.group === group).map(
+                  ({ href, label, Icon }) => {
+                    const active = isActiveRoute(pathname, href);
                     return (
-                      <Link
-                        key={href}
-                        href={href}
-                        title={effectiveCollapsed ? label : undefined}
-                        className={cn(
-                          "flex items-center gap-2 rounded-lg border px-2.5 text-[13px] font-extrabold transition-colors",
-                          effectiveCollapsed
-                            ? "h-9 justify-center px-0"
-                            : "h-9 justify-between",
-                          active
-                            ? "border-[#31435c] bg-[#172436] text-white"
-                            : "border-transparent text-[#c6d1df] hover:bg-[#152030]",
-                        )}
-                      >
-                        <span
+                      <li key={href}>
+                        <Link
+                          href={href}
+                          onClick={onNavigate}
+                          aria-current={active ? "page" : undefined}
+                          aria-label={collapsed ? label : undefined}
+                          title={collapsed ? label : undefined}
                           className={cn(
-                            "flex items-center gap-2.5",
-                            effectiveCollapsed ? "justify-center" : "",
+                            "flex h-8 items-center gap-2.5 rounded-lg border px-2.5 text-[13px] font-extrabold transition-colors",
+                            FOCUS_RING,
+                            collapsed && "justify-center px-0",
+                            active
+                              ? "border-rail-active-line bg-rail-active text-white"
+                              : "border-transparent text-rail-text hover:bg-rail-hover",
                           )}
                         >
                           <span
+                            aria-hidden="true"
                             className={cn(
                               "grid place-items-center rounded-lg",
-                              effectiveCollapsed ? "h-7 w-7" : "h-6 w-6",
+                              collapsed ? "h-7 w-7" : "h-6 w-6",
                               active
-                                ? "bg-[#eff6ff] text-[#1d4ed8]"
-                                : "bg-[#1d2b3d] text-[#9cc2ff]",
+                                ? "bg-rail-chip-active text-rail-chip-active-icon"
+                                : "bg-rail-chip text-rail-chip-icon",
                             )}
                           >
                             <Icon className="h-4 w-4" />
                           </span>
-                          {!effectiveCollapsed && label}
-                        </span>
-                      </Link>
+                          {!collapsed && label}
+                        </Link>
+                      </li>
                     );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                  },
+                )}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
 
+/** Persistent rail from `md` up; below that the TopBar opens `MobileNav`. */
+export function Sidebar() {
+  const [collapsed, setCollapsed] = usePersistentState(
+    "trustops:sidebar:collapsed",
+    false,
+  );
+
+  return (
+    <aside
+      className={cn(
+        "sticky top-[var(--topbar-h)] h-[calc(100dvh-var(--topbar-h))] grid-rows-[1fr_auto] self-start border-r border-rail-line bg-rail text-slate-300 transition-[width] hidden md:grid",
+        collapsed ? "w-[64px]" : "w-[248px]",
+      )}
+    >
+      <NavLinks collapsed={collapsed} />
       <SidebarFooter
-        collapsed={effectiveCollapsed}
+        collapsed={collapsed}
         toggle={
           <button
             type="button"
-            onClick={() => {
-              if (!compactViewport) setCollapsed(!collapsed);
-            }}
-            aria-label={
-              compactViewport
-                ? "Sidebar is compact on small screens"
-                : effectiveCollapsed
-                  ? "Expand sidebar"
-                  : "Collapse sidebar"
-            }
-            className="ml-auto grid h-7 w-7 place-items-center rounded-md text-[#9aa9bc] hover:bg-[#152030]"
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "ml-auto grid h-7 w-7 place-items-center rounded-md text-slate-400 hover:bg-rail-hover hover:text-slate-200",
+              FOCUS_RING,
+            )}
           >
-            {effectiveCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
+            {collapsed ? (
+              <ChevronRight aria-hidden="true" className="h-4 w-4" />
             ) : (
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
             )}
           </button>
         }
       />
     </aside>
+  );
+}
+
+export function MobileNav({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  // The drawer only exists below md; never leave a hidden modal trapping focus.
+  useEffect(() => {
+    if (!open) return;
+    const query = window.matchMedia("(min-width: 768px)");
+    const close = () => {
+      if (query.matches) onOpenChange(false);
+    };
+    close();
+    query.addEventListener("change", close);
+    return () => query.removeEventListener("change", close);
+  }, [open, onOpenChange]);
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm md:hidden" />
+        <Dialog.Content className="fixed inset-y-0 left-0 z-50 grid w-[min(288px,calc(100vw-48px))] grid-rows-[auto_1fr_auto] border-r border-rail-line bg-rail text-slate-300 shadow-hero md:hidden">
+          <div className="flex h-[var(--topbar-h)] items-center justify-between border-b border-rail-line px-4">
+            <Dialog.Title className="text-sm font-semibold text-slate-100">
+              Navigation
+            </Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Console sections
+            </Dialog.Description>
+            <Dialog.Close
+              aria-label="Close navigation"
+              className={cn(
+                "grid h-8 w-8 place-items-center rounded-md text-slate-300 hover:bg-rail-hover hover:text-white",
+                FOCUS_RING,
+              )}
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </Dialog.Close>
+          </div>
+          <NavLinks collapsed={false} onNavigate={() => onOpenChange(false)} />
+          <SidebarFooter collapsed={false} />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

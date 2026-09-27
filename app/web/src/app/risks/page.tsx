@@ -18,6 +18,7 @@ import {
   useUpdateRiskMutation,
 } from "@/lib/api/hooks";
 import type { Risk, RiskLevel, RiskStatus } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -224,7 +225,7 @@ export default function RisksPage() {
     <div className="page-shell space-y-6">
       <PageHeader
         eyebrow="Operate"
-        title="Risk register"
+        title={ROUTE_LABELS["/risks"]}
         description="Track identified risks scored by severity, likelihood, and impact. Assign an owner, link a mitigating control, and walk each risk through the open → mitigating → accepted → closed lifecycle."
       />
       <Card className="overflow-hidden">

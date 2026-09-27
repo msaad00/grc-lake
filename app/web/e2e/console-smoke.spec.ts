@@ -7,7 +7,7 @@ test.describe("console smoke", () => {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: /^Dashboard$/,
+        name: /^Overview$/,
       }),
     ).toBeVisible();
     await expect(
@@ -86,7 +86,7 @@ test.describe("console smoke", () => {
     await page.goto("/console/audit-room/");
     await expect(page.getByRole("main")).toBeVisible({ timeout: 20_000 });
     await expect(
-      page.getByRole("heading", { level: 1, name: "Audit readiness room" }),
+      page.getByRole("heading", { level: 1, name: "Audit room" }),
     ).toBeVisible();
     await expect(page.getByText("Audit score", { exact: true })).toBeVisible();
     await expect(
@@ -111,7 +111,7 @@ test.describe("console smoke", () => {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "Normalized evidence facts",
+        name: "Evidence",
       }),
     ).toBeVisible();
     await expect(
@@ -207,15 +207,19 @@ test.describe("console smoke", () => {
       "Audit room",
       "Trust center",
       "Audit log",
+      "Graph",
+      "Access & keys",
+      "Deploy",
     ]) {
-      await expect(sidebar.getByRole("link", { name: label })).toBeVisible();
+      await expect(
+        sidebar.getByRole("link", { name: label, exact: true }),
+      ).toBeVisible();
     }
 
     for (const label of [
       "Onboarding",
       "Launch",
       "Demo",
-      "Deploy",
       "Agent harness",
       "Pricing",
     ]) {

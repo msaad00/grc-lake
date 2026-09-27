@@ -6,39 +6,46 @@ import { BRAND } from "@/lib/brand";
 
 const VERSION = BRAND.version;
 
+const LINK_FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-rail";
+
 interface Props {
   collapsed: boolean;
-  toggle: ReactNode;
+  toggle?: ReactNode;
 }
 
 export function SidebarFooter({ collapsed, toggle }: Props) {
   return (
-    <div className="mt-auto grid gap-1 border-t border-railLine p-3 text-[11px] text-[#9aa9bc]">
+    <div className="mt-auto grid gap-1 border-t border-rail-line p-3 text-[11px] text-slate-300">
       {!collapsed ? (
         <>
           <a
-            href="https://github.com/msaad00/trustops-security-data-lake"
+            href={BRAND.repoUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-[#152030]"
+            className={`inline-flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-rail-hover ${LINK_FOCUS}`}
           >
             <span className="inline-flex items-center gap-2">
-              <BookText className="h-3.5 w-3.5" /> Docs
+              <BookText aria-hidden="true" className="h-3.5 w-3.5" /> Docs
             </span>
-            <ExternalLink className="h-3 w-3 opacity-60" />
+            <ExternalLink aria-hidden="true" className="h-3 w-3 opacity-60" />
           </a>
           <a
-            href="https://github.com/msaad00/trustops-security-data-lake/issues"
+            href={`${BRAND.repoUrl}/issues`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-[#152030]"
+            className={`inline-flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-rail-hover ${LINK_FOCUS}`}
           >
             <span className="inline-flex items-center gap-2">
-              <MessageCircleQuestion className="h-3.5 w-3.5" /> Feedback
+              <MessageCircleQuestion
+                aria-hidden="true"
+                className="h-3.5 w-3.5"
+              />{" "}
+              Feedback
             </span>
-            <ExternalLink className="h-3 w-3 opacity-60" />
+            <ExternalLink aria-hidden="true" className="h-3 w-3 opacity-60" />
           </a>
-          <div className="mt-1 flex items-center justify-between pl-2 text-[10px] text-[#5b6a7e]">
+          <div className="mt-1 flex min-h-7 items-center justify-between pl-2 text-[10px] text-slate-400">
             <span>v{VERSION}</span>
             {toggle}
           </div>
@@ -46,15 +53,16 @@ export function SidebarFooter({ collapsed, toggle }: Props) {
       ) : (
         <div className="flex flex-col items-center gap-1">
           <a
-            href="https://github.com/msaad00/trustops-security-data-lake"
+            href={BRAND.repoUrl}
             target="_blank"
             rel="noreferrer"
-            className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#152030]"
+            aria-label="Docs"
             title="Docs"
+            className={`grid h-7 w-7 place-items-center rounded-md hover:bg-rail-hover ${LINK_FOCUS}`}
           >
-            <BookText className="h-3.5 w-3.5" />
+            <BookText aria-hidden="true" className="h-3.5 w-3.5" />
           </a>
-          <div className="text-[9px] text-[#5b6a7e]">v{VERSION}</div>
+          <div className="text-[9px] text-slate-400">v{VERSION}</div>
           {toggle}
         </div>
       )}

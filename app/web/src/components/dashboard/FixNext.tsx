@@ -74,7 +74,7 @@ export function FixNext({
               </Badge>
               <div className="min-w-0 flex-1">
                 <div
-                  className="truncate text-sm font-black text-ink"
+                  className="line-clamp-2 text-sm font-black leading-5 text-ink"
                   title={title ?? v.control_id}
                 >
                   {title ?? v.control_id}

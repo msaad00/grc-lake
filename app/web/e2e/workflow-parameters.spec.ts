@@ -79,7 +79,7 @@ test("refresh updates selected node parameters without requiring reselection", a
       request.url().endsWith("/api/v1/workflows") &&
       request.method() === "POST",
   );
-  await page.getByRole("heading", { name: "Workflow builder" }).click();
+  await page.getByRole("heading", { level: 1, name: "Workflows" }).click();
   await page.keyboard.press("ControlOrMeta+s");
   expect((await saveRequest).postDataJSON().nodes[0].params).toEqual({
     message: "Local edit after refresh",

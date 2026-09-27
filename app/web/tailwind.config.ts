@@ -10,8 +10,20 @@ const config: Config = {
         muted: "rgb(var(--rgb-muted) / <alpha-value>)",
         line: "rgb(var(--rgb-line) / <alpha-value>)",
         panel: "rgb(var(--rgb-panel) / <alpha-value>)",
-        rail: "rgb(var(--rgb-rail) / <alpha-value>)",
-        railLine: "rgb(var(--rgb-rail-line) / <alpha-value>)",
+        rail: {
+          DEFAULT: "rgb(var(--rgb-rail) / <alpha-value>)",
+          line: "rgb(var(--rgb-rail-line) / <alpha-value>)",
+          hover: "#152030",
+          active: "#172436",
+          "active-line": "#31435c",
+          text: "#c6d1df",
+          heading: "#8a9ab0",
+          "heading-hover": "#bcc8d8",
+          chip: "#1d2b3d",
+          "chip-icon": "#9cc2ff",
+          "chip-active": "#eff6ff",
+          "chip-active-icon": "#1d4ed8",
+        },
         surface: "rgb(var(--rgb-surface) / <alpha-value>)",
         surfaceMuted: "rgb(var(--rgb-surface-muted) / <alpha-value>)",
         brand: {
@@ -25,7 +37,6 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
-          "Inter",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",

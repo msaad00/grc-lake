@@ -12,8 +12,8 @@ const buttonVariants = cva(
       variant: {
         default: "border border-line bg-surface text-ink hover:bg-surfaceMuted",
         primary:
-          "border border-transparent bg-gradient-to-br from-[#315dff] to-[#21c6c7] text-white hover:opacity-95",
-        dark: "border border-[#111827] bg-[#111827] text-white hover:bg-[#0b1015]",
+          "border border-transparent bg-gradient-to-br from-[#315dff] to-[#0e7490] text-white hover:opacity-95",
+        dark: "border border-slate-900 bg-slate-900 text-white hover:bg-slate-950 dark:border-slate-200 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
         ghost:
           "border border-transparent bg-transparent text-ink hover:bg-surfaceMuted",
       },

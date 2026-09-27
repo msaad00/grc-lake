@@ -1,12 +1,13 @@
 """Regression contract for a compact, source-aligned dashboard overview."""
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 DASHBOARD = ROOT / "app/web/src/app/dashboard/page.tsx"
 ASSESSMENT = ROOT / "app/web/src/components/dashboard/AssessmentOverview.tsx"
 READINESS = ROOT / "app/web/src/components/dashboard/ReadinessGrid.tsx"
-SIGNAL_FLOW = ROOT / "app/web/src/components/dashboard/TrustSignalFlow.tsx"
+DASHBOARD_DIR = ROOT / "app/web/src/components/dashboard"
 NEXT_CONFIG = ROOT / "app/web/next.config.ts"
 
 
@@ -48,10 +49,55 @@ def test_dashboard_kpis_are_flat_theme_tiles_and_pass_the_framework_catalog() ->
     assessment = ASSESSMENT.read_text(encoding="utf-8")
 
     assert "catalog={registeredFrameworks.data ?? []}" in dashboard
-    assert "Stale evidence" in assessment
+    assert "Evidence to refresh" in assessment
     assert "Needs evidence" in assessment
-    for hardcoded in ("bg-[radial-gradient", "text-white", "border-slate-700"):
-        assert hardcoded not in assessment
+    # Flat tiles on surface/line tokens: no gradients, no hardcoded dark hexes.
+    assert "text-white" not in assessment
+    assert "radial-gradient" not in assessment
+    assert "dark:border-slate" not in assessment
+    assert not re.search(r"#[0-9a-fA-F]{3,6}\b", assessment)
+    assert "border-line bg-surface" in assessment
+    # rounded-2xl is outside the tokenized radius scale.
+    assert "rounded-2xl" not in assessment
+    assert "rounded-xl" in assessment
+
+
+def test_assessment_status_and_details_are_accessible() -> None:
+    assessment = ASSESSMENT.read_text(encoding="utf-8")
+
+    assert re.search(r'<h2[^>]*className="sr-only"[^>]*>\s*Current assessment\s*</h2>', assessment)
+    assert "<h2>{status}</h2>" not in assessment
+    assert "formatDateTime(evaluatedAt)" in assessment
+    assert "evaluatedAt={assessment.evaluated_at}" in assessment
+    assert "toLocaleString" not in assessment
+    assert "group relative" not in assessment
+    assert "ChevronDown" in assessment
+    assert "Escape" in assessment
+    assert "pointerdown" in assessment
+    assert 'href="/evidence"' in assessment
+    assert 'href="/evidence/"' not in assessment
+    # The legend is compact on mobile rather than hidden.
+    assert "hidden flex-wrap" not in assessment
+
+
+def test_dashboard_has_no_duplicate_lifecycle_or_overview_kpis() -> None:
+    dashboard = DASHBOARD.read_text(encoding="utf-8")
+
+    assert dashboard.count("<TrustLifecycle") == 1
+    assert "Assessment hash" not in dashboard
+    assert "Proof export" not in dashboard
+    assert 'label="Framework posture"' not in dashboard
+    assert "KpiTile" not in dashboard
+    assert '{" "}' not in dashboard
+    assert '<Badge tone="info">Open audit room</Badge>' not in dashboard
+    assert '<Button asChild size="sm"' in dashboard
+    assert "queries={tests}" in dashboard
+    assert 'ROUTE_LABELS["/dashboard"]' in dashboard
+
+
+def test_unused_dashboard_visuals_are_removed() -> None:
+    for name in ("FrameworkBars", "PostureRing", "TrustSignalFlow"):
+        assert not (DASHBOARD_DIR / f"{name}.tsx").exists(), name
 
 
 def test_dashboard_readiness_cards_keep_framework_marks_legible() -> None:
@@ -59,14 +105,6 @@ def test_dashboard_readiness_cards_keep_framework_marks_legible() -> None:
 
     assert "size={40}" in readiness
     assert 'aria-label="Framework posture list"' in readiness
-
-
-def test_dashboard_evidence_loop_keeps_stage_labels_readable() -> None:
-    signal_flow = SIGNAL_FLOW.read_text(encoding="utf-8")
-
-    assert 'aria-label="Evidence operating loop"' in signal_flow
-    assert 'text-slate-300">' in signal_flow
-    assert "font-medium text-slate-300" in signal_flow
 
 
 def test_next_dev_keeps_runtime_output_inside_the_web_project() -> None:

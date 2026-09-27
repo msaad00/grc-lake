@@ -18,6 +18,7 @@ from typing import Any
 
 from security_lakehouse import api_v1
 from security_lakehouse.assessment import SnapshotWrittenHook, build_current_posture, write_assessment_snapshot
+from security_lakehouse.asset_names import load_asset_names, with_asset_names
 from security_lakehouse.audit_log import build_audit_log
 from security_lakehouse.connector_state import (
     append_config_event,
@@ -148,6 +149,7 @@ def handle_get(path: str, query: Query, lake_dir: str | Path) -> tuple[HTTPStatu
         rows = read_jsonl(lake / "silver" / "normalized_events.jsonl", base_dir=lake)
         if control_id:
             rows = [row for row in rows if control_id in row["control_ids"]]
+        rows = with_asset_names(rows, load_asset_names(lake))
         return HTTPStatus.OK, {"count": len(rows), "evidence": rows}
     if path == "/api/assets":
         return HTTPStatus.OK, {"assets": read_jsonl(lake / "gold" / "asset_risk.jsonl", base_dir=lake)}

@@ -7,6 +7,7 @@ import type { Violation } from "@/lib/api/types";
 import { Badge } from "@/components/ui/badge";
 import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { useControls } from "@/lib/api/hooks";
+import { assetLabel } from "@/lib/format";
 
 const SEVERITY_TONE: Record<
   string,
@@ -61,8 +62,10 @@ export function FixNext({
         )}
         {top.map((v) => {
           const title = titles.get(v.control_id);
+          // Show a named asset; hide a bare demo ID that would read as noise.
           const showAsset =
-            Boolean(v.asset_id) && !v.asset_id.startsWith("golden:");
+            Boolean(v.asset_name?.trim()) ||
+            (Boolean(v.asset_id) && !v.asset_id.startsWith("golden:"));
           return (
             <Link
               key={v.violation_id}
@@ -100,7 +103,7 @@ export function FixNext({
                     className="mt-1 truncate text-xs text-muted"
                     title={v.asset_id}
                   >
-                    {v.asset_id}
+                    {assetLabel(v)}
                   </div>
                 ) : null}
               </div>

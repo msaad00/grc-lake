@@ -27,6 +27,7 @@ from security_lakehouse.assessment import (
     verify_snapshot_chain,
     write_assessment_snapshot,
 )
+from security_lakehouse.asset_names import load_asset_names, with_asset_names
 from security_lakehouse.connector_runner import ConnectorSyncError, run_connector_sync
 from security_lakehouse.connector_state import (
     LOCAL_ONLY_OPTIONS as _LOCAL_ONLY_OPTIONS,
@@ -168,7 +169,10 @@ COLLECTION_LOADERS: dict[str, tuple[str, Callable[[Path], list[JsonObject]]]] = 
     ),
     "/api/v1/evidence": (
         "evidence",
-        lambda lake: read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True, base_dir=lake),
+        lambda lake: with_asset_names(
+            read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True, base_dir=lake),
+            load_asset_names(lake),
+        ),
     ),
     "/api/v1/evidence/freshness": (
         "evidence.freshness",

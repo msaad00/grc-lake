@@ -33,6 +33,7 @@ import {
 } from "@/lib/table-features";
 import type { Severity, Violation } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { assetLabel } from "@/lib/format";
 
 const helper = createColumnHelper<typeof sortableTableFeatures, Violation>();
 
@@ -173,9 +174,9 @@ function ViolationsPageContent() {
     helper.accessor("asset_id", {
       header: "Asset & environment",
       cell: (info) => (
-        <div className="max-w-[280px]">
+        <div className="max-w-[280px]" title={info.getValue() || undefined}>
           <div className="break-words text-xs leading-5 text-ink [overflow-wrap:anywhere]">
-            {info.getValue() || "Unknown asset"}
+            {assetLabel(info.row.original) || "Unknown asset"}
           </div>
           <Badge
             className="mt-1"
@@ -389,7 +390,7 @@ function ViolationsPageContent() {
                   <tr
                     key={r.id}
                     tabIndex={0}
-                    aria-label={`Open finding ${controlTitles.get(r.original.control_id) ?? r.original.event_type} on ${r.original.asset_id || "unknown asset"}`}
+                    aria-label={`Open finding ${controlTitles.get(r.original.control_id) ?? r.original.event_type} on ${assetLabel(r.original) || "unknown asset"}`}
                     onClick={() => selectFinding(r.original)}
                     onKeyDown={(event) => {
                       if (event.target !== event.currentTarget) return;

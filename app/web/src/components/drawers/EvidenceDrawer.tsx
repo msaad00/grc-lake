@@ -8,6 +8,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { EntityTagsEditor } from "@/components/EntityTagsEditor";
 import { useVerifyMutation } from "@/lib/api/hooks";
 import type { NormalizedEvent, VerifyResult } from "@/lib/api/types";
+import { assetLabel } from "@/lib/format";
 
 interface Props {
   evidence: NormalizedEvent | null;
@@ -34,7 +35,7 @@ export function EvidenceDrawer({ evidence, onClose }: Props) {
       onOpenChange={(o) => !o && onClose()}
       title={evidence?.event_id ?? "Evidence"}
       description={
-        evidence ? `${evidence.source} · ${evidence.asset_id}` : undefined
+        evidence ? `${evidence.source} · ${assetLabel(evidence)}` : undefined
       }
       footer={
         <div className="flex items-center justify-between gap-2">
@@ -66,6 +67,11 @@ export function EvidenceDrawer({ evidence, onClose }: Props) {
             </dd>
             <dt className="text-muted">Asset</dt>
             <dd>
+              {evidence.asset_name ? (
+                <div className="font-semibold text-ink">
+                  {evidence.asset_name}
+                </div>
+              ) : null}
               <code className="text-xs text-ink">{evidence.asset_id}</code>
             </dd>
             <dt className="text-muted">Owner</dt>

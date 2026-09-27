@@ -3,7 +3,12 @@
 Ships one canonical mockup company (``golden``) whose raw evidence covers all
 33 SOC 2 common-criteria controls plus four representative NIST AI RMF
 subcategories — 37 controls total on the workbench dashboard without live
-connectors.
+connectors — plus a handful of repository-governance events for one public repo.
+
+``mockup_companies/golden/raw/security_events.jsonl`` is generated from this
+module (``security-lakehouse fixtures write-golden``); a test keeps the two
+identical. Asset IDs are stable identifiers; each asset also carries a
+human-readable ``asset_name`` that the console shows instead of the ID.
 """
 
 from __future__ import annotations
@@ -51,6 +56,153 @@ _ASSET_TYPE_BY_EVENT = {
 }
 _STATUSES = ("passed", "open", "passed", "open", "blocked", "passed", "open", "passed")
 
+# AI assets keep the model/agent IDs the demo has always used.
+_AI_ASSET_IDS = {
+    6: "golden:model:risk-scorer",
+    7: "golden:agent:triage-agent",
+    14: "golden:model:support-assistant",
+    15: "golden:agent:ops-copilot",
+    22: "golden:model:fraud-detector",
+    23: "golden:agent:ticket-router",
+    30: "golden:model:doc-summarizer",
+    31: "golden:agent:release-helper",
+}
+
+# One display name per golden control row, in control order. Each name fits the
+# row's asset type (see ``_ASSET_TYPE_BY_EVENT``).
+_ASSET_NAMES = (
+    "Customer records bucket",
+    "Production admin role",
+    "Cloud audit trail",
+    "Threat detection feed",
+    "payments-api repository",
+    "billing-worker repository",
+    "Risk scorer model",
+    "Triage agent",
+    "Billing database",
+    "CI deploy role",
+    "Identity provider system log",
+    "SIEM detection rules",
+    "web-console repository",
+    "mobile-app repository",
+    "Support assistant model",
+    "Ops copilot agent",
+    "Analytics warehouse",
+    "Support read-only role",
+    "Source control audit log",
+    "Endpoint alert stream",
+    "infra-terraform repository",
+    "data-ingest repository",
+    "Fraud detector model",
+    "Ticket router agent",
+    "Backup vault",
+    "Break-glass admin role",
+    "Kubernetes API audit log",
+    "Web firewall alert stream",
+    "auth-service repository",
+    "docs-site repository",
+    "Doc summarizer model",
+    "Release helper agent",
+    "Log archive bucket",
+    "ML platform role",
+    "Model evaluation audit log",
+    "Model drift alert stream",
+    "ml-pipelines repository",
+)
+
+_REPO_ASSET = {
+    "asset_id": "github:repo:acme/model-service",
+    "asset_name": "acme/model-service repository",
+    "asset_type": "repository",
+    "asset_owner": "acme",
+}
+_REPO_TIME = "2026-05-24T12:00:00Z"
+
+
+def _repository_events(tenant_id: str) -> list[dict[str, Any]]:
+    """Public-repo and repo-governance evidence for the demo's one source repository."""
+    public = {**_REPO_ASSET, "environment": "public", "repo": "acme/model-service"}
+    repo_id = _REPO_ASSET["asset_id"]
+    return [
+        {
+            "event_id": "repo-code-graph",
+            "tenant_id": tenant_id,
+            "event_time": _REPO_TIME,
+            "source": "github-public-repo",
+            "event_type": "repository.code_graph",
+            "entity": dict(public),
+            "severity": "info",
+            "status": "observed",
+            "controls": [],
+            "evidence": {
+                "evidence_id": "ev-code-graph",
+                "evidence_ref": "https://github.com/acme/model-service",
+                "collected_at": _REPO_TIME,
+            },
+            "attributes": {
+                "nodes": [
+                    {"id": repo_id, "kind": "repository", "label": "acme/model-service"},
+                    {"id": f"{repo_id}:dir:.github", "kind": "directory", "label": ".github"},
+                    {"id": f"{repo_id}:signal:ci_workflow", "kind": "evidence_signal", "label": "ci_workflow"},
+                ],
+                "edges": [
+                    {"source": repo_id, "target": f"{repo_id}:dir:.github", "kind": "contains"},
+                    {"source": repo_id, "target": f"{repo_id}:signal:ci_workflow", "kind": "has_signal"},
+                ],
+                "counts": {"signals": 1},
+            },
+        },
+        {
+            "event_id": "repo-codeowners",
+            "tenant_id": tenant_id,
+            "event_time": _REPO_TIME,
+            "source": "github-public-repo",
+            "event_type": "repository.codeowners",
+            "entity": dict(public),
+            "severity": "info",
+            "status": "observed",
+            "controls": ["SOC2-CC6.1"],
+            "evidence": {"evidence_id": "ev-codeowners"},
+            "attributes": {"paths": [".github/CODEOWNERS"], "path_count": 1},
+        },
+        {
+            "event_id": "repo-auth-gap",
+            "tenant_id": tenant_id,
+            "event_time": _REPO_TIME,
+            "source": "github-public-repo",
+            "event_type": "repository.authenticated_signal_gap",
+            "entity": dict(public),
+            "severity": "info",
+            "status": "requires_authenticated_connector",
+            "controls": [],
+            "evidence": {"evidence_id": "ev-auth-gap"},
+            "attributes": {"requires_authenticated_connector": ["branch_protection_rules"]},
+        },
+        {
+            "event_id": "repo-branch",
+            "tenant_id": tenant_id,
+            "event_time": _REPO_TIME,
+            "source": "github-repo-governance",
+            "event_type": "repository.governance.branch_protection",
+            "entity": {**_REPO_ASSET, "environment": "prod", "repo": "acme/model-service", "provider": "github"},
+            "severity": "info",
+            "status": "observed",
+            "controls": ["SOC2-CC6.1", "ISO27001-A.5.15"],
+            "evidence": {
+                "evidence_id": "ev-branch",
+                "evidence_ref": "https://api.github.com/repos/acme/model-service",
+                "collected_at": _REPO_TIME,
+            },
+            "attributes": {
+                "governance": {
+                    "available": True,
+                    "required_pull_request_reviews": {"required_approving_review_count": 2},
+                    "required_status_checks": {"contexts": ["quality", "web"]},
+                }
+            },
+        },
+    ]
+
 
 def golden_control_ids() -> list[str]:
     """Return the 37 control IDs the golden fixture is designed to populate."""
@@ -69,8 +221,11 @@ def build_golden_events(
 ) -> list[dict[str, Any]]:
     """Synthesize one validated raw event per golden control ID."""
     base = (base_time or datetime(2026, 6, 30, 12, 0, 0, tzinfo=UTC)).astimezone(UTC)
+    control_ids = golden_control_ids()
+    if len(control_ids) != len(_ASSET_NAMES):
+        raise ValueError(f"golden fixture has {len(_ASSET_NAMES)} asset names for {len(control_ids)} controls")
     rows: list[dict[str, Any]] = []
-    for index, control_id in enumerate(golden_control_ids()):
+    for index, control_id in enumerate(control_ids):
         status = _STATUSES[index % len(_STATUSES)]
         severity = (
             "critical" if status in {"open", "blocked"} and index % 5 == 0 else "high" if status == "open" else "info"
@@ -89,7 +244,8 @@ def build_golden_events(
                 "severity": severity,
                 "status": status,
                 "entity": {
-                    "asset_id": f"golden:asset:{control_id.lower()}",
+                    "asset_id": _AI_ASSET_IDS.get(index, f"golden:asset:{control_id.lower()}"),
+                    "asset_name": _ASSET_NAMES[index],
                     "asset_type": asset_type,
                     "environment": "prod",
                     "owner": "security-platform",
@@ -113,6 +269,20 @@ def build_golden_events(
     return rows
 
 
+def build_golden_fixture_rows(*, tenant_id: str = GOLDEN_TENANT_ID) -> list[dict[str, Any]]:
+    """Every row of the committed golden fixture: control events, then repository events."""
+    rows = build_golden_events(tenant_id=tenant_id) + _repository_events(tenant_id)
+    errors = validate_raw_events(rows)
+    if errors:
+        raise ValueError("; ".join(errors))
+    return rows
+
+
+def render_golden_fixture() -> str:
+    """The exact text of ``mockup_companies/golden/raw/security_events.jsonl``."""
+    return "\n".join(json.dumps(row, separators=(",", ":")) for row in build_golden_fixture_rows()) + "\n"
+
+
 def golden_fixture_path(root: Path | None = None) -> Path:
     """Path to ``mockup_companies/golden/raw/security_events.jsonl``."""
     return (root or FIXTURES_DIR) / GOLDEN_COMPANY / "raw" / "security_events.jsonl"
@@ -122,8 +292,7 @@ def write_golden_fixture(*, root: Path | None = None) -> Path:
     """Write the golden JSONL fixture and return its path."""
     path = golden_fixture_path(root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    rows = build_golden_events()
-    path.write_text("\n".join(json.dumps(row, separators=(",", ":")) for row in rows) + "\n", encoding="utf-8")
+    path.write_text(render_golden_fixture(), encoding="utf-8")
     return path
 
 

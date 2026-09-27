@@ -9,6 +9,7 @@ import { QueryState } from "@/components/QueryState";
 import { AiGovernanceStrip } from "@/components/audit-room/AiGovernanceStrip";
 import { useAiInventory, usePlatformStream } from "@/lib/api/hooks";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { assetLabel } from "@/lib/format";
 
 export default function AiGovernancePage() {
   const inventory = useAiInventory(50);
@@ -68,8 +69,11 @@ export default function AiGovernancePage() {
                           key={item.asset_id}
                           className="border-b border-line/70"
                         >
-                          <td className="px-2 py-2 font-bold text-ink">
-                            {item.asset_id}
+                          <td
+                            className="px-2 py-2 font-bold text-ink"
+                            title={item.asset_id}
+                          >
+                            {assetLabel(item)}
                           </td>
                           <td className="px-2 py-2 text-muted">
                             {item.asset_type}

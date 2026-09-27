@@ -163,6 +163,11 @@ export function ViolationDrawer({ violation, onClose, onToast }: Props) {
             <dl className="mt-3 grid grid-cols-[100px_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-xs">
               <dt className="text-muted">Asset</dt>
               <dd>
+                {violation.asset_name ? (
+                  <div className="font-semibold text-ink">
+                    {violation.asset_name}
+                  </div>
+                ) : null}
                 <code className="text-ink">{violation.asset_id}</code>
               </dd>
               <dt className="text-muted">Owner</dt>

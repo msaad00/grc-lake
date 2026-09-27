@@ -30,6 +30,34 @@ Python package, Helm chart, and bundled web console.
   plus cited NIST RMF tasks P-3, P-14, and M-7 (43 to 46 of 47). All are
   `proposed`: evaluatable coverage rises from 991 to 1174 requirements while
   attestable (reviewed) coverage stays at 350.
+- Operator note: this release adds database migration `0020`
+  (`saml_assertion_replays`). The server applies it at startup; with more than
+  one replica, upgrade with a single replica first.
+- Outbound HTTP connects to the IP address it validated. Connectors, webhooks
+  and workflow actions resolve each host once per connection, require every
+  answer to be public, and open the socket to that address, so a DNS answer
+  that changes between the check and the connect (rebinding) cannot reach a
+  private address, including on redirect hops. TLS SNI and certificate checks
+  still use the hostname. Requests through an operator egress proxy connect to
+  the proxy.
+- SAML replay protection is shared across replicas: consumed assertion IDs are
+  stored in the application database under a unique constraint, so a replay to
+  a different replica is rejected. A database error rejects the login.
+- The golden demo names its assets ("Customer records bucket", "Risk scorer
+  model"), and the console shows those names in findings, evidence, drawers,
+  the command palette, AI inventory and the graph, keeping the stable IDs in
+  drawers and tooltips. Raw events may set the optional `entity.asset_name`;
+  the API returns it as `asset_name`. Normalized events and their Parquet and
+  Iceberg exports are unchanged.
+- `fixtures load --rebase-times` puts the newest demo row three hours back
+  instead of one, so the demo's freshness counts and posture score stay the
+  same for about a day instead of changing minute to minute after a load.
+- `frameworks sync` reports drift only when a source's content hash changes;
+  `pulled_at` now records when the current content was first seen, so the
+  scheduled job no longer opens a PR for every run.
+- The package declares its license as the SPDX expression `Apache-2.0`
+  (wheel metadata 2.4, `License-Expression`); building needs setuptools 77 or
+  newer.
 
 ## 0.2.17 - 2026-09-27
 

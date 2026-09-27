@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import mimetypes
 from http import HTTPStatus
@@ -16,6 +17,9 @@ from security_lakehouse.io import resolve_path
 from security_lakehouse.web import web_dist_dir, web_dist_index
 
 AUDITOR_ROLE = "auditor"
+
+MAX_BODY_BYTES = 5 * 1024 * 1024
+_LOOPBACK_NAMES = {"localhost", "127.0.0.1", "::1"}
 
 
 def serve(lake_dir: str | Path, *, host: str = "127.0.0.1", port: int = 8787) -> None:
@@ -58,6 +62,9 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        if not self._host_allowed():
+            self._send_guard_error(parsed.path, HTTPStatus.FORBIDDEN, "forbidden", "unrecognized Host header")
+            return
         if self.web_dist is not None and self._serve_from_dist(parsed.path):
             return
         if parsed.path in {"/", "/console", "/console/"}:
@@ -92,15 +99,17 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        request_body = self._guarded_json_body(parsed.path)
+        if request_body is None:
+            return
         if parsed.path.startswith("/api/v1/"):
             if self._role() == AUDITOR_ROLE:
                 self._send_json(
                     {"error": "forbidden", "reason": "auditor role is read-only"}, status=HTTPStatus.FORBIDDEN
                 )
                 return
-            self._handle_v1_post(parsed.path)
+            self._handle_v1_post(parsed.path, request_body)
             return
-        request_body = self._read_json_body()
         if self.headers.get("Idempotency-Key") and "idempotency_key" not in request_body:
             request_body = {**request_body, "idempotency_key": self.headers["Idempotency-Key"]}
         status, body = api_legacy.handle_post(parsed.path, request_body, self.lake_dir, role=self._role())
@@ -183,8 +192,7 @@ class _Handler(BaseHTTPRequestHandler):
             },
         )
 
-    def _handle_v1_post(self, path: str) -> None:
-        body = self._read_json_body()
+    def _handle_v1_post(self, path: str, body: dict) -> None:
         status, payload = api_v1.handle_post(path, body, self.lake_dir)
         self._send_json(payload, status=status)
 
@@ -250,15 +258,79 @@ class _Handler(BaseHTTPRequestHandler):
     def _send_file(self, path: Path, content_type: str) -> None:
         self._send_bytes(path.read_bytes(), content_type=content_type)
 
-    def _read_json_body(self) -> dict:
-        length = int(self.headers.get("content-length") or "0")
-        if length <= 0:
+    def _allowed_hosts(self) -> set[str]:
+        bound = str(self.server.server_address[0]).strip("[]").lower()
+        return _LOOPBACK_NAMES | {bound}
+
+    def _host_is_local(self, host: str) -> bool:
+        host = host.strip("[]").lower()
+        if host in self._allowed_hosts():
+            return True
+        try:
+            return ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            return False
+
+    def _host_allowed(self) -> bool:
+        """Reject a Host header naming another site (DNS rebinding)."""
+        raw = (self.headers.get("Host") or "").strip()
+        if not raw:
+            return True
+        host = urlparse(f"//{raw}").hostname or ""
+        return self._host_is_local(host)
+
+    def _origin_allowed(self) -> bool:
+        """A browser POST must come from this server's own origin."""
+        origin = self.headers.get("Origin")
+        if origin is None:
+            return True
+        parsed = urlparse(origin.strip())
+        if parsed.scheme != "http" or not parsed.hostname:
+            return False
+        try:
+            port = parsed.port or 80
+        except ValueError:
+            return False
+        return self._host_is_local(parsed.hostname) and port == int(self.server.server_address[1])
+
+    def _guarded_json_body(self, path: str) -> dict | None:
+        """Validate a mutating request and return its JSON body, or send an error and return None."""
+        if not self._host_allowed():
+            self._send_guard_error(path, HTTPStatus.FORBIDDEN, "forbidden", "unrecognized Host header")
+            return None
+        if not self._origin_allowed():
+            self._send_guard_error(path, HTTPStatus.FORBIDDEN, "forbidden", "cross-origin request refused")
+            return None
+        raw_length = (self.headers.get("Content-Length") or "0").strip()
+        if not raw_length.isdigit():
+            self._send_guard_error(path, HTTPStatus.BAD_REQUEST, "bad_request", "invalid Content-Length")
+            return None
+        length = int(raw_length)
+        if length > MAX_BODY_BYTES:
+            self._send_guard_error(
+                path, HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "payload_too_large", "request body too large"
+            )
+            return None
+        if length == 0:
             return {}
+        content_type = (self.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+        if content_type != "application/json":
+            self._send_guard_error(
+                path, HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "unsupported_media_type", "body must be application/json"
+            )
+            return None
         try:
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, UnicodeDecodeError):
             return {}
         return payload if isinstance(payload, dict) else {}
+
+    def _send_guard_error(self, path: str, status: HTTPStatus, code: str, reason: str) -> None:
+        self.close_connection = True
+        if path == "/api/v1" or path.startswith("/api/v1/"):
+            self._send_json(api_v1.error_envelope(code, reason), status=status)
+        else:
+            self._send_json({"error": code, "reason": reason}, status=status)
 
     def _send_json(self, payload: object, *, status: HTTPStatus = HTTPStatus.OK) -> None:
         body = json.dumps(self._redact(payload), indent=2, sort_keys=True, default=str).encode("utf-8")

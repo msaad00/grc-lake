@@ -1,0 +1,75 @@
+[
+  {
+    "mobileDeviceId": "101",
+    "deviceType": "iOS",
+    "general": {
+      "udid": "0dad565fb40b010a9e490440188063a378721069",
+      "displayName": "IPHONE-ADA",
+      "lastContactDate": "2026-06-02T11:48:56.307Z",
+      "osVersion": "18.6",
+      "osBuild": "22G86",
+      "ipAddress": "10.0.0.1",
+      "managed": true,
+      "supervised": true,
+      "deviceOwnershipType": "Institutional",
+      "managementId": "9932fad3-29e9-4b71-bc7c-77dcefce819d"
+    },
+    "security": {
+      "dataProtected": true,
+      "blockLevelEncryptionCapable": true,
+      "fileLevelEncryptionCapable": true,
+      "passcodePresent": true,
+      "passcodeCompliant": true,
+      "passcodeCompliantWithProfile": true,
+      "hardwareEncryption": 3,
+      "activationLockEnabled": true,
+      "jailBreakDetected": false,
+      "lostModeEnabled": false,
+      "lostModePhoneNumber": ""
+    },
+    "userAndLocation": {
+      "username": "ada",
+      "realName": "Ada Lovelace",
+      "emailAddress": "ada@example.com",
+      "phoneNumber": "555-0100"
+    }
+  },
+  {
+    "mobileDeviceId": "102",
+    "deviceType": "iOS",
+    "general": {
+      "udid": "1dad565fb40b010a9e490440188063a378721070",
+      "displayName": "IPAD-KIOSK",
+      "lastContactDate": "2026-06-01T08:00:00.000Z",
+      "osVersion": "17.7.9",
+      "osBuild": "21H420",
+      "managed": true,
+      "supervised": false,
+      "deviceOwnershipType": "Institutional"
+    },
+    "security": {
+      "dataProtected": false,
+      "blockLevelEncryptionCapable": true,
+      "fileLevelEncryptionCapable": true,
+      "passcodePresent": false,
+      "passcodeCompliant": false,
+      "passcodeCompliantWithProfile": false,
+      "hardwareEncryption": 3,
+      "jailBreakDetected": true
+    },
+    "userAndLocation": {
+      "username": "",
+      "emailAddress": ""
+    }
+  },
+  {
+    "mobileDeviceId": "201",
+    "deviceType": "tvOS",
+    "general": {
+      "displayName": "LOBBY-TV",
+      "lastContactDate": "2026-06-02T08:00:00.000Z",
+      "osVersion": "18.6",
+      "managed": true
+    }
+  }
+]

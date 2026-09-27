@@ -25,6 +25,9 @@ import type { ConnectorView } from "@/lib/api/types";
 const isRunnableConnector = (connector: ConnectorView) =>
   Boolean(connector.is_implemented);
 
+const PREVIEW_TITLE =
+  "Implemented and fixture-tested; not yet verified against a live tenant.";
+
 const toneForState = (state: string) =>
   state === "enabled" ? "ready" : "default";
 
@@ -152,6 +155,11 @@ function ConnectorRow({
         <span className="flex flex-wrap items-center gap-2">
           <span className="truncate font-black text-ink">{connector.name}</span>
           <Badge tone={toneForState(connector.state)}>{connector.state}</Badge>
+          {connector.release_stage === "preview" && (
+            <Badge tone="info" title={PREVIEW_TITLE}>
+              Preview
+            </Badge>
+          )}
           {health && <Badge tone={health.tone}>{health.label}</Badge>}
         </span>
         <span className="mt-1 block truncate text-xs text-muted">

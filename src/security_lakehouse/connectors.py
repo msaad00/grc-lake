@@ -21,6 +21,9 @@ VALID_COLLECTION_MODES = {"existing_lake_read", "direct_api_read", "managed_evid
 VALID_ACCESS_BOUNDARIES = {"read_only_role", "scoped_token", "dedicated_schema"}
 VALID_ROUTES = {"Snowflake", "ClickHouse", "dual", "local"}
 VALID_PRODUCTION_STATUSES = {"primary_lake", "supported_connector", "local_demo"}
+# Optional. "preview" marks an implemented connector not yet verified against a
+# live tenant; absent means generally available.
+VALID_RELEASE_STAGES = {"ga", "preview"}
 DENIED_PERMISSION_WORDS = {"admin", "delete", "drop", "modify", "owner", "write all", "root"}
 EXPLICIT_READ_ONLY_PERMISSIONS = {"administration:read"}
 SENSITIVE_FIELD_NAMES = {"password", "secret", "token", "private_key", "client_secret", "api_key"}
@@ -165,6 +168,8 @@ def validate_connector_row(connector_id: str, connector: dict[str, Any]) -> list
         errors.append(f"connector {connector_id} has invalid default_route {route}")
     if production_status not in VALID_PRODUCTION_STATUSES:
         errors.append(f"connector {connector_id} has invalid production_status {production_status}")
+    if "release_stage" in connector and connector["release_stage"] not in VALID_RELEASE_STAGES:
+        errors.append(f"connector {connector_id} has invalid release_stage {connector['release_stage']}")
     if int(connector.get("freshness_slo_minutes") or 0) <= 0:
         errors.append(f"connector {connector_id} freshness_slo_minutes must be positive")
 

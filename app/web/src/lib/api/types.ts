@@ -702,6 +702,8 @@ export interface ConnectorView {
     "primary_lake" | "supported_connector" | "local_demo" | string;
   /** Access contract only when false — sync is unavailable. */
   is_implemented?: boolean;
+  /** "preview" = implemented but not yet verified against a live tenant; absent = GA. */
+  release_stage?: "ga" | "preview" | string;
   /** Present when the row came from an installed package, not the in-repo catalog. */
   provenance?: { source: "entry_point"; entry_point: string };
   state: ConnectorState;

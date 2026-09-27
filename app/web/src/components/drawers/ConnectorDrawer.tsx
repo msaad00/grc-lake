@@ -1054,6 +1054,14 @@ export function ConnectorDrawer({
                     </span>
                   </div>
                   <span className="flex items-center gap-1">
+                    {connector.release_stage === "preview" ? (
+                      <Badge
+                        tone="info"
+                        title="Implemented and fixture-tested; not yet verified against a live tenant."
+                      >
+                        Preview
+                      </Badge>
+                    ) : null}
                     {connector.provenance?.source === "entry_point" ? (
                       <Badge title={connector.provenance.entry_point}>
                         Installed package

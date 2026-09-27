@@ -1,0 +1,110 @@
+[
+  {
+    "enrollment_id": 1425526,
+    "content_type": "Uploaded Policy",
+    "module_name": "Acceptable Use Policy",
+    "user": {
+      "id": 667542,
+      "first_name": "William",
+      "last_name": "Marcoux",
+      "email": "wmarcoux@kb4-demo.com"
+    },
+    "campaign_name": "New Employee Policies",
+    "enrollment_date": "2026-01-05T15:02:38.000Z",
+    "start_date": "2026-01-05T15:02:38.000Z",
+    "completion_date": "2026-01-09T10:00:00.000Z",
+    "status": "Passed",
+    "time_spent": 2340,
+    "policy_acknowledged": true
+  },
+  {
+    "enrollment_id": 1425527,
+    "content_type": "Store Purchase",
+    "module_name": "2026 Kevin Mitnick Security Awareness Training",
+    "user": {
+      "id": 667542,
+      "first_name": "William",
+      "last_name": "Marcoux",
+      "email": "wmarcoux@kb4-demo.com"
+    },
+    "campaign_name": "Annual Security Awareness 2026",
+    "enrollment_date": "2026-02-01T00:00:00.000Z",
+    "start_date": "2026-02-01T00:00:00.000Z",
+    "completion_date": "2026-02-10T13:45:00.000Z",
+    "status": "Completed",
+    "time_spent": 2700,
+    "policy_acknowledged": false
+  },
+  {
+    "enrollment_id": 1425600,
+    "content_type": "Store Purchase",
+    "module_name": "2026 Kevin Mitnick Security Awareness Training",
+    "user": {
+      "id": 796742,
+      "first_name": "Sarah",
+      "last_name": "Thomas",
+      "email": "s_thomas@kb4-demo.com"
+    },
+    "campaign_name": "Annual Security Awareness 2026",
+    "enrollment_date": "2026-02-01T00:00:00.000Z",
+    "start_date": "2026-02-01T00:00:00.000Z",
+    "completion_date": null,
+    "status": "Past Due",
+    "time_spent": 120,
+    "policy_acknowledged": false
+  },
+  {
+    "enrollment_id": 1425601,
+    "content_type": "Uploaded Policy",
+    "module_name": "Acceptable Use Policy",
+    "user": {
+      "id": 796742,
+      "first_name": "Sarah",
+      "last_name": "Thomas",
+      "email": "s_thomas@kb4-demo.com"
+    },
+    "campaign_name": "New Employee Policies",
+    "enrollment_date": "2026-01-05T15:02:38.000Z",
+    "start_date": "2026-01-05T15:02:38.000Z",
+    "completion_date": "2026-01-06T09:00:00.000Z",
+    "status": "Passed",
+    "time_spent": 600,
+    "policy_acknowledged": true
+  },
+  {
+    "enrollment_id": 1425700,
+    "content_type": "Store Purchase",
+    "module_name": "2026 Kevin Mitnick Security Awareness Training",
+    "user": {
+      "id": 802220,
+      "first_name": "Diego",
+      "last_name": "Alvarez",
+      "email": "dalvarez@kb4-demo.com"
+    },
+    "campaign_name": "Annual Security Awareness 2026",
+    "enrollment_date": "2026-05-01T00:00:00.000Z",
+    "start_date": "2026-05-01T00:00:00.000Z",
+    "completion_date": null,
+    "status": "In Progress",
+    "time_spent": 900,
+    "policy_acknowledged": false
+  },
+  {
+    "enrollment_id": 1425701,
+    "content_type": "Uploaded Policy",
+    "module_name": "Acceptable Use Policy",
+    "user": {
+      "id": 802220,
+      "first_name": "Diego",
+      "last_name": "Alvarez",
+      "email": "dalvarez@kb4-demo.com"
+    },
+    "campaign_name": "New Employee Policies",
+    "enrollment_date": "2026-05-01T00:00:00.000Z",
+    "start_date": "2026-05-01T00:00:00.000Z",
+    "completion_date": null,
+    "status": "Not Started",
+    "time_spent": 0,
+    "policy_acknowledged": false
+  }
+]

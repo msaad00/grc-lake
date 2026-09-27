@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "query_time": 0.012,
+    "powered_by": "device-api",
+    "trace_id": "5f1c9a2e-7c1d-4b1e-9d7a-0d2f3b4a5c6d"
+  },
+  "errors": [],
+  "resources": [
+    {
+      "device_id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+      "cid": "0123456789abcdef0123456789abcdef",
+      "hostname": "WIN-FIN-0142",
+      "platform_name": "Windows",
+      "os_version": "Windows 11",
+      "product_type_desc": "Workstation",
+      "agent_version": "7.18.18607.0",
+      "first_seen": "2025-11-02T14:03:11Z",
+      "last_seen": "2026-06-02T22:41:09Z",
+      "status": "normal",
+      "reduced_functionality_mode": "no",
+      "mac_address": "3c-22-fb-10-aa-01",
+      "local_ip": "10.20.4.17",
+      "external_ip": "203.0.113.40",
+      "serial_number": "5CG1234XYZ",
+      "last_login_user": "jdoe",
+      "tags": ["FalconGroupingTags/finance"],
+      "device_policies": {
+        "prevention": {
+          "policy_type": "prevention",
+          "policy_id": "pol-win-standard",
+          "applied": true,
+          "settings_hash": "f3a1",
+          "assigned_date": "2025-11-02T14:05:00Z",
+          "applied_date": "2025-11-02T14:07:12Z"
+        }
+      }
+    },
+    {
+      "device_id": "b2c3d4e5f60718293a4b5c6d7e8f90a1",
+      "cid": "0123456789abcdef0123456789abcdef",
+      "hostname": "mbp-eng-0077",
+      "platform_name": "Mac",
+      "os_version": "Sonoma (14)",
+      "product_type_desc": "Workstation",
+      "agent_version": "7.17.18504.0",
+      "first_seen": "2025-08-19T09:12:44Z",
+      "last_seen": "2026-05-01T08:00:00Z",
+      "status": "normal",
+      "reduced_functionality_mode": "no",
+      "mac_address": "a4-83-e7-22-bb-02",
+      "local_ip": "192.168.1.23",
+      "serial_number": "C02XK1ABJG5J",
+      "device_policies": {
+        "prevention": {
+          "policy_type": "prevention",
+          "policy_id": "pol-mac-standard",
+          "applied": true
+        }
+      }
+    },
+    {
+      "device_id": "c3d4e5f60718293a4b5c6d7e8f90a1b2",
+      "cid": "0123456789abcdef0123456789abcdef",
+      "hostname": "srv-legacy-03",
+      "platform_name": "Linux",
+      "os_version": "RHEL 7.9",
+      "product_type_desc": "Server",
+      "agent_version": "6.45.14203.0",
+      "first_seen": "2024-02-11T10:00:00Z",
+      "last_seen": "2026-06-02T23:59:59Z",
+      "status": "normal",
+      "reduced_functionality_mode": "yes",
+      "local_ip": "10.1.0.9",
+      "device_policies": {
+        "prevention": {
+          "policy_type": "prevention",
+          "policy_id": "pol-linux-audit",
+          "applied": true
+        }
+      }
+    },
+    {
+      "device_id": "d4e5f60718293a4b5c6d7e8f90a1b2c3",
+      "cid": "0123456789abcdef0123456789abcdef",
+      "hostname": "kiosk-lobby-1",
+      "platform_name": "Windows",
+      "os_version": "Windows 10",
+      "product_type_desc": "Workstation",
+      "agent_version": "7.10.16303.0",
+      "status": "normal",
+      "reduced_functionality_mode": "Unknown"
+    },
+    {
+      "device_id": "e5f60718293a4b5c6d7e8f90a1b2c3d4",
+      "cid": "0123456789abcdef0123456789abcdef",
+      "hostname": "WIN-HR-0009",
+      "platform_name": "Windows",
+      "os_version": "Windows 11",
+      "product_type_desc": "Workstation",
+      "agent_version": "7.18.18607.0",
+      "first_seen": "2026-05-30T12:00:00Z",
+      "last_seen": "2026-06-02T17:30:00Z",
+      "status": "contained",
+      "reduced_functionality_mode": "no",
+      "device_policies": {
+        "prevention": {
+          "policy_type": "prevention",
+          "policy_id": "pol-win-standard",
+          "applied": false
+        }
+      }
+    }
+  ]
+}

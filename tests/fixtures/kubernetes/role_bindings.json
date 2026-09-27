@@ -1,0 +1,53 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": { "resourceVersion": "" },
+  "items": [
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "creationTimestamp": "2026-03-02T13:05:48Z",
+        "name": "deployer-admin",
+        "namespace": "payments",
+        "resourceVersion": "118004",
+        "uid": "ae4f1a5b-3c4d-4e5f-8a0b-2c3d4e5f6a01"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "cluster-admin"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "deployer",
+          "namespace": "payments"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "creationTimestamp": "2026-03-21T11:05:10Z",
+        "name": "analysts-edit",
+        "namespace": "analytics",
+        "resourceVersion": "140301",
+        "uid": "ae4f1a5b-3c4d-4e5f-8a0b-2c3d4e5f6a02"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "edit"
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "analysts"
+        }
+      ]
+    }
+  ]
+}

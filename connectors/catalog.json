@@ -531,6 +531,118 @@
       "vendor": "Workday",
       "description": "Employment status, hire and termination dates, department, and manager from a tenant-defined RaaS report.",
       "setup_hint": "Custom report with the TrustOps column contract, shared with a read-only integration system user."
+    },
+    {
+      "connector_id": "jamf-devices",
+      "name": "Jamf Pro Devices",
+      "category": "endpoint",
+      "collection_mode": "direct_api_read",
+      "access_boundary": "scoped_token",
+      "credential_type": "jamf_oauth_client_credentials",
+      "minimum_permissions": ["Read Computers", "Read Mobile Devices"],
+      "evidence_types": [
+        "device",
+        "encryption",
+        "os_patch",
+        "screen_lock",
+        "firewall",
+        "compliance"
+      ],
+      "default_route": "dual",
+      "freshness_slo_minutes": 240,
+      "is_implemented": true,
+      "production_status": "supported_connector",
+      "release_stage": "preview",
+      "velocity": "low_current_state",
+      "native_connector": false,
+      "data_shape": "current_state",
+      "vendor": "Jamf",
+      "description": "macOS and iOS FileVault/data protection, OS patch level, passcode or screen lock, firewall, and managed check-in state.",
+      "setup_hint": "Jamf Pro API client whose API role grants only Read Computers and Read Mobile Devices."
+    },
+    {
+      "connector_id": "crowdstrike-falcon",
+      "name": "CrowdStrike Falcon",
+      "category": "endpoint",
+      "collection_mode": "direct_api_read",
+      "access_boundary": "scoped_token",
+      "credential_type": "crowdstrike_oauth_client_credentials",
+      "minimum_permissions": [
+        "Hosts: Read",
+        "Prevention policies: Read",
+        "Alerts: Read"
+      ],
+      "evidence_types": [
+        "endpoint_protection",
+        "edr_coverage",
+        "prevention_policy",
+        "detections"
+      ],
+      "default_route": "dual",
+      "freshness_slo_minutes": 240,
+      "is_implemented": true,
+      "production_status": "supported_connector",
+      "release_stage": "preview",
+      "velocity": "low_current_state",
+      "native_connector": false,
+      "data_shape": "current_state",
+      "vendor": "CrowdStrike",
+      "description": "Falcon sensor coverage and last check-in, prevention policy assignment, and an unresolved-alert summary.",
+      "setup_hint": "Falcon API client limited to read scopes for hosts, prevention policies, and alerts, in your Falcon cloud region."
+    },
+    {
+      "connector_id": "kubernetes-cluster",
+      "name": "Kubernetes Cluster",
+      "category": "cloud",
+      "collection_mode": "direct_api_read",
+      "access_boundary": "scoped_token",
+      "credential_type": "kubernetes_read_only_service_account",
+      "minimum_permissions": [
+        "get/list clusterrolebindings and rolebindings",
+        "get/list namespaces, pods, and networkpolicies",
+        "get/list deployments, daemonsets, statefulsets, replicasets, jobs, and cronjobs"
+      ],
+      "evidence_types": [
+        "kubernetes_rbac",
+        "pod_security",
+        "network_policy",
+        "image_provenance",
+        "audit_logging"
+      ],
+      "default_route": "dual",
+      "freshness_slo_minutes": 240,
+      "is_implemented": true,
+      "production_status": "supported_connector",
+      "release_stage": "preview",
+      "velocity": "low_current_state",
+      "native_connector": false,
+      "data_shape": "current_state",
+      "vendor": "Kubernetes",
+      "description": "cluster-admin bindings, privileged or root workloads, namespaces without network policies, image registries, secrets injected as env vars, and API server audit flags where visible.",
+      "setup_hint": "Service account bound to a get/list-only ClusterRole, used in-cluster or through a kubeconfig context."
+    },
+    {
+      "connector_id": "knowbe4-training",
+      "name": "KnowBe4 Security Awareness Training",
+      "category": "security_training",
+      "collection_mode": "direct_api_read",
+      "access_boundary": "scoped_token",
+      "credential_type": "knowbe4_reporting_api_token",
+      "minimum_permissions": [
+        "Reporting API key (read-only reporting; Platinum, Diamond, SAT Foundation, or SAT Advanced subscription)"
+      ],
+      "evidence_types": ["security_training", "phishing_simulation"],
+      "default_route": "dual",
+      "freshness_slo_minutes": 1440,
+      "is_implemented": true,
+      "production_status": "supported_connector",
+      "release_stage": "preview",
+      "velocity": "low_current_state",
+      "native_connector": false,
+      "data_shape": "current_state",
+      "vendor": "KnowBe4",
+      "description": "Per-user security awareness training completion and overdue status, plus a phishing-simulation phish-prone summary.",
+      "setup_hint": "Reporting API key from the KnowBe4 Reporting API console, stored as a secret reference; pick the account's region."
     }
   ]
 }

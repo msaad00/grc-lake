@@ -1,0 +1,62 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": { "resourceVersion": "" },
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "creationTimestamp": "2026-01-12T09:14:03Z",
+        "labels": { "kubernetes.io/metadata.name": "default" },
+        "name": "default",
+        "resourceVersion": "38",
+        "uid": "5b1c7c1e-7d7a-4f0e-9a4e-0d1f2c3b4a01"
+      },
+      "spec": { "finalizers": ["kubernetes"] },
+      "status": { "phase": "Active" }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "creationTimestamp": "2026-01-12T09:14:02Z",
+        "labels": { "kubernetes.io/metadata.name": "kube-system" },
+        "name": "kube-system",
+        "resourceVersion": "12",
+        "uid": "5b1c7c1e-7d7a-4f0e-9a4e-0d1f2c3b4a02"
+      },
+      "spec": { "finalizers": ["kubernetes"] },
+      "status": { "phase": "Active" }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "creationTimestamp": "2026-02-03T15:40:11Z",
+        "labels": {
+          "kubernetes.io/metadata.name": "payments",
+          "team": "payments"
+        },
+        "name": "payments",
+        "resourceVersion": "91822",
+        "uid": "5b1c7c1e-7d7a-4f0e-9a4e-0d1f2c3b4a03"
+      },
+      "spec": { "finalizers": ["kubernetes"] },
+      "status": { "phase": "Active" }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "creationTimestamp": "2026-03-21T11:02:44Z",
+        "labels": { "kubernetes.io/metadata.name": "analytics" },
+        "name": "analytics",
+        "resourceVersion": "140277",
+        "uid": "5b1c7c1e-7d7a-4f0e-9a4e-0d1f2c3b4a04"
+      },
+      "spec": { "finalizers": ["kubernetes"] },
+      "status": { "phase": "Active" }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 """Regression contract for the concise connector hub experience."""
 
+import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
@@ -43,3 +45,45 @@ def test_connector_hub_uses_compact_interactive_filters_and_grid() -> None:
     assert "daily snapshot ready" not in page
     assert "Select a source to connect, probe access, and schedule its daily" not in page
     assert "Connect a source, test access, then sync evidence." in page
+
+
+def test_preview_connectors_are_wired_into_the_console_and_badged() -> None:
+    catalog = json.loads((ROOT / "connectors/catalog.json").read_text(encoding="utf-8"))["connectors"]
+    preview = [row for row in catalog if row.get("release_stage") == "preview"]
+    assert {row["connector_id"] for row in preview} >= {
+        "jamf-devices",
+        "crowdstrike-falcon",
+        "kubernetes-cluster",
+        "knowbe4-training",
+    }
+    lib = ROOT / "app/web/src/lib"
+    forms = (lib / "connector-forms.ts").read_text(encoding="utf-8")
+    visuals = (lib / "connector-visuals.ts").read_text(encoding="utf-8")
+    presets = (lib / "integration-presets.ts").read_text(encoding="utf-8")
+    for row in preview:
+        key = f'"{row["connector_id"]}": '
+        assert key + "[" in forms, row["connector_id"]
+        assert key + "{" in visuals, row["connector_id"]
+        assert f'connectorId: "{row["connector_id"]}"' in presets, row["connector_id"]
+    # Secrets are only ever referenced by env var name in these forms.
+    block = forms[forms.index('"jamf-devices": [') : forms.index('"workday-personnel": [')]
+    assert "secret: true" not in block
+    assert set(re.findall(r'name: "([a-z_]+)"', block)) <= {
+        "base_url",
+        "client_id",
+        "client_secret_ref",
+        "screen_lock_attribute",
+        "cloud",
+        "cluster_name",
+        "context",
+        "kubeconfig_ref",
+        "allowed_registries",
+        "region",
+        "credential_ref",
+    }
+
+    page = PAGE.read_text(encoding="utf-8")
+    drawer = (ROOT / "app/web/src/components/drawers/ConnectorDrawer.tsx").read_text(encoding="utf-8")
+    for source in (page, drawer):
+        assert 'release_stage === "preview"' in source
+        assert re.search(r">\s*Preview\s*</Badge>", source)

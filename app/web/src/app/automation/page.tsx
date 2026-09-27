@@ -49,6 +49,8 @@ import type {
 import { useAuditorMode } from "@/lib/state/auditor";
 import type { WorkflowTemplate } from "@/lib/workflow/templates";
 import { WORKFLOW_TEMPLATES } from "@/lib/workflow/templates";
+import { ROUTE_LABELS } from "@/lib/console-copy";
+import { QueryState } from "@/components/QueryState";
 
 const NEW_WORKFLOW_ID = "__new__";
 
@@ -602,8 +604,8 @@ export default function AutomationPage() {
   return (
     <div className="page-shell grid grid-cols-[minmax(0,1fr)] gap-4">
       <PageHeader
-        eyebrow="Workflows"
-        title="Workflow builder"
+        eyebrow="Workflow builder"
+        title={ROUTE_LABELS["/automation"]}
         description="Design and run trust automation from a populated canvas."
         actions={
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -715,30 +717,32 @@ export default function AutomationPage() {
         </div>
       </Card>
 
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[240px_minmax(0,1fr)] 2xl:grid-cols-[240px_minmax(0,1fr)_340px]">
-        <ActionPalette catalog={catalog.data ?? []} onAdd={addNode} />
-        <WorkflowCanvas
-          nodes={nodesWithRunState}
-          edges={editor.edges}
-          catalog={catalog.data ?? []}
-          onNodesChange={(n) => setEditor((e) => ({ ...e, nodes: n }))}
-          onEdgesChange={(es) => setEditor((e) => ({ ...e, edges: es }))}
-          onSelectNode={setSelectedNode}
-          onDropAction={addNode}
-          fitTrigger={fitTrigger}
-          lastRun={lastRun}
-          onDismissRun={() => setLastRun(null)}
-          onOpenTemplates={() => setTemplatesOpen(true)}
-        />
-        <NodeConfigPanel
-          node={selected}
-          spec={selectedSpec}
-          lastResult={selectedRunResult}
-          onClose={() => setSelectedNode(null)}
-          onUpdateParams={updateNodeParams}
-          onDelete={deleteNode}
-        />
-      </div>
+      <QueryState queries={[workflows, catalog]} label="workflows">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[240px_minmax(0,1fr)] 2xl:grid-cols-[240px_minmax(0,1fr)_340px]">
+          <ActionPalette catalog={catalog.data ?? []} onAdd={addNode} />
+          <WorkflowCanvas
+            nodes={nodesWithRunState}
+            edges={editor.edges}
+            catalog={catalog.data ?? []}
+            onNodesChange={(n) => setEditor((e) => ({ ...e, nodes: n }))}
+            onEdgesChange={(es) => setEditor((e) => ({ ...e, edges: es }))}
+            onSelectNode={setSelectedNode}
+            onDropAction={addNode}
+            fitTrigger={fitTrigger}
+            lastRun={lastRun}
+            onDismissRun={() => setLastRun(null)}
+            onOpenTemplates={() => setTemplatesOpen(true)}
+          />
+          <NodeConfigPanel
+            node={selected}
+            spec={selectedSpec}
+            lastResult={selectedRunResult}
+            onClose={() => setSelectedNode(null)}
+            onUpdateParams={updateNodeParams}
+            onDelete={deleteNode}
+          />
+        </div>
+      </QueryState>
 
       <RunnerContract nodes={editor.nodes} edges={editor.edges} />
 

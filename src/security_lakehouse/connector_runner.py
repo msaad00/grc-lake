@@ -198,7 +198,10 @@ def _read_secret_file_first(name: str, env: dict[str, str]) -> str | None:
     if file_path:
         try:
             file_value = Path(file_path).read_text(encoding="utf-8").strip()
-        except OSError:
+        except OSError as exc:
+            # The variable name can come from a stored credential ref, which an
+            # operator may have filled with the secret itself, so it is not logged.
+            logger.warning("a configured *_FILE secret mount is unreadable (%s)", exc.__class__.__name__)
             return None
         return file_value or None
     inline = env.get(name)

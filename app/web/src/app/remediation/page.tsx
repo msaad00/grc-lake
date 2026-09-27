@@ -31,6 +31,7 @@ import type {
   RemediationTask,
 } from "@/lib/api/types";
 import { findingHref, safeHttpUrl } from "@/lib/finding-links";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -307,14 +308,14 @@ function TasksSection() {
         <input
           className={`${inputClass} w-40`}
           aria-label="Control ID"
-          placeholder="control id"
+          placeholder="Control ID"
           value={controlId}
           onChange={(e) => setControlId(e.target.value)}
         />
         <input
           className={`${inputClass} w-36`}
           aria-label="Owner"
-          placeholder="owner"
+          placeholder="Owner"
           value={owner}
           onChange={(e) => setOwner(e.target.value)}
         />
@@ -465,14 +466,14 @@ function EvidenceRequestsSection() {
         <input
           className={`${inputClass} w-44`}
           aria-label="Control ID"
-          placeholder="control id"
+          placeholder="Control ID"
           value={controlId}
           onChange={(e) => setControlId(e.target.value)}
         />
         <input
           className={`${inputClass} min-w-[200px] flex-1`}
           aria-label="Requested from"
-          placeholder="requested from"
+          placeholder="Requested from"
           value={from}
           onChange={(e) => setFrom(e.target.value)}
         />
@@ -591,14 +592,14 @@ function ExceptionsSection() {
         <input
           className={`${inputClass} w-44`}
           aria-label="Control ID"
-          placeholder="control id"
+          placeholder="Control ID"
           value={controlId}
           onChange={(e) => setControlId(e.target.value)}
         />
         <input
           className={`${inputClass} min-w-[200px] flex-1`}
           aria-label="Reason"
-          placeholder="reason"
+          placeholder="Reason"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
         />
@@ -682,7 +683,7 @@ function RemediationContent() {
     <div className="page-shell grid gap-4">
       <PageHeader
         eyebrow="Resolve"
-        title="Remediation"
+        title={ROUTE_LABELS["/remediation"]}
         description="Tasks, evidence requests, and exceptions."
       />
       <div

@@ -25,5 +25,5 @@ def test_framework_roster_separates_readiness_from_unavailable_evaluation() -> N
     assert "Framework roster" in roster
     assert "Readiness tracked" in roster
     assert "Not evaluated" in roster
-    assert "${mapped}/${total} controls mapped" in roster
-    assert "${attestable} fully reviewed" in roster
+    assert "${formatCount(mapped)}/${formatCount(total)} controls mapped" in roster
+    assert "${formatCount(attestable)} fully reviewed" in roster

@@ -31,6 +31,8 @@ import { notify } from "@/lib/toast";
 import type { TrustShare } from "@/lib/api/types";
 import { formatDateTime, formatRelative, plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { ROUTE_LABELS } from "@/lib/console-copy";
+import { QueryState } from "@/components/QueryState";
 
 const HOURS_OPTIONS = [1, 4, 24, 24 * 7, 24 * 30];
 
@@ -146,16 +148,22 @@ export default function TrustCenterPage() {
   return (
     <div className="page-shell grid gap-4">
       <PageHeader
-        eyebrow="Trust center"
-        title="Trust assurance center"
+        eyebrow="Trust assurance"
+        title={ROUTE_LABELS["/trust-center"]}
         description="Share your evaluated posture with customers and auditors without exposing private evidence. Every link is read-only, expires automatically, and can be revoked."
         actions={
-          <Badge tone="info" className="max-w-[180px]">
-            <ShieldCheck className="mr-1 h-3 w-3" />{" "}
-            <span className="truncate">
-              {posture.data?.assessment_hash?.slice(0, 12) ?? "—"}…
-            </span>
-          </Badge>
+          posture.data?.assessment_hash ? (
+            <Badge
+              tone="info"
+              className="max-w-[240px]"
+              title={posture.data.assessment_hash}
+            >
+              <ShieldCheck aria-hidden="true" className="mr-1 h-3 w-3" />
+              <span className="truncate">
+                Assessment ID {posture.data.assessment_hash.slice(0, 12)}…
+              </span>
+            </Badge>
+          ) : undefined
         }
       />
 
@@ -325,65 +333,69 @@ export default function TrustCenterPage() {
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>
-            {plural((shares.data ?? []).length, "active share")}
+            {shares.isSuccess
+              ? plural(shares.data.length, "active share")
+              : "Active shares"}
           </CardTitle>
           <CardDescription>
             Revoking a link stops it working immediately and removes it from
             this list. The revocation stays in the audit log.
           </CardDescription>
         </CardHeader>
-        <div className="grid gap-2 p-5 pt-0">
-          {(shares.data ?? []).length === 0 && (
-            <div className="rounded-lg border border-dashed border-line p-3 text-xs text-muted">
-              No active shares. Issue one above to start.
-            </div>
-          )}
-          {(shares.data ?? []).map((share) => (
-            <div
-              key={share.share_id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-xl border border-line bg-surface p-3 text-sm"
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-black text-ink">
-                    {audienceLabel(share.sensitivity_ceiling)}
-                  </span>
-                  <Badge tone={share.expired ? "critical" : "ready"}>
-                    {share.expired ? "Expired" : "Active"}
-                  </Badge>
-                </div>
-                <div className="mt-1 text-xs text-muted">
-                  Created by <b className="text-ink">{share.created_by}</b>{" "}
-                  {formatDateTime(share.created_at)} ·{" "}
-                  {share.expired ? "expired" : "expires"}{" "}
-                  {formatRelative(share.expires_at)}
-                </div>
-                <div className="mt-1 text-[10px] text-muted [overflow-wrap:anywhere]">
-                  ID <code className="text-ink">{share.share_id}</code> · token
-                  hash{" "}
-                  <code className="text-ink">
-                    {share.token_sha256.slice(0, 12)}…
-                  </code>
-                </div>
+        <QueryState queries={shares} label="trust shares">
+          <div className="grid gap-2 p-5 pt-0">
+            {(shares.data ?? []).length === 0 && (
+              <div className="rounded-lg border border-dashed border-line p-3 text-xs text-muted">
+                No active shares. Issue one above to start.
               </div>
-              <Button
-                variant="default"
-                size="sm"
-                disabled={auditor || revoke.isPending}
-                onClick={async () => {
-                  try {
-                    await revoke.mutateAsync(share.share_id);
-                    flash("Share link revoked.");
-                  } catch (err) {
-                    flash(`Revoke failed: ${(err as Error).message}`);
-                  }
-                }}
+            )}
+            {(shares.data ?? []).map((share) => (
+              <div
+                key={share.share_id}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-xl border border-line bg-surface p-3 text-sm"
               >
-                <XCircle className="h-3 w-3" /> Revoke
-              </Button>
-            </div>
-          ))}
-        </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-black text-ink">
+                      {audienceLabel(share.sensitivity_ceiling)}
+                    </span>
+                    <Badge tone={share.expired ? "critical" : "ready"}>
+                      {share.expired ? "Expired" : "Active"}
+                    </Badge>
+                  </div>
+                  <div className="mt-1 text-xs text-muted">
+                    Created by <b className="text-ink">{share.created_by}</b>{" "}
+                    {formatDateTime(share.created_at)} ·{" "}
+                    {share.expired ? "expired" : "expires"}{" "}
+                    {formatRelative(share.expires_at)}
+                  </div>
+                  <div className="mt-1 text-[10px] text-muted [overflow-wrap:anywhere]">
+                    ID <code className="text-ink">{share.share_id}</code> ·
+                    token hash{" "}
+                    <code className="text-ink">
+                      {share.token_sha256.slice(0, 12)}…
+                    </code>
+                  </div>
+                </div>
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={auditor || revoke.isPending}
+                  onClick={async () => {
+                    try {
+                      await revoke.mutateAsync(share.share_id);
+                      flash("Share link revoked.");
+                    } catch (err) {
+                      flash(`Revoke failed: ${(err as Error).message}`);
+                    }
+                  }}
+                >
+                  <XCircle className="h-3 w-3" /> Revoke
+                </Button>
+              </div>
+            ))}
+          </div>
+        </QueryState>
       </Card>
     </div>
   );

@@ -71,20 +71,20 @@ Managed hosted is the same TrustOps binary and chart — operated for you on
 dedicated or isolated tenant infrastructure. This model is **not publicly
 available** in the OSS release; operators enable commercial hosted features via
 environment flags. See [COMMERCIAL_HOSTED.md](COMMERCIAL_HOSTED.md) for the
-gated API scaffold (invites, usage limits, SCIM hooks).
+gated commercial features (invites, usage limits, SCIM 2.0, Stripe billing).
 
 Evaluator flow: [Shareable Demo](SHAREABLE_DEMO.md).
 
 ## Feature parity lens (honest)
 
-| Capability                                      | TrustOps v0.2.0                           |
+| Capability                                      | TrustOps v0.2.16                          |
 | ----------------------------------------------- | ----------------------------------------- |
 | Continuous control tests from live integrations | Yes (connectors + scheduler)              |
 | Executive dashboard + framework readiness       | Yes                                       |
 | Trust center / customer sharing                 | Yes (scoped tokens)                       |
 | Policy/policy-template library                  | MVP (8 bundled templates + adopt/publish) |
-| Auditor workflow / audit project management     | Roadmap                                   |
-| Vendor risk questionnaires                      | Roadmap                                   |
+| Auditor workflow / audit project management     | MVP (audit room + audit readiness API)    |
+| Vendor risk questionnaires                      | MVP (bundled questionnaire templates)     |
 | OSS + self-hosted                               | **Yes**                                   |
 | Customer-owned evidence lake                    | **Yes**                                   |
 

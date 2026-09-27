@@ -191,11 +191,11 @@ export function IngestionStatusPanel({
           <Metric
             label="Freshness"
             value={summary?.stale_evidence ?? 0}
-            detail="stale evidence"
+            detail="records need refresh"
           />
           <Metric
-            label="Proof pack"
-            value={proofReady ? "ready" : "missing"}
+            label="Assessment export"
+            value={proofReady ? "Available" : "Pending"}
             detail={status?.proof?.scenario ?? "not run"}
           />
         </div>
@@ -450,8 +450,8 @@ export function IngestionStatusPanel({
               </div>
               <p className="mt-2 text-sm leading-5 text-muted">
                 {proofReady
-                  ? `${status?.proof?.evidence_count ?? 0} rows in latest proof pack across ${(status?.proof?.sources ?? []).length} sources.`
-                  : "Run a sync to create the first proof pack."}
+                  ? `${status?.proof?.evidence_count ?? 0} rows in the latest assessment export across ${(status?.proof?.sources ?? []).length} sources.`
+                  : "Run a sync to create the first assessment export."}
               </p>
             </div>
             <div className="rounded-lg border border-line bg-surface p-3">

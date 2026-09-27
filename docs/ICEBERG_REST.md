@@ -9,10 +9,10 @@ in TrustOps.
 
 ## Connect and publish
 
-Install the optional adapter. The 0.2.10 container also includes these dependencies.
+Install the optional adapter. Container images from 0.2.10 onward also include these dependencies.
 
 ```bash
-pip install 'trustops-security-data-lake[iceberg]==0.2.10'
+pip install 'trustops-security-data-lake[iceberg]>=0.2.10'
 ```
 
 A catalog administrator must provision the warehouse/catalog and namespace,

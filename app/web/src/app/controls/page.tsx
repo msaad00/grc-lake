@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { ControlMonitoringSummary } from "@/components/controls/ControlMonitoringSummary";
 import { ControlTestTable } from "@/components/dashboard/ControlTestTable";
 import type { ControlPosture, Violation } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const SURFACE = "controls";
 const selectClass =
@@ -220,7 +221,7 @@ function ControlsPageContent() {
     <div className="page-shell grid gap-5">
       <PageHeader
         eyebrow="Continuous control monitoring"
-        title="Control workbench"
+        title={ROUTE_LABELS["/controls"]}
         description="Results, evidence, and owners."
       />
       <TrustPipelineStrip activeStage="controls" />

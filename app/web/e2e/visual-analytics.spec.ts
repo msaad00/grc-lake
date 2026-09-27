@@ -57,9 +57,7 @@ test.describe("visual analytics", () => {
         await expect(page.getByRole("main")).toBeVisible({ timeout: 20_000 });
         if (viewport.name === "mobile") {
           await expect(
-            page.getByRole("button", {
-              name: "Sidebar is compact on small screens",
-            }),
+            page.getByRole("button", { name: "Open navigation" }),
           ).toBeVisible();
         }
         if (route === "insights") {

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime
 
 from fastapi import HTTPException, Request, status
-from sqlalchemy.orm import Session
 
 from security_lakehouse.auth.rbac import Identity
 from security_lakehouse.data_policy import redact_payload
@@ -44,13 +43,3 @@ def page_meta(limit: int, offset: int, count: int) -> dict[str, int]:
 
 def redact_for_identity(payload: object, identity: Identity) -> object:
     return redact_payload(payload, role=identity.role)
-
-
-def get_db_session(request: Request) -> Session:
-    """Yield a DB session from ``app.state.sessionmaker`` (router-friendly)."""
-    sessionmaker = request.app.state.sessionmaker
-    session = sessionmaker()
-    try:
-        yield session
-    finally:
-        session.close()

@@ -32,6 +32,7 @@ import {
   type SortableColumnDefs,
 } from "@/lib/table-features";
 import type { Severity, Violation } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const helper = createColumnHelper<typeof sortableTableFeatures, Violation>();
 
@@ -244,8 +245,8 @@ function ViolationsPageContent() {
   return (
     <div className="page-shell grid gap-5">
       <PageHeader
-        eyebrow="Findings"
-        title="Findings queue"
+        eyebrow="Triage"
+        title={ROUTE_LABELS["/violations"]}
         description="Prioritize findings, assign owners, and review evidence."
       />
       <TrustPipelineStrip activeStage="findings" />

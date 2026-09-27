@@ -66,6 +66,7 @@ def test_signup_requires_flags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 def test_signup_creates_tenant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
     monkeypatch.setenv("TRUSTOPS_SELF_SERVE_SIGNUP", "1")
+    monkeypatch.setenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", "1")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -98,6 +99,48 @@ def test_signup_secret_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
         headers={"X-TrustOps-Signup-Secret": "test-signup-secret"},
     )
     assert ok.status_code == HTTPStatus.CREATED
+
+
+def test_signup_without_secret_is_closed_unless_explicitly_opened(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("TRUSTOPS_SELF_SERVE_SIGNUP", "1")
+    monkeypatch.delenv("TRUSTOPS_SIGNUP_SECRET", raising=False)
+    monkeypatch.delenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", raising=False)
+    _seed_lake(tmp_path)
+    client = TestClient(create_app(tmp_path))
+    body = {"org_slug": "closed", "org_name": "Closed", "admin_email": "a@closed.test"}
+    assert client.post("/api/v1/signup", json=body).status_code == HTTPStatus.FORBIDDEN
+    assert (
+        client.post("/api/v1/signup", json=body, headers={"X-TrustOps-Signup-Secret": ""}).status_code
+        == HTTPStatus.FORBIDDEN
+    )
+
+
+def test_verify_signup_secret_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    from security_lakehouse.commercial import signup
+
+    monkeypatch.delenv("TRUSTOPS_SIGNUP_SECRET", raising=False)
+    monkeypatch.delenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", raising=False)
+    assert signup.verify_signup_secret(None) is False
+    assert signup.verify_signup_secret("anything") is False
+    monkeypatch.setenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", "true")
+    assert signup.verify_signup_secret(None) is True
+    monkeypatch.setenv("TRUSTOPS_SIGNUP_SECRET", "s3cret")
+    assert signup.verify_signup_secret(None) is False  # a configured secret always wins
+    assert signup.verify_signup_secret("s3cret") is True
+    assert signup.verify_signup_secret("s3cre") is False
+
+
+def test_signup_disabled_is_501_even_without_a_secret(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.delenv("TRUSTOPS_SELF_SERVE_SIGNUP", raising=False)
+    monkeypatch.delenv("TRUSTOPS_SIGNUP_SECRET", raising=False)
+    _seed_lake(tmp_path)
+    client = TestClient(create_app(tmp_path))
+    body = {"org_slug": "off", "org_name": "Off", "admin_email": "a@off.test"}
+    assert client.post("/api/v1/signup", json=body).status_code == HTTPStatus.NOT_IMPLEMENTED
 
 
 def _bearer(token: str) -> dict[str, str]:

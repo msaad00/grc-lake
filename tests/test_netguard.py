@@ -41,3 +41,25 @@ def test_assert_url_is_public_rejects_non_http_scheme() -> None:
 def test_assert_url_is_public_rejects_missing_host() -> None:
     with pytest.raises(ValueError, match="no host"):
         assert_url_is_public("https:///missing-host")
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "100.64.0.1",  # carrier-grade NAT (RFC 6598), not flagged by is_private
+        "100.127.255.254",
+        "192.0.0.8",  # IETF protocol assignments
+        "198.18.0.1",  # benchmarking
+        "::ffff:10.0.0.1",
+        "224.0.1.1",  # globally scoped multicast is still not a unicast target
+    ],
+)
+def test_non_global_ranges_are_blocked(monkeypatch, address: str) -> None:
+    family = socket.AF_INET6 if ":" in address else socket.AF_INET
+
+    def fake_getaddrinfo(host, port, family_=0, type=0, proto=0, flags=0):
+        return [(family, socket.SOCK_STREAM, 6, "", (address, 0))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", fake_getaddrinfo)
+    with pytest.raises(ValueError, match="non-public"):
+        assert_resolved_ip_is_public("sneaky.example")

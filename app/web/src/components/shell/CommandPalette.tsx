@@ -4,26 +4,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  ActivityIcon,
   AlertOctagon,
-  Bot,
-  BookOpen,
-  BrainCircuit,
   Camera,
   FileSearch,
-  LayoutDashboard,
-  Layers,
-  Network,
-  Plug,
+  PlayCircle,
   RefreshCw,
+  Rocket,
   Search,
-  ShieldAlert,
   ShieldCheck,
   Sparkles,
-  Users,
   Workflow,
-  Zap,
+  type LucideIcon,
 } from "lucide-react";
+import { ROUTE_LABELS } from "@/lib/console-copy";
+import { NAV_ITEMS } from "@/lib/nav";
 import { api } from "@/lib/api/client";
 import type {
   ControlPosture,
@@ -35,191 +29,37 @@ import type {
 interface PaletteItem {
   id: string;
   group:
-    "Actions" | "Routes" | "Controls" | "Violations" | "Evidence" | "Workflows";
+    "Actions" | "Routes" | "Controls" | "Findings" | "Evidence" | "Workflows";
   label: string;
   subtitle?: string;
   href?: string;
   run?: () => void;
-  Icon: typeof LayoutDashboard;
+  Icon: LucideIcon;
 }
 
+const EXTRA_ROUTES = [
+  { href: "/onboarding", Icon: Rocket },
+  { href: "/poc", Icon: Sparkles },
+  { href: "/demo", Icon: PlayCircle },
+] as const;
+
 const ROUTE_ITEMS: PaletteItem[] = [
-  {
-    id: "r:dashboard",
-    group: "Routes",
-    label: "Dashboard",
-    href: "/dashboard",
-    Icon: LayoutDashboard,
-  },
-  {
-    id: "r:controls",
-    group: "Routes",
-    label: "Controls",
-    href: "/controls",
-    Icon: ShieldCheck,
-  },
-  {
-    id: "r:violations",
-    group: "Routes",
-    label: "Findings",
-    href: "/violations",
-    Icon: AlertOctagon,
-  },
-  {
-    id: "r:risks",
-    group: "Routes",
-    label: "Risk register",
-    href: "/risks",
-    Icon: ShieldAlert,
-  },
-  {
-    id: "r:evidence",
-    group: "Routes",
-    label: "Evidence",
-    href: "/evidence",
-    Icon: FileSearch,
-  },
-  {
-    id: "r:automation",
-    group: "Routes",
-    label: "Workflows",
-    href: "/automation",
-    Icon: Zap,
-  },
-  {
-    id: "r:graph",
-    group: "Routes",
-    label: "Graph",
-    href: "/graph",
-    Icon: Network,
-  },
-  {
-    id: "r:audit-log",
-    group: "Routes",
-    label: "Audit log",
-    href: "/audit-log",
-    Icon: ActivityIcon,
-  },
-  {
-    id: "r:connectors",
-    group: "Routes",
-    label: "Connections",
-    href: "/connectors",
-    Icon: Plug,
-  },
-  {
-    id: "r:frameworks",
-    group: "Routes",
-    label: "Frameworks",
-    href: "/frameworks",
-    Icon: BookOpen,
-  },
-  {
-    id: "r:crosswalk",
-    group: "Routes",
-    label: "Crosswalk diagnostics",
-    href: "/crosswalk",
-    Icon: Layers,
-  },
-  {
-    id: "r:trust-center",
-    group: "Routes",
-    label: "Trust center",
-    href: "/trust-center",
-    Icon: Sparkles,
-  },
-  {
-    id: "r:audit-room",
-    group: "Routes",
-    label: "Audit room",
-    href: "/audit-room",
-    Icon: ShieldCheck,
-  },
-  {
-    id: "r:ai-governance",
-    group: "Routes",
-    label: "AI governance",
-    href: "/ai-governance",
-    Icon: BrainCircuit,
-  },
-  {
-    id: "r:agents",
-    group: "Routes",
-    label: "Agent API",
-    href: "/agents",
-    Icon: Bot,
-  },
-  {
-    id: "r:remediation",
-    group: "Routes",
-    label: "Remediation",
-    href: "/remediation",
-    Icon: ShieldCheck,
-  },
-  {
-    id: "r:policies",
-    group: "Routes",
-    label: "Policies",
-    href: "/policies",
-    Icon: BookOpen,
-  },
-  {
-    id: "r:vendor-risk",
-    group: "Routes",
-    label: "Vendor risk",
-    href: "/vendor-risk",
-    Icon: ShieldAlert,
-  },
-  {
-    id: "r:access-reviews",
-    group: "Routes",
-    label: "Access reviews",
-    href: "/access-reviews",
-    Icon: Users,
-  },
-  {
-    id: "r:insights",
-    group: "Routes",
-    label: "Insights",
-    href: "/insights",
-    Icon: ActivityIcon,
-  },
-  {
-    id: "r:onboarding",
-    group: "Routes",
-    label: "Onboarding",
-    href: "/onboarding",
-    Icon: Sparkles,
-  },
-  {
-    id: "r:deploy",
-    group: "Routes",
-    label: "Deploy",
-    href: "/deploy",
-    Icon: Layers,
-  },
-  {
-    id: "r:demo",
-    group: "Routes",
-    label: "Demo",
-    href: "/demo",
-    Icon: Sparkles,
-  },
-  {
-    id: "r:poc",
-    group: "Routes",
-    label: "Launch",
-    href: "/poc",
-    Icon: Sparkles,
-  },
-  {
-    id: "r:auth",
-    group: "Routes",
-    label: "Access & keys",
-    href: "/auth",
-    Icon: ShieldCheck,
-  },
-];
+  ...NAV_ITEMS.map(({ href, label, Icon }) => ({ href, label, Icon })),
+  ...EXTRA_ROUTES.map(({ href, Icon }) => ({
+    href,
+    label: ROUTE_LABELS[href],
+    Icon,
+  })),
+].map(({ href, label, Icon }) => ({
+  id: `r:${href}`,
+  group: "Routes",
+  label,
+  href,
+  Icon,
+}));
+
+const LISTBOX_ID = "command-palette-results";
+const optionId = (index: number) => `${LISTBOX_ID}-option-${index}`;
 
 interface Props {
   open: boolean;
@@ -297,7 +137,7 @@ export function CommandPalette({
       })),
       ...violations.map<PaletteItem>((v) => ({
         id: `v:${v.violation_id}`,
-        group: "Violations",
+        group: "Findings",
         label: v.violation_id,
         subtitle: `${v.severity} · ${v.asset_id}`,
         href: `/violations?id=${encodeURIComponent(v.violation_id)}`,
@@ -357,6 +197,13 @@ export function CommandPalette({
     return out;
   }, [items]);
 
+  const activeId = items[activeIndex] ? optionId(activeIndex) : undefined;
+
+  useEffect(() => {
+    if (!activeId) return;
+    document.getElementById(activeId)?.scrollIntoView({ block: "nearest" });
+  }, [activeId]);
+
   const go = (item: PaletteItem) => {
     onOpenChange(false);
     if (item.run) {
@@ -373,12 +220,18 @@ export function CommandPalette({
         <Dialog.Content className="fixed left-1/2 top-[14%] z-50 w-[min(640px,calc(100vw-32px))] -translate-x-1/2 overflow-hidden rounded-2xl bg-surface shadow-hero">
           <Dialog.Title className="sr-only">Search</Dialog.Title>
           <Dialog.Description className="sr-only">
-            Search controls, violations, evidence, workflows, and routes.
+            Search controls, findings, evidence, workflows, and pages.
           </Dialog.Description>
           <div className="flex items-center gap-3 border-b border-line px-4 py-3">
-            <Search className="h-4 w-4 text-muted" />
+            <Search aria-hidden="true" className="h-4 w-4 text-muted" />
             <input
               ref={inputRef}
+              role="combobox"
+              aria-label="Search the console"
+              aria-expanded={items.length > 0}
+              aria-controls={LISTBOX_ID}
+              aria-autocomplete="list"
+              aria-activedescendant={activeId}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -394,45 +247,63 @@ export function CommandPalette({
                   if (target) go(target);
                 }
               }}
-              placeholder="Search controls, violations, evidence, workflows, routes…"
+              placeholder="Search controls, findings, evidence, workflows, pages…"
               className="flex-1 bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
             />
             <kbd className="rounded border border-line bg-surfaceMuted px-1.5 py-0.5 text-[10px] font-bold text-muted">
               esc
             </kbd>
           </div>
-          <div className="max-h-[60vh] overflow-auto p-2">
+          <div
+            id={LISTBOX_ID}
+            role="listbox"
+            aria-label="Search results"
+            className="max-h-[60vh] overflow-auto p-2"
+          >
             {items.length === 0 && (
-              <div className="px-3 py-8 text-center text-sm text-muted">
+              <div
+                role="presentation"
+                className="px-3 py-8 text-center text-sm text-muted"
+              >
                 No matches.
               </div>
             )}
             {Array.from(grouped.entries()).map(([group, list]) => (
-              <div key={group} className="grid gap-0.5 px-1 pb-2">
-                <div className="px-2 pb-1 pt-3 text-[10px] font-black uppercase tracking-wider text-muted">
+              <div
+                key={group}
+                role="group"
+                aria-labelledby={`${LISTBOX_ID}-${group}`}
+                className="grid gap-0.5 px-1 pb-2"
+              >
+                <div
+                  id={`${LISTBOX_ID}-${group}`}
+                  role="presentation"
+                  className="px-2 pb-1 pt-3 text-[10px] font-black uppercase tracking-wider text-muted"
+                >
                   {group}
                 </div>
                 {list.map((item) => {
                   const idx = items.indexOf(item);
                   const active = idx === activeIndex;
                   return (
-                    <button
+                    <div
                       key={item.id}
-                      type="button"
+                      id={optionId(idx)}
+                      role="option"
+                      aria-selected={active}
+                      tabIndex={-1}
                       onMouseEnter={() => setActiveIndex(idx)}
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => go(item)}
                       className={[
-                        "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm",
-                        active
-                          ? "bg-ink text-surface"
-                          : "text-ink hover:bg-surfaceMuted",
+                        "grid w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm text-ink",
+                        active ? "bg-brand/15" : "hover:bg-surfaceMuted",
                       ].join(" ")}
                     >
                       <item.Icon
+                        aria-hidden="true"
                         className={
-                          active
-                            ? "h-4 w-4 text-brand-cyan"
-                            : "h-4 w-4 text-muted"
+                          active ? "h-4 w-4 text-brand" : "h-4 w-4 text-muted"
                         }
                       />
                       <span className="min-w-0">
@@ -443,7 +314,7 @@ export function CommandPalette({
                           <span
                             className={[
                               "block truncate text-[11px]",
-                              active ? "text-slate-300" : "text-muted",
+                              "text-muted",
                             ].join(" ")}
                           >
                             {item.subtitle}
@@ -451,16 +322,15 @@ export function CommandPalette({
                         )}
                       </span>
                       <kbd
+                        aria-hidden="true"
                         className={[
-                          "rounded border px-1.5 py-0.5 text-[10px] font-bold",
-                          active
-                            ? "border-slate-600 bg-slate-800 text-slate-200"
-                            : "border-line bg-surface text-muted",
+                          "rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-bold text-muted",
+                          active ? "visible" : "invisible",
                         ].join(" ")}
                       >
                         ↵
                       </kbd>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

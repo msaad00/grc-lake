@@ -4,6 +4,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Bell,
   Building2,
   ChevronDown,
   LogOut,
@@ -19,6 +20,7 @@ import { useAuthWhoami } from "@/lib/api/hooks";
 import { useAuditorMode } from "@/lib/state/auditor";
 import { useTheme, type ThemeMode } from "@/components/theme/ThemeProvider";
 import { workspaceIdentity } from "@/lib/workspace";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 export function UserMenu({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -139,7 +141,16 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
               className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-1.5 text-sm text-ink outline-none data-[highlighted]:bg-surfaceMuted"
             >
               <User className="h-4 w-4 text-muted" />
-              Access &amp; SSO
+              {ROUTE_LABELS["/auth"]}
+            </Link>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild>
+            <Link
+              href="/audit-log"
+              className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-1.5 text-sm text-ink outline-none data-[highlighted]:bg-surfaceMuted sm:hidden"
+            >
+              <Bell className="h-4 w-4 text-muted" />
+              Notifications
             </Link>
           </DropdownMenu.Item>
           <DropdownMenu.Item asChild>

@@ -74,7 +74,7 @@ export function FixNext({
               </Badge>
               <div className="min-w-0 flex-1">
                 <div
-                  className="truncate text-sm font-black text-ink"
+                  className="line-clamp-2 text-sm font-black leading-5 text-ink"
                   title={title ?? v.control_id}
                 >
                   {title ?? v.control_id}
@@ -111,7 +111,7 @@ export function FixNext({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-5 py-3">
         <span className="text-xs text-muted">
-          {violations.length} open findings
+          Highest risk first · {top.length} of {violations.length}
         </span>
         <Link
           href="/violations"

@@ -18,7 +18,7 @@ import { ConnectorMark } from "@/components/connectors/ConnectorMark";
 import { EvidencePathPanel } from "@/components/connectors/EvidencePathPanel";
 import { OnboardingGuideBanner } from "@/components/onboarding/OnboardingGuideBanner";
 import { connectorNotify } from "@/lib/connector-notify";
-import { CONNECT_FLOW } from "@/lib/console-copy";
+import { CONNECT_FLOW, ROUTE_LABELS } from "@/lib/console-copy";
 import { useConnectors } from "@/lib/api/hooks";
 import type { ConnectorView } from "@/lib/api/types";
 
@@ -265,7 +265,7 @@ export default function ConnectorsPage() {
       )}
       <PageHeader
         eyebrow="Sources"
-        title="Connect evidence"
+        title={ROUTE_LABELS["/connectors"]}
         description="Connect a source, test access, then sync evidence. You can also read an existing lake, normalize evidence, then evaluate it."
         actions={
           totals.unhealthy > 0 ? (

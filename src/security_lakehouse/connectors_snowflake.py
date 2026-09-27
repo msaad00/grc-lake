@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import os
 import re
-from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -788,7 +787,3 @@ def _safe_identifier(value: str) -> str:
     if not all(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", part) for part in parts):
         raise ValueError(f"unsafe Snowflake view identifier {value!r}")
     return ".".join(parts)
-
-
-def _as_dicts(rows: Iterable[Any]) -> list[dict[str, Any]]:
-    return [row for row in rows if isinstance(row, dict)]

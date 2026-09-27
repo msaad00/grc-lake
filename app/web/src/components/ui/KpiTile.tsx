@@ -13,12 +13,13 @@ const TONE_VALUE: Record<KpiTone, string> = {
   brand: "text-brand",
 };
 
+// Accents double as icon-chip fills behind white glyphs, so each clears 4.5:1.
 const TONE_ACCENT: Record<KpiTone, string> = {
   default: "#64748b",
   critical: "#d92d20",
-  attention: "#f79009",
-  ready: "#16b364",
-  brand: "#4f7cff",
+  attention: "#b54708",
+  ready: "#067647",
+  brand: "#3b5bdb",
 };
 
 export function KpiTile({

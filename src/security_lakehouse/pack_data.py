@@ -29,13 +29,6 @@ NIST_CSF_2_SOURCE = "https://www.nist.gov/cyberframework"
 
 
 @lru_cache(maxsize=1)
-def nist_800_53_rev5_moderate_ids() -> tuple[str, ...]:
-    path = PACK_DATA_DIR / "nist_800_53_rev5_moderate.json"
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    return tuple(str(row) for row in payload["control_ids"])
-
-
-@lru_cache(maxsize=1)
 def cmmc_2_level2_requirements() -> tuple[tuple[str, str], ...]:
     path = PACK_DATA_DIR / "cmmc_2_level2.json"
     payload = json.loads(path.read_text(encoding="utf-8"))

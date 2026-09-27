@@ -4,9 +4,10 @@ A single-node, in-process limiter that caps request rate per credential so one
 caller (or a leaked key) cannot exhaust the server. It is intentionally simple
 and dependency-free:
 
-* **Per-credential.** The bucket key is a hash of the presented bearer token, or
-  the client host when no token is presented, so one tenant's burst never
-  consumes another's budget.
+* **Per-credential.** The bucket key is a hash of the bearer token once that
+  token has authenticated, otherwise the client host, so one tenant's burst
+  never consumes another's budget and unauthenticated tokens cannot mint new
+  buckets.
 * **Token bucket.** Each key refills at ``rps`` tokens/second up to ``burst``
   capacity, so steady traffic is allowed and short spikes absorb into the burst.
   A denied request reports how long to wait (the ``Retry-After`` value).

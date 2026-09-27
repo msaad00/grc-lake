@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from xml.etree import ElementTree
 
-from tools.render_readme_header import render_logo, render_open_graph, render_social_preview
+from tools.render_readme_header import render_logo, render_open_graph, render_readme_summary, render_social_preview
 
 from security_lakehouse.safeguards import coverage_by_framework
 
@@ -116,3 +116,18 @@ def test_product_preview_is_collapsible_and_uses_fixture_evidence() -> None:
     assert "not live customer evidence" in preview
     for image in ("dashboard", "frameworks", "evidence", "connectors", "audit-room"):
         assert f"trustops-demo-{image}.png" in preview
+
+
+def test_readme_ccf_summary_matches_the_generator_and_names_every_family() -> None:
+    readme = README.read_text(encoding="utf-8")
+    block = readme.split("<!-- BEGIN README CCF SUMMARY -->", maxsplit=1)[1].split(
+        "<!-- END README CCF SUMMARY -->", maxsplit=1
+    )[0]
+    assert block == f"\n\n{render_readme_summary()}\n\n"
+
+    families = json.loads((ROOT / "controls" / "families.json").read_text(encoding="utf-8"))["families"]
+    assert len(families) == 21
+    for family in families:
+        assert family["label"] in block
+    coverage = coverage_by_framework()
+    assert f"{coverage['controls']:,} catalogued requirements" in block

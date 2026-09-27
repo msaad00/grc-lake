@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { ConnectionCompareDiagram } from "@/components/diagrams/ConnectionCompareDiagram";
 import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { BRAND } from "@/lib/brand";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const DEPLOYMENT_MODELS = [
   {
@@ -57,7 +58,7 @@ export default function DeployPage() {
     <div className="page-shell grid gap-2">
       <PageHeader
         eyebrow="Platform"
-        title="Deployment"
+        title={ROUTE_LABELS["/deploy"]}
         description={`${BRAND.name} is open source. Run locally or self-host in your VPC.`}
         actions={
           <>

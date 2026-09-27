@@ -259,29 +259,6 @@ def _build_disk_config_record(
     }
 
 
-def validate_configure_payload(
-    *,
-    connector_id: str,
-    state: str,
-    credentials: dict[str, Any] | None,
-    options: dict[str, Any] | None,
-) -> None:
-    """Validate public connector configuration before it can be enabled.
-
-    ``append_config_event`` is intentionally a low-level append helper used by
-    tests and offline fixture setup. Public API/console callers must pass
-    through this validator so an empty form cannot create an enabled connector.
-    """
-    error = configure_payload_error(
-        connector_id=connector_id,
-        state=state,
-        credentials=credentials,
-        options=options,
-    )
-    if error:
-        raise ValueError(error)
-
-
 def configure_payload_error(
     *,
     connector_id: str,
@@ -289,7 +266,12 @@ def configure_payload_error(
     credentials: dict[str, Any] | None,
     options: dict[str, Any] | None,
 ) -> str | None:
-    """Return a public, deterministic connector configuration validation error."""
+    """Return a public, deterministic connector configuration validation error.
+
+    ``append_config_event`` is a low-level append helper that does not validate;
+    the API and CLI configure paths call this first so an empty form cannot
+    create an enabled connector.
+    """
     if state != "enabled":
         return None
     catalog = load_connector_catalog()

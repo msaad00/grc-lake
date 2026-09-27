@@ -34,8 +34,11 @@ def assert_resolved_ip_is_public(host: str, *, label: str = "target") -> list[st
     """Resolve ``host`` and reject any address in a non-public range.
 
     Returns the resolved addresses on success; raises ``ValueError`` otherwise.
-    The private/loopback/link-local/reserved/multicast check runs on the
-    resolved address(es), not just the hostname string.
+    Every resolved address must be globally routable unicast; the check runs on
+    the resolved address(es), not just the hostname string.
+
+    The connection re-resolves the name, so a resolver that answers differently
+    between this check and the connect (DNS rebinding) is not caught here.
     """
     if host.lower() == "localhost":
         raise ValueError(f"{label} 'localhost' is not allowed")
@@ -49,14 +52,9 @@ def assert_resolved_ip_is_public(host: str, *, label: str = "target") -> list[st
     for raw_ip in addresses:
         # Strip any IPv6 scope id (e.g. fe80::1%eth0) before parsing.
         ip = ipaddress.ip_address(raw_ip.split("%", 1)[0])
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_reserved
-            or ip.is_multicast
-            or ip.is_unspecified
-        ):
+        # is_global also excludes shared/CGNAT space (100.64.0.0/10), which
+        # is_private does not flag.
+        if not ip.is_global or ip.is_multicast:
             raise ValueError(f"{label} resolves to non-public address {raw_ip} (SSRF blocked)")
     return addresses
 

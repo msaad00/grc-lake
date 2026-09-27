@@ -232,7 +232,7 @@ def test_dashboard_render_tolerates_empty_lake(tmp_path: Path) -> None:
     empty_lake.mkdir()
     out = render_dashboard(empty_lake, tmp_path / "empty.html")
     html = out.read_text(encoding="utf-8")
-    assert ">Dashboard<" in html or "TrustOps Home" in html
+    assert ">Overview<" in html
     assert "TrustOps" in html
 
 
@@ -245,7 +245,7 @@ def test_dashboard_render_uses_gold_data(tmp_path: Path) -> None:
     # Either the React single-file export (when web/dist/ is packaged) or the
     # The React export or offline fallback must surface its stable heading and
     # embed the current assessment payload for the downstream auditor.
-    assert ">Dashboard<" in html or "TrustOps Home" in html
+    assert ">Overview<" in html
     assert "TrustOps" in html
     assert "SOC2-CC6.1" in html
     assert "container:rag-api@sha256:91ab" in html

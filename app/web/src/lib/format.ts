@@ -64,6 +64,22 @@ export function formatDateTime(iso: string | null | undefined): string {
       });
 }
 
+/** Grouped integer for counts, e.g. 2,021; "—" when unknown. */
+export function formatCount(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat(undefined).format(value);
+}
+
+/** Split an identifier or URI into its readable last segment and the
+ * prefix it lives under, e.g. "s3://bucket/a/b.json" → ["b.json", "s3://bucket/a/"]. */
+export function splitRef(ref: string | null | undefined): [string, string] {
+  if (!ref) return ["—", ""];
+  const trimmed = ref.replace(/[/:]+$/, "");
+  const cut = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf(":"));
+  if (cut <= 0 || cut === trimmed.length - 1) return [ref, ""];
+  return [trimmed.slice(cut + 1), trimmed.slice(0, cut + 1)];
+}
+
 /** Link to a repo doc on GitHub, e.g. docsUrl("SERVER_AUTH.md"). */
 export function docsUrl(path: string): string {
   return `${BRAND.repoUrl}/blob/main/docs/${path}`;

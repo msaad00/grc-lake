@@ -53,6 +53,7 @@
       "freshness_slo_minutes": 60,
       "is_implemented": true,
       "production_status": "supported_connector",
+      "release_stage": "preview",
       "velocity": "low_current_state",
       "native_connector": false,
       "data_shape": "current_state",

@@ -515,7 +515,7 @@ def _parser() -> argparse.ArgumentParser:
     frameworks = sub.add_parser("frameworks", help="framework registry commands")
     frameworks_sub = frameworks.add_subparsers(dest="frameworks_command", required=True)
     frameworks_sync = frameworks_sub.add_parser(
-        "sync", help="re-fetch official sources, recompute sha256, advance pulled_at"
+        "sync", help="re-fetch official sources, recompute sha256, record source changes"
     )
     frameworks_sync.add_argument(
         "--allow-network",

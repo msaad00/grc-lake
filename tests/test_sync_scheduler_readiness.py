@@ -74,6 +74,41 @@ def test_sync_unchanged_when_sha_matches(tmp_path: Path) -> None:
     assert results[0].state == "unchanged"
 
 
+def test_sync_with_unchanged_content_leaves_the_registry_byte_identical(tmp_path: Path) -> None:
+    """Drift is a content change; re-fetching the same bytes must not dirty the registry."""
+    body = b"<official text>"
+    path = _fixture_registry(tmp_path)
+    first = sync_frameworks(path, fetcher=lambda _url: body)
+    assert first[0].state == "updated"
+    after_first = path.read_bytes()
+    history = tmp_path / "history.jsonl"
+    history_after_first = history.read_bytes()
+
+    second = sync_frameworks(path, fetcher=lambda _url: body)
+
+    assert second[0].state == "unchanged"
+    assert second[0].pulled_at == first[0].pulled_at
+    assert path.read_bytes() == after_first
+    assert history.read_bytes() == history_after_first
+
+
+def test_sync_advances_pulled_at_only_when_content_changes(tmp_path: Path) -> None:
+    path = _fixture_registry(tmp_path, with_sha=hashlib.sha256(b"v1").hexdigest())
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["frameworks"][0]["pulled_at"] = "2026-01-01T00:00:00Z"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    unchanged = sync_frameworks(path, fetcher=lambda _url: b"v1")
+    assert unchanged[0].pulled_at == "2026-01-01T00:00:00Z"
+    assert json.loads(path.read_text(encoding="utf-8"))["frameworks"][0]["pulled_at"] == "2026-01-01T00:00:00Z"
+
+    changed = sync_frameworks(path, fetcher=lambda _url: b"v2")
+    saved = json.loads(path.read_text(encoding="utf-8"))["frameworks"][0]
+    assert changed[0].state == "updated"
+    assert saved["pulled_at"] == changed[0].pulled_at != "2026-01-01T00:00:00Z"
+    assert saved["source_sha256"] == hashlib.sha256(b"v2").hexdigest()
+
+
 def test_sync_fetcher_error_marks_framework_error(tmp_path: Path) -> None:
     path = _fixture_registry(tmp_path)
 

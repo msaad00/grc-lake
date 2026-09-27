@@ -9,7 +9,7 @@ Remaining gaps, each scoped in its own issue:
 
 | Epic                                                                      | Area       | Gap it closes                                                                                                        |
 | ------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
-| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks | ISO 27701 pack (license review); SOC 1 stays planned (no official catalog)                                           |
+| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks | ISO 27701:2025 limited pack (10/78 verified); SOC 1 stays planned (no official catalog)                              |
 | [#608](https://github.com/msaad00/trustops-security-data-lake/issues/608) | Connectors | CIS Azure/GCP benchmarks, ISO 27001 clauses 4–10 (HRIS/MDM shipped)                                                  |
 | [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Connectors | Databricks evidence reader shipped as preview; live-workspace verification against the `docs/HERO_DATA_LAKES.md` bar |
 | [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform   | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                      |

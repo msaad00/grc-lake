@@ -6,8 +6,8 @@
 
 image:
   repository: ghcr.io/msaad00/trustops
-  tag: latest
-  pullPolicy: Always
+  tag: "0.2.16" # pin a released version; never a moving tag
+  pullPolicy: IfNotPresent
 
 replicaCount: 1
 

@@ -12,11 +12,13 @@
 # Build:  docker build -t trustops:dev .
 # Run:    docker run --rm -p 8787:8787 -v $PWD/build/lakehouse:/lake trustops:dev
 
-ARG NODE_VERSION=22
-ARG PYTHON_VERSION=3.12
+# Base images are pinned by multi-arch index digest so a rebuild of the same
+# commit gets the same bytes; Dependabot's docker ecosystem bumps tag + digest
+# together. uv is copied from its official image, pinned the same way.
+FROM ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82 AS uv
 
 # --- 1. React workbench ----------------------------------------------------
-FROM node:${NODE_VERSION}-slim AS web-build
+FROM node:22-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS web-build
 WORKDIR /workbench
 COPY app/web/package*.json ./
 RUN npm ci --no-audit --no-fund
@@ -24,7 +26,7 @@ COPY app/web/ ./
 RUN npm run build
 
 # --- 2. Python package + analytics venv -----------------------------------
-FROM python:${PYTHON_VERSION}-slim AS py-build
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS py-build
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_CACHE_DIR=1
 WORKDIR /src
 COPY pyproject.toml uv.lock README.md ./
@@ -40,19 +42,26 @@ COPY agent-skills/ ./agent-skills/
 # Bring the static export into the package tree before install so wheel
 # package-data picks it up.
 COPY --from=web-build /src/security_lakehouse/web/dist/ ./src/security_lakehouse/web/dist/
+COPY --from=uv /uv /usr/local/bin/uv
+ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
+# Dependencies come from uv.lock with their sha256 hashes, and the install
+# refuses any distribution whose hash does not match. The project itself is
+# then built from this source tree with --no-deps, so nothing unpinned is
+# resolved at build time.
+# The image binds 0.0.0.0, so it must be able to run the authenticated
+# server. Without the `server` extra the CMD below silently falls back to
+# local mode, which has no authentication at all.
 RUN python -m venv /opt/trustops-venv \
-  && python -m pip install uv==0.10.9 \
-  && uv export --frozen --no-dev --no-emit-project --no-hashes \
+  && uv export --frozen --no-dev --no-emit-project \
        --extra server --extra analytics --extra cloud --extra mcp --extra iceberg \
-       --output-file /tmp/trustops-constraints.txt \
-  # The image binds 0.0.0.0, so it must be able to run the authenticated
-  # server. Without the `server` extra the CMD below silently falls back to
-  # local mode, which has no authentication at all.
+       --output-file /tmp/trustops-requirements.txt \
   && uv pip install --python /opt/trustops-venv/bin/python \
-       --constraint /tmp/trustops-constraints.txt ".[server,analytics,cloud,mcp,iceberg]"
+       --require-hashes --requirement /tmp/trustops-requirements.txt \
+  && uv pip install --python /opt/trustops-venv/bin/python --no-deps \
+       ".[server,analytics,cloud,mcp,iceberg]"
 
 # --- 3. Slim runtime ------------------------------------------------------
-FROM python:${PYTHON_VERSION}-slim AS runtime
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS runtime
 LABEL org.opencontainers.image.title="TrustOps Security Data Lake"
 LABEL org.opencontainers.image.source="https://github.com/msaad00/trustops-security-data-lake"
 LABEL org.opencontainers.image.licenses="Apache-2.0"

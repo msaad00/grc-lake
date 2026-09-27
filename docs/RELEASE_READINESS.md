@@ -1,8 +1,9 @@
 # Release readiness
 
-TrustOps **0.2.16** adds production SCIM 2.0 and Stripe billing for commercial
-hosted tenants, a Databricks evidence-lake reader (preview), inherited NIST SP
-800-53 reviews, and official NIST AI RMF titles. See [the
+TrustOps **0.2.17** is a security and hardening release: parameterized
+ClickHouse cursor queries, fail-closed signup, SAML replay protection, local
+server CSRF guards, a CI-gated and attested release pipeline, and an accessible,
+mobile-ready console. See [the
 changelog](../CHANGELOG.md) for release scope.
 
 ## Release gates

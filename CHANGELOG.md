@@ -3,7 +3,7 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.2.17 - 2026-09-27
 
 - Operator note: this release adds database migration `0019` (a
   `resolution_note` column on remediation tasks). The server applies pending
@@ -38,6 +38,24 @@ Python package, Helm chart, and bundled web console.
   document is regenerated. Frameworks and Crosswalk now name their mapping
   units, and console pages mount once per navigation, so input typed right
   after a navigation is no longer lost.
+- Security fixes. ClickHouse evidence-lake cursors are sent as typed query
+  parameters and every query runs with `readonly=1` (a crafted row value could
+  previously break out of the SQL literal). SAML responses must answer a login
+  this server started and each assertion is accepted once; IdP-initiated login
+  now requires `TRUSTOPS_SAML_ALLOW_IDP_INITIATED=true`. Self-service signup
+  fails closed without `TRUSTOPS_SIGNUP_SECRET` unless
+  `TRUSTOPS_ALLOW_OPEN_SIGNUP=1`. The local stdlib server rejects foreign
+  `Host` and cross-origin `Origin` headers, requires JSON bodies, and caps
+  request size. Rate limits key on the client until a bearer token
+  authenticates. Egress checks block all non-global addresses (including
+  CGNAT). Invite acceptance records the new user, returns 409 for existing
+  members, and validates the role.
+- Console: mobile navigation drawer, one name per page across the sidebar,
+  headings, and command palette, Graph and Settings in the sidebar, keyboard
+  and screen-reader support in the shell and command palette, contrast fixes,
+  loading and error states where pages showed empty data, and a flat KPI strip
+  on the overview. README, roadmap, and deployment docs now match the code,
+  and README screenshots are captured from one frozen dataset in both themes.
 - Harden the release pipeline: a tag publishes only a commit that is on main
   and passed CI, and only when the package, chart, console, `package.json`,
   and changelog agree on the version. Wheels, sdists, and the container image

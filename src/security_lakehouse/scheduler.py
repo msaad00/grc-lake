@@ -207,15 +207,19 @@ def _read_state(lake_dir: str | Path) -> dict[str, datetime]:
             row = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if not isinstance(row, dict):
+            continue
         target_kind = str(row.get("target_kind") or "workflow")
         target_id = str(row.get("target_id") or row.get("workflow_id") or "")
         last = row.get("last_fired_at")
         if not target_id or not last:
             continue
         try:
-            parsed = datetime.fromisoformat(str(last).replace("Z", "+00:00")).astimezone(UTC)
+            parsed = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
         except ValueError:
             continue
+        # astimezone() would read a naive value as server-local time.
+        parsed = parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed.astimezone(UTC)
         key = _state_key(target_kind, target_id)
         existing = latest.get(key)
         if existing is None or parsed > existing:

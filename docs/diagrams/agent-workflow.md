@@ -35,4 +35,4 @@ security-lakehouse agents posture-review --lake build/lakehouse --orchestrator l
 security-lakehouse agents soc-triage --lake build/lakehouse --orchestrator langgraph
 ```
 
-See [Agent Harness](AGENT_HARNESS.md) and [Shareable Demo](SHAREABLE_DEMO.md).
+See [Agent Harness](../AGENT_HARNESS.md) and [Shareable Demo](../SHAREABLE_DEMO.md).

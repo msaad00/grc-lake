@@ -1,13 +1,12 @@
 ---
-name: security-compliance-analytics
+name: compliance-analytics
 description: >-
   Use the local continuous compliance assessment artifacts and API to answer
   audit, control, evidence, vulnerability, runtime, posture, snapshot, and
   executive-risk questions. The skill is read-only unless the user explicitly
   requests a point-in-time snapshot.
-license: MIT
+license: Apache-2.0
 metadata:
-  version: "0.1.0"
   author: Mohamed Saad
   data_flow: >-
     Reads generated lakehouse JSON and SQLite artifacts from the local repo.

@@ -150,7 +150,11 @@ def test_azure_linking_is_provider_identity_first() -> None:
     assert "Customer-owned Entra application" not in forms
     assert "**Azure**" in readme
     assert "managed identity, or federated workload identity" in readme
-    assert "No connector requires pasted long-lived cloud keys." in readme
+    assert "No connector requires pasted long-lived cloud keys." not in readme
+    assert "Cloud connectors use short-lived or workload identity credentials" in readme
+    assert "a service-account key file also works" in readme
+    assert "use scoped API tokens or an integration-user login" in readme
+    assert "not the secret itself" in readme
     assert "Local `az login` is acceptable for developer proof only." in live_poc
     assert "Do not present it as" in live_poc
 

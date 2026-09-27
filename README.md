@@ -20,17 +20,24 @@
 </p>
 
 TrustOps collects security evidence, evaluates controls, tracks follow-up work,
-and exports assessments for review. **Built for humans and agents:** use the
-console for investigation and review, or API, CLI, MCP, and CI for automation.
-Deploy it in your environment. Data access and egress depend on your configured
-connectors, sinks, and model integrations.
+and exports assessments for review.
+
+- **Customer-owned evidence lake.** Evidence stays in storage you run; deploy
+  TrustOps in your environment. Data access and egress depend on the connectors,
+  sinks, and model integrations you configure.
+- **Deterministic rules decide pass or fail.** Every result traces to evidence
+  and the evaluated catalog; models may summarize or propose, never decide.
+- **Headless by design.** Use the console for investigation and review, or the
+  API, CLI, MCP server, and CI gates for automation.
 
 ## Quick start
 
-**Try the console with fixture data.** From a cloned repository, use Python 3.11+,
+**Try the console with fixture data.** Use Python 3.11+,
 [uv](https://docs.astral.sh/uv/), and Node 22+:
 
 ```bash
+git clone https://github.com/msaad00/trustops-security-data-lake.git
+cd trustops-security-data-lake
 uv sync --frozen --extra dev --extra server
 make demo-local
 ```
@@ -60,7 +67,17 @@ For the CLI and local lake only:
 ```bash
 pip install trustops-security-data-lake
 security-lakehouse fixtures load --company golden --out ./lake --rebase-times
+security-lakehouse assessment status --lake ./lake
 ```
+
+To give an agent the same lake over MCP (stdio):
+
+```bash
+pip install 'trustops-security-data-lake[mcp]'
+TRUSTOPS_LAKE=./lake trustops-mcp
+```
+
+See [headless GRC](docs/HEADLESS_GRC.md) for remote-server mode and the MCP trust boundary.
 
 [Docker, Helm, and production configuration](deploy/README.md) ·
 [Server authentication](docs/SERVER_AUTH.md)
@@ -84,9 +101,12 @@ Models may summarize or propose actions; deterministic rules decide control resu
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**16 framework packs · 44 reusable safeguards · 21 control families · 2021 catalogued requirements.**
+**16 framework packs · 44 reusable safeguards · 21 control families · 2,021 catalogued requirements.**
 
 813 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
+
+Control families: Identity and access · Data protection · Detection · Audit logging · Change management · Configuration management · Secure development · Secure architecture · Vulnerability management · Third-party risk · Risk management · Availability and recovery · Incident response · Governance · People security · Physical security · Network security · System maintenance · Processing integrity · Privacy · AI governance.
+
 <!-- END README CCF SUMMARY -->
 
 <table>
@@ -106,7 +126,9 @@ Models may summarize or propose actions; deterministic rules decide control resu
 
 Framework identities show catalog scope. A pack may be a limited mapping;
 see the [coverage matrix](docs/FRAMEWORK_COVERAGE.md) for the exact boundary.
-**SOC 1 and ISO 27701 are planned**, with no catalogued controls yet.
+**NIST RMF (SP 800-37 Rev. 2) is catalogued but not yet mapped** to safeguards, and
+the **PCI DSS v4.0.1 pack covers its 12 principal requirements**, not every
+sub-requirement. **SOC 1 and ISO 27701 are planned**, with no catalogued controls yet.
 
 | CCF layer              | What it represents                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -116,19 +138,20 @@ see the [coverage matrix](docs/FRAMEWORK_COVERAGE.md) for the exact boundary.
 | **Assessment results** | Pass, fail, stale, or not-evaluated outcomes from the collected evidence.                                    |
 
 <details>
-<summary><strong>Control families and evaluation details</strong></summary>
-
-Identity & access · data protection · detection · logging · change management ·
-availability · incident response · third-party risk · vulnerability management ·
-AI governance · risk management · privacy · governance · monitoring · control operations.
+<summary><strong>Evaluation details and further reading</strong></summary>
 
 One safeguard can serve several frameworks. Every required mapped safeguard must
 pass for a requirement to pass; an unmapped requirement remains unmapped.
 A reviewed mapping is not certification or proof that a customer's controls pass.
 
-[CCF design and safeguards](docs/COMMON_CONTROL_FRAMEWORK.md) ·
-[Coverage by framework](docs/FRAMEWORK_COVERAGE.md) ·
-[Executable catalog](controls/catalog.json)
+| Area                                                 | Read more                                                                                                  |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Safeguards and executable rules                      | [Common Control Framework](docs/COMMON_CONTROL_FRAMEWORK.md) · [Executable catalog](controls/catalog.json) |
+| Framework mappings and coverage                      | [Framework coverage](docs/FRAMEWORK_COVERAGE.md)                                                           |
+| Findings, reviews, exceptions, and audit preparation | [Product walkthrough](docs/PRODUCT_WALKTHROUGH.md) · [Audit readiness](docs/AUDIT_READINESS.md)            |
+| Implemented, partial, and planned capabilities       | [Product status](docs/PRODUCT_SHAPE.md) · [Roadmap](ROADMAP.md)                                            |
+
+Inspect the current safeguard catalog from the CLI:
 
 ```bash
 security-lakehouse frameworks safeguards --format table
@@ -141,24 +164,32 @@ security-lakehouse frameworks safeguards --format table
 <details open>
 <summary><strong>01 · Product tour</strong> — posture, evidence, frameworks, and triage</summary>
 
-The images show the bundled demo fixture, not live customer evidence. They follow
-your GitHub light or dark theme.
+The images show the bundled demo fixture, not live customer evidence.
+The inline images follow your GitHub theme.
 
 <p align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-dashboard-dark.png"><img src="docs/images/trustops-demo-dashboard.png" alt="TrustOps overview: assessment score, control pass rate, and open findings" width="100%"></picture>
-  <br><sub><strong>Overview</strong> — posture, pass rate, and open findings in one read, drilling into frameworks and findings.</sub>
+  <br><sub><strong>Overview</strong> — assessment score, control pass rate, open findings, and evidence to refresh, with framework posture and the highest-risk findings below.</sub>
 </p>
 
 <p align="center">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-frameworks-dark.png"><img src="docs/images/trustops-demo-frameworks.png" alt="Framework coverage with catalogued, mapped, and reviewed requirements" width="49%"></picture>
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-evidence-dark.png"><img src="docs/images/trustops-demo-evidence.png" alt="Normalized evidence facts with source, freshness, and provenance" width="49%"></picture>
-  <br><sub><strong>Frameworks</strong> — honest coverage: catalogued, mapped, and reviewed are counted separately. &nbsp;·&nbsp; <strong>Evidence</strong> — every fact carries its source, freshness, and hash.</sub>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-frameworks-dark.png"><img src="docs/images/trustops-demo-frameworks.png" alt="Requirement coverage summary with catalogued, mapped, and reviewed counts above the framework roster" width="100%"></picture>
+  <br><sub><strong>Frameworks</strong> — catalogued, mapped, and reviewed requirements are counted separately, then broken down per framework.</sub>
 </p>
 
 <p align="center">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-triage-dark.png"><img src="docs/images/trustops-demo-triage.png" alt="Finding triage drawer with owner, due date, and evidence provenance" width="49%"></picture>
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-graph-dark.png"><img src="docs/images/trustops-demo-graph.png" alt="Compliance mapping graph from framework to control, evidence, and asset" width="49%"></picture>
-  <br><sub><strong>Triage</strong> — assign, set due dates, and keep a history. &nbsp;·&nbsp; <strong>Graph</strong> — trace a framework to its controls, evidence, and assets.</sub>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-evidence-dark.png"><img src="docs/images/trustops-demo-evidence.png" alt="Evidence table with source, asset, mapped control, status, freshness against its SLA, and evidence reference" width="100%"></picture>
+  <br><sub><strong>Evidence</strong> — each normalized record shows its source, mapped control, freshness against the source's SLA, and where the original lives.</sub>
+</p>
+
+<p align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-graph-dark.png"><img src="docs/images/trustops-demo-graph.png" alt="Compliance graph focused on one evidence type, with the assets it was collected from highlighted" width="100%"></picture>
+  <br><sub><strong>Graph</strong> — focus one evidence type and see the controls it proves and the assets it came from.</sub>
+</p>
+
+<p align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-triage-dark.png"><img src="docs/images/trustops-demo-triage.png" alt="Finding triage drawer with asset, owner, suggested remediation, and triage fields" width="55%"></picture>
+  <br><sub><strong>Triage</strong> — a finding with its asset and owner, suggested remediation steps, and state, assignee, and due date recorded in triage history.</sub>
 </p>
 
 [Full walkthrough](docs/PRODUCT_WALKTHROUGH.md) ·
@@ -184,9 +215,15 @@ A connector can also ship as a separately installed Python package that
 registers its sync builder and catalog row through entry points; see
 [Shipping a connector as a package](docs/ADDING_CONNECTORS.md#shipping-a-connector-as-a-package).
 
-No connector requires pasted long-lived cloud keys.
+Cloud connectors use short-lived or workload identity credentials: AWS STS sessions,
+Azure managed or federated identity, and GCP Application Default Credentials
+(workload identity or the metadata server; a service-account key file also works).
+GitHub reads a GitHub App installation token, which expires within an hour; you mint
+and rotate it. Other SaaS connectors (Okta, GitLab, Jira, BambooHR, Rippling, Workday)
+use scoped API tokens or an integration-user login. Connector settings keep a credential
+reference (an environment variable name or mounted secret file), not the secret itself.
 
-- **AWS** uses STS AssumeRole, one External ID per deployed role, short-lived session credentials, and read-only IAM posture APIs. Temporary credentials expire after each session; TrustOps stores no long-lived access keys. Scale rollout with CloudFormation StackSets or Terraform workspaces; Bulk account import is the next operator surface. See the [cloud setup guide](docs/LIVE_CLOUD_POC.md).
+- **AWS** uses STS AssumeRole, one External ID per deployed role, short-lived session credentials, and read-only IAM posture APIs. Temporary credentials expire after each session; TrustOps stores no long-lived access keys. Scale rollout with CloudFormation StackSets or Terraform workspaces; Bulk account import is planned. See the [cloud setup guide](docs/LIVE_CLOUD_POC.md).
 - **Azure** supports a customer-owned Entra application, managed identity, or federated workload identity with Reader scope.
 - **Snowflake** uses a read-only service identity with a key-pair or OAuth token reference. TrustOps stores identifiers, not passwords or private-key contents. Snowflake is the existing security-data-lake path.
 
@@ -196,22 +233,7 @@ No connector requires pasted long-lived cloud keys.
 </details>
 
 <details>
-<summary><strong>03 · Controls and workflows</strong> — safeguards, frameworks, and ownership</summary>
-
-| Area                                                 | Read more                                                                                       |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Safeguards and executable rules                      | [Common Control Framework](docs/COMMON_CONTROL_FRAMEWORK.md)                                    |
-| Framework mappings and coverage                      | [Framework coverage](docs/FRAMEWORK_COVERAGE.md)                                                |
-| Findings, reviews, exceptions, and audit preparation | [Product walkthrough](docs/PRODUCT_WALKTHROUGH.md) · [Audit readiness](docs/AUDIT_READINESS.md) |
-| Implemented, partial, and planned capabilities       | [Product status](docs/PRODUCT_SHAPE.md) · [Roadmap](ROADMAP.md)                                 |
-
-Catalog size, mapped coverage, and evaluated results are separate measures. Inspect
-the current safeguard catalog with `security-lakehouse frameworks safeguards`.
-
-</details>
-
-<details>
-<summary><strong>04 · Deployment and interoperability</strong> — local, cloud, and evidence storage</summary>
+<summary><strong>03 · Deployment and interoperability</strong> — local, cloud, and evidence storage</summary>
 
 ```text
 Source → Raw evidence → Normalized facts → Control evaluation → Assessment
@@ -224,15 +246,16 @@ Source → Raw evidence → Normalized facts → Control evaluation → Assessme
 | Evidence and evaluation | Local JSONL, deterministic rules, and verified assessment generations.                                          |
 | Local analytics         | SQLite mart; DuckDB is optional.                                                                                |
 | Operational state       | Application database and local state for jobs, assignments, and reviews.                                        |
-| External storage        | Snowflake and ClickHouse integrations; verify the configured deployment.                                        |
+| External storage        | Snowflake, ClickHouse, and Databricks (preview) integrations; verify the configured deployment.                 |
 | Portable evidence       | Optional [Parquet export](docs/PARQUET_EXPORT.md) of one verified generation; independently tested with DuckDB. |
 | Open table catalogs     | Optional [Iceberg REST publication](docs/ICEBERG_REST.md); local Polaris and DuckDB snapshot reads tested.      |
 
 Run locally with Python or Docker, or deploy the Helm chart in your own cloud.
 The current assessment writer needs durable local POSIX storage and one writer
-per lake. Snowflake and ClickHouse integrations are evidence backends; they do
-not host the TrustOps application. Snowflake Native App packaging and Databricks
-support are planned. See the [deployment guide](deploy/README.md).
+per lake. Snowflake, ClickHouse, and Databricks integrations are evidence backends;
+they do not host the TrustOps application. Snowflake Native App packaging is planned;
+the Databricks evidence reader is in preview (live-workspace verification pending).
+See the [deployment guide](deploy/README.md).
 
 [Architecture guide](docs/ARCHITECTURE.md) ·
 [Architecture diagram](docs/images/trustops-assessment-architecture.svg) ·
@@ -241,7 +264,7 @@ support are planned. See the [deployment guide](deploy/README.md).
 </details>
 
 <details>
-<summary><strong>05 · API, agents, and CI</strong> — use the same assessment engine headlessly</summary>
+<summary><strong>04 · API, agents, and CI</strong> — use the same assessment engine headlessly</summary>
 
 | Surface                                 | Purpose                                                          |
 | --------------------------------------- | ---------------------------------------------------------------- |

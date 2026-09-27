@@ -16,7 +16,7 @@ snapshot publication.
 Install the optional dependencies (the example also uses repository sample data):
 
 ```bash
-pip install 'trustops-security-data-lake[parquet,analytics]==0.2.10'
+pip install 'trustops-security-data-lake[parquet,analytics]>=0.2.10'
 security-lakehouse ingestion normalize \
   --raw data/raw/security_events.jsonl --out build/parquet-demo-lake \
   --tenant-id acme-prod

@@ -186,5 +186,5 @@ security-lakehouse db upgrade --lake build/lakehouse
 ## Related docs
 
 - [Deployment](DEPLOYMENT.md) — OSS vs self-hosted positioning
-- [HA read replicas](../runbooks/HA_READ_REPLICAS.md) — single-writer lake + read replicas
+- [HA read replicas](runbooks/HA_READ_REPLICAS.md) — single-writer lake + read replicas
 - [Helm security guards](../deploy/README.md) — auth + replica guards

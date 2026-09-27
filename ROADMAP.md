@@ -1,6 +1,21 @@
 # TrustOps Roadmap
 
-Prioritized enhancements from product audit (v0.2.0). Track in GitHub issues as needed.
+Status as of v0.2.16. Open epics come first; the shipped priority lists below are kept
+as the delivery record. Track work in GitHub issues.
+
+## Open epics
+
+Remaining gaps, each scoped in its own issue:
+
+| Epic                                                                      | Area       | Gap it closes                                                                                                        |
+| ------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks | ISO 27701 pack (license review); SOC 1 stays planned (no official catalog)                                           |
+| [#608](https://github.com/msaad00/trustops-security-data-lake/issues/608) | Connectors | CIS Azure/GCP benchmarks, ISO 27001 clauses 4–10 (HRIS/MDM shipped)                                                  |
+| [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Connectors | Databricks evidence reader shipped as preview; live-workspace verification against the `docs/HERO_DATA_LAKES.md` bar |
+| [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform   | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                      |
+
+#611 is the cheapest to start: `docs/FRAMEWORK_EXPANSION_PLAN.md` already carries the
+rules and the contributor checklist, so it is execution rather than design.
 
 ## P0 — Shareable hosted demo (managed GRC-class entry)
 
@@ -13,7 +28,7 @@ Prioritized enhancements from product audit (v0.2.0). Track in GitHub issues as 
 
 ## P1 — Product depth
 
-- [x] SOC 2 common criteria full pack (33 controls)
+- [x] SOC 2 common criteria full pack (33 controls; with the TSC extensions below the SOC 2 pack now holds 61 requirements)
 - [x] NIST AI RMF 1.0 full pack (72 subcategories)
 - [x] FedRAMP Moderate foundation pack (287 NIST SP 800-53 Rev 5 controls)
 - [x] CIS AWS Foundations v3.0 pack (62 recommendations)
@@ -65,20 +80,6 @@ Prioritized enhancements from product audit (v0.2.0). Track in GitHub issues as 
 - [x] Unified v1 audit-log with stable event IDs (#339)
 - [x] Audit readiness API and audit room (#340)
 - [x] MCP/API resource catalog parity for platform endpoints (access reviews, policies, vendor diligence, insights)
-
-## Open epics (next)
-
-The four gaps with no shipped implementation, each scoped in its own issue:
-
-| Epic                                                                      | Area       | Gap it closes                                                              |
-| ------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
-| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks | ISO 27701 pack (license review); SOC 1 stays planned (no official catalog) |
-| [#608](https://github.com/msaad00/trustops-security-data-lake/issues/608) | Connectors | CIS Azure/GCP benchmarks, ISO 27001 clauses 4–10 (HRIS/MDM shipped)        |
-| [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Connectors | Databricks adapter — `docs/HERO_DATA_LAKES.md` sets its own acceptance bar |
-| [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform   | Live Stripe + IdP verification of the P5 billing/SCIM paths                |
-
-#611 is the cheapest to start: `docs/FRAMEWORK_EXPANSION_PLAN.md` already carries the
-rules and the contributor checklist, so it is execution rather than design.
 
 ## P7 — Turnkey GRC loop + premium UX
 

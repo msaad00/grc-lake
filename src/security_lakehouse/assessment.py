@@ -576,11 +576,6 @@ def build_violations(
     return _build_violations_capped(iterator, max_violations=max_violations)
 
 
-def _build_violations(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    violations, _summary = _build_violations_capped(iter(events), max_violations=None)
-    return violations
-
-
 def _build_violations_capped(
     events: Iterable[dict[str, Any]],
     *,

@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-import importlib.util
 from typing import Any
-
-
-def langgraph_available() -> bool:
-    return importlib.util.find_spec("langgraph") is not None
 
 
 def memory_checkpointer() -> Any:

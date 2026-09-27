@@ -324,9 +324,8 @@ class _FakeSamlAuth:
 
     def process_response(self, request_id: str | None = None) -> None:
         self.seen.append(request_id)
-        if not self.authenticated:
-            self._errors = ["invalid_response"]
-        elif self.in_response_to is not None and request_id is not None and self.in_response_to != request_id:
+        mismatched = self.in_response_to is not None and request_id is not None and self.in_response_to != request_id
+        if not self.authenticated or mismatched:
             self._errors = ["invalid_response"]
 
     def get_errors(self) -> list[str]:

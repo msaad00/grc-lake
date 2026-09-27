@@ -184,9 +184,7 @@ def test_random_bearer_tokens_cannot_mint_fresh_budgets(client) -> None:
     import secrets
 
     test_client, _token = client
-    statuses = [
-        test_client.get("/api/v1/risks", headers=_bearer(secrets.token_hex(16))).status_code for _ in range(6)
-    ]
+    statuses = [test_client.get("/api/v1/risks", headers=_bearer(secrets.token_hex(16))).status_code for _ in range(6)]
     assert HTTPStatus.TOO_MANY_REQUESTS in statuses
     assert statuses[-1] == HTTPStatus.TOO_MANY_REQUESTS
 
@@ -199,7 +197,10 @@ def test_only_authenticated_credentials_get_their_own_bucket(client) -> None:
     app = test_client.app
     request = type("R", (), {"headers": _bearer(token), "client": type("C", (), {"host": "10.0.0.9"})()})()
     assert _rate_limit_key(request, app.state.rate_limit_known_credentials).startswith("k:")
-    assert _rate_limit_key(
-        type("R", (), {"headers": _bearer("forged"), "client": request.client})(),
-        app.state.rate_limit_known_credentials,
-    ) == "h:10.0.0.9"
+    assert (
+        _rate_limit_key(
+            type("R", (), {"headers": _bearer("forged"), "client": request.client})(),
+            app.state.rate_limit_known_credentials,
+        )
+        == "h:10.0.0.9"
+    )

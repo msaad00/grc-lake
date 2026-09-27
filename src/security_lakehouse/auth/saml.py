@@ -18,7 +18,6 @@ from typing import Any
 from urllib.parse import parse_qs
 
 from itsdangerous import BadData, URLSafeTimedSerializer
-
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 

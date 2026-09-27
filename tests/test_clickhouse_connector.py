@@ -201,7 +201,9 @@ def test_clickhouse_cursor_values_are_bound_as_query_parameters_not_spliced_into
         {"event_id": hostile_id, "event_time": hostile_time},
     ]
     requests: list[Any] = []
-    with patch("security_lakehouse.netguard.open_public", side_effect=_capturing_clickhouse([first_page, []], requests)):
+    with patch(
+        "security_lakehouse.netguard.open_public", side_effect=_capturing_clickhouse([first_page, []], requests)
+    ):
         ClickHouseClient("https://ch.example:8443", user="r", password="s").normalized_events(
             since="2026-01-01\\' OR 1=1 --", page_size=2
         )

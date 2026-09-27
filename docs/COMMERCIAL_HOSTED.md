@@ -27,9 +27,8 @@ unauthenticated workspace creation.
 SAML SSO for hosted tenants is configured as in
 [Server auth](SERVER_AUTH.md#saml). Only SP-initiated logins are accepted by
 default; set `TRUSTOPS_SAML_ALLOW_IDP_INITIATED=true` to accept IdP-initiated
-logins. The assertion replay cache is per process, so with several replicas a
-replay routed to another replica is not caught
-([#732](https://github.com/msaad00/trustops-security-data-lake/issues/732)).
+logins. Consumed assertion IDs are stored in the shared application database,
+so a replay is rejected whichever replica receives it.
 
 Optional SCIM 2.0 provisioning (Enterprise tier). Enable it, then have a tenant
 admin issue a SCIM token (see [SCIM](#scim)):

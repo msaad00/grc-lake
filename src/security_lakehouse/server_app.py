@@ -52,8 +52,13 @@ from security_lakehouse.auth.rate_limit_redis import RateLimiterBackend, build_r
 from security_lakehouse.auth.rbac import Identity, scopes_for_role
 from security_lakehouse.auth.request_audit import append_request_audit
 from security_lakehouse.auth.saml import (
+    SAML_REQUEST_COOKIE,
+    SAML_REQUEST_MAX_AGE_SECONDS,
+    AssertionReplayCache,
     SAMLLoginError,
     build_saml_auth,
+    decode_saml_request_id,
+    encode_saml_request_id,
     complete_saml_login,
     email_from_saml_assertion,
     groups_from_saml_assertion,
@@ -1107,6 +1112,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     app.state.oauth = None
     app.state.saml_config = load_saml_config()
     app.state.saml_auth_factory = build_saml_auth
+    app.state.saml_replay_cache = AssertionReplayCache()
     if app.state.oidc_config is not None:
         from starlette.middleware.sessions import SessionMiddleware
 
@@ -1413,7 +1419,18 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 query=dict(request.query_params),
             ),
         )
-        return RedirectResponse(url=auth.login(), status_code=status.HTTP_302_FOUND)
+        response = RedirectResponse(url=auth.login(), status_code=status.HTTP_302_FOUND)
+        # The IdP returns the user with a cross-site POST, which drops a Lax cookie.
+        response.set_cookie(
+            SAML_REQUEST_COOKIE,
+            encode_saml_request_id(auth.get_last_request_id()),
+            max_age=SAML_REQUEST_MAX_AGE_SECONDS,
+            httponly=True,
+            secure=True,
+            samesite="none",
+            path="/api/v1/auth/saml",
+        )
+        return response
 
     @app.get("/api/v1/auth/saml/metadata")
     def saml_metadata(request: Request):
@@ -1451,12 +1468,23 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 body=body,
             ),
         )
-        auth.process_response()
+        saml_config = app.state.saml_config
+        request_id = decode_saml_request_id(request.cookies.get(SAML_REQUEST_COOKIE))
+        if request_id is None and not saml_config.allow_idp_initiated:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
+        auth.process_response(request_id=request_id)
         errors = auth.get_errors()
         if errors or not auth.is_authenticated():
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
+        # python3-saml only compares InResponseTo when the response carries one.
+        if request_id is not None and auth.get_last_response_in_response_to() != request_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
+        assertion_id = auth.get_last_assertion_id()
+        if not assertion_id or not app.state.saml_replay_cache.check_and_store(
+            str(assertion_id), not_on_or_after=auth.get_last_assertion_not_on_or_after()
+        ):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
         try:
-            saml_config = app.state.saml_config
             claim_values = groups_from_saml_assertion(
                 auth,
                 attribute_name=saml_config.role_attribute,
@@ -1471,6 +1499,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="SAML login rejected") from None
         session.commit()
         response = RedirectResponse(url="/console", status_code=status.HTTP_302_FOUND)
+        response.delete_cookie(SAML_REQUEST_COOKIE, path="/api/v1/auth/saml", secure=True, samesite="none")
         response.set_cookie(
             SESSION_COOKIE,
             encode_session_cookie(sess_token),

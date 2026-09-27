@@ -161,6 +161,20 @@ def _rate_limit_key(request: Request, known: _KnownCredentials) -> str:
     return "h:" + client
 
 
+async def _json_object_body(request: Request) -> dict[str, Any]:
+    """Parse a mutation body: empty or undecodable is no body; valid non-object JSON is a 400."""
+    raw = await request.body()
+    if not raw.strip():
+        return {}
+    try:
+        body = json.loads(raw)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="request body must be a JSON object")
+    return body
+
+
 _LEGACY_ERROR_REASONS = {
     HTTPStatus.BAD_REQUEST: "invalid request",
     HTTPStatus.FORBIDDEN: "forbidden",
@@ -3274,10 +3288,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        try:
-            body = await request.json()
-        except Exception:  # noqa: BLE001 - empty/invalid body is treated as no body
-            body = {}
+        body = await _json_object_body(request)
         v1_path = f"/api/v1/{rest}"
         if request.headers.get("Idempotency-Key") and "idempotency_key" not in body:
             body = {**body, "idempotency_key": request.headers["Idempotency-Key"]}
@@ -3318,10 +3329,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        try:
-            body = await request.json()
-        except Exception:  # noqa: BLE001 - empty/invalid body is treated as no body
-            body = {}
+        body = await _json_object_body(request)
         legacy_path = f"/api/{rest}"
         required_scope = api_legacy.required_post_scope(legacy_path)
         if not identity.has_scope(required_scope):

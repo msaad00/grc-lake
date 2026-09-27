@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from security_lakehouse.commercial.email import (
@@ -17,9 +18,17 @@ from security_lakehouse.commercial.email import (
     email_delivery_from_env,
 )
 from security_lakehouse.commercial.limits import assert_within_limit
-from security_lakehouse.db.models import Tenant, TenantInvite, User
+from security_lakehouse.db.models import USER_ROLES, Tenant, TenantInvite, User
 
 INVITE_TTL_HOURS = 168  # 7 days
+
+
+class InviteConflictError(ValueError):
+    """The invited email already belongs to a member of the tenant."""
+
+
+class InviteExpiredError(ValueError):
+    """The invite is past its expiry; its row has been marked ``expired``."""
 
 
 def _hash_token(token: str) -> str:
@@ -47,6 +56,8 @@ def create_invite(
     normalized = email.strip().lower()
     if not normalized:
         raise ValueError("email is required")
+    if role not in USER_ROLES:
+        raise ValueError(f"role must be one of {list(USER_ROLES)}")
     tenant = session.get(Tenant, tenant_id)
     if tenant is None:
         raise ValueError("tenant not found")
@@ -112,9 +123,19 @@ def accept_invite(
     now = datetime.now(UTC)
     expires = row.expires_at.replace(tzinfo=UTC) if row.expires_at.tzinfo is None else row.expires_at.astimezone(UTC)
     if expires < now:
-        row.status = "expired"
-        session.flush()
-        raise ValueError("invite expired")
+        # A previously expired invite for the same address holds the
+        # (tenant, email, status) key; the time check still rejects this one.
+        try:
+            with session.begin_nested():
+                row.status = "expired"
+        except IntegrityError:
+            pass
+        raise InviteExpiredError("invite expired")
+    existing = session.scalars(
+        select(User.id).where(User.tenant_id == row.tenant_id, User.email == row.email)
+    ).one_or_none()
+    if existing is not None:
+        raise InviteConflictError("a user with this email already exists in the tenant")
     user = User(
         tenant_id=row.tenant_id,
         email=row.email,
@@ -122,11 +143,15 @@ def accept_invite(
         role=row.role,
         is_active=True,
     )
-    session.add(user)
-    row.status = "accepted"
-    row.accepted_at = now
-    row.accepted_user_id = user.id
-    session.flush()
+    try:
+        with session.begin_nested():
+            session.add(user)
+            session.flush()
+            row.status = "accepted"
+            row.accepted_at = now
+            row.accepted_user_id = user.id
+    except IntegrityError as exc:
+        raise InviteConflictError("a user with this email already exists in the tenant") from exc
     return {"user_id": user.id, "email": user.email, "role": user.role, "tenant_id": user.tenant_id}
 
 
@@ -145,6 +170,8 @@ def invite_to_dict(row: TenantInvite) -> dict[str, Any]:
 
 
 __all__ = [
+    "InviteConflictError",
+    "InviteExpiredError",
     "accept_invite",
     "create_invite",
     "invite_to_dict",

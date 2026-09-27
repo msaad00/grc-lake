@@ -34,7 +34,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import Field
+from pydantic import Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -72,7 +72,7 @@ from security_lakehouse.db import metrics as metrics_db
 from security_lakehouse.db import migrate, remediation, repository
 from security_lakehouse.db import tags as tags_db
 from security_lakehouse.db.base import DEFAULT_PAGE_LIMIT, clamp_limit, create_engine_for, session_factory
-from security_lakehouse.db.models import REMEDIATION_PRIORITIES, User
+from security_lakehouse.db.models import REMEDIATION_PRIORITIES, USER_ROLES, User
 from security_lakehouse.demo_links import build_demo_kit
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import resolve_path
@@ -88,7 +88,14 @@ from security_lakehouse.web import web_dist_dir, web_dist_index
 
 _COOKIE_SECURE = os.environ.get("TRUSTOPS_COOKIE_SECURE", "true").lower() in {"1", "true", "yes", "on"}
 
-_ERROR_CODES = {400: "bad_request", 401: "unauthorized", 403: "forbidden", 404: "not_found", 429: "rate_limited"}
+_ERROR_CODES = {
+    400: "bad_request",
+    401: "unauthorized",
+    403: "forbidden",
+    404: "not_found",
+    409: "conflict",
+    429: "rate_limited",
+}
 
 # Health probes are exempt from rate limiting so a limiter trip can never hide
 # liveness from an orchestrator.
@@ -153,6 +160,13 @@ class EscalateFreshnessRequest(_StrictModel):
 class CreateInviteRequest(_StrictModel):
     email: str
     role: str = "contributor"
+
+    @field_validator("role")
+    @classmethod
+    def _known_role(cls, value: str) -> str:
+        if value not in USER_ROLES:
+            raise ValueError(f"role must be one of {list(USER_ROLES)}")
+        return value
 
 
 class AcceptInviteRequest(_StrictModel):
@@ -1708,6 +1722,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             data = invite_services.accept_invite(session, token=body.token, display_name=body.display_name)
         except UsageLimitError as exc:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+        except invite_services.InviteConflictError as exc:
+            session.rollback()
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        except invite_services.InviteExpiredError as exc:
+            session.commit()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
         except ValueError as exc:
             detail = str(exc)
             if "TRUSTOPS_COMMERCIAL_HOSTED" in detail:

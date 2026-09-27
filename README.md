@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="docs/images/trustops-capability-header.svg" alt="TrustOps — read-only cloud, identity, code and data sources; Common Control Framework and framework packs." width="100%">
+  <img src="docs/images/trustops-capability-header.svg" alt="TrustOps — collect, evaluate, resolve, and export: read-only evidence from cloud, identity, code, and data sources, evaluated through a common control framework and framework packs." width="100%">
 </p>
-
-<p align="center"><strong>Open, self-hosted GRC for cloud and AI.</strong></p>
 
 <p align="center">
   <a href="https://pypi.org/project/trustops-security-data-lake/"><img src="https://img.shields.io/pypi/v/trustops-security-data-lake?color=2b7bba&label=PyPI" alt="PyPI version"></a>

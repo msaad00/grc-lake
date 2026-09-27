@@ -123,15 +123,30 @@ def _shift(node: Any, delta: timedelta) -> Any:
     return node
 
 
-def rebase_fixture_times(rows: list[dict[str, Any]], *, now: datetime | None = None) -> list[dict[str, Any]]:
-    """Shift every ``*_time``/``*_at`` timestamp so the newest is one hour before ``now``.
+# How old the newest demo row is right after a rebase. Demo sources use
+# freshness SLOs of 5, 10, 60 minutes and 24 hours, and the golden rows span
+# about 40 minutes. Three hours back puts every sub-hour-SLO row past twice its
+# SLO (expired) and keeps every daily-SLO row well inside it (fresh), so no row
+# changes status for roughly 20 hours. Anchoring nearer ``now`` puts rows on the
+# 60-minute boundaries and the demo's counts change minute to minute.
+DEMO_NEWEST_EVIDENCE_AGE = timedelta(hours=3)
+
+
+def rebase_fixture_times(
+    rows: list[dict[str, Any]],
+    *,
+    now: datetime | None = None,
+    newest_age: timedelta = DEMO_NEWEST_EVIDENCE_AGE,
+) -> list[dict[str, Any]]:
+    """Shift every ``*_time``/``*_at`` timestamp so the newest is ``newest_age`` before ``now``.
 
     Demo fixtures are dated when they were authored; without this their evidence
-    ages past every freshness SLA and the demo reads as fully expired.
+    ages past every freshness SLA and the demo reads as fully expired. Relative
+    spacing between rows is preserved.
     """
     stamps = _timestamps(rows)
     if not stamps:
         return [dict(row) for row in rows]
-    target = (now or datetime.now(UTC)) - timedelta(hours=1)
+    target = (now or datetime.now(UTC)) - newest_age
     delta = target - max(stamps)
     return [_shift(row, delta) for row in rows]

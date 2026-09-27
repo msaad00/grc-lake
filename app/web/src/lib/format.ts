@@ -80,6 +80,14 @@ export function splitRef(ref: string | null | undefined): [string, string] {
   return [trimmed.slice(cut + 1), trimmed.slice(0, cut + 1)];
 }
 
+/** What to show for an asset: its source-provided name, else its ID. */
+export function assetLabel(asset: {
+  asset_id?: string | null;
+  asset_name?: string | null;
+}): string {
+  return asset.asset_name?.trim() || asset.asset_id || "";
+}
+
 /** Link to a repo doc on GitHub, e.g. docsUrl("SERVER_AUTH.md"). */
 export function docsUrl(path: string): string {
   return `${BRAND.repoUrl}/blob/main/docs/${path}`;

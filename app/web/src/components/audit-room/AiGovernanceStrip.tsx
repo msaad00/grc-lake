@@ -8,7 +8,7 @@ import { QueryState } from "@/components/QueryState";
 import { KpiTile } from "@/components/ui/KpiTile";
 import { useAiGovernance, useAiInventory } from "@/lib/api/hooks";
 import type { AiInventoryItem } from "@/lib/api/types";
-import { plural } from "@/lib/format";
+import { assetLabel, plural } from "@/lib/format";
 
 const STATE_COPY: Record<
   string,
@@ -172,8 +172,11 @@ export function AiGovernanceStrip() {
                     className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-surfaceMuted px-3 py-2 text-xs"
                   >
                     <div className="min-w-0 [overflow-wrap:anywhere]">
-                      <span className="font-bold text-ink">
-                        {item.asset_id}
+                      <span
+                        className="font-bold text-ink"
+                        title={item.asset_id}
+                      >
+                        {assetLabel(item)}
                       </span>
                       <span className="ml-2 text-muted">
                         {item.asset_type} · {item.owner || "unowned"}

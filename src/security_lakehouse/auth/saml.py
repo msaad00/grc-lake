@@ -8,21 +8,26 @@ same hashed browser session token used by all human SSO flows.
 
 from __future__ import annotations
 
+import logging
 import os
 import threading
 import time
 from collections import OrderedDict
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import parse_qs
 
 from itsdangerous import BadData, URLSafeTimedSerializer
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import delete
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from security_lakehouse.db import repository
-from security_lakehouse.db.models import User
+from security_lakehouse.db.models import SamlAssertionReplay, User
+
+logger = logging.getLogger(__name__)
 
 _TRUTHY = {"1", "true", "yes", "on"}
 _REQUIRED_ENV = {
@@ -272,15 +277,16 @@ def decode_saml_request_id(value: str | None) -> str | None:
 
 
 class AssertionReplayCache:
-    """Remembers consumed assertion IDs until their ``NotOnOrAfter`` passes.
+    """In-process replay cache: consumed assertion IDs until ``NotOnOrAfter`` passes.
 
-    In-process and bounded: each replica keeps its own cache, so a replay
-    routed to a different replica is not caught. The oldest entries are
-    evicted first when the cache is full.
+    Only protects a single process. Server mode uses
+    ``DatabaseAssertionReplayCache`` so every replica shares one record; this
+    class is the fallback for callers without an application database. The
+    oldest entries are evicted first when the cache is full.
     """
 
     def __init__(self, *, max_entries: int = 10_000, default_ttl_seconds: int = 3600) -> None:
-        self._entries: OrderedDict[str, float] = OrderedDict()
+        self._entries: OrderedDict[tuple[str, str], float] = OrderedDict()
         self._max = max_entries
         self._default_ttl = default_ttl_seconds
         self._lock = threading.Lock()
@@ -288,16 +294,91 @@ class AssertionReplayCache:
     def __len__(self) -> int:
         return len(self._entries)
 
-    def check_and_store(self, assertion_id: str, *, not_on_or_after: float | None, now: float | None = None) -> bool:
+    def check_and_store(
+        self,
+        assertion_id: str,
+        *,
+        not_on_or_after: float | None,
+        issuer: str = "",
+        now: float | None = None,
+    ) -> bool:
         """Record ``assertion_id``; return ``False`` if it was already consumed and is still valid."""
         moment = time.time() if now is None else now
         expires = float(not_on_or_after) if not_on_or_after else moment + self._default_ttl
+        key = (issuer, assertion_id)
         with self._lock:
-            for key in [k for k, exp in self._entries.items() if exp <= moment]:
-                del self._entries[key]
-            if assertion_id in self._entries:
+            for stale in [k for k, exp in self._entries.items() if exp <= moment]:
+                del self._entries[stale]
+            if key in self._entries:
                 return False
-            self._entries[assertion_id] = expires
+            self._entries[key] = expires
             while len(self._entries) > self._max:
                 self._entries.popitem(last=False)
+        return True
+
+
+class DatabaseAssertionReplayCache:
+    """Replay cache stored in the application database and shared by every replica.
+
+    Each consumed ``(issuer, assertion_id)`` is inserted under a unique
+    constraint, so of two replicas racing on the same assertion exactly one
+    insert commits and the other is rejected. Rows expire at the assertion's
+    ``NotOnOrAfter`` (or after ``default_ttl_seconds`` when it has none); an
+    expired row for the same ID is replaced, and every
+    ``cleanup_interval_seconds`` the check also deletes all expired rows.
+
+    Any database error rejects the login (fail closed).
+    """
+
+    def __init__(
+        self,
+        sessionmaker: Callable[[], Session],
+        *,
+        default_ttl_seconds: int = 3600,
+        cleanup_interval_seconds: int = 300,
+    ) -> None:
+        self._sessionmaker = sessionmaker
+        self._default_ttl = default_ttl_seconds
+        self._cleanup_interval = cleanup_interval_seconds
+        self._next_cleanup = 0.0
+        self._lock = threading.Lock()
+
+    def _cleanup_due(self, moment: float) -> bool:
+        with self._lock:
+            if moment < self._next_cleanup:
+                return False
+            self._next_cleanup = moment + self._cleanup_interval
+            return True
+
+    def check_and_store(
+        self,
+        assertion_id: str,
+        *,
+        not_on_or_after: float | None,
+        issuer: str = "",
+        now: float | None = None,
+    ) -> bool:
+        """Record ``assertion_id``; return ``False`` if it was already consumed and is still valid."""
+        moment = time.time() if now is None else now
+        expires = float(not_on_or_after) if not_on_or_after else moment + self._default_ttl
+        moment_at = datetime.fromtimestamp(moment, UTC)
+        expires_at = datetime.fromtimestamp(expires, UTC)
+        try:
+            with self._sessionmaker() as session:
+                if self._cleanup_due(moment):
+                    session.execute(delete(SamlAssertionReplay).where(SamlAssertionReplay.expires_at <= moment_at))
+                session.execute(
+                    delete(SamlAssertionReplay).where(
+                        SamlAssertionReplay.issuer == issuer,
+                        SamlAssertionReplay.assertion_id == assertion_id,
+                        SamlAssertionReplay.expires_at <= moment_at,
+                    )
+                )
+                session.add(SamlAssertionReplay(issuer=issuer, assertion_id=assertion_id, expires_at=expires_at))
+                session.commit()
+        except IntegrityError:
+            return False
+        except SQLAlchemyError:
+            logger.exception("SAML replay cache unavailable; rejecting the assertion")
+            return False
         return True

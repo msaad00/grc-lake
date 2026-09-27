@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.asset_names import asset_names_from_raw, entity_asset_id
 from security_lakehouse.controls import expand_controls, load_control_map
 from security_lakehouse.evidence_freshness import (
     build_evidence_freshness,
@@ -214,7 +215,11 @@ def _write_generation(
     for control_id, control in control_map.items():
         for asset_type in control.get("asset_types") or []:
             applicability[str(asset_type)].append(control_id)
-    asset_rows = _build_asset_rows(silver_rows, {k: sorted(v) for k, v in applicability.items()})
+    asset_rows = _build_asset_rows(
+        silver_rows,
+        {k: sorted(v) for k, v in applicability.items()},
+        asset_names_from_raw(raw_rows),
+    )
     control_test_rows = build_control_tests(silver_rows, control_rows)
     metrics = _build_metrics(silver_rows, control_rows, asset_rows)
     metrics.update(_build_freshness_metrics(evidence_freshness_rows))
@@ -479,7 +484,7 @@ def _silver_row(row: dict[str, Any], raw_sha256: str) -> dict[str, Any]:
     entity = row["entity"]
     evidence = row.get("evidence") or {}
     attributes = row.get("attributes") or {}
-    asset_id = str(entity.get("asset_id") or entity.get("id") or entity.get("name") or "unknown")
+    asset_id = entity_asset_id(entity)
     severity = str(row.get("severity", "info")).lower()
     event_type = str(row["event_type"])
     return {
@@ -592,8 +597,10 @@ def _build_control_rows(
 def _build_asset_rows(
     silver_rows: list[dict[str, Any]],
     applicability: dict[str, list[str]] | None = None,
+    asset_names: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     applies = applicability or {}
+    names = asset_names or {}
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in silver_rows:
         grouped[row["asset_id"]].append(row)
@@ -602,20 +609,21 @@ def _build_asset_rows(
         sev = Counter(row["severity"] for row in rows if row["status"] in {"open", "failed", "blocked", "noncompliant"})
         risk_score = max((row["severity_score"] for row in rows), default=0) + min(20, len(rows) * 2)
         asset_type = rows[0]["asset_type"]
-        assets.append(
-            {
-                "asset_id": asset_id,
-                "asset_type": asset_type,
-                "asset_owner": rows[0]["asset_owner"],
-                "environment": rows[0]["environment"],
-                "risk_score": min(100, risk_score),
-                "critical_open": sev["critical"],
-                "high_open": sev["high"],
-                "event_count": len(rows),
-                "applicable_control_ids": applies.get(asset_type, []),
-                "latest_event_time": max(row["event_time"] for row in rows),
-            }
-        )
+        asset = {
+            "asset_id": asset_id,
+            "asset_type": asset_type,
+            "asset_owner": rows[0]["asset_owner"],
+            "environment": rows[0]["environment"],
+            "risk_score": min(100, risk_score),
+            "critical_open": sev["critical"],
+            "high_open": sev["high"],
+            "event_count": len(rows),
+            "applicable_control_ids": applies.get(asset_type, []),
+            "latest_event_time": max(row["event_time"] for row in rows),
+        }
+        if asset_id in names:
+            asset["asset_name"] = names[asset_id]
+        assets.append(asset)
     return sorted(assets, key=lambda item: (-int(item["risk_score"]), item["asset_id"]))
 
 

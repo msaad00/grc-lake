@@ -17,7 +17,9 @@ shape of the active set.
 Each framework already declares `version`, `effective_date`, `superseded_by`,
 plus provenance (`official_source_url`, `source_sha256`, `pulled_at`,
 `sync_cadence_days`). The sync job re-fetches the official source, recomputes
-the sha256, and — when the body changes — appends a row to
+the sha256, and — only when the body changes — updates `source_sha256` and
+`pulled_at` (so `pulled_at` is when the current content was first seen, and an
+unchanged source leaves the registry untouched) and appends a row to
 `frameworks/history.jsonl` so the history of _what the upstream said when_
 survives even before a human assigns a new version label. The file does not
 exist until the first upstream change is detected; the sync job creates it on

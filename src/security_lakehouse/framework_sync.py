@@ -1,10 +1,12 @@
-"""Re-fetch official framework sources, recompute sha256, advance pulled_at.
+"""Re-fetch official framework sources, recompute sha256, record content drift.
 
 Runs as ``security-lakehouse frameworks sync`` (CLI) and on a cron via
 ``.github/workflows/framework-sync.yml``. The job is intentionally append-only
 in spirit: it mutates ``frameworks/registry.json`` in place but only the
 ``source_sha256`` + ``pulled_at`` fields, and only when the upstream body has
-changed (sha differs from what's in the registry).
+changed (sha differs from what's in the registry). ``pulled_at`` is when the
+current ``source_sha256`` was recorded, so re-fetching identical content leaves
+the registry byte-identical and the scheduled job opens no drift PR.
 
 When run with ``--open-pr`` and inside GitHub Actions, the workflow that calls
 this CLI opens a pull request with the diff so a human reviewer ratifies the
@@ -184,12 +186,13 @@ def sync_frameworks(
             )
             continue
         new_sha = hashlib.sha256(body).hexdigest()
-        pulled_at = _utc_iso()
-        framework["pulled_at"] = pulled_at
-        framework["source_sha256"] = new_sha
         state = "unchanged" if new_sha == old_sha else "updated"
+        pulled_at = framework.get("pulled_at")
         if state == "updated":
             dirty = True
+            pulled_at = _utc_iso()
+            framework["pulled_at"] = pulled_at
+            framework["source_sha256"] = new_sha
             # Append-only record of the source drift so the history of *what the
             # upstream said when* survives even before a human assigns a new
             # version label in the registry. History sits next to the registry
@@ -216,8 +219,9 @@ def sync_frameworks(
             )
         )
 
-    # Always rewrite (atomic) so even unchanged-but-touched pulled_at lands.
-    if any(r.state in {"updated", "unchanged"} for r in results):
+    # Only a content change rewrites the registry. The scheduled job treats any
+    # registry diff as drift, so an identical re-fetch must leave it untouched.
+    if dirty:
         path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
     # Re-lock the catalog bundle so source drift is reflected in the audit pin.
     # Only for the real default registry — the bundle spans repo-global controls

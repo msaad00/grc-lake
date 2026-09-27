@@ -54,7 +54,7 @@ from security_lakehouse.auth.request_audit import AnonymousAuditSampler, append_
 from security_lakehouse.auth.saml import (
     SAML_REQUEST_COOKIE,
     SAML_REQUEST_MAX_AGE_SECONDS,
-    AssertionReplayCache,
+    DatabaseAssertionReplayCache,
     SAMLLoginError,
     build_saml_auth,
     complete_saml_login,
@@ -1127,7 +1127,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     app.state.oauth = None
     app.state.saml_config = load_saml_config()
     app.state.saml_auth_factory = build_saml_auth
-    app.state.saml_replay_cache = AssertionReplayCache()
+    app.state.saml_replay_cache = DatabaseAssertionReplayCache(app.state.sessionmaker)
     if app.state.oidc_config is not None:
         from starlette.middleware.sessions import SessionMiddleware
 
@@ -1506,8 +1506,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if request_id is not None and auth.get_last_response_in_response_to() != request_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
         assertion_id = auth.get_last_assertion_id()
-        if not assertion_id or not app.state.saml_replay_cache.check_and_store(
-            str(assertion_id), not_on_or_after=auth.get_last_assertion_not_on_or_after()
+        if not assertion_id or not await run_in_threadpool(
+            app.state.saml_replay_cache.check_and_store,
+            str(assertion_id),
+            not_on_or_after=auth.get_last_assertion_not_on_or_after(),
+            issuer=saml_config.idp_entity_id,
         ):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="SAML response rejected")
         try:

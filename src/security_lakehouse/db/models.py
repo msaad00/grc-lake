@@ -796,3 +796,26 @@ class WebhookDelivery(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow, server_default=func.now()
     )
+
+
+class SamlAssertionReplay(Base):
+    """A consumed SAML assertion ID, kept until its ``NotOnOrAfter`` passes.
+
+    Every replica reads and writes this table, so a captured response replayed
+    against a different replica is still rejected. SAML requires assertion IDs
+    to be unique per issuer, so the constraint is on (issuer, assertion_id).
+    """
+
+    __tablename__ = "saml_assertion_replays"
+    __table_args__ = (
+        UniqueConstraint("issuer", "assertion_id", name="uq_saml_assertion_replays_issuer_assertion"),
+        Index("ix_saml_assertion_replays_expires_at", "expires_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    issuer: Mapped[str] = mapped_column(String(512), nullable=False)
+    assertion_id: Mapped[str] = mapped_column(String(512), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utcnow, server_default=func.now()
+    )

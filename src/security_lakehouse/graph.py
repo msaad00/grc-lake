@@ -177,7 +177,8 @@ def build_compliance_graph(lake_dir: str | Path) -> dict[str, Any]:
                     {
                         "id": asset_node_id,
                         "kind": "asset",
-                        "label": asset_id,
+                        "label": row.get("asset_name") or asset_id,
+                        "asset_id": asset_id,
                         "subtitle": row.get("asset_type") or "asset",
                         "owner": row.get("asset_owner"),
                         "environment": row.get("environment"),
@@ -237,7 +238,8 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
         ghost = {
             "id": node_id,
             "kind": "asset",
-            "label": asset_id,
+            "label": row.get("asset_name") or asset_id,
+            "asset_id": asset_id,
             "subtitle": row.get("asset_type") or "asset",
             "owner": row.get("asset_owner"),
             "environment": row.get("environment"),

@@ -72,6 +72,12 @@ from security_lakehouse.connectors_google_workspace import (
     GoogleWorkspaceFixtureClient,
     collect_google_workspace_evidence,
 )
+from security_lakehouse.connectors_iceberg import (
+    IcebergFixtureClient,
+    build_reader,
+    collect_iceberg_evidence,
+    resolve_iceberg_mappings,
+)
 from security_lakehouse.connectors_intune import (
     IntuneClient,
     IntuneFixtureClient,
@@ -721,6 +727,16 @@ def _build_runtime_gateway(inputs: SyncInputs) -> list[dict[str, Any]]:
     )
 
 
+def _build_iceberg(inputs: SyncInputs) -> list[dict[str, Any]]:
+    specs = resolve_iceberg_mappings(inputs.credentials, inputs.options)
+    reader: Any = (
+        IcebergFixtureClient(inputs.fixture_dir)
+        if inputs.fixture_dir
+        else build_reader(inputs.credentials, inputs.options, env=inputs.env)
+    )
+    return collect_iceberg_evidence(reader, specs, since=inputs.since, max_rows=_max_rows_per_sync(inputs.options))
+
+
 REGISTRY: dict[str, ConnectorBuilder] = {
     "snowflake-evidence-lake": _build_snowflake,
     "clickhouse-telemetry-lake": _build_clickhouse,
@@ -745,6 +761,7 @@ REGISTRY: dict[str, ConnectorBuilder] = {
     "crowdstrike-falcon": _build_crowdstrike,
     "kubernetes-cluster": _build_kubernetes,
     "knowbe4-training": _build_knowbe4,
+    "iceberg-parquet-lake": _build_iceberg,
 }
 
 

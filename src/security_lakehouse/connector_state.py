@@ -288,6 +288,27 @@ def configure_payload_error(
     return _mapping_error(opts)
 
 
+def _has_mapping(options: dict[str, Any]) -> bool:
+    return options.get("mapping") not in (None, "", {}) or options.get("mappings") not in (None, "", [])
+
+
+def _iceberg_missing_config(credentials: dict[str, Any], options: dict[str, Any]) -> list[str]:
+    catalog_type = str(credentials.get("catalog_type") or "").strip()
+    if catalog_type == "glue":
+        # Without a mapping, Glue defaults to the Amazon Security Lake OCSF presets.
+        return [] if _has_value(credentials, "region") else ["region"]
+    if catalog_type == "rest":
+        missing = [field for field in ("uri", "warehouse") if not _has_value(credentials, field)]
+    elif catalog_type == "parquet":
+        has_paths = isinstance(options.get("parquet_paths"), dict) and bool(options.get("parquet_paths"))
+        missing = [] if _has_value(credentials, "path") or has_paths else ["path"]
+    else:
+        return ["catalog_type"]
+    if not _has_mapping(options):
+        missing.append("mapping")
+    return missing
+
+
 def _mapping_error(options: dict[str, Any]) -> str | None:
     """Validate ``options.mapping``/``options.mappings`` so a bad spec is rejected before it is stored."""
     if options.get("mapping") in (None, "", {}) and options.get("mappings") in (None, "", []):
@@ -506,6 +527,9 @@ def _missing_required_config(
         if not (_has_value(credentials, "credential_ref") or _has_value(credentials, "token")):
             missing.append("credential_ref")
         return missing
+
+    if connector_id == "iceberg-parquet-lake":
+        return _iceberg_missing_config(credentials, options)
 
     if connector_id == "databricks-evidence-lake":
         return [

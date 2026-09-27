@@ -209,6 +209,23 @@ const PRESETS: Record<string, IntegrationPreset> = {
       "OAuth tokens last one hour and are minted per sync; nothing is written to the workspace.",
     ],
   },
+  "iceberg-parquet-lake": {
+    connectorId: "iceberg-parquet-lake",
+    title: "Iceberg / Parquet lake (preview)",
+    authLabel: "Read-only IAM role or catalog token",
+    badges: ["Read-only scans", "OCSF presets"],
+    summary:
+      "Point TrustOps at the Iceberg tables or Parquet data you already run. For Amazon Security Lake, choose Glue and the region; the OCSF presets map CloudTrail and Security Hub tables to evidence.",
+    providerSetup:
+      "Grant a read-only role glue:GetDatabase and glue:GetTable on the lake database plus s3:GetObject and s3:ListBucket on the data prefix, or issue a short-lived REST catalog token.",
+    trustOpsInput:
+      "Source type, region or catalog URI, optional role ARN, and, for sources other than Security Lake, a mapping supplied through the API or CLI.",
+    advancedTitle: "How reads work",
+    advancedDetails: [
+      "Filters and the watermark are pushed into Iceberg or Parquet scans; nothing is written to the lake.",
+      "The first sync reads a recent window; later syncs continue from the watermark with a lookback for late data.",
+    ],
+  },
   "snowflake-evidence-lake": {
     connectorId: "snowflake-evidence-lake",
     title: "Snowflake evidence lake",

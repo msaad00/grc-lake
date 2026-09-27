@@ -31,6 +31,55 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         hint: "Environment variable name holding the read-only token.",
       },
     ],
+    "iceberg-parquet-lake": [
+      {
+        name: "catalog_type",
+        label: "Source type",
+        placeholder: "glue",
+        required: true,
+        hint: "glue (AWS Glue, including Amazon Security Lake), rest (Iceberg REST catalog), or parquet.",
+      },
+      {
+        name: "region",
+        label: "AWS region",
+        placeholder: "us-east-1",
+        hint: "Required for Glue; used for S3 Parquet reads.",
+      },
+      {
+        name: "role_arn",
+        label: "Read-only role ARN (optional)",
+        placeholder: "arn:aws:iam::111122223333:role/trustops-lake-reader",
+        hint: "Assumed for Glue and S3 reads; otherwise the runtime's AWS identity is used.",
+      },
+      {
+        name: "external_id",
+        label: "External ID (optional)",
+        placeholder: "trustops-external-id",
+      },
+      {
+        name: "uri",
+        label: "REST catalog URI",
+        placeholder: "https://catalog.example.com/api/catalog",
+        hint: "REST catalogs only; must be HTTPS on a public address.",
+      },
+      {
+        name: "warehouse",
+        label: "REST warehouse",
+        placeholder: "security_lake",
+      },
+      {
+        name: "credential_ref",
+        label: "Bearer token env var",
+        placeholder: "TRUSTOPS_ICEBERG_TOKEN",
+        hint: "REST catalogs only; a short-lived token supplied by your secret broker.",
+      },
+      {
+        name: "path",
+        label: "Parquet location",
+        placeholder: "s3://aws-security-data-lake-us-east-1-abc/aws/SH_FINDINGS/1.0/",
+        hint: "Parquet only: s3://bucket/prefix, or a local path under TRUSTOPS_LAKE_LOCAL_ROOT.",
+      },
+    ],
     "snowflake-evidence-lake": [
       {
         name: "account",
@@ -479,6 +528,20 @@ export const CONNECTOR_SCOPE_FIELDS: Record<string, ConnectorFieldDef[]> = {
       label: "GitLab API URL (optional)",
       placeholder: "https://gitlab.com/api/v4",
       hint: "Self-managed GitLab base API URL; defaults to gitlab.com.",
+    },
+  ],
+  "iceberg-parquet-lake": [
+    {
+      name: "security_lake_sources",
+      label: "Security Lake sources (Glue)",
+      placeholder: "cloud_trail_mgmt, sh_findings",
+      hint: "Used when no mapping is configured; each source maps through the OCSF presets.",
+    },
+    {
+      name: "initial_window_days",
+      label: "First-sync window (days)",
+      placeholder: "30",
+      hint: "The first sync reads this many recent days; later syncs continue from the watermark.",
     },
   ],
   "snowflake-evidence-lake": [

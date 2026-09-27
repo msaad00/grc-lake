@@ -594,7 +594,7 @@ def map_rows(
     reported in ``errors`` by 1-based position and never emitted.
     """
     now = collected_at or datetime.now(UTC)
-    lower_bound = _lower_bound(spec, since)
+    bound = lower_bound(spec, since)
     result = MapResult()
     for index, raw in enumerate(rows, start=1):
         row = _lower_keys(raw)
@@ -606,7 +606,7 @@ def map_rows(
         except _RowError as exc:
             result.errors.append({"row": index, "error": str(exc)})
             continue
-        if lower_bound is not None and parse_event_time(event["event_time"]) < lower_bound:
+        if bound is not None and parse_event_time(event["event_time"]) < bound:
             result.filtered += 1
             continue
         result.events.append(event)
@@ -814,7 +814,7 @@ def _same(left: Any, right: Any) -> bool:
     return str(left) == str(right)
 
 
-def _lower_bound(spec: MappingSpec, since: str | None) -> datetime | None:
+def lower_bound(spec: MappingSpec, since: str | None) -> datetime | None:
     if not since or not spec.incremental:
         return None
     return parse_event_time(since) - timedelta(minutes=spec.lookback_minutes)
@@ -1029,7 +1029,7 @@ def compile_select(
             conditions.append(f"{column} {'IN' if item.op == 'in' else 'NOT IN'} ({markers})")
 
     observed = _quote(spec.observed_column, dialect)
-    lower = _lower_bound(spec, since)
+    lower = lower_bound(spec, since)
     if lower is not None:
         bound_param = watermark_param(spec, lower)
         bound.append(bound_param)

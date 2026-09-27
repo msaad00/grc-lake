@@ -643,6 +643,39 @@
       "vendor": "KnowBe4",
       "description": "Per-user security awareness training completion and overdue status, plus a phishing-simulation phish-prone summary.",
       "setup_hint": "Reporting API key from the KnowBe4 Reporting API console, stored as a secret reference; pick the account's region."
+    },
+    {
+      "connector_id": "iceberg-parquet-lake",
+      "name": "Iceberg / Parquet Lake",
+      "category": "analytics_lake",
+      "collection_mode": "existing_lake_read",
+      "access_boundary": "read_only_role",
+      "credential_type": "cloud_iam_role_or_catalog_bearer_ref",
+      "minimum_permissions": [
+        "glue:GetDatabase and glue:GetTable on the lake database (Glue catalogs)",
+        "s3:GetObject and s3:ListBucket on the lake data prefix",
+        "kms:Decrypt on the lake key when data is encrypted with a customer managed key",
+        "Iceberg REST catalog read access to the namespace (REST catalogs)"
+      ],
+      "evidence_types": [
+        "authentication",
+        "account_change",
+        "api_activity",
+        "detection_finding",
+        "vulnerability_finding",
+        "compliance_finding"
+      ],
+      "default_route": "dual",
+      "freshness_slo_minutes": 60,
+      "is_implemented": true,
+      "production_status": "supported_connector",
+      "release_stage": "preview",
+      "velocity": "high_event_stream",
+      "native_connector": false,
+      "data_shape": "event_log",
+      "vendor": "Apache Iceberg / Parquet",
+      "description": "Read-only, incremental reads of Iceberg tables (AWS Glue or Iceberg REST catalogs) and Parquet datasets through lake mappings; defaults to the OCSF presets for Amazon Security Lake.",
+      "setup_hint": "Read-only IAM role (or Security Lake subscriber with data access) for Glue + S3, or a short-lived REST catalog bearer token reference."
     }
   ]
 }

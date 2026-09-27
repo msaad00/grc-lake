@@ -23,6 +23,13 @@ Python package, Helm chart, and bundled web console.
   Amazon Security Lake, or REST catalogs, and Parquet on S3) and
   `bigquery-evidence-lake` (new optional `bigquery` extra). See
   docs/BRING_YOUR_OWN_LAKE.md.
+- Widen mapping coverage on the existing safeguards: 180 title-theme mappings
+  for ISO 27001:2022 (57 to 81 of 93), NIST CSF 2.0 (79 to 101 of 106),
+  ISO 27017 (29 to 44 of 47), NIST AI RMF (20 to 28 of 72), FedRAMP Moderate
+  (207 to 262 of 287, with their 800-53 twins), and GDPR (18 to 19 of 20),
+  plus cited NIST RMF tasks P-3, P-14, and M-7 (43 to 46 of 47). All are
+  `proposed`: evaluatable coverage rises from 991 to 1174 requirements while
+  attestable (reviewed) coverage stays at 350.
 
 ## 0.2.17 - 2026-09-27
 

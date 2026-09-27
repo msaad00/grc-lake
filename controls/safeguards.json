@@ -1085,6 +1085,118 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.6.7",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.3",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.18",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-6.2.1",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-6.2.2",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-9.4.2",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-CLD.12.1.5",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-PR.AA-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AC-11",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AC-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AC-11.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AC-11.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AC-2.5",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AC-2.5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-IA-8.4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-IA-8.4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -1203,6 +1315,97 @@
         {
           "control_id": "CIS-CONTROLS-5",
           "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-PR.AA-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AC-2.3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AC-2.3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AC-2.13",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AC-2.13",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-IA-12",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-IA-12",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-IA-12.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-IA-12.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-IA-12.3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-IA-12.3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-IA-12.5",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-IA-12.5",
+          "framework_id": "nist-800-53-rev5",
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
@@ -1574,9 +1777,52 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.5.14",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.11",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.12",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-PR.DS-10",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SC-17",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SC-17",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
+        "audit_log",
         "cloud_policy",
         "cloud_resource",
         "container_image",
@@ -1977,6 +2223,83 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.5.7",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-DE.AE-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-DE.AE-06",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-DE.AE-07",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-DE.CM-09",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AU-6.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AU-6.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SI-4.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SI-4.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SI-4.4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SI-4.4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -2355,6 +2678,90 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.17",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-12.4.2",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-12.4.3",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-12.4.4",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AC-2.4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AC-2.4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AU-3.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AU-3.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AU-7.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AU-7.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AU-9",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AU-9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -2646,6 +3053,34 @@
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, PR.PS-01"
           }
+        },
+        {
+          "control_id": "ISO27001-A.8.19",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-PR.PS-05",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CM-11",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CM-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -2844,6 +3279,27 @@
         {
           "control_id": "CIS-CONTROLS-7",
           "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.7",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-16.1.3",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-ID.RA-02",
+          "framework_id": "nist-csf-2.0",
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
@@ -3079,6 +3535,118 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-CLD.6.3.1",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-DE.CM-06",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-GV.SC-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-ID.RA-10",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-3.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-4.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SA-4.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SA-4.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SA-4.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SA-4.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SA-4.9",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SA-4.9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SA-9",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SA-9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SR-11",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SR-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -3088,6 +3656,7 @@
         "cloud_policy",
         "cloud_resource",
         "data_store",
+        "host",
         "identity_user",
         "repo",
         "service"
@@ -3226,6 +3795,58 @@
           "framework_id": "nist-800-53-rev5",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-CSF-ID.RA-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-4.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-1.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-3.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-RMF-P-3",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-3"
+          }
+        },
+        {
+          "control_id": "NIST-RMF-P-14",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.1 (Prepare), Task P-14"
+          }
         }
       ],
       "asset_types": [
@@ -3414,6 +4035,230 @@
         {
           "control_id": "CIS-CONTROLS-11",
           "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.6",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-12.1.3",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-PR.IR-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-PR.IR-04",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-RC.RP-01",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-RC.RP-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-RC.RP-03",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-RC.RP-05",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-2.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-2.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-2.3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-2.3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-4.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-4.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-6.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-6.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-7.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-7.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-7.3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-7.3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-8",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-8",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-8.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-8.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-8.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-8.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CP-9.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CP-9.1",
+          "framework_id": "nist-800-53-rev5",
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
@@ -3687,6 +4532,27 @@
             "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
             "locator": "AI RMF Core, MAP 1.4"
           }
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-1.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-3.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-4.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -4486,6 +5352,27 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.5.10",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-8.1.3",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "GDPR-Art.24",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -4699,6 +5586,34 @@
         {
           "control_id": "CIS-CONTROLS-14",
           "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AT-2.2",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AT-2.2",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AT-2.3",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AT-2.3",
+          "framework_id": "nist-800-53-rev5",
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
@@ -5001,12 +5916,196 @@
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, PR.AA-06"
           }
+        },
+        {
+          "control_id": "ISO27001-A.7.3",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.5",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.6",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.7",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.8",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.9",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.10",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.11",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.7.12",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-11.2.5",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-DE.CM-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-PR.IR-02",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-MP-7",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-MP-7",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-PE-9",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-PE-9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-PE-10",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-PE-10",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-PE-11",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-PE-11",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-PE-12",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-PE-12",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-PE-13",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-PE-13",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-PE-15",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-PE-15",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
+        "audit_log",
         "cloud_policy",
         "cloud_resource",
         "container_image",
+        "host",
         "iam_role",
         "identity_group",
         "identity_user",
@@ -5152,6 +6251,13 @@
         {
           "control_id": "CIS-CONTROLS-16",
           "framework_id": "cis-controls-v8.1",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.33",
+          "framework_id": "iso-27001-2022",
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
@@ -5380,9 +6486,122 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.8.23",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-CLD.9.5.1",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-AC-4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-AC-4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CA-9",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CA-9",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SC-20",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SC-20",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SC-21",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SC-21",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SC-22",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SC-22",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SC-7.4",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SC-7.4",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-SC-7.5",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-SC-7.5",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
+        "audit_log",
         "cloud_policy",
         "cloud_resource",
         "container_image",
@@ -5697,6 +6916,69 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27001-A.5.13",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-8.1.2",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-CSF-ID.AM-08",
+          "framework_id": "nist-csf-2.0",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CM-12",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CM-12",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CM-12.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CM-12.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "FEDRAMP-CM-8.1",
+          "framework_id": "fedramp-moderate",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-53-CM-8.1",
+          "framework_id": "nist-800-53-rev5",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
         }
       ],
       "asset_types": [
@@ -5839,6 +7121,25 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "ISO27017-CLD.8.1.5",
+          "framework_id": "iso-27017-2015",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-RMF-M-7",
+          "framework_id": "nist-rmf-800-37r2",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-37 Rev. 2",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
+            "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
+            "locator": "Chapter 3, Section 3.7 (Monitor), Task M-7"
+          }
         }
       ],
       "asset_types": [

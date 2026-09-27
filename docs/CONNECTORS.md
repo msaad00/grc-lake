@@ -63,6 +63,11 @@ Each catalog entry also carries **UX metadata** consumed by the console and demo
 | `description` | What evidence the connector ingests                                            |
 | `setup_hint`  | Read-only connection guidance shown in `/connectors` and account-linking cards |
 
+`release_stage` is optional: `"preview"` marks an implemented connector that has not
+been verified against a live tenant (the console shows a Preview badge); absent or
+`"ga"` means generally available. `security-lakehouse connectors validate` rejects any
+other value.
+
 Connection field definitions live in `app/web/src/lib/connector-forms.ts`; vendor
 marks use neutral text badges in `app/web/src/lib/connector-visuals.ts` (not
 official logos — see [THIRD_PARTY_ASSETS.md](THIRD_PARTY_ASSETS.md)).
@@ -85,12 +90,15 @@ security-lakehouse connectors list
 
 ## Connector Runner
 
-TrustOps currently has **17 connector contracts**. **Fourteen** are executable
-runners (eight direct source/API runners plus Snowflake, ClickHouse, S3, SIEM,
-and runtime-gateway existing-lake readers and the Okta System Log incremental adapter). The remaining
-entries are read-only access contracts or managed evidence boundaries — probes
-validate configuration but **sync is not available** until a collection adapter
-ships.
+TrustOps currently has **26 connector contracts**. **Twenty-three** are executable
+runners (direct source/API runners, the Snowflake, Databricks, ClickHouse, S3, SIEM,
+and runtime-gateway existing-lake readers, and the Okta System Log incremental
+adapter). The remaining entries are read-only access contracts or managed evidence
+boundaries — probes validate configuration but **sync is not available** until a
+collection adapter ships. Runners marked **(preview)** carry
+`"release_stage": "preview"` in the catalog and a Preview badge in `/connectors`:
+they are implemented and fixture-tested against the vendor's documented API but
+have not yet been verified against a live tenant.
 
 | Connector ID                | Source                  | Runner status                           |
 | --------------------------- | ----------------------- | --------------------------------------- |
@@ -107,6 +115,10 @@ ships.
 | `rippling-personnel`        | Rippling employment     | executable                              |
 | `workday-personnel`         | Workday employment      | executable (RaaS report)                |
 | `databricks-evidence-lake`  | Databricks UC evidence  | executable existing-lake read (preview) |
+| `jamf-devices`              | Jamf Pro device posture | executable (preview)                    |
+| `crowdstrike-falcon`        | CrowdStrike Falcon EDR  | executable (preview)                    |
+| `kubernetes-cluster`        | Kubernetes config       | executable (preview)                    |
+| `knowbe4-training`          | KnowBe4 training        | executable (preview)                    |
 | `snowflake-evidence-lake`   | governed evidence lake  | executable existing-lake read           |
 | `clickhouse-telemetry-lake` | telemetry analytics     | executable existing-lake read           |
 | `object-storage-evidence`   | object evidence store   | executable existing-lake read           |
@@ -643,6 +655,204 @@ leave it; catalog, schema, and view names are strict identifiers quoted with
 backticks. The bootstrap views keep the latest 10,000 audit events so a read
 stays under the 25 MiB inline result limit. This connector has not yet been
 verified against a live workspace.
+
+## Jamf Pro: macOS and iOS device posture (preview)
+
+`jamf-devices` reads the Jamf Pro API (11.32 reference) — `GET /api/v4/computers-inventory`,
+`GET /api/v2/mobile-devices/detail` (both paged 100 at a time), and
+`GET /api/v1/managed-software-updates/available-updates` — and emits current-state
+events per managed Mac and iPhone/iPad:
+
+| Event                     | Pass when                                                                                 | Controls                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `jamf.device.encryption`  | FileVault boot volume encrypted (Mac) or `dataProtected` (iOS)                            | FEDRAMP-AC-19.5, CMMC-3.1.19, ISO27001-A.8.1                                             |
+| `jamf.device.management`  | Managed, not jailbroken, and checked in within 30 days                                    | FEDRAMP-AC-19, CMMC-3.1.18, SOC2-CC6.8, ISO27001-A.8.1, FEDRAMP-CM-8                     |
+| `jamf.device.os_patch`    | OS version is the newest Apple offers for that major version                              | FEDRAMP-SI-2, CMMC-3.14.1, ISO27001-A.8.8, SOC2-CC7.1, CIS-CONTROLS-7, NIST-CSF-PR.PS-02 |
+| `jamf.device.screen_lock` | Passcode present and compliant (iOS), or the configured extension attribute is true (Mac) | FEDRAMP-AC-11, CMMC-3.1.10, ISO27001-A.8.1                                               |
+| `jamf.device.firewall`    | macOS application firewall enabled                                                        | FEDRAMP-CM-6, CMMC-3.4.2, CIS-CONTROLS-4, ISO27001-A.8.1                                 |
+
+Encryption and management use the same controls as `intune-devices`, so either MDM
+satisfies them. An unencrypted disk, an unmanaged or jailbroken device, a missing
+passcode, or a macOS major version Apple no longer offers updates for is high; an
+available update, a stale check-in, a disabled firewall, or an unenforced screen lock
+is medium; encryption in progress is low. Signals Jamf does not report are not
+emitted rather than guessed: Jamf inventory has no macOS screen-lock field, so Macs
+are evaluated only when you name a computer extension attribute
+(`screen_lock_attribute`) that reports it; Apple TV and Apple Watch get only the
+management event; and if the API client cannot read the available-updates feed (403
+or 404) no patch verdict is emitted.
+
+**Least privilege.** In Jamf Pro, **Settings > System > API roles and clients**:
+
+1. Create an API role with only **Read Computers** and **Read Mobile Devices**.
+2. Create an API client with that role, enable it, and generate a client secret.
+3. Store the secret in your secret store and configure `base_url`
+   (`https://yourcompany.jamfcloud.com`), `client_id`, and `client_secret_ref`
+   (default `JAMF_CLIENT_SECRET`).
+
+TrustOps exchanges the client credentials at `POST {base_url}/api/v1/oauth/token`
+for a short-lived bearer token held in memory only, re-mints it once on a 401, and
+fails closed after that. No Jamf user account or password is used.
+
+**Data minimization.** Only the GENERAL, DISK_ENCRYPTION, OPERATING_SYSTEM, SECURITY,
+and USER_AND_LOCATION sections are requested (EXTENSION_ATTRIBUTES only when a
+screen-lock attribute is configured). From them TrustOps keeps device ID and name,
+platform, OS version, encryption, firewall and passcode state, managed and check-in
+state, and the assigned user's email (the join key to identity-provider users). IP
+addresses, serial numbers, usernames, real names, phone numbers, recovery keys, and
+locations are dropped before anything is stored. Every request goes only to the
+configured `base_url` through the public-egress guard with 429/5xx backoff.
+
+## CrowdStrike Falcon: sensor coverage and prevention (preview)
+
+`crowdstrike-falcon` reads the Falcon API of one CrowdStrike cloud and emits
+current-state endpoint evidence:
+
+| Event                                | Pass when                                                                  | Controls                                                                                  |
+| ------------------------------------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `crowdstrike.host.sensor`            | The sensor reported within 7 days and is not in reduced functionality mode | SOC2-CC6.8, FEDRAMP-SI-3, CMMC-3.14.2, ISO27001-A.8.7, CIS-CONTROLS-10, NIST-CSF-DE.CM-09 |
+| `crowdstrike.host.prevention_policy` | An enabled prevention policy is assigned and applied                       | SOC2-CC6.8, FEDRAMP-SI-3, CMMC-3.14.2, ISO27001-A.8.7                                     |
+| `crowdstrike.detections.summary`     | No unresolved critical, high, or medium alerts from the last 30 days       | SOC2-CC7.2, FEDRAMP-SI-4, CMMC-3.14.6, ISO27001-A.8.16, NIST-CSF-DE.CM-09                 |
+
+Reduced functionality mode, a missing, disabled, unapplied, or unknown prevention
+policy, and an unresolved critical or high alert are high-severity open findings. A
+sensor that has not reported in 7 days, or never reported, is medium.
+
+**Least privilege.** On the Falcon console's API clients and keys page, create an API client with only **Hosts: Read**, **Prevention policies: Read**,
+and **Alerts: Read**. Store its secret and configure `cloud` (`us-1`, `us-2`, `eu-1`,
+`us-gov-1`, `us-gov-2`), `client_id`, and `client_secret_ref` (default
+`CROWDSTRIKE_CLIENT_SECRET`). TrustOps exchanges the client credentials at
+`https://<cloud API host>/oauth2/token` for a short-lived token held in memory only
+and re-mints it once on a 401.
+
+**Calls.** `GET /devices/queries/devices-scroll/v1`, then
+`POST /devices/entities/devices/v2` (5,000 IDs per call);
+`GET /policy/combined/prevention/v1`; and `POST /alerts/combined/alerts/v1` filtered to
+`status:!'closed'` within a 30-day window. All requests go to the selected cloud's API
+host through the public-egress guard; a 429 waits for `X-RateLimit-RetryAfter` (or
+`Retry-After`).
+
+**Data minimization.** Only host ID, hostname, platform, OS and sensor version, first
+and last seen, containment status, reduced-functionality flag, and prevention policy
+assignment are kept. MAC and IP addresses, serial numbers, user names, and tags are
+dropped before storage. From alerts, only ID, status, severity, and creation time are
+used, and only to compute the summary counts.
+
+## Kubernetes: cluster configuration baseline (preview)
+
+`kubernetes-cluster` reads cluster configuration with `list` calls only, using the
+official Kubernetes Python client
+(`pip install 'trustops-security-data-lake[kubernetes]'`), and emits current-state
+events:
+
+| Event                                   | Open when                                                                                               | Controls                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `kubernetes.rbac.cluster_admin_binding` | A (Cluster)RoleBinding grants `cluster-admin` to a non-`system:` subject (CIS 5.1.1)                    | FEDRAMP-AC-6, FEDRAMP-AC-6.5, CMMC-3.1.5, SOC2-CC6.3, ISO27001-A.8.2, NIST-CSF-PR.AA-05               |
+| `kubernetes.workload.pod_security`      | Privileged, hostPath, host namespaces (high); root or privilege escalation allowed (medium) (CIS 5.2.x) | FEDRAMP-CM-6, FEDRAMP-CM-7, CMMC-3.4.2, CMMC-3.4.6, ISO27001-A.8.9, CIS-CONTROLS-4, NIST-CSF-PR.PS-01 |
+| `kubernetes.namespace.network_policy`   | A namespace has no NetworkPolicy (CIS 5.3.2)                                                            | FEDRAMP-SC-7, CMMC-3.13.1, ISO27001-A.8.22                                                            |
+| `kubernetes.workload.image_registry`    | An image is outside `allowed_registries` (medium) or uses `latest`/no tag without a digest (low)        | FEDRAMP-CM-7.5, NIST-CSF-PR.PS-05, CIS-CONTROLS-2                                                     |
+| `kubernetes.workload.secret_env`        | Secrets are injected as environment variables (CIS 5.4.1)                                               | FEDRAMP-SC-28, CMMC-3.13.16, NIST-CSF-PR.DS-01                                                        |
+| `kubernetes.cluster.audit_logging`      | The kube-apiserver lacks `--audit-policy-file` plus a log or webhook sink (CIS 1.2.16, 3.2.1)           | FEDRAMP-AU-2, FEDRAMP-AU-12, CMMC-3.3.1, ISO27001-A.8.15, NIST-CSF-PR.PS-04, CIS-CONTROLS-8           |
+
+CIS references are to the CIS Kubernetes Benchmark v1.10. Workloads are evaluated on
+their controller's pod template (Deployment, DaemonSet, StatefulSet, CronJob, and
+ownerless ReplicaSets, Jobs, and Pods), so a pod is never counted twice. Without
+`allowed_registries`, image evidence is recorded as `observed` inventory, never as a
+pass. The built-in `cluster-admin` binding to `system:masters` is recorded as
+`observed`. System namespaces are not exempted: privileged CNI or CSI DaemonSets in
+`kube-system` show as findings, tagged `system_namespace`.
+
+**Audit logging on managed clusters.** EKS, GKE, and AKS do not expose the API server
+to the cluster, so no audit-logging event is emitted there; evidence audit logging
+through the cloud posture connector instead. Self-managed clusters (kubeadm and
+similar) expose the apiserver static pod and are evaluated.
+
+**Least privilege.** Use a kubeconfig for a dedicated identity (optionally a named
+`context`; `kubeconfig_ref` names the env var holding its path, default `KUBECONFIG`)
+or the in-cluster service account when TrustOps runs inside the cluster. Bind it to
+this get/list-only ClusterRole — never `view`, `edit`, or `cluster-admin`, and no
+access to Secrets:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: trustops-config-reader
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces", "pods"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "daemonsets", "statefulsets", "replicasets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["batch"]
+    resources: ["cronjobs", "jobs"]
+    verbs: ["get", "list"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterrolebindings", "rolebindings"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: trustops-config-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: trustops-config-reader
+subjects:
+  - kind: ServiceAccount
+    name: trustops
+    namespace: trustops
+```
+
+**Egress.** The client talks directly to the operator-configured API server. Cluster
+endpoints are usually private addresses, so the public-address egress guard used for
+SaaS APIs does not apply here. Lists page with `limit`/`continue` and retry 429/5xx
+honoring `Retry-After`.
+
+**Data minimization.** Secret objects are never listed. Environment variable values,
+container commands and args, labels, and annotations are never stored; only the names
+of Secret-backed variables, image references, and binding subjects are kept.
+
+## KnowBe4: security awareness training (preview)
+
+`knowbe4-training` reads the KnowBe4 Reporting API
+(`https://{region}.api.knowbe4.com`, region `us`, `eu`, `ca`, `uk`, or `de`):
+`GET /v1/users?status=active`, `GET /v1/training/enrollments?exclude_archived_users=true`,
+and `GET /v1/phishing/security_tests`, paged 500 rows at a time.
+
+| Event                      | Pass when                                                             | Controls                                                                                                                                |
+| -------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `knowbe4.user.training`    | Every enrollment is `Completed` or `Passed`                           | FEDRAMP-AT-2, FEDRAMP-AT-4, CMMC-3.2.1, CMMC-3.2.2, ISO27001-A.6.3, NIST-CSF-PR.AT-01, CIS-CONTROLS-14, SOC2-CC1.4, HIPAA-164.308(a)(5) |
+| `knowbe4.phishing.summary` | Delivery-weighted phish-prone % of tests in the last 90 days is < 20% | FEDRAMP-AT-2, CMMC-3.2.1, ISO27001-A.6.3, NIST-CSF-PR.AT-01, CIS-CONTROLS-14                                                            |
+
+Any `Past Due` enrollment is an open medium finding (`training_overdue`); only
+`Not Started`/`In Progress` is open low (`training_incomplete`); an active user with no
+enrollment is open medium (`not_enrolled`). The enrollment schema has no due date, so
+`Past Due` is KnowBe4's own verdict. No phishing test in the last 90 days is
+`observed`, never a pass. The 20% threshold is a TrustOps default, not a KnowBe4
+benchmark.
+
+**Least privilege.** A Reporting API key from the KnowBe4 Reporting API console
+(Platinum, Diamond, SAT Foundation, or SAT Advanced subscription). The key is read-only
+reporting for the whole account — KnowBe4 offers no finer scope — and is not the User
+Event API key. Store it as a secret and reference it with `credential_ref` (default
+`KNOWBE4_API_TOKEN`); only the region is stored in TrustOps. Anonymized consoles return
+no per-user data.
+
+**Rate limits.** KnowBe4 allows 4 requests/second, a 50/minute burst, and 2,000 plus
+licensed users per day. The client paces requests at least 1.25 s apart and retries
+429/5xx honoring `Retry-After`.
+
+**Data minimization.** Only user ID, primary email (the join key to identity-provider
+and HRIS records), employee number, enrollment status counts, last completion date,
+and phish-prone percentage are kept. Names, job titles, phone numbers, locations,
+divisions, manager details, aliases, and custom fields are dropped before anything is
+stored. The key is only ever sent to the configured regional host.
 
 ## Offboarding check: HR terminations ↔ IdP accounts
 

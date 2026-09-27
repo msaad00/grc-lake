@@ -1,0 +1,169 @@
+[
+  {
+    "id": "1",
+    "udid": "3F2504E0-4F89-11D3-9A0C-0305E82C3301",
+    "general": {
+      "name": "MBP-ADA",
+      "lastIpAddress": "203.0.113.10",
+      "platform": "Mac",
+      "remoteManagement": { "managed": true, "managementUsername": null },
+      "supervised": true,
+      "lastContact": "2026-06-02T18:04:13Z",
+      "lastEnrolledDate": "2025-09-01T12:00:00Z",
+      "managementId": "73226fb6-61df-4c10-9552-eb9bc353d507",
+      "lastLoggedInUsernameBinary": "ada",
+      "extensionAttributes": []
+    },
+    "diskEncryption": {
+      "bootPartitionEncryptionDetails": {
+        "partitionName": "Macintosh HD",
+        "partitionFileVault2State": "ENCRYPTED",
+        "partitionFileVault2Percent": 100
+      },
+      "individualRecoveryKeyValidityStatus": "VALID",
+      "institutionalRecoveryKeyPresent": false,
+      "diskEncryptionConfigurationName": "FileVault",
+      "fileVault2Enabled": true,
+      "fileVault2EnabledUserNames": ["ada"]
+    },
+    "operatingSystem": {
+      "name": "macOS",
+      "version": "15.6",
+      "build": "24G84",
+      "supplementalBuildVersion": "24G84",
+      "rapidSecurityResponse": "",
+      "activeDirectoryStatus": "Not Bound",
+      "fileVault2Status": "ALL_ENCRYPTED",
+      "softwareUpdateDeviceId": "J316sAP",
+      "extensionAttributes": []
+    },
+    "security": {
+      "sipStatus": "ENABLED",
+      "gatekeeperStatus": "APP_STORE_AND_IDENTIFIED_DEVELOPERS",
+      "xprotectVersion": "5310",
+      "autoLoginDisabled": true,
+      "remoteDesktopEnabled": false,
+      "activationLockEnabled": true,
+      "recoveryLockEnabled": true,
+      "firewallEnabled": true,
+      "secureBootLevel": "FULL_SECURITY",
+      "externalBootLevel": "DISALLOW_BOOTING_FROM_EXTERNAL_MEDIA",
+      "bootstrapTokenAllowed": true,
+      "bootstrapTokenEscrowedStatus": "ESCROWED",
+      "lockdownModeEnabled": false
+    },
+    "userAndLocation": {
+      "username": "ada",
+      "realname": "Ada Lovelace",
+      "email": "ada@example.com",
+      "position": "Engineer",
+      "phone": "555-0100",
+      "departmentId": "1",
+      "buildingId": "1",
+      "room": "5"
+    },
+    "extensionAttributes": [
+      {
+        "definitionId": "23",
+        "name": "Screen Lock Enforced",
+        "enabled": true,
+        "multiValue": false,
+        "values": ["true"],
+        "dataType": "STRING",
+        "inputType": "SCRIPT"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "udid": "3F2504E0-4F89-11D3-9A0C-0305E82C3302",
+    "general": {
+      "name": "MBA-GRACE",
+      "lastIpAddress": "203.0.113.11",
+      "platform": "Mac",
+      "remoteManagement": { "managed": true, "managementUsername": null },
+      "supervised": true,
+      "lastContact": "2026-04-01T09:00:00Z",
+      "lastEnrolledDate": "2025-08-01T12:00:00Z",
+      "managementId": "83226fb6-61df-4c10-9552-eb9bc353d508",
+      "extensionAttributes": []
+    },
+    "diskEncryption": {
+      "bootPartitionEncryptionDetails": {
+        "partitionName": "Macintosh HD",
+        "partitionFileVault2State": "UNENCRYPTED",
+        "partitionFileVault2Percent": 0
+      },
+      "individualRecoveryKeyValidityStatus": "NOT_APPLICABLE",
+      "institutionalRecoveryKeyPresent": false,
+      "fileVault2Enabled": false,
+      "fileVault2EnabledUserNames": []
+    },
+    "operatingSystem": {
+      "name": "macOS",
+      "version": "15.4",
+      "build": "24E248",
+      "fileVault2Status": "NOT_ENCRYPTED",
+      "extensionAttributes": []
+    },
+    "security": {
+      "sipStatus": "ENABLED",
+      "gatekeeperStatus": "APP_STORE_AND_IDENTIFIED_DEVELOPERS",
+      "autoLoginDisabled": true,
+      "firewallEnabled": false,
+      "activationLockEnabled": false,
+      "recoveryLockEnabled": false
+    },
+    "userAndLocation": {
+      "username": "grace",
+      "realname": "Grace Hopper",
+      "email": "grace@example.com",
+      "phone": "555-0101"
+    },
+    "extensionAttributes": [
+      {
+        "definitionId": "23",
+        "name": "Screen Lock Enforced",
+        "enabled": true,
+        "multiValue": false,
+        "values": ["false"],
+        "dataType": "STRING",
+        "inputType": "SCRIPT"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "udid": "3F2504E0-4F89-11D3-9A0C-0305E82C3303",
+    "general": {
+      "name": "IMAC-LAB",
+      "platform": "Mac",
+      "remoteManagement": { "managed": false, "managementUsername": null },
+      "supervised": false,
+      "lastContact": "2026-06-01T09:00:00Z",
+      "extensionAttributes": []
+    },
+    "diskEncryption": {
+      "bootPartitionEncryptionDetails": {
+        "partitionName": "Macintosh HD",
+        "partitionFileVault2State": "ENCRYPTING",
+        "partitionFileVault2Percent": 45
+      },
+      "fileVault2Enabled": false
+    },
+    "operatingSystem": {
+      "name": "macOS",
+      "version": "12.7.6",
+      "build": "21H1320",
+      "fileVault2Status": "NOT_APPLICABLE"
+    },
+    "security": {
+      "firewallEnabled": true
+    },
+    "userAndLocation": {
+      "username": "",
+      "email": ""
+    },
+    "extensionAttributes": []
+  }
+]

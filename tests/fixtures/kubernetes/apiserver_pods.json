@@ -1,0 +1,56 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": { "resourceVersion": "" },
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "creationTimestamp": "2026-01-12T09:14:10Z",
+        "labels": { "component": "kube-apiserver", "tier": "control-plane" },
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system",
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "controller": true,
+            "kind": "Node",
+            "name": "cp-1",
+            "uid": "b05a2b6c-4d5e-4f6a-9b0c-3d4e5f6a7b01"
+          }
+        ],
+        "resourceVersion": "301",
+        "uid": "b05a2b6c-4d5e-4f6a-9b0c-3d4e5f6a7b02"
+      },
+      "spec": {
+        "containers": [
+          {
+            "command": [
+              "kube-apiserver",
+              "--advertise-address=10.0.0.10",
+              "--allow-privileged=true",
+              "--audit-log-maxage=30",
+              "--audit-log-path=/var/log/kubernetes/audit/audit.log",
+              "--audit-policy-file=/etc/kubernetes/audit-policy.yaml",
+              "--authorization-mode=Node,RBAC",
+              "--client-ca-file=/etc/kubernetes/pki/ca.crt",
+              "--enable-admission-plugins=NodeRestriction",
+              "--etcd-servers=https://127.0.0.1:2379",
+              "--secure-port=6443",
+              "--tls-cert-file=/etc/kubernetes/pki/apiserver.crt",
+              "--tls-private-key-file=/etc/kubernetes/pki/apiserver.key"
+            ],
+            "image": "registry.k8s.io/kube-apiserver:v1.34.1",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "kube-apiserver"
+          }
+        ],
+        "hostNetwork": true,
+        "nodeName": "cp-1",
+        "priorityClassName": "system-node-critical"
+      },
+      "status": { "phase": "Running" }
+    }
+  ]
+}

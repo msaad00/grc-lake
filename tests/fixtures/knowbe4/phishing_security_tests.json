@@ -1,0 +1,73 @@
+[
+  {
+    "campaign_id": 3423,
+    "pst_id": 16142,
+    "status": "Closed",
+    "name": "Corporate Test - April",
+    "groups": [{ "group_id": 16342, "name": "Corporate Employees" }],
+    "phish_prone_percentage": 0.25,
+    "started_at": "2026-04-02T15:02:38.000Z",
+    "duration": 7,
+    "categories": [{ "category_id": 4237, "name": "Current Events" }],
+    "template": {
+      "id": 11428,
+      "name": "CNN Breaking News",
+      "difficulty": 3,
+      "type": "User"
+    },
+    "landing-page": { "id": 1842, "name": "SEI Landing Page" },
+    "scheduled_count": 40,
+    "delivered_count": 40,
+    "opened_count": 24,
+    "clicked_count": 10,
+    "replied_count": 0,
+    "attachment_open_count": 0,
+    "macro_enabled_count": 0,
+    "data_entered_count": 0,
+    "qr_code_scanned_count": 0,
+    "reported_count": 12,
+    "bounced_count": 0
+  },
+  {
+    "campaign_id": 3423,
+    "pst_id": 16310,
+    "status": "Closed",
+    "name": "Corporate Test - May",
+    "groups": [{ "group_id": 16342, "name": "Corporate Employees" }],
+    "phish_prone_percentage": 0.1,
+    "started_at": "2026-05-04T15:00:00.000Z",
+    "duration": 7,
+    "categories": [{ "category_id": 4240, "name": "IT" }],
+    "template": {
+      "id": 11501,
+      "name": "Password Expiry",
+      "difficulty": 2,
+      "type": "User"
+    },
+    "landing-page": { "id": 1842, "name": "SEI Landing Page" },
+    "scheduled_count": 60,
+    "delivered_count": 60,
+    "opened_count": 30,
+    "clicked_count": 6,
+    "replied_count": 0,
+    "attachment_open_count": 0,
+    "reported_count": 25,
+    "bounced_count": 0
+  },
+  {
+    "campaign_id": 3100,
+    "pst_id": 12001,
+    "status": "Closed",
+    "name": "Corporate Test - 2025",
+    "groups": [{ "group_id": 16342, "name": "Corporate Employees" }],
+    "phish_prone_percentage": 0.6,
+    "started_at": "2025-09-01T15:00:00.000Z",
+    "duration": 7,
+    "scheduled_count": 50,
+    "delivered_count": 50,
+    "opened_count": 40,
+    "clicked_count": 30,
+    "replied_count": 0,
+    "attachment_open_count": 0
+  }
+]

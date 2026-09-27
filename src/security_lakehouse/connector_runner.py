@@ -51,6 +51,11 @@ from security_lakehouse.connectors_clickhouse import (
     ClickHouseFixtureClient,
     collect_clickhouse_evidence,
 )
+from security_lakehouse.connectors_crowdstrike import (
+    CrowdStrikeClient,
+    CrowdStrikeFixtureClient,
+    collect_crowdstrike_evidence,
+)
 from security_lakehouse.connectors_databricks import (
     DatabricksClient,
     DatabricksFixtureClient,
@@ -72,10 +77,25 @@ from security_lakehouse.connectors_intune import (
     IntuneFixtureClient,
     collect_intune_evidence,
 )
+from security_lakehouse.connectors_jamf import (
+    JamfFixtureClient,
+    JamfProClient,
+    collect_jamf_evidence,
+)
 from security_lakehouse.connectors_jira import (
     JiraClient,
     JiraFixtureClient,
     collect_jira_evidence,
+)
+from security_lakehouse.connectors_knowbe4 import (
+    KnowBe4Client,
+    KnowBe4FixtureClient,
+    collect_knowbe4_evidence,
+)
+from security_lakehouse.connectors_kubernetes import (
+    KubernetesClient,
+    KubernetesFixtureClient,
+    collect_kubernetes_evidence,
 )
 from security_lakehouse.connectors_okta import (
     OktaClient,
@@ -243,6 +263,20 @@ AZURE_SUBSCRIPTION_ID_ENV = "AZURE_SUBSCRIPTION_ID"
 # DefaultAzureCredential's own tenant variable; intune-devices reuses it as the
 # operator override for the configured tenant_id.
 AZURE_TENANT_ID_ENV = "AZURE_TENANT_ID"
+
+# Jamf Pro and CrowdStrike Falcon authenticate as OAuth API clients; only the
+# client id and a reference to the secret are stored. KnowBe4 uses a Reporting
+# API key referenced the same way. Kubernetes reads a kubeconfig path (or the
+# in-cluster service account) — never an inline token.
+JAMF_URL_ENV = "JAMF_URL"
+JAMF_CLIENT_ID_ENV = "JAMF_CLIENT_ID"
+JAMF_CLIENT_SECRET_ENV = "JAMF_CLIENT_SECRET"
+CROWDSTRIKE_CLOUD_ENV = "CROWDSTRIKE_CLOUD"
+CROWDSTRIKE_CLIENT_ID_ENV = "CROWDSTRIKE_CLIENT_ID"
+CROWDSTRIKE_CLIENT_SECRET_ENV = "CROWDSTRIKE_CLIENT_SECRET"
+KUBECONFIG_ENV = "KUBECONFIG"
+KUBERNETES_SERVICE_HOST_ENV = "KUBERNETES_SERVICE_HOST"
+KNOWBE4_API_TOKEN_ENV = "KNOWBE4_API_TOKEN"
 
 # Environment variables carrying the Jira Cloud site base URL and the account
 # email used for HTTP Basic read auth. The read-only API token is read from
@@ -600,6 +634,22 @@ def _build_databricks(inputs: SyncInputs) -> list[dict[str, Any]]:
     return _collect_databricks(fixture_dir=inputs.fixture_dir, env=inputs.env, credentials=inputs.credentials)
 
 
+def _build_jamf(inputs: SyncInputs) -> list[dict[str, Any]]:
+    return _collect_jamf(fixture_dir=inputs.fixture_dir, env=inputs.env, credentials=inputs.credentials)
+
+
+def _build_crowdstrike(inputs: SyncInputs) -> list[dict[str, Any]]:
+    return _collect_crowdstrike(fixture_dir=inputs.fixture_dir, env=inputs.env, credentials=inputs.credentials)
+
+
+def _build_kubernetes(inputs: SyncInputs) -> list[dict[str, Any]]:
+    return _collect_kubernetes(fixture_dir=inputs.fixture_dir, env=inputs.env, credentials=inputs.credentials)
+
+
+def _build_knowbe4(inputs: SyncInputs) -> list[dict[str, Any]]:
+    return _collect_knowbe4(fixture_dir=inputs.fixture_dir, env=inputs.env, credentials=inputs.credentials)
+
+
 def _build_jira(inputs: SyncInputs) -> list[dict[str, Any]]:
     return _collect_jira(
         fixture_dir=inputs.fixture_dir,
@@ -678,6 +728,10 @@ REGISTRY: dict[str, ConnectorBuilder] = {
     "rippling-personnel": _build_rippling,
     "workday-personnel": _build_workday,
     "databricks-evidence-lake": _build_databricks,
+    "jamf-devices": _build_jamf,
+    "crowdstrike-falcon": _build_crowdstrike,
+    "kubernetes-cluster": _build_kubernetes,
+    "knowbe4-training": _build_knowbe4,
 }
 
 
@@ -1088,6 +1142,115 @@ def _collect_databricks(
             "DATABRICKS_CLIENT_SECRET)"
         )
     return collect_databricks_evidence(DatabricksClient(host, client_secret=secret, **fields))
+
+
+def _collect_jamf(
+    *,
+    fixture_dir: str | Path | None,
+    env: dict[str, str],
+    credentials: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    creds = credentials or {}
+    base_url = str(creds.get("base_url") or env.get(JAMF_URL_ENV) or "").strip()
+    screen_lock_attribute = str(creds.get("screen_lock_attribute") or "").strip() or None
+    if fixture_dir:
+        return collect_jamf_evidence(
+            JamfFixtureClient(fixture_dir, base_url=base_url or "https://fixture.jamfcloud.com"),
+            screen_lock_attribute=screen_lock_attribute,
+        )
+    client_id = str(creds.get("client_id") or env.get(JAMF_CLIENT_ID_ENV) or "").strip()
+    secret = _resolve_provider_secret(str(creds.get("client_secret_ref") or ""), JAMF_CLIENT_SECRET_ENV, env)
+    if not base_url or not client_id or not secret:
+        raise ValueError(
+            "jamf-devices sync requires --fixture-dir, or a configured base_url and API client_id plus the "
+            f"API client secret (client_secret_ref naming the secret, or {JAMF_CLIENT_SECRET_ENV}); the API "
+            "client's role needs only Read Computers and Read Mobile Devices"
+        )
+    return collect_jamf_evidence(
+        JamfProClient(base_url, client_id=client_id, client_secret=secret),
+        screen_lock_attribute=screen_lock_attribute,
+    )
+
+
+def _collect_crowdstrike(
+    *,
+    fixture_dir: str | Path | None,
+    env: dict[str, str],
+    credentials: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    creds = credentials or {}
+    cloud = str(creds.get("cloud") or env.get(CROWDSTRIKE_CLOUD_ENV) or "us-1").strip()
+    if fixture_dir:
+        return collect_crowdstrike_evidence(CrowdStrikeFixtureClient(fixture_dir, cloud=cloud))
+    client_id = str(creds.get("client_id") or env.get(CROWDSTRIKE_CLIENT_ID_ENV) or "").strip()
+    secret = _resolve_provider_secret(str(creds.get("client_secret_ref") or ""), CROWDSTRIKE_CLIENT_SECRET_ENV, env)
+    if not client_id or not secret:
+        raise ValueError(
+            "crowdstrike-falcon sync requires --fixture-dir, or a Falcon API client_id plus its secret "
+            f"(client_secret_ref naming the secret, or {CROWDSTRIKE_CLIENT_SECRET_ENV}) with only the "
+            "Hosts, Prevention policies, and Alerts read scopes"
+        )
+    return collect_crowdstrike_evidence(CrowdStrikeClient(cloud, client_id=client_id, client_secret=secret))
+
+
+def _collect_kubernetes(
+    *,
+    fixture_dir: str | Path | None,
+    env: dict[str, str],
+    credentials: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    creds = credentials or {}
+    cluster_name = str(creds.get("cluster_name") or "").strip()
+    allowed_registries = _split_list(creds.get("allowed_registries"))
+    if fixture_dir:
+        return collect_kubernetes_evidence(
+            KubernetesFixtureClient(fixture_dir, cluster_name=cluster_name or "fixture-cluster"),
+            allowed_registries=allowed_registries,
+        )
+    if not cluster_name:
+        raise ValueError(
+            "kubernetes-cluster sync requires --fixture-dir, or a configured cluster_name plus a read-only "
+            "service account (in-cluster, or a kubeconfig named by kubeconfig_ref / KUBECONFIG)"
+        )
+    kubeconfig_ref = str(creds.get("kubeconfig_ref") or "").strip()
+    kubeconfig_path = (env.get(kubeconfig_ref) if kubeconfig_ref else None) or env.get(KUBECONFIG_ENV) or None
+    in_cluster = _truthy(creds.get("in_cluster")) or (
+        not kubeconfig_path and bool(env.get(KUBERNETES_SERVICE_HOST_ENV))
+    )
+    context = str(creds.get("context") or "").strip() or None
+    return collect_kubernetes_evidence(
+        KubernetesClient(cluster_name, context=context, kubeconfig_path=kubeconfig_path, in_cluster=in_cluster),
+        allowed_registries=allowed_registries,
+    )
+
+
+def _collect_knowbe4(
+    *,
+    fixture_dir: str | Path | None,
+    env: dict[str, str],
+    credentials: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    creds = credentials or {}
+    region = str(creds.get("region") or "us").strip().lower()
+    if fixture_dir:
+        return collect_knowbe4_evidence(KnowBe4FixtureClient(fixture_dir, region=region))
+    token = _resolve_provider_secret(str(creds.get("credential_ref") or ""), KNOWBE4_API_TOKEN_ENV, env)
+    if not token:
+        raise ValueError(
+            "knowbe4-training sync requires --fixture-dir, or a KnowBe4 Reporting API key "
+            f"(credential_ref naming the secret, or {KNOWBE4_API_TOKEN_ENV}) and the account region"
+        )
+    return collect_knowbe4_evidence(KnowBe4Client(region, token=token))
+
+
+def _split_list(value: Any) -> list[str] | None:
+    items = value if isinstance(value, list) else str(value or "").split(",")
+    cleaned = [str(item).strip() for item in items if str(item).strip()]
+    return cleaned or None
+
+
+def _truthy(value: Any) -> bool:
+    return value is True or str(value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _collect_jira(

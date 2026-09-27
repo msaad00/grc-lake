@@ -24,9 +24,14 @@ uv run pytest tests/test_my_vendor_evidence_connector.py
 ## Contributor checklist
 
 1. **Collector** — `src/security_lakehouse/connectors_<slug>.py` with live +
-   fixture clients and `collect_<slug>_evidence(...)`.
+   fixture clients and `collect_<slug>_evidence(...)`. HTTP requests go through
+   `netguard.open_public`, `ingestion.backoff.http_retry`, and
+   `ingestion.paginate.paginate`; OAuth client-credentials APIs use
+   `ingestion.oauth.ClientCredentialsToken` (in-memory token, one re-mint on 401).
+   Every control ID an event carries must exist in `controls/catalog.json`.
 2. **Registry** — `_build_<slug>` builder + one line in `REGISTRY`.
-3. **Catalog** — row in `connectors/catalog.json` with `is_implemented: true`.
+3. **Catalog** — row in `connectors/catalog.json` with `is_implemented: true`, and
+   `"release_stage": "preview"` until the connector has run against a live tenant.
 4. **Tests** — fixture-backed sync under `tests/test_<slug>_connector.py`.
 5. **Docs** — permissions and setup in `docs/CONNECTORS.md`.
 

@@ -1,0 +1,93 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": { "resourceVersion": "" },
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "creationTimestamp": "2026-09-25T18:42:07Z",
+        "labels": { "run": "debug" },
+        "name": "debug",
+        "namespace": "default",
+        "resourceVersion": "201544",
+        "uid": "d27c4d8e-6f7a-4b8c-9d0e-5f6a7b8c9d01"
+      },
+      "spec": {
+        "containers": [
+          {
+            "image": "busybox:1.36",
+            "name": "debug",
+            "stdin": true,
+            "tty": true
+          }
+        ],
+        "restartPolicy": "Always"
+      },
+      "status": { "phase": "Running" }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "creationTimestamp": "2026-09-20T10:11:15Z",
+        "labels": { "app": "api", "pod-template-hash": "7d9f8c6b5d" },
+        "name": "api-7d9f8c6b5d-x2k9p",
+        "namespace": "payments",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "api-7d9f8c6b5d",
+            "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c03"
+          }
+        ],
+        "resourceVersion": "188130",
+        "uid": "d27c4d8e-6f7a-4b8c-9d0e-5f6a7b8c9d02"
+      },
+      "spec": {
+        "containers": [
+          {
+            "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/payments/api@sha256:3f1c2b9a8e7d6c5b4a3928171615141312111009080706050403020100ffeedd",
+            "name": "api"
+          }
+        ]
+      },
+      "status": { "phase": "Running" }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "creationTimestamp": "2026-01-12T09:14:10Z",
+        "labels": { "component": "kube-apiserver", "tier": "control-plane" },
+        "name": "kube-apiserver-cp-1",
+        "namespace": "kube-system",
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "controller": true,
+            "kind": "Node",
+            "name": "cp-1",
+            "uid": "b05a2b6c-4d5e-4f6a-9b0c-3d4e5f6a7b01"
+          }
+        ],
+        "resourceVersion": "301",
+        "uid": "b05a2b6c-4d5e-4f6a-9b0c-3d4e5f6a7b02"
+      },
+      "spec": {
+        "containers": [
+          {
+            "image": "registry.k8s.io/kube-apiserver:v1.34.1",
+            "name": "kube-apiserver"
+          }
+        ],
+        "hostNetwork": true
+      },
+      "status": { "phase": "Running" }
+    }
+  ]
+}

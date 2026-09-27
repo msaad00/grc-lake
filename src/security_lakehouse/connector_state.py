@@ -414,6 +414,21 @@ def _missing_required_config(
     if connector_id == "intune-devices":
         return ["tenant_id"] if not _has_value(credentials, "tenant_id") else []
 
+    if connector_id in {"jamf-devices", "crowdstrike-falcon"}:
+        scope_field = "base_url" if connector_id == "jamf-devices" else "cloud"
+        return [f for f in (scope_field, "client_id", "client_secret_ref") if not _has_value(credentials, f)]
+
+    if connector_id == "kubernetes-cluster":
+        # The kubeconfig (or in-cluster service account) is resolved at sync
+        # time; only the cluster label is required to enable.
+        return ["cluster_name"] if not _has_value(credentials, "cluster_name") else []
+
+    if connector_id == "knowbe4-training":
+        missing = [] if _has_value(credentials, "region") else ["region"]
+        if not (_has_value(credentials, "credential_ref") or _has_value(credentials, "token")):
+            missing.append("credential_ref")
+        return missing
+
     if connector_id == "gcp-posture":
         # Credentials resolve through Application Default Credentials, so only
         # the project scope is required — no stored credential reference, the

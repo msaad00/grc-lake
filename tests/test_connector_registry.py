@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from security_lakehouse import connector_runner, connector_state
-from security_lakehouse.connectors import load_connector_catalog, validate_connector_catalog
+from security_lakehouse.connectors import load_connector_catalog, validate_connector_catalog, validate_connector_row
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.validation import validate_raw_events
 
@@ -39,7 +39,12 @@ REAL_ADAPTERS = {
     "rippling-personnel",
     "workday-personnel",
     "databricks-evidence-lake",
+    "jamf-devices",
+    "crowdstrike-falcon",
+    "kubernetes-cluster",
+    "knowbe4-training",
 }
+PREVIEW_CONNECTORS = {"jamf-devices", "crowdstrike-falcon", "kubernetes-cluster", "knowbe4-training"}
 FIXTURES = Path(__file__).parent / "fixtures"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -58,6 +63,22 @@ def test_implemented_adapters_catalog_flags_agree_with_registry() -> None:
     }
     assert connector_runner.registered_connector_ids() == frozenset(implemented_from_catalog)
     assert frozenset(REAL_ADAPTERS) == connector_state.IMPLEMENTED_ADAPTERS
+
+
+def test_preview_connectors_are_labelled_preview_until_live_verified() -> None:
+    catalog = load_connector_catalog()
+    for connector_id in PREVIEW_CONNECTORS:
+        assert catalog[connector_id]["release_stage"] == "preview", connector_id
+        assert catalog[connector_id]["is_implemented"] is True
+    assert {cid for cid, row in catalog.items() if row.get("release_stage") == "preview"} >= PREVIEW_CONNECTORS
+
+
+def test_catalog_rejects_an_unknown_release_stage() -> None:
+    row = {**load_connector_catalog()["jamf-devices"], "release_stage": "beta-ish"}
+    assert any("release_stage" in error for error in validate_connector_row("jamf-devices", row))
+    assert validate_connector_row("jamf-devices", {**row, "release_stage": "ga"}) == []
+    del row["release_stage"]
+    assert validate_connector_row("jamf-devices", row) == []
 
 
 def test_connector_catalog_accepts_scoped_github_administration_read() -> None:
@@ -242,6 +263,10 @@ def test_unknown_connector_id_raises_no_runner_registered(tmp_path: Path) -> Non
         ("jira-ticketing", "jira", {}),
         ("intune-devices", "intune", {}),
         ("bamboohr-personnel", "bamboohr", {}),
+        ("jamf-devices", "jamf", {}),
+        ("crowdstrike-falcon", "crowdstrike", {}),
+        ("kubernetes-cluster", "kubernetes", {}),
+        ("knowbe4-training", "knowbe4", {}),
     ],
 )
 def test_fixture_sync_flows_through_registry(

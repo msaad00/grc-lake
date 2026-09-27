@@ -1,0 +1,294 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "metadata": { "resourceVersion": "" },
+  "items": [
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "creationTimestamp": "2026-02-03T16:00:00Z",
+        "generation": 14,
+        "labels": { "app": "api" },
+        "name": "api",
+        "namespace": "payments",
+        "resourceVersion": "188120",
+        "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c01"
+      },
+      "spec": {
+        "replicas": 3,
+        "selector": { "matchLabels": { "app": "api" } },
+        "template": {
+          "metadata": { "labels": { "app": "api" } },
+          "spec": {
+            "containers": [
+              {
+                "env": [
+                  { "name": "LOG_LEVEL", "value": "structured-json" },
+                  {
+                    "name": "DB_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": { "key": "password", "name": "api-db" }
+                    }
+                  }
+                ],
+                "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/payments/api@sha256:3f1c2b9a8e7d6c5b4a3928171615141312111009080706050403020100ffeedd",
+                "name": "api",
+                "ports": [{ "containerPort": 8080, "protocol": "TCP" }],
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": { "drop": ["ALL"] },
+                  "readOnlyRootFilesystem": true
+                }
+              }
+            ],
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 10001,
+              "seccompProfile": { "type": "RuntimeDefault" }
+            },
+            "serviceAccountName": "api"
+          }
+        }
+      },
+      "status": { "availableReplicas": 3, "readyReplicas": 3, "replicas": 3 }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "creationTimestamp": "2026-02-10T08:22:31Z",
+        "generation": 3,
+        "labels": { "app": "legacy-worker" },
+        "name": "legacy-worker",
+        "namespace": "payments",
+        "resourceVersion": "171002",
+        "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c02"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": { "matchLabels": { "app": "legacy-worker" } },
+        "template": {
+          "metadata": { "labels": { "app": "legacy-worker" } },
+          "spec": {
+            "containers": [
+              {
+                "image": "nginx",
+                "name": "worker",
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "runAsUser": 0
+                }
+              }
+            ],
+            "securityContext": { "runAsNonRoot": true }
+          }
+        }
+      },
+      "status": { "availableReplicas": 1, "readyReplicas": 1, "replicas": 1 }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "ReplicaSet",
+      "metadata": {
+        "creationTimestamp": "2026-09-20T10:11:12Z",
+        "labels": { "app": "api", "pod-template-hash": "7d9f8c6b5d" },
+        "name": "api-7d9f8c6b5d",
+        "namespace": "payments",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Deployment",
+            "name": "api",
+            "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c01"
+          }
+        ],
+        "resourceVersion": "188119",
+        "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c03"
+      },
+      "spec": {
+        "replicas": 3,
+        "selector": {
+          "matchLabels": { "app": "api", "pod-template-hash": "7d9f8c6b5d" }
+        },
+        "template": {
+          "metadata": {
+            "labels": { "app": "api", "pod-template-hash": "7d9f8c6b5d" }
+          },
+          "spec": {
+            "containers": [
+              {
+                "image": "busybox:latest",
+                "name": "api",
+                "securityContext": { "privileged": true }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "DaemonSet",
+      "metadata": {
+        "creationTimestamp": "2026-01-12T09:20:00Z",
+        "generation": 2,
+        "labels": { "k8s-app": "node-agent" },
+        "name": "node-agent",
+        "namespace": "kube-system",
+        "resourceVersion": "9120",
+        "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c04"
+      },
+      "spec": {
+        "selector": { "matchLabels": { "k8s-app": "node-agent" } },
+        "template": {
+          "metadata": { "labels": { "k8s-app": "node-agent" } },
+          "spec": {
+            "containers": [
+              {
+                "image": "registry.k8s.io/node-agent:v1.2.3",
+                "name": "agent",
+                "securityContext": { "privileged": true },
+                "volumeMounts": [
+                  {
+                    "mountPath": "/host/proc",
+                    "name": "proc",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "hostNetwork": true,
+            "hostPID": true,
+            "volumes": [
+              { "hostPath": { "path": "/proc", "type": "" }, "name": "proc" }
+            ]
+          }
+        }
+      },
+      "status": {
+        "currentNumberScheduled": 3,
+        "desiredNumberScheduled": 3,
+        "numberReady": 3
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "creationTimestamp": "2026-03-21T11:10:00Z",
+        "generation": 5,
+        "labels": { "app": "warehouse" },
+        "name": "warehouse",
+        "namespace": "analytics",
+        "resourceVersion": "150011",
+        "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c05"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": { "matchLabels": { "app": "warehouse" } },
+        "serviceName": "warehouse",
+        "template": {
+          "metadata": { "labels": { "app": "warehouse" } },
+          "spec": {
+            "containers": [
+              {
+                "envFrom": [
+                  { "secretRef": { "name": "warehouse-credentials" } }
+                ],
+                "image": "ghcr.io/acme/warehouse:latest",
+                "name": "warehouse",
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "runAsNonRoot": true
+                }
+              }
+            ],
+            "initContainers": [
+              {
+                "command": ["sh", "-c", "chown -R 999:999 /data"],
+                "image": "docker.io/library/busybox:1.36",
+                "name": "fix-permissions",
+                "securityContext": { "allowPrivilegeEscalation": false }
+              }
+            ]
+          }
+        }
+      },
+      "status": { "readyReplicas": 1, "replicas": 1 }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "CronJob",
+      "metadata": {
+        "creationTimestamp": "2026-03-22T07:00:00Z",
+        "generation": 1,
+        "name": "nightly-report",
+        "namespace": "analytics",
+        "resourceVersion": "150400",
+        "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c06"
+      },
+      "spec": {
+        "concurrencyPolicy": "Forbid",
+        "jobTemplate": {
+          "spec": {
+            "template": {
+              "spec": {
+                "containers": [
+                  {
+                    "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/analytics/report:1.4.0",
+                    "name": "report",
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": { "drop": ["ALL"] }
+                    }
+                  }
+                ],
+                "restartPolicy": "OnFailure",
+                "securityContext": { "runAsNonRoot": true, "runAsUser": 2000 }
+              }
+            }
+          }
+        },
+        "schedule": "0 2 * * *"
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "Job",
+      "metadata": {
+        "creationTimestamp": "2026-09-26T02:00:00Z",
+        "labels": { "batch.kubernetes.io/job-name": "nightly-report-29312040" },
+        "name": "nightly-report-29312040",
+        "namespace": "analytics",
+        "ownerReferences": [
+          {
+            "apiVersion": "batch/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "CronJob",
+            "name": "nightly-report",
+            "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c06"
+          }
+        ],
+        "resourceVersion": "201990",
+        "uid": "c16b3c7d-5e6f-4a7b-8c0d-4e5f6a7b8c07"
+      },
+      "spec": {
+        "template": {
+          "spec": {
+            "containers": [
+              {
+                "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/analytics/report:1.4.0",
+                "name": "report"
+              }
+            ],
+            "restartPolicy": "OnFailure"
+          }
+        }
+      }
+    }
+  ]
+}

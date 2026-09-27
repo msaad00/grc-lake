@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "query_time": 0.004,
+    "pagination": { "offset": 0, "limit": 5000, "total": 3 },
+    "powered_by": "empower-api",
+    "trace_id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9"
+  },
+  "errors": [],
+  "resources": [
+    {
+      "id": "pol-win-standard",
+      "cid": "0123456789abcdef0123456789abcdef",
+      "name": "Windows Standard Prevention",
+      "description": "Default workstation prevention",
+      "platform_name": "Windows",
+      "enabled": true,
+      "created_by": "admin@example.com",
+      "created_timestamp": "2025-01-10T12:00:00Z",
+      "modified_by": "admin@example.com",
+      "modified_timestamp": "2026-03-01T12:00:00Z",
+      "groups": [],
+      "prevention_settings": []
+    },
+    {
+      "id": "pol-mac-standard",
+      "name": "macOS Standard Prevention",
+      "platform_name": "Mac",
+      "enabled": true,
+      "groups": []
+    },
+    {
+      "id": "pol-linux-audit",
+      "name": "Linux Detect Only (disabled)",
+      "platform_name": "Linux",
+      "enabled": false,
+      "groups": []
+    }
+  ]
+}

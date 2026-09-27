@@ -125,6 +125,73 @@ const PRESETS: Record<string, IntegrationPreset> = {
       "Any other report column is ignored and never stored.",
     ],
   },
+  "jamf-devices": {
+    connectorId: "jamf-devices",
+    title: "Jamf Pro devices",
+    authLabel: "API client (read-only role)",
+    badges: ["Read Computers", "Read Mobile Devices", "Secret reference only"],
+    summary:
+      "Create a Jamf Pro API role with only Read Computers and Read Mobile Devices, assign it to an API client, store the client secret, then enter the Jamf Pro URL and client ID. Sync reads encryption, OS version, passcode, firewall, and check-in state.",
+    providerSetup:
+      "A Jamf Pro admin creates the API role and API client under Settings > System > API roles and clients, enables the client, and generates its secret.",
+    trustOpsInput:
+      "Jamf Pro URL, API client ID, and the client secret reference.",
+    advancedTitle: "What is collected",
+    advancedDetails: [
+      "Device ID and name, platform, OS version, FileVault or data-protection state, firewall, passcode compliance, managed and check-in state, and the assigned user's email.",
+      "IP addresses, serial numbers, usernames, real names, phone numbers, recovery keys, and locations are dropped before anything is stored.",
+    ],
+  },
+  "crowdstrike-falcon": {
+    connectorId: "crowdstrike-falcon",
+    title: "CrowdStrike Falcon",
+    authLabel: "API client (read scopes)",
+    badges: ["Hosts: Read", "Prevention policies: Read", "Alerts: Read"],
+    summary:
+      "Create a Falcon API client with the Hosts, Prevention policies, and Alerts read scopes, store its secret, then enter the cloud and client ID. Sync reads sensor coverage, prevention policy status, and unresolved alert counts.",
+    providerSetup:
+      "A Falcon administrator creates an API client with only the three read scopes.",
+    trustOpsInput:
+      "Falcon cloud, API client ID, and the client secret reference.",
+    advancedTitle: "What is collected",
+    advancedDetails: [
+      "Host ID and name, platform, OS and sensor version, last seen, reduced functionality mode, and prevention policy; unresolved alert counts by severity for the last 30 days.",
+      "MAC and IP addresses, serial numbers, user names, and alert details beyond status and severity are never stored.",
+    ],
+  },
+  "kubernetes-cluster": {
+    connectorId: "kubernetes-cluster",
+    title: "Kubernetes cluster",
+    authLabel: "Read-only ClusterRole",
+    badges: ["get/list only", "No Secret access"],
+    summary:
+      "Bind a dedicated service account to a get/list-only ClusterRole, then name the cluster. Sync reads RBAC bindings, pod security settings, network policies, image sources, and API server audit flags where visible.",
+    providerSetup:
+      "A cluster admin applies the trustops-config-reader ClusterRole and binding (docs/CONNECTORS.md), then issues a kubeconfig for that identity or runs TrustOps in-cluster.",
+    trustOpsInput:
+      "Cluster name, optional kubeconfig context and path reference, optional allowed registries.",
+    advancedTitle: "What is collected",
+    advancedDetails: [
+      "Binding subjects, workload security settings, image references, names of Secret-backed env vars, NetworkPolicy counts, and audit flag presence.",
+      "Secrets, env values, container arguments, labels, and annotations are never read or stored.",
+    ],
+  },
+  "knowbe4-training": {
+    connectorId: "knowbe4-training",
+    title: "KnowBe4 training",
+    authLabel: "Reporting API key",
+    badges: ["Read-only reporting", "Secret reference only"],
+    summary:
+      "Generate a Reporting API key in the KnowBe4 console, store it as a secret, then pick the account region. Sync reads training enrollment status and phishing test results.",
+    providerSetup:
+      "A KnowBe4 admin generates a Reporting API key. It requires a Platinum, Diamond, SAT Foundation, or SAT Advanced subscription.",
+    trustOpsInput: "Region and the API key secret reference.",
+    advancedTitle: "What is collected",
+    advancedDetails: [
+      "User ID, email, employee number, enrollment status counts, last completion date, and phish-prone percentage.",
+      "Names, phone numbers, locations, manager details, and custom fields are never stored.",
+    ],
+  },
   "databricks-evidence-lake": {
     connectorId: "databricks-evidence-lake",
     title: "Databricks evidence lake",

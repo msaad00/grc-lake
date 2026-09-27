@@ -125,6 +125,102 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         hint: "Rippling API token limited to the workers.read scope.",
       },
     ],
+    "jamf-devices": [
+      {
+        name: "base_url",
+        label: "Jamf Pro URL",
+        placeholder: "https://yourcompany.jamfcloud.com",
+        required: true,
+        hint: "Bare https URL of the Jamf Pro server, without a path.",
+      },
+      {
+        name: "client_id",
+        label: "API client ID",
+        placeholder: "00000000-0000-0000-0000-000000000000",
+        required: true,
+        hint: "Jamf Pro API client whose API role grants only Read Computers and Read Mobile Devices.",
+      },
+      {
+        name: "client_secret_ref",
+        label: "Client secret env var",
+        placeholder: "JAMF_CLIENT_SECRET",
+        required: true,
+        hint: "API client secret, stored as a secret reference. TrustOps mints short-lived tokens from it.",
+      },
+      {
+        name: "screen_lock_attribute",
+        label: "Mac screen-lock extension attribute",
+        placeholder: "Screen Lock Enforced",
+        hint: "Optional. Computer extension attribute reporting true/false for screen-lock enforcement; Macs are not evaluated for screen lock without it.",
+      },
+    ],
+    "crowdstrike-falcon": [
+      {
+        name: "cloud",
+        label: "Falcon cloud",
+        placeholder: "us-1",
+        required: true,
+        hint: "us-1, us-2, eu-1, us-gov-1, or us-gov-2.",
+      },
+      {
+        name: "client_id",
+        label: "API client ID",
+        placeholder: "0123456789abcdef0123456789abcdef",
+        required: true,
+        hint: "Falcon API client with only the Hosts, Prevention policies, and Alerts read scopes.",
+      },
+      {
+        name: "client_secret_ref",
+        label: "Client secret env var",
+        placeholder: "CROWDSTRIKE_CLIENT_SECRET",
+        required: true,
+        hint: "API client secret, stored as a secret reference. TrustOps mints short-lived tokens from it.",
+      },
+    ],
+    "kubernetes-cluster": [
+      {
+        name: "cluster_name",
+        label: "Cluster name",
+        placeholder: "prod-eks",
+        required: true,
+        hint: "Label used for evidence and asset IDs.",
+      },
+      {
+        name: "context",
+        label: "Kubeconfig context",
+        placeholder: "prod-eks-readonly",
+        hint: "Optional. Leave empty to use the current context, or when TrustOps runs in-cluster.",
+      },
+      {
+        name: "kubeconfig_ref",
+        label: "Kubeconfig path env var",
+        placeholder: "KUBECONFIG",
+        hint: "Optional. Environment variable holding the kubeconfig path for the read-only identity; defaults to KUBECONFIG or the in-cluster service account.",
+      },
+      {
+        name: "allowed_registries",
+        label: "Allowed image registries",
+        placeholder:
+          "123456789012.dkr.ecr.us-east-1.amazonaws.com, registry.k8s.io",
+        hint: "Optional, comma-separated. Without it, image sources are recorded as inventory only.",
+      },
+    ],
+    "knowbe4-training": [
+      {
+        name: "region",
+        label: "KnowBe4 account region",
+        placeholder: "us",
+        required: true,
+        hint: "us, eu, ca, uk, or de — the server your console is on (training.knowbe4.com is us).",
+      },
+      {
+        name: "credential_ref",
+        label: "Reporting API key env var",
+        placeholder: "KNOWBE4_API_TOKEN",
+        required: true,
+        hint: "Key from the KnowBe4 Reporting API console (read-only reporting), stored as a secret reference.",
+      },
+    ],
     "workday-personnel": [
       {
         name: "report_url",

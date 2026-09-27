@@ -258,8 +258,13 @@ class _Handler(BaseHTTPRequestHandler):
     def _send_file(self, path: Path, content_type: str) -> None:
         self._send_bytes(path.read_bytes(), content_type=content_type)
 
+    def _bound_address(self) -> tuple[str, int]:
+        address = self.server.server_address
+        assert isinstance(address, tuple)
+        return str(address[0]), int(address[1])
+
     def _allowed_hosts(self) -> set[str]:
-        bound = str(self.server.server_address[0]).strip("[]").lower()
+        bound = self._bound_address()[0].strip("[]").lower()
         return _LOOPBACK_NAMES | {bound}
 
     def _host_is_local(self, host: str) -> bool:
@@ -291,7 +296,7 @@ class _Handler(BaseHTTPRequestHandler):
             port = parsed.port or 80
         except ValueError:
             return False
-        return self._host_is_local(parsed.hostname) and port == int(self.server.server_address[1])
+        return self._host_is_local(parsed.hostname) and port == self._bound_address()[1]
 
     def _guarded_json_body(self, path: str) -> dict | None:
         """Validate a mutating request and return its JSON body, or send an error and return None."""

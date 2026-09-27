@@ -50,7 +50,7 @@ from security_lakehouse.auth.presentation import build_auth_methods_payload
 from security_lakehouse.auth.rate_limit import RateLimitConfig
 from security_lakehouse.auth.rate_limit_redis import RateLimiterBackend, build_rate_limiter
 from security_lakehouse.auth.rbac import Identity, scopes_for_role
-from security_lakehouse.auth.request_audit import append_request_audit
+from security_lakehouse.auth.request_audit import AnonymousAuditSampler, append_request_audit, should_audit_request
 from security_lakehouse.auth.saml import (
     SAML_REQUEST_COOKIE,
     SAML_REQUEST_MAX_AGE_SECONDS,
@@ -1101,6 +1101,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         ensure_cookie_signing_configured()
     app.state.rate_limiter = build_rate_limiter(RateLimitConfig.from_env(dict(os.environ)), dict(os.environ))
     app.state.rate_limit_known_credentials = _KnownCredentials()
+    app.state.anonymous_audit_sampler = AnonymousAuditSampler()
 
     def lake_for(identity: Identity) -> Path:
         """Resolve the per-request lake for ``identity`` so one tenant can never
@@ -1153,7 +1154,18 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         response = await call_next(request)
         path = request.url.path
         # Audit authorization decisions on the secured API surfaces only; health is open.
-        if path.startswith("/api/") and path not in {"/api/healthz", "/api/v1/healthz"}:
+        identity = getattr(request.state, "identity", None)
+        if (
+            path.startswith("/api/")
+            and path not in {"/api/healthz", "/api/v1/healthz"}
+            and should_audit_request(
+                app.state.anonymous_audit_sampler,
+                identity=identity,
+                method=request.method,
+                status_code=response.status_code,
+                client_host=request.client.host if request.client else "unknown",
+            )
+        ):
             # Offload the synchronous append so the audit write never blocks the
             # event loop on every authenticated request.
             await run_in_threadpool(
@@ -1164,7 +1176,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 status_code=response.status_code,
                 decision="allow" if response.status_code < 400 else "deny",
                 correlation_id=correlation_id,
-                identity=getattr(request.state, "identity", None),
+                identity=identity,
             )
         response.headers["X-Correlation-ID"] = correlation_id
         return response

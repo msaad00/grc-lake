@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
@@ -125,11 +126,8 @@ def accept_invite(
     if expires < now:
         # A previously expired invite for the same address holds the
         # (tenant, email, status) key; the time check still rejects this one.
-        try:
-            with session.begin_nested():
-                row.status = "expired"
-        except IntegrityError:
-            pass
+        with contextlib.suppress(IntegrityError), session.begin_nested():
+            row.status = "expired"
         raise InviteExpiredError("invite expired")
     existing = session.scalars(
         select(User.id).where(User.tenant_id == row.tenant_id, User.email == row.email)

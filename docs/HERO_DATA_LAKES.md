@@ -2,11 +2,18 @@
 
 This project tells a customer-owned security data lake story:
 
-| Backend    | Best fit                             | Security value                                                             | Status                                      |
-| ---------- | ------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------- |
-| Snowflake  | governed enterprise evidence lake    | audit shares, retention, RBAC, rollups, query history, Iceberg option      | executable read-only runner                 |
-| ClickHouse | high-volume telemetry analytics lake | runtime event windows, fast detection analytics, TTL, materialized rollups | schema and telemetry contract               |
-| Databricks | governed lakehouse / AI estates      | Unity Catalog evidence views, workspace audit log, service-principal reads | read-only runner, live verification pending |
+| Backend           | Best fit                               | Security value                                                             | Status                                                                  |
+| ----------------- | -------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Snowflake         | governed enterprise evidence lake      | audit shares, retention, RBAC, rollups, query history, Iceberg option      | executable read-only runner; mapped tables experimental                 |
+| ClickHouse        | high-volume telemetry analytics lake   | runtime event windows, fast detection analytics, TTL, materialized rollups | read-only runner over `normalized_events`; mapped tables experimental   |
+| Databricks        | governed lakehouse / AI estates        | Unity Catalog evidence views, workspace audit log, service-principal reads | read-only runner, live verification pending; mapped tables experimental |
+| Iceberg / Parquet | open-table lakes, Amazon Security Lake | OCSF tables in place, Glue or REST catalogs, partition-pruned scans        | preview reader, live verification pending                               |
+| BigQuery          | Google Cloud security warehouse        | parameterized reads, workload identity, bytes-billed cap                   | preview reader, live verification pending                               |
+
+The Snowflake, Databricks, and ClickHouse readers still read TrustOps-shaped
+views or tables by default. To read tables you already have, such as OCSF tables
+from Amazon Security Lake, configure a lake mapping instead; see
+[BRING_YOUR_OWN_LAKE.md](BRING_YOUR_OWN_LAKE.md).
 
 The local pipeline remains the source of truth for the demo. It writes replayable
 bronze/silver/gold artifacts and a SQLite mart so the project can run anywhere.
@@ -45,7 +52,8 @@ Use Snowflake when the question is:
 | Iceberg/Open Catalog | customer wants open table access across engines                        | keep tables interoperable for Spark, Trino, DuckDB, and other readers |
 
 The live Snowflake runner is intentionally read-only by default. It expects
-TrustOps-shaped evidence views with a least-privilege role, writes collected rows
+TrustOps-shaped evidence views, or mapped existing tables
+([BRING_YOUR_OWN_LAKE.md](BRING_YOUR_OWN_LAKE.md)), with a least-privilege role, writes collected rows
 into managed raw connector evidence, and lets the same pipeline rebuild bronze,
 silver, gold, snapshots, and current posture. The runner does not create
 Snowflake objects, mutate warehouse state, or require DDL privileges.
@@ -132,6 +140,7 @@ through a SQL warehouse, without copying evidence out of the workspace.
 | Schema artifact    | Done: [`deploy/databricks/bootstrap_poc.sql`](../deploy/databricks/bootstrap_poc.sql)         |
 | Tests              | Done: fixtures plus a fake Statement Execution API (token, polling, chunks, host pinning)     |
 | Verified demo path | **Pending**: not yet run against a live workspace; treat the connector as preview until it is |
+| Mapped tables      | Experimental: read existing Unity Catalog tables through a lake mapping instead of the views  |
 
 Least privilege is `CAN USE` on one SQL warehouse plus `USE CATALOG`,
 `USE SCHEMA`, and `SELECT` on the evidence views. On SQL warehouses, Unity
@@ -168,4 +177,8 @@ raw JSONL evidence
   -> Snowflake governed evidence lake
   -> ClickHouse high-volume telemetry lake
   -> Databricks governed lakehouse (preview, Unity Catalog views)
+
+existing customer tables (OCSF / Security Lake, Iceberg, Parquet, BigQuery, warehouse tables)
+  -> lake mapping (read-only, parameterized)
+  -> raw evidence -> the same bronze/silver/gold pipeline
 ```

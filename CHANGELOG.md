@@ -12,6 +12,17 @@ Python package, Helm chart, and bundled web console.
   (SP 800-37 Rev 2) tasks with task-level citations. All 351 new mappings are
   `proposed`, so evaluatable coverage rises from 813 to 991 requirements while
   attestable (reviewed) coverage stays at 350.
+- Bring your own lake (experimental): a declarative lake mapping spec maps
+  existing tables to evidence, so the Snowflake, Databricks, and ClickHouse
+  readers no longer need TrustOps-shaped views. Mappings compile to read-only,
+  parameterized queries. Built-in OCSF presets cover Authentication, Account
+  Change, API Activity, and Detection, Vulnerability, and Compliance Findings
+  (OCSF 1.1.0), plus the legacy Security Finding (OCSF 1.0.0-rc.2).
+  `security-lakehouse lake map --dry-run` previews mapped rows and errors. New
+  preview readers: `iceberg-parquet-lake` (Iceberg via AWS Glue, including
+  Amazon Security Lake, or REST catalogs, and Parquet on S3) and
+  `bigquery-evidence-lake` (new optional `bigquery` extra). See
+  docs/BRING_YOUR_OWN_LAKE.md.
 
 ## 0.2.17 - 2026-09-27
 

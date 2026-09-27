@@ -170,6 +170,16 @@ If any SAML environment variable is present, all required SAML variables must
 be present. The server fails closed instead of starting with a partial SSO
 boundary.
 
+Login is SP-initiated by default. `/login` stores the AuthnRequest ID in a
+signed, ten-minute `SameSite=None; Secure` cookie, so the deployment must be
+served over HTTPS (or `localhost`). The ACS accepts only a response whose
+`InResponseTo` matches that ID. IdP-initiated (unsolicited) responses are
+rejected unless `TRUSTOPS_SAML_ALLOW_IDP_INITIATED=true`. Consumed assertion
+IDs are cached until their `NotOnOrAfter` and a replay is rejected. That cache
+lives in each process's memory, so across multiple replicas a replay sent to a
+different replica is not caught
+([#732](https://github.com/msaad00/trustops-security-data-lake/issues/732)).
+
 ## Roles
 
 | Role             | Access                                                            |

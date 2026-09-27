@@ -178,7 +178,8 @@ def _read_secret_file_first(name: str, env: dict[str, str]) -> str | None:
     if file_path:
         try:
             file_value = Path(file_path).read_text(encoding="utf-8").strip()
-        except OSError:
+        except OSError as exc:
+            logger.warning("secret file named by %s_FILE is unreadable (%s)", name, exc.__class__.__name__)
             return None
         return file_value or None
     inline = env.get(name)

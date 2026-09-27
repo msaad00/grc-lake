@@ -1,8 +1,11 @@
 # Build context exclusions (keep image small + reproducible).
 .git
 .github
+.claude/
 .venv
 .pytest_cache
+.mypy_cache/
+.ruff_cache/
 __pycache__
 *.pyc
 *.pyo
@@ -10,6 +13,16 @@ __pycache__
 build/
 dist/
 .DS_Store
+
+# Not read by any Dockerfile COPY: tests, docs, examples, sample evidence,
+# and dev tooling. Excluding them keeps the build context small and stops an
+# edit there from invalidating the image cache.
+**/node_modules/
+tests/
+docs/
+examples/
+data/
+tools/
 
 # Local lakes — never bake customer evidence into the image.
 build/lakehouse/

@@ -7,22 +7,41 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Scoped to this job: the only writes are the sync branch and its PR.
+    # Opening the PR also needs the repository setting "Allow GitHub Actions
+    # to create and approve pull requests".
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
-          cache: pip
-      - name: Install package
-        run: python -m pip install -e ".[dev]"
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: "0.10.9" # keep in step with the Dockerfile uv image
+      - name: Install package (frozen lockfile)
+        run: uv sync --frozen
+      # A regulator that is down or blocking us is reported per framework and
+      # does not fail the job; the other sources still refresh. Only a crash
+      # of the sync itself fails this step.
       - name: Sync framework sources
-        run: security-lakehouse frameworks sync --allow-network | tee sync.json
+        run: uv run security-lakehouse frameworks sync --allow-network | tee sync.json
+      - name: Report source errors
+        run: |
+          uv run python -m security_lakehouse.framework_sync report sync.json > sync-report.md
+          cat sync-report.md >> "$GITHUB_STEP_SUMMARY"
+          errors="$(jq '[.results[] | select(.state == "error")] | length' sync.json)"
+          if [ "${errors}" -gt 0 ]; then
+            echo "::warning::${errors} framework source(s) could not be fetched; see the job summary"
+          fi
       - name: Detect drift
         id: drift
         run: |
@@ -39,13 +58,19 @@ jobs:
             echo "Reviewer should verify each updated \`source_sha256\` against the"
             echo "regulator's site before merging."
             echo
-            echo '```'
+            cat sync-report.md
+            echo
+            echo '<details><summary>Raw sync output</summary>'
+            echo
+            echo '```json'
             cat sync.json
             echo '```'
+            echo
+            echo '</details>'
           } > pr-body.md
       - name: Open PR with drift
         if: steps.drift.outputs.drift == 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           commit-message: "chore(frameworks): sync official sources"
           title: "chore(frameworks): sync official sources"
@@ -54,3 +79,7 @@ jobs:
           body-path: pr-body.md
           branch: chore/framework-sync
           delete-branch: true
+          # Keep the working files out of the commit.
+          add-paths: |
+            frameworks/
+            controls/bundle.lock.json

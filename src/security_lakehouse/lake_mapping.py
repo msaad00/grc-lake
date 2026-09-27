@@ -943,6 +943,29 @@ def collect_mapped_evidence(
     return events
 
 
+def probe_mappings(client: Any, specs: list[MappingSpec]) -> dict[str, Any]:
+    """Read one row per mapped table to prove the read scope; errors carry the exception class only."""
+    checks: list[dict[str, Any]] = []
+    for spec in specs:
+        try:
+            rows = client.fetch_mapping_rows(spec, since=None, limit=1)
+        except Exception as exc:  # noqa: BLE001 - probes surface sanitized errors
+            checks.append(
+                {
+                    "mapping": spec.name,
+                    "table": spec.source_table,
+                    "ok": False,
+                    "sample_rows": None,
+                    "error": exc.__class__.__name__,
+                }
+            )
+            continue
+        checks.append(
+            {"mapping": spec.name, "table": spec.source_table, "ok": True, "sample_rows": len(rows), "error": None}
+        )
+    return {"ok": all(check["ok"] for check in checks), "mappings": checks}
+
+
 def read_fixture_table(fixture_dir: str | Path, table: str) -> list[dict[str, Any]]:
     """Rows for ``table`` from ``<fixture_dir>/<table>.json`` (a list) or ``.jsonl``."""
     base = Path(fixture_dir)

@@ -24,7 +24,14 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.io import read_json
-from security_lakehouse.lake_mapping import MappingSpec, compile_select, json_safe_row, read_fixture_table
+from security_lakehouse.lake_mapping import (
+    MappingSpec,
+    compile_select,
+    json_safe_row,
+    probe_mappings,
+    read_fixture_table,
+    resolve_mappings,
+)
 from security_lakehouse.models import utc_iso
 
 CONNECTOR_ID = "snowflake-evidence-lake"
@@ -245,6 +252,24 @@ def probe_snowflake_access(
     """
     environment = env or os.environ
     query_params = _probe_query_params(credentials=credentials, options=options, env=environment)
+    specs = resolve_mappings(options)
+    if specs:
+        # Mapped reads never touch the TrustOps views, so probe the mapped tables.
+        mapped = probe_mappings(SnowflakeClient(query_params=query_params), specs)
+        return {
+            "ok": mapped["ok"],
+            "context": {},
+            "views": [
+                {
+                    "purpose": check["mapping"],
+                    "view": check["table"],
+                    "ok": check["ok"],
+                    "row_count": check["sample_rows"],
+                    "error": check["error"],
+                }
+                for check in mapped["mappings"]
+            ],
+        }
     views = {key: str(options.get(key) or default) for key, default in DEFAULT_VIEWS.items()}
     try:
         result = SnowflakeClient(query_params=query_params, views=views).probe()

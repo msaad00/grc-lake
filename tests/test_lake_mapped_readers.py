@@ -294,3 +294,87 @@ def test_decimal_and_datetime_driver_values_are_json_safe(monkeypatch: pytest.Mo
 
     row = json_safe_row({"N": Decimal("3"), "T": datetime(2026, 1, 1, tzinfo=UTC), "F": Decimal("1.5")})
     assert row == {"n": 3, "t": "2026-01-01T00:00:00Z", "f": 1.5}
+
+
+DATABRICKS_CREDS = {
+    "host": HOST,
+    "warehouse_id": "abc123",
+    "catalog": "main",
+    "schema": "security",
+    "client_id": "00000000-0000-0000-0000-000000000000",
+    "client_secret_ref": "DATABRICKS_CLIENT_SECRET",
+}
+
+
+@pytest.mark.parametrize("missing", sorted(DATABRICKS_CREDS))
+def test_databricks_enablement_requires_every_reader_field(missing: str) -> None:
+    credentials = {key: value for key, value in DATABRICKS_CREDS.items() if key != missing}
+    for options in ({}, {"mapping": SPEC}):
+        error = configure_payload_error(
+            connector_id="databricks-evidence-lake", state="enabled", credentials=credentials, options=options
+        )
+        assert error == f"missing required connector configuration: {missing}"
+
+
+def test_databricks_enablement_accepts_views_or_a_valid_mapping_and_rejects_a_bad_one() -> None:
+    def error(options: dict[str, Any]) -> str | None:
+        return configure_payload_error(
+            connector_id="databricks-evidence-lake", state="enabled", credentials=DATABRICKS_CREDS, options=options
+        )
+
+    assert error({}) is None
+    assert error({"mapping": SPEC}) is None
+    assert error({"mapping": {"preset": "ocsf/api_activity", "source": {"table": "ocsf_api"}}}) is None
+    bad = error({"mapping": {**SPEC, "spec_version": 2}})
+    assert bad is not None and "spec_version" in bad
+
+
+# --- probes check mapped tables, not the TrustOps views -------------------------
+
+
+def test_snowflake_probe_checks_mapped_tables_instead_of_views(monkeypatch: pytest.MonkeyPatch) -> None:
+    from security_lakehouse.connectors_snowflake import probe_snowflake_access
+
+    log = _fake_snowflake(monkeypatch)
+    probe = probe_snowflake_access(
+        credentials={"account": "acme", "user": "reader", "credential_ref": "externalbrowser"},
+        options={"mapping": SPEC},
+        env={},
+    )
+    assert probe["ok"] is True
+    assert [check["view"] for check in probe["views"]] == ["okta_events"]
+    [(sql, _params)] = log
+    assert sql.endswith("LIMIT 1")
+    assert "TRUSTOPS_AUDIT_EVENTS" not in sql
+
+
+def test_clickhouse_probe_checks_mapped_tables(monkeypatch: pytest.MonkeyPatch) -> None:
+    from security_lakehouse.connectors_clickhouse import probe_clickhouse_access
+
+    seen: list[Any] = []
+
+    def fake_open_public(request: Any, *, timeout: float, label: str) -> _FakeResponse:
+        seen.append(request)
+        return _FakeResponse(b"")
+
+    monkeypatch.setattr(netguard, "open_public", fake_open_public)
+    probe = probe_clickhouse_access(
+        credentials={"host": "https://ch.example.com:8443"}, options={"mapping": SPEC}, env={}
+    )
+    assert probe["ok"] is True
+    assert probe["table"] == "okta_events"
+    assert "FROM security.okta_events" in seen[0].data.decode()
+
+
+def test_mapping_probe_reports_a_failing_table_without_provider_text() -> None:
+    from security_lakehouse.lake_mapping import probe_mappings
+
+    class Broken:
+        def fetch_mapping_rows(self, spec: Any, *, since: Any, limit: int) -> list[dict[str, Any]]:
+            raise PermissionError("secret provider detail")
+
+    probe = probe_mappings(Broken(), [parse_mapping(SPEC)])
+    assert probe["ok"] is False
+    assert probe["mappings"] == [
+        {"mapping": "okta_auth", "table": "okta_events", "ok": False, "sample_rows": None, "error": "PermissionError"}
+    ]

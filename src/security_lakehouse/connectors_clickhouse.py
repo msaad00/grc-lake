@@ -19,7 +19,13 @@ from typing import Any
 from security_lakehouse import netguard
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json
-from security_lakehouse.lake_mapping import MappingSpec, compile_select, read_fixture_table
+from security_lakehouse.lake_mapping import (
+    MappingSpec,
+    compile_select,
+    probe_mappings,
+    read_fixture_table,
+    resolve_mappings,
+)
 from security_lakehouse.models import parse_event_time, utc_iso
 
 CONNECTOR_ID = "clickhouse-telemetry-lake"
@@ -282,7 +288,19 @@ def probe_clickhouse_access(
     host, user, password, database, table = _connection_params(credentials, options, env=env)
     if not host:
         raise ValueError("clickhouse-telemetry-lake probe requires host")
-    return ClickHouseClient(host, user=user, password=password, database=database).probe(table=table)
+    client = ClickHouseClient(host, user=user, password=password, database=database)
+    specs = resolve_mappings(options)
+    if specs:
+        mapped = probe_mappings(client, specs)
+        failed = next((check for check in mapped["mappings"] if not check["ok"]), None)
+        return {
+            "ok": mapped["ok"],
+            "table": ", ".join(check["table"] for check in mapped["mappings"]),
+            "row_count": sum(check["sample_rows"] or 0 for check in mapped["mappings"]),
+            "error": failed["error"] if failed else None,
+            "mappings": mapped["mappings"],
+        }
+    return client.probe(table=table)
 
 
 def discover_clickhouse_scope(

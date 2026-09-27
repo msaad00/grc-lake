@@ -22,7 +22,9 @@ import logging
 import math
 import os
 import secrets
+import threading
 import uuid
+from collections import OrderedDict
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
@@ -102,17 +104,54 @@ _ERROR_CODES = {
 _RATE_LIMIT_EXEMPT = {"/api/healthz", "/api/v1/healthz"}
 
 
-def _rate_limit_key(request: Request) -> str:
-    """Bucket key for a request: the presented credential, else the client host.
+class _KnownCredentials:
+    """Bounded set of bearer-token digests that have authenticated successfully.
 
-    The bearer token is hashed so raw key material never lands in the limiter's
-    in-memory map; unauthenticated callers fall back to their source host.
+    Only these earn a per-credential rate-limit bucket; any other presented
+    token is charged to the client address, so rotating unauthenticated tokens
+    cannot mint fresh budgets or flood the limiter's key map.
     """
+
+    def __init__(self, max_entries: int = 10_000) -> None:
+        self._entries: OrderedDict[str, None] = OrderedDict()
+        self._max = max_entries
+        self._lock = threading.Lock()
+
+    def __contains__(self, digest: object) -> bool:
+        with self._lock:
+            return digest in self._entries
+
+    def add(self, digest: str) -> None:
+        with self._lock:
+            self._entries[digest] = None
+            self._entries.move_to_end(digest)
+            while len(self._entries) > self._max:
+                self._entries.popitem(last=False)
+
+    def discard(self, digest: str) -> None:
+        with self._lock:
+            self._entries.pop(digest, None)
+
+
+def _bearer_digest(request: Request) -> str | None:
     auth = request.headers.get("Authorization", "")
     if auth.lower().startswith("bearer "):
         token = auth[7:].strip()
         if token:
-            return "k:" + hashlib.sha256(token.encode("utf-8")).hexdigest()[:32]
+            return hashlib.sha256(token.encode("utf-8")).hexdigest()[:32]
+    return None
+
+
+def _rate_limit_key(request: Request, known: _KnownCredentials) -> str:
+    """Bucket key: an authenticated credential's own bucket, else the client host.
+
+    The bearer token is hashed so raw key material never lands in the limiter's
+    in-memory map. Behind a reverse proxy the client host is whatever uvicorn
+    resolves from its ``--forwarded-allow-ips`` / ``FORWARDED_ALLOW_IPS`` setting.
+    """
+    digest = _bearer_digest(request)
+    if digest is not None and digest in known:
+        return "k:" + digest
     client = request.client.host if request.client else "unknown"
     return "h:" + client
 
@@ -1042,6 +1081,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     if app.state.require_auth:
         ensure_cookie_signing_configured()
     app.state.rate_limiter = build_rate_limiter(RateLimitConfig.from_env(dict(os.environ)), dict(os.environ))
+    app.state.rate_limit_known_credentials = _KnownCredentials()
 
     def lake_for(identity: Identity) -> Path:
         """Resolve the per-request lake for ``identity`` so one tenant can never
@@ -1114,9 +1154,10 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     @app.middleware("http")
     async def _rate_limit(request: Request, call_next):
         limiter: RateLimiterBackend = app.state.rate_limiter
+        known: _KnownCredentials = app.state.rate_limit_known_credentials
         path = request.url.path
         if limiter.enabled and path.startswith("/api/") and path not in _RATE_LIMIT_EXEMPT:
-            allowed, retry_after = limiter.check(_rate_limit_key(request))
+            allowed, retry_after = limiter.check(_rate_limit_key(request, known))
             if not allowed:
                 response = JSONResponse(
                     api_v1.error_envelope("rate_limited", "rate limit exceeded; slow down and retry"),
@@ -1124,7 +1165,15 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 )
                 response.headers["Retry-After"] = str(max(1, math.ceil(retry_after)))
                 return response
-        return await call_next(request)
+        response = await call_next(request)
+        digest = _bearer_digest(request)
+        if digest is not None:
+            identity = getattr(request.state, "identity", None)
+            if response.status_code == HTTPStatus.UNAUTHORIZED:
+                known.discard(digest)
+            elif identity is not None and getattr(identity, "api_key_id", None):
+                known.add(digest)
+        return response
 
     @app.exception_handler(StarletteHTTPException)
     async def _error_envelope(request: Request, exc: StarletteHTTPException) -> JSONResponse:

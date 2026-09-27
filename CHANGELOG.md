@@ -3,6 +3,16 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Deepen the common control framework: 34 new safeguards split thin families
+  (governance, incident response, privacy, change, vulnerability, configuration,
+  secure development, architecture, processing integrity, third-party risk,
+  system maintenance) into their sub-objectives, and map 43 of the 47 NIST RMF
+  (SP 800-37 Rev 2) tasks with task-level citations. All 351 new mappings are
+  `proposed`, so evaluatable coverage rises from 813 to 991 requirements while
+  attestable (reviewed) coverage stays at 350.
+
 ## 0.2.17 - 2026-09-27
 
 - Operator note: this release adds database migration `0019` (a

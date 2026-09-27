@@ -217,6 +217,7 @@ def test_review_report_groups_frameworks_categories_and_source_gaps() -> None:
         "nist-800-53-rev5",
         "nist-csf-2.0",
         "nist-ai-rmf",
+        "nist-rmf-800-37r2",
     }
 
 

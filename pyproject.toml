@@ -147,6 +147,7 @@ where = ["src"]
     "static/*.svg",
     "migrations/script.py.mako",
     "migrations/versions/*.py",
+    "lake_presets/*/*.json",
 ]
 
 [tool.setuptools.data-files]

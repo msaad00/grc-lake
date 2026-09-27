@@ -1,0 +1,122 @@
+{
+  "spec_version": 1,
+  "name": "ocsf_account_change",
+  "description": "OCSF Account Change (class_uid 3001), OCSF 1.1.0 (Amazon Security Lake source version 2). Identity lifecycle and privilege changes for account-management controls.",
+  "source": {
+    "table": "ocsf_table",
+    "incremental": true,
+    "lookback_minutes": 60
+  },
+  "filters": [
+    {
+      "column": "class_uid",
+      "op": "eq",
+      "value": 3001
+    }
+  ],
+  "fields": {
+    "id": {
+      "columns": [
+        "metadata.uid",
+        "time",
+        "user.uid",
+        "user.name",
+        "activity_id"
+      ]
+    },
+    "observed_at": {
+      "column": "time_dt",
+      "format": "timestamp"
+    },
+    "source": {
+      "coalesce": [
+        {
+          "column": "metadata.product.name"
+        },
+        {
+          "const": "ocsf"
+        }
+      ]
+    },
+    "severity": {
+      "column": "severity_id",
+      "map": {
+        "0": "info",
+        "1": "info",
+        "2": "low",
+        "3": "medium",
+        "4": "high",
+        "5": "critical",
+        "6": "critical",
+        "99": "info"
+      },
+      "default": "info"
+    },
+    "event_type": {
+      "const": "ocsf.account_change"
+    },
+    "asset_id": {
+      "coalesce": [
+        {
+          "column": "user.uid"
+        },
+        {
+          "column": "user.name"
+        },
+        {
+          "column": "cloud.account.uid"
+        }
+      ]
+    },
+    "asset_type": {
+      "const": "identity"
+    },
+    "controls": {
+      "const": [
+        "SOC2-CC6.2",
+        "SOC2-CC6.3",
+        "ISO27001-A.5.16",
+        "ISO27001-A.5.18",
+        "NIST-800-53-AC-2"
+      ]
+    }
+  },
+  "attributes": {
+    "ocsf_class_uid": {
+      "column": "class_uid"
+    },
+    "ocsf_activity_id": {
+      "column": "activity_id"
+    },
+    "ocsf_version": {
+      "column": "metadata.version"
+    },
+    "product": {
+      "column": "metadata.product.name"
+    },
+    "vendor": {
+      "column": "metadata.product.vendor_name"
+    },
+    "cloud_account": {
+      "column": "cloud.account.uid"
+    },
+    "cloud_region": {
+      "column": "cloud.region"
+    },
+    "outcome": {
+      "column": "status"
+    },
+    "activity": {
+      "column": "activity_name"
+    },
+    "user": {
+      "column": "user.name"
+    },
+    "actor": {
+      "column": "actor.user.name"
+    },
+    "src_ip": {
+      "column": "src_endpoint.ip"
+    }
+  }
+}

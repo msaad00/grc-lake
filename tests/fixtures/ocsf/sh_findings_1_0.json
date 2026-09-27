@@ -1,0 +1,29 @@
+[
+  {
+    "metadata": {
+      "uid": "arn:aws:securityhub:us-east-1:111122223333:subscription/cis-aws-foundations-benchmark/v/1.2.0/1.14/finding/legacy1",
+      "version": "1.0.0-rc.2",
+      "product": { "name": "Security Hub", "vendor_name": "AWS" }
+    },
+    "time": 1789900000000,
+    "class_uid": 2001,
+    "class_name": "Security Finding",
+    "category_uid": 2,
+    "activity_id": 2,
+    "severity_id": 4,
+    "severity": "High",
+    "state_id": 1,
+    "state": "New",
+    "finding": {
+      "uid": "arn:aws:securityhub:us-east-1:111122223333:subscription/cis-aws-foundations-benchmark/v/1.2.0/1.14/finding/legacy1",
+      "title": "1.14 Ensure hardware MFA is enabled for the root user",
+      "src_url": "https://docs.aws.amazon.com/console/securityhub/standards-cis-1.14/remediation"
+    },
+    "compliance": { "status": "FAILED" },
+    "resources": [{ "uid": "AWS::::Account:111122223333", "type": "AwsAccount" }],
+    "cloud": { "provider": "AWS", "region": "us-east-1", "account_uid": "111122223333" },
+    "eventday": "20260920",
+    "region": "us-east-1",
+    "accountid": "111122223333"
+  }
+]

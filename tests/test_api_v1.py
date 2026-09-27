@@ -10,6 +10,8 @@ from http import HTTPStatus
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
+import pytest
+
 from security_lakehouse import api_v1
 from security_lakehouse.connector_state import append_config_event, append_run_event
 from security_lakehouse.server import _Handler
@@ -659,6 +661,47 @@ def test_v1_workflow_scopes_match_the_pre_v1_routes_including_the_split() -> Non
     assert api_v1.required_post_scope("/api/v1/workflows/runs/r-1/approve") == "workflow_manage"
     assert api_v1.required_post_scope("/api/v1/workflows/runs/r-1/reject") == "workflow_manage"
     assert api_v1.required_post_scope("/api/v1/workflows") == "workflow_manage"
+
+
+@pytest.mark.parametrize(
+    "rel",
+    [
+        "snapshots",
+        "scheduler/tick",
+        "violations/v-1/triage",
+        "evidence/e-1/verify",
+        "connectors/aws-posture/configure",
+        "connectors/aws-posture/discover",
+        "connectors/aws-posture/probe",
+        "workflows",
+        "workflows/actions/run",
+        "workflows/wf-1/run",
+        "workflows/runs/r-1/retry",
+        "workflows/runs/r-1/approve",
+        "workflows/runs/r-1/reject",
+        "trust-shares",
+        "trust-shares/s-1/revoke",
+        "not/a/route",
+    ],
+)
+def test_legacy_and_v1_post_scopes_come_from_one_table(rel: str) -> None:
+    from security_lakehouse import api_legacy
+
+    assert api_legacy.required_post_scope(f"/api/{rel}") == api_v1.required_post_scope(f"/api/v1/{rel}")
+
+
+def test_scheduler_tick_requires_connector_manage_on_both_surfaces() -> None:
+    from security_lakehouse import api_legacy
+
+    assert api_v1.required_post_scope("/api/v1/scheduler/tick") == "connector_manage"
+    assert api_legacy.required_post_scope("/api/scheduler/tick") == "connector_manage"
+
+
+def test_legacy_scope_lookup_does_not_accept_v1_paths() -> None:
+    from security_lakehouse import api_legacy
+
+    assert api_legacy.required_post_scope("/api/v1/snapshots") == api_v1._UNMAPPED_POST_SCOPE
+    assert api_legacy.required_post_scope("/elsewhere/snapshots") == api_v1._UNMAPPED_POST_SCOPE
 
 
 def test_v1_workflow_id_match_does_not_swallow_sibling_routes() -> None:

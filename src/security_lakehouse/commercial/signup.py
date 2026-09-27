@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hmac
 import os
 import re
 from typing import Any
@@ -27,11 +28,16 @@ def signup_secret_configured() -> bool:
     return bool(os.environ.get("TRUSTOPS_SIGNUP_SECRET", "").strip())
 
 
+def open_signup_allowed() -> bool:
+    return os.environ.get("TRUSTOPS_ALLOW_OPEN_SIGNUP", "").strip().lower() in {"1", "true", "yes"}
+
+
 def verify_signup_secret(provided: str | None) -> bool:
+    """Check the signup secret; with none configured, signup is closed unless explicitly opened."""
     expected = os.environ.get("TRUSTOPS_SIGNUP_SECRET", "").strip()
     if not expected:
-        return True
-    return (provided or "").strip() == expected
+        return open_signup_allowed()
+    return hmac.compare_digest((provided or "").strip().encode("utf-8"), expected.encode("utf-8"))
 
 
 def normalize_slug(raw: str) -> str:
@@ -93,6 +99,7 @@ def create_workspace(
 __all__ = [
     "create_workspace",
     "normalize_slug",
+    "open_signup_allowed",
     "self_serve_signup_enabled",
     "signup_secret_configured",
     "verify_signup_secret",

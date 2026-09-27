@@ -156,8 +156,8 @@ def test_health_probe_is_never_throttled(client) -> None:
 
 
 def test_distinct_credentials_do_not_share_a_budget(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_RPS", "1")
-    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_BURST", "1")
+    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_RPS", "0.001")
+    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_BURST", "2")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     tokens = []
@@ -168,6 +168,39 @@ def test_distinct_credentials_do_not_share_a_budget(tmp_path: Path, monkeypatch:
             _key, token = create_api_key(session, tenant_id=tenant.id, user_id=user.id)
             tokens.append(token)
     test_client = TestClient(app)
-    # Each credential gets its own first request before being throttled.
+    # A credential is budgeted on its own only once it has authenticated; its
+    # first request is charged to the client address like any unknown caller.
     assert test_client.get("/api/v1/risks", headers=_bearer(tokens[0])).status_code == HTTPStatus.OK
     assert test_client.get("/api/v1/risks", headers=_bearer(tokens[1])).status_code == HTTPStatus.OK
+    for _ in range(2):
+        assert test_client.get("/api/v1/risks", headers=_bearer(tokens[0])).status_code == HTTPStatus.OK
+    assert test_client.get("/api/v1/risks", headers=_bearer(tokens[0])).status_code == HTTPStatus.TOO_MANY_REQUESTS
+    assert test_client.get("/api/v1/risks", headers=_bearer(tokens[1])).status_code == HTTPStatus.OK
+
+
+def test_random_bearer_tokens_cannot_mint_fresh_budgets(client) -> None:
+    """An unauthenticated token is not a credential: rotating garbage tokens
+    must share the caller's address budget instead of opening a new bucket each."""
+    import secrets
+
+    test_client, _token = client
+    statuses = [test_client.get("/api/v1/risks", headers=_bearer(secrets.token_hex(16))).status_code for _ in range(6)]
+    assert HTTPStatus.TOO_MANY_REQUESTS in statuses
+    assert statuses[-1] == HTTPStatus.TOO_MANY_REQUESTS
+
+
+def test_only_authenticated_credentials_get_their_own_bucket(client) -> None:
+    from security_lakehouse.server_app import _rate_limit_key
+
+    test_client, token = client
+    assert test_client.get("/api/v1/risks", headers=_bearer(token)).status_code == HTTPStatus.OK
+    app = test_client.app
+    request = type("R", (), {"headers": _bearer(token), "client": type("C", (), {"host": "10.0.0.9"})()})()
+    assert _rate_limit_key(request, app.state.rate_limit_known_credentials).startswith("k:")
+    assert (
+        _rate_limit_key(
+            type("R", (), {"headers": _bearer("forged"), "client": request.client})(),
+            app.state.rate_limit_known_credentials,
+        )
+        == "h:10.0.0.9"
+    )

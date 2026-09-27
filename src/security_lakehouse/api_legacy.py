@@ -97,40 +97,15 @@ def _workflow_run_id_match(path: str) -> str | None:
 
 
 def required_post_scope(path: str) -> str:
-    """Return the RBAC scope required to mutate a legacy console route."""
-    if path == "/api/snapshots":
-        return "snapshot"
-    if _suffix_match(path, "/api/violations/", "/triage") is not None:
-        return "write"
-    if _suffix_match(path, "/api/evidence/", "/verify") is not None:
-        return "write"
-    if _suffix_match(path, "/api/connectors/", "/configure") is not None:
-        return "connector_manage"
-    if _suffix_match(path, "/api/connectors/", "/discover") is not None:
-        return "connector_manage"
-    if _suffix_match(path, "/api/connectors/", "/probe") is not None:
-        return "connector_manage"
-    if path == "/api/workflows":
-        return "workflow_manage"
-    if path == "/api/scheduler/tick":
-        return "workflow_manage"
-    if path == "/api/workflows/actions/run":
-        return "workflow_run"
-    workflow_run = _suffix_match(path, "/api/workflows/", "/run")
-    if workflow_run is not None and workflow_run != "actions":
-        return "workflow_run"
-    if _suffix_match(path, "/api/workflows/runs/", "/retry") is not None:
-        return "workflow_run"
-    if _suffix_match(path, "/api/workflows/runs/", "/approve") is not None:
-        return "workflow_manage"
-    if _suffix_match(path, "/api/workflows/runs/", "/reject") is not None:
-        return "workflow_manage"
-    if path == "/api/trust-shares":
-        return "snapshot"
-    if _suffix_match(path, "/api/trust-shares/", "/revoke") is not None:
-        return "snapshot"
-    # Same fail-closed default as the v1 surface (kept in lockstep by test).
-    return api_v1._UNMAPPED_POST_SCOPE
+    """Return the RBAC scope required to mutate a legacy console route.
+
+    Every legacy mutation has a v1 twin, so the v1 table is the single source
+    of truth; ``/api/<rest>`` is scoped exactly like ``/api/v1/<rest>``.
+    """
+    prefix = "/api/"
+    if not path.startswith(prefix) or path.startswith("/api/v1/"):
+        return api_v1._UNMAPPED_POST_SCOPE
+    return api_v1.required_post_scope("/api/v1/" + path[len(prefix) :])
 
 
 @generation_reader

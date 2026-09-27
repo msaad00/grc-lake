@@ -119,20 +119,22 @@ def test_clickhouse_live_query_parses_json_each_row() -> None:
 def _keyset_clickhouse_server(dataset: list[dict[str, Any]], captured: list[str]):
     """A fake ClickHouse HTTP endpoint that honors the client's keyset cursor.
 
-    Parses the outgoing SQL for the composite ``(event_time, event_id)`` boundary
-    and ``LIMIT``, returning the next slice — so the test exercises the real page
-    loop, not a fixed sequence.
+    Reads the composite ``(event_time, event_id)`` boundary from the HTTP query
+    parameters (``param_cursor_id``) and ``LIMIT`` from the SQL, returning the
+    next slice — so the test exercises the real page loop, not a fixed sequence.
     """
     import re
+    import urllib.parse
 
     def handler(request: object, **_kwargs: object) -> object:
         sql = request.data.decode("utf-8")  # type: ignore[attr-defined]
         captured.append(sql)
+        params = urllib.parse.parse_qs(urllib.parse.urlsplit(request.full_url).query)  # type: ignore[attr-defined]
         limit = int(re.search(r"LIMIT (\d+)", sql).group(1))  # type: ignore[union-attr]
-        cursor = re.search(r"event_id > '([^']+)'", sql)
+        cursor = (params.get("param_cursor_id") or [None])[0]
         start = 0
         if cursor is not None:
-            start = next(i for i, row in enumerate(dataset) if row["event_id"] == cursor.group(1)) + 1
+            start = next(i for i, row in enumerate(dataset) if row["event_id"] == cursor) + 1
         page = dataset[start : start + limit]
         response = MagicMock()
         response.read.return_value = "\n".join(json.dumps(row) for row in page).encode("utf-8")
@@ -153,7 +155,7 @@ def test_clickhouse_keyset_paginates_across_pages() -> None:
 
     assert [row["event_id"] for row in rows] == ["e0", "e1", "e2", "e3", "e4"]
     assert len(captured) == 3  # 2 + 2 + 1 (short page stops the loop)
-    assert "event_id > 'e1'" in captured[1]  # page 2 continued from the composite cursor, not an offset
+    assert "event_id > {cursor_id:String}" in captured[1]  # page 2 continued from the composite cursor, not an offset
     assert "LIMIT 2" in captured[0]
 
 
@@ -169,6 +171,86 @@ def test_clickhouse_keyset_survives_duplicate_timestamps() -> None:
 
     assert [row["event_id"] for row in rows] == ["a", "b", "c"]  # none dropped at the boundary
     assert len(captured) == 2  # a,b then c — terminates, no infinite loop
+
+
+def _capturing_clickhouse(pages: list[list[dict[str, Any]]], requests: list[Any]):
+    def handler(request: Any, **_kwargs: object) -> object:
+        requests.append(request)
+        page = pages.pop(0) if pages else []
+        response = MagicMock()
+        response.read.return_value = "\n".join(json.dumps(row) for row in page).encode("utf-8")
+        response.__enter__.return_value = response
+        return response
+
+    return handler
+
+
+def test_clickhouse_cursor_values_are_bound_as_query_parameters_not_spliced_into_sql() -> None:
+    """A source-controlled cursor value must never reach the SQL text.
+
+    ClickHouse treats a backslash as an escape inside string literals, so doubling
+    single quotes alone lets ``abc\\' OR 1=1 --`` break out of the literal. The
+    cursor (and the watermark) are sent as typed HTTP query parameters instead.
+    """
+    import urllib.parse
+
+    hostile_id = "abc\\' OR 1=1 --"
+    hostile_time = "2026-06-01 10:00:00\\' OR 1=1 --"
+    first_page = [
+        {"event_id": "a", "event_time": "2026-06-01T09:00:00Z"},
+        {"event_id": hostile_id, "event_time": hostile_time},
+    ]
+    requests: list[Any] = []
+    with patch(
+        "security_lakehouse.netguard.open_public", side_effect=_capturing_clickhouse([first_page, []], requests)
+    ):
+        ClickHouseClient("https://ch.example:8443", user="r", password="s").normalized_events(
+            since="2026-01-01\\' OR 1=1 --", page_size=2
+        )
+
+    assert len(requests) == 2
+    for request in requests:
+        sql = request.data.decode("utf-8")
+        assert "OR 1=1" not in sql
+        assert "{since:String}" in sql
+    second_sql = requests[1].data.decode("utf-8")
+    assert "{cursor_time:String}" in second_sql and "{cursor_id:String}" in second_sql
+    params = urllib.parse.parse_qs(urllib.parse.urlsplit(requests[1].full_url).query)
+    # ClickHouse decodes parameter values in its escaped (TSV) format, so a raw
+    # backslash would be consumed as an escape and the cursor would not match
+    # the row it came from; it must arrive doubled.
+    assert params["param_cursor_id"] == ["abc\\\\' OR 1=1 --"]
+    assert params["param_cursor_time"] == ["2026-06-01 10:00:00\\\\' OR 1=1 --"]
+    assert params["param_since"] == ["2026-01-01\\\\' OR 1=1 --"]
+
+
+@pytest.mark.parametrize(
+    ("raw", "encoded"),
+    [
+        ("plain", "plain"),
+        ("a\\b", "a\\\\b"),
+        ("tab\there", "tab\\there"),
+        ("line\nbreak\r", "line\\nbreak\\r"),
+        ("nul\x00", "nul\\0"),
+        ("quote'", "quote'"),
+    ],
+)
+def test_clickhouse_query_parameter_values_use_escaped_format(raw: str, encoded: str) -> None:
+    from security_lakehouse.connectors_clickhouse import escape_query_parameter
+
+    assert escape_query_parameter(raw) == encoded
+
+
+def test_clickhouse_queries_run_with_readonly_setting() -> None:
+    import urllib.parse
+
+    requests: list[Any] = []
+    with patch("security_lakehouse.netguard.open_public", side_effect=_capturing_clickhouse([[]], requests)):
+        ClickHouseClient("https://ch.example:8443", user="r", password="s", database="security").show_tables()
+
+    params = urllib.parse.parse_qs(urllib.parse.urlsplit(requests[0].full_url).query)
+    assert params["readonly"] == ["1"]
+    assert params["database"] == ["security"]
 
 
 def test_clickhouse_retries_on_transient_gateway_error(monkeypatch: pytest.MonkeyPatch) -> None:

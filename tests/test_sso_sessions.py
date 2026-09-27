@@ -21,6 +21,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from security_lakehouse.auth.oidc import OIDCConfig, OIDCLoginError, complete_oidc_login  # noqa: E402
 from security_lakehouse.auth.saml import (  # noqa: E402
+    SAML_REQUEST_COOKIE,
+    AssertionReplayCache,
     SAMLConfig,
     SAMLConfigError,
     SAMLLoginError,
@@ -292,21 +294,54 @@ class _FakeSamlSettings:
 
 
 class _FakeSamlAuth:
-    def __init__(self, email: str = "saml@acme.test", authenticated: bool = True) -> None:
+    """Mimics python3-saml: InResponseTo is only checked when both sides are present."""
+
+    def __init__(
+        self,
+        email: str = "saml@acme.test",
+        authenticated: bool = True,
+        *,
+        request_id: str = "ONELOGIN_req-1",
+        in_response_to: str | None = "ONELOGIN_req-1",
+        assertion_id: str = "_assertion-1",
+        not_on_or_after: int | None = None,
+        seen: list[str | None] | None = None,
+    ) -> None:
         self.email = email
         self.authenticated = authenticated
+        self.request_id = request_id
+        self.in_response_to = in_response_to
+        self.assertion_id = assertion_id
+        self.not_on_or_after = not_on_or_after
+        self.seen = seen if seen is not None else []
+        self._errors: list[str] = []
 
     def login(self) -> str:
         return "https://idp.test/sso?SAMLRequest=fake"
 
-    def process_response(self) -> None:
-        return None
+    def get_last_request_id(self) -> str:
+        return self.request_id
+
+    def process_response(self, request_id: str | None = None) -> None:
+        self.seen.append(request_id)
+        mismatched = self.in_response_to is not None and request_id is not None and self.in_response_to != request_id
+        if not self.authenticated or mismatched:
+            self._errors = ["invalid_response"]
 
     def get_errors(self) -> list[str]:
-        return [] if self.authenticated else ["invalid_response"]
+        return self._errors
 
     def is_authenticated(self) -> bool:
-        return self.authenticated
+        return self.authenticated and not self._errors
+
+    def get_last_response_in_response_to(self) -> str | None:
+        return self.in_response_to
+
+    def get_last_assertion_id(self) -> str:
+        return self.assertion_id
+
+    def get_last_assertion_not_on_or_after(self) -> int | None:
+        return self.not_on_or_after
 
     def get_attributes(self) -> dict[str, list[str]]:
         return {"email": [self.email]}
@@ -328,15 +363,40 @@ def _set_saml_env(monkeypatch) -> None:
     monkeypatch.setenv("TRUSTOPS_SAML_AUTO_PROVISION", "true")
 
 
-def test_saml_endpoints_use_same_session_model(tmp_path: Path, monkeypatch) -> None:
+def _saml_app(tmp_path: Path, monkeypatch, **fake_kwargs):
     _set_saml_env(monkeypatch)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
-    app.state.saml_auth_factory = lambda _config, _request_data: _FakeSamlAuth()
-    client = TestClient(app)
-
+    seen: list[str | None] = []
+    app.state.saml_auth_factory = lambda _config, _request_data: _FakeSamlAuth(seen=seen, **fake_kwargs)
     with session_scope(app.state.sessionmaker) as session:
         create_tenant(session, slug="acme", name="Acme")
+    return app, seen
+
+
+def _post_acs(client, request_cookie: str | None = None):
+    if request_cookie is not None:
+        client.cookies.set(SAML_REQUEST_COOKIE, request_cookie)
+    else:
+        client.cookies.clear()
+    return client.post(
+        "/api/v1/auth/saml/acs",
+        content=b"SAMLResponse=fake",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        follow_redirects=False,
+    )
+
+
+def _login_request_cookie(client) -> str:
+    login = client.get("/api/v1/auth/saml/login", follow_redirects=False)
+    assert login.status_code == HTTPStatus.FOUND
+    header = next(v for k, v in login.headers.multi_items() if k == "set-cookie" and SAML_REQUEST_COOKIE in v)
+    return header.split(f"{SAML_REQUEST_COOKIE}=", 1)[1].split(";", 1)[0]
+
+
+def test_saml_endpoints_use_same_session_model(tmp_path: Path, monkeypatch) -> None:
+    app, seen = _saml_app(tmp_path, monkeypatch)
+    client = TestClient(app)
 
     login = client.get("/api/v1/auth/saml/login", follow_redirects=False)
     assert login.status_code == HTTPStatus.FOUND
@@ -346,35 +406,90 @@ def test_saml_endpoints_use_same_session_model(tmp_path: Path, monkeypatch) -> N
     assert metadata.status_code == HTTPStatus.OK
     assert "EntityDescriptor" in metadata.text
 
-    acs = client.post(
-        "/api/v1/auth/saml/acs",
-        content=b"SAMLResponse=fake",
-        headers={"content-type": "application/x-www-form-urlencoded"},
-        follow_redirects=False,
-    )
+    acs = _post_acs(client, _login_request_cookie(client))
     assert acs.status_code == HTTPStatus.FOUND
     assert SESSION_COOKIE in acs.headers["set-cookie"]
+    assert seen[-1] == "ONELOGIN_req-1"  # the AuthnRequest ID reached process_response
 
     session_token = acs.headers["set-cookie"].split(f"{SESSION_COOKIE}=", 1)[1].split(";", 1)[0]
+    client.cookies.clear()
     client.cookies.set(SESSION_COOKIE, session_token)
     who = client.get("/api/v1/auth/whoami").json()["data"]
     assert who["email"] == "saml@acme.test"
     assert who["role"] == "read_only"
 
 
-def test_saml_acs_rejects_failed_response(tmp_path: Path, monkeypatch) -> None:
-    _set_saml_env(monkeypatch)
-    _seed_lake(tmp_path)
-    app = create_app(tmp_path)
-    app.state.saml_auth_factory = lambda _config, _request_data: _FakeSamlAuth(authenticated=False)
+def test_saml_login_request_cookie_is_signed_and_cross_site_postable(tmp_path: Path, monkeypatch) -> None:
+    app, _seen = _saml_app(tmp_path, monkeypatch)
+    client = TestClient(app)
+    login = client.get("/api/v1/auth/saml/login", follow_redirects=False)
+    header = next(v for k, v in login.headers.multi_items() if k == "set-cookie" and SAML_REQUEST_COOKIE in v)
+    assert "ONELOGIN_req-1" not in header  # signed, not the bare id
+    lowered = header.lower()
+    assert "httponly" in lowered
+    assert "samesite=none" in lowered and "secure" in lowered  # the IdP POSTs cross-site
+
+
+def test_saml_acs_rejects_a_replayed_assertion(tmp_path: Path, monkeypatch) -> None:
+    app, _seen = _saml_app(tmp_path, monkeypatch)
+    client = TestClient(app)
+    cookie = _login_request_cookie(client)
+
+    assert _post_acs(client, cookie).status_code == HTTPStatus.FOUND
+    replay = _post_acs(client, cookie)
+    assert replay.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_saml_acs_rejects_unsolicited_response_by_default(tmp_path: Path, monkeypatch) -> None:
+    app, _seen = _saml_app(tmp_path, monkeypatch, in_response_to=None)
+    client = TestClient(app)
+    assert _post_acs(client).status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_saml_acs_rejects_forged_request_cookie(tmp_path: Path, monkeypatch) -> None:
+    app, _seen = _saml_app(tmp_path, monkeypatch)
+    client = TestClient(app)
+    assert _post_acs(client, "ONELOGIN_req-1").status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_saml_acs_requires_in_response_to_when_sp_initiated(tmp_path: Path, monkeypatch) -> None:
+    """python3-saml skips the InResponseTo check when the response omits it;
+    an SP-initiated login must not accept a response that answers no request."""
+    app, _seen = _saml_app(tmp_path, monkeypatch, in_response_to=None)
+    client = TestClient(app)
+    assert _post_acs(client, _login_request_cookie(client)).status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_saml_acs_rejects_response_to_a_different_request(tmp_path: Path, monkeypatch) -> None:
+    app, _seen = _saml_app(tmp_path, monkeypatch, in_response_to="ONELOGIN_other")
+    client = TestClient(app)
+    assert _post_acs(client, _login_request_cookie(client)).status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_saml_idp_initiated_login_is_opt_in_and_still_replay_protected(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("TRUSTOPS_SAML_ALLOW_IDP_INITIATED", "true")
+    app, seen = _saml_app(tmp_path, monkeypatch, in_response_to=None)
     client = TestClient(app)
 
-    with session_scope(app.state.sessionmaker) as session:
-        create_tenant(session, slug="acme", name="Acme")
+    assert _post_acs(client).status_code == HTTPStatus.FOUND
+    assert seen[-1] is None
+    assert _post_acs(client).status_code == HTTPStatus.UNAUTHORIZED
 
-    resp = client.post(
-        "/api/v1/auth/saml/acs",
-        content=b"SAMLResponse=fake",
-        headers={"content-type": "application/x-www-form-urlencoded"},
-    )
+
+def test_assertion_replay_cache_expires_and_is_bounded() -> None:
+    cache = AssertionReplayCache(max_entries=2, default_ttl_seconds=60)
+    assert cache.check_and_store("a", not_on_or_after=None, now=1000.0) is True
+    assert cache.check_and_store("a", not_on_or_after=None, now=1001.0) is False
+    # Past its NotOnOrAfter the id can no longer validate, so it may be forgotten.
+    assert cache.check_and_store("b", not_on_or_after=1010, now=1002.0) is True
+    assert cache.check_and_store("b", not_on_or_after=1010, now=1011.0) is True
+    assert cache.check_and_store("c", not_on_or_after=None, now=1012.0) is True
+    assert cache.check_and_store("d", not_on_or_after=None, now=1013.0) is True
+    assert len(cache) <= 2
+
+
+def test_saml_acs_rejects_failed_response(tmp_path: Path, monkeypatch) -> None:
+    app, _seen = _saml_app(tmp_path, monkeypatch, authenticated=False)
+    client = TestClient(app)
+    resp = _post_acs(client, _login_request_cookie(client))
     assert resp.status_code == HTTPStatus.UNAUTHORIZED

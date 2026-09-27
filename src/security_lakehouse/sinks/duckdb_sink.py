@@ -23,7 +23,6 @@ unit-tested without the optional ``analytics`` extra installed at import time.
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -253,11 +252,3 @@ class DuckDBSink:
             if self._connection is None:
                 conn.close()
         return landed
-
-
-def land_to_duckdb(lake_dir: str | Path, env: dict[str, str] | None = None) -> dict[str, int] | None:
-    """Land the medallion into the embedded DuckDB lake when one is configured."""
-    config = DuckDBSinkConfig.from_env(dict(env if env is not None else os.environ))
-    if config is None:
-        return None
-    return DuckDBSink(config).load(lake_dir)

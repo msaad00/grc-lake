@@ -96,7 +96,8 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "path",
         label: "Parquet location",
-        placeholder: "s3://aws-security-data-lake-us-east-1-abc/aws/SH_FINDINGS/1.0/",
+        placeholder:
+          "s3://aws-security-data-lake-us-east-1-abc/aws/SH_FINDINGS/1.0/",
         hint: "Parquet only: s3://bucket/prefix, or a local path under TRUSTOPS_LAKE_LOCAL_ROOT.",
       },
     ],

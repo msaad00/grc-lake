@@ -83,11 +83,7 @@
       "column": "finding.src_url"
     },
     "controls": {
-      "const": [
-        "SOC2-CC7.2",
-        "ISO27001-A.8.16",
-        "NIST-800-53-SI-4"
-      ]
+      "const": ["SOC2-CC7.2", "ISO27001-A.8.16", "NIST-800-53-SI-4"]
     }
   },
   "attributes": {

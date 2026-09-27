@@ -3,7 +3,11 @@
     "metadata": {
       "uid": "arn:aws:guardduty:us-east-1:111122223333:detector/abc/finding/f1",
       "version": "1.1.0",
-      "product": { "name": "GuardDuty", "vendor_name": "Amazon", "uid": "arn:aws:securityhub:us-east-1::product/aws/guardduty" }
+      "product": {
+        "name": "GuardDuty",
+        "vendor_name": "Amazon",
+        "uid": "arn:aws:securityhub:us-east-1::product/aws/guardduty"
+      }
     },
     "time": 1789990000000,
     "time_dt": "2026-09-21T11:26:40.000Z",
@@ -21,8 +25,17 @@
       "types": ["TTPs/Impact/CryptoCurrency:EC2-BitcoinTool.B!DNS"],
       "src_url": "https://console.aws.amazon.com/guardduty/home?region=us-east-1#/findings?search=id%3Df1"
     },
-    "resources": [{ "uid": "arn:aws:ec2:us-east-1:111122223333:instance/i-0abc1234def567890", "type": "AwsEc2Instance" }],
-    "cloud": { "provider": "AWS", "region": "us-east-1", "account": { "uid": "111122223333" } },
+    "resources": [
+      {
+        "uid": "arn:aws:ec2:us-east-1:111122223333:instance/i-0abc1234def567890",
+        "type": "AwsEc2Instance"
+      }
+    ],
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
     "region": "us-east-1",
     "accountid": "111122223333"
   },
@@ -46,9 +59,22 @@
       "uid": "arn:aws:inspector2:us-east-1:111122223333:finding/v1",
       "title": "CVE-2024-3094 - xz-utils"
     },
-    "vulnerabilities": [{ "cve": { "uid": "CVE-2024-3094" }, "severity": "Critical", "is_fix_available": true }],
-    "resource": { "uid": "arn:aws:ecr:us-east-1:111122223333:repository/api/sha256:abc", "type": "AwsEcrContainerImage" },
-    "cloud": { "provider": "AWS", "region": "us-east-1", "account": { "uid": "111122223333" } },
+    "vulnerabilities": [
+      {
+        "cve": { "uid": "CVE-2024-3094" },
+        "severity": "Critical",
+        "is_fix_available": true
+      }
+    ],
+    "resource": {
+      "uid": "arn:aws:ecr:us-east-1:111122223333:repository/api/sha256:abc",
+      "type": "AwsEcrContainerImage"
+    },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
     "region": "us-east-1",
     "accountid": "111122223333"
   },
@@ -76,10 +102,16 @@
       "control": "IAM.6",
       "status": "Fail",
       "status_id": 3,
-      "standards": ["standards/aws-foundational-security-best-practices/v/1.0.0"]
+      "standards": [
+        "standards/aws-foundational-security-best-practices/v/1.0.0"
+      ]
     },
     "resource": { "uid": "AWS::::Account:111122223333", "type": "AwsAccount" },
-    "cloud": { "provider": "AWS", "region": "us-east-1", "account": { "uid": "111122223333" } },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
     "region": "us-east-1",
     "accountid": "111122223333"
   },
@@ -107,10 +139,16 @@
       "control": "S3.1",
       "status": "Pass",
       "status_id": 1,
-      "standards": ["standards/aws-foundational-security-best-practices/v/1.0.0"]
+      "standards": [
+        "standards/aws-foundational-security-best-practices/v/1.0.0"
+      ]
     },
     "resource": { "uid": "AWS::::Account:111122223333", "type": "AwsAccount" },
-    "cloud": { "provider": "AWS", "region": "us-east-1", "account": { "uid": "111122223333" } },
+    "cloud": {
+      "provider": "AWS",
+      "region": "us-east-1",
+      "account": { "uid": "111122223333" }
+    },
     "region": "us-east-1",
     "accountid": "111122223333"
   }

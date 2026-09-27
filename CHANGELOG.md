@@ -3,8 +3,24 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.2.18 - 2026-09-27
 
+- Operator note: this release adds database migration `0020`
+  (`saml_assertion_replays`). The server applies it at startup; with more than
+  one replica, upgrade with a single replica first.
+- New connectors (preview): Jamf Pro (device encryption, OS patch level,
+  screen lock, firewall, managed state), CrowdStrike Falcon (sensor coverage,
+  prevention policies, detections), Kubernetes (cluster-admin bindings, pod
+  security, network policies, image registries; new optional `kubernetes`
+  extra), and KnowBe4 (training completion and phishing results). All are
+  read-only, use credential references, and report against existing control
+  IDs. Connectors not yet verified against a live tenant carry
+  `release_stage: "preview"` and a Preview badge in the console.
+- ISO/IEC 27701:2025 limited privacy pack (`iso-27701-2025`): 10 of the 78
+  Annex A controls, each with its identifier and short title confirmed by two
+  independent non-vendor sources; the other 68 are listed as gaps. The
+  withdrawn 2019 edition stays planned. New privacy evidence types, connector
+  hints, and proposed safeguard mappings.
 - Docs: the README leads with the two evidence modes (ingest, or read the lake
   you already run), a self-host table, and a plain scope table, with each fact
   stated once. Connector, roadmap, deployment, and product-status docs match the
@@ -55,9 +71,6 @@ Python package, Helm chart, and bundled web console.
   plus cited NIST RMF tasks P-3, P-14, and M-7 (43 to 46 of 47). All are
   `proposed`: evaluatable coverage rises from 991 to 1174 requirements while
   attestable (reviewed) coverage stays at 350.
-- Operator note: this release adds database migration `0020`
-  (`saml_assertion_replays`). The server applies it at startup; with more than
-  one replica, upgrade with a single replica first.
 - Outbound HTTP connects to the IP address it validated. Connectors, webhooks
   and workflow actions resolve each host once per connection, require every
   answer to be public, and open the socket to that address, so a DNS answer

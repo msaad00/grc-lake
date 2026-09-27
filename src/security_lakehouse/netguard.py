@@ -133,12 +133,13 @@ def _connect_pinned(host: str, port: int, timeout: Any, source_address: Any, lab
     raise last_error or OSError(f"{label} host {host!r} could not be reached")
 
 
-class PinnedHTTPConnection(http.client.HTTPConnection):
-    """``HTTPConnection`` that connects to the address it validated, not a second lookup.
+class _PinnedConnectMixin:
+    """Swap ``http.client``'s TCP connect for ``_connect_pinned``.
 
-    When the request goes through an operator-configured proxy, the socket goes
-    to the proxy as configured and the proxy resolves the target; the target URL
-    is still checked by the caller's validator.
+    When the request goes through an operator-configured proxy (plain-HTTP
+    forwarding or a CONNECT tunnel), the socket goes to the proxy as configured
+    and the proxy resolves the target; the target URL is still checked by the
+    caller's validator.
     """
 
     def __init__(self, *args: Any, label: str = "target", proxied: bool = False, **kwargs: Any) -> None:
@@ -147,29 +148,24 @@ class PinnedHTTPConnection(http.client.HTTPConnection):
         self._proxied = proxied
         self._create_connection = self._pinned_create_connection
 
-    def _pinned_create_connection(self, address: tuple[str, int], timeout: Any = None, source_address: Any = None):  # type: ignore[no-untyped-def]  # noqa: ANN201
-        if self._proxied or self._tunnel_host:
+    def _pinned_create_connection(
+        self, address: tuple[str, int], timeout: Any = None, source_address: Any = None
+    ) -> socket.socket:
+        if self._proxied or getattr(self, "_tunnel_host", None):
             return socket.create_connection(address, timeout, source_address)
         return _connect_pinned(address[0], address[1], timeout, source_address, self._label)
 
 
-class PinnedHTTPSConnection(http.client.HTTPSConnection):
+class PinnedHTTPConnection(_PinnedConnectMixin, http.client.HTTPConnection):
+    """``HTTPConnection`` that connects to the address it validated, not a second lookup."""
+
+
+class PinnedHTTPSConnection(_PinnedConnectMixin, http.client.HTTPSConnection):
     """``HTTPSConnection`` pinned like ``PinnedHTTPConnection``.
 
     ``HTTPSConnection.connect`` wraps the socket with ``server_hostname=self.host``,
     so SNI and certificate hostname checks stay on the original name.
     """
-
-    def __init__(self, *args: Any, label: str = "target", proxied: bool = False, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._label = label
-        self._proxied = proxied
-        self._create_connection = self._pinned_create_connection
-
-    def _pinned_create_connection(self, address: tuple[str, int], timeout: Any = None, source_address: Any = None):  # type: ignore[no-untyped-def]  # noqa: ANN201
-        if self._proxied or self._tunnel_host:
-            return socket.create_connection(address, timeout, source_address)
-        return _connect_pinned(address[0], address[1], timeout, source_address, self._label)
 
 
 def _is_proxied(req: urllib.request.Request) -> bool:

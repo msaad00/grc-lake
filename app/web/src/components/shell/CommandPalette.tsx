@@ -29,12 +29,7 @@ import type {
 interface PaletteItem {
   id: string;
   group:
-    | "Actions"
-    | "Routes"
-    | "Controls"
-    | "Findings"
-    | "Evidence"
-    | "Workflows";
+    "Actions" | "Routes" | "Controls" | "Findings" | "Evidence" | "Workflows";
   label: string;
   subtitle?: string;
   href?: string;

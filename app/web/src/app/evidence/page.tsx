@@ -345,9 +345,7 @@ function EvidencePageContent() {
             severity: (viewFilters.severity as Severity | "all") ?? "all",
             freshness:
               (viewFilters.freshness as
-                | EvidenceFreshnessStatus
-                | "all"
-                | undefined) ?? "all",
+                EvidenceFreshnessStatus | "all" | undefined) ?? "all",
             query: (viewFilters.query as string) ?? "",
           })
         }

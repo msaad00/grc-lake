@@ -78,9 +78,9 @@ def fixture_dir(tmp_path: Path) -> Path:
 @pytest.mark.parametrize(
     "client_factory",
     [
-        lambda d: SnowflakeFixtureClient(d),
+        SnowflakeFixtureClient,
         lambda d: DatabricksFixtureClient(d, host=HOST),
-        lambda d: ClickHouseFixtureClient(d),
+        ClickHouseFixtureClient,
     ],
 )
 def test_fixture_clients_serve_mapping_rows(client_factory: Any, fixture_dir: Path) -> None:

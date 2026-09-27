@@ -13,17 +13,21 @@ Related: [TRUSTOPS_85_PLAN.md](TRUSTOPS_85_PLAN.md) (self-hosted bar) ·
 
 | Dimension             | Mature managed GRC SaaS     | TrustOps today                                              |
 | --------------------- | --------------------------- | ----------------------------------------------------------- |
-| **Product shape**     | Polished multi-tenant SaaS  | Self-hostable platform + optional hosted scaffold           |
+| **Product shape**     | Polished multi-tenant SaaS  | Self-hostable platform + optional commercial hosted mode    |
 | **Core GRC loop**     | Mature, turnkey             | Strong on controls, evidence, audit room, shares            |
 | **UI/UX**             | Best-in-class consumer SaaS | Good foundation — Epic #96 largely shipped (~65–70% polish) |
-| **Integrations**      | 100+ deep connectors        | Solid cloud/IdP core, narrower long tail                    |
+| **Integrations**      | 100+ deep connectors        | 25 executable connectors, 7 in preview; narrower long tail  |
 | **Agents / API / CI** | Add-ons, limited vs core    | **Differentiator** — MCP, harness, headless-first           |
-| **Data ownership**    | Vendor-hosted evidence      | **Customer lake** — major differentiator                    |
+| **Data ownership**    | Vendor-hosted evidence      | **Customer lake** — ingest into it or read an existing lake |
 
 **Overall:** TrustOps is a credible **self-hosted / headless GRC platform** with
-real audit-room depth. HRIS, device, and personnel coverage is partial through four
-connectors (Intune, BambooHR, Rippling, Workday), so it is not yet a drop-in
-replacement for teams that want fully managed compliance out of the box.
+real audit-room depth. It works in two modes: read-only connectors ingest evidence
+into a lake you own, or readers evaluate the Snowflake, ClickHouse, Databricks
+(preview), Iceberg/Parquet (preview), or BigQuery (preview) lake you already run
+([BRING_YOUR_OWN_LAKE.md](BRING_YOUR_OWN_LAKE.md)). HRIS, device, and personnel
+coverage is partial (Intune, BambooHR, Rippling, Workday, plus Jamf, CrowdStrike
+Falcon, and KnowBe4 in preview), so it is not yet a drop-in replacement for teams
+that want fully managed compliance out of the box.
 
 ## Product shape (two models, one core)
 
@@ -37,7 +41,7 @@ flowchart TB
   end
 
   subgraph surfaces [Surfaces]
-    CON[Console 28 routes]
+    CON[Console 30 routes]
     API["/api/v1 + SDK"]
     MCP[MCP + CI gates]
     AGT[Agent harness]
@@ -46,7 +50,7 @@ flowchart TB
   subgraph deploy [Deployment]
     OSS[OSS local]
     SH[Self-hosted Helm]
-    HOST[Managed hosted scaffold]
+    HOST[Commercial hosted mode]
   end
 
   LAKE --> TESTS --> SNAP --> AUDIT
@@ -59,7 +63,7 @@ flowchart TB
 | **Console**         | Security, GRC, auditors     | Connect sources, review posture, fix gaps, share trust |
 | **API / CLI / MCP** | Engineers, CI, agents       | Sync, query, automate without the UI                   |
 | **Agent harness**   | Optional AI or rules runner | Summarize gaps; approval-gated writes only             |
-| **Hosted scaffold** | Teams wanting a live URL    | Signup, invites, usage limits, SCIM, Stripe billing    |
+| **Hosted mode**     | Teams wanting a live URL    | Signup, invites, usage limits, SCIM, Stripe billing    |
 
 The assessment engine stays **model-independent**. LLMs orchestrate around
 redacted facts; the engine owns normalization, control evaluation, snapshots,
@@ -76,78 +80,78 @@ Connect → Sync → Evaluate → Remediate → Review → Share → Prove
    │         │        │           └─ Violations queue, remediation, vendor risk (MVP)
    │         │        └─ Deterministic control tests, framework readiness
    │         └─ Connector probe/sync, freshness signals
-   └─ AWS/Azure/GCP/Snowflake/GitHub/Okta + catalog long tail
+   └─ AWS/Azure/GCP/GitHub/Okta connectors + existing-lake readers
 ```
 
-| Loop stage          | Maturity    | Notes                                                                            |
-| ------------------- | ----------- | -------------------------------------------------------------------------------- |
-| Connect & sync      | **Strong**  | Executable runners for core cloud/IdP; catalog for long tail                     |
-| Evaluate            | **Strong**  | Lake-backed tests, not connector pass/fail widgets only                          |
-| Remediate           | **Good**    | Tasks, evidence requests, workflow canvas with approvals                         |
-| Audit review        | **Good**    | Audit room, readiness API, access reviews, executive PDF                         |
-| Share & prove       | **Good**    | Trust-center shares, snapshots, hash chain, auditor redaction                    |
-| Personnel / devices | **Partial** | Intune device posture; BambooHR/Rippling/Workday employment records; IdP reviews |
-| Policy program      | **Good**    | Template library + employee attestation MVP shipped                              |
-| SaaS polish         | **Good**    | Trust Home, audit room SSE, saved views, tags, drill-down                        |
+| Loop stage          | Maturity    | Notes                                                                          |
+| ------------------- | ----------- | ------------------------------------------------------------------------------ |
+| Connect & sync      | **Strong**  | Executable runners for core cloud/IdP; existing-lake readers (some preview)    |
+| Evaluate            | **Strong**  | Lake-backed tests, not connector pass/fail widgets only                        |
+| Remediate           | **Good**    | Tasks, evidence requests, workflow canvas with approvals                       |
+| Audit review        | **Good**    | Audit room, readiness API, access reviews, executive PDF                       |
+| Share & prove       | **Good**    | Trust-center shares, snapshots, hash chain, auditor redaction                  |
+| Personnel / devices | **Partial** | Intune, Jamf (preview), CrowdStrike (preview); HRIS records; KnowBe4 (preview) |
+| Policy program      | **Good**    | Template library + employee attestation MVP shipped                            |
+| SaaS polish         | **Good**    | Trust Home, audit room SSE, saved views, tags, drill-down                      |
 
-## Console surface (28 routes)
+## Console surface (30 routes)
 
-| Route                                                       | Purpose                                           |
-| ----------------------------------------------------------- | ------------------------------------------------- |
-| `/console/dashboard/`                                       | Trust Command Center — posture, KPIs, audit strip |
-| `/console/audit-room/`                                      | Audit score, gaps, workflow checklist             |
-| `/console/controls/`                                        | Control workbench                                 |
-| `/console/evidence/`                                        | Evidence room                                     |
-| `/console/violations/`                                      | Finding queue                                     |
-| `/console/remediation/`                                     | Tasks and evidence requests                       |
-| `/console/frameworks/`                                      | Framework readiness                               |
-| `/console/connectors/`                                      | Source linking + sync health                      |
-| `/console/access-reviews/`                                  | Certification campaigns                           |
-| `/console/policies/`                                        | Policy template library                           |
-| `/console/vendor-risk/`                                     | Vendor questionnaires (MVP)                       |
-| `/console/trust-center/`                                    | Share management                                  |
-| `/console/audit-log/`                                       | Unified request audit                             |
-| `/console/agents/`                                          | Agent harness runs                                |
-| `/console/automation/`                                      | Workflow canvas                                   |
-| `/console/graph/`                                           | Compliance graph workbench                        |
-| `/console/insights/`                                        | Trends and metrics                                |
-| `/console/auth/`                                            | API keys, users, invites                          |
-| `/console/onboarding/`                                      | First-run wizard                                  |
-| `/console/deploy/`                                          | OSS / self-hosted / hosted                        |
-| `/console/demo/`                                            | Evaluator landing                                 |
-| + login, pricing, POC, risks, crosswalk, public trust token |
+| Route                                                                                      | Purpose                                           |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `/console/dashboard/`                                                                      | Trust Command Center — posture, KPIs, audit strip |
+| `/console/audit-room/`                                                                     | Audit score, gaps, workflow checklist             |
+| `/console/controls/`                                                                       | Control workbench                                 |
+| `/console/evidence/`                                                                       | Evidence room                                     |
+| `/console/violations/`                                                                     | Finding queue                                     |
+| `/console/remediation/`                                                                    | Tasks and evidence requests                       |
+| `/console/frameworks/`                                                                     | Framework readiness                               |
+| `/console/connectors/`                                                                     | Source linking + sync health                      |
+| `/console/access-reviews/`                                                                 | Certification campaigns                           |
+| `/console/policies/`                                                                       | Policy template library                           |
+| `/console/vendor-risk/`                                                                    | Vendor questionnaires (MVP)                       |
+| `/console/trust-center/`                                                                   | Share management                                  |
+| `/console/audit-log/`                                                                      | Unified request audit                             |
+| `/console/agents/`                                                                         | Agent harness runs                                |
+| `/console/automation/`                                                                     | Workflow canvas                                   |
+| `/console/graph/`                                                                          | Compliance graph workbench                        |
+| `/console/insights/`                                                                       | Trends and metrics                                |
+| `/console/auth/`                                                                           | API keys, users, invites                          |
+| `/console/onboarding/`                                                                     | First-run wizard                                  |
+| `/console/deploy/`                                                                         | OSS / self-hosted / hosted                        |
+| `/console/demo/`                                                                           | Evaluator landing                                 |
+| + login, signup, invite, pricing, POC, risks, crosswalk, AI governance, public trust token |
 
 ## Parity scorecard (honest — not for investors)
 
 Rough comparison vs mature managed GRC SaaS on capability + UX reality:
 
-| Area                       | vs managed SaaS | TrustOps today                                                      |
-| -------------------------- | --------------- | ------------------------------------------------------------------- |
-| Audit room + readiness     | Strong          | **Shipped** — live SSE, gaps, vendor/policy strips                  |
-| Evidence freshness SLA     | Strong          | **Shipped** — summary, escalate, audit panel                        |
-| Vendor diligence + policy  | MVP parity      | **Shipped** — questionnaires + attestation rollups                  |
-| Saved views + tags         | Good            | **Shipped** — controls, violations, evidence + tag filter           |
-| Framework drill-down       | Good            | **Shipped** — control → rule → evidence → source                    |
-| Live SSE updates           | Good            | **Shipped** — posture + audit-readiness stream                      |
-| Integrations long tail     | Behind          | AWS/Azure/GCP/Snowflake/GitHub/GitLab/Okta live; #22/#23 repo graph |
-| HRIS / devices / personnel | Partial         | Intune + BambooHR/Rippling/Workday; HR↔IdP offboarding check        |
-| Billing / full SCIM        | Good            | SCIM 2.0 + Stripe billing shipped; live account/IdP runs pending    |
-| Premium onboarding polish  | Behind          | Wizard shipped; polish incremental                                  |
+| Area                       | vs managed SaaS | TrustOps today                                                    |
+| -------------------------- | --------------- | ----------------------------------------------------------------- |
+| Audit room + readiness     | Strong          | **Shipped** — live SSE, gaps, vendor/policy strips                |
+| Evidence freshness SLA     | Strong          | **Shipped** — summary, escalate, audit panel                      |
+| Vendor diligence + policy  | MVP parity      | **Shipped** — questionnaires + attestation rollups                |
+| Saved views + tags         | Good            | **Shipped** — controls, violations, evidence + tag filter         |
+| Framework drill-down       | Good            | **Shipped** — control → rule → evidence → source                  |
+| Live SSE updates           | Good            | **Shipped** — posture + audit-readiness stream                    |
+| Integrations long tail     | Behind          | 25 executable connectors (7 preview); add more as Python packages |
+| HRIS / devices / personnel | Partial         | Intune, HRIS, Jamf/CrowdStrike/KnowBe4 preview; offboarding check |
+| Billing / full SCIM        | Good            | SCIM 2.0 + Stripe billing shipped; live account/IdP runs pending  |
+| Premium onboarding polish  | Behind          | Wizard shipped; polish incremental                                |
 
 ## Parity scorecard (detailed)
 
 Rough comparison vs mature managed GRC SaaS on capability + UX reality:
 
-| Area                        | vs mature SaaS | TrustOps strength                                                            |
-| --------------------------- | -------------- | ---------------------------------------------------------------------------- |
-| SOC 2 / ISO control library | ~85%           | Depth good; 942 seeded controls, equivalence groups, framework packs as code |
-| Continuous monitoring       | ~75%           | Core cloud/IdP connectors runnable                                           |
-| Auditor experience          | ~70%           | Trust shares, PDF, audit room trends; no marketplace                         |
-| Personnel / devices / HR    | ~30%           | Workarounds only                                                             |
-| Policy program              | ~70%           | Templates + attestation MVP                                                  |
-| Vendor risk                 | ~65%           | Questionnaires + audit-room rollups                                          |
-| Self-host / API / agents    | **~120%**      | Ahead — they don't lead here                                                 |
-| SaaS polish / onboarding    | ~65–70%        | #96 shipped; incremental polish remains                                      |
+| Area                        | vs mature SaaS | TrustOps strength                                                     |
+| --------------------------- | -------------- | --------------------------------------------------------------------- |
+| SOC 2 / ISO control library | ~85%           | 2,031 catalogued requirements, 78 safeguards, framework packs as code |
+| Continuous monitoring       | ~75%           | Core cloud/IdP connectors runnable                                    |
+| Auditor experience          | ~70%           | Trust shares, PDF, audit room trends; no marketplace                  |
+| Personnel / devices / HR    | Partial        | Intune, HRIS records; Jamf, CrowdStrike, KnowBe4 in preview           |
+| Policy program              | ~70%           | Templates + attestation MVP                                           |
+| Vendor risk                 | ~65%           | Questionnaires + audit-room rollups                                   |
+| Self-host / API / agents    | **~120%**      | Ahead — they don't lead here                                          |
+| SaaS polish / onboarding    | ~65–70%        | #96 shipped; incremental polish remains                               |
 
 ## Where TrustOps matches well (shipped)
 
@@ -156,11 +160,12 @@ These are real surfaces — not roadmap slides:
 - **Audit workflow (headless + UI)** — continuous control tests, audit readiness API,
   audit room, trust shares, auditor role redaction, access reviews, evidence
   requests → remediation, point-in-time snapshots, unified audit log, executive PDF
-- **Framework depth** — SOC 2, NIST AI RMF, FedRAMP foundation, CIS AWS,
-  ISO 27001/42001 packs
+- **Framework depth** — 17 packs, including SOC 2, ISO 27001/27017/42001, NIST CSF 2.0,
+  NIST 800-53, NIST RMF, NIST AI RMF, FedRAMP Moderate, CMMC 2.0, CIS, HIPAA, PCI DSS,
+  GDPR, EU AI Act, and a limited ISO 27701:2025 pack
 - **Identity & access** (PR [#345](https://github.com/msaad00/trustops-security-data-lake/pull/345)) —
-  user/role admin, API-key → browser session, IdP group → role mapping, SCIM Users
-  scaffold
+  user/role admin, API-key → browser session, IdP group → role mapping, SCIM 2.0
+  users and groups
 - **Deploy transparency** — Helm, EKS terraform, `/console/deploy`, OSS positioning
 
 ## Where mature SaaS is still ahead
@@ -181,9 +186,10 @@ Mature SaaS: HRIS, device MDM, ticketing, training — hundreds of pre-built che
 
 TrustOps: strong AWS / Azure / GCP / Snowflake / GitHub / Okta paths with vendor
 marks in-console; open connector catalog; read-only posture. Intune (MDM) and
-BambooHR, Rippling, and Workday (HRIS) ship, so personnel and device coverage is
-partial; remaining gaps include pen-test coordination and the long tail of
-pre-built SaaS checks.
+BambooHR, Rippling, and Workday (HRIS) ship; Jamf, CrowdStrike Falcon, Kubernetes,
+and KnowBe4 ship in preview. Personnel and device coverage is still partial;
+remaining gaps include pen-test coordination and the long tail of pre-built SaaS
+checks.
 
 ### 3. Compliance OS convenience
 
@@ -192,7 +198,7 @@ pre-built SaaS checks.
 | Policy employee sign-off  | Native       | **MVP shipped** — publish + acknowledgment tracking                      |
 | Personnel tracking        | Native       | **HRIS records (BambooHR, Rippling, Workday)** + IdP offboarding check   |
 | Auditor marketplace       | Yes          | BYO auditor + trust share                                                |
-| Device inventory          | Integrations | **Intune** encryption + compliance per device                            |
+| Device inventory          | Integrations | **Intune** per-device compliance; Jamf and CrowdStrike in preview        |
 | Billing / self-serve SaaS | Native       | Stripe billing + signup shipped; live Stripe verification pending (#610) |
 | SCIM lifecycle            | Full         | Per-tenant tokens, users + groups, group → role map; live IdP pending    |
 
@@ -209,6 +215,7 @@ Hard for classic GRC SaaS to match:
 | Differentiator                | Why it matters                                                |
 | ----------------------------- | ------------------------------------------------------------- |
 | **Self-host + customer lake** | Evidence in bronze/silver/gold — not a vendor silo            |
+| **Existing-lake mode**        | Read the Snowflake/ClickHouse/OCSF lake you already run       |
 | **Headless-first**            | Same `/api/v1` for console, MCP, CI gates, agents             |
 | **Agent harness**             | Governed runs, approval-gated writes, LangGraph orchestration |
 | **Deterministic assessment**  | Control tests from lake pipeline, not widget pass/fail only   |
@@ -238,7 +245,7 @@ actually delivered.
 | Priority | Issue                                                                        | Closes                                       | Status                                       |
 | -------- | ---------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- |
 | **P0**   | [#96](https://github.com/msaad00/trustops-security-data-lake/issues/96) Epic | Premium GRC SaaS feel — biggest UX gap       | **Mostly shipped** (#89–#95, #91)            |
-| **P0**   | [#14](https://github.com/msaad00/trustops-security-data-lake/issues/14)      | Source-linked framework/control expansion    | **Partial** (NIST CSF 2.0 full pack shipped) |
+| **P0**   | [#14](https://github.com/msaad00/trustops-security-data-lake/issues/14)      | Source-linked framework/control expansion    | **Partial** (17 packs; SOC 1 planned)        |
 | **P1**   | [#13](https://github.com/msaad00/trustops-security-data-lake/issues/13)      | Evidence freshness SLA + stale → remediation | **Shipped**                                  |
 | **P1**   | [#15](https://github.com/msaad00/trustops-security-data-lake/issues/15)      | Audit snapshot room + reviewer trust center  | **Shipped** (trends + timeline)              |
 | **P1**   | [#18](https://github.com/msaad00/trustops-security-data-lake/issues/18)      | Product-grade topology, trend, workflow viz  | **Partial** (framework/freshness/SLA charts) |

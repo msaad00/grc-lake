@@ -5,6 +5,13 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Docs: the README leads with the two evidence modes (ingest, or read the lake
+  you already run), a self-host table, and a plain scope table, with each fact
+  stated once. Connector, roadmap, deployment, and product-status docs match the
+  live catalog (28 contracts, 25 executable) and coverage (17 packs, 2,031
+  requirements; NIST RMF mapped, ISO 27701:2025 limited), and stale "scaffold"
+  wording is gone. The Databricks reader is now marked preview in the connector
+  catalog, matching its docs.
 - Deepen the common control framework: 34 new safeguards split thin families
   (governance, incident response, privacy, change, vulnerability, configuration,
   secure development, architecture, processing integrity, third-party risk,

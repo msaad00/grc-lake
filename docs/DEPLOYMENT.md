@@ -100,8 +100,9 @@ Need to fork, air-gap, or pass strict data-residency review?
 Want a live demo link for evaluators this week?
   -> Local fixtures + SHAREABLE_DEMO.md
 
-Already centralize security evidence in Snowflake or a SIEM lake?
-  -> Existing-lake read mode + TrustOps assessment on top
+Already centralize security evidence in Snowflake, Databricks, ClickHouse,
+Iceberg/Parquet (Amazon Security Lake), BigQuery, or a SIEM lake?
+  -> Existing-lake read mode + TrustOps assessment on top (BRING_YOUR_OWN_LAKE.md)
 ```
 
 ## Next steps
@@ -109,6 +110,7 @@ Already centralize security evidence in Snowflake or a SIEM lake?
 | Goal                                         | Doc                                                  |
 | -------------------------------------------- | ---------------------------------------------------- |
 | Run locally in 5 minutes                     | [README.md](../README.md#quick-start)                |
+| Read the lake you already run                | [BRING_YOUR_OWN_LAKE.md](BRING_YOUR_OWN_LAKE.md)     |
 | Host a shareable POC                         | [SHAREABLE_POC_HOSTING.md](SHAREABLE_POC_HOSTING.md) |
 | Evaluator demo script                        | [SHAREABLE_DEMO.md](SHAREABLE_DEMO.md)               |
 | Framework packs (SOC 2, NIST AI RMF, custom) | [FRAMEWORK_PACKS.md](FRAMEWORK_PACKS.md)             |

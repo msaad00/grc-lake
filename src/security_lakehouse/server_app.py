@@ -1702,6 +1702,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         from security_lakehouse.commercial import signup as signup_services
 
+        if not signup_services.self_serve_signup_enabled():
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="self-serve signup requires TRUSTOPS_COMMERCIAL_HOSTED=1 and TRUSTOPS_SELF_SERVE_SIGNUP=1",
+            )
         secret = request.headers.get("X-TrustOps-Signup-Secret")
         if not signup_services.verify_signup_secret(secret):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="invalid signup secret")

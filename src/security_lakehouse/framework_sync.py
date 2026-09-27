@@ -17,20 +17,51 @@ framework as "skipped — network disabled" so unit tests don't make HTTP calls.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import sys
+import time
 import urllib.error
 import urllib.request
+from collections import Counter
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from importlib import metadata
 from pathlib import Path
 from typing import Any
 
 from security_lakehouse.catalog import DEFAULT_FRAMEWORK_REGISTRY
 from security_lakehouse.io import append_jsonl
 
-USER_AGENT = "trustops-framework-sync/1.0"
+PROJECT_URL = "https://github.com/msaad00/trustops-security-data-lake"
+
+
+def _package_version() -> str:
+    try:
+        return metadata.version("trustops-security-data-lake")
+    except metadata.PackageNotFoundError:
+        return "0.0.0"
+
+
+# Several regulator sites sit behind bot filters that 403 an opaque UA. Say
+# who we are and where to reach the maintainers, in the conventional
+# "compatible; name/version; +url" form crawlers use.
+USER_AGENT = f"Mozilla/5.0 (compatible; trustops-framework-sync/{_package_version()}; +{PROJECT_URL})"
 DEFAULT_TIMEOUT_SECONDS = 30
+MAX_ATTEMPTS = 4
+BASE_RETRY_DELAY_SECONDS = 2.0
+MAX_RETRY_DELAY_SECONDS = 60.0
+# 403 is included on purpose: CDN bot shields in front of regulator sites
+# return it transiently under burst load, and a later retry often succeeds.
+RETRYABLE_STATUS = frozenset({403, 408, 425, 429, 500, 502, 503, 504})
+FETCH_ERRORS: tuple[type[BaseException], ...] = (
+    urllib.error.URLError,
+    http.client.HTTPException,
+    TimeoutError,
+    OSError,
+    ValueError,
+)
 
 
 @dataclass(frozen=True)
@@ -47,10 +78,43 @@ def _utc_iso() -> str:
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
-def _fetch(url: str, *, timeout: int = DEFAULT_TIMEOUT_SECONDS) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
-        return response.read()
+def _retry_delay(attempt: int, exc: BaseException) -> float:
+    if isinstance(exc, urllib.error.HTTPError) and exc.headers is not None:
+        retry_after = (exc.headers.get("Retry-After") or "").strip()
+        if retry_after.isdigit():
+            return min(float(retry_after), MAX_RETRY_DELAY_SECONDS)
+    return min(BASE_RETRY_DELAY_SECONDS * (2 ** (attempt - 1)), MAX_RETRY_DELAY_SECONDS)
+
+
+def _is_retryable(exc: BaseException) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in RETRYABLE_STATUS
+    return isinstance(exc, (urllib.error.URLError, TimeoutError, ConnectionError))
+
+
+def _fetch(
+    url: str,
+    *,
+    timeout: int = DEFAULT_TIMEOUT_SECONDS,
+    opener: Callable[..., Any] = urllib.request.urlopen,
+    sleep: Callable[[float], None] = time.sleep,
+) -> bytes:
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml,application/pdf,application/json;q=0.9,*/*;q=0.8",
+        },
+    )
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            with opener(request, timeout=timeout) as response:
+                return bytes(response.read())
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
+            if attempt == MAX_ATTEMPTS or not _is_retryable(exc):
+                raise
+            sleep(_retry_delay(attempt, exc))
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 def sync_frameworks(
@@ -105,7 +169,9 @@ def sync_frameworks(
             continue
         try:
             body = (fetcher or _fetch)(url)
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        except FETCH_ERRORS as exc:
+            # One regulator being down or blocking us must not cost the other
+            # frameworks their refresh; the error is reported per framework.
             results.append(
                 SyncResult(
                     framework_id=framework_id,
@@ -165,3 +231,41 @@ def sync_frameworks(
         except (OSError, ValueError) as exc:
             print(f"warning: catalog bundle lock was not refreshed: {exc}", file=sys.stderr)
     return results
+
+
+def format_sync_report(payload: Mapping[str, Any]) -> str:
+    """Render ``frameworks sync`` JSON output as Markdown for a PR body or job summary."""
+    rows: Sequence[Mapping[str, Any]] = payload.get("results") or []
+    counts = Counter(str(row.get("state")) for row in rows)
+    order = ("updated", "unchanged", "skipped", "error")
+    parts = [f"{counts[state]} {state}" for state in order if counts[state]]
+    parts += [f"{n} {state}" for state, n in sorted(counts.items()) if state not in order]
+    lines = [f"**Framework sync:** {', '.join(parts) or 'no frameworks'}", ""]
+    errors = [row for row in rows if row.get("state") == "error"]
+    if not errors:
+        lines.append("No source errors.")
+        return "\n".join(lines) + "\n"
+    lines += [
+        "These sources could not be fetched; their registry entries were left unchanged:",
+        "",
+        "| Framework | Reason |",
+        "| --- | --- |",
+    ]
+    for row in errors:
+        reason = str(row.get("reason") or "").replace("|", "\\|").replace("\n", " ")
+        lines.append(f"| `{row.get('framework_id')}` | {reason} |")
+    return "\n".join(lines) + "\n"
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if len(args) != 2 or args[0] != "report":
+        print("usage: python -m security_lakehouse.framework_sync report <sync.json>", file=sys.stderr)
+        return 2
+    payload = json.loads(Path(args[1]).read_text(encoding="utf-8"))
+    sys.stdout.write(format_sync_report(payload))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

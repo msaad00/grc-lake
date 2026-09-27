@@ -25,11 +25,11 @@ Headless setup (curl, CLI, MCP): [playbooks/HEADLESS_CONNECTOR_SETUP.md](playboo
 
 ## Access modes (pick one)
 
-| Mode                             | When to use                                           | Boundary                          |
-| -------------------------------- | ----------------------------------------------------- | --------------------------------- |
-| **Direct tool API read**         | **Default** — no existing evidence lake               | scoped token or app installation  |
-| Existing security data lake read | You already have Snowflake/ClickHouse/S3/SIEM exports | read-only role                    |
-| Managed evidence objects         | Local proof, starter deployments, demos               | dedicated schema/output directory |
+| Mode                             | When to use                                                            | Boundary                          |
+| -------------------------------- | ---------------------------------------------------------------------- | --------------------------------- |
+| **Direct tool API read**         | **Default** — no existing evidence lake                                | scoped token or app installation  |
+| Existing security data lake read | You already run a lake or SIEM export ([BYOL](BRING_YOUR_OWN_LAKE.md)) | read-only role                    |
+| Managed evidence objects         | Local proof, starter deployments, demos                                | dedicated schema/output directory |
 
 Avoid broad cloud permissions. Connectors should not need admin, delete, owner,
 or unrestricted write access to evaluate posture.
@@ -90,10 +90,10 @@ security-lakehouse connectors list
 
 ## Connector Runner
 
-TrustOps currently has **26 connector contracts**. **Twenty-three** are executable
-runners (direct source/API runners, the Snowflake, Databricks, ClickHouse, S3, SIEM,
-and runtime-gateway existing-lake readers, and the Okta System Log incremental
-adapter). The remaining entries are read-only access contracts or managed evidence
+TrustOps currently has **28 connector contracts**. **Twenty-five** are executable
+runners (direct source/API runners, the Snowflake, Databricks, ClickHouse,
+Iceberg/Parquet, BigQuery, S3, SIEM, and runtime-gateway existing-lake readers, and
+the Okta System Log incremental adapter). The remaining entries are read-only access contracts or managed evidence
 boundaries — probes validate configuration but **sync is not available** until a
 collection adapter ships. Runners marked **(preview)** carry
 `"release_stage": "preview"` in the catalog and a Preview badge in `/connectors`:
@@ -121,6 +121,8 @@ have not yet been verified against a live tenant.
 | `knowbe4-training`          | KnowBe4 training        | executable (preview)                    |
 | `snowflake-evidence-lake`   | governed evidence lake  | executable existing-lake read           |
 | `clickhouse-telemetry-lake` | telemetry analytics     | executable existing-lake read           |
+| `iceberg-parquet-lake`      | Iceberg / Parquet lake  | executable existing-lake read (preview) |
+| `bigquery-evidence-lake`    | BigQuery evidence       | executable existing-lake read (preview) |
 | `object-storage-evidence`   | object evidence store   | executable existing-lake read           |
 | `okta-system-log`           | Okta System Log API     | **implemented** (incremental)           |
 | `siem-alerts`               | SIEM/detection exports  | executable existing-lake read           |

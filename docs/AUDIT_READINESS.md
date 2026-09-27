@@ -47,7 +47,7 @@ See [HEADLESS_GRC.md](HEADLESS_GRC.md) for the overall architecture.
 | Auditor marketplace    | Export trust share + PDF snapshot |
 | Pen test coordination  | External process                  |
 | Device/agent inventory | Connector evidence only           |
-| Native billing/signup  | Commercial scaffold (P5)          |
+| Native billing/signup  | Commercial hosted mode (P5)       |
 
 ## UI/UX targets (Epic #96)
 

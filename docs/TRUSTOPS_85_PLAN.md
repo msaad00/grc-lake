@@ -50,12 +50,12 @@ TrustOps reaches 85% when a team can complete this path in one short session:
 TrustOps is three surfaces over one deterministic core — see the full parity
 map, issue tracker, and execution order in [PRODUCT_SHAPE.md](PRODUCT_SHAPE.md).
 
-| Surface         | Primary user                | Value                                                  |
-| --------------- | --------------------------- | ------------------------------------------------------ |
-| Console         | Security, GRC, auditors     | Connect sources, review posture, fix gaps, share trust |
-| API/CLI/MCP     | Engineers, CI, agents       | Sync, query, automate, and integrate without the UI    |
-| Agent harness   | Optional AI or rules runner | Summarize gaps and propose approval-gated next actions |
-| Hosted scaffold | Teams wanting a live URL    | Signup, invites, usage limits (billing/SCIM partial)   |
+| Surface       | Primary user                | Value                                                  |
+| ------------- | --------------------------- | ------------------------------------------------------ |
+| Console       | Security, GRC, auditors     | Connect sources, review posture, fix gaps, share trust |
+| API/CLI/MCP   | Engineers, CI, agents       | Sync, query, automate, and integrate without the UI    |
+| Agent harness | Optional AI or rules runner | Summarize gaps and propose approval-gated next actions |
+| Hosted mode   | Teams wanting a live URL    | Signup, invites, usage limits, SCIM, Stripe billing    |
 
 **Turnkey GRC target:** interoperable (API/MCP), secure (auth/RBAC/audit),
 scale (HA + audit-scale), and premium UX (Epic #96) — without sacrificing the

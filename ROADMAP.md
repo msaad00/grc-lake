@@ -1,21 +1,28 @@
 # TrustOps Roadmap
 
-Status as of v0.2.16. Open epics come first; the shipped priority lists below are kept
-as the delivery record. Track work in GitHub issues.
+Status as of v0.2.18. Remaining gaps come first; the shipped priority lists below are
+kept as the delivery record. Track work in GitHub issues.
 
-## Open epics
+## Remaining gaps
 
-Remaining gaps, each scoped in its own issue:
+The linked epics are closed on GitHub; each row names what is still left.
 
-| Epic                                                                      | Area       | Gap it closes                                                                                                        |
-| ------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
-| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks | ISO 27701:2025 limited pack (10/78 verified); SOC 1 stays planned (no official catalog)                              |
-| [#608](https://github.com/msaad00/trustops-security-data-lake/issues/608) | Connectors | CIS Azure/GCP benchmarks, ISO 27001 clauses 4–10 (HRIS/MDM shipped)                                                  |
-| [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Connectors | Databricks evidence reader shipped as preview; live-workspace verification against the `docs/HERO_DATA_LAKES.md` bar |
-| [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform   | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                      |
+| Epic                                                                      | Area           | What remains                                                                                                                  |
+| ------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks     | ISO 27701:2025 is a limited pack (10 of 78 Annex A controls); SOC 1 stays planned (no official catalog)                       |
+| [#608](https://github.com/msaad00/trustops-security-data-lake/issues/608) | Connectors     | CIS Azure/GCP benchmarks, ISO 27001 clauses 4–10; live-tenant runs for the Jamf, CrowdStrike, Kubernetes, KnowBe4 previews    |
+| [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Existing lakes | Databricks, Iceberg/Parquet, and BigQuery readers are preview and lake mappings are experimental; live verification pending   |
+| [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform       | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                               |
+| —                                                                         | Mapping review | 832 proposed safeguard mappings (including all NIST RMF and ISO 27701 mappings) await human review before they are attestable |
 
-#611 is the cheapest to start: `docs/FRAMEWORK_EXPANSION_PLAN.md` already carries the
-rules and the contributor checklist, so it is execution rather than design.
+## Shipped for 0.2.18
+
+- [x] Bring your own lake: lake mapping spec (experimental) for the Snowflake, Databricks, and ClickHouse readers, OCSF presets for Amazon Security Lake, and preview Iceberg/Parquet and BigQuery readers ([#738](https://github.com/msaad00/trustops-security-data-lake/pull/738))
+- [x] Jamf, CrowdStrike Falcon, Kubernetes, and KnowBe4 evidence connectors, in preview ([#736](https://github.com/msaad00/trustops-security-data-lake/pull/736))
+- [x] Deeper control families and NIST RMF (SP 800-37 Rev. 2) mapped: 46 of 47 tasks, proposed ([#735](https://github.com/msaad00/trustops-security-data-lake/pull/735), [#739](https://github.com/msaad00/trustops-security-data-lake/pull/739))
+- [x] Wider proposed mapping coverage for ISO 27001, NIST CSF 2.0, ISO 27017, NIST AI RMF, FedRAMP Moderate, and GDPR ([#739](https://github.com/msaad00/trustops-security-data-lake/pull/739))
+- [x] ISO/IEC 27701:2025 limited privacy pack ([#741](https://github.com/msaad00/trustops-security-data-lake/pull/741))
+- [x] Outbound HTTP pinned to validated IPs, shared SAML replay cache, stable demo data ([#740](https://github.com/msaad00/trustops-security-data-lake/pull/740))
 
 ## P0 — Shareable hosted demo (managed GRC-class entry)
 
@@ -68,9 +75,9 @@ rules and the contributor checklist, so it is execution rather than design.
 
 ## P5 — Commercial hosted
 
-- [x] Commercial pricing API scaffold (gated env; not in OSS console)
+- [x] Commercial pricing API (gated env; not in OSS console)
 - [x] Self-serve signup and tenant lifecycle
-- [x] Usage limits enforcement scaffold
+- [x] Usage limits enforcement (users, pending invites, API keys)
 - [x] SCIM 2.0 provisioning (per-tenant tokens, users, groups → roles)
 - [x] Billing (Stripe Checkout + portal, webhook-driven plan state, past-due grace → read-only)
 

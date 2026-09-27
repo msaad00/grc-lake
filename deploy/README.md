@@ -31,7 +31,7 @@ PVC at `/lake` and the application-state database (`server/app.db` or
 For HA deployments (read replicas + single writer), see
 [HA read replicas](../docs/runbooks/HA_READ_REPLICAS.md).
 
-Commercial hosted invite/SCIM scaffolding is documented in
+Commercial hosted invites, SCIM, and billing are documented in
 [COMMERCIAL_HOSTED.md](../docs/COMMERCIAL_HOSTED.md).
 
 ## Container image

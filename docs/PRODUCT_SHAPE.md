@@ -21,8 +21,9 @@ Related: [TRUSTOPS_85_PLAN.md](TRUSTOPS_85_PLAN.md) (self-hosted bar) ·
 | **Data ownership**    | Vendor-hosted evidence      | **Customer lake** — major differentiator                    |
 
 **Overall:** TrustOps is a credible **self-hosted / headless GRC platform** with
-real audit-room depth. It is not yet a drop-in replacement for teams that want
-fully managed compliance with HRIS, devices, and personnel out of the box.
+real audit-room depth. HRIS, device, and personnel coverage is partial through four
+connectors (Intune, BambooHR, Rippling, Workday), so it is not yet a drop-in
+replacement for teams that want fully managed compliance out of the box.
 
 ## Product shape (two models, one core)
 
@@ -179,19 +180,21 @@ states, or zero-config wow on first login.
 Mature SaaS: HRIS, device MDM, ticketing, training — hundreds of pre-built checks.
 
 TrustOps: strong AWS / Azure / GCP / Snowflake / GitHub / Okta paths with vendor
-marks in-console; open connector catalog; read-only posture. Intune (MDM) and BambooHR
-(HRIS) ship; gaps: Workday/Rippling HRIS, pen-test coordination ([#22](https://github.com/msaad00/trustops-security-data-lake/issues/22), [#23](https://github.com/msaad00/trustops-security-data-lake/issues/23)).
+marks in-console; open connector catalog; read-only posture. Intune (MDM) and
+BambooHR, Rippling, and Workday (HRIS) ship, so personnel and device coverage is
+partial; remaining gaps include pen-test coordination and the long tail of
+pre-built SaaS checks.
 
 ### 3. Compliance OS convenience
 
-| Feature                   | Mature SaaS  | TrustOps                                                               |
-| ------------------------- | ------------ | ---------------------------------------------------------------------- |
-| Policy employee sign-off  | Native       | **MVP shipped** — publish + acknowledgment tracking                    |
-| Personnel tracking        | Native       | **HRIS records (BambooHR, Rippling, Workday)** + IdP offboarding check |
-| Auditor marketplace       | Yes          | BYO auditor + trust share                                              |
-| Device inventory          | Integrations | **Intune** encryption + compliance per device                          |
-| Billing / self-serve SaaS | Native       | Pricing/signup scaffold; Stripe not shipped                            |
-| SCIM lifecycle            | Full         | Per-tenant tokens, users + groups, group → role map; live IdP pending  |
+| Feature                   | Mature SaaS  | TrustOps                                                                 |
+| ------------------------- | ------------ | ------------------------------------------------------------------------ |
+| Policy employee sign-off  | Native       | **MVP shipped** — publish + acknowledgment tracking                      |
+| Personnel tracking        | Native       | **HRIS records (BambooHR, Rippling, Workday)** + IdP offboarding check   |
+| Auditor marketplace       | Yes          | BYO auditor + trust share                                                |
+| Device inventory          | Integrations | **Intune** encryption + compliance per device                            |
+| Billing / self-serve SaaS | Native       | Stripe billing + signup shipped; live Stripe verification pending (#610) |
+| SCIM lifecycle            | Full         | Per-tenant tokens, users + groups, group → role map; live IdP pending    |
 
 ### 4. Visual analytics ([#18](https://github.com/msaad00/trustops-security-data-lake/issues/18))
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, FileCheck2, ShieldCheck } from "lucide-react";
+import { ClipboardCheck } from "lucide-react";
 import {
   useControlTests,
   useFrameworks,
@@ -22,33 +22,24 @@ import { TrustLifecycle } from "@/components/dashboard/TrustLifecycle";
 import { IngestionStatusPanel } from "@/components/dashboard/IngestionStatusPanel";
 import { EvalRunsStrip } from "@/components/dashboard/EvalRunsStrip";
 import { DataPipelineStrip } from "@/components/dashboard/DataPipelineStrip";
-import { KpiTile } from "@/components/ui/KpiTile";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { QueryState } from "@/components/QueryState";
-import { formatWhen } from "@/lib/utils";
-
-// The API stamps UTC; the chip should show the viewer's calendar day.
-function localDate(iso: string): string {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return "—";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
-}
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 export default function DashboardPage() {
   const posture = usePosture();
   const tests = useControlTests();
   const ingestion = useIngestionStatus();
   const registeredFrameworks = useFrameworks();
-  const { connected } = usePostureStream();
+  usePostureStream();
   const data = posture.data;
   const p = data?.posture;
   const frameworks = data?.frameworks ?? [];
   const registeredCount =
     registeredFrameworks.data?.length ?? frameworks.length;
-  const proofReady = Boolean(ingestion.data?.proof?.proof_pack_exists);
   const ingestionNeedsAttention =
     ingestion.data?.state !== "active" ||
     Boolean(ingestion.data?.recommended_actions?.length) ||
@@ -62,25 +53,7 @@ export default function DashboardPage() {
     <div className="page-shell grid gap-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="ui-page-title">Dashboard</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1 text-xs font-medium ${connected ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}
-          >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-amber-500"}`}
-            />
-            {connected ? "Updates connected" : "Polling updates"}
-          </span>
-          {data?.evaluated_at ? (
-            <span
-              className="rounded-md border border-line bg-surface px-2 py-1 text-xs text-muted"
-              title={`Evaluated ${formatWhen(data.evaluated_at)}`}
-            >
-              {localDate(data.evaluated_at)}
-            </span>
-          ) : null}
+          <h1 className="ui-page-title">{ROUTE_LABELS["/dashboard"]}</h1>
         </div>
       </div>
 
@@ -113,14 +86,16 @@ export default function DashboardPage() {
               {
                 label: "Test results",
                 content: (
-                  <div
-                    role="region"
-                    aria-label="Control test results"
-                    tabIndex={0}
-                    className="max-h-[440px] overflow-auto"
-                  >
-                    <ControlTestTable rows={tests.data ?? []} />
-                  </div>
+                  <QueryState queries={tests} label="control test results">
+                    <div
+                      role="region"
+                      aria-label="Control test results"
+                      tabIndex={0}
+                      className="max-h-[440px] overflow-auto"
+                    >
+                      <ControlTestTable rows={tests.data ?? []} />
+                    </div>
+                  </QueryState>
                 ),
               },
             ]}
@@ -139,7 +114,6 @@ export default function DashboardPage() {
                 label: "Sources",
                 content: (
                   <div className="p-3">
-                    {" "}
                     <div className="grid gap-2">
                       <IngestionStatusPanel status={ingestion.data} embedded />
                       <CollapsibleCard
@@ -164,55 +138,25 @@ export default function DashboardPage() {
                 label: "Exports",
                 content: (
                   <div className="p-3">
-                    {" "}
-                    <div className="grid gap-2">
-                      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 2xl:grid-cols-3">
-                        <KpiTile
-                          label="Proof export"
-                          value={proofReady ? "ready" : "pending"}
-                          detail={
-                            proofReady
-                              ? `${ingestion.data?.proof?.evidence_count ?? 0} evidence rows in latest pack`
-                              : "sync and evaluate to prepare export"
-                          }
-                          tone={proofReady ? "ready" : "attention"}
-                          icon={<FileCheck2 className="h-3.5 w-3.5" />}
-                        />
-                        <KpiTile
-                          label="Framework posture"
-                          value={`${frameworks.length}/${registeredCount}`}
-                          detail="Assessed frameworks"
-                          tone="brand"
-                          icon={<ClipboardCheck className="h-3.5 w-3.5" />}
-                        />
-                        <KpiTile
-                          label="Assessment hash"
-                          value={data?.assessment_hash?.slice(0, 8) ?? "—"}
-                          detail="Current assessment"
-                          tone={data?.assessment_hash ? "ready" : "default"}
-                          icon={<ShieldCheck className="h-3.5 w-3.5" />}
-                        />
-                      </div>
-                      <Card className="overflow-hidden p-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <h2 className="text-base font-semibold text-ink">
-                              Assessment exports
-                            </h2>
-                          </div>
+                    <Card className="overflow-hidden p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h2 className="text-base font-semibold text-ink">
+                          Assessment exports
+                        </h2>
+                        <Button asChild size="sm">
                           <Link href="/audit-room">
-                            <Badge tone="info">Open audit room</Badge>
+                            <ClipboardCheck
+                              aria-hidden="true"
+                              className="h-4 w-4"
+                            />
+                            Open audit room
                           </Link>
-                        </div>
-                        <div className="mt-3">
-                          <ComplianceOverview frameworks={frameworks} />
-                        </div>
-                      </Card>
-                      <TrustLifecycle
-                        posture={p}
-                        assessmentHash={data?.assessment_hash}
-                      />
-                    </div>
+                        </Button>
+                      </div>
+                      <div className="mt-3">
+                        <ComplianceOverview frameworks={frameworks} />
+                      </div>
+                    </Card>
                   </div>
                 ),
               },

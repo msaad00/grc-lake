@@ -127,7 +127,7 @@ function FrameworkCard({
                 coverage?.total
                   ? `${coverage.assessed} of ${coverage.total} controls assessed`
                   : `${framework.control_count} ${framework.control_count === 1 ? "control" : "controls"} assessed`
-              } · ${framework.failing_control_count} failing · ${framework.stale_control_count} stale`
+              } · ${framework.failing_control_count} failing · ${framework.stale_control_count} need fresh evidence`
             : `${unmonitored!.implemented_control_count} mapped controls`}
         </div>
       </div>
@@ -135,11 +135,11 @@ function FrameworkCard({
         {framework && showScore && (
           <div
             className="text-xl font-semibold tabular-nums"
-            title="Assessment score"
             style={{ color: barColor(framework.score) }}
           >
             {Math.round(framework.score)}
-            <span className="text-sm">%</span>
+            <span className="text-xs font-medium text-muted"> / 100</span>
+            <span className="sr-only"> assessment score</span>
           </div>
         )}
         <div

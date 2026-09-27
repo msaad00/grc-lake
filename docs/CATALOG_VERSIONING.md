@@ -19,7 +19,9 @@ plus provenance (`official_source_url`, `source_sha256`, `pulled_at`,
 `sync_cadence_days`). The sync job re-fetches the official source, recomputes
 the sha256, and — when the body changes — appends a row to
 `frameworks/history.jsonl` so the history of _what the upstream said when_
-survives even before a human assigns a new version label.
+survives even before a human assigns a new version label. The file does not
+exist until the first upstream change is detected; the sync job creates it on
+that first append.
 
 ### Controls (`controls/catalog.json` + `controls/history.jsonl`)
 

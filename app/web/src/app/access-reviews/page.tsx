@@ -20,6 +20,8 @@ import type {
   AccessReviewDecision,
   AccessReviewStatus,
 } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
+import { QueryState } from "@/components/QueryState";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -190,48 +192,50 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
         </div>
       )}
 
-      <div className="mt-4 space-y-2">
-        {items.data?.length ? (
-          items.data.map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line px-3 py-2"
-            >
-              <div className="min-w-0">
-                <div className="truncate text-sm text-ink">
-                  {item.subject_name || item.subject_id}
+      <QueryState queries={items} label="review items">
+        <div className="mt-4 space-y-2">
+          {items.data?.length ? (
+            items.data.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-ink">
+                    {item.subject_name || item.subject_id}
+                  </div>
+                  <div className="truncate text-xs text-muted">
+                    {item.source} · {item.access_summary || "—"}
+                  </div>
                 </div>
-                <div className="truncate text-xs text-muted">
-                  {item.source} · {item.access_summary || "—"}
+                <div className="flex items-center gap-1.5">
+                  <Badge tone={DECISION_TONE[item.decision]}>
+                    {item.decision}
+                  </Badge>
+                  {DECISIONS.map((d) => (
+                    <Button
+                      key={d}
+                      size="sm"
+                      variant={item.decision === d ? "dark" : "ghost"}
+                      disabled={decide.isPending}
+                      onClick={() =>
+                        decide.mutate({ itemId: item.id, decision: d })
+                      }
+                    >
+                      {d}
+                    </Button>
+                  ))}
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Badge tone={DECISION_TONE[item.decision]}>
-                  {item.decision}
-                </Badge>
-                {DECISIONS.map((d) => (
-                  <Button
-                    key={d}
-                    size="sm"
-                    variant={item.decision === d ? "dark" : "ghost"}
-                    disabled={decide.isPending}
-                    onClick={() =>
-                      decide.mutate({ itemId: item.id, decision: d })
-                    }
-                  >
-                    {d}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-sm text-muted">
-            No items yet. Use “Seed from evidence” to pull the identities in the
-            lake into this review.
-          </p>
-        )}
-      </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted">
+              No items yet. Use “Seed from evidence” to pull the identities in
+              the lake into this review.
+            </p>
+          )}
+        </div>
+      </QueryState>
     </Card>
   );
 }
@@ -275,7 +279,7 @@ export default function AccessReviewsPage() {
     <div className="page-shell space-y-6">
       <PageHeader
         eyebrow="Access governance"
-        title="Access reviews"
+        title={ROUTE_LABELS["/access-reviews"]}
         description="Run periodic user-access certification campaigns: seed the identities in your lake, certify or revoke each one, and prove each access control is under a current review."
       />
 
@@ -289,20 +293,22 @@ export default function AccessReviewsPage() {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-2">
-          {campaigns.data?.length ? (
-            campaigns.data.map((c) => (
-              <CampaignRow
-                key={c.id}
-                campaign={c}
-                selected={c.id === selectedId}
-                onSelect={() => setSelectedId(c.id)}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-muted">No campaigns yet.</p>
-          )}
-        </div>
+        <QueryState queries={campaigns} label="access review campaigns">
+          <div className="space-y-2">
+            {campaigns.data?.length ? (
+              campaigns.data.map((c) => (
+                <CampaignRow
+                  key={c.id}
+                  campaign={c}
+                  selected={c.id === selectedId}
+                  onSelect={() => setSelectedId(c.id)}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-muted">No campaigns yet.</p>
+            )}
+          </div>
+        </QueryState>
         <div className="space-y-6">
           {selectedId ? (
             <CampaignDetail campaignId={selectedId} />

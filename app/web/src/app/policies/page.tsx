@@ -23,6 +23,7 @@ import type {
   PolicyDocumentStatus,
   PolicyTemplateSummary,
 } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -249,7 +250,7 @@ export default function PoliciesPage() {
     <div className="page-shell space-y-6">
       <PageHeader
         eyebrow="Governance"
-        title="Policy template library"
+        title={ROUTE_LABELS["/policies"]}
         description="Browse bundled SOC 2 and ISO-aligned policy templates, adopt them for your tenant, edit markdown drafts, and publish to prove control coverage."
       />
 

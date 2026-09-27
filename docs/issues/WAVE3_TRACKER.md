@@ -36,5 +36,3 @@ Neutral copy only — no competitor trademarks in product UI.
 | **#18** | Topology/workflow graphs — separate viz epic |
 | **#15** | Audit snapshot room / public trust center    |
 | **#14** | New framework pack YAML — backend            |
-
-See [DELIVERY_TRACKER.md](../DELIVERY_TRACKER.md).

@@ -34,6 +34,7 @@ import { AgentRunDrawer } from "@/components/drawers/AgentRunDrawer";
 import { useAuditorMode } from "@/lib/state/auditor";
 import { useAgentRuns, useCreateAgentRunMutation } from "@/lib/api/hooks";
 import type { AgentHarness } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 type BadgeTone = "ready" | "info" | "attention" | "critical" | "default";
 
@@ -582,7 +583,7 @@ function AgentsPageContent() {
     <div className="page-shell grid gap-5">
       <PageHeader
         eyebrow="Agent harness"
-        title="Governed runs"
+        title={ROUTE_LABELS["/agents"]}
         description="Run deterministic harnesses, inspect evaluations, and approve proposed writes."
         actions={
           <div className="flex flex-wrap items-center gap-2">

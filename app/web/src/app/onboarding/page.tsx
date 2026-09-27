@@ -16,6 +16,7 @@ import { OnboardingQuickConnect } from "@/components/onboarding/OnboardingQuickC
 import { OnboardingEvidencePaths } from "@/components/onboarding/OnboardingEvidencePaths";
 import { usePocReadiness } from "@/lib/api/hooks";
 import type { PocReadinessStep } from "@/lib/api/types";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 function stepHref(step: PocReadinessStep) {
   return step.console_href ?? step.href?.replace(/^\/console/, "") ?? null;
@@ -32,7 +33,7 @@ export default function OnboardingPage() {
     <div className="mx-auto grid w-full max-w-3xl min-w-0 gap-2 px-3 py-2 sm:px-4">
       <PageHeader
         eyebrow="Getting started"
-        title="Onboarding"
+        title={ROUTE_LABELS["/onboarding"]}
         description="Connect sources, prove sync, reach a shareable workspace."
       />
 

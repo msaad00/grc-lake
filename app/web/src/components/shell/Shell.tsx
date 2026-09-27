@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
-import { Breadcrumbs } from "./Breadcrumbs";
 import { CommandPalette } from "./CommandPalette";
 import { PlatformStreamLiveRegion } from "./PlatformStreamLiveRegion";
-import { Sidebar } from "./Sidebar";
+import { MobileNav, Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { ApiHealthBanner } from "@/components/ApiHealthBanner";
 import { AuditorBanner } from "@/components/AuditorBanner";
@@ -32,6 +31,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   const flash = useCallback((msg: string) => notify.success(msg), []);
 
@@ -55,55 +55,58 @@ export function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-dvh w-full min-w-0 max-w-none flex-col bg-rail">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-ink focus:shadow-hero"
-      >
-        Skip to main content
-      </a>
-      <PlatformStreamLiveRegion />
-      <TopBar
-        onRefresh={onRefresh}
-        onSnapshot={onSnapshot}
-        onOpenPalette={() => setPaletteOpen(true)}
-      />
-      <AuditorBanner />
-      <div className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] bg-panel">
-        <Sidebar />
-        <div className="grid min-w-0 grid-rows-[auto_1fr] overflow-x-hidden">
-          <Breadcrumbs />
-          <main
-            id="main-content"
-            className="min-w-0 max-w-full overflow-x-hidden bg-panel"
-          >
-            <ApiHealthBanner />
-            {/* Entry animation only: an exit phase (AnimatePresence mode="wait")
-                renders the next page inside the outgoing wrapper and then mounts
-                it again, which throws away anything typed in between. */}
-            <motion.div
-              key={normalizedPathname}
-              className="min-w-0"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.16, ease: "easeOut" }}
+    <MotionConfig reducedMotion="user">
+      <div className="flex min-h-dvh w-full min-w-0 max-w-none flex-col bg-rail">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-ink focus:shadow-hero"
+        >
+          Skip to main content
+        </a>
+        <PlatformStreamLiveRegion />
+        <TopBar
+          onRefresh={onRefresh}
+          onSnapshot={onSnapshot}
+          onOpenPalette={() => setPaletteOpen(true)}
+          onOpenNav={() => setNavOpen(true)}
+        />
+        <MobileNav open={navOpen} onOpenChange={setNavOpen} />
+        <AuditorBanner />
+        <div className="grid min-w-0 flex-1 grid-cols-1 bg-panel md:grid-cols-[auto_minmax(0,1fr)]">
+          <Sidebar />
+          <div className="min-w-0 overflow-x-hidden">
+            <main
+              id="main-content"
+              className="min-w-0 max-w-full overflow-x-hidden bg-panel"
             >
-              {children}
-            </motion.div>
-          </main>
+              <ApiHealthBanner />
+              {/* Entry animation only. An exit phase would render the next page
+                inside the outgoing wrapper and then mount it again, throwing
+                away anything typed in between. */}
+              <motion.div
+                key={normalizedPathname}
+                className="min-w-0"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.16, ease: "easeOut" }}
+              >
+                {children}
+              </motion.div>
+            </main>
+          </div>
         </div>
+        <CommandPalette
+          open={paletteOpen}
+          onOpenChange={setPaletteOpen}
+          onSnapshot={onSnapshot}
+          onRefresh={onRefresh}
+        />
+        <SnapshotModal
+          open={snapshotOpen}
+          onClose={() => setSnapshotOpen(false)}
+          onToast={flash}
+        />
       </div>
-      <CommandPalette
-        open={paletteOpen}
-        onOpenChange={setPaletteOpen}
-        onSnapshot={onSnapshot}
-        onRefresh={onRefresh}
-      />
-      <SnapshotModal
-        open={snapshotOpen}
-        onClose={() => setSnapshotOpen(false)}
-        onToast={flash}
-      />
-    </div>
+    </MotionConfig>
   );
 }

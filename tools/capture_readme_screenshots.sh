@@ -7,7 +7,13 @@ cd "$ROOT"
 
 PORT="${TRUSTOPS_SCREENSHOT_PORT:-8787}"
 BASE="http://127.0.0.1:${PORT}"
-LAKE="${TRUSTOPS_LAKE:-build/lakehouse}"
+# A dedicated throwaway lake: seeded remediation rows and app state from a
+# previous capture never leak into the next one.
+LAKE="${TRUSTOPS_SCREENSHOT_LAKE:-build/screenshot-lake}"
+case "$LAKE" in
+  build/*) rm -rf "$LAKE" ;;
+  *) echo "TRUSTOPS_SCREENSHOT_LAKE must live under build/ (got ${LAKE})" >&2; exit 1 ;;
+esac
 
 echo "==> Load golden fixture into ${LAKE}"
 uv run security-lakehouse fixtures load --company golden --out "$LAKE" --rebase-times
@@ -39,8 +45,9 @@ until curl -sf "${BASE}/api/v1/healthz" >/dev/null 2>&1; do
   sleep 0.5
 done
 
-echo "==> Capture screenshots to docs/images/"
-TRUSTOPS_SCREENSHOT_URL="$BASE" npm --prefix app/web run demo-screenshots
+echo "==> Capture screenshots to docs/images/ (light + dark, one frozen clock)"
+TRUSTOPS_SCREENSHOT_NOW="${TRUSTOPS_SCREENSHOT_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" \
+  TRUSTOPS_SCREENSHOT_URL="$BASE" npm --prefix app/web run demo-screenshots
 
 echo "==> Optimize PNGs"
 uv run python tools/optimize_screenshots.py

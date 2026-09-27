@@ -35,7 +35,7 @@ Default connect: agentless read-only API — no customer SDL required
 ./tools/close_shipped_issues.sh
 ```
 
-Closes child issues **#475–#480** and harness parent **#16**. See [ISSUE_CLOSEOUT.md](../ISSUE_CLOSEOUT.md).
+Closes child issues **#475–#480** and harness parent **#16**.
 
 ## Next wave
 

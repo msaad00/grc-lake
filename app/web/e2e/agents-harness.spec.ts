@@ -21,7 +21,7 @@ test.describe("agents harness", () => {
     await page.goto("/console/agents/");
     await expect(page.getByRole("main")).toBeVisible({ timeout: 20_000 });
     await expect(
-      page.getByRole("heading", { name: "Governed runs" }),
+      page.getByRole("heading", { level: 1, name: "Agents" }),
     ).toBeVisible();
     await expect(page.getByText(/fixture/i).first()).toBeVisible({
       timeout: 15_000,

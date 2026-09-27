@@ -49,6 +49,35 @@ test("assessment overview links to workspaces and discloses provenance", async (
   await expect(
     overview.getByText("Assessment ID", { exact: true }),
   ).not.toBeVisible();
+  // Escape and an outside click both dismiss it, like the popovers around it.
+  await overview.getByText("Assessment details", { exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(
+    overview.getByText("Assessment ID", { exact: true }),
+  ).not.toBeVisible();
+  await overview.getByText("Assessment details", { exact: true }).click();
+  await page.getByRole("heading", { level: 1, name: "Overview" }).click();
+  await expect(
+    overview.getByText("Assessment ID", { exact: true }),
+  ).not.toBeVisible();
+});
+
+test("command palette is a combobox whose active option follows the keyboard", async ({
+  page,
+}) => {
+  await page.goto("/console/dashboard/");
+  await page.getByRole("button", { name: "Open command palette" }).click();
+  const input = page.getByRole("combobox", { name: "Search the console" });
+  await expect(input).toBeFocused();
+  await input.fill("graph");
+  const option = page.getByRole("option", { name: /Graph/ }).first();
+  await expect(option).toHaveAttribute("aria-selected", "true");
+  await expect(input).toHaveAttribute(
+    "aria-activedescendant",
+    (await option.getAttribute("id")) ?? "",
+  );
+  await input.press("Enter");
+  await expect(page).toHaveURL(/\/console\/graph\/?/);
 });
 
 test("compact app header keeps search and account actions usable on mobile", async ({
@@ -86,14 +115,14 @@ test("overview leads with overall posture and distinguishes score from test pass
     exact: true,
   });
   await expect(
-    overview.getByText("Overall posture", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    overview.getByRole("img", {
-      name: `Assessment score ${Math.round(assessment.posture.score)} out of 100`,
+    overview.getByRole("progressbar", {
+      name: "Assessment score",
       exact: true,
     }),
-  ).toBeVisible();
+  ).toHaveAttribute(
+    "aria-valuenow",
+    String(Math.round(assessment.posture.score)),
+  );
   await expect(
     overview.getByRole("progressbar", {
       name: "Control pass rate",
@@ -110,18 +139,15 @@ test("overview leads with overall posture and distinguishes score from test pass
     ),
   ).toBeVisible();
   const accuracy = ingestion.eval_accuracy;
-  const other = Math.max(
-    0,
-    accuracy.total_tests -
-      accuracy.passing -
-      accuracy.failing -
-      accuracy.warning,
-  );
+  // Unevaluated tests are named for what they need, not lumped into "Other".
   await expect(
     overview
       .getByRole("link", { name: /Control pass rate/ })
-      .getByText(`${other} Other`, { exact: true }),
+      .getByText(`${ingestion.eval_accuracy.needs_evidence} Needs evidence`, {
+        exact: true,
+      }),
   ).toBeVisible();
+  expect(accuracy.needs_evidence).toBeGreaterThan(0);
 });
 
 test("unevaluated controls do not appear as a zero-percent result", async ({
@@ -169,7 +195,7 @@ test("overview shows actual finding severity and stays compact at tablet width",
   });
   await expect(
     overview.getByRole("img", {
-      name: `Finding severity: ${critical} critical, ${high} high, ${Math.max(0, total - critical - high)} other`,
+      name: `Finding severity: ${critical} critical, ${high} high, ${Math.max(0, total - critical - high)} medium or low`,
       exact: true,
     }),
   ).toBeVisible();

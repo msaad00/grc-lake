@@ -30,6 +30,7 @@ import { QueryState } from "@/components/QueryState";
 import { useAuthMethods, useAuthWhoami } from "@/lib/api/hooks";
 import type { AuthMethod } from "@/lib/api/types";
 import { docsUrl } from "@/lib/format";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 function MethodRow({ method }: { method: AuthMethod }) {
   const externalLogin = method.id !== "api_key";
@@ -102,7 +103,7 @@ export default function AuthPage() {
     <div className="page-shell grid gap-3">
       <PageHeader
         eyebrow="Access"
-        title="Authentication"
+        title={ROUTE_LABELS["/auth"]}
         description="OIDC, SAML, and API keys share one tenant, role, and audit boundary — the same identity model as hosted enterprise GRC workspaces."
         actions={<Badge tone="ready">Server auth</Badge>}
       />

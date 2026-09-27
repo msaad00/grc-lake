@@ -6,6 +6,7 @@ import type {
   FrameworkReadiness,
   FrameworkView,
 } from "@/lib/api/types";
+import { formatCount } from "@/lib/format";
 
 interface Props {
   frameworks: FrameworkView[];
@@ -44,8 +45,8 @@ function FrameworkLine({
         </div>
         <div className="mt-0.5 truncate text-xs font-medium leading-5 text-muted">
           {notEvaluated
-            ? `Not evaluated · ${total ? `${total} controls in catalog` : "catalog pack pending"}`
-            : `${mapped}/${total} controls mapped · ${attestable} fully reviewed`}
+            ? `Not evaluated · ${total ? `${formatCount(total)} controls in catalog` : "catalog pack pending"}`
+            : `${formatCount(mapped)}/${formatCount(total)} controls mapped · ${formatCount(attestable)} fully reviewed`}
         </div>
       </div>
       <Badge

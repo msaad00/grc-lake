@@ -14,6 +14,7 @@ import { QueryState } from "@/components/QueryState";
 import { useAuditLog } from "@/lib/api/hooks";
 import type { AuditLogEntry } from "@/lib/api/types";
 import { formatDateTime, plural } from "@/lib/format";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 
 const PAGE_LIMIT = 200;
 
@@ -129,8 +130,8 @@ export default function AuditLogPage() {
   return (
     <div className="page-shell grid gap-5">
       <PageHeader
-        eyebrow="Audit log"
-        title="Console activity"
+        eyebrow="Console activity"
+        title={ROUTE_LABELS["/audit-log"]}
         description="Every posture-changing event in one stream: triage decisions, connector setup and tests, snapshots, workflow runs, and trust-share links. Entries are append-only and cannot be edited."
         actions={
           <Badge tone="info">

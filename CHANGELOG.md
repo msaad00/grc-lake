@@ -3,6 +3,51 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Operator note: this release adds database migration `0019` (a
+  `resolution_note` column on remediation tasks). The server applies pending
+  migrations automatically at startup, so back up the database before
+  upgrading. With more than one replica, upgrade with a single replica first
+  (or scale to one) so only one process runs the migration.
+- Add SCIM provisioning and Billing panels to the console's Auth page for
+  commercial hosted admins: create SCIM tokens with a one-time reveal, revoke
+  them, see plan and access state, and open Stripe checkout or the customer
+  portal. Both panels stay hidden on OSS installs. Listing SCIM tokens now
+  returns 501 when SCIM is disabled, matching create.
+- Console polish: dark-mode contrast across every route, layouts that fit at
+  390px, a graph that wraps wide ranks instead of shrinking to unreadable zoom,
+  a paginated crosswalk, sign-in options first on phones, and one page width
+  and gutter scale. `/api/v1/platform/usage` returns 501 instead of 404 without
+  commercial hosting, and the POC "Agent/API access" step links to the console.
+- Stop overclaiming readiness, freshness, and review status. Readiness numbers
+  change on upgrade: a framework is ready only when at least 50% of its catalog
+  controls are assessed (not on score alone), controls without evidence are
+  `missing` rather than fresh, the audit score no longer counts shipped product
+  features, and the crosswalk shows each mapping's real status (reviewed or
+  proposed). The readiness payload adds per-framework coverage and
+  `framework_ready_criteria`.
+- Persona-driven console fixes: findings carry into tasks and link back,
+  resolving a task records proof in the new `resolution_note` field, owner
+  filters, trust shares with a copyable URL and preview (public shares no
+  longer expose violation or stale counts), adoptable policy templates, and
+  refreshed demo data.
+- Reviewers can reject a proposed agent decision with a reason
+  (`POST /api/v1/agent-runs/{id}/decisions/{i}/reject` and a matching MCP tool);
+  a rejected decision never runs and approving it returns 409. The OpenAPI
+  document is regenerated. Frameworks and Crosswalk now name their mapping
+  units, and console pages mount once per navigation, so input typed right
+  after a navigation is no longer lost.
+- Harden the release pipeline: a tag publishes only a commit that is on main
+  and passed CI, and only when the package, chart, console, `package.json`,
+  and changelog agree on the version. Wheels, sdists, and the container image
+  carry signed build provenance; the image also carries an SBOM, and the
+  release attaches a CycloneDX SBOM of the Python dependencies. Fixable HIGH or
+  CRITICAL image vulnerabilities fail CI and block the release. Workflow
+  actions and container base images are pinned by digest. `latest` moves only
+  on stable releases. Framework sync retries rate-limited or failing regulator
+  sites and reports per-source errors without failing the job.
+
 ## 0.2.16 - 2026-09-24
 
 - Add production SCIM 2.0 for commercial hosted tenants: per-tenant hashed

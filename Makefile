@@ -42,8 +42,11 @@ dashboard:
 api-smoke:
 	PYTHONPATH=src python tools/api_smoke.py
 
+# Clean first: a stale wheel left in dist/ would otherwise be verified (and
+# could be uploaded) alongside the fresh one.
 release-build: web-install web-build
-	python -m build
+	rm -rf dist
+	uv build --out-dir dist
 	python tools/verify_wheel.py dist/*.whl
 
 openapi-export:

@@ -5,7 +5,7 @@ Three install surfaces — pick the one that fits your blast radius.
 | Surface                      | When to use                                                                                  | Command                                                                                                                                                                                                                                          |
 | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Python wheel**             | Local demos, single laptop, contributor onboarding                                           | `pip install trustops-security-data-lake && security-lakehouse serve --lake build/lakehouse`                                                                                                                                                     |
-| **Container image**          | CI, Docker Compose, single-host servers                                                      | `docker run -p 8787:8787 -v $PWD/build/lakehouse:/lake ghcr.io/msaad00/trustops:latest`                                                                                                                                                          |
+| **Container image**          | CI, Docker Compose, single-host servers                                                      | `docker run -p 8787:8787 -v $PWD/build/lakehouse:/lake ghcr.io/msaad00/trustops:0.2.16`                                                                                                                                                          |
 | **Helm + EKS**               | Production self-hosted, customer-data-residency requirement                                  | See [Helm chart](helm/trustops/) + [EKS reference IaC](eks-terraform/) below                                                                                                                                                                     |
 | **Snowflake POC**            | Governed evidence lake using customer-owned Snowflake views                                  | Run [`snowflake/bootstrap_poc.sql`](snowflake/bootstrap_poc.sql), then connect the reader role                                                                                                                                                   |
 | **Databricks POC (preview)** | Unity Catalog evidence views read by a service principal through a SQL warehouse             | Run [`databricks/bootstrap_poc.sql`](databricks/bootstrap_poc.sql), then connect the service principal                                                                                                                                           |
@@ -57,14 +57,13 @@ Renders in any conformant Kubernetes ≥ 1.27:
 ```bash
 helm install trustops ./deploy/helm/trustops \
   --namespace trustops --create-namespace \
-  --set image.tag=0.2.0 \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=trustops.example.com
 ```
 
 Key value groups:
 
-- `image` — repository, tag, pull policy, pull secrets.
+- `image` — repository, tag, pull policy, pull secrets. `image.tag` defaults to the chart's `appVersion`, so the chart and image versions move together.
 - `lake.persistence` — PVC backing for `gold/` + `silver/` + `bronze/` (use a CSI driver that supports `ReadWriteMany` only if you also run multiple replicas).
 - `serviceAccount.annotations` — bind an IRSA role (EKS) or Workload Identity (GKE) here for read-only access to the customer evidence bucket.
 - `scheduler` — opt-in CronJob that runs `security-lakehouse scheduler tick` to fire `trigger.cron` workflows. Disable with `scheduler.enabled=false` if you drive it from an external scheduler.

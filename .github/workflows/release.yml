@@ -23,14 +23,60 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The tag is the version. If pyproject disagrees, the artifact would carry a
-  # version nobody asked for, so stop before anything is built.
+  # A tag can be pushed on any commit. Only publish a commit that is already on
+  # main and that the ci workflow passed on, so a release is never the first
+  # time a change meets the test suite.
+  verify-tested-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.ref_type == 'tag'
+        with:
+          fetch-depth: 0
+      - name: Tagged commit is on main and passed ci
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "${SHA}" origin/main; then
+            echo "::error::${GITHUB_REF_NAME} (${SHA}) is not on main; tag a commit that has been merged"
+            exit 1
+          fi
+          # ci may still be running on a freshly merged commit; wait for it
+          # rather than failing a tag pushed right after the merge.
+          for attempt in $(seq 1 40); do
+            runs="$(gh api "repos/${REPO}/actions/workflows/ci.yml/runs?head_sha=${SHA}&per_page=50" \
+              --jq '[.workflow_runs[] | {status, conclusion}]')"
+            if [ "$(jq '[.[] | select(.conclusion == "success")] | length' <<<"${runs}")" -gt 0 ]; then
+              echo "ci passed on ${SHA}"
+              exit 0
+            fi
+            if [ "$(jq '[.[] | select(.status != "completed")] | length' <<<"${runs}")" -eq 0 ]; then
+              echo "::error::no successful ci run for ${SHA} (runs: ${runs}); fix or re-run ci on main, then re-run this workflow"
+              exit 1
+            fi
+            echo "ci still running on ${SHA} (check ${attempt}/40); waiting"
+            sleep 60
+          done
+          echo "::error::timed out waiting for ci on ${SHA}"
+          exit 1
+
+  # The tag is the version. If any shipped surface disagrees, the artifact would
+  # carry a version nobody asked for, so stop before anything is built.
   verify-version:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       version: ${{ steps.check.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: check
         run: |
           project_version="$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"
@@ -50,6 +96,7 @@ jobs:
           chart_version="$(grep -m1 '^version:' deploy/helm/trustops/Chart.yaml | awk '{print $2}')"
           chart_app_version="$(grep -m1 '^appVersion:' deploy/helm/trustops/Chart.yaml | sed 's/.*"\(.*\)".*/\1/')"
           brand_version="$(sed -n 's/^[[:space:]]*version: "\(.*\)",$/\1/p' app/web/src/lib/brand.ts | head -n1)"
+          web_package_version="$(jq -r .version app/web/package.json)"
           if [ "${chart_version}" != "${project_version}" ]; then
             echo "::error::Chart.yaml version ${chart_version} does not match release version ${project_version}"
             exit 1
@@ -62,21 +109,35 @@ jobs:
             echo "::error::console brand version ${brand_version} does not match release version ${project_version}"
             exit 1
           fi
-          echo "tag ${GITHUB_REF_NAME} matches package, chart, and console ${project_version}"
+          if [ "${web_package_version}" != "${project_version}" ]; then
+            echo "::error::app/web/package.json version ${web_package_version} does not match release version ${project_version}"
+            exit 1
+          fi
+          # The GitHub release body is this version's CHANGELOG section; a tag
+          # without one would publish empty notes.
+          if ! awk -v v="${project_version}" '$1 == "##" && $2 == v { found = 1 } END { exit !found }' CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## ${project_version}' section"
+            exit 1
+          fi
+          echo "tag ${GITHUB_REF_NAME} matches package, chart, console, and changelog ${project_version}"
 
   build:
-    needs: verify-version
+    needs: [verify-tested-commit, verify-version]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: app/web/package-lock.json
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: "0.10.9" # keep in step with the Dockerfile uv image
 
       # The console is gitignored and declared as package data. Building it
       # before packaging is what keeps the published wheel from being silently
@@ -85,17 +146,31 @@ jobs:
         run: make web-install web-build
 
       - name: Build sdist and wheel
-        run: |
-          python -m pip install --upgrade build
-          python -m build
+        run: uv build --out-dir dist
 
       - name: Verify the wheel is publishable
         run: python tools/verify_wheel.py dist/*.whl
 
-      - uses: actions/upload-artifact@v7
+      # CycloneDX SBOM of the locked runtime dependency set (base + the extras
+      # the container image installs), attached to the GitHub release.
+      - name: Generate Python SBOM
+        run: |
+          mkdir -p sbom
+          uv export --frozen --format cyclonedx1.5 --no-dev \
+            --extra server --extra analytics --extra cloud --extra mcp --extra iceberg \
+            --output-file "sbom/trustops-security-data-lake-${{ needs.verify-version.outputs.version }}.cdx.json" \
+            > /dev/null
+          jq -e '.bomFormat == "CycloneDX" and (.components | length) > 0' sbom/*.cdx.json > /dev/null
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dist
           path: dist/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom
+          path: sbom/
           if-no-files-found: error
 
   pypi:
@@ -104,60 +179,134 @@ jobs:
     # a branch would otherwise reach PyPI with no tag↔version gate having run.
     if: github.ref_type == 'tag' && (github.event_name == 'push' || !inputs.dry_run)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: release
     permissions:
-      id-token: write # PyPI trusted publishing; no long-lived token to leak
+      id-token: write # PyPI trusted publishing + Sigstore signing
+      attestations: write
+      artifact-metadata: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: dist
           path: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      # SLSA build provenance for the exact wheel and sdist bytes, verifiable
+      # with `gh attestation verify <file> --repo <owner>/<repo>`.
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/*
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
 
   image:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    env:
+      PUBLISH: ${{ github.ref_type == 'tag' && (github.event_name == 'push' || !inputs.dry_run) }}
+      IMAGE: ghcr.io/${{ github.repository_owner }}/trustops
     steps:
-      - uses: actions/checkout@v7
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/login-action@v4
-        if: github.ref_type == 'tag' && (github.event_name == 'push' || !inputs.dry_run)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # reaches the registry. The push below reuses the same cached layers.
+      - name: Build image for scanning
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: false
+          load: true
+          provenance: false
+          tags: trustops:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Scan image (fixable HIGH/CRITICAL block the release)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: trustops:scan
+          version: v0.70.0
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        if: env.PUBLISH == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v6
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         id: meta
         with:
-          images: ghcr.io/${{ github.repository_owner }}/trustops
+          images: ${{ env.IMAGE }}
+          # `latest` must only ever move to a stable release; a prerelease tag
+          # such as v1.0.0-rc.1 gets its exact version and sha tag only.
+          flavor: latest=false
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
-      - uses: docker/build-push-action@v7
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' && !contains(github.ref_name, '-') }}
+            type=sha
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
-          push: ${{ github.ref_type == 'tag' && (github.event_name == 'push' || !inputs.dry_run) }}
+          push: ${{ env.PUBLISH == 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Attest image provenance
+        if: env.PUBLISH == 'true'
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
 
   github-release:
-    needs: [pypi, image]
+    needs: [verify-version, pypi, image]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: CHANGELOG.md
+          sparse-checkout-cone-mode: false
+      - name: Extract this version's changelog section
+        env:
+          VERSION: ${{ needs.verify-version.outputs.version }}
+        run: |
+          awk -v v="${VERSION}" '
+            $1 == "##" { if (found) exit; if ($2 == v) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "::error::CHANGELOG.md section for ${VERSION} is empty"
+            exit 1
+          fi
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: dist
           path: dist
-      - uses: softprops/action-gh-release@v3
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          files: dist/*
+          name: sbom
+          path: sbom
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          body_path: release-notes.md
+          # Appended after body_path: the PR list and contributors.
           generate_release_notes: true
+          files: |
+            dist/*
+            sbom/*.cdx.json

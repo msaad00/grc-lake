@@ -1,19 +1,24 @@
 # Example: block merges when TrustOps posture regresses.
 # Copy into .github/workflows/ and set repository secrets:
-#   TRUSTOPS_URL, TRUSTOPS_API_TOKEN
+#   TRUSTOPS_URL, TRUSTOPS_API_TOKEN (read-scoped API key)
+# Reference: docs/CI_GATE.md
 name: TrustOps posture gate
 
 on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   posture:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
       - name: Evaluate TrustOps posture
-        uses: ./.github/actions/posture-gate
+        id: gate
+        uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.19
         with:
           trustops-url: ${{ secrets.TRUSTOPS_URL }}
           api-token: ${{ secrets.TRUSTOPS_API_TOKEN }}

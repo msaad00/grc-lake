@@ -20,7 +20,7 @@ Avoid duplicate PRs. Before opening work, check this table.
 | Framework visuals   | `cursor/framework-visuals-ux-d259` | KPI tiles, framework marks, dashboard UX |
 | Connector health UX | `cursor/connectors-ux-fixes-d259`  | Account linking strip, sync health       |
 
-See [issues/WAVE3_TRACKER.md](issues/WAVE3_TRACKER.md).
+See [issues/WAVE3_TRACKER.md](../../docs/issues/WAVE3_TRACKER.md).
 
 ## Shipped — close if still open
 
@@ -75,4 +75,4 @@ Optional: existing Snowflake/ClickHouse lake read
 Human console: peer surface on same /api/v1
 ```
 
-See [HEADLESS_CONNECTOR_SETUP.md](playbooks/HEADLESS_CONNECTOR_SETUP.md).
+See [HEADLESS_CONNECTOR_SETUP.md](../../docs/playbooks/HEADLESS_CONNECTOR_SETUP.md).

@@ -1,0 +1,47 @@
+name: Framework request
+description: Ask for a new framework pack, a newer version of one, or mapping corrections.
+labels: ["enhancement", "area-frameworks"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        See docs/FRAMEWORK_COVERAGE.md for what each pack covers today and docs/FRAMEWORK_PACKS.md
+        for how packs are built.
+  - type: input
+    id: framework
+    attributes:
+      label: Framework and version
+      placeholder: "e.g. ISO/IEC 27001:2022"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Request type
+      options:
+        - New framework pack
+        - Newer version of an existing pack
+        - Mapping is wrong or missing
+        - Pack is incomplete
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Official source
+      description: Link to the publisher's catalog or requirement text. Packs are built only from official sources.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: For a mapping problem, give the safeguard ID, framework ID, control ID, and why the mapping is wrong.
+      placeholder: "SG-IDENTITY-001 -> soc2 / SOC2-CC6.3: ..."
+    validations:
+      required: true
+  - type: textarea
+    id: licensing
+    attributes:
+      label: Licensing
+      description: Can the requirement text be redistributed, or only the identifiers? Leave blank if unsure.

@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest a new capability or an improvement to an existing one.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should TrustOps do? Include the API, CLI, or console surface if you have one in mind.
+    validations:
+      required: true
+  - type: dropdown
+    id: persona
+    attributes:
+      label: Who is this for
+      multiple: true
+      options:
+        - Security or GRC lead
+        - Engineer fixing findings
+        - Auditor or reviewer
+        - Platform or DevOps operator
+        - Agent, CI, or automation
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I would like to open a pull request for this.

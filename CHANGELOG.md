@@ -28,6 +28,34 @@ Python package, Helm chart, and bundled web console.
   tenants whose connectors name a shared or default secret must move it to a
   tenant-prefixed variable or add it to `TRUSTOPS_CONNECTOR_SECRET_REFS`; see
   docs/SERVER_AUTH.md#hosted-connector-credentials.
+- Hosted Azure isolation: in server mode `azure-posture` and `intune-devices`
+  authenticate only as the customer's own Entra app registration (`tenant_id`,
+  `client_id`, and one of `client_secret_ref`, `client_certificate_ref`, or
+  `federated_token_file_ref`). `DefaultAzureCredential`, the `az` CLI login,
+  and the server-wide `AZURE_SUBSCRIPTION_ID`/`AZURE_TENANT_ID` overrides are
+  refused for tenants. Local and CLI runs keep `DefaultAzureCredential`.
+  Operator note: hosted Azure and Intune connectors that relied on the
+  server's identity stop syncing until the tenant configures an app
+  registration and the operator provisions its secret under the tenant prefix.
+- Hosted workflow secrets: in server mode `{{secret.NAME}}` resolves from the
+  calling tenant's `TRUSTOPS_TENANT_<TENANT_ID>__SECRET_<NAME>`, not the shared
+  `TRUSTOPS_SECRET_<NAME>`. Operator note: before upgrading, copy each
+  tenant's workflow secrets to its prefixed name (tenant `acme`:
+  `TRUSTOPS_SECRET_SLACK_WEBHOOK` becomes
+  `TRUSTOPS_TENANT_ACME__SECRET_SLACK_WEBHOOK`), or list a secret that is
+  deliberately shared by every tenant in `TRUSTOPS_WORKFLOW_SHARED_SECRETS`.
+  Unmigrated webhook, Slack, and Jira actions fail without sending. Local
+  mode is unchanged.
+- Mapping review: `frameworks review resign --lake <dir> --previous-key-env
+  <NAME>` re-signs the decision-log tip after `TRUSTOPS_COOKIE_SIGNING_KEY`
+  is rotated. It verifies the hash chain and the old tip MAC with the
+  previous key first, refuses and writes nothing if either fails, and records
+  a `tip_resigned` entry in the workbench audit log. Operator note: after
+  rotating the key, run it once per tenant lake. See
+  docs/MAPPING_REVIEW.md#rotating-the-signing-key.
+- SSRF guard: 6to4 (`2002::/16`) and Teredo (`2001::/32`) addresses are
+  judged by the IPv4 addresses they embed, so one that tunnels to a private,
+  loopback, or metadata IPv4 is refused on every supported Python version.
 
 ## 0.2.18 - 2026-09-27
 

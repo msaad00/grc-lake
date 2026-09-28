@@ -327,9 +327,7 @@ def test_6to4_and_teredo_are_judged_even_where_python_calls_them_global(monkeypa
 def test_embedded_ipv4_extraction_matches_the_rfc_layouts() -> None:
     import ipaddress
 
-    assert netguard._embedded_ipv4s(ipaddress.IPv6Address("2002:c0a8:101::1")) == [
-        ipaddress.IPv4Address("192.168.1.1")
-    ]
+    assert netguard._embedded_ipv4s(ipaddress.IPv6Address("2002:c0a8:101::1")) == [ipaddress.IPv4Address("192.168.1.1")]
     assert netguard._embedded_ipv4s(ipaddress.IPv6Address("2001:0:4136:e378:8000:63bf:f5ff:fffe")) == [
         ipaddress.IPv4Address("65.54.227.120"),
         ipaddress.IPv4Address("10.0.0.1"),

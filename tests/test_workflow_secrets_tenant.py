@@ -36,9 +36,7 @@ def captured(monkeypatch: pytest.MonkeyPatch) -> list[urllib.request.Request]:
         return _Response()
 
     monkeypatch.setattr(netguard, "open_guarded", _open)
-    monkeypatch.setattr(
-        netguard.socket, "getaddrinfo", lambda *a, **k: [(2, 1, 6, "", ("93.184.216.34", 0))]
-    )
+    monkeypatch.setattr(netguard.socket, "getaddrinfo", lambda *a, **k: [(2, 1, 6, "", ("93.184.216.34", 0))])
     monkeypatch.setattr(wf, "_webhook_backoff_sleep", lambda _s: None)
     monkeypatch.setenv(wf.EGRESS_ALLOWLIST_ENV, "hooks.example.com")
     monkeypatch.delenv(COMMERCIAL_HOSTED_ENV, raising=False)

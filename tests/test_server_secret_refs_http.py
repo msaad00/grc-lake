@@ -50,7 +50,7 @@ def test_server_legacy_configure_refuses_server_secret_ref(client: TestClient) -
 
 def test_server_configure_accepts_the_tenant_prefix(client: TestClient) -> None:
     # Insecure (no-auth) mode serves the synthetic "insecure" tenant.
-    resp = client.post(CONFIGURE, json=_payload("TRUSTOPS_TENANT_INSECURE_JAMF_SECRET"))
+    resp = client.post(CONFIGURE, json=_payload("TRUSTOPS_TENANT_INSECURE__JAMF_SECRET"))
     assert resp.status_code == HTTPStatus.CREATED, resp.json()
 
 

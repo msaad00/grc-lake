@@ -14,15 +14,17 @@ Python package, Helm chart, and bundled web console.
   New `compliance_reviewer` role and `mapping_review` scope; API keys, agents,
   and MCP tools can list the queue but never decide.
 - Hosted tenant isolation: in server mode, connector secret references resolve
-  only under the tenant's `TRUSTOPS_TENANT_<TENANT_ID>_` prefix or the new
+  only under the tenant's `TRUSTOPS_TENANT_<TENANT_ID>__` prefix or the new
   operator allowlist `TRUSTOPS_CONNECTOR_SECRET_REFS`, and server secrets
   (`TRUSTOPS_*`, `DATABASE_*`, `AWS_*`, `STRIPE_*`, and similar) are always
   refused. Cloud readers need delegated access: AWS `role_arn` plus
   `external_id`, GCP and BigQuery `impersonate_service_account`, a tenant
   `kubeconfig_ref` for Kubernetes. Local Parquet paths are scoped to
   `$TRUSTOPS_LAKE_LOCAL_ROOT/<tenant_id>`. Iceberg REST and Glue readers keep
-  only vended credentials from catalog metadata and refuse non-`s3://`
-  storage locations. Local and CLI runs are unchanged. Operator note: hosted
+  only vended credentials from catalog metadata and accept only object-store
+  locations (`s3://`, or the warehouse's `gs://`); local `file:` warehouses
+  stay available in local and CLI mode only. Local and CLI runs are otherwise
+  unchanged. Operator note: hosted
   tenants whose connectors name a shared or default secret must move it to a
   tenant-prefixed variable or add it to `TRUSTOPS_CONNECTOR_SECRET_REFS`; see
   docs/SERVER_AUTH.md#hosted-connector-credentials.

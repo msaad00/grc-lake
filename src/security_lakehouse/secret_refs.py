@@ -10,8 +10,8 @@ In hosted server mode the process environment holds the server's own secrets
 tenant chooses both the reference and the host the resolved value is sent to.
 There, a name resolves only when it is
 
-* under the tenant's own prefix ``TRUSTOPS_TENANT_<TENANT_ID>_`` (tenant id
-  upper-cased, non-alphanumerics replaced by ``_``), or
+* under the tenant's own prefix ``TRUSTOPS_TENANT_<TENANT_ID>__`` (tenant id
+  upper-cased, ``-`` replaced by ``_``; see :func:`tenant_secret_prefix`), or
 * listed by the operator in ``TRUSTOPS_CONNECTOR_SECRET_REFS`` (comma-separated
   exact names, or ``PREFIX*`` patterns),
 
@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 ALLOWLIST_ENV = "TRUSTOPS_CONNECTOR_SECRET_REFS"
 TENANT_PREFIX_ROOT = "TRUSTOPS_TENANT_"
 ENV_NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+_TENANT_ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 # Server-side secrets and runtime identity. Denied in server mode even when an
 # operator's allowlist pattern would match. ``TRUSTOPS_`` covers every core
@@ -85,8 +86,18 @@ class SecretRefPolicyError(ConnectorConfigError):
     """A credential reference names an env var this tenant may not read."""
 
 
-def tenant_secret_prefix(tenant_id: str) -> str:
-    return TENANT_PREFIX_ROOT + re.sub(r"[^A-Z0-9]", "_", tenant_id.upper()) + "_"
+def tenant_secret_prefix(tenant_id: str) -> str | None:
+    """``TRUSTOPS_TENANT_<ID>__`` for ids that map to it one-to-one, else ``None``.
+
+    Only lowercase alphanumeric ids with single inner hyphens qualify (UUIDs,
+    slugs). Upper-casing and ``-`` -> ``_`` are then injective, and because such
+    an id never yields ``__``, the double-underscore terminator stops one
+    tenant's prefix from also prefixing another's (``a`` vs ``a-b``). Any other
+    id gets no tenant prefix and resolves only operator-allowlisted names.
+    """
+    if not _TENANT_ID_RE.fullmatch(tenant_id or ""):
+        return None
+    return TENANT_PREFIX_ROOT + tenant_id.upper().replace("-", "_") + "__"
 
 
 def _allowlist(env: dict[str, str] | os._Environ[str]) -> tuple[frozenset[str], tuple[str, ...]]:
@@ -108,7 +119,7 @@ def _allowlist(env: dict[str, str] | os._Environ[str]) -> tuple[frozenset[str], 
 
 def _denied_as_server_secret(name: str, tenant_prefix: str | None) -> bool:
     upper = name.upper()
-    if tenant_prefix and upper.startswith(tenant_prefix):
+    if tenant_prefix and name.startswith(tenant_prefix):
         return False
     base = upper[: -len("_FILE")] if upper.endswith("_FILE") else upper
     return base in DENIED_NAMES or upper in DENIED_NAMES or upper.startswith(DENIED_PREFIXES)
@@ -136,7 +147,7 @@ def secret_ref_denial(
     tenant_prefix = tenant_secret_prefix(tenant_id) if tenant_id else None
     if _denied_as_server_secret(candidate, tenant_prefix):
         return f"{label} names a server secret; hosted connectors cannot read server credentials"
-    if tenant_prefix and candidate.upper().startswith(tenant_prefix):
+    if tenant_prefix and candidate.startswith(tenant_prefix):
         return None
     exact, prefixes = _allowlist(source)
     if candidate in exact or any(prefix and candidate.startswith(prefix) for prefix in prefixes):

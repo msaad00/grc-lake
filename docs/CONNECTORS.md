@@ -101,7 +101,7 @@ they are implemented and fixture-tested against the vendor's documented API but
 have not yet been verified against a live tenant.
 
 In hosted server mode, secret references must use the tenant's
-`TRUSTOPS_TENANT_<TENANT_ID>_` prefix or the operator's
+`TRUSTOPS_TENANT_<TENANT_ID>__` prefix or the operator's
 `TRUSTOPS_CONNECTOR_SECRET_REFS` allowlist, and cloud readers need delegated
 access (AWS role plus external ID, GCP `impersonate_service_account`, a tenant
 kubeconfig). See [Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials).

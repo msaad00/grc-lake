@@ -173,7 +173,7 @@ def test_kubernetes_tenant_kubeconfig_ref_is_used_in_server_mode(monkeypatch: py
 
     monkeypatch.setattr(connector_runner, "KubernetesClient", FakeClient)
     monkeypatch.setattr(connector_runner, "collect_kubernetes_evidence", lambda *a, **k: [])
-    prefix = "TRUSTOPS_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F_"
+    prefix = "TRUSTOPS_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
     env = {f"{prefix}KUBECONFIG": "/secrets/tenant/kubeconfig", "KUBERNETES_SERVICE_HOST": "10.0.0.1"}
     with server_execution(TENANT):
         connector_runner._collect_kubernetes(

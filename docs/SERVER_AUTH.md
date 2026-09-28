@@ -310,9 +310,12 @@ Local and CLI runs act for the operator and are unchanged.
 `client_secret_ref`, `credential_ref`, `kubeconfig_ref`, `options.token_env`)
 names an environment variable. In server mode a name resolves only when it is:
 
-- under the tenant's own prefix `TRUSTOPS_TENANT_<TENANT_ID>_`, where the tenant
-  id is upper-cased with every non-alphanumeric replaced by `_` (for tenant
-  `3f2b8c1e-9a4d-...`, `TRUSTOPS_TENANT_3F2B8C1E_9A4D_..._JAMF_SECRET`), or
+- under the tenant's own prefix `TRUSTOPS_TENANT_<TENANT_ID>__`: the tenant id
+  upper-cased, `-` replaced by `_`, then a double underscore (for tenant
+  `3f2b8c1e-9a4d-...`, `TRUSTOPS_TENANT_3F2B8C1E_9A4D_...__JAMF_SECRET`). Only
+  lowercase alphanumeric ids with single inner hyphens (UUIDs, slugs) get a
+  prefix, so no two tenants share one and no tenant's prefix starts another's;
+  a tenant with any other id resolves only allowlisted names, or
 - listed in `TRUSTOPS_CONNECTOR_SECRET_REFS`, a comma-separated list of exact
   names or `PREFIX*` patterns set by the operator.
 

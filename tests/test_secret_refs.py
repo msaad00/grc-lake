@@ -16,7 +16,7 @@ from security_lakehouse.secret_refs import (
 )
 
 TENANT = "3f2b8c1e-9a4d-4c2b-8f1e-2a6b7c8d9e0f"
-TENANT_PREFIX = "TRUSTOPS_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F_"
+TENANT_PREFIX = "TRUSTOPS_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
 
 
 @pytest.fixture(autouse=True)
@@ -24,8 +24,34 @@ def _no_hosted_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(COMMERCIAL_HOSTED_ENV, raising=False)
 
 
-def test_tenant_prefix_is_upper_snake_of_tenant_id() -> None:
+def test_tenant_prefix_is_upper_snake_of_tenant_id_with_terminator() -> None:
     assert tenant_secret_prefix(TENANT) == TENANT_PREFIX
+    assert tenant_secret_prefix("insecure") == "TRUSTOPS_TENANT_INSECURE__"
+
+
+@pytest.mark.parametrize("tenant_id", ["a_b", "A-B", "a--b", "-a", "a-", "a.b", "", "a b"])
+def test_ids_that_cannot_map_injectively_get_no_prefix(tenant_id: str) -> None:
+    assert tenant_secret_prefix(tenant_id) is None
+
+
+def test_tenant_prefixes_never_collide_or_nest() -> None:
+    """ "a-b" vs "a_b" and "a" vs "a-b" were ambiguous under plain upper-snake."""
+    assert tenant_secret_prefix("a-b") != tenant_secret_prefix("a_b")
+    short, longer = tenant_secret_prefix("a"), tenant_secret_prefix("a-b")
+    assert short is not None and longer is not None
+    assert not longer.startswith(short)
+    env = {longer + "TOKEN": "tenant-a-b-secret"}
+    with server_execution("a"):
+        assert secret_ref_denial(longer + "TOKEN", env=env)
+    with server_execution("a-b"):
+        assert resolve_secret_ref(longer + "TOKEN", env) == "tenant-a-b-secret"
+
+
+def test_ineligible_tenant_id_only_gets_the_operator_allowlist() -> None:
+    env = {"TRUSTOPS_TENANT_A_B__TOKEN": "x", "ACME_TOKEN": "y", ALLOWLIST_ENV: "ACME_TOKEN"}
+    with server_execution("a_b"):
+        assert secret_ref_denial("TRUSTOPS_TENANT_A_B__TOKEN", env=env)
+        assert resolve_secret_ref("ACME_TOKEN", env) == "y"
 
 
 def test_local_mode_resolves_any_name_unchanged() -> None:

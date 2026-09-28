@@ -22,6 +22,10 @@ mappings, with a trail an auditor can follow. This module is that overlay:
 from __future__ import annotations
 
 import copy
+import hashlib
+import hmac
+import json
+import os
 import uuid
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
@@ -52,6 +56,12 @@ MAX_EVIDENCE_REF_CHARS = 1000
 MAX_REVIEWER_CHARS = 320
 MAX_BATCH_ITEMS = 500
 
+# When the server's session-signing key is configured, the chain tip is also
+# MACed with a key derived from it, so rewriting the whole log (recomputing
+# every hash) is detectable by anyone without that key.
+SIGNING_KEY_ENV = "TRUSTOPS_COOKIE_SIGNING_KEY"
+_TIP_MAC_DOMAIN = b"trustops-mapping-review-tip-v1"
+
 __all__ = [
     "DECISIONS",
     "DEFAULT_SAFEGUARDS",
@@ -64,7 +74,9 @@ __all__ = [
     "record_decisions",
     "review_attestation",
     "review_log_path",
+    "review_log_verified",
     "review_progress",
+    "review_tip_path",
     "verify_review_log",
 ]
 
@@ -76,6 +88,34 @@ class MappingReviewError(ValueError):
 def review_log_path(lake_dir: str | Path) -> Path:
     """Return the tenant's append-only decision log."""
     return Path(lake_dir) / "gold" / "mapping_reviews.jsonl"
+
+
+def review_tip_path(lake_dir: str | Path) -> Path:
+    """Return the sidecar holding the MAC over the decision log tip."""
+    return Path(lake_dir) / "gold" / "mapping_reviews.tip.json"
+
+
+def _tip_key() -> bytes | None:
+    secret = os.environ.get(SIGNING_KEY_ENV, "").strip()
+    if not secret:
+        return None
+    return hmac.new(secret.encode("utf-8"), _TIP_MAC_DOMAIN, hashlib.sha256).digest()
+
+
+def _tip_mac(key: bytes, length: int, tip_hash: str | None) -> str:
+    message = f"{length}:{tip_hash or ''}".encode()
+    return hmac.new(key, message, hashlib.sha256).hexdigest()
+
+
+def _write_tip(lake_dir: str | Path, length: int, tip_hash: str | None) -> None:
+    key = _tip_key()
+    if key is None:
+        return
+    target = review_tip_path(lake_dir)
+    body = {"length": length, "tip_hash": tip_hash, "mac": _tip_mac(key, length, tip_hash)}
+    tmp = target.with_name(target.name + ".tmp")
+    tmp.write_text(json.dumps(body, sort_keys=True), encoding="utf-8")
+    os.replace(tmp, target)
 
 
 def _index(payload: JsonObject) -> dict[MappingKey, tuple[JsonObject, JsonObject]]:
@@ -188,7 +228,17 @@ def record_decisions(
             latest[key] = decision_id
         return records
 
-    return append_chained_jsonl_batch(review_log_path(lake_dir), build)
+    log = verify_review_log(lake_dir)
+    if not log["ok"]:
+        raise MappingReviewError(
+            "the decision log failed verification, so no new decision can be recorded on it; "
+            "restore gold/mapping_reviews.jsonl from backup (see docs/MAPPING_REVIEW.md)"
+        )
+    return append_chained_jsonl_batch(
+        review_log_path(lake_dir),
+        build,
+        on_appended=lambda length, tip_hash: _write_tip(lake_dir, length, tip_hash),
+    )
 
 
 def list_decisions(
@@ -226,8 +276,40 @@ def latest_decisions(lake_dir: str | Path) -> dict[MappingKey, JsonObject]:
 
 
 def verify_review_log(lake_dir: str | Path) -> JsonObject:
-    """Verify the decision log hash chain."""
-    return verify_chained_jsonl(review_log_path(lake_dir))
+    """Verify the decision log hash chain and, when a signing key is set, the tip MAC.
+
+    A log that cannot be parsed (for example a torn trailing line after a
+    crash) is reported as not ok rather than raised. ``tip_mac`` is
+    ``not_configured`` without a key, else ``verified``, ``missing`` or
+    ``invalid``.
+    """
+    try:
+        log = verify_chained_jsonl(review_log_path(lake_dir))
+    except ValueError as exc:
+        log = {"ok": False, "length": None, "tip_hash": None, "issues": [str(exc)]}
+    key = _tip_key()
+    if key is None:
+        return {**log, "tip_mac": "not_configured"}
+    if not log["length"] and log["ok"]:
+        return {**log, "tip_mac": "verified"}
+    try:
+        sidecar = json.loads(review_tip_path(lake_dir).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {**log, "ok": False, "tip_mac": "missing", "issues": [*log["issues"], "tip MAC sidecar is missing"]}
+    except (OSError, ValueError):
+        sidecar = {}
+    expected = _tip_mac(key, int(log["length"] or 0), log["tip_hash"])
+    recorded = str(sidecar.get("mac") or "") if isinstance(sidecar, dict) else ""
+    if not hmac.compare_digest(expected, recorded):
+        return {**log, "ok": False, "tip_mac": "invalid", "issues": [*log["issues"], "tip MAC does not match the log"]}
+    return {**log, "tip_mac": "verified"}
+
+
+def review_log_verified(lake_dir: str | Path | None) -> bool:
+    """True when there is no log to apply, or the log verifies."""
+    if lake_dir is None:
+        return True
+    return bool(verify_review_log(lake_dir)["ok"])
 
 
 def _decision_summary(row: JsonObject) -> JsonObject:
@@ -248,10 +330,16 @@ def effective_safeguards(lake_dir: str | Path | None = None, *, payload: JsonObj
     Each member gains ``effective_review_state`` and ``org_review`` (the decision
     in force, or ``None``). With no lake, or no decisions, the states equal the
     shipped review status. The shipped payload is never mutated.
+
+    Decisions are applied only from a log that verifies. When it does not, every
+    mapping falls back to its shipped state and the payload carries
+    ``review_log_verified: False`` so each coverage surface can say so.
     """
     shipped = payload if payload is not None else load_safeguards()
-    decisions = latest_decisions(lake_dir) if lake_dir is not None else {}
+    verified = review_log_verified(lake_dir)
+    decisions = latest_decisions(lake_dir) if lake_dir is not None and verified else {}
     effective = copy.deepcopy(shipped)
+    effective["review_log_verified"] = verified
     for entry in effective.get("safeguards", []):
         for member in entry.get("satisfies", []):
             row = decisions.get((str(entry["safeguard_id"]), str(member.get("control_id"))))
@@ -275,7 +363,7 @@ def list_review_items(
         for member in entry.get("satisfies", [])
     }
     counts: dict[MappingKey, int] = {}
-    if lake_dir is not None:
+    if lake_dir is not None and effective["review_log_verified"]:
         for row in read_jsonl(review_log_path(lake_dir), missing_ok=True):
             key = (str(row.get("safeguard_id")), str(row.get("control_id")))
             counts[key] = counts.get(key, 0) + 1
@@ -337,6 +425,7 @@ def review_progress(lake_dir: str | Path | None, *, payload: JsonObject | None =
         "families": families,
         "totals": totals,
         "states": REVIEW_STATE_LABELS,
+        "review_log_verified": bool(effective["review_log_verified"]),
     }
 
 
@@ -350,7 +439,8 @@ def review_attestation(lake_dir: str | Path) -> JsonObject:
     """
     try:
         log = verify_review_log(lake_dir)
-        coverage = coverage_by_framework(effective_safeguards(lake_dir))
+        effective = effective_safeguards(lake_dir)
+        coverage = coverage_by_framework(effective)
     except (OSError, ValueError) as exc:
         return {"summary": None, "decision_log": {"ok": False, "error": str(exc)}}
     return {
@@ -365,11 +455,13 @@ def review_attestation(lake_dir: str | Path) -> JsonObject:
             "org_reviewed_mappings": coverage["org_reviewed_mappings"],
             "needs_changes_mappings": coverage["needs_changes_mappings"],
             "rejected_mappings": coverage["rejected_mappings"],
+            "review_log_verified": bool(effective["review_log_verified"]),
         },
         "decision_log": {
             "ok": log["ok"],
             "length": log["length"],
             "tip_hash": log["tip_hash"],
             "issues": log["issues"],
+            "tip_mac": log["tip_mac"],
         },
     }

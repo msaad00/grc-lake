@@ -446,3 +446,113 @@ def _first_proposed_item() -> dict[str, str]:
             if member.get("review_status") == "proposed":
                 return _item(entry["safeguard_id"], member["control_id"], member["framework_id"])
     raise AssertionError("no proposed mapping shipped")
+
+
+# --- chain integrity -------------------------------------------------------------
+
+
+@pytest.fixture
+def _no_signing_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("TRUSTOPS_COOKIE_SIGNING_KEY", raising=False)
+
+
+def _rewrite_first_decision(lake: Path, **changes: str) -> None:
+    path = review_log_path(lake)
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    rows[0].update(changes)
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+
+
+@pytest.mark.usefixtures("_no_signing_key")
+def test_tampered_log_is_not_applied_and_reports_unverified(tmp_path: Path) -> None:
+    _decide(tmp_path, "reject", SOC2_REVIEWED)
+    _rewrite_first_decision(tmp_path, decision="approve")
+
+    effective = effective_safeguards(tmp_path, payload=_PAYLOAD)
+    assert effective["review_log_verified"] is False
+    states = {
+        (entry["safeguard_id"], member["control_id"]): member["effective_review_state"]
+        for entry in effective["safeguards"]
+        for member in entry["satisfies"]
+    }
+    # Falls back to the shipped state: no org decision is in force.
+    assert states[("SG-A", "SOC2-CC6.1")] == "maintainer_reviewed"
+    assert states[("SG-A", "ISO27001-A.5.15")] == "proposed"
+    assert all(member["org_review"] is None for entry in effective["safeguards"] for member in entry["satisfies"])
+    assert review_progress(tmp_path, payload=_PAYLOAD)["review_log_verified"] is False
+
+
+@pytest.mark.usefixtures("_no_signing_key")
+def test_torn_trailing_line_is_unverified_not_a_crash(tmp_path: Path) -> None:
+    _decide(tmp_path, "approve", ISO)
+    with review_log_path(tmp_path).open("a", encoding="utf-8") as handle:
+        handle.write('{"decision_id": "half-writ')
+    effective = effective_safeguards(tmp_path, payload=_PAYLOAD)
+    assert effective["review_log_verified"] is False
+    assert verify_review_log(tmp_path)["ok"] is False
+
+
+@pytest.mark.usefixtures("_no_signing_key")
+def test_intact_log_is_applied_and_reports_verified(tmp_path: Path) -> None:
+    assert effective_safeguards(tmp_path, payload=_PAYLOAD)["review_log_verified"] is True
+    _decide(tmp_path, "approve", ISO)
+    effective = effective_safeguards(tmp_path, payload=_PAYLOAD)
+    assert effective["review_log_verified"] is True
+    assert review_progress(tmp_path, payload=_PAYLOAD)["review_log_verified"] is True
+
+
+@pytest.mark.usefixtures("_no_signing_key")
+def test_batch_is_written_with_a_single_append(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import os as os_module
+
+    from security_lakehouse import ledger
+
+    writes: list[bytes] = []
+    real_write = os_module.write
+
+    def spy(fd: int, data: bytes) -> int:
+        writes.append(bytes(data))
+        return real_write(fd, data)
+
+    monkeypatch.setattr(ledger.os, "write", spy)
+    records = _decide(tmp_path, "approve", ISO, HIPAA)
+    assert len(records) == 2
+    assert len(writes) == 1
+    assert writes[0].count(b"\n") == 2
+    assert verify_review_log(tmp_path)["ok"] is True
+
+
+def test_signed_tip_detects_a_consistently_rewritten_chain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from security_lakehouse.ledger import canonical_record_hash
+
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "k" * 48)
+    _decide(tmp_path, "reject", SOC2_REVIEWED)
+    log = verify_review_log(tmp_path)
+    assert log["ok"] is True and log["tip_mac"] == "verified"
+
+    # Someone with write access to the lake but not the key recomputes the
+    # chain after editing a decision: the hashes line up, the MAC does not.
+    path = review_log_path(tmp_path)
+    row = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+    row["decision"] = "approve"
+    row["record_hash"] = canonical_record_hash(row)
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    log = verify_review_log(tmp_path)
+    assert log["ok"] is False and log["tip_mac"] == "invalid"
+    assert effective_safeguards(tmp_path, payload=_PAYLOAD)["review_log_verified"] is False
+
+
+def test_signed_tip_missing_sidecar_is_unverified(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "k" * 48)
+    _decide(tmp_path, "approve", ISO)
+    mapping_review.review_tip_path(tmp_path).unlink()
+    log = verify_review_log(tmp_path)
+    assert log["ok"] is False and log["tip_mac"] == "missing"
+
+
+@pytest.mark.usefixtures("_no_signing_key")
+def test_without_a_signing_key_the_tip_mac_is_not_configured(tmp_path: Path) -> None:
+    _decide(tmp_path, "approve", ISO)
+    log = verify_review_log(tmp_path)
+    assert log["ok"] is True and log["tip_mac"] == "not_configured"

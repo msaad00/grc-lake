@@ -43,6 +43,7 @@ from security_lakehouse.connector_state import (
     run_discovery,
     run_probe,
 )
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.framework_detail import build_framework_detail
 from security_lakehouse.framework_provenance import build_framework_view
 from security_lakehouse.generations import generation_identity, generation_reader
@@ -150,7 +151,11 @@ def list_snapshots(lake_dir: str | Path) -> list[JsonObject]:
 
 def _ccf_coverage(lake: Path) -> JsonObject:
     effective = effective_safeguards(lake)
-    return {"families": coverage_by_family(effective), "frameworks": coverage_by_framework(effective)}
+    return {
+        "families": coverage_by_family(effective),
+        "frameworks": coverage_by_framework(effective),
+        "review_log_verified": bool(effective["review_log_verified"]),
+    }
 
 
 # Route -> (resource name, loader) for endpoints returning a single object.
@@ -1602,10 +1607,7 @@ def _mapping_review_get(path: str, params: Params, lake: Path) -> tuple[HTTPStat
         except ValueError as exc:
             return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", str(exc), resource="mapping-reviews.decisions")
     if path == "/api/v1/mapping-reviews/summary":
-        try:
-            log = verify_review_log(lake)
-        except ValueError as exc:
-            log = {"ok": False, "length": None, "tip_hash": None, "issues": [str(exc)]}
+        log = verify_review_log(lake)
         return HTTPStatus.OK, envelope("mapping-reviews.summary", {**review_progress(lake), "decision_log": log})
     return HTTPStatus.NOT_FOUND, error_envelope("not_found", "unknown route")
 
@@ -1696,9 +1698,15 @@ def handle_post(
     payload = body or {}
     if path == MAPPING_REVIEW_DECISIONS_PATH:
         # Local mode has no authenticated principal, so the reviewer is named in
-        # the body and the record says it was unauthenticated. Server mode never
-        # reaches this branch: it serves the path from its own route with the
-        # signed-in user as reviewer.
+        # the body and the record says it was unauthenticated. Server mode serves
+        # the path from its own route with the signed-in user as reviewer; this
+        # guard keeps that true even if route registration order ever changes.
+        if in_server_mode():
+            return HTTPStatus.FORBIDDEN, error_envelope(
+                "forbidden",
+                "mapping review decisions require a signed-in console session",
+                resource="mapping-reviews.decisions",
+            )
         return record_mapping_review(
             payload,
             lake,

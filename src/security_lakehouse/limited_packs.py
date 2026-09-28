@@ -73,6 +73,7 @@ def _limited_row_transform(
         source_url=source_url,
         official_source_ref=framework_id,
         required_evidence_types=tuple(row.extra.get("required_evidence_types", ())),
+        reconciled_at=row.extra.get("source_reconciled_at"),
     )
 
 

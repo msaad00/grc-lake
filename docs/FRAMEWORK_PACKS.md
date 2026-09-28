@@ -163,7 +163,7 @@ equal to the pack sizes above.
 
 Run `frameworks sync-packs --pack gdpr --pack hipaa --pack pci-dss --pack eu-ai-act`
 to merge expanded honest subsets (20 GDPR articles, 18 HIPAA sections, 12 PCI
-requirements, 15 EU AI Act articles as of v0.2.x). These are **not** full
+requirements, 16 EU AI Act articles as of v0.2.x). These are **not** full
 official catalogs — see [Framework Coverage](FRAMEWORK_COVERAGE.md) for counts.
 
 PCI DSS cites **v4.0.1** and seeds all 12 principal requirements at the

@@ -27,7 +27,7 @@ for the manifest schema and the "add a new framework" workflow.
 | `gdpr_2016_679.json`             | `gdpr`              |                                          **14** |
 | `hipaa_security_rule.json`       | `hipaa`             |                                          **12** |
 | `pci_dss_v4.json`                | `pci-dss`           |                                          **12** |
-| `eu_ai_act_2024_1689.json`       | `eu-ai-act`         |                                           **9** |
+| `eu_ai_act_2024_1689.json`       | `eu-ai-act`         |                                          **10** |
 | `evidence_connector_hints.json`  | all packs           |                                               — |
 
 `nist_csf_2_core.json` is the original manifest precedent for this pattern

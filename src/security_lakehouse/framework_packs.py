@@ -621,7 +621,7 @@ PACK_BUILDERS = {**PACK_BUILDERS, **LIMITED_PACK_BUILDERS}
 
 def _review_fields(spec: PackControlSpec) -> tuple[str | None, str, str | None]:
     """(reviewed_by, review_status, reviewed date) for a generated pack row."""
-    reconciled = SOURCE_RECONCILED_PACKS.get(spec.framework_id)
+    reconciled = spec.reconciled_at or SOURCE_RECONCILED_PACKS.get(spec.framework_id)
     if reconciled:
         return SOURCE_RECONCILED_BY, "proposed", reconciled
     if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS:
@@ -630,7 +630,7 @@ def _review_fields(spec: PackControlSpec) -> tuple[str | None, str, str | None]:
 
 
 def pack_control_row(spec: PackControlSpec) -> JsonObject:
-    reconciled = SOURCE_RECONCILED_PACKS.get(spec.framework_id)
+    reconciled = spec.reconciled_at or SOURCE_RECONCILED_PACKS.get(spec.framework_id)
     reviewed_by, review_status, reviewed_date = _review_fields(spec)
     return {
         "control_id": spec.control_id,

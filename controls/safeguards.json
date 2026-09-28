@@ -4674,12 +4674,6 @@
           "review_status": "reviewed"
         },
         {
-          "control_id": "EU-AI-ACT-Art.49",
-          "framework_id": "eu-ai-act-2024-1689",
-          "role": "equivalent",
-          "review_status": "proposed"
-        },
-        {
           "control_id": "EU-AI-ACT-Art.9",
           "framework_id": "eu-ai-act-2024-1689",
           "role": "equivalent",
@@ -4905,6 +4899,18 @@
             "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
             "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
             "locator": "Article 13(3)"
+          }
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.27",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2024/1689 (Artificial Intelligence Act)",
+            "url": "https://publications.europa.eu/resource/cellar/dc8116a1-3fe6-11ef-865a-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "bba630444b3278e881066774002a1d7824308934f49ccfa203e65be43692f55e",
+            "locator": "Article 27"
           }
         }
       ],
@@ -5768,6 +5774,18 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.49",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2024/1689 (Artificial Intelligence Act)",
+            "url": "https://publications.europa.eu/resource/cellar/dc8116a1-3fe6-11ef-865a-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "bba630444b3278e881066774002a1d7824308934f49ccfa203e65be43692f55e",
+            "locator": "Article 49"
+          }
         }
       ],
       "asset_types": [

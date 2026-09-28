@@ -2045,9 +2045,16 @@
       "owner": "ai-security"
     },
     {
+      "control_id": "EU-AI-ACT-Art.27",
+      "framework": "EU AI Act",
+      "title": "Fundamental rights impact assessment by deployers",
+      "risk_domain": "ai-governance",
+      "owner": "privacy-office"
+    },
+    {
       "control_id": "EU-AI-ACT-Art.49",
       "framework": "EU AI Act",
-      "title": "Fundamental-rights impact assessment where required",
+      "title": "High-risk AI system registration in the EU database",
       "risk_domain": "ai-governance",
       "owner": "privacy-office"
     },

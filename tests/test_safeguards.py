@@ -221,6 +221,7 @@ def test_review_report_groups_frameworks_categories_and_source_gaps() -> None:
         "nist-800-171-rev3",
         "nis2-2022-2555",
         "dora-2022-2554",
+        "eu-ai-act-2024-1689",
     }
 
 

@@ -23,6 +23,17 @@ Python package, Helm chart, and bundled web console.
 - Test reliability: the API rate-limit tests run on a frozen clock, and the
   connector registry tests restore process-global state and ignore connectors
   from installed packages.
+- Framework packs: NIST SP 800-171 Rev 3 (all 97 requirements from NIST's
+  OSCAL catalog, each with its Rev 2 predecessors from NIST's change
+  analysis), EU NIS2 (Article 21(2)(a)-(j) measures and Article 23
+  reporting) and EU DORA (99 financial-entity obligations across Articles
+  5-30 and 45). Sources are pinned by sha256; every new CCF mapping is
+  proposed, and requirements without an honest safeguard home are listed.
+  CMMC 2.0 Level 2 stays on Rev 2.
+- EU AI Act: `EU-AI-ACT-Art.49` carried the fundamental rights impact
+  assessment title, which is Article 27. It is now "Registration" (version
+  1.1.0; the old version stays in history), its risk-assessment mapping moved
+  to the AI governance safeguard, and Article 27 is added.
 
 ## 0.2.19 - 2026-09-28
 

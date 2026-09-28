@@ -2,13 +2,13 @@
   "schema_version": "trustops.catalog_bundle.v1",
   "as_of": null,
   "framework_count": 22,
-  "control_count": 2244,
-  "crosswalk_count": 2244,
+  "control_count": 2245,
+  "crosswalk_count": 2245,
   "components": {
     "frameworks": "2b46444467ecf7d5c645826f234291c934329934f0e74c15711e7732fef8ebf5",
-    "controls": "68c4c782886f6f491ab782bec5c9bb78aaddc497d9519c6ddd2c17f45f1f9755",
-    "crosswalk": "747f9642f51127d29a3072f35c5b7a578e5046d31678b1a6b86094711c39e0c4",
-    "safeguards": "2c37ff7f5814570ff5827b2317f4c0b629a7a1c667bbfff0227eac5d1d6db997"
+    "controls": "f070be718a366e65432330abe7df935bcc24d6440bfd9beef26aa42e753f9a3d",
+    "crosswalk": "6e5da4bca255a50d8de62711666404a764293ca65d46eec7bb8abed659ddc471",
+    "safeguards": "1b2ae04abd4a7b64473a6a9fbfaa889ac33dda4338632be59c0fb64bd75558a5"
   },
   "framework_versions": [
     {
@@ -2247,10 +2247,17 @@
       "lifecycle_status": "active"
     },
     {
-      "control_id": "EU-AI-ACT-Art.49",
+      "control_id": "EU-AI-ACT-Art.27",
       "framework_id": "eu-ai-act-2024-1689",
       "version": "1.0.0",
-      "valid_from": "2026-06-30",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "EU-AI-ACT-Art.49",
+      "framework_id": "eu-ai-act-2024-1689",
+      "version": "1.1.0",
+      "valid_from": "2026-09-28",
       "lifecycle_status": "active"
     },
     {
@@ -15876,5 +15883,5 @@
       "lifecycle_status": "active"
     }
   ],
-  "bundle_sha256": "7166b91b496eb380610c1844630ee3c62fc28c4e6fdf6b921fdcb037ad60d58b"
+  "bundle_sha256": "6f50e84a85098171ecda2c32463506fca33b14e27daa79da6fe41144ddf6a3e6"
 }

@@ -4279,16 +4279,32 @@
       ]
     },
     {
+      "control_id": "EU-AI-ACT-Art.27",
+      "framework_id": "eu-ai-act-2024-1689",
+      "articles": [
+        {
+          "article_id": "Art.27",
+          "title": "Fundamental rights impact assessment by deployers",
+          "official_source_url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202401689",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to EU AI Act Art.27."
+        }
+      ]
+    },
+    {
       "control_id": "EU-AI-ACT-Art.49",
       "framework_id": "eu-ai-act-2024-1689",
       "articles": [
         {
           "article_id": "Art.49",
-          "title": "Fundamental-rights impact assessment where required",
+          "title": "High-risk AI system registration in the EU database",
           "official_source_url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202401689",
-          "reviewed_by": "internal-trust-team",
-          "reviewed_at": "2026-06-30T00:00:00Z",
-          "rationale": "Pack mapping to EU AI Act Art.49."
+          "reviewed_by": "automated-source-reconciliation",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to EU AI Act Art.49 (Registration).",
+          "review_status": "proposed"
         }
       ]
     },

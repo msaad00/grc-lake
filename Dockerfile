@@ -15,7 +15,7 @@
 # Base images are pinned by multi-arch index digest so a rebuild of the same
 # commit gets the same bytes; Dependabot's docker ecosystem bumps tag + digest
 # together. uv is copied from its official image, pinned the same way.
-FROM ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.19@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424 AS uv
 
 # --- 1. React workbench ----------------------------------------------------
 FROM node:22-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS web-build

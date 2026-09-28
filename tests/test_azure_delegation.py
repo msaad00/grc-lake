@@ -101,7 +101,7 @@ def test_server_mode_builds_a_client_secret_credential_from_the_tenant_prefix(cr
 
 
 def test_server_mode_builds_a_certificate_credential(credential_log) -> None:
-    pem = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----"
+    pem = "-----BEGIN CERTIFICATE-----\nabc\n-----END CERTIFICATE-----"
     env = {f"{PREFIX}AZURE_CERT": pem}
     with server_execution(TENANT):
         delegation.azure_credential(

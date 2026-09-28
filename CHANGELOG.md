@@ -46,9 +46,9 @@ Python package, Helm chart, and bundled web console.
   deliberately shared by every tenant in `TRUSTOPS_WORKFLOW_SHARED_SECRETS`.
   Unmigrated webhook, Slack, and Jira actions fail without sending. Local
   mode is unchanged.
-- Mapping review: `frameworks review resign --lake <dir> --previous-key-env
-  <NAME>` re-signs the decision-log tip after `TRUSTOPS_COOKIE_SIGNING_KEY`
-  is rotated. It verifies the hash chain and the old tip MAC with the
+- Mapping review: the new `frameworks review resign` command
+  (`--lake <dir> --previous-key-env <NAME>`) re-signs the decision-log tip
+  after `TRUSTOPS_COOKIE_SIGNING_KEY` is rotated. It verifies the hash chain and the old tip MAC with the
   previous key first, refuses and writes nothing if either fails, and records
   a `tip_resigned` entry in the workbench audit log. Operator note: after
   rotating the key, run it once per tenant lake. See

@@ -3,6 +3,13 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Posture gate fails closed: when an allowlist of failing controls is set and
+  the control-tests request fails, the gate now fails instead of reporting zero
+  failing tests, and failing tests beyond the fetched page count as unexpected
+  instead of being dropped. Empty lists no longer crash on macOS bash 3.2.
+
 ## 0.2.19 - 2026-09-28
 
 - Operator note (hosted / multi-tenant server mode only; self-hosted

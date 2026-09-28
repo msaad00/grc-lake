@@ -23,7 +23,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_errors import ConnectorConfigError
 from security_lakehouse.connector_ids import stable_id_slug
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.io import read_json
 from security_lakehouse.lake_mapping import (
     MappingSpec,
@@ -34,6 +36,7 @@ from security_lakehouse.lake_mapping import (
     resolve_mappings,
 )
 from security_lakehouse.models import utc_iso
+from security_lakehouse.secret_refs import resolve_secret_ref
 
 CONNECTOR_ID = "snowflake-evidence-lake"
 SOURCE = "snowflake"
@@ -341,15 +344,23 @@ def _probe_query_params(
     private_key_file_pwd_ref = str(credentials.get("private_key_file_pwd_ref") or "").strip()
     authenticator = str(options.get("authenticator") or credentials.get("authenticator") or "").strip()
 
+    if in_server_mode(env):
+        # A hosted tenant must not point the connector at a key file on the
+        # server's disk or open a browser on the server.
+        if private_key_file:
+            raise ConnectorConfigError("Snowflake private_key_file is not accepted in hosted mode; use private_key_ref")
+        if credential_ref.lower() == "externalbrowser" or authenticator.lower() == "externalbrowser":
+            raise ConnectorConfigError("Snowflake externalbrowser auth is not available in hosted mode")
+
     if private_key_ref:
-        private_key_file = env.get(private_key_ref)
+        private_key_file = resolve_secret_ref(private_key_ref, env, field="private_key_ref", file_first=False)
         if not private_key_file:
             raise ValueError(f"Snowflake private_key_ref environment variable {private_key_ref!r} is not set")
         authenticator = authenticator or "SNOWFLAKE_JWT"
     elif private_key_file:
         authenticator = authenticator or "SNOWFLAKE_JWT"
     elif credential_ref and credential_ref.lower() != "externalbrowser":
-        oauth_token = env.get(credential_ref)
+        oauth_token = resolve_secret_ref(credential_ref, env, field="credential_ref", file_first=False)
         if not oauth_token:
             raise ValueError(f"Snowflake credential_ref environment variable {credential_ref!r} is not set")
         authenticator = authenticator or "oauth"
@@ -360,7 +371,11 @@ def _probe_query_params(
     else:
         authenticator = authenticator or "externalbrowser"
 
-    private_key_file_pwd = env.get(private_key_file_pwd_ref) if private_key_file_pwd_ref else None
+    private_key_file_pwd = (
+        resolve_secret_ref(private_key_file_pwd_ref, env, field="private_key_file_pwd_ref", file_first=False)
+        if private_key_file_pwd_ref
+        else None
+    )
     params = {
         "account": account,
         "user": user,

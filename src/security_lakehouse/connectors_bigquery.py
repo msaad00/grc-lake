@@ -4,7 +4,10 @@ Reads existing BigQuery tables through lake mappings with one parameterized
 standard-SQL SELECT per mapping (``@name`` query parameters; only validated
 identifiers reach the SQL text). Authentication is Application Default
 Credentials: workload identity, an attached service account, or gcloud ADC.
-No key file is configured in TrustOps.
+No key file is configured in TrustOps. ``impersonate_service_account`` makes the
+reader impersonate a customer service account from that ADC identity; hosted
+server mode requires it, and there a fully qualified source table must live in
+the configured project unless ``options.allow_cross_project`` is set.
 
 Least privilege is ``roles/bigquery.jobUser`` on the project that runs the
 query plus ``roles/bigquery.dataViewer`` on the source dataset. Every query
@@ -21,6 +24,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_errors import ConnectorConfigError
+from security_lakehouse.delegation import gcp_credentials
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.lake_mapping import (
     DEFAULT_MAX_ROWS,
     MappingSpec,
@@ -51,6 +57,7 @@ class BigQueryClient:
         location: str | None = None,
         maximum_bytes_billed: int = DEFAULT_MAXIMUM_BYTES_BILLED,
         credentials: Any = None,
+        allow_cross_project: bool = False,
     ) -> None:
         if not _PROJECT.fullmatch(str(project or "")):
             raise ValueError("project_id must be a Google Cloud project id (6-30 lowercase letters, digits, '-')")
@@ -70,9 +77,16 @@ class BigQueryClient:
         self.project = project
         self.dataset = dataset
         self.maximum_bytes_billed = int(maximum_bytes_billed)
+        self.allow_cross_project = bool(allow_cross_project)
         self.client = bigquery.Client(project=project, location=location, credentials=credentials)
 
     def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
+        parts = str(spec.source_table).split(".")
+        if len(parts) == 3 and parts[0] != self.project and not self.allow_cross_project and in_server_mode():
+            raise ConnectorConfigError(
+                f"mapping {spec.name!r} reads a table outside the configured project; "
+                "set options.allow_cross_project to allow it"
+            )
         namespace = (self.project, self.dataset) if self.dataset else ()
         query = compile_select(spec, "bigquery", since=since, limit=limit, default_namespace=namespace)
         job_config = self._bigquery.QueryJobConfig(
@@ -110,6 +124,8 @@ def client_from_config(credentials: dict[str, Any], options: dict[str, Any]) -> 
         dataset=str(credentials.get("dataset") or "").strip() or None,
         location=str(credentials.get("location") or "").strip() or None,
         maximum_bytes_billed=cap,
+        credentials=gcp_credentials(credentials),
+        allow_cross_project=str(options.get("allow_cross_project") or "").strip().lower() in {"1", "true", "yes"},
     )
 
 

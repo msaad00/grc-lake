@@ -9,14 +9,103 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from security_lakehouse.parquet_export import SCHEMA_VERSION, export_parquet
+from security_lakehouse.secret_refs import resolve_secret_ref
 
 TENANT_PROPERTY = "trustops.tenant_id"
 FORMAT_PROPERTY = "trustops.evidence_format"
 FORMAT_VERSION = "trustops.iceberg_evidence.v1"
 
+# Storage schemes a remote catalog's metadata may point FileIO at. Everything
+# else -- file paths, bare paths, http(s), hdfs, other clouds -- is refused, so
+# table metadata cannot read the TrustOps host's disk or reach internal hosts.
+OBJECT_STORE_SCHEMES = ("s3", "s3a", "s3n")
+# A REST warehouse configured on another object store opts in its scheme.
+_WAREHOUSE_SCHEME_GROUPS = {"gs": ("gs", "gcs"), "gcs": ("gs", "gcs")}
+# The only FileIO properties a catalog (config or table response) may supply:
+# vended short-lived credentials, their expiry, and the region. Endpoints,
+# proxies, signers, role ARNs, retry/FileIO implementation classes, and
+# default-scheme overrides are dropped.
+VENDED_STORAGE_KEYS = frozenset(
+    {
+        "s3.access-key-id",
+        "s3.secret-access-key",
+        "s3.session-token",
+        "s3.region",
+        "client.access-key-id",
+        "client.secret-access-key",
+        "client.session-token",
+        "client.region",
+        "gcs.oauth2.token",
+        "gcs.oauth2.token-expires-at",
+    }
+)
+
 
 class IcebergPublicationError(ValueError):
     """Safe error text for local operators; never exposes a provider response."""
+
+
+def storage_properties(properties):
+    """Keep only vended-credential FileIO properties from catalog-supplied config."""
+    return {
+        key: str(value)
+        for key, value in dict(properties or {}).items()
+        if key in VENDED_STORAGE_KEYS and value is not None
+    }
+
+
+def warehouse_schemes(warehouse):
+    """Extra storage schemes a configured warehouse location opts in to."""
+    scheme = urlsplit(str(warehouse or "")).scheme.lower()
+    return _WAREHOUSE_SCHEME_GROUPS.get(scheme, ())
+
+
+_GUARDED_IO_CLASS = None
+
+
+def _guarded_io_class():
+    global _GUARDED_IO_CLASS
+    if _GUARDED_IO_CLASS is None:
+        from pyiceberg.io import InputFile, OutputFile
+        from pyiceberg.io.pyarrow import PyArrowFileIO
+
+        class GuardedPyArrowFileIO(PyArrowFileIO):
+            allowed_schemes = frozenset(OBJECT_STORE_SCHEMES)
+
+            def _check(self, location):
+                text = location.location if isinstance(location, InputFile | OutputFile) else str(location)
+                if urlsplit(text).scheme.lower() not in self.allowed_schemes:
+                    raise IcebergPublicationError(
+                        "storage location must use an object-store scheme such as s3; "
+                        "local paths, HTTP, and other schemes are refused"
+                    )
+
+            def _initialize_fs(self, scheme, netloc=None):
+                if str(scheme).lower() not in self.allowed_schemes:
+                    raise IcebergPublicationError("storage location scheme is not allowed")
+                return super()._initialize_fs(scheme, netloc)
+
+            def new_input(self, location):
+                self._check(location)
+                return super().new_input(location)
+
+            def new_output(self, location):
+                self._check(location)
+                return super().new_output(location)
+
+            def delete(self, location):
+                self._check(location)
+                return super().delete(location)
+
+        _GUARDED_IO_CLASS = GuardedPyArrowFileIO
+    return _GUARDED_IO_CLASS
+
+
+def guarded_file_io(properties, *, extra_schemes=()):
+    """A PyArrow FileIO limited to vended credentials and object-store locations."""
+    io = _guarded_io_class()(storage_properties(properties))
+    io.allowed_schemes = frozenset(OBJECT_STORE_SCHEMES) | frozenset(extra_schemes)
+    return io
 
 
 def _identifier(value):
@@ -47,14 +136,16 @@ def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_ht
         raise IcebergPublicationError(
             "catalog URI must use HTTPS without embedded credentials; loopback HTTP requires explicit opt-in"
         )
-    if not re.fullmatch(r"[A-Z_][A-Z0-9_]*", token_env) or not os.environ.get(token_env):
+    if not re.fullmatch(r"[A-Z_][A-Z0-9_]*", token_env):
         raise IcebergPublicationError("the configured bearer-token environment variable is missing or invalid")
-    token = os.environ[token_env]
+    token = resolve_secret_ref(token_env, dict(os.environ), field="credential_ref", file_first=False)
+    if not token:
+        raise IcebergPublicationError("the configured bearer-token environment variable is missing or invalid")
     if any(character.isspace() for character in token):
         raise IcebergPublicationError("bearer token must not contain whitespace")
+    extra_schemes = warehouse_schemes(warehouse)
     try:
         from pyiceberg.catalog.rest import RestCatalog
-        from pyiceberg.io.pyarrow import PyArrowFileIO
 
         class EvidenceRestCatalog(RestCatalog):
             def _fetch_config(self):
@@ -86,9 +177,10 @@ def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_ht
                 )
 
             def _load_file_io(self, properties=None, location=None):
-                # Do not dynamically import a FileIO implementation supplied in
-                # remote table metadata. Preserve scoped vended storage settings.
-                return PyArrowFileIO({**self.properties, **(properties or {})})
+                # Never import a FileIO named by the server, and keep only the
+                # vended credentials from its config/table responses: no
+                # endpoint, proxy, signer, or local/HTTP locations.
+                return guarded_file_io({**self.properties, **(properties or {})}, extra_schemes=extra_schemes)
 
         return EvidenceRestCatalog("trustops", uri=uri.rstrip("/"), warehouse=warehouse, token=token)
     except IcebergPublicationError:

@@ -150,6 +150,8 @@ from security_lakehouse.connectors_workday import (
     WorkdayReportFixtureClient,
     collect_workday_evidence,
 )
+from security_lakehouse.delegation import gcp_credentials, server_env_override
+from security_lakehouse.execution_mode import in_server_mode, server_execution, server_tenant_id
 from security_lakehouse.ingestion.merge import dedupe_by_key
 from security_lakehouse.ingestion.watermark import read_watermark, write_watermark
 from security_lakehouse.io import read_jsonl, write_jsonl
@@ -168,6 +170,7 @@ from security_lakehouse.offboarding import (
 )
 from security_lakehouse.pipeline import normalize_raw_events
 from security_lakehouse.repo_governance import sync_repo_governance
+from security_lakehouse.secret_refs import resolve_provider_default, resolve_ref_or_default, resolve_secret_ref
 from security_lakehouse.sinks import land_if_configured
 from security_lakehouse.validation import validate_raw_events
 
@@ -195,10 +198,10 @@ def _resolve_provider_token(token_env: str, provider_env: str, env: dict[str, st
     source credential cannot silently become another source's auth header.
     """
     if token_env != DEFAULT_TOKEN_ENV:
-        explicit = env.get(token_env)
+        explicit = resolve_secret_ref(token_env, env, field="credential_ref", file_first=False)
         if explicit:
             return explicit
-    return env.get(provider_env)
+    return resolve_provider_default(provider_env, env, file_first=False)
 
 
 def _read_secret_file_first(name: str, env: dict[str, str]) -> str | None:
@@ -208,23 +211,10 @@ def _read_secret_file_first(name: str, env: dict[str, str]) -> str | None:
     convention) is read first, so the raw secret can live on disk with
     least-privilege permissions and be revoked by rotating the file, rather than
     sitting inline in the process environment. Falls back to the ``<NAME>`` value
-    when no file is configured. Returns ``None`` when neither is set.
+    when no file is configured. Returns ``None`` when neither is set. In hosted
+    server mode the name must pass :mod:`secret_refs` policy.
     """
-    name = (name or "").strip()
-    if not name:
-        return None
-    file_path = env.get(f"{name}_FILE")
-    if file_path:
-        try:
-            file_value = Path(file_path).read_text(encoding="utf-8").strip()
-        except OSError as exc:
-            # The variable name can come from a stored credential ref, which an
-            # operator may have filled with the secret itself, so it is not logged.
-            logger.warning("a configured *_FILE secret mount is unreadable (%s)", exc.__class__.__name__)
-            return None
-        return file_value or None
-    inline = env.get(name)
-    return inline.strip() if inline and inline.strip() else None
+    return resolve_secret_ref(name, env)
 
 
 def _resolve_provider_secret(ref: str, provider_env: str, env: dict[str, str]) -> str | None:
@@ -234,11 +224,8 @@ def _resolve_provider_secret(ref: str, provider_env: str, env: dict[str, str]) -
     otherwise the provider-specific default variable is used. Each name is
     resolved file-first via :func:`_read_secret_file_first`.
     """
-    for name in (ref, provider_env):
-        value = _read_secret_file_first(name, env)
-        if value:
-            return value
-    return None
+    value = resolve_secret_ref(ref, env) if (ref or "").strip() else None
+    return value or resolve_provider_default(provider_env, env)
 
 
 # Environment variable carrying the Okta org base URL for live collection. The
@@ -349,6 +336,22 @@ def run_connector_sync(
     materialize: bool = True,
 ) -> ConnectorSyncResult:
     """Run one configured connector and persist its evidence + run event."""
+    if in_server_mode() and not server_tenant_id():
+        tenant_id = server_tenant_id(lake_dir)
+        if tenant_id:
+            # A hosted run without request context (a scheduler or CLI pass over
+            # the server's tenant lakes) still acts for the lake's tenant, so
+            # tenant-prefixed secret refs resolve and nothing else does.
+            with server_execution(tenant_id):
+                return run_connector_sync(
+                    lake_dir,
+                    connector_id=connector_id,
+                    actor=actor,
+                    repo=repo,
+                    fixture_dir=fixture_dir,
+                    token_env=token_env,
+                    materialize=materialize,
+                )
     lake = Path(lake_dir)
     start = time.perf_counter()
     try:
@@ -575,14 +578,14 @@ def _build_github(inputs: SyncInputs) -> list[dict[str, Any]]:
     effective_repo = (inputs.repo or str(inputs.options.get("repo") or "")).strip()
     if not effective_repo:
         raise ValueError("github-security sync requires options.repo (owner/name)")
-    token_env = GITHUB_APP_INSTALLATION_TOKEN_ENV if inputs.token_env == DEFAULT_TOKEN_ENV else inputs.token_env
+    # None lets repo governance fall back to the provider default, which the
+    # secret-ref policy governs separately from an explicit reference.
     cred_ref = str(inputs.credentials.get("credential_ref") or "").strip()
-    if cred_ref:
-        token_env = cred_ref
+    explicit = cred_ref or (None if inputs.token_env == DEFAULT_TOKEN_ENV else inputs.token_env)
     return sync_repo_governance(
         effective_repo,
         fixture_dir=inputs.fixture_dir,
-        token_env=token_env,
+        token_env=explicit,
         provider="github",
     )
 
@@ -591,14 +594,14 @@ def _build_gitlab(inputs: SyncInputs) -> list[dict[str, Any]]:
     effective_repo = (inputs.repo or str(inputs.options.get("repo") or "")).strip()
     if not effective_repo:
         raise ValueError("gitlab-security sync requires options.repo (namespace/project)")
-    token_env = "TRUSTOPS_GITLAB_ACCESS_TOKEN" if inputs.token_env == DEFAULT_TOKEN_ENV else inputs.token_env
+    # None lets repo governance fall back to the provider default, which the
+    # secret-ref policy governs separately from an explicit reference.
     cred_ref = str(inputs.credentials.get("credential_ref") or "").strip()
-    if cred_ref:
-        token_env = cred_ref
+    explicit = cred_ref or (None if inputs.token_env == DEFAULT_TOKEN_ENV else inputs.token_env)
     return sync_repo_governance(
         effective_repo,
         fixture_dir=inputs.fixture_dir,
-        token_env=token_env,
+        token_env=explicit,
         provider="gitlab",
     )
 
@@ -972,8 +975,12 @@ def _collect_aws(
             f"{AWS_ACCOUNT_ID_ENV}, plus read-only AWS credentials "
             "(SSO profile, assumed role, instance role, or the standard provider chain)"
         )
-    role_arn = (env.get(AWS_ROLE_ARN_ENV) or str(creds.get("role_arn") or "")).strip() or None
-    external_id = (env.get(AWS_EXTERNAL_ID_ENV) or str(creds.get("external_id") or "")).strip() or None
+    # An operator env override would point every hosted tenant at one role, so
+    # server mode uses only the tenant's stored role and external id.
+    role_arn = (server_env_override(env.get(AWS_ROLE_ARN_ENV)) or str(creds.get("role_arn") or "")).strip() or None
+    external_id = (
+        server_env_override(env.get(AWS_EXTERNAL_ID_ENV)) or str(creds.get("external_id") or "")
+    ).strip() or None
     default_region = env.get(AWS_REGION_ENV) or str(scope.get("region") or "us-east-1")
     client = AWSClient(region_name=default_region, role_arn=role_arn, external_id=external_id)
     # Never label one account's evidence with another account's id.
@@ -1081,7 +1088,7 @@ def _collect_gcp(
             "(Application Default Credentials: gcloud auth application-default login, "
             "GOOGLE_APPLICATION_CREDENTIALS, or workload identity)"
         )
-    client = GCPClient(project_id)
+    client = GCPClient(project_id, credentials=gcp_credentials(credentials or {}))
     return collect_gcp_evidence(client, project_id=project_id)
 
 
@@ -1287,10 +1294,21 @@ def _collect_kubernetes(
             "service account (in-cluster, or a kubeconfig named by kubeconfig_ref / KUBECONFIG)"
         )
     kubeconfig_ref = str(creds.get("kubeconfig_ref") or "").strip()
-    kubeconfig_path = (env.get(kubeconfig_ref) if kubeconfig_ref else None) or env.get(KUBECONFIG_ENV) or None
-    in_cluster = _truthy(creds.get("in_cluster")) or (
-        not kubeconfig_path and bool(env.get(KUBERNETES_SERVICE_HOST_ENV))
-    )
+    kubeconfig_path = resolve_secret_ref(kubeconfig_ref, env, field="kubeconfig_ref", file_first=False)
+    if in_server_mode(env):
+        # The server's own service account and kubeconfig belong to the
+        # operator; a hosted tenant must name its own kubeconfig.
+        if _truthy(creds.get("in_cluster")) or not kubeconfig_path:
+            raise ConnectorConfigError(
+                "kubernetes-cluster in hosted mode requires kubeconfig_ref naming the tenant kubeconfig; "
+                "the in-cluster service account and the server KUBECONFIG are not used"
+            )
+        in_cluster = False
+    else:
+        kubeconfig_path = kubeconfig_path or env.get(KUBECONFIG_ENV) or None
+        in_cluster = _truthy(creds.get("in_cluster")) or (
+            not kubeconfig_path and bool(env.get(KUBERNETES_SERVICE_HOST_ENV))
+        )
     context = str(creds.get("context") or "").strip() or None
     return collect_kubernetes_evidence(
         KubernetesClient(cluster_name, context=context, kubeconfig_path=kubeconfig_path, in_cluster=in_cluster),
@@ -1371,8 +1389,14 @@ def _collect_clickhouse(
     else:
         host = str(credentials.get("host") or env.get("CLICKHOUSE_HOST") or "").strip()
         user = str(credentials.get("user") or env.get("CLICKHOUSE_USER") or "default").strip() or "default"
-        token_env = str(credentials.get("credential_ref") or "CLICKHOUSE_PASSWORD")
-        password = str(credentials.get("token") or credentials.get("password") or env.get(token_env) or "").strip()
+        password = str(
+            credentials.get("token")
+            or credentials.get("password")
+            or resolve_ref_or_default(
+                credentials.get("credential_ref"), "CLICKHOUSE_PASSWORD", env, field="credential_ref", file_first=False
+            )
+            or ""
+        ).strip()
         if not host:
             raise ValueError(
                 "clickhouse-telemetry-lake sync requires --fixture-dir, or host plus read-only credentials"
@@ -1405,8 +1429,12 @@ def _collect_s3(
             raise ValueError(
                 "object-storage-evidence sync requires --fixture-dir, or options.bucket plus read-only S3 credentials"
             )
-        role_arn = (env.get(AWS_ROLE_ARN_ENV) or str(credentials.get("role_arn") or "")).strip() or None
-        external_id = (env.get(AWS_EXTERNAL_ID_ENV) or str(credentials.get("external_id") or "")).strip() or None
+        role_arn = (
+            server_env_override(env.get(AWS_ROLE_ARN_ENV)) or str(credentials.get("role_arn") or "")
+        ).strip() or None
+        external_id = (
+            server_env_override(env.get(AWS_EXTERNAL_ID_ENV)) or str(credentials.get("external_id") or "")
+        ).strip() or None
         client = S3Client(
             bucket=bucket,
             prefix=prefix,
@@ -1432,8 +1460,13 @@ def _collect_siem(
         client: SiemClient | SiemFixtureClient = SiemFixtureClient(fixture_dir, index=index)
     else:
         host = str(credentials.get("host") or env.get("SIEM_EXPORT_URL") or "").strip()
-        token_env = str(credentials.get("credential_ref") or "TRUSTOPS_SIEM_TOKEN")
-        token = str(credentials.get("token") or env.get(token_env) or "").strip()
+        token = str(
+            credentials.get("token")
+            or resolve_ref_or_default(
+                credentials.get("credential_ref"), "TRUSTOPS_SIEM_TOKEN", env, field="credential_ref", file_first=False
+            )
+            or ""
+        ).strip()
         if not host:
             raise ValueError("siem-alerts sync requires --fixture-dir, or host plus read-only credentials")
         netguard.assert_url_is_public(host, label="siem export url")
@@ -1458,8 +1491,17 @@ def _collect_runtime_gateway(
         )
     else:
         host = str(credentials.get("host") or env.get("RUNTIME_GATEWAY_URL") or "").strip()
-        token_env = str(credentials.get("credential_ref") or "TRUSTOPS_RUNTIME_GATEWAY_TOKEN")
-        token = str(credentials.get("token") or env.get(token_env) or "").strip()
+        token = str(
+            credentials.get("token")
+            or resolve_ref_or_default(
+                credentials.get("credential_ref"),
+                "TRUSTOPS_RUNTIME_GATEWAY_TOKEN",
+                env,
+                field="credential_ref",
+                file_first=False,
+            )
+            or ""
+        ).strip()
         if not host:
             raise ValueError("runtime-gateway sync requires --fixture-dir, or host plus read-only credentials")
         netguard.assert_url_is_public(host, label="runtime gateway url")
@@ -1502,16 +1544,26 @@ def _collect_snowflake(
             "role": str(options.get("role") or env.get(SNOWFLAKE_ROLE_ENV) or "").strip(),
             "authenticator": str(options.get("authenticator") or env.get(SNOWFLAKE_AUTHENTICATOR_ENV) or "").strip(),
         }
-        if token_env != DEFAULT_TOKEN_ENV and env.get(token_env):
+        if token_env != DEFAULT_TOKEN_ENV and resolve_secret_ref(
+            token_env, env, field="credential_ref", file_first=False
+        ):
             effective_credentials["credential_ref"] = token_env
-        elif not effective_credentials["credential_ref"] and env.get(SNOWFLAKE_OAUTH_TOKEN_ENV):
+        elif not effective_credentials["credential_ref"] and resolve_provider_default(
+            SNOWFLAKE_OAUTH_TOKEN_ENV, env, file_first=False
+        ):
             effective_credentials["credential_ref"] = SNOWFLAKE_OAUTH_TOKEN_ENV
-        if not effective_credentials["private_key_ref"] and env.get(SNOWFLAKE_PRIVATE_KEY_FILE_ENV):
+        if not effective_credentials["private_key_ref"] and resolve_provider_default(
+            SNOWFLAKE_PRIVATE_KEY_FILE_ENV, env, file_first=False
+        ):
             effective_credentials["private_key_ref"] = SNOWFLAKE_PRIVATE_KEY_FILE_ENV
-        if not effective_credentials["private_key_file_pwd_ref"] and env.get(SNOWFLAKE_PRIVATE_KEY_FILE_PWD_ENV):
+        if not effective_credentials["private_key_file_pwd_ref"] and resolve_provider_default(
+            SNOWFLAKE_PRIVATE_KEY_FILE_PWD_ENV, env, file_first=False
+        ):
             effective_credentials["private_key_file_pwd_ref"] = SNOWFLAKE_PRIVATE_KEY_FILE_PWD_ENV
         try:
             params = _probe_query_params(credentials=effective_credentials, options=effective_options, env=env)
+        except ConnectorConfigError:
+            raise
         except ValueError as exc:
             raise ValueError(
                 "snowflake-evidence-lake sync requires --fixture-dir, or "

@@ -81,6 +81,7 @@ from security_lakehouse.db import tags as tags_db
 from security_lakehouse.db.base import DEFAULT_PAGE_LIMIT, clamp_limit, create_engine_for, session_factory
 from security_lakehouse.db.models import REMEDIATION_PRIORITIES, USER_ROLES, User
 from security_lakehouse.demo_links import build_demo_kit
+from security_lakehouse.execution_mode import run_in_server_mode, server_execution
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import resolve_path
 from security_lakehouse.public_url import normalize_public_url
@@ -1163,6 +1164,14 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             raise RuntimeError("TRUSTOPS_SESSION_SECRET is required when OIDC SSO is configured")
         app.add_middleware(SessionMiddleware, secret_key=secret, same_site="lax", https_only=_COOKIE_SECURE)
         app.state.oauth = build_oauth(app.state.oidc_config)
+
+    @app.middleware("http")
+    async def _server_execution_mode(request: Request, call_next):
+        # Every request here acts for a tenant, never the operator: connector
+        # secret refs, ambient cloud identity, and local paths take the hosted
+        # policy. Routes that know the tenant re-enter with its id.
+        with server_execution(None):
+            return await call_next(request)
 
     @app.middleware("http")
     async def _security_headers(request: Request, call_next):
@@ -3257,7 +3266,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.get("/api/v1/frameworks/{framework_id}/detail", tags=["data"])
     def v1_framework_detail(framework_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:
-        _status, body = api_v1.handle_get(f"/api/v1/frameworks/{framework_id}/detail", {}, lake_for(identity))
+        with server_execution(identity.tenant_id):
+            _status, body = api_v1.handle_get(f"/api/v1/frameworks/{framework_id}/detail", {}, lake_for(identity))
         return JSONResponse(_redact_payload(body, identity), status_code=int(_status))
 
     @app.get("/api/v1/frameworks/coverage", tags=["data"])
@@ -3306,6 +3316,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 ),
             )
         result_status, payload = await run_in_threadpool(
+            run_in_server_mode,
+            identity.tenant_id,
             api_v1.record_mapping_review,
             body.model_dump(),
             lake_for(identity),
@@ -3356,7 +3368,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     # --- versioned data surface (authenticated) ---
     @app.get("/api/v1/{rest:path}")
     def v1_get(rest: str, request: Request, identity: Identity = Depends(_require_read)) -> JSONResponse:
-        _status, body = api_v1.handle_get(f"/api/v1/{rest}", _params(request), lake_for(identity))
+        with server_execution(identity.tenant_id):
+            _status, body = api_v1.handle_get(f"/api/v1/{rest}", _params(request), lake_for(identity))
         return JSONResponse(_redact_payload(body, identity), status_code=int(_status))
 
     @app.post("/api/v1/{rest:path}")
@@ -3384,6 +3397,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         # commits); this route has no other pending DB work, so committing
         # once here persists them.
         _status, payload = await run_in_threadpool(
+            run_in_server_mode,
+            identity.tenant_id,
             api_v1.handle_post,
             v1_path,
             body,
@@ -3397,7 +3412,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     # Registered after the v1 routes so /api/v1/* and /api/healthz keep priority.
     @app.get("/api/{rest:path}")
     def legacy_get(rest: str, request: Request, identity: Identity = Depends(_require_read)) -> JSONResponse:
-        _status, body = api_legacy.handle_get(f"/api/{rest}", _params(request), lake_for(identity))
+        with server_execution(identity.tenant_id):
+            _status, body = api_legacy.handle_get(f"/api/{rest}", _params(request), lake_for(identity))
         return JSONResponse(_redact_payload(body, identity), status_code=int(_status))
 
     @app.post("/api/{rest:path}")
@@ -3423,6 +3439,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         # /api/snapshots, which also deserves webhook dispatch -- it has the
         # same auth/tenant machinery as the versioned route.
         response = await run_in_threadpool(
+            run_in_server_mode,
+            identity.tenant_id,
             _legacy_post_response,
             legacy_path,
             body,

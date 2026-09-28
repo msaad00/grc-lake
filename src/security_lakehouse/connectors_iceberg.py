@@ -13,11 +13,16 @@ and typed values, so scans prune files and partitions. Rows are then ordered by
 the observed-time column and bounded per sync, and ``lake_mapping.map_rows``
 re-applies the same filters and bound.
 
-Egress: Glue and S3 use the AWS SDK's regional endpoints (no endpoint override
-is accepted, and FileIO ignores storage settings supplied by table metadata).
-A REST catalog URI must be HTTPS and resolve to a public address (netguard);
-the hardened REST client from ``iceberg_export`` refuses redirects and
-endpoint relocation.
+Egress: Glue and S3 use the AWS SDK's regional endpoints; no endpoint override
+is accepted from TrustOps configuration. Catalog-supplied storage settings are
+filtered, not trusted: FileIO keeps only vended short-lived credentials and the
+region from a REST catalog's config/table responses (endpoint, proxy, signer,
+role, retry and FileIO implementation keys are dropped), and every metadata,
+manifest, and data location must use an s3 scheme (or the configured REST
+warehouse's object-store scheme). ``file:``, bare paths, and HTTP are refused
+for REST and Glue alike (see ``iceberg_export.guarded_file_io``). A REST catalog
+URI must be HTTPS and resolve to a public address (netguard); the hardened REST
+client from ``iceberg_export`` refuses redirects and endpoint relocation.
 
 Requires the ``iceberg`` extra (pyiceberg + pyarrow) for Iceberg and the
 ``parquet`` extra (pyarrow) for Parquet; AWS catalogs also need boto3.
@@ -33,6 +38,9 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_errors import ConnectorConfigError
+from security_lakehouse.delegation import require_aws_delegation
+from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
 from security_lakehouse.lake_mapping import (
     DEFAULT_MAX_ROWS,
     MappingError,
@@ -44,6 +52,7 @@ from security_lakehouse.lake_mapping import (
     resolve_mapping_ref,
     resolve_mappings,
 )
+from security_lakehouse.secret_refs import SecretRefPolicyError, secret_ref_denial
 
 CONNECTOR_ID = "iceberg-parquet-lake"
 SOURCE = "iceberg"
@@ -238,11 +247,19 @@ def build_reader(
     if catalog_type == "rest":
         uri = str(credentials.get("uri") or "").strip()
         warehouse = str(credentials.get("warehouse") or "").strip()
-        token_env = str(credentials.get("credential_ref") or DEFAULT_REST_TOKEN_ENV).strip()
+        explicit_ref = str(credentials.get("credential_ref") or "").strip()
+        token_env = explicit_ref or DEFAULT_REST_TOKEN_ENV
         if not uri or not warehouse:
             raise ValueError("iceberg-parquet-lake REST catalogs need uri and warehouse")
         if not _ENV_NAME.fullmatch(token_env):
             raise ValueError("credential_ref must name an environment variable holding the catalog bearer token")
+        denial = secret_ref_denial(token_env, env=env, field="credential_ref")
+        if denial and explicit_ref:
+            raise SecretRefPolicyError(denial)
+        if denial:
+            raise ConnectorConfigError(
+                "iceberg-parquet-lake REST catalogs in hosted mode need credential_ref naming the tenant token"
+            )
         if not uri.startswith("https://"):
             raise ValueError("iceberg-parquet-lake REST catalog uri must use https")
         netguard.assert_url_is_public(uri, label="iceberg rest catalog")
@@ -257,6 +274,9 @@ def build_reader(
         region = _region(credentials) if credentials.get("region") else None
         role_arn = _optional(credentials, "role_arn", _ROLE_ARN)
         paths = _parquet_paths(credentials, options)
+        external_id = _optional(credentials, "external_id", _EXTERNAL_ID)
+        if any(str(uri).strip().startswith("s3://") for uri in paths.values()):
+            require_aws_delegation(role_arn, external_id, label="iceberg-parquet-lake")
         session_credentials = (
             _assume_role(role_arn, _optional(credentials, "external_id", _EXTERNAL_ID), region) if role_arn else None
         )
@@ -274,10 +294,10 @@ def glue_catalog(
     catalog_id: str | None = None,
 ) -> Any:
     """A pyiceberg Glue catalog whose FileIO is pinned to catalog-level settings."""
+    require_aws_delegation(role_arn, external_id, label="iceberg-parquet-lake")
     try:
         import boto3  # noqa: PLC0415
         from pyiceberg.catalog.glue import GlueCatalog  # noqa: PLC0415
-        from pyiceberg.io.pyarrow import PyArrowFileIO  # noqa: PLC0415
     except ImportError as exc:  # pragma: no cover - optional extra
         raise RuntimeError(
             "iceberg-parquet-lake Glue reads need the 'iceberg' and 'cloud' extras (pyiceberg, pyarrow, boto3)"
@@ -306,8 +326,11 @@ def glue_catalog(
     class PinnedGlueCatalog(GlueCatalog):
         def _load_file_io(self, properties: Any = None, location: str | None = None) -> Any:
             # Table metadata must not redirect storage reads (endpoint, proxy,
-            # signer) or choose the FileIO implementation.
-            return PyArrowFileIO(dict(self.properties))
+            # signer), choose the FileIO implementation, or point a metadata,
+            # manifest, or data location at the local disk or an HTTP host.
+            from security_lakehouse.iceberg_export import guarded_file_io  # noqa: PLC0415
+
+            return guarded_file_io(dict(self.properties))
 
     return PinnedGlueCatalog("trustops_glue", client=glue_client, **properties)
 
@@ -447,6 +470,16 @@ def _parse_location(uri: str, env: Any) -> tuple[str, str]:
         raise ValueError(f"local Parquet paths are disabled; set {LOCAL_ROOT_ENV} to the directory they may read")
     resolved = Path(text).resolve()
     allowed = Path(root).resolve()
+    if in_server_mode(env if isinstance(env, dict) else None):
+        # The root is shared by the whole server; each hosted tenant reads only
+        # its own <root>/<tenant_id> subtree.
+        tenant_id = server_tenant_id()
+        if not tenant_id or "/" in tenant_id or tenant_id in {".", ".."}:
+            raise ValueError("local Parquet paths in hosted mode need a tenant context")
+        allowed = (allowed / tenant_id).resolve()
+        if resolved != allowed and allowed not in resolved.parents:
+            raise ValueError(f"local Parquet path is outside this tenant's directory under {LOCAL_ROOT_ENV}")
+        return "local", str(resolved)
     if resolved != allowed and allowed not in resolved.parents:
         raise ValueError(f"local Parquet path is outside {LOCAL_ROOT_ENV}")
     return "local", str(resolved)
@@ -470,6 +503,7 @@ def _assume_role(role_arn: str, external_id: str | None, region: str | None) -> 
         import boto3  # noqa: PLC0415
     except ImportError as exc:  # pragma: no cover - optional extra
         raise RuntimeError("assuming an AWS role needs boto3 (the 'cloud' extra)") from exc
+    require_aws_delegation(role_arn, external_id, label="iceberg-parquet-lake")
     kwargs: dict[str, Any] = {"RoleArn": role_arn, "RoleSessionName": "trustops-lake-reader"}
     if external_id:
         kwargs["ExternalId"] = external_id

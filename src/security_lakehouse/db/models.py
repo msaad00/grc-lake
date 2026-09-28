@@ -18,7 +18,7 @@ from security_lakehouse.db.base import Base
 
 # Server-mode roles. ``viewer`` and ``analyst`` are not accepted aliases here;
 # the API surface uses explicit product roles so audit events are unambiguous.
-USER_ROLES = ("admin", "security_admin", "contributor", "auditor", "read_only")
+USER_ROLES = ("admin", "security_admin", "compliance_reviewer", "contributor", "auditor", "read_only")
 
 # Remediation workflow vocabularies.
 REMEDIATION_STATUSES = ("open", "in_progress", "blocked", "resolved", "dismissed")

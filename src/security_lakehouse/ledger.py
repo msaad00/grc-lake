@@ -12,6 +12,7 @@ import fcntl
 import hashlib
 import json
 import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -86,6 +87,37 @@ def append_chained_jsonl(
         chained[hash_field] = canonical_record_hash(chained, hash_field=hash_field)
         append_jsonl(target, chained)
         return chained
+
+
+def append_chained_jsonl_batch(
+    path: str | Path,
+    build: Callable[[list[dict[str, Any]]], list[dict[str, Any]]],
+    *,
+    prev_field: str = "prev_hash",
+    hash_field: str = "record_hash",
+) -> list[dict[str, Any]]:
+    """Append the records ``build(existing_rows)`` returns, chained, under one lock.
+
+    ``build`` sees the chain as it is while the lock is held, so records that
+    reference earlier rows (for example "this supersedes decision X") are
+    derived from the same state they are appended to, even with concurrent
+    writers in other processes.
+    """
+    target = Path(path)
+    with chain_lock(target):
+        rows = read_jsonl(target, missing_ok=True)
+        prev_hash: str | None = None
+        if rows:
+            tip = rows[-1].get(hash_field)
+            prev_hash = tip if isinstance(tip, str) and tip else canonical_record_hash(rows[-1], hash_field=hash_field)
+        written: list[dict[str, Any]] = []
+        for record in build(rows):
+            chained = {**record, prev_field: prev_hash}
+            chained[hash_field] = canonical_record_hash(chained, hash_field=hash_field)
+            append_jsonl(target, chained)
+            written.append(chained)
+            prev_hash = chained[hash_field]
+        return written
 
 
 def verify_chained_jsonl(

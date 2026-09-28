@@ -15,6 +15,7 @@ SENSITIVITY_RANK = {level: index for index, level in enumerate(SENSITIVITY_LEVEL
 ROLE_SENSITIVITY_CEILING: dict[str, str] = {
     "admin": "restricted",
     "security_admin": "restricted",
+    "compliance_reviewer": "confidential",
     "contributor": "confidential",
     "read_only": "confidential",
     "auditor": "internal",

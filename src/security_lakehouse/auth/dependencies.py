@@ -23,6 +23,7 @@ _INSECURE_IDENTITY = Identity(
     role="admin",
     scopes=scopes_for_role("admin"),
     workspace_id="insecure",
+    auth_method="insecure",
 )
 
 
@@ -68,6 +69,7 @@ def get_identity(
             scopes=scopes_for_role(key.user.role),
             workspace_id=key.workspace_id,
             api_key_id=key.id,
+            auth_method="api_key",
         )
         identity = _apply_billing_state(session, identity)
         request.state.identity = identity
@@ -91,6 +93,7 @@ def get_identity(
             role=sess.user.role,
             scopes=scopes_for_role(sess.user.role),
             workspace_id=sess.tenant_id,
+            auth_method=f"session:{sess.idp or 'unknown'}",
         )
         identity = _apply_billing_state(session, identity)
         request.state.identity = identity

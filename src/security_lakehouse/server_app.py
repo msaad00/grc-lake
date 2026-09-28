@@ -29,7 +29,7 @@ from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.concurrency import run_in_threadpool
@@ -192,6 +192,7 @@ _require_control_manage = require_scope("control_manage")
 # inbound connector (admin/security_admin only) — reading the (secret-free)
 # list/detail is ordinary `read`.
 _require_connector_manage = require_scope("connector_manage")
+_require_mapping_review = require_scope("mapping_review")
 
 
 class CreateKeyRequest(_StrictModel):
@@ -421,6 +422,25 @@ class ApproveAgentDecisionRequest(_StrictModel):
     note: str = ""
 
 
+class MappingRef(_StrictModel):
+    safeguard_id: str = Field(min_length=1, max_length=128)
+    control_id: str = Field(min_length=1, max_length=128)
+    framework_id: str = Field(min_length=1, max_length=128)
+
+
+class MappingReviewDecisionRequest(_StrictModel):
+    """One org review decision over one or more mappings.
+
+    There is deliberately no ``reviewer`` field: the reviewer is the signed-in
+    user, and a client-supplied one is rejected as an unknown field.
+    """
+
+    decision: Literal["approve", "reject", "needs_changes"]
+    rationale: str = Field(max_length=4000)
+    items: list[MappingRef] = Field(min_length=1, max_length=500)
+    evidence_ref: str | None = Field(default=None, max_length=1000)
+
+
 def _snapshot_written_hook(session: Session, tenant_id: str) -> SnapshotWrittenHook:
     """Build the ``write_assessment_snapshot`` hook that dispatches webhook events.
 
@@ -514,7 +534,14 @@ def _redact_payload(payload: object, identity: Identity) -> object:
 
 def _role_allowed_for_actor(requested_role: str, identity: Identity) -> bool:
     """Allow same or narrower read visibility, never role escalation."""
-    visibility_rank = {"auditor": 0, "read_only": 1, "contributor": 1, "security_admin": 2, "admin": 2}
+    visibility_rank = {
+        "auditor": 0,
+        "read_only": 1,
+        "compliance_reviewer": 1,
+        "contributor": 1,
+        "security_admin": 2,
+        "admin": 2,
+    }
     return visibility_rank.get(requested_role, 99) <= visibility_rank.get(identity.role, -1)
 
 
@@ -3240,7 +3267,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             framework_coverage_summary,
         )
 
-        rows = build_framework_coverage()
+        rows = build_framework_coverage(lake_dir=lake_for(identity))
         data = {
             "summary": framework_coverage_summary(rows),
             "frameworks": rows,
@@ -3252,6 +3279,42 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 meta={"count": len(rows)},
             )
         )
+
+    # Registered ahead of the /api/v1/{rest} catch-all so the reviewer always
+    # comes from the authenticated principal, never the request body.
+    @app.post(
+        "/api/v1/mapping-reviews/decisions",
+        status_code=status.HTTP_201_CREATED,
+        tags=["mapping-review"],
+    )
+    async def mapping_review_decide(
+        body: MappingReviewDecisionRequest,
+        identity: Identity = Depends(_require_mapping_review),
+    ) -> JSONResponse:
+        """Approve, reject, or request changes to safeguard mappings for this tenant.
+
+        Requires the ``mapping_review`` scope and a signed-in console session.
+        Bearer API keys, which agents, CI, and MCP clients use, can read the
+        queue and history but are refused here whatever their role.
+        """
+        if not identity.is_interactive_session:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "mapping review decisions require a signed-in console session; "
+                    "API keys (agents, CI, MCP) can list the queue but cannot decide"
+                ),
+            )
+        result_status, payload = await run_in_threadpool(
+            api_v1.record_mapping_review,
+            body.model_dump(),
+            lake_for(identity),
+            reviewer=identity.email,
+            reviewer_id=identity.user_id,
+            reviewer_role=identity.role,
+            auth_method=identity.auth_method,
+        )
+        return JSONResponse(payload, status_code=int(result_status))
 
     @app.get("/api/v1/snapshots/{snapshot_id}", tags=["assessment"])
     def snapshot_detail(snapshot_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:

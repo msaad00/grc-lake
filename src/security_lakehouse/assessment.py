@@ -306,6 +306,11 @@ def write_assessment_snapshot(
         assessment["catalog_bundle"] = (
             read_json(bundle_path) if bundle_path.is_file() else _catalog_bundle_for_snapshot()
         )
+        # Pin the mapping-review counts and the org decision-log tip, so the
+        # coverage an auditor sees ties back to the decisions in force.
+        from security_lakehouse.mapping_review import review_attestation
+
+        assessment["mapping_review"] = review_attestation(lake)
         assessment["prev_hash"] = prev_hash
         # assessment_hash covers prev_hash, so the chain is tamper-evident.
         assessment["assessment_hash"] = _assessment_hash(assessment)
@@ -789,4 +794,5 @@ def snapshot_detail_summary(snapshot_id: str, payload: dict[str, Any]) -> dict[s
         "stale_control_count": stale_count,
         "evidence_refs": sorted(evidence_refs)[:100],
         "evidence_freshness": payload.get("evidence_freshness"),
+        "mapping_review": payload.get("mapping_review"),
     }

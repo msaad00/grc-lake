@@ -11,9 +11,10 @@ from security_lakehouse.db.models import USER_ROLES
 ROLE_RANK: dict[str, int] = {
     "auditor": 1,
     "read_only": 2,
-    "contributor": 3,
-    "security_admin": 4,
-    "admin": 5,
+    "compliance_reviewer": 3,
+    "contributor": 4,
+    "security_admin": 5,
+    "admin": 6,
 }
 
 

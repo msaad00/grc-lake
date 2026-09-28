@@ -125,6 +125,7 @@ EXPECTED_TOOLS = {
     "get_control_remediation",
     "get_framework_coverage",
     "get_mapping_review_queue",
+    "list_mapping_review_decisions",
 }
 
 

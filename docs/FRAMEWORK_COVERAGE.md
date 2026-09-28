@@ -5,7 +5,7 @@ Regenerate with `make coverage-doc`. `Attestable` is the auditor-defensible
 coverage (reviewed safeguard mappings); the gap to `Evaluatable` is the
 review backlog.
 
-Frameworks: 19 (17 implemented, 2 planned)
+Framework packs: 17 with catalogued requirements (2 more registry entries planned or superseded)
 Requirements catalogued: 2031 (all source-cited)
 Evaluatable (touched by a safeguard): 1182 (58.2%)
 **Attestable (reviewed safeguard mapping — what an auditor accepts): 350 (17.2%)**

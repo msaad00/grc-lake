@@ -15,6 +15,7 @@ import { useAuditLog } from "@/lib/api/hooks";
 import type { AuditLogEntry } from "@/lib/api/types";
 import { formatDateTime, plural } from "@/lib/format";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const PAGE_LIMIT = 200;
 
@@ -96,7 +97,7 @@ function Row({ entry }: { entry: AuditLogEntry }) {
             Event <code className="break-all">{entry.event_id}</code>
           </div>
         </div>
-        {entry.result && <Badge>{entry.result}</Badge>}
+        {entry.result && <Badge>{displayLabel(entry.result)}</Badge>}
       </button>
       {open && (
         <div className="border-t border-line bg-surfaceMuted/40 p-3">

@@ -25,7 +25,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { QueryState } from "@/components/QueryState";
 import { KpiTile } from "@/components/ui/KpiTile";
 import { useAuditReadiness, usePlatformStream } from "@/lib/api/hooks";
-import { ROUTE_LABELS } from "@/lib/console-copy";
+import { ROUTE_LABELS, SCORE_COPY } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const AUDIT_ROOM_TABS = ["Freshness", "Runs", "Snapshots", "Gaps"] as const;
 type AuditRoomTab = (typeof AUDIT_ROOM_TABS)[number];
@@ -40,7 +41,7 @@ const STATE_COPY: Record<
 > = {
   audit_ready: { label: "Audit ready", tone: "ready" },
   on_track: { label: "On track", tone: "attention" },
-  needs_work: { label: "Needs work", tone: "attention" },
+  needs_work: { label: "Needs attention", tone: "attention" },
 };
 
 export default function AuditRoomPage() {
@@ -71,7 +72,8 @@ export default function AuditRoomPage() {
                   <Badge
                     tone={STATE_COPY[audit.data.state]?.tone ?? "attention"}
                   >
-                    {STATE_COPY[audit.data.state]?.label ?? audit.data.state}
+                    {STATE_COPY[audit.data.state]?.label ??
+                      displayLabel(audit.data.state)}
                   </Badge>
                   {connected ? <Badge tone="ready">Live</Badge> : null}
                   <span className="text-xs font-semibold text-muted">
@@ -80,11 +82,21 @@ export default function AuditRoomPage() {
                 </div>
               </CardHeader>
               <CardContent className="grid gap-3">
+                <p className="text-xs text-muted">
+                  <b className="font-semibold text-ink">
+                    {SCORE_COPY.auditReadiness.label}
+                  </b>
+                  : {SCORE_COPY.auditReadiness.definition}{" "}
+                  <b className="font-semibold text-ink">
+                    {SCORE_COPY.assessment.label}
+                  </b>
+                  : {SCORE_COPY.assessment.definition}
+                </p>
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                   <KpiTile
-                    label="Audit score"
-                    value={`${audit.data.audit_score}%`}
-                    detail="weighted posture"
+                    label={SCORE_COPY.auditReadiness.label}
+                    value={`${audit.data.audit_score}/100`}
+                    detail={`${SCORE_COPY.assessment.label} ${audit.data.posture.score}/100`}
                   />
                   <KpiTile
                     label="Control tests"
@@ -92,12 +104,12 @@ export default function AuditRoomPage() {
                     detail={`${audit.data.control_tests.failing} failing`}
                   />
                   <KpiTile
-                    label="Frameworks"
+                    label="Frameworks ready"
                     value={`${audit.data.posture.frameworks_ready}/${audit.data.posture.frameworks_total}`}
-                    detail={`${audit.data.posture.score}% posture`}
+                    detail="of assessed framework packs"
                   />
                   <KpiTile
-                    label="Evidence fresh"
+                    label="Evidence fresh rate"
                     value={
                       audit.data.evidence_freshness
                         ? `${audit.data.evidence_freshness.fresh_rate_pct}%`

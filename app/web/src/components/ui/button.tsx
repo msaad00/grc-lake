@@ -11,8 +11,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "border border-line bg-surface text-ink hover:bg-surfaceMuted",
+        // Disabled primary drops the brand fill so it cannot read as active.
         primary:
-          "border border-transparent bg-brand text-onBrand hover:bg-brand/90",
+          "border border-transparent bg-brand text-onBrand hover:bg-brand/90 disabled:border-line disabled:bg-surfaceMuted disabled:text-muted disabled:opacity-100",
         dark: "border border-transparent bg-ink text-surface hover:bg-ink/90",
         ghost:
           "border border-transparent bg-transparent text-ink hover:bg-surfaceMuted",

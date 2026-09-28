@@ -67,8 +67,8 @@ test("crosswalk counts only reviewed mappings and badges proposed rows", async (
   ).toBeVisible();
 
   const table = page.locator("table").first();
-  await expect(table.getByText("proposed", { exact: true })).toHaveCount(2);
-  await expect(table.getByText("reviewed", { exact: true })).toHaveCount(1);
+  await expect(table.getByText("Proposed", { exact: true })).toHaveCount(2);
+  await expect(table.getByText("Reviewed", { exact: true })).toHaveCount(1);
 
   const frameworkFilter = page.getByRole("combobox", {
     name: "Filter crosswalk by framework",

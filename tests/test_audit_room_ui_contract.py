@@ -39,3 +39,28 @@ def test_audit_room_does_not_present_product_features_as_readiness() -> None:
 
     assert "workflow_coverage" not in page
     assert '"shipped"' not in page
+
+
+def test_scores_have_one_name_and_definition_across_pages() -> None:
+    """Overview and audit room read score names from SCORE_COPY; no ad-hoc labels."""
+    web = ROOT / "app/web/src"
+    page = PAGE.read_text(encoding="utf-8")
+    overview = (web / "components/dashboard/AssessmentOverview.tsx").read_text(encoding="utf-8")
+    copy = (web / "lib/console-copy.ts").read_text(encoding="utf-8")
+
+    assert "export const SCORE_COPY" in copy
+    assert "SCORE_COPY.auditReadiness.label" in page
+    assert "SCORE_COPY.auditReadiness.definition" in page
+    assert "SCORE_COPY.assessment.label" in page
+    assert "SCORE_COPY.assessment.label" in overview
+    for stale in ('label="Audit score"', "weighted posture", "% posture"):
+        assert stale not in page, stale
+
+
+def test_freshness_panel_does_not_repeat_the_summary_kpis() -> None:
+    panel = (ROOT / "app/web/src/components/evidence/EvidenceFreshnessSlaPanel.tsx").read_text(encoding="utf-8")
+    # Fresh rate and SLA breaches are already in the readiness summary row.
+    assert "Fresh rate" not in panel
+    assert "SLA breaches\n" not in panel
+    assert "uppercase" not in panel
+    assert 'replaceAll("_", " ")' not in panel

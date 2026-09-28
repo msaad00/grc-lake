@@ -18,7 +18,7 @@ from security_lakehouse.catalog import (
     load_control_catalog,
     load_framework_registry,
 )
-from security_lakehouse.framework_provenance import build_framework_view
+from security_lakehouse.framework_provenance import build_framework_view, framework_pack_counts, framework_pack_state
 from security_lakehouse.mappings import DEFAULT_MAPPINGS, article_mapping_reviewed, load_control_article_mappings
 from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
@@ -140,6 +140,8 @@ def build_framework_coverage(
                 "official_source_name": framework["official_source_name"],
                 "official_source_url": framework["official_source_url"],
                 "effective_date": framework.get("effective_date"),
+                "superseded_by": framework.get("superseded_by"),
+                "pack_state": framework_pack_state(framework, seeded_count),
                 "source_sha256": framework.get("source_sha256"),
                 "pulled_at": framework.get("pulled_at"),
                 "freshness_state": source.get("freshness_state", "never_pulled"),
@@ -188,10 +190,16 @@ def framework_coverage_summary(
     applicability = applicability_rows if applicability_rows is not None else build_control_asset_applicability()
     implemented = [row for row in rows if str(row.get("implementation_status", "")).startswith("implemented")]
     planned = [row for row in rows if str(row.get("implementation_status", "")) == "planned"]
+    pack_counts = framework_pack_counts(
+        str(row.get("pack_state") or framework_pack_state(row, int(row["seeded_control_count"]))) for row in rows
+    )
     return {
         "framework_count": len(rows),
         "implemented_framework_count": len(implemented),
         "planned_framework_count": len(planned),
+        "seeded_framework_count": pack_counts["seeded_framework_count"],
+        "stub_framework_count": pack_counts["stub_framework_count"],
+        "superseded_framework_count": pack_counts["superseded_framework_count"],
         "seeded_control_count": seeded,
         "source_cited_mapping_count": mapped,
         "reviewed_mapping_count": reviewed,
@@ -281,7 +289,8 @@ def render_framework_coverage_markdown(
         applicability_lines.append(f"| `{_markdown_text(row['asset_type'])}` | {row['applicable_control_count']} |")
     return "\n".join(
         [
-            f"Frameworks: {summary['framework_count']} ({summary['implemented_framework_count']} implemented, {summary['planned_framework_count']} planned)",
+            f"Framework packs: {summary['seeded_framework_count']} with catalogued requirements"
+            f" ({summary['stub_framework_count']} more registry entries planned or superseded)",
             f"Requirements catalogued: {summary['seeded_control_count']} (all source-cited)",
             f"Evaluatable (touched by a safeguard): {summary['evaluatable_requirement_count']} "
             f"({summary['evaluatable_coverage_pct']}%)",

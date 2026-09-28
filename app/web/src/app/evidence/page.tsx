@@ -51,6 +51,7 @@ import type {
 } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
 import { splitRef } from "@/lib/format";
+import { displayLabel } from "@/lib/display";
 
 const SURFACE = "evidence";
 
@@ -190,11 +191,15 @@ function EvidencePageContent() {
   const columns: SortableColumnDefs<EvidenceRow> = [
     helper.accessor("event_time", {
       header: "Time",
-      cell: (info) => (
-        <code className="whitespace-nowrap text-xs text-ink">
-          {String(info.getValue()).slice(0, 19).replace("T", " ")}
-        </code>
-      ),
+      cell: (info) => {
+        const stamp = String(info.getValue());
+        return (
+          <code className="block whitespace-nowrap text-xs leading-5 text-ink">
+            {stamp.slice(0, 10)}
+            <span className="block text-muted">{stamp.slice(11, 19)}</span>
+          </code>
+        );
+      },
     }),
     helper.accessor("source", {
       header: "Source",
@@ -208,7 +213,7 @@ function EvidencePageContent() {
         const [name, scope] = splitRef(info.getValue());
         const displayName = info.row.original.asset_name?.trim();
         return (
-          <div className="min-w-[160px] max-w-[240px]" title={info.getValue()}>
+          <div className="min-w-[140px] max-w-[220px]" title={info.getValue()}>
             {displayName ? (
               <div className="truncate text-xs font-semibold text-ink">
                 {displayName}
@@ -228,20 +233,20 @@ function EvidencePageContent() {
     helper.accessor("control_ids", {
       header: "Controls",
       cell: (info) => (
-        <div className="grid min-w-[180px] gap-0.5 font-mono text-xs text-ink">
+        <div className="grid min-w-[130px] max-w-[190px] gap-0.5 font-mono text-xs text-ink">
           {(info.getValue() as string[]).map((c) => (
-            <span key={c} className="whitespace-nowrap">
-              {c}
-            </span>
+            <span key={c}>{c}</span>
           ))}
         </div>
       ),
     }),
+    // The source's own check outcome for this row, not the evaluated
+    // control result (that lives on Controls).
     helper.accessor("status", {
-      header: "Status",
+      header: "Check result",
       cell: (info) => {
         const v = info.getValue() as string;
-        return <Badge tone={toneForStatus(v)}>{v}</Badge>;
+        return <Badge tone={toneForStatus(v)}>{displayLabel(v)}</Badge>;
       },
     }),
     helper.accessor((row) => row.freshness, {
@@ -249,7 +254,7 @@ function EvidencePageContent() {
       header: "Freshness",
       cell: (info) => {
         const row = info.getValue();
-        if (!row) return <Badge>not scored</Badge>;
+        if (!row) return <Badge>Not scored</Badge>;
         const age =
           row.age_minutes === null
             ? "no age"
@@ -257,8 +262,10 @@ function EvidencePageContent() {
               ? `${Math.round(row.age_minutes / 1440)}d old`
               : `${Math.round(row.age_minutes)}m old`;
         return (
-          <div className="min-w-[132px] space-y-1">
-            <Badge tone={toneForFreshness(row.status)}>{row.status}</Badge>
+          <div className="min-w-[120px] space-y-1">
+            <Badge tone={toneForFreshness(row.status)}>
+              {displayLabel(row.status)}
+            </Badge>
             <div className="whitespace-nowrap text-xs text-muted">
               {age} · SLO {row.freshness_slo_minutes}m
             </div>
@@ -271,7 +278,7 @@ function EvidencePageContent() {
       cell: (info) => {
         const [file, location] = splitRef(info.getValue());
         return (
-          <div className="min-w-[160px] max-w-[260px]" title={info.getValue()}>
+          <div className="min-w-[140px] max-w-[220px]" title={info.getValue()}>
             <code className="block truncate text-xs text-ink">{file}</code>
             {location ? (
               <div className="truncate text-[11px] text-muted">{location}</div>
@@ -406,7 +413,7 @@ function EvidencePageContent() {
                         key={h.id}
                         scope="col"
                         onClick={h.column.getToggleSortingHandler()}
-                        className="cursor-pointer px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
+                        className="cursor-pointer whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
                       >
                         <span className="inline-flex items-center gap-1">
                           {flexRender(

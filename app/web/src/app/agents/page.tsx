@@ -35,6 +35,7 @@ import { useAuditorMode } from "@/lib/state/auditor";
 import { useAgentRuns, useCreateAgentRunMutation } from "@/lib/api/hooks";
 import type { AgentHarness } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 type BadgeTone = "ready" | "info" | "attention" | "critical" | "default";
 
@@ -807,7 +808,7 @@ function AgentsPageContent() {
                         {harnessLabel(run.harness)}
                       </span>
                       <Badge tone={toneForStatus(run.status)}>
-                        {run.status}
+                        {displayLabel(run.status)}
                       </Badge>
                       <Badge tone={modeTone(run.mode)}>
                         {modeLabel(run.mode)}
@@ -853,7 +854,7 @@ function AgentsPageContent() {
           {selectedRun && (
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={toneForStatus(selectedRun.status)}>
-                {selectedRun.status}
+                {displayLabel(selectedRun.status)}
               </Badge>
               <Badge tone={modeTone(selectedRun.mode)}>
                 {modeLabel(selectedRun.mode)}

@@ -29,8 +29,9 @@ import {
   useReviewedCrosswalk,
 } from "@/lib/api/hooks";
 import { frameworkVisual } from "@/lib/framework-visuals";
-import { ROUTE_LABELS } from "@/lib/console-copy";
+import { MAPPING_REVIEW_GLOSSARY, ROUTE_LABELS } from "@/lib/console-copy";
 import { QueryState } from "@/components/QueryState";
+import { displayLabel } from "@/lib/display";
 
 const PAGE_SIZE = 25;
 const CHIP_LIMIT = 6;
@@ -183,15 +184,16 @@ export default function CrosswalkPage() {
               Safeguard mappings for your organization:
             </span>{" "}
             {reviewSummary.data.totals.maintainer_reviewed.toLocaleString()}{" "}
-            maintainer-reviewed ·{" "}
+            {MAPPING_REVIEW_GLOSSARY.maintainer_reviewed.label.toLowerCase()} ·{" "}
             {reviewSummary.data.totals.org_reviewed.toLocaleString()}{" "}
-            org-reviewed ·{" "}
+            {MAPPING_REVIEW_GLOSSARY.org_reviewed.label.toLowerCase()} ·{" "}
             {(
               reviewSummary.data.totals.pending +
               reviewSummary.data.totals.needs_changes
             ).toLocaleString()}{" "}
             awaiting a decision ·{" "}
-            {reviewSummary.data.totals.rejected.toLocaleString()} rejected
+            {reviewSummary.data.totals.rejected.toLocaleString()}{" "}
+            {MAPPING_REVIEW_GLOSSARY.rejected.label.toLowerCase()}
           </p>
           <Link href="/mapping-review" className="ui-link text-sm">
             Review mappings
@@ -365,7 +367,7 @@ export default function CrosswalkPage() {
                                   : "attention"
                               }
                             >
-                              {row.status}
+                              {displayLabel(row.status)}
                             </Badge>
                           </div>
                           <div className="mt-1 text-xs leading-5 text-muted">

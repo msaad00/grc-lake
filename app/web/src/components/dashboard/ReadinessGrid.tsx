@@ -11,6 +11,7 @@ import { frameworkDetailHref } from "@/lib/framework-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { splitFrameworkPacks, stubCountLabel } from "@/lib/framework-packs";
 
 const FRAMEWORK_IDS: Record<string, string> = {
   "SOC 2": "soc2",
@@ -102,13 +103,7 @@ function FrameworkRow({
   const showScore = Boolean(framework && coverage?.sufficient);
   const status = framework
     ? statusFor(framework, coverage!)
-    : {
-        label:
-          unmonitored?.implementation_status === "planned"
-            ? "Planned"
-            : "Not assessed",
-        tone: "default" as const,
-      };
+    : { label: "Not assessed", tone: "default" as const };
   const assessedShare =
     framework && coverage?.total
       ? Math.min(100, Math.round((coverage.assessed / coverage.total) * 100))
@@ -200,16 +195,20 @@ export function ReadinessGrid({
       new Set(sorted.map((framework) => frameworkIdFor(framework.framework))),
     [sorted],
   );
+  const { packs, stubs } = useMemo(
+    () => splitFrameworkPacks(catalog),
+    [catalog],
+  );
   const unmonitored = useMemo(
     () =>
-      catalog
+      packs
         .filter((framework) => !monitoredIds.has(framework.framework_id))
         .sort((a, b) =>
           frameworkLabel(a).localeCompare(frameworkLabel(b), undefined, {
             numeric: true,
           }),
         ),
-    [catalog, monitoredIds],
+    [packs, monitoredIds],
   );
   const totalCount = sorted.length + unmonitored.length;
   const visibleLimit = expanded ? totalCount : PREVIEW;
@@ -289,9 +288,18 @@ export function ReadinessGrid({
                 )}
                 {expanded
                   ? "Show fewer"
-                  : `Show all ${totalCount} frameworks (${hiddenCount} more)`}
+                  : `Show all ${totalCount} framework packs (${hiddenCount} more)`}
               </Button>
             </div>
+          ) : null}
+          {stubs.length ? (
+            <p className="border-t border-line px-4 py-2 text-xs text-muted sm:px-5">
+              Not counted: {stubCountLabel(stubs.length)} registry{" "}
+              {stubs.length === 1 ? "entry" : "entries"} with no requirements.{" "}
+              <Link href="/frameworks" className="ui-link">
+                View frameworks
+              </Link>
+            </p>
           ) : null}
         </>
       ) : (

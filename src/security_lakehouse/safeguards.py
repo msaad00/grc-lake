@@ -46,6 +46,15 @@ REVIEW_STATE_LABELS = {
     "needs_changes": "needs changes",
     "rejected": "rejected",
 }
+# One-line meaning of each state; the console glossary (console-copy.ts) and
+# the CLI help repeat these verbatim, and a test pins them together.
+REVIEW_STATE_DEFINITIONS = {
+    "maintainer_reviewed": "Confirmed by the catalog maintainers and shipped as reviewed.",
+    "org_reviewed": "Approved by a reviewer in your organization, with a rationale.",
+    "proposed": "Suggested mapping that no one has reviewed; not attestable.",
+    "needs_changes": "Sent back by your organization; stays in the review queue.",
+    "rejected": "Rejected by your organization; excluded from coverage.",
+}
 ATTESTABLE_STATES = frozenset({"maintainer_reviewed", "org_reviewed"})
 PENDING_STATES = frozenset({"proposed", "needs_changes"})
 

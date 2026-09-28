@@ -20,6 +20,7 @@ import {
 } from "@/lib/api/hooks";
 import type { TenantInvite } from "@/lib/api/types";
 import { notify } from "@/lib/toast";
+import { displayLabel } from "@/lib/display";
 
 const ROLES = [
   "contributor",
@@ -37,7 +38,7 @@ function InviteStatusBadge({ row }: { row: TenantInvite }) {
       : row.status === "accepted"
         ? "ready"
         : "default";
-  return <Badge tone={tone}>{row.status}</Badge>;
+  return <Badge tone={tone}>{displayLabel(row.status)}</Badge>;
 }
 
 export function InvitesPanel() {
@@ -128,7 +129,7 @@ export function InvitesPanel() {
                             {row.email}
                           </span>
                           <InviteStatusBadge row={row} />
-                          <Badge tone="default">{row.role}</Badge>
+                          <Badge tone="default">{displayLabel(row.role)}</Badge>
                         </div>
                         <p className="mt-1 text-xs text-muted">
                           Invited by {row.invited_by}

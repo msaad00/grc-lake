@@ -9,6 +9,7 @@ import { EntityTagsEditor } from "@/components/EntityTagsEditor";
 import { useVerifyMutation } from "@/lib/api/hooks";
 import type { NormalizedEvent, VerifyResult } from "@/lib/api/types";
 import { assetLabel } from "@/lib/format";
+import { displayLabel } from "@/lib/display";
 
 interface Props {
   evidence: NormalizedEvent | null;
@@ -78,7 +79,7 @@ export function EvidenceDrawer({ evidence, onClose }: Props) {
             <dd className="font-semibold">{evidence.asset_owner}</dd>
             <dt className="text-muted">Status</dt>
             <dd>
-              <Badge>{evidence.status}</Badge>
+              <Badge>{displayLabel(evidence.status)}</Badge>
             </dd>
             <dt className="text-muted">Severity</dt>
             <dd>
@@ -87,7 +88,7 @@ export function EvidenceDrawer({ evidence, onClose }: Props) {
                   evidence.severity === "critical" ? "critical" : "attention"
                 }
               >
-                {evidence.severity}
+                {displayLabel(evidence.severity)}
               </Badge>
             </dd>
             <dt className="text-muted">Controls</dt>

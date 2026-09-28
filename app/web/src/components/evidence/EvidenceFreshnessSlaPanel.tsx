@@ -16,6 +16,7 @@ import {
   useEscalateStaleEvidenceMutation,
   useEvidenceFreshnessSummary,
 } from "@/lib/api/hooks";
+import { displayLabel } from "@/lib/display";
 import { formatMinutes, plural } from "@/lib/format";
 import { notify } from "@/lib/toast";
 
@@ -68,40 +69,10 @@ export function EvidenceFreshnessSlaPanel() {
         <QueryState queries={[summary]} label="freshness SLA">
           {summary.data && (
             <>
-              <div className="grid gap-3 sm:grid-cols-4">
-                <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[11px] font-semibold uppercase text-muted">
-                    Fresh rate
-                  </div>
-                  <div className="mt-1 text-2xl font-semibold text-ink">
-                    {summary.data.fresh_rate_pct}%
-                  </div>
-                </div>
-                <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[11px] font-semibold uppercase text-muted">
-                    SLA breaches
-                  </div>
-                  <div className="mt-1 text-2xl font-semibold text-ink">
-                    {summary.data.sla_breach_count}
-                  </div>
-                </div>
-                <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[11px] font-semibold uppercase text-muted">
-                    Sources at risk
-                  </div>
-                  <div className="mt-1 text-2xl font-semibold text-ink">
-                    {summary.data.sources_needing_action}
-                  </div>
-                </div>
-                <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[11px] font-semibold uppercase text-muted">
-                    Tracked records
-                  </div>
-                  <div className="mt-1 text-2xl font-semibold text-ink">
-                    {summary.data.total}
-                  </div>
-                </div>
-              </div>
+              <p className="text-xs text-muted">
+                {plural(summary.data.sources_needing_action, "source")} at risk
+                · {plural(summary.data.total, "tracked record")}
+              </p>
 
               {summary.data.sla_breach_count > 0 && (
                 <div className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
@@ -136,7 +107,7 @@ export function EvidenceFreshnessSlaPanel() {
                               : "ready"
                           }
                         >
-                          {row.status.replaceAll("_", " ")}
+                          {displayLabel(row.status)}
                         </Badge>
                       </div>
                       <p className="text-xs text-muted">

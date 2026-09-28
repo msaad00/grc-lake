@@ -43,7 +43,7 @@ function ShareLinkRow({ link }: { link: DemoShareLink }) {
     <div className="grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-black text-ink">{link.label}</span>
+          <span className="text-sm font-semibold text-ink">{link.label}</span>
           <Badge tone="info">{link.audience}</Badge>
         </div>
         <p className="mt-1 text-xs leading-5 text-muted">{link.description}</p>
@@ -91,7 +91,7 @@ function AccountLinkRow({ row }: { row: DemoAccountLink }) {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <ConnectorMark connectorId={row.connector_id} size="sm" />
-          <span className="text-sm font-black text-ink">{row.label}</span>
+          <span className="text-sm font-semibold text-ink">{row.label}</span>
           <Badge tone={accountStatusTone(row.status)}>
             {accountStatusLabel(row.status)}
           </Badge>
@@ -148,7 +148,7 @@ export function DemoShareKit({ kit }: { kit: DemoKit }) {
             Connect read-only cloud, identity, and evidence-lake accounts. True
             ingestion starts after probe, enable, and first sync.
             {summary.live_ingestion > 0 && (
-              <span className="mt-1 block font-bold text-emerald-700 dark:text-emerald-300">
+              <span className="mt-1 block font-semibold text-success-fg">
                 {summary.live_ingestion} source(s) actively ingesting evidence.
               </span>
             )}

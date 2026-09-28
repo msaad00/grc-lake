@@ -57,7 +57,6 @@ export default function DeployPage() {
   return (
     <div className="page-shell grid gap-2">
       <PageHeader
-        eyebrow="Platform"
         title={ROUTE_LABELS["/deploy"]}
         description={`${BRAND.name} is open source. Run locally or self-host in your VPC.`}
         actions={

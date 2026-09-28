@@ -278,7 +278,6 @@ export default function AccessReviewsPage() {
   return (
     <div className="page-shell space-y-6">
       <PageHeader
-        eyebrow="Access governance"
         title={ROUTE_LABELS["/access-reviews"]}
         description="Run periodic user-access certification campaigns: seed the identities in your lake, certify or revoke each one, and prove each access control is under a current review."
       />

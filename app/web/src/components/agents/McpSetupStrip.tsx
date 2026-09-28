@@ -72,7 +72,7 @@ export function McpSetupStrip() {
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="grid gap-2 rounded-xl border border-line bg-surfaceMuted p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-black uppercase tracking-wide text-muted">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted">
               Install
             </span>
             <Button
@@ -89,13 +89,13 @@ export function McpSetupStrip() {
               Copy
             </Button>
           </div>
-          <pre className="overflow-x-auto rounded-lg bg-[#07111e] p-3 text-xs text-slate-100">
+          <pre className="overflow-x-auto rounded-lg bg-code p-3 text-xs text-code-fg">
             pip install &apos;trustops-security-data-lake[mcp]&apos;
           </pre>
         </div>
         <div className="grid gap-2 rounded-xl border border-line bg-surfaceMuted p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
               <Terminal className="h-3.5 w-3.5" />
               Cursor / MCP host
             </span>
@@ -109,7 +109,7 @@ export function McpSetupStrip() {
             </Button>
           </div>
           <pre
-            className="max-h-36 overflow-auto rounded-lg bg-[#07111e] p-3 text-xs text-slate-100"
+            className="max-h-36 overflow-auto rounded-lg bg-code p-3 text-xs text-slate-100"
             tabIndex={0}
           >
             {CURSOR_CONFIG}
@@ -118,7 +118,7 @@ export function McpSetupStrip() {
             Replace <code className="text-ink">tops_...</code> with an API key.
             <Link
               href="/auth/#api-keys"
-              className="inline-flex items-center gap-1 font-bold text-brand hover:underline"
+              className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
             >
               <KeyRound className="h-3.5 w-3.5" />
               Create key
@@ -128,7 +128,7 @@ export function McpSetupStrip() {
       </div>
       <div className="grid min-w-0 gap-2 rounded-xl border border-line bg-surfaceMuted p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             <GitBranch className="h-3.5 w-3.5" />
             GitHub Actions posture gate
           </span>
@@ -148,13 +148,13 @@ export function McpSetupStrip() {
             href={docsUrl("playbooks/CI_POSTURE_GATE.md")}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-bold text-brand hover:underline"
+            className="font-semibold text-brand hover:underline"
           >
             CI gate guide
           </a>
         </p>
         <pre
-          className="max-h-48 overflow-auto rounded-lg bg-[#07111e] p-3 text-xs text-slate-100"
+          className="max-h-48 overflow-auto rounded-lg bg-code p-3 text-xs text-slate-100"
           tabIndex={0}
         >
           {CI_GATE_STEP}
@@ -164,7 +164,7 @@ export function McpSetupStrip() {
         {MCP_TOOLS.map((tool) => (
           <span
             key={tool}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-2.5 py-1 text-[11px] font-bold text-ink"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-2.5 py-1 text-[11px] font-semibold text-ink"
           >
             <TrustOpsMark size="xs" gradientId={`trustops-mcp-tool-${tool}`} />
             {tool}
@@ -172,7 +172,7 @@ export function McpSetupStrip() {
         ))}
       </div>
       <details className="text-xs leading-5 text-muted">
-        <summary className="w-fit cursor-pointer font-bold hover:text-ink">
+        <summary className="w-fit cursor-pointer font-semibold hover:text-ink">
           Details
         </summary>
         <div className="mt-1 grid gap-1">
@@ -189,7 +189,7 @@ export function McpSetupStrip() {
               href={docsUrl("api/AGENT_SKILLS.md")}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold text-brand hover:underline"
+              className="font-semibold text-brand hover:underline"
             >
               AGENT_SKILLS.md
             </a>

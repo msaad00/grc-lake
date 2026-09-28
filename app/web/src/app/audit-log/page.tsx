@@ -81,7 +81,7 @@ function Row({ entry }: { entry: AuditLogEntry }) {
             <Badge tone={CATEGORY_TONE[entry.category]}>
               {CATEGORY_BADGE[entry.category] ?? entry.category}
             </Badge>
-            <span className="min-w-0 font-black text-ink [overflow-wrap:anywhere]">
+            <span className="min-w-0 font-semibold text-ink [overflow-wrap:anywhere]">
               {entry.summary}
             </span>
           </div>
@@ -130,7 +130,6 @@ export default function AuditLogPage() {
   return (
     <div className="page-shell grid gap-5">
       <PageHeader
-        eyebrow="Console activity"
         title={ROUTE_LABELS["/audit-log"]}
         description="Every posture-changing event in one stream: triage decisions, connector setup and tests, snapshots, workflow runs, and trust-share links. Entries are append-only and cannot be edited."
         actions={
@@ -154,7 +153,7 @@ export default function AuditLogPage() {
               aria-pressed={category === c}
               onClick={() => setCategory(c)}
               className={[
-                "rounded-full border px-3 py-1.5 text-xs font-black",
+                "rounded-full border px-3 py-1.5 text-xs font-semibold",
                 category === c
                   ? "border-ink bg-ink text-surface"
                   : "border-line bg-surface text-muted hover:border-brand",

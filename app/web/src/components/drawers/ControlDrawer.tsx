@@ -78,13 +78,13 @@ export function ControlDrawer({ control, onClose, onOpenViolation }: Props) {
               />
             </dd>
             <dt className="text-muted">Owner</dt>
-            <dd className="font-extrabold">{control.owner}</dd>
+            <dd className="font-semibold">{control.owner}</dd>
             <dt className="text-muted">Status</dt>
-            <dd className="font-extrabold">{control.status}</dd>
+            <dd className="font-semibold">{control.status}</dd>
             <dt className="text-muted">Risk score</dt>
-            <dd className="font-extrabold">{control.risk_score}</dd>
+            <dd className="font-semibold">{control.risk_score}</dd>
             <dt className="text-muted">Evidence</dt>
-            <dd className="font-extrabold">
+            <dd className="font-semibold">
               <Link
                 href={`/evidence/?control=${encodeURIComponent(control.control_id)}`}
                 aria-label={`Evidence ${control.evidence_count}/${control.event_count} records`}
@@ -95,7 +95,7 @@ export function ControlDrawer({ control, onClose, onOpenViolation }: Props) {
             </dd>
           </dl>
           <div>
-            <div className="mb-2 text-xs font-black uppercase tracking-wide text-muted">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
               Open findings · {violations.length}
             </div>
             <div className="grid gap-2">
@@ -109,7 +109,7 @@ export function ControlDrawer({ control, onClose, onOpenViolation }: Props) {
                   key={v.violation_id}
                   type="button"
                   onClick={() => onOpenViolation(v.violation_id)}
-                  className="rounded-lg border border-line p-3 text-left hover:border-brand hover:bg-blue-50/40 dark:hover:bg-blue-500/10"
+                  className="rounded-lg border border-line p-3 text-left hover:border-brand hover:bg-info-bg"
                 >
                   <div
                     className="text-sm font-semibold text-ink"

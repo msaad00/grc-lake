@@ -40,6 +40,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import "@xyflow/react/dist/style.css";
+import { GRAPH_LAYER } from "@/lib/graph-palette";
 import { FrameworkBadge } from "@/components/framework/FrameworkBadge";
 import type {
   ComplianceGraph,
@@ -61,29 +62,32 @@ interface GraphNodeData extends Record<string, unknown> {
 type FlowGraphNode = Node<GraphNodeData, "trustops-graph">;
 
 const KIND_STYLE: Partial<
-  Record<GraphNodeKind, { border: string; bg: string; chip: string }>
+  Record<GraphNodeKind, { border: string; chip: string }>
 > = {
-  framework: { border: "#4f7cff", bg: "#eff6ff", chip: "#1d4ed8" },
-  control: { border: "#12b76a", bg: "#ecfdf5", chip: "#067647" },
-  evidence_type: { border: "#f79009", bg: "#fffbeb", chip: "#b54708" },
-  asset: { border: "#7a35ff", bg: "#f5f0ff", chip: "#6d28d9" },
-  repository: { border: "#0ea5e9", bg: "#f0f9ff", chip: "#0369a1" },
-  directory: { border: "#64748b", bg: "#f8fafc", chip: "#475569" },
-  language: { border: "#059669", bg: "#ecfdf5", chip: "#047857" },
-  evidence_signal: { border: "#ca8a04", bg: "#fefce8", chip: "#854d0e" },
-  governance_signal: { border: "#2563eb", bg: "#eff6ff", chip: "#1d4ed8" },
-  signal_gap: { border: "#dc2626", bg: "#fef2f2", chip: "#b91c1c" },
-  workflow: { border: "#9333ea", bg: "#f5f3ff", chip: "#7e22ce" },
-  dependency_manifest: { border: "#c2410c", bg: "#fff7ed", chip: "#9a3412" },
-  ownership_file: { border: "#0891b2", bg: "#ecfeff", chip: "#0e7490" },
-  security_file: { border: "#047857", bg: "#ecfdf5", chip: "#047857" },
-  file: { border: "#71717a", bg: "#fafafa", chip: "#52525b" },
-  principal: { border: "#be123c", bg: "#fff1f2", chip: "#9f1239" },
-  team: { border: "#4338ca", bg: "#eef2ff", chip: "#3730a3" },
-  review_rule: { border: "#65a30d", bg: "#f7fee7", chip: "#4d7c0f" },
-  status_check: { border: "#15803d", bg: "#f0fdf4", chip: "#166534" },
-  workflow_permission: { border: "#ea580c", bg: "#fff7ed", chip: "#c2410c" },
-  evidence: { border: "#475569", bg: "#f8fafc", chip: "#334155" },
+  framework: { border: GRAPH_LAYER.framework, chip: GRAPH_LAYER.framework },
+  control: { border: GRAPH_LAYER.control, chip: GRAPH_LAYER.control },
+  evidence_type: {
+    border: GRAPH_LAYER.evidence_type,
+    chip: GRAPH_LAYER.evidence_type,
+  },
+  asset: { border: GRAPH_LAYER.asset, chip: GRAPH_LAYER.asset },
+  repository: { border: "#0ea5e9", chip: "#0369a1" },
+  directory: { border: "#64748b", chip: "#475569" },
+  language: { border: "#059669", chip: "#047857" },
+  evidence_signal: { border: "#ca8a04", chip: "#854d0e" },
+  governance_signal: { border: "#2563eb", chip: "#1d4ed8" },
+  signal_gap: { border: "#dc2626", chip: "#b91c1c" },
+  workflow: { border: "#9333ea", chip: "#7e22ce" },
+  dependency_manifest: { border: "#c2410c", chip: "#9a3412" },
+  ownership_file: { border: "#0891b2", chip: "#0e7490" },
+  security_file: { border: "#047857", chip: "#047857" },
+  file: { border: "#71717a", chip: "#52525b" },
+  principal: { border: "#be123c", chip: "#9f1239" },
+  team: { border: "#4338ca", chip: "#3730a3" },
+  review_rule: { border: "#65a30d", chip: "#4d7c0f" },
+  status_check: { border: "#15803d", chip: "#166534" },
+  workflow_permission: { border: "#ea580c", chip: "#c2410c" },
+  evidence: { border: "#475569", chip: "#334155" },
 };
 
 const KIND_ICON: Partial<Record<GraphNodeKind, LucideIcon>> = {
@@ -113,7 +117,7 @@ const KIND_ICON: Partial<Record<GraphNodeKind, LucideIcon>> = {
 function emphasisClass(emphasis: GraphNodeData["emphasis"]): string {
   switch (emphasis) {
     case "dimmed":
-      return "opacity-25";
+      return "opacity-50 saturate-50";
     case "highlight":
       return "opacity-100 shadow-[0_0_0_3px_rgba(15,23,42,0.18)]";
     case "path":
@@ -127,9 +131,8 @@ function emphasisClass(emphasis: GraphNodeData["emphasis"]): string {
 
 function GraphNodeCard({ data, selected }: NodeProps<FlowGraphNode>) {
   const tone = KIND_STYLE[data.kind] ?? {
-    border: "#94a3b8",
-    bg: "#f8fafc",
-    chip: "#475569",
+    border: "var(--color-line-strong)",
+    chip: "var(--color-muted)",
   };
   const Icon = KIND_ICON[data.kind] ?? Network;
   return (
@@ -138,16 +141,16 @@ function GraphNodeCard({ data, selected }: NodeProps<FlowGraphNode>) {
         <div
           style={{
             borderColor: selected ? "var(--color-ink)" : tone.border,
-            background: `color-mix(in srgb, ${tone.border} 10%, var(--color-surface))`,
+            background: `color-mix(in srgb, ${tone.border} 8%, var(--color-surface))`,
             borderWidth: selected ? 2 : 1.5,
           }}
           className={`w-[144px] max-w-[144px] rounded-lg px-2 py-1.5 transition-all ${emphasisClass(data.emphasis)}`}
         >
           <div className="flex items-center justify-between gap-2">
             <span
-              className="inline-flex min-w-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide"
+              className="inline-flex min-w-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
               style={{
-                color: `color-mix(in srgb, ${tone.chip} 60%, var(--color-ink))`,
+                color: `color-mix(in srgb, ${tone.chip} 55%, var(--color-ink))`,
                 background: "var(--color-surface)",
               }}
             >
@@ -162,12 +165,12 @@ function GraphNodeCard({ data, selected }: NodeProps<FlowGraphNode>) {
               />
             )}
           </div>
-          <div className="mt-1 truncate text-[11px] font-black text-ink">
+          <div className="mt-1 truncate text-xs font-semibold text-ink">
             {data.label}
           </div>
-          <div className="truncate text-[9px] text-muted">{data.subtitle}</div>
+          <div className="truncate text-[10px] text-muted">{data.subtitle}</div>
           {data.owner && (
-            <div className="mt-1 truncate text-[9px] text-muted">
+            <div className="mt-1 truncate text-[10px] text-muted">
               owner {data.owner}
             </div>
           )}
@@ -179,10 +182,10 @@ function GraphNodeCard({ data, selected }: NodeProps<FlowGraphNode>) {
           sideOffset={8}
           className="z-[80] max-w-[280px] rounded-lg border border-line bg-surface p-3 text-xs text-ink shadow-hero"
         >
-          <div className="text-[10px] font-black uppercase tracking-wider text-muted">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
             {data.kind.replace("_", " ")}
           </div>
-          <div className="mt-1 font-black">{data.label}</div>
+          <div className="mt-1 font-semibold">{data.label}</div>
           {data.subtitle && (
             <div className="mt-0.5 text-muted">{data.subtitle}</div>
           )}
@@ -575,9 +578,9 @@ function InnerGraphCanvas({
               ? "#f59e0b"
               : onHighlight
                 ? "var(--color-ink)"
-                : "#94a3b8",
+                : "var(--color-line-strong)",
             strokeWidth: onPath ? 2.5 : 1.5,
-            opacity: dimmed && !onPath && !onHighlight ? 0.2 : 1,
+            opacity: dimmed && !onPath && !onHighlight ? 0.4 : 1,
           },
         };
       });
@@ -646,7 +649,15 @@ function InnerGraphCanvas({
         if (!svg) return null;
         const clone = svg.cloneNode(true) as SVGSVGElement;
         clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        return new XMLSerializer().serializeToString(clone);
+        // A standalone SVG cannot resolve theme tokens; inline their values.
+        const styles = getComputedStyle(root);
+        return new XMLSerializer()
+          .serializeToString(clone)
+          .replace(
+            /var\((--color-[a-z0-9-]+)\)/g,
+            (match, name: string) =>
+              styles.getPropertyValue(name).trim() || match,
+          );
       },
     };
   }, [graph, canvasRef]);

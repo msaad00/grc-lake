@@ -39,7 +39,7 @@ function TokenRow({
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-black text-ink">{row.name}</span>
+          <span className="text-sm font-semibold text-ink">{row.name}</span>
           <code className="rounded bg-surfaceMuted px-1.5 py-0.5 text-xs text-muted">
             {row.token_prefix}…
           </code>
@@ -146,7 +146,7 @@ export function ScimTokensPanel() {
         <CardContent className="grid gap-2">
           <QueryState queries={[tokens]} label="SCIM tokens">
             {active.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center text-sm font-bold text-muted">
+              <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center text-sm font-semibold text-muted">
                 No active SCIM tokens. Create one to connect Okta or Entra ID.
               </div>
             ) : (
@@ -156,7 +156,7 @@ export function ScimTokensPanel() {
             )}
             {revoked.length > 0 ? (
               <details className="text-xs text-muted">
-                <summary className="cursor-pointer font-bold">
+                <summary className="cursor-pointer font-semibold">
                   {revoked.length} revoked
                 </summary>
                 <div className="mt-2 grid gap-2">
@@ -199,12 +199,12 @@ export function ScimTokensPanel() {
           </div>
         }
       >
-        <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+        <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
           Name
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
             placeholder="okta"
           />
         </label>

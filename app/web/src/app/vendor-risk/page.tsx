@@ -127,7 +127,7 @@ function CreateAssessmentForm({
           <span
             id="vendor-name-error"
             role="alert"
-            className="font-bold text-critical"
+            className="font-semibold text-critical"
           >
             Enter a vendor name.
           </span>
@@ -384,7 +384,6 @@ export default function VendorRiskPage() {
   return (
     <div className="page-shell space-y-6">
       <PageHeader
-        eyebrow="Third-party risk"
         title={ROUTE_LABELS["/vendor-risk"]}
         description="Run standardized vendor diligence questionnaires, capture yes/partial/no answers, and score third-party readiness against SOC 2 vendor-risk controls."
       />
@@ -452,7 +451,7 @@ export default function VendorRiskPage() {
               ))
             ) : (
               <Card className="grid gap-3 border-dashed p-5">
-                <p className="text-sm font-bold text-ink">
+                <p className="text-sm font-semibold text-ink">
                   Start your first vendor review
                 </p>
                 <p className="text-sm leading-6 text-muted">

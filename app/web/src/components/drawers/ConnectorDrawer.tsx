@@ -197,14 +197,14 @@ function SnowflakeSetupHint({
   discovered: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-500/30 dark:bg-blue-500/10">
+    <div className="rounded-lg border border-info/40 bg-info-bg px-3 py-2">
       <div className="flex flex-wrap items-center gap-2">
         <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-black text-blue-950 dark:text-blue-300">
+          <div className="text-sm font-semibold text-brand">
             Read-only Snowflake role
           </div>
-          <div className="mt-0.5 text-xs leading-5 text-blue-950 dark:text-blue-300">
+          <div className="mt-0.5 text-xs leading-5 text-brand">
             Key-pair or OAuth reference; no pasted private key.
           </div>
         </div>
@@ -262,12 +262,12 @@ function LatestSyncProof({
 
   return (
     <section
-      className={`rounded-xl border border-line bg-white ${compact ? "p-2.5" : "p-3"}`}
+      className={`rounded-xl border border-line bg-surface ${compact ? "p-2.5" : "p-3"}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wide text-muted">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted">
               Latest sync
             </span>
             <Badge tone={tone}>{sync?.result ?? connector.state}</Badge>
@@ -275,8 +275,8 @@ function LatestSyncProof({
           <div
             className={
               compact
-                ? "mt-1 text-sm font-black text-ink"
-                : "mt-2 text-base font-black text-ink"
+                ? "mt-1 text-sm font-semibold text-ink"
+                : "mt-2 text-base font-semibold text-ink"
             }
           >
             {title}
@@ -289,7 +289,7 @@ function LatestSyncProof({
           {failed && runnable ? (
             <Link
               href="https://github.com/msaad00/trustops-security-data-lake/blob/main/docs/runbooks/OBSERVABILITY_CONNECTOR_SYNC.md"
-              className="mt-2 inline-flex text-xs font-bold text-brand hover:underline"
+              className="mt-2 inline-flex text-xs font-semibold text-brand hover:underline"
               target="_blank"
               rel="noreferrer"
             >
@@ -299,7 +299,7 @@ function LatestSyncProof({
           {!runnable ? (
             <Link
               href="https://github.com/msaad00/trustops-security-data-lake/blob/main/docs/ADDING_CONNECTORS.md"
-              className="mt-2 inline-flex text-xs font-bold text-brand hover:underline"
+              className="mt-2 inline-flex text-xs font-semibold text-brand hover:underline"
               target="_blank"
               rel="noreferrer"
             >
@@ -324,36 +324,36 @@ function LatestSyncProof({
               key={label}
               className="rounded-full border border-line bg-panel px-2.5 py-1"
             >
-              <span className="font-black uppercase tracking-wide text-muted">
+              <span className="font-semibold uppercase tracking-wide text-muted">
                 {label}
               </span>{" "}
-              <span className="font-black text-ink">{value}</span>
+              <span className="font-semibold text-ink">{value}</span>
             </div>
           ))}
         </div>
       ) : (
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           <div className="rounded-lg border border-line bg-panel p-2">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               Evidence
             </div>
-            <div className="mt-1 text-sm font-black text-ink">
+            <div className="mt-1 text-sm font-semibold text-ink">
               {sync?.evidence_count ?? "—"}
             </div>
           </div>
           <div className="rounded-lg border border-line bg-panel p-2">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               Last run
             </div>
-            <div className="mt-1 text-sm font-black text-ink">
+            <div className="mt-1 text-sm font-semibold text-ink">
               {formatWhen(sync?.occurred_at)}
             </div>
           </div>
           <div className="rounded-lg border border-line bg-panel p-2">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               Duration
             </div>
-            <div className="mt-1 text-sm font-black text-ink">
+            <div className="mt-1 text-sm font-semibold text-ink">
               {sync?.duration_ms !== null && sync?.duration_ms !== undefined
                 ? `${sync.duration_ms} ms`
                 : "—"}
@@ -912,9 +912,9 @@ export function ConnectorDrawer({
                   type="button"
                   role="tab"
                   aria-selected={setupTab === tab}
-                  className={`rounded-md px-2 py-1.5 text-xs font-black ${
+                  className={`rounded-md px-2 py-1.5 text-xs font-semibold ${
                     setupTab === tab
-                      ? "bg-brand text-white"
+                      ? "bg-surface text-ink shadow-card ring-1 ring-line"
                       : "text-muted hover:bg-surface"
                   }`}
                   onClick={() => setSetupTab(tab)}
@@ -931,7 +931,7 @@ export function ConnectorDrawer({
           !showConnectedCloudSummary &&
           setupTab === "Runs" && (
             <section className="rounded-lg border border-line bg-surface p-3">
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Run history
               </div>
               <div className="mt-2 grid gap-2">
@@ -959,7 +959,7 @@ export function ConnectorDrawer({
                       )}
                     </div>
                     {run.error && (
-                      <div className="mt-1 text-rose-700 dark:text-rose-300">
+                      <div className="mt-1 text-danger-fg">
                         {runErrorDetail(run, connector)}
                       </div>
                     )}
@@ -978,7 +978,7 @@ export function ConnectorDrawer({
           !showConnectedCloudSummary &&
           setupTab === "Events" && (
             <section className="rounded-lg border border-line bg-surface p-3">
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Configuration events
               </div>
               <div className="mt-2 grid gap-2">
@@ -1004,7 +1004,7 @@ export function ConnectorDrawer({
             </section>
           )}
         {(!usesManagedCloudLink || setupTab === "Setup") && !isRunnable && (
-          <section className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs leading-4 text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <section className="rounded-lg border border-warning/40 bg-warning-bg px-2.5 py-2 text-xs leading-4 text-warning-fg">
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <p>
@@ -1018,9 +1018,7 @@ export function ConnectorDrawer({
         {(!usesManagedCloudLink ||
           showConnectedCloudSummary ||
           setupTab === "Setup") && (
-          <div
-            className={`grid gap-3 ${showSetupProgressCard ? "lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.72fr)]" : "lg:grid-cols-1"}`}
-          >
+          <div className="grid gap-3">
             {!auditor &&
               connector &&
               showCloudLinkPanel &&
@@ -1038,25 +1036,26 @@ export function ConnectorDrawer({
               )}
             {showSetupProgressCard && (
               <section
-                className={`rounded-lg border border-line bg-surface p-2.5 ${usesManagedCloudLink && (hasStagedServerCredentials || showConnectedCloudSummary) ? "lg:col-span-2" : ""}`}
+                aria-label="Setup progress"
+                className="order-first rounded-lg border border-line bg-surface p-3"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <ConnectorMark
                       connectorId={connector.connector_id}
                       name={connector.name}
                       category={connector.category}
                       size="sm"
                     />
-                    <span className="text-xs font-semibold text-ink">
+                    <span className="min-w-0 text-xs font-semibold text-ink">
                       Step {Math.min(onboardingStep, 4)} of 4 ·{" "}
                       {setupSteps[Math.min(onboardingStep, 4) - 1]?.label}
                     </span>
                   </div>
-                  <span className="flex items-center gap-1">
+                  <span className="flex flex-wrap items-center gap-1">
                     {connector.release_stage === "preview" ? (
                       <Badge
-                        tone="info"
+                        tone="outline"
                         title="Implemented and fixture-tested; not yet verified against a live tenant."
                       >
                         Preview
@@ -1096,25 +1095,25 @@ export function ConnectorDrawer({
           !showConnectedCloudSummary &&
           (!usesManagedCloudLink || setupTab === "Setup") && (
             <details className="rounded-xl border border-line p-3">
-              <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-black uppercase tracking-wide text-muted">
+              <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
                 <ListChecks className="h-3.5 w-3.5" /> Connector contract
               </summary>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Permissions
                   </div>
                   <ul className="mt-2 space-y-1 text-xs">
                     {connector.minimum_permissions.map((perm) => (
                       <li key={perm} className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
                         <code className="text-ink">{perm}</code>
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Evidence
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1140,9 +1139,9 @@ export function ConnectorDrawer({
                   type="button"
                   role="tab"
                   aria-selected={connectedTab === tab}
-                  className={`rounded px-2 py-1 text-xs font-black ${
+                  className={`rounded px-2 py-1 text-xs font-semibold ${
                     connectedTab === tab
-                      ? "bg-brand text-white"
+                      ? "bg-surface text-ink shadow-card ring-1 ring-line"
                       : "text-muted hover:bg-surface"
                   }`}
                   onClick={() => setConnectedTab(tab)}
@@ -1160,7 +1159,7 @@ export function ConnectorDrawer({
                   compact
                 />
                 <section className="rounded-xl border border-line bg-surface p-2.5">
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Connection details
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1169,10 +1168,10 @@ export function ConnectorDrawer({
                         key={detail.label}
                         className="rounded-full border border-line bg-panel px-2.5 py-1 text-xs"
                       >
-                        <span className="font-black uppercase tracking-wide text-muted">
+                        <span className="font-semibold uppercase tracking-wide text-muted">
                           {detail.label}
                         </span>{" "}
-                        <span className="font-black text-ink">
+                        <span className="font-semibold text-ink">
                           {detail.value}
                         </span>
                       </div>
@@ -1198,7 +1197,7 @@ export function ConnectorDrawer({
                 <section className="rounded-xl border border-line bg-surface p-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-xs font-black uppercase tracking-wide text-muted">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                         Authorization
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -1222,7 +1221,7 @@ export function ConnectorDrawer({
                     assume-role session.
                   </p>
                   {hasPendingConfigChanges && (
-                    <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-xs font-semibold text-blue-950 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+                    <div className="mt-2 rounded-lg border border-info/40 bg-info-bg px-2.5 py-2 text-xs font-semibold text-info-fg">
                       New setup staged. Test connection, then save changes.
                     </div>
                   )}
@@ -1249,14 +1248,14 @@ export function ConnectorDrawer({
                 </section>
 
                 <section className="rounded-xl border border-line bg-surface p-2.5">
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Schedule and scope
                   </div>
                   <div className="mt-2 grid gap-1.5">
                     {[...scopeFields, ...schedulerFields].map((field) => (
                       <label
                         key={field.name}
-                        className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted"
+                        className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted"
                       >
                         {field.label}
                         <input
@@ -1277,14 +1276,14 @@ export function ConnectorDrawer({
                 </section>
 
                 <details className="rounded-xl border border-line bg-surface p-3 lg:col-span-2">
-                  <summary className="cursor-pointer list-none text-xs font-black uppercase tracking-wide text-muted">
+                  <summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-muted">
                     Granted read scope and evidence output
                   </summary>
                   <div className="mt-3 grid gap-3 lg:grid-cols-2">
                     <ul className="grid gap-2 text-xs">
                       {connector.minimum_permissions.map((perm) => (
                         <li key={perm} className="flex items-start gap-2">
-                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
                           <code className="text-ink">{perm}</code>
                         </li>
                       ))}
@@ -1307,7 +1306,7 @@ export function ConnectorDrawer({
 
             {connectedTab === "Runs" && (
               <section className="mt-3 rounded-xl border border-line bg-surface p-3">
-                <div className="text-xs font-black uppercase tracking-wide text-muted">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Connector run log
                   {runHistoryRows.length > 8
                     ? ` · showing 8 of ${runHistoryRows.length} events`
@@ -1345,9 +1344,7 @@ export function ConnectorDrawer({
                           )}
                         </div>
                         {r.error && (
-                          <div className="mt-1 text-rose-700 dark:text-rose-300">
-                            {r.error}
-                          </div>
+                          <div className="mt-1 text-danger-fg">{r.error}</div>
                         )}
                       </div>
                     ))}
@@ -1413,7 +1410,7 @@ export function ConnectorDrawer({
                                 placeholder={field.placeholder}
                               />
                               {error ? (
-                                <span className="text-xs text-rose-700 dark:text-rose-300">
+                                <span className="text-xs text-danger-fg">
                                   {error}
                                 </span>
                               ) : field.hint ? (
@@ -1426,7 +1423,7 @@ export function ConnectorDrawer({
                         })}
                       {credentialFields.some((field) => !field.required) && (
                         <details className="rounded-lg border border-line bg-surfaceMuted p-3">
-                          <summary className="cursor-pointer list-none text-xs font-black uppercase tracking-wide text-muted">
+                          <summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-muted">
                             Advanced identity settings
                           </summary>
                           <div className="mt-3 grid gap-2">
@@ -1435,7 +1432,7 @@ export function ConnectorDrawer({
                               .map((field) => (
                                 <label
                                   key={field.name}
-                                  className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted"
+                                  className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted"
                                 >
                                   {field.label}
                                   <input
@@ -1465,7 +1462,7 @@ export function ConnectorDrawer({
                   )}
                   {isSnowflake && !showSnowflakeScopeFields && (
                     <div className="mt-2 rounded-lg border border-line bg-surfaceMuted p-3">
-                      <div className="text-xs font-black uppercase tracking-wide text-muted">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                         Read scope
                       </div>
                       <div className="mt-1 text-xs font-semibold text-muted">
@@ -1480,7 +1477,7 @@ export function ConnectorDrawer({
                     <div className="mt-2 border-t border-line pt-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <div className="text-xs font-black uppercase tracking-wide text-muted">
+                          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                             Read scope
                           </div>
                           {isSnowflake && (
@@ -1536,7 +1533,7 @@ export function ConnectorDrawer({
                           return (
                             <label
                               key={field.name}
-                              className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted"
+                              className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted"
                             >
                               {field.label}
                               {isSnowflake && selectValues.length > 0 ? (
@@ -1572,7 +1569,7 @@ export function ConnectorDrawer({
                       </div>
                       {advancedScopeFields.length > 0 && (
                         <details className="mt-3 rounded-lg border border-line bg-surfaceMuted p-3">
-                          <summary className="cursor-pointer list-none text-xs font-black uppercase tracking-wide text-muted">
+                          <summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-muted">
                             Advanced view mapping
                           </summary>
                           <div className="mt-2 text-xs leading-5 text-muted">
@@ -1602,7 +1599,7 @@ export function ConnectorDrawer({
                               return (
                                 <label
                                   key={field.name}
-                                  className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted"
+                                  className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted"
                                 >
                                   {field.label}
                                   {selectValues.length > 0 ? (
@@ -1642,7 +1639,7 @@ export function ConnectorDrawer({
                   )}
                   {schedulerFields.length > 0 && (
                     <div className="mt-2 border-t border-line pt-3">
-                      <div className="text-xs font-black uppercase tracking-wide text-muted">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                         Scheduled sync
                       </div>
                       <div className="mt-1 text-xs font-semibold text-muted">
@@ -1653,7 +1650,7 @@ export function ConnectorDrawer({
                         {schedulerFields.map((field) => (
                           <label
                             key={field.name}
-                            className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted"
+                            className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted"
                           >
                             {field.label}
                             <input
@@ -1679,7 +1676,7 @@ export function ConnectorDrawer({
                   )}
                   {usesDiscoveredReadScope && !isSnowflake && (
                     <div className="mt-2 rounded-lg border border-line bg-surfaceMuted p-3">
-                      <div className="text-xs font-black uppercase tracking-wide text-muted">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                         Read scope
                       </div>
                       <div className="mt-1 text-xs font-semibold text-muted">
@@ -1701,13 +1698,13 @@ export function ConnectorDrawer({
                   )}
                 </div>
                 {!canEnable && !isEnabled && (
-                  <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                  <div className="mt-2 rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-xs font-semibold text-warning-fg">
                     Required before enabling:{" "}
                     {actionableMissingRequired.join(", ")}.
                   </div>
                 )}
                 {canEnable && !isEnabled && !probeGateSatisfied && (
-                  <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+                  <div className="mt-2 rounded-lg border border-info/40 bg-info-bg px-3 py-2 text-xs font-semibold text-info-fg">
                     {connector.connector_id === "aws-posture"
                       ? "Test connection before enabling. TrustOps will call AWS STS AssumeRole with the account target and external ID; no long-lived AWS keys are stored."
                       : connector.connector_id === "azure-posture"
@@ -1719,7 +1716,7 @@ export function ConnectorDrawer({
                 )}
                 {discoveryRun?.metadata && (
                   <div className="mt-2 rounded-lg border border-line bg-surfaceMuted p-3 text-xs">
-                    <div className="font-black uppercase tracking-wide text-muted">
+                    <div className="font-semibold uppercase tracking-wide text-muted">
                       Discovered scope
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1746,13 +1743,13 @@ export function ConnectorDrawer({
                   </div>
                 )}
                 {canEnable && !isEnabled && probeGateSatisfied && (
-                  <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <div className="mt-2 rounded-lg border border-success/40 bg-success-bg px-3 py-2 text-xs font-semibold text-success-fg">
                     Access checked. Enable writes the redacted configuration
                     event.
                   </div>
                 )}
                 {latestError?.error && (
-                  <div className="mt-2 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                  <div className="mt-2 flex items-start gap-2 rounded-lg border border-danger/40 bg-danger-bg px-3 py-2 text-xs text-danger-fg">
                     <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     <div>
                       <b>Latest run needs attention:</b>{" "}
@@ -1771,7 +1768,7 @@ export function ConnectorDrawer({
                         <> · configured {connector.configured_at}</>
                       )}
                       {!isEnabled && (
-                        <span className="block mt-1 text-amber-800 dark:text-amber-300">
+                        <span className="block mt-1 text-warning-fg">
                           Staged but not enabled — run Test connection, then
                           Enable.
                         </span>

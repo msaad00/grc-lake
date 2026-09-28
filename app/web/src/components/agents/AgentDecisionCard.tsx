@@ -104,7 +104,7 @@ export function AgentDecisionCard({
     >
       <div className="min-w-0">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-black text-ink">
+          <span className="truncate text-sm font-semibold text-ink">
             {decision.action}
           </span>
           <Badge tone={toneForStatus(decision.status)}>
@@ -114,22 +114,22 @@ export function AgentDecisionCard({
             <Badge tone="attention">approval</Badge>
           )}
         </div>
-        <p className="mt-1 text-sm font-bold leading-5 text-muted">
+        <p className="mt-1 text-sm font-semibold leading-5 text-muted">
           {decision.reason ?? "No reason provided."}
         </p>
         <pre className="mt-2 max-h-32 overflow-auto rounded-lg bg-surfaceMuted p-3 text-xs text-ink">
           {jsonPreview(decision.payload)}
         </pre>
         {decision.execution_result ? (
-          <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-            <div className="font-black">Execution result</div>
+          <div className="mt-2 rounded-lg border border-success/40 bg-success-bg px-3 py-2 text-xs text-success-fg">
+            <div className="font-semibold">Execution result</div>
             <pre className="mt-1 overflow-auto">
               {jsonPreview(decision.execution_result)}
             </pre>
             {link ? (
               <Link
                 href={link.href}
-                className="mt-2 inline-flex text-xs font-black text-brand hover:underline"
+                className="mt-2 inline-flex text-xs font-semibold text-brand hover:underline"
               >
                 {link.label}
               </Link>
@@ -137,8 +137,8 @@ export function AgentDecisionCard({
           </div>
         ) : null}
         {decision.status === "rejected" ? (
-          <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
-            <span className="font-black">
+          <div className="mt-2 rounded-lg border border-danger/40 bg-danger-bg px-3 py-2 text-xs text-danger-fg">
+            <span className="font-semibold">
               Rejected
               {decision.rejected_by ? ` by ${decision.rejected_by}` : ""}:
             </span>{" "}
@@ -149,7 +149,7 @@ export function AgentDecisionCard({
       <div className="flex min-w-0 flex-col items-stretch gap-2 lg:items-end">
         {decision.status === "proposed" ? (
           <>
-            <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+            <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
               Note or reason
               <textarea
                 value={note}
@@ -160,11 +160,11 @@ export function AgentDecisionCard({
                 rows={2}
                 aria-invalid={needsReason}
                 placeholder="Optional for approval; required to reject"
-                className="min-w-[220px] rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand aria-[invalid=true]:border-rose-500"
+                className="min-w-[220px] rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand aria-[invalid=true]:border-danger"
               />
             </label>
             {needsReason ? (
-              <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
+              <p className="text-xs font-semibold text-danger-fg">
                 Add a reason to reject this decision.
               </p>
             ) : null}

@@ -70,47 +70,47 @@ export function EvidenceFreshnessSlaPanel() {
             <>
               <div className="grid gap-3 sm:grid-cols-4">
                 <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[10px] font-black uppercase text-muted">
+                  <div className="text-[11px] font-semibold uppercase text-muted">
                     Fresh rate
                   </div>
-                  <div className="mt-1 text-2xl font-black text-ink">
+                  <div className="mt-1 text-2xl font-semibold text-ink">
                     {summary.data.fresh_rate_pct}%
                   </div>
                 </div>
                 <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[10px] font-black uppercase text-muted">
+                  <div className="text-[11px] font-semibold uppercase text-muted">
                     SLA breaches
                   </div>
-                  <div className="mt-1 text-2xl font-black text-ink">
+                  <div className="mt-1 text-2xl font-semibold text-ink">
                     {summary.data.sla_breach_count}
                   </div>
                 </div>
                 <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[10px] font-black uppercase text-muted">
+                  <div className="text-[11px] font-semibold uppercase text-muted">
                     Sources at risk
                   </div>
-                  <div className="mt-1 text-2xl font-black text-ink">
+                  <div className="mt-1 text-2xl font-semibold text-ink">
                     {summary.data.sources_needing_action}
                   </div>
                 </div>
                 <div className="rounded-lg border border-line bg-panel p-3">
-                  <div className="text-[10px] font-black uppercase text-muted">
+                  <div className="text-[11px] font-semibold uppercase text-muted">
                     Tracked records
                   </div>
-                  <div className="mt-1 text-2xl font-black text-ink">
+                  <div className="mt-1 text-2xl font-semibold text-ink">
                     {summary.data.total}
                   </div>
                 </div>
               </div>
 
               {summary.data.sla_breach_count > 0 && (
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                <div className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
                   <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />
                   <p>
                     {summary.data.stale_count} stale ·{" "}
                     {summary.data.expired_count} expired ·{" "}
                     {summary.data.missing_count} missing. Review in{" "}
-                    <Link href="/evidence" className="font-bold underline">
+                    <Link href="/evidence" className="font-semibold underline">
                       Evidence
                     </Link>{" "}
                     or escalate to remediation owners.
@@ -126,7 +126,7 @@ export function EvidenceFreshnessSlaPanel() {
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-black text-ink">
+                        <span className="text-sm font-semibold text-ink">
                           {row.source}
                         </span>
                         <Badge
@@ -144,7 +144,7 @@ export function EvidenceFreshnessSlaPanel() {
                         {formatMinutes(row.freshness_slo_minutes)}
                       </p>
                     </div>
-                    <span className="text-xs font-bold text-muted">
+                    <span className="text-xs font-semibold text-muted">
                       {plural(
                         row.stale_count + row.expired_count + row.missing_count,
                         "breach",

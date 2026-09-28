@@ -65,7 +65,7 @@ function SnapshotDetailDrawer({
         {detail.data && (
           <div className="grid gap-3 text-sm">
             <div className="grid gap-1 rounded-lg border border-line bg-surfaceMuted p-3">
-              <div className="font-bold text-ink">{detail.data.reason}</div>
+              <div className="font-semibold text-ink">{detail.data.reason}</div>
               <div className="text-muted">
                 {detail.data.evaluated_at
                   ? new Date(detail.data.evaluated_at).toLocaleString()
@@ -78,7 +78,7 @@ function SnapshotDetailDrawer({
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <span className="text-muted">Posture</span>
-                <div className="font-bold text-ink">
+                <div className="font-semibold text-ink">
                   {typeof detail.data.posture?.score === "number"
                     ? `${detail.data.posture.score}%`
                     : "—"}
@@ -86,13 +86,13 @@ function SnapshotDetailDrawer({
               </div>
               <div>
                 <span className="text-muted">Violations</span>
-                <div className="font-bold text-ink">
+                <div className="font-semibold text-ink">
                   {detail.data.violation_count}
                 </div>
               </div>
             </div>
             <div>
-              <div className="mb-1 text-xs font-bold uppercase tracking-wide text-muted">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
                 Frameworks ({detail.data.frameworks?.length ?? 0})
               </div>
               <div className="flex flex-wrap gap-1">
@@ -104,7 +104,7 @@ function SnapshotDetailDrawer({
               </div>
             </div>
             <div>
-              <div className="mb-1 text-xs font-bold uppercase tracking-wide text-muted">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
                 Top violations
               </div>
               <ul className="max-h-40 space-y-1 overflow-y-auto text-xs">
@@ -113,7 +113,9 @@ function SnapshotDetailDrawer({
                     key={`${v.control_id}-${i}`}
                     className="rounded border border-line px-2 py-1"
                   >
-                    <span className="font-bold text-ink">{v.control_id}</span>
+                    <span className="font-semibold text-ink">
+                      {v.control_id}
+                    </span>
                     <span className="text-muted"> · {v.severity ?? "—"}</span>
                   </li>
                 ))}
@@ -207,7 +209,7 @@ export function AuditSnapshotTimeline() {
                           {shortDate(row.evaluated_at)}
                         </td>
                         <td className="py-2 pr-3">{row.reason}</td>
-                        <td className="py-2 pr-3 font-bold text-ink">
+                        <td className="py-2 pr-3 font-semibold text-ink">
                           {row.posture_score != null
                             ? `${row.posture_score}%`
                             : "—"}

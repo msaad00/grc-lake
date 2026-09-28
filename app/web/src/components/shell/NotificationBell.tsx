@@ -48,11 +48,11 @@ export function NotificationBell() {
         <button
           type="button"
           aria-label="Notifications"
-          className="relative inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-300 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+          className="relative inline-flex h-8 w-8 items-center justify-center rounded-md text-muted hover:bg-rail-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <Bell className="h-4 w-4" />
           {unread > 0 && (
-            <span className="absolute -right-1 -top-1 grid h-4 min-w-[16px] place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white">
+            <span className="absolute -right-1 -top-1 grid h-4 min-w-[16px] place-items-center rounded-full bg-danger-bg px-1 text-[10px] font-semibold text-danger-fg">
               {unread > 9 ? "9+" : unread}
             </span>
           )}
@@ -65,11 +65,11 @@ export function NotificationBell() {
           onCloseAutoFocus={markSeen}
           className="z-[60] grid min-w-[360px] max-w-[480px] gap-0.5 rounded-xl border border-line bg-surface p-1.5 shadow-hero"
         >
-          <DropdownMenu.Label className="flex items-center justify-between gap-2 px-2 py-2 text-[10px] font-black uppercase tracking-wider text-muted">
+          <DropdownMenu.Label className="flex items-center justify-between gap-2 px-2 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
             <span>Audit activity</span>
             <Link
               href="/audit-log"
-              className="text-[10px] font-black uppercase tracking-wider text-brand hover:underline"
+              className="text-[11px] font-semibold uppercase tracking-wider text-brand hover:underline"
             >
               View all →
             </Link>

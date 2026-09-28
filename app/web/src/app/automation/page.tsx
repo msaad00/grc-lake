@@ -243,13 +243,13 @@ function WorkflowHealthStrip({
       <Badge tone={connected ? "ready" : "attention"}>
         {connected ? `${counts.edges} edges` : "connect nodes"}
       </Badge>
-      <span className="rounded-full bg-blue-50 px-2.5 py-1 font-black text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+      <span className="rounded-full bg-info-bg px-2.5 py-1 font-semibold text-info-fg">
         {counts.triggers} trigger
       </span>
-      <span className="rounded-full bg-amber-50 px-2.5 py-1 font-black text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+      <span className="rounded-full bg-warning-bg px-2.5 py-1 font-semibold text-warning-fg">
         {counts.checks} check
       </span>
-      <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-black text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+      <span className="rounded-full bg-success-bg px-2.5 py-1 font-semibold text-success-fg">
         {counts.actions} action
       </span>
     </div>
@@ -267,7 +267,7 @@ function RunnerContract({
     <details className="group rounded-xl border border-line bg-surface shadow-card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
         <div className="min-w-0">
-          <div className="text-sm font-black text-ink">
+          <div className="text-sm font-semibold text-ink">
             Workflow runner contract
           </div>
           <div className="truncate text-xs text-muted">
@@ -604,7 +604,6 @@ export default function AutomationPage() {
   return (
     <div className="page-shell grid grid-cols-[minmax(0,1fr)] gap-4">
       <PageHeader
-        eyebrow="Workflow builder"
         title={ROUTE_LABELS["/automation"]}
         description="Design and run trust automation from a populated canvas."
         actions={
@@ -622,7 +621,7 @@ export default function AutomationPage() {
                 setSelectedNode(null);
                 setLastRun(null);
               }}
-              className="max-w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm font-extrabold focus:outline-none focus:ring-1 focus:ring-brand sm:max-w-[260px]"
+              className="max-w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand sm:max-w-[260px]"
             >
               <option value="">Saved workflows</option>
               {(workflows.data ?? []).map((w) => (
@@ -689,18 +688,18 @@ export default function AutomationPage() {
 
       <Card className="overflow-hidden border-brand/20">
         <div className="grid gap-3 p-3 xl:grid-cols-[minmax(220px,0.7fr)_minmax(280px,1fr)_auto] xl:items-end">
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+          <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
             Name
             <input
               value={editor.name}
               onChange={(e) =>
                 setEditor((ed) => ({ ...ed, name: e.target.value }))
               }
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-extrabold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
               disabled={auditor}
             />
           </label>
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+          <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
             Description
             <input
               value={editor.description}
@@ -781,7 +780,7 @@ export default function AutomationPage() {
                 className="grid w-full gap-1 rounded-lg border border-line bg-surface p-3 text-left text-xs hover:border-brand"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-black">
+                  <span className="font-semibold">
                     v{r.workflow_version} · {r.node_results.length} nodes
                   </span>
                   <Badge

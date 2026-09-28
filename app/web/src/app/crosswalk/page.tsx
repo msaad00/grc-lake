@@ -146,7 +146,6 @@ export default function CrosswalkPage() {
   return (
     <div className="page-shell grid gap-5">
       <PageHeader
-        eyebrow="Control mapping coverage"
         title={ROUTE_LABELS["/crosswalk"]}
         description="Control-to-article mappings, their review status, and framework overlap."
         actions={
@@ -191,7 +190,7 @@ export default function CrosswalkPage() {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <ControlFamilyIcon domain={group.risk_domain} />
-                  <span className="text-sm font-black text-ink">
+                  <span className="text-sm font-semibold text-ink">
                     {group.label}
                   </span>
                   <Badge tone="info">{group.risk_domain}</Badge>
@@ -206,7 +205,7 @@ export default function CrosswalkPage() {
                       key={ref.control_id}
                       href={`/controls/?id=${encodeURIComponent(ref.control_id)}`}
                       aria-label={ref.control_id}
-                      className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-bold text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+                      className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
                     >
                       <FrameworkBadge
                         frameworkId={ref.framework_id}
@@ -258,7 +257,7 @@ export default function CrosswalkPage() {
                   setFramework(event.target.value);
                   setPage(0);
                 }}
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-bold text-ink outline-none"
+                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-ink outline-none"
               >
                 <option value="all">All frameworks</option>
                 {frameworkOptions.map((item) => (
@@ -274,7 +273,7 @@ export default function CrosswalkPage() {
                   setReviewFilter(event.target.value as ReviewFilter);
                   setPage(0);
                 }}
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-bold text-ink outline-none"
+                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-ink outline-none"
               >
                 <option value="all">All review states</option>
                 <option value="reviewed">Reviewed</option>
@@ -300,7 +299,7 @@ export default function CrosswalkPage() {
               <div className="overflow-x-auto rounded-lg border border-line">
                 <table className="w-full min-w-[960px] border-collapse text-sm">
                   <thead>
-                    <tr className="border-b border-line bg-surfaceMuted text-left text-[11px] font-black uppercase tracking-wide text-muted">
+                    <tr className="border-b border-line bg-surfaceMuted text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
                       <th className="px-3 py-2">Framework</th>
                       <th className="px-3 py-2">Control</th>
                       <th className="px-3 py-2">Source article</th>
@@ -322,13 +321,13 @@ export default function CrosswalkPage() {
                           />
                         </td>
                         <td className="px-3 py-3 align-top">
-                          <code className="font-black text-ink">
+                          <code className="font-semibold text-ink">
                             {row.control_id}
                           </code>
                         </td>
                         <td className="max-w-[280px] px-3 py-3 align-top">
                           <div className="flex flex-wrap items-center gap-2">
-                            <code className="font-black text-ink">
+                            <code className="font-semibold text-ink">
                               {row.article_id}
                             </code>
                             <Badge
@@ -348,7 +347,7 @@ export default function CrosswalkPage() {
                             href={row.official_source_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-brand hover:underline"
+                            className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:underline"
                           >
                             official source <ExternalLink className="h-3 w-3" />
                           </a>
@@ -411,7 +410,7 @@ export default function CrosswalkPage() {
         </Card>
 
         <details className="overflow-hidden rounded-xl border border-line bg-surface shadow-card">
-          <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-black text-ink">
+          <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink">
             Reviewed framework overlap matrix
             <Badge tone="info">{reviewedFrameworks.length} frameworks</Badge>
           </summary>
@@ -419,13 +418,13 @@ export default function CrosswalkPage() {
             <table className="w-full min-w-[720px] border-collapse text-sm">
               <thead>
                 <tr>
-                  <th className="bg-surfaceMuted px-3 py-2 text-left text-[11px] font-black uppercase tracking-wide text-muted">
+                  <th className="bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
                     Framework
                   </th>
                   {reviewedFrameworks.map((f) => (
                     <th
                       key={f}
-                      className="border-l border-line bg-surfaceMuted px-3 py-2 text-left text-[11px] font-black uppercase tracking-wide text-muted"
+                      className="border-l border-line bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
                     >
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
@@ -442,7 +441,7 @@ export default function CrosswalkPage() {
               <tbody>
                 {reviewedMatrix.map((row) => (
                   <tr key={row.framework_id} className="border-t border-line">
-                    <th className="bg-surfaceMuted px-3 py-3 text-left text-xs font-black text-ink">
+                    <th className="bg-surfaceMuted px-3 py-3 text-left text-xs font-semibold text-ink">
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
                           frameworkId={row.framework_id}
@@ -496,7 +495,7 @@ export default function CrosswalkPage() {
         </details>
 
         <details className="overflow-hidden rounded-xl border border-line bg-surface shadow-card">
-          <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-black text-ink">
+          <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink">
             Heuristic domain overlap matrix
             <Badge>{heuristicFrameworks.length} frameworks</Badge>
           </summary>
@@ -504,13 +503,13 @@ export default function CrosswalkPage() {
             <table className="w-full min-w-[720px] border-collapse text-sm">
               <thead>
                 <tr>
-                  <th className="bg-surfaceMuted px-3 py-2 text-left text-[11px] font-black uppercase tracking-wide text-muted">
+                  <th className="bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
                     Framework
                   </th>
                   {heuristicFrameworks.map((f) => (
                     <th
                       key={f}
-                      className="border-l border-line bg-surfaceMuted px-3 py-2 text-left text-[11px] font-black uppercase tracking-wide text-muted"
+                      className="border-l border-line bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
                     >
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
@@ -527,7 +526,7 @@ export default function CrosswalkPage() {
               <tbody>
                 {heuristicMatrix.map((row) => (
                   <tr key={row.framework_id} className="border-t border-line">
-                    <th className="bg-surfaceMuted px-3 py-3 text-left text-xs font-black text-ink">
+                    <th className="bg-surfaceMuted px-3 py-3 text-left text-xs font-semibold text-ink">
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
                           frameworkId={row.framework_id}

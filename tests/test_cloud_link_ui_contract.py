@@ -14,8 +14,8 @@ def test_connected_cloud_drawer_stays_compact_at_narrow_widths() -> None:
     shell = DRAWER_SHELL.read_text(encoding="utf-8")
 
     assert '"w-[min(560px,calc(100vw-16px))]"' in shell
-    assert 'className="flex-1 overflow-auto p-3 sm:p-4"' in shell
-    assert 'className="border-t border-line p-3 sm:p-4"' in shell
+    assert 'className="flex-1 overflow-auto px-4 py-5 sm:px-5"' in shell
+    assert 'className="border-t border-line px-4 py-3 sm:px-5"' in shell
     assert 'size="sm"' in drawer
     assert 'aria-label="Connected connector view"' in drawer
 

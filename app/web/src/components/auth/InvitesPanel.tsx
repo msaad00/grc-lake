@@ -111,7 +111,7 @@ export function InvitesPanel() {
           ) : (
             <QueryState queries={[invites]} label="invites">
               {invites.data && invites.data.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center text-sm font-bold text-muted">
+                <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center text-sm font-semibold text-muted">
                   No pending invites. Invite teammates by email.
                 </div>
               ) : (
@@ -123,7 +123,7 @@ export function InvitesPanel() {
                     >
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-black text-ink">
+                          <span className="text-sm font-semibold text-ink">
                             {row.email}
                           </span>
                           <InviteStatusBadge row={row} />
@@ -168,21 +168,21 @@ export function InvitesPanel() {
         }
       >
         <div className="grid gap-4">
-          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+          <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             Email
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
               placeholder="alice@company.com"
             />
           </label>
-          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+          <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             Role
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
             >
               {ROLES.map((item) => (
                 <option key={item} value={item}>

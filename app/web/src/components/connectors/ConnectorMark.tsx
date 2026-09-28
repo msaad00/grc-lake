@@ -112,7 +112,7 @@ export function ConnectorMark({
         ) : (
           <span
             className={[
-              "grid h-full w-full place-items-center rounded-xl font-black tracking-wide",
+              "grid h-full w-full place-items-center rounded-xl font-semibold tracking-wide",
               dim.mark,
             ].join(" ")}
             style={{ color: visual.accent, background: visual.bg }}
@@ -124,9 +124,10 @@ export function ConnectorMark({
       {showVendor && (
         <span className="min-w-0 overflow-hidden">
           <span
-            className={["block truncate font-black text-ink", dim.vendor].join(
-              " ",
-            )}
+            className={[
+              "block truncate font-semibold text-ink",
+              dim.vendor,
+            ].join(" ")}
           >
             {name ?? visual.vendor}
           </span>

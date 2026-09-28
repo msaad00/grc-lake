@@ -44,7 +44,7 @@ export function OnboardingEvidencePaths() {
           >
             <div className="flex items-center gap-2">
               <Icon className="h-4 w-4 text-brand" aria-hidden="true" />
-              <h2 className="text-sm font-black text-ink">{title}</h2>
+              <h2 className="text-sm font-semibold text-ink">{title}</h2>
             </div>
             <p className="mt-2 flex-1 text-xs leading-5 text-muted">
               {description}

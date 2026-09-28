@@ -75,7 +75,7 @@ export function EvidenceDrawer({ evidence, onClose }: Props) {
               <code className="text-xs text-ink">{evidence.asset_id}</code>
             </dd>
             <dt className="text-muted">Owner</dt>
-            <dd className="font-extrabold">{evidence.asset_owner}</dd>
+            <dd className="font-semibold">{evidence.asset_owner}</dd>
             <dt className="text-muted">Status</dt>
             <dd>
               <Badge>{evidence.status}</Badge>
@@ -117,11 +117,11 @@ export function EvidenceDrawer({ evidence, onClose }: Props) {
               className={[
                 "rounded-xl border p-3 text-sm",
                 result.verified
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                  : "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300",
+                  ? "border-success/40 bg-success-bg text-success-fg"
+                  : "border-danger/40 bg-danger-bg text-danger-fg",
               ].join(" ")}
             >
-              <div className="flex items-center gap-2 font-black">
+              <div className="flex items-center gap-2 font-semibold">
                 {result.verified ? (
                   <>
                     <CheckCircle2 className="h-4 w-4" /> Hash matches bronze raw

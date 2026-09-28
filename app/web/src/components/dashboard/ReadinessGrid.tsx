@@ -2,20 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronUp, LayoutGrid, ListFilter } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { FrameworkPosture, FrameworkView } from "@/lib/api/types";
 import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { FrameworkBadge } from "@/components/framework/FrameworkBadge";
 import { resolveFrameworkId } from "@/lib/framework-visuals";
 import { frameworkDetailHref } from "@/lib/framework-links";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-function barColor(score: number) {
-  if (score >= 85) return "#059669";
-  if (score >= 65) return "#d97706";
-  return "#dc2626";
-}
 
 const FRAMEWORK_IDS: Record<string, string> = {
   "SOC 2": "soc2",
@@ -76,6 +71,10 @@ function statusFor(framework: FrameworkPosture, coverage: Coverage) {
   return { label: "Review", tone: "attention" as const };
 }
 
+function byName(a: FrameworkPosture, b: FrameworkPosture) {
+  return a.framework.localeCompare(b.framework, undefined, { numeric: true });
+}
+
 function worstFirst(a: FrameworkPosture, b: FrameworkPosture) {
   return (
     a.score - b.score ||
@@ -86,7 +85,7 @@ function worstFirst(a: FrameworkPosture, b: FrameworkPosture) {
   );
 }
 
-function FrameworkCard({
+function FrameworkRow({
   framework,
   coverage,
   unmonitored,
@@ -102,58 +101,70 @@ function FrameworkCard({
     : framework!.framework;
   const showScore = Boolean(framework && coverage?.sufficient);
   const status = framework
-    ? statusFor(framework, coverage!).label
-    : unmonitored?.implementation_status === "planned"
-      ? "Planned"
-      : "Not assessed";
+    ? statusFor(framework, coverage!)
+    : {
+        label:
+          unmonitored?.implementation_status === "planned"
+            ? "Planned"
+            : "Not assessed",
+        tone: "default" as const,
+      };
+  const assessedShare =
+    framework && coverage?.total
+      ? Math.min(100, Math.round((coverage.assessed / coverage.total) * 100))
+      : null;
+  const progress = framework
+    ? `${
+        coverage?.total
+          ? `${coverage.assessed} of ${coverage.total} controls assessed`
+          : `${framework.control_count} ${framework.control_count === 1 ? "control" : "controls"} assessed`
+      }${framework.failing_control_count ? ` · ${framework.failing_control_count} failing` : ""}`
+    : `${unmonitored!.implemented_control_count} mapped controls`;
   return (
     <Link
       href={frameworkDetailHref(id)}
-      className="group flex min-w-0 items-center gap-3 border-b border-line px-2 py-4 transition-colors hover:bg-surfaceMuted focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+      className="group flex min-w-0 items-center gap-3 px-4 py-3 transition-colors hover:bg-surfaceMuted focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand sm:px-5"
     >
       <FrameworkBadge
         frameworkId={id}
         fallbackLabel={label}
-        size={40}
+        size={32}
         variant="mark-only"
       />
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold leading-5 text-ink [overflow-wrap:anywhere]">
-          {label}
-        </div>
-        <div className="mt-1 text-xs leading-5 text-muted">
-          {framework
-            ? `${
-                coverage?.total
-                  ? `${coverage.assessed} of ${coverage.total} controls assessed`
-                  : `${framework.control_count} ${framework.control_count === 1 ? "control" : "controls"} assessed`
-              } · ${framework.failing_control_count} failing · ${framework.stale_control_count} need fresh evidence`
-            : `${unmonitored!.implemented_control_count} mapped controls`}
-        </div>
-      </div>
-      <div className="w-24 shrink-0 text-right">
-        {framework && showScore && (
-          <div
-            className="text-xl font-semibold tabular-nums"
-            style={{ color: barColor(framework.score) }}
-          >
-            {Math.round(framework.score)}
-            <span className="text-xs font-medium text-muted"> / 100</span>
-            <span className="sr-only"> assessment score</span>
-          </div>
-        )}
-        <div
-          className={cn(
-            "font-medium text-muted",
-            showScore || !framework ? "text-[11px]" : "text-xs",
-          )}
-        >
-          {status}
+        <div className="truncate text-sm font-medium text-ink">{label}</div>
+        <div className="mt-1 flex min-w-0 items-center gap-2">
+          {assessedShare != null ? (
+            <span
+              aria-hidden="true"
+              className="hidden h-1 w-16 shrink-0 overflow-hidden rounded-full bg-surfaceMuted sm:block"
+            >
+              <span
+                className="block h-full rounded-full bg-line-strong"
+                style={{ width: `${Math.max(3, assessedShare)}%` }}
+              />
+            </span>
+          ) : null}
+          <span className="line-clamp-2 text-xs text-muted sm:truncate">
+            {progress}
+          </span>
         </div>
       </div>
+      {framework && showScore ? (
+        <span className="shrink-0 text-sm tabular-nums text-ink">
+          {Math.round(framework.score)}
+          <span className="text-xs text-muted">/100</span>
+          <span className="sr-only"> assessment score</span>
+        </span>
+      ) : null}
+      <Badge tone={status.tone} className="shrink-0">
+        {status.label}
+      </Badge>
     </Link>
   );
 }
+
+const PREVIEW = 4;
 
 export function ReadinessGrid({
   frameworks,
@@ -165,8 +176,11 @@ export function ReadinessGrid({
   embedded?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [showAll, setShowAll] = useState(false);
-  const sorted = useMemo(() => [...frameworks].sort(worstFirst), [frameworks]);
+  const [sort, setSort] = useState<"priority" | "name">("priority");
+  const sorted = useMemo(
+    () => [...frameworks].sort(sort === "name" ? byName : worstFirst),
+    [frameworks, sort],
+  );
   const catalogById = useMemo(
     () => new Map(catalog.map((entry) => [entry.framework_id, entry])),
     [catalog],
@@ -197,15 +211,8 @@ export function ReadinessGrid({
         ),
     [catalog, monitoredIds],
   );
-  const lowCoverageCount = sorted.filter(
-    (f) => !coverageByName.get(f.framework)?.sufficient,
-  ).length;
-  const readyCount = sorted.filter(
-    (f) => f.state === "ready" && coverageByName.get(f.framework)?.sufficient,
-  ).length;
-  const workCount = sorted.length - readyCount - lowCoverageCount;
   const totalCount = sorted.length + unmonitored.length;
-  const visibleLimit = showAll || expanded ? totalCount : 3;
+  const visibleLimit = expanded ? totalCount : PREVIEW;
   const visibleFrameworks = sorted.slice(0, visibleLimit);
   const visibleUnmonitored = unmonitored.slice(
     0,
@@ -215,13 +222,6 @@ export function ReadinessGrid({
     totalCount - visibleFrameworks.length - visibleUnmonitored.length,
     0,
   );
-  const summary = [
-    `${sorted.length} assessed`,
-    `${workCount} need attention`,
-    `${readyCount} ready`,
-    ...(lowCoverageCount ? [`${lowCoverageCount} insufficient coverage`] : []),
-    `${unmonitored.length} not assessed`,
-  ].join(" · ");
 
   return (
     <CollapsibleCard
@@ -229,96 +229,73 @@ export function ReadinessGrid({
       storageKey="dashboard-framework-readiness"
       defaultOpen
       title="Framework posture"
-      className="shadow-card [&>div:first-child>button]:min-w-[180px] [&>div:first-child]:items-center [&>div:first-child]:flex-wrap [&>div:first-child]:px-5 [&>div:first-child]:py-4"
-      contentClassName="space-y-3 px-3 py-3 sm:px-5"
-      actions={
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={!showAll ? "dark" : "default"}
-            onClick={() => {
-              setShowAll(false);
-              setExpanded(false);
-            }}
-          >
-            <ListFilter className="h-4 w-4" />
-            Priority
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={showAll ? "dark" : "default"}
-            onClick={() => {
-              setShowAll(true);
-              setExpanded(true);
-            }}
-          >
-            <LayoutGrid className="h-4 w-4" />
-            All
-          </Button>
-        </div>
-      }
+      contentClassName="p-0"
     >
-      <p className="text-sm text-muted">{summary}</p>
-
       {totalCount > 0 ? (
         <>
-          <div className="relative">
-            <div
-              className={cn(
-                "grid min-w-0 gap-x-7 2xl:grid-cols-2",
-                (showAll || expanded) &&
-                  "max-h-[360px] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]",
-              )}
-              tabIndex={0}
-              role="region"
-              aria-label="Framework posture list"
-            >
-              {visibleFrameworks.map((f) => (
-                <FrameworkCard
-                  key={f.framework}
-                  framework={f}
-                  coverage={coverageByName.get(f.framework)}
-                />
-              ))}
-              {visibleUnmonitored.map((framework) => (
-                <FrameworkCard
-                  key={framework.framework_id}
-                  unmonitored={framework}
-                />
-              ))}
-            </div>
+          <div className="flex items-center justify-end gap-3 px-4 pb-1 pt-3 sm:px-5">
+            <label className="inline-flex items-center gap-2 text-xs text-muted">
+              Sort
+              <select
+                value={sort}
+                onChange={(event) =>
+                  setSort(event.target.value as "priority" | "name")
+                }
+                className="ui-input h-7 py-0 pr-7 text-xs text-ink"
+              >
+                <option value="priority">Needs attention first</option>
+                <option value="name">Name</option>
+              </select>
+            </label>
           </div>
-          {hiddenCount > 0 && (
-            <Button
-              type="button"
-              variant="default"
-              className="w-full"
-              aria-expanded={expanded}
-              onClick={() => setExpanded(true)}
-            >
-              <ChevronDown className="h-4 w-4" />
-              Show {hiddenCount} more frameworks
-            </Button>
-          )}
-          {(expanded || showAll) && totalCount > 3 && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => {
-                setExpanded(false);
-                setShowAll(false);
-              }}
-            >
-              <ChevronUp className="h-4 w-4" />
-              Show priority frameworks
-            </Button>
-          )}
+          <div
+            className={cn(
+              "grid min-w-0 divide-y divide-line",
+              expanded &&
+                "max-h-[420px] overflow-y-auto overscroll-contain [scrollbar-width:thin]",
+            )}
+            tabIndex={0}
+            role="region"
+            aria-label="Framework posture list"
+          >
+            {visibleFrameworks.map((f) => (
+              <FrameworkRow
+                key={f.framework}
+                framework={f}
+                coverage={coverageByName.get(f.framework)}
+              />
+            ))}
+            {visibleUnmonitored.map((framework) => (
+              <FrameworkRow
+                key={framework.framework_id}
+                unmonitored={framework}
+              />
+            ))}
+          </div>
+          {totalCount > PREVIEW ? (
+            <div className="border-t border-line px-2 py-1.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted hover:text-ink"
+                aria-expanded={expanded}
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? (
+                  <ChevronUp aria-hidden="true" className="h-4 w-4" />
+                ) : (
+                  <ChevronDown aria-hidden="true" className="h-4 w-4" />
+                )}
+                {expanded
+                  ? "Show fewer"
+                  : `Show all ${totalCount} frameworks (${hiddenCount} more)`}
+              </Button>
+            </div>
+          ) : null}
         </>
       ) : (
-        <div className="rounded-lg border border-dashed border-line bg-surfaceMuted p-5 text-sm font-semibold text-muted">
+        <div className="m-4 rounded-md border border-dashed border-line bg-surfaceMuted p-5 text-sm text-muted">
           No framework assessments yet. Connect a source and evaluate controls
           to begin.
         </div>

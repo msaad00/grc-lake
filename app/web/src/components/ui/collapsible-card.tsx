@@ -52,12 +52,12 @@ export function CollapsibleCard({
 
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <div className="flex w-full items-start justify-between gap-2 px-3 py-2">
+      <div className="flex w-full items-start justify-between gap-2 px-4 py-3">
         <button
           type="button"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
-          className="flex min-w-0 flex-1 items-start gap-2 text-left"
+          className="flex min-w-0 flex-1 items-start gap-2 rounded-sm text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         >
           {open ? (
             <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
@@ -67,7 +67,7 @@ export function CollapsibleCard({
           <span className="grid min-w-0 gap-0.5">
             <span className="ui-section-title block">{title}</span>
             {description && (
-              <span className="block text-sm leading-5 text-muted">
+              <span className="block text-xs leading-5 text-muted">
                 {description}
               </span>
             )}
@@ -80,7 +80,7 @@ export function CollapsibleCard({
         )}
       </div>
       {open && (
-        <div className={cn("border-t border-line p-3", contentClassName)}>
+        <div className={cn("border-t border-line p-4", contentClassName)}>
           {children}
         </div>
       )}

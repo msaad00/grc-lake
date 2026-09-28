@@ -100,7 +100,9 @@ export function NodeConfigPanel({
             <Badge tone="info">{spec.kind}</Badge>
             <code className="truncate text-xs text-ink">{spec.node_type}</code>
           </div>
-          <div className="mt-1 text-sm font-black text-ink">{spec.label}</div>
+          <div className="mt-1 text-sm font-semibold text-ink">
+            {spec.label}
+          </div>
           <div className="text-xs text-muted">{spec.description}</div>
         </div>
         <button
@@ -119,11 +121,11 @@ export function NodeConfigPanel({
             className={[
               "mb-4 rounded-xl border p-3 text-xs",
               lastResult.result === "ok"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                : "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300",
+                ? "border-success/40 bg-success-bg text-success-fg"
+                : "border-danger/40 bg-danger-bg text-danger-fg",
             ].join(" ")}
           >
-            <div className="flex items-center gap-2 font-black">
+            <div className="flex items-center gap-2 font-semibold">
               {lastResult.result === "ok" ? (
                 <>
                   <CheckCircle2 className="h-4 w-4" /> Last run output
@@ -141,7 +143,7 @@ export function NodeConfigPanel({
         )}
 
         <section className="grid gap-3">
-          <div className="text-xs font-black uppercase tracking-wide text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
             Parameters
           </div>
           {fields.length === 0 ? (
@@ -156,12 +158,12 @@ export function NodeConfigPanel({
               return (
                 <label
                   key={name}
-                  className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted"
+                  className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted"
                 >
                   <span>
                     {field.label}
                     {field.required && (
-                      <span className="text-rose-600"> *</span>
+                      <span className="text-danger-fg"> *</span>
                     )}
                   </span>
                   <input
@@ -187,7 +189,7 @@ export function NodeConfigPanel({
         </section>
 
         <section className="mt-4 rounded-xl border border-line bg-surfaceMuted p-3">
-          <div className="text-xs font-black uppercase tracking-wide text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
             Output keys (downstream nodes can read)
           </div>
           <div className="mt-2 grid gap-1 text-[11px]">
@@ -210,11 +212,11 @@ export function NodeConfigPanel({
             className={[
               "mt-4 rounded-xl border p-3 text-xs",
               testError
-                ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
-                : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+                ? "border-danger/40 bg-danger-bg text-danger-fg"
+                : "border-success/40 bg-success-bg text-success-fg",
             ].join(" ")}
           >
-            <div className="font-black">
+            <div className="font-semibold">
               {testError ? "Test action errored" : "Test action returned"}
             </div>
             <pre className="mt-2 overflow-auto rounded bg-surface p-2 font-mono text-[11px] text-ink">

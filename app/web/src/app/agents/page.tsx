@@ -582,7 +582,6 @@ function AgentsPageContent() {
   return (
     <div className="page-shell grid gap-5">
       <PageHeader
-        eyebrow="Agent harness"
         title={ROUTE_LABELS["/agents"]}
         description="Run deterministic harnesses, inspect evaluations, and approve proposed writes."
         actions={
@@ -614,8 +613,8 @@ function AgentsPageContent() {
               onClick={() => selectSkill(skill)}
               className="rounded-lg border border-line bg-surface p-3 text-left transition-colors hover:border-brand"
             >
-              <div className="text-xs font-black text-brand">{skill.id}</div>
-              <div className="mt-1 text-sm font-black text-ink">
+              <div className="text-xs font-semibold text-brand">{skill.id}</div>
+              <div className="mt-1 text-sm font-semibold text-ink">
                 {skill.label}
               </div>
               <div className="mt-1 text-xs leading-4 text-muted">
@@ -649,7 +648,7 @@ function AgentsPageContent() {
             <div className="grid gap-3 rounded-xl border border-line bg-surfaceMuted p-3">
               <div className="grid gap-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-black uppercase tracking-wide text-muted">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Orchestrator
                   </span>
                   <Badge tone={orchestrator === "langgraph" ? "info" : "ready"}>
@@ -663,9 +662,9 @@ function AgentsPageContent() {
                       type="button"
                       onClick={() => setOrchestrator(value)}
                       className={[
-                        "rounded-lg border px-3 py-2 text-left text-xs font-black capitalize",
+                        "rounded-lg border px-3 py-2 text-left text-xs font-semibold capitalize",
                         orchestrator === value
-                          ? "border-brand bg-blue-50 text-brand dark:bg-blue-500/10"
+                          ? "border-brand bg-info-bg text-brand"
                           : "border-line bg-surface text-ink",
                       ].join(" ")}
                     >
@@ -683,7 +682,7 @@ function AgentsPageContent() {
                   className="mt-1"
                 />
                 <span className="min-w-0">
-                  <span className="block text-xs font-black text-ink">
+                  <span className="block text-xs font-semibold text-ink">
                     Fixture mode (rules-only, no model)
                   </span>
                   <span className="mt-0.5 block text-xs leading-5 text-muted">
@@ -694,7 +693,7 @@ function AgentsPageContent() {
                 </span>
               </label>
 
-              <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+              <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
                 Budget
                 <select
                   aria-label="Budget profile"
@@ -717,19 +716,19 @@ function AgentsPageContent() {
             <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
               <div className="rounded-lg border border-line bg-surface p-3">
                 <LockKeyhole className="h-4 w-4 text-brand" />
-                <div className="mt-2 text-xs font-black text-ink">
+                <div className="mt-2 text-xs font-semibold text-ink">
                   Writes require approval
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-surface p-3">
                 <Gauge className="h-4 w-4 text-brand" />
-                <div className="mt-2 text-xs font-black text-ink">
+                <div className="mt-2 text-xs font-semibold text-ink">
                   Budget is enforced
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-surface p-3">
                 <ShieldCheck className="h-4 w-4 text-brand" />
-                <div className="mt-2 text-xs font-black text-ink">
+                <div className="mt-2 text-xs font-semibold text-ink">
                   Core owns verdicts
                 </div>
               </div>
@@ -753,7 +752,7 @@ function AgentsPageContent() {
                   )}
                   <span className="min-w-0">
                     <span className="block">{spec.label}</span>
-                    <span className="block truncate text-xs font-bold text-muted">
+                    <span className="block truncate text-xs font-semibold text-muted">
                       {harness === "posture_review"
                         ? `${orchestrator} · ${useModel ? "model assisted" : "fixture mode"}`
                         : `${orchestrator} · ${useModel ? "model assisted" : "fixture mode"}`}
@@ -763,7 +762,7 @@ function AgentsPageContent() {
               );
             })}
             {agentRuns.isError && (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+              <div className="rounded-lg border border-danger/40 bg-danger-bg px-3 py-2 text-sm font-semibold text-danger-fg">
                 Agent run API is unreachable.
               </div>
             )}
@@ -784,7 +783,7 @@ function AgentsPageContent() {
           </CardHeader>
           <div className="grid max-h-[360px] gap-2 overflow-auto p-4 pt-0">
             {runs.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm font-bold text-muted">
+              <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm font-semibold text-muted">
                 No persisted runs yet.
               </div>
             ) : (
@@ -794,7 +793,7 @@ function AgentsPageContent() {
                   className={[
                     "grid min-w-0 gap-2 rounded-lg border px-3 py-3 transition",
                     selectedRun?.id === run.id
-                      ? "border-brand bg-blue-50 dark:bg-blue-500/10"
+                      ? "border-brand bg-info-bg"
                       : "border-line bg-surface hover:bg-surfaceMuted",
                   ].join(" ")}
                 >
@@ -804,7 +803,7 @@ function AgentsPageContent() {
                     className="grid min-w-0 gap-2 text-left"
                   >
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <span className="truncate text-sm font-black capitalize text-ink">
+                      <span className="truncate text-sm font-semibold capitalize text-ink">
                         {harnessLabel(run.harness)}
                       </span>
                       <Badge tone={toneForStatus(run.status)}>
@@ -819,7 +818,7 @@ function AgentsPageContent() {
                         {run.evaluation.confidence ?? "no confidence"}
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs font-bold text-muted md:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-muted md:grid-cols-4">
                       <span>{run.decisions.length} decisions</span>
                       <span>{run.evaluation.score ?? 0} score</span>
                       <span>{shortHash(run.input_hash)}</span>
@@ -864,48 +863,48 @@ function AgentsPageContent() {
         </CardHeader>
         <CardContent>
           {!selectedRun ? (
-            <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm font-bold text-muted">
+            <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm font-semibold text-muted">
               Select or create a run.
             </div>
           ) : (
             <div className="grid gap-4">
               <div className="grid gap-3 rounded-lg border border-line bg-surfaceMuted p-3 md:grid-cols-4">
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Harness
                   </div>
-                  <div className="truncate text-sm font-black capitalize text-ink">
+                  <div className="truncate text-sm font-semibold capitalize text-ink">
                     {harnessLabel(selectedRun.harness)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Confidence
                   </div>
-                  <div className="text-sm font-black text-ink">
+                  <div className="text-sm font-semibold text-ink">
                     {selectedRun.evaluation.confidence ?? "none"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Input hash
                   </div>
-                  <code className="block truncate text-sm font-black text-ink">
+                  <code className="block truncate text-sm font-semibold text-ink">
                     {shortHash(selectedRun.input_hash)}
                   </code>
                 </div>
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Budget
                   </div>
-                  <div className="truncate text-sm font-black text-ink">
+                  <div className="truncate text-sm font-semibold text-ink">
                     {jsonPreview(selectedRun.budget).replace(/\s+/g, " ")}
                   </div>
                 </div>
               </div>
 
               {selectedRun.errors.length > 0 && (
-                <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                <div className="rounded-lg border border-danger/40 bg-danger-bg px-3 py-2 text-sm font-semibold text-danger-fg">
                   {selectedRun.errors.join(" ")}
                 </div>
               )}
@@ -920,14 +919,14 @@ function AgentsPageContent() {
                   };
                 }
               ).data_readiness?.status === "needs_ingestion" ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                  <div className="font-black">Lake needs ingestion</div>
-                  <p className="mt-1 font-bold leading-5">
+                <div className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-3 text-sm text-warning-fg">
+                  <div className="font-semibold">Lake needs ingestion</div>
+                  <p className="mt-1 font-semibold leading-5">
                     Fixture mode is ready, but this lake has no assessment data
                     yet. Load the golden fixture or connect a source, then
                     re-run the harness.
                   </p>
-                  <ul className="mt-2 list-disc pl-5 text-xs font-bold">
+                  <ul className="mt-2 list-disc pl-5 text-xs font-semibold">
                     {(
                       (
                         selectedRun.state as {
@@ -947,7 +946,7 @@ function AgentsPageContent() {
 
               <div className="grid gap-3">
                 {selectedRun.decisions.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-line px-4 py-6 text-sm font-bold text-muted">
+                  <div className="rounded-lg border border-dashed border-line px-4 py-6 text-sm font-semibold text-muted">
                     This run did not propose any writes.
                   </div>
                 ) : (
@@ -969,8 +968,8 @@ function AgentsPageContent() {
       <details className="grid gap-3 rounded-xl border border-line bg-surface p-4">
         <summary className="flex min-w-0 cursor-pointer list-none flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="text-lg font-black text-ink">API runner</h2>
-            <p className="text-sm font-bold text-muted">
+            <h2 className="text-lg font-semibold text-ink">API runner</h2>
+            <p className="text-sm font-semibold text-muted">
               Advanced contracts for CLI, scheduler, MCP, and headless agents.
             </p>
           </div>
@@ -1030,7 +1029,7 @@ function AgentsPageContent() {
                 {(selected.path_params ?? []).map((p) => (
                   <label
                     key={p.name}
-                    className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted"
+                    className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted"
                   >
                     {p.name}
                     <input
@@ -1046,7 +1045,7 @@ function AgentsPageContent() {
                     />
                   </label>
                 ))}
-                <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+                <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
                   X-Trust-Role (optional)
                   <input
                     value={role}
@@ -1056,7 +1055,7 @@ function AgentsPageContent() {
                   />
                 </label>
                 {selected.method === "POST" && (
-                  <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+                  <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
                     Body (JSON)
                     <textarea
                       rows={6}
@@ -1089,7 +1088,7 @@ function AgentsPageContent() {
                   Reproduce this call from any shell.
                 </CardDescription>
               </CardHeader>
-              <pre className="overflow-auto bg-slate-950 p-4 text-xs text-slate-100">
+              <pre className="overflow-auto bg-code p-4 text-xs text-code-fg">
                 {curl}
               </pre>
             </Card>

@@ -10,7 +10,9 @@ test.describe("framework coverage workflow", () => {
       name: "Framework coverage summary",
     });
     await expect(portfolio).toBeVisible({ timeout: 20_000 });
-    await expect(portfolio.getByText("Coverage summary")).toBeVisible();
+    await expect(
+      portfolio.getByRole("heading", { name: "Requirement coverage" }),
+    ).toBeVisible();
     await expect(portfolio.getByText("Catalogued requirements")).toBeVisible();
     await expect(portfolio.getByText("Mapped requirements")).toBeVisible();
     await expect(

@@ -40,10 +40,10 @@ export function AuthIdentityDiagram() {
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs font-black uppercase tracking-wide text-muted">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted">
           Identity boundary
         </span>
-        <span className="text-[11px] font-bold text-muted">
+        <span className="text-[11px] font-semibold text-muted">
           Browser SSO + API keys share one tenant and audit model
         </span>
       </div>

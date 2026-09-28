@@ -118,7 +118,7 @@ export function BillingPanel() {
           {status && access ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-black text-ink">
+                <span className="text-sm font-semibold text-ink">
                   {titleCase(status.plan_tier ?? "starter")} plan
                 </span>
                 <Badge tone={access.tone}>{access.label}</Badge>

@@ -48,7 +48,7 @@ export function FrameworkMark({
   return (
     <span
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border font-black",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border font-semibold",
         className,
       )}
       style={{

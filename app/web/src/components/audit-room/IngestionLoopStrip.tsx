@@ -87,7 +87,7 @@ export function IngestionLoopStrip() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <Activity className="h-4 w-4 text-brand" />
-                  <span className="text-sm font-black text-ink">
+                  <span className="text-sm font-semibold text-ink">
                     Continuous ingestion loop
                   </span>
                   <Badge tone={toneForState(ingestion.data.state)}>
@@ -133,7 +133,7 @@ export function IngestionLoopStrip() {
                 </Button>
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:underline"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline"
                 >
                   Source health
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -221,12 +221,12 @@ export function IngestionLoopStrip() {
             {(evalRuns.data ?? []).length > 0 && (
               <div className="rounded-lg border border-line bg-panel p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
                     <History className="h-3.5 w-3.5" />
                     Recent eval runs
                   </div>
                   {scale?.mode && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-muted">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted">
                       <Layers className="h-3 w-3" />
                       {scale.mode.replace(/_/g, " ")}
                     </span>
@@ -239,7 +239,7 @@ export function IngestionLoopStrip() {
                       className="rounded-md border border-line bg-surface px-2.5 py-2"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-xs font-bold text-ink">
+                        <span className="truncate text-xs font-semibold text-ink">
                           {run.mode}
                         </span>
                         <Badge
@@ -257,7 +257,7 @@ export function IngestionLoopStrip() {
                           <span>{run.duration_ms}ms</span>
                         )}
                         {run.pass_rate != null && (
-                          <span className="inline-flex items-center gap-0.5 font-bold text-ink">
+                          <span className="inline-flex items-center gap-0.5 font-semibold text-ink">
                             <BarChart3 className="h-3 w-3" />
                             {formatPassRate(run.pass_rate)}
                           </span>

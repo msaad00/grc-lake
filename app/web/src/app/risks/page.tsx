@@ -104,7 +104,7 @@ function CreateRiskForm() {
         value={owner}
         onChange={(e) => setOwner(e.target.value)}
       />
-      <label className="flex items-center gap-1 text-[11px] font-black uppercase text-muted">
+      <label className="flex items-center gap-1 text-[11px] font-semibold uppercase text-muted">
         sev
         <select
           aria-label="Risk severity"
@@ -119,7 +119,7 @@ function CreateRiskForm() {
           ))}
         </select>
       </label>
-      <label className="flex items-center gap-1 text-[11px] font-black uppercase text-muted">
+      <label className="flex items-center gap-1 text-[11px] font-semibold uppercase text-muted">
         likely
         <select
           aria-label="Risk likelihood"
@@ -134,7 +134,7 @@ function CreateRiskForm() {
           ))}
         </select>
       </label>
-      <label className="flex items-center gap-1 text-[11px] font-black uppercase text-muted">
+      <label className="flex items-center gap-1 text-[11px] font-semibold uppercase text-muted">
         impact
         <select
           aria-label="Risk impact"
@@ -169,7 +169,9 @@ function RiskRow({ risk }: { risk: Risk }) {
   return (
     <div className="flex flex-wrap items-center gap-3 px-5 py-3">
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-black text-ink">{risk.title}</div>
+        <div className="truncate text-sm font-semibold text-ink">
+          {risk.title}
+        </div>
         <div className="text-[11px] text-muted">
           {risk.category || "uncategorized"} · {risk.owner || "unassigned"} ·
           due {fmtDate(risk.due_at)}
@@ -224,7 +226,6 @@ export default function RisksPage() {
   return (
     <div className="page-shell space-y-6">
       <PageHeader
-        eyebrow="Operate"
         title={ROUTE_LABELS["/risks"]}
         description="Track identified risks scored by severity, likelihood, and impact. Assign an owner, link a mitigating control, and walk each risk through the open → mitigating → accepted → closed lifecycle."
       />

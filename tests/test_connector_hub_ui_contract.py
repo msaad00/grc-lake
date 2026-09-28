@@ -90,3 +90,25 @@ def test_preview_connectors_are_wired_into_the_console_and_badged() -> None:
     for source in (page, drawer):
         assert 'release_stage === "preview"' in source
         assert re.search(r">\s*Preview\s*</Badge>", source)
+
+
+def test_connector_surfaces_use_theme_tokens_and_catalog_driven_lake_copy() -> None:
+    web = Path(__file__).parents[1] / "app/web/src"
+    for rel in (
+        "app/connectors/page.tsx",
+        "components/drawers/ConnectorDrawer.tsx",
+        "components/connectors/CloudLinkPanel.tsx",
+    ):
+        source = (web / rel).read_text(encoding="utf-8")
+        # Raw white fills turn into white cards with invisible text in dark mode.
+        assert not re.search(r"(?<![\w:-])bg-white(?![\w-])", source), rel
+        assert "bg-white/" not in source, rel
+
+    drawer = (web / "components/drawers/ConnectorDrawer.tsx").read_text(encoding="utf-8")
+    # The drawer is at most 560px wide: one column, progress header first.
+    assert "lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.72fr)]" not in drawer
+    assert 'aria-label="Setup progress"' in drawer
+
+    panel = (web / "components/connectors/EvidencePathPanel.tsx").read_text(encoding="utf-8")
+    assert "Snowflake or ClickHouse" not in panel
+    assert "release_stage" in panel

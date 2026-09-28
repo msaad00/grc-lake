@@ -23,10 +23,12 @@ test("dashboard panels switch independently, support keyboard tabs, and retain c
   await expect(
     page.getByRole("tab", { name: "Test results", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
-  await page.getByRole("tab", { name: "Exports", exact: true }).click();
+  await page.getByRole("tab", { name: "Sources", exact: true }).click();
   await expect(
-    page.getByRole("link", { name: "Open audit room" }),
-  ).toBeVisible();
+    page.getByRole("tab", { name: "Sources", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  // Export status lives once, in the header line; no duplicate Exports tab.
+  await expect(page.getByRole("tab", { name: "Exports" })).toHaveCount(0);
   await page.getByRole("button", { name: "Compliance", exact: true }).click();
   await expect(compliance).toBeHidden();
   await expect(operations).toBeVisible();
@@ -56,7 +58,6 @@ test("dashboard panels stack on mobile without page overflow", async ({
     "Control families",
     "Test results",
     "Sources",
-    "Exports",
     "Frameworks",
   ]) {
     await page.getByRole("tab", { name: label, exact: true }).click();

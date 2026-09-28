@@ -20,12 +20,12 @@ export function OnboardingGuideBanner({
   dismissHref = "/onboarding",
 }: Props) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-brand/25 bg-blue-50 px-4 py-3 dark:bg-blue-500/10">
-      <span className="shrink-0 rounded-full border border-brand/30 bg-surface px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand">
+    <div className="flex items-start gap-3 rounded-xl border border-brand/25 bg-info-bg px-4 py-3">
+      <span className="shrink-0 rounded-full border border-brand/30 bg-surface px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-brand">
         Step {step}/{total}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-black text-ink">{title}</div>
+        <div className="text-sm font-semibold text-ink">{title}</div>
         <p className="mt-0.5 text-xs leading-5 text-muted">{detail}</p>
       </div>
       <Link

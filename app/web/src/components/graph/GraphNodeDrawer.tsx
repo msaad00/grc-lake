@@ -101,7 +101,7 @@ export function GraphNodeDrawer({ node, graphMode, onClose }: Props) {
           </div>
 
           {isPublicGap && (
-            <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
               <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />
               <p>
                 This signal is not available in public audit mode. Run an
@@ -119,19 +119,19 @@ export function GraphNodeDrawer({ node, graphMode, onClose }: Props) {
             {node.owner && (
               <>
                 <dt className="text-muted">Owner</dt>
-                <dd className="font-extrabold">{node.owner}</dd>
+                <dd className="font-semibold">{node.owner}</dd>
               </>
             )}
             {node.environment && (
               <>
                 <dt className="text-muted">Environment</dt>
-                <dd className="font-extrabold">{node.environment}</dd>
+                <dd className="font-semibold">{node.environment}</dd>
               </>
             )}
             {node.evidence_id && (
               <>
                 <dt className="text-muted">Evidence id</dt>
-                <dd className="font-extrabold">{node.evidence_id}</dd>
+                <dd className="font-semibold">{node.evidence_id}</dd>
               </>
             )}
             {node.evidence_ref && (
@@ -143,26 +143,26 @@ export function GraphNodeDrawer({ node, graphMode, onClose }: Props) {
             {node.event_type && (
               <>
                 <dt className="text-muted">Event type</dt>
-                <dd className="font-extrabold">{node.event_type}</dd>
+                <dd className="font-semibold">{node.event_type}</dd>
               </>
             )}
             {node.freshness_status && (
               <>
                 <dt className="text-muted">Freshness</dt>
-                <dd className="font-extrabold">{node.freshness_status}</dd>
+                <dd className="font-semibold">{node.freshness_status}</dd>
               </>
             )}
             {node.severity && (
               <>
                 <dt className="text-muted">Severity</dt>
-                <dd className="font-extrabold">{node.severity}</dd>
+                <dd className="font-semibold">{node.severity}</dd>
               </>
             )}
           </dl>
 
           {(node.control_ids?.length ?? 0) > 0 && (
             <div>
-              <div className="mb-2 text-xs font-black uppercase tracking-wide text-muted">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
                 Linked controls
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -170,7 +170,7 @@ export function GraphNodeDrawer({ node, graphMode, onClose }: Props) {
                   <Link
                     key={controlId}
                     href="/controls"
-                    className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-black hover:border-brand"
+                    className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold hover:border-brand"
                   >
                     <ShieldCheck className="h-3 w-3" />
                     {controlId}

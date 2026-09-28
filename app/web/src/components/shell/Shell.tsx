@@ -59,7 +59,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="flex min-h-dvh w-full min-w-0 max-w-none flex-col bg-rail">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-ink focus:shadow-hero"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-ink focus:shadow-hero"
         >
           Skip to main content
         </a>

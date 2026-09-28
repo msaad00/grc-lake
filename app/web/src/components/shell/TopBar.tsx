@@ -44,10 +44,10 @@ export function TopBar({
   }, [onOpenPalette]);
 
   const actionClass =
-    "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300";
+    "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-rail-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand";
 
   return (
-    <header className="sticky top-0 z-40 flex h-[var(--topbar-h)] min-w-0 items-center gap-3 border-b border-white/10 bg-rail px-3 text-slate-100 sm:gap-5 sm:px-5">
+    <header className="sticky top-0 z-40 flex h-[var(--topbar-h)] min-w-0 items-center gap-3 border-b border-rail-line bg-rail px-3 text-ink sm:gap-5 sm:px-5">
       <button
         type="button"
         onClick={onOpenNav}
@@ -58,7 +58,6 @@ export function TopBar({
       </button>
       <TrustOpsLogo
         href="/dashboard"
-        inverted
         markSize="md"
         showWordmark
         wordmarkClassName="hidden lg:block"
@@ -69,14 +68,14 @@ export function TopBar({
         type="button"
         onClick={onOpenPalette}
         aria-label="Open command palette"
-        className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-2.5 text-left text-xs text-slate-400 transition-colors hover:border-slate-500 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 lg:max-w-[480px]"
+        className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-surfaceMuted px-2.5 text-left text-xs text-muted transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand lg:max-w-[480px]"
       >
         <Search aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate sm:hidden">Search…</span>
         <span className="hidden flex-1 truncate sm:block">
           Search controls, findings, evidence…
         </span>
-        <kbd className="ml-auto hidden rounded border border-white/15 px-1 py-0.5 text-[10px] leading-none text-slate-400 md:block">
+        <kbd className="ml-auto hidden rounded border border-line bg-surface px-1 py-0.5 text-[10px] leading-none text-muted md:block">
           ⌘ K
         </kbd>
       </button>
@@ -85,11 +84,11 @@ export function TopBar({
           role="status"
           aria-label={statusLabel}
           title={statusLabel}
-          className="mr-1 inline-flex items-center gap-1.5 text-[11px] text-slate-400 sm:mr-2"
+          className="mr-1 inline-flex items-center gap-1.5 text-[11px] text-muted sm:mr-2"
         >
           <span
             aria-hidden="true"
-            className={`h-2 w-2 rounded-full ${live ? "bg-emerald-400" : "bg-amber-400"}`}
+            className={`h-2 w-2 rounded-full ${live ? "bg-success" : "bg-warning"}`}
           />
           <span aria-hidden="true" className="hidden xl:inline">
             {statusLabel}
@@ -112,12 +111,12 @@ export function TopBar({
           onClick={onSnapshot}
           aria-label="Capture snapshot"
           title="Capture snapshot"
-          className="inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-md border border-cyan-300/25 bg-cyan-300/10 px-2 text-xs font-medium text-cyan-100 transition-colors hover:bg-cyan-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:px-3 dark:border-cyan-500/30"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-md border border-line bg-surface px-2 text-xs font-medium text-ink transition-colors hover:bg-surfaceMuted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-3"
         >
           <Camera aria-hidden="true" className="h-4 w-4" />
           <span className="hidden md:inline">Snapshot</span>
         </button>
-        <div className="ml-1 border-l border-white/10 pl-2 sm:ml-2 sm:pl-3">
+        <div className="ml-1 border-l border-rail-line pl-2 sm:ml-2 sm:pl-3">
           <UserMenu compact />
         </div>
       </div>

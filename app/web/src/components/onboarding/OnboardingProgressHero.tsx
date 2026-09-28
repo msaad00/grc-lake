@@ -51,19 +51,19 @@ export function OnboardingProgressHero({
   );
 
   return (
-    <Card className="overflow-hidden border-line bg-gradient-to-br from-slate-950 via-[#0b1526] to-[#0a3038] text-white">
+    <Card className="overflow-hidden text-ink">
       <div className="grid gap-5 p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <TrustOpsMark size="lg" gradientId="onboarding-mark-gradient" />
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-300">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-brand">
                 First-run setup
               </div>
-              <div className="text-xl font-black tracking-tight">
+              <div className="text-xl font-semibold tracking-tight">
                 Launch your trust workspace
               </div>
-              <p className="mt-1 max-w-xl text-sm font-medium text-slate-300">
+              <p className="mt-1 max-w-xl text-sm font-medium text-muted">
                 Connect read-only sources (no lake build required), sync
                 evidence, and share auditor-ready proof — same loop agents run
                 headlessly.
@@ -94,24 +94,24 @@ export function OnboardingProgressHero({
                 href={href}
                 className={`rounded-xl border p-3 transition-colors ${
                   active
-                    ? "border-sky-400/60 bg-sky-500/10"
+                    ? "border-brand bg-brand/5"
                     : done
-                      ? "border-emerald-500/30 bg-emerald-500/10"
-                      : "border-white/10 bg-white/5 hover:border-white/20"
+                      ? "border-success/40 bg-success-bg"
+                      : "border-line bg-surface hover:border-line-strong"
                 }`}
               >
                 <div className="flex items-center gap-2">
                   {done ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    <CheckCircle2 className="h-4 w-4 text-success-fg" />
                   ) : (
                     <Circle
-                      className={`h-4 w-4 ${active ? "text-sky-300" : "text-slate-500"}`}
+                      className={`h-4 w-4 ${active ? "text-brand" : "text-muted"}`}
                     />
                   )}
                   <Icon
-                    className={`h-4 w-4 ${active ? "text-sky-200" : "text-slate-300"}`}
+                    className={`h-4 w-4 ${active ? "text-brand" : "text-muted"}`}
                   />
-                  <span className="text-sm font-black">{stage.label}</span>
+                  <span className="text-sm font-semibold">{stage.label}</span>
                 </div>
               </Link>
             );
@@ -119,30 +119,28 @@ export function OnboardingProgressHero({
         </div>
 
         <div>
-          <div className="mb-2 flex items-center justify-between text-[11px] font-black uppercase tracking-wide text-slate-400">
+          <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
             <span>Blocking progress</span>
             <span>
               {completedBlocking}/{blockingTotal}
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+          <div className="h-2 overflow-hidden rounded-full bg-surfaceMuted">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#4f7cff] to-[#30c7d2]"
+              className="h-full rounded-full bg-brand"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
         {currentStep && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surfaceMuted p-4">
             <div className="min-w-0">
-              <div className="text-[10px] font-black uppercase tracking-wide text-sky-300">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-brand">
                 Current step
               </div>
-              <div className="font-black text-white">{currentStep.label}</div>
-              <p className="mt-1 text-sm text-slate-300">
-                {currentStep.detail}
-              </p>
+              <div className="font-semibold text-ink">{currentStep.label}</div>
+              <p className="mt-1 text-sm text-muted">{currentStep.detail}</p>
             </div>
             {currentHref ? (
               <Button asChild variant="primary">

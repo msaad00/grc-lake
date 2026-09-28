@@ -198,7 +198,9 @@ function EvidencePageContent() {
     }),
     helper.accessor("source", {
       header: "Source",
-      cell: (info) => <Badge tone="info">{info.getValue()}</Badge>,
+      cell: (info) => (
+        <span className="font-mono text-xs text-ink">{info.getValue()}</span>
+      ),
     }),
     helper.accessor("asset_id", {
       header: "Asset",
@@ -226,11 +228,11 @@ function EvidencePageContent() {
     helper.accessor("control_ids", {
       header: "Controls",
       cell: (info) => (
-        <div className="flex min-w-[180px] flex-wrap gap-1">
+        <div className="grid min-w-[180px] gap-0.5 font-mono text-xs text-ink">
           {(info.getValue() as string[]).map((c) => (
-            <Badge key={c} className="whitespace-nowrap">
+            <span key={c} className="whitespace-nowrap">
               {c}
-            </Badge>
+            </span>
           ))}
         </div>
       ),
@@ -255,9 +257,9 @@ function EvidencePageContent() {
               ? `${Math.round(row.age_minutes / 1440)}d old`
               : `${Math.round(row.age_minutes)}m old`;
         return (
-          <div className="max-w-[180px] space-y-1">
+          <div className="min-w-[132px] space-y-1">
             <Badge tone={toneForFreshness(row.status)}>{row.status}</Badge>
-            <div className="text-xs text-muted">
+            <div className="whitespace-nowrap text-xs text-muted">
               {age} · SLO {row.freshness_slo_minutes}m
             </div>
           </div>
@@ -291,15 +293,14 @@ function EvidencePageContent() {
   return (
     <div className="page-shell grid gap-3">
       <PageHeader
-        eyebrow="Evidence room"
         title={ROUTE_LABELS["/evidence"]}
         description="These rows are evidence facts, not reports. Click a row to verify its SHA-256 hash against the original, unaltered record."
         actions={
-          <span className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-black text-muted">
+          <span className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-muted">
             {staleCount > 0 ? (
-              <AlertTriangle className="mr-1 inline h-3 w-3 text-amber-600" />
+              <AlertTriangle className="mr-1 inline h-3 w-3 text-warning-fg" />
             ) : (
-              <ShieldCheck className="mr-1 inline h-3 w-3 text-emerald-600" />
+              <ShieldCheck className="mr-1 inline h-3 w-3 text-success-fg" />
             )}
             {staleCount > 0
               ? `${staleCount} freshness issues`
@@ -317,7 +318,7 @@ function EvidencePageContent() {
               <Icon className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <div className="text-sm font-black text-ink">{title}</div>
+              <div className="text-sm font-semibold text-ink">{title}</div>
               <p className="mt-1 text-sm leading-5 text-muted">{detail}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold text-muted">{note}</span>
@@ -405,7 +406,7 @@ function EvidencePageContent() {
                         key={h.id}
                         scope="col"
                         onClick={h.column.getToggleSortingHandler()}
-                        className="cursor-pointer px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-wide text-muted"
+                        className="cursor-pointer px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
                       >
                         <span className="inline-flex items-center gap-1">
                           {flexRender(
@@ -424,7 +425,7 @@ function EvidencePageContent() {
                   <tr
                     key={r.id}
                     onClick={() => setSelected(r.original)}
-                    className="cursor-pointer border-b border-line last:border-0 hover:bg-blue-50/40 dark:hover:bg-blue-500/10"
+                    className="cursor-pointer border-b border-line last:border-0 hover:bg-info-bg"
                   >
                     {r.getVisibleCells().map((c) => (
                       <td key={c.id} className="px-3 py-2.5 align-top">

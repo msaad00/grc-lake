@@ -65,7 +65,6 @@ export default function DemoLandingPage() {
   return (
     <div className="page-shell grid gap-3">
       <PageHeader
-        eyebrow="Hosted demo"
         title={`${BRAND.name} live demo`}
         description="Evaluate continuous compliance with real account linking and evidence ingestion — not a static screenshot tour."
         actions={
@@ -82,11 +81,11 @@ export default function DemoLandingPage() {
           <div className="border-b border-line p-6 lg:border-b-0 lg:border-r">
             <div className="flex items-center gap-2 text-brand">
               <ShieldCheck className="h-5 w-5" />
-              <span className="text-sm font-black uppercase tracking-wide">
+              <span className="text-sm font-semibold uppercase tracking-wide">
                 Enterprise GRC-style flow
               </span>
             </div>
-            <h2 className="mt-3 text-2xl font-black text-ink">
+            <h2 className="mt-3 text-2xl font-semibold text-ink">
               Link accounts, ingest evidence, share proof
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
@@ -135,7 +134,9 @@ export default function DemoLandingPage() {
                   <Icon className="h-4 w-4" />
                 </span>
                 <span>
-                  <span className="text-sm font-black text-ink">{title}</span>
+                  <span className="text-sm font-semibold text-ink">
+                    {title}
+                  </span>
                   <span className="mt-0.5 block text-xs leading-5 text-muted">
                     {detail}
                   </span>

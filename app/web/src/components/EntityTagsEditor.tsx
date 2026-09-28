@@ -31,7 +31,7 @@ export function EntityTagsEditor({
 
   return (
     <div className="rounded-xl border border-line bg-surfaceMuted p-3">
-      <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
         Tags
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -56,7 +56,7 @@ export function EntityTagsEditor({
           <select
             value={pickId}
             onChange={(e) => setPickId(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-2 py-1 text-xs font-extrabold"
+            className="rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold"
           >
             <option value="">Add tag…</option>
             {available.map((tag) => (
@@ -84,7 +84,7 @@ export function EntityTagsEditor({
                 },
               );
             }}
-            className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2 py-1 text-xs font-extrabold hover:border-brand disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold hover:border-brand disabled:opacity-50"
           >
             <Plus className="h-3 w-3" />
             Add

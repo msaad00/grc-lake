@@ -67,10 +67,10 @@ export function EvalRunsStrip({
           <CardContent className="grid gap-3">
             <div className="grid gap-2 sm:grid-cols-4">
               <div className="rounded-lg border border-line bg-panel px-3 py-2">
-                <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Last eval
                 </div>
-                <div className="mt-1 text-sm font-black text-ink">
+                <div className="mt-1 text-sm font-semibold text-ink">
                   {scale?.latest_eval?.occurred_at
                     ? shortDate(scale.latest_eval.occurred_at)
                     : "never"}
@@ -81,10 +81,10 @@ export function EvalRunsStrip({
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-panel px-3 py-2">
-                <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Pass rate
                 </div>
-                <div className="mt-1 text-sm font-black text-ink">
+                <div className="mt-1 text-sm font-semibold text-ink">
                   {formatPassRate(accuracy?.pass_rate)}
                 </div>
                 <div className="mt-1 text-xs text-muted">
@@ -94,11 +94,11 @@ export function EvalRunsStrip({
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-panel px-3 py-2">
-                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-muted">
+                <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   <Clock3 className="h-3 w-3" />
                   Next eval
                 </div>
-                <div className="mt-1 text-sm font-black text-ink">
+                <div className="mt-1 text-sm font-semibold text-ink">
                   {scale?.next_eval_at
                     ? shortDate(scale.next_eval_at)
                     : "not scheduled"}
@@ -110,11 +110,11 @@ export function EvalRunsStrip({
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-panel px-3 py-2">
-                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-muted">
+                <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   <PlayCircle className="h-3 w-3" />
                   Recent runs
                 </div>
-                <div className="mt-1 text-sm font-black text-ink">
+                <div className="mt-1 text-sm font-semibold text-ink">
                   {(evalRuns.data ?? []).length}
                 </div>
                 <div className="mt-1 text-xs text-muted">
@@ -131,7 +131,7 @@ export function EvalRunsStrip({
                     className="grid gap-2 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_120px_100px_90px_80px]"
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-black text-ink">
+                      <div className="truncate text-sm font-semibold text-ink">
                         {run.mode}
                       </div>
                       <div className="truncate text-xs text-muted">
@@ -151,7 +151,7 @@ export function EvalRunsStrip({
                         ? `${run.event_count.toLocaleString()} events`
                         : "—"}
                     </div>
-                    <div className="text-xs font-bold text-ink">
+                    <div className="text-xs font-semibold text-ink">
                       {formatPassRate(run.pass_rate)}
                     </div>
                   </div>

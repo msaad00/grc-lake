@@ -82,14 +82,14 @@ export function SnapshotModal({ open, onClose, onToast }: Props) {
       }
     >
       <div className="grid gap-4 text-sm">
-        <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+        <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
           Reason
           <select
             value={reason}
             onChange={(e) =>
               setReason(e.target.value as (typeof REASONS)[number])
             }
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-extrabold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
           >
             {REASONS.map((r) => (
               <option key={r} value={r}>
@@ -99,7 +99,7 @@ export function SnapshotModal({ open, onClose, onToast }: Props) {
           </select>
         </label>
         <div className="rounded-xl border border-line bg-surfaceMuted p-3">
-          <div className="text-xs font-black uppercase tracking-wide text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
             Latest snapshot
           </div>
           {last ? (

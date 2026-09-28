@@ -33,38 +33,38 @@ const KIND_META: Record<
   trigger: {
     label: "Triggers",
     Icon: Zap,
-    iconBg: "bg-blue-50 dark:bg-blue-500/10",
-    iconFg: "text-blue-600",
-    pillBg: "bg-blue-50 dark:bg-blue-500/10",
-    pillFg: "text-blue-700 dark:text-blue-300",
-    borderHover: "hover:border-blue-400",
+    iconBg: "bg-info-bg",
+    iconFg: "text-brand",
+    pillBg: "bg-info-bg",
+    pillFg: "text-brand",
+    borderHover: "hover:border-info",
   },
   check: {
     label: "Checks",
     Icon: GitFork,
-    iconBg: "bg-amber-50 dark:bg-amber-500/10",
-    iconFg: "text-amber-600",
-    pillBg: "bg-amber-50 dark:bg-amber-500/10",
-    pillFg: "text-amber-700 dark:text-amber-300",
-    borderHover: "hover:border-amber-400",
+    iconBg: "bg-warning-bg",
+    iconFg: "text-warning-fg",
+    pillBg: "bg-warning-bg",
+    pillFg: "text-warning-fg",
+    borderHover: "hover:border-warning",
   },
   gate: {
     label: "Gates",
     Icon: Shield,
-    iconBg: "bg-violet-50 dark:bg-violet-500/10",
-    iconFg: "text-violet-600",
-    pillBg: "bg-violet-50 dark:bg-violet-500/10",
-    pillFg: "text-violet-700 dark:text-violet-300",
-    borderHover: "hover:border-violet-400",
+    iconBg: "bg-info-bg",
+    iconFg: "text-brand",
+    pillBg: "bg-info-bg",
+    pillFg: "text-brand",
+    borderHover: "hover:border-info",
   },
   action: {
     label: "Actions",
     Icon: Cpu,
-    iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
-    iconFg: "text-emerald-600",
-    pillBg: "bg-emerald-50 dark:bg-emerald-500/10",
-    pillFg: "text-emerald-700 dark:text-emerald-300",
-    borderHover: "hover:border-emerald-400",
+    iconBg: "bg-success-bg",
+    iconFg: "text-success-fg",
+    pillBg: "bg-success-bg",
+    pillFg: "text-success-fg",
+    borderHover: "hover:border-success",
   },
 };
 
@@ -131,7 +131,7 @@ export function ActionPalette({ catalog, onAdd }: Props) {
                     >
                       <Icon className={cn("h-2.5 w-2.5", meta.pillFg)} />
                     </span>
-                    <span className="text-[11px] font-black uppercase tracking-widest text-muted">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
                       {meta.label}
                     </span>
                     <span className="ml-auto text-[10px] text-muted">
@@ -168,7 +168,7 @@ export function ActionPalette({ catalog, onAdd }: Props) {
                           <Icon className={cn("h-3.5 w-3.5", meta.iconFg)} />
                         </span>
                         <span className="min-w-0">
-                          <span className="block truncate text-xs font-black text-ink">
+                          <span className="block truncate text-xs font-semibold text-ink">
                             {action.label}
                           </span>
                           <span className="mt-0.5 block truncate text-[11px] text-muted">

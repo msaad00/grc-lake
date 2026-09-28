@@ -89,7 +89,8 @@ def test_rail_is_tokenized_focusable_and_marks_the_current_page() -> None:
     assert "rotate-180" not in sidebar
     for source in (sidebar, footer):
         assert not re.search(r"#[0-9a-fA-F]{3,6}\b", source)
-    assert "text-slate-400" in footer
+    assert "text-muted" in footer
+    assert "slate-" not in footer
     assert "rail: {" in tailwind
 
 
@@ -148,16 +149,19 @@ def test_topbar_status_and_notifications_are_reachable_at_every_size() -> None:
     assert "sm:hidden" in user_menu
 
 
-def test_buttons_and_kpi_chips_keep_white_text_on_dark_enough_fills() -> None:
+def test_buttons_and_kpi_tiles_use_theme_tokens_for_filled_states() -> None:
     button = _read(SRC / "components/ui/button.tsx")
     kpi = _read(SRC / "components/ui/KpiTile.tsx")
 
-    assert "#21c6c7" not in button
-    assert "to-[#0e7490]" in button
-    dark_variant = re.search(r"dark:\s*\"([^\"]+)\"", button)
-    assert dark_variant and "dark:" in dark_variant.group(1)
-    assert "#f79009" not in kpi
-    assert "#16b364" not in kpi
+    # Filled buttons pair a token fill with its token foreground, so the
+    # AA-checked pair holds in both themes (no hardcoded gradient + white).
+    assert "bg-brand text-onBrand" in button
+    assert "bg-ink text-surface" in button
+    assert "text-white" not in button
+    for source in (button, kpi):
+        assert not re.search(r"#[0-9a-fA-F]{3,6}\b", source)
+    # KPI tiles carry no decorative icon chip.
+    assert "icon" not in kpi
 
 
 def test_font_stack_only_names_fonts_the_console_ships() -> None:

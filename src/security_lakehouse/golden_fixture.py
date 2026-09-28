@@ -42,7 +42,17 @@ _EVENT_TYPES = (
     "model.lineage",
     "runtime.inference",
 )
-_SOURCES = ("aws_config", "okta", "github", "audit_log", "siem", "model_registry", "runtime_gateway")
+# Source follows the event, so a model-drift alert never appears to come from AWS Config.
+_SOURCE_BY_EVENT = {
+    "cloud.config": "aws_config",
+    "iam.access_review": "okta",
+    "monitoring.audit": "audit_log",
+    "monitoring.detection": "siem",
+    "scm.branch_protection": "github",
+    "scanner.dependency": "github",
+    "model.lineage": "model_registry",
+    "runtime.inference": "runtime_gateway",
+}
 # Asset type follows the event so the demo never shows, say, a branch-protection check on a "model".
 _ASSET_TYPE_BY_EVENT = {
     "cloud.config": "data_store",
@@ -240,7 +250,7 @@ def build_golden_events(
                 "event_id": f"golden-{index + 1:03d}",
                 "event_time": event_time.isoformat().replace("+00:00", "Z"),
                 "event_type": event_type,
-                "source": _SOURCES[index % len(_SOURCES)],
+                "source": _SOURCE_BY_EVENT[event_type],
                 "severity": severity,
                 "status": status,
                 "entity": {

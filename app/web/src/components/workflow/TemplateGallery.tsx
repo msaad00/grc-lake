@@ -29,23 +29,23 @@ const KIND_CHIP: Record<
   { bg: string; fg: string; Icon: React.ElementType }
 > = {
   trigger: {
-    bg: "bg-blue-50 dark:bg-blue-500/10",
-    fg: "text-blue-700 dark:text-blue-300",
+    bg: "bg-info-bg",
+    fg: "text-brand",
     Icon: Zap,
   },
   check: {
-    bg: "bg-amber-50 dark:bg-amber-500/10",
-    fg: "text-amber-700 dark:text-amber-300",
+    bg: "bg-warning-bg",
+    fg: "text-warning-fg",
     Icon: GitFork,
   },
   gate: {
-    bg: "bg-violet-50 dark:bg-violet-500/10",
-    fg: "text-violet-700 dark:text-violet-300",
+    bg: "bg-info-bg",
+    fg: "text-brand",
     Icon: Shield,
   },
   action: {
-    bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    fg: "text-emerald-700 dark:text-emerald-300",
+    bg: "bg-success-bg",
+    fg: "text-success-fg",
     Icon: Cpu,
   },
 };
@@ -69,7 +69,7 @@ function FlowPreview({ template }: { template: WorkflowTemplate }) {
           <span key={node.id} className="flex items-center gap-1.5">
             <span
               className={cn(
-                "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black",
+                "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
                 chip.bg,
                 chip.fg,
                 "border-transparent",
@@ -151,7 +151,7 @@ export function TemplateGallery({ open, onClose, onPick }: Props) {
               type="button"
               onClick={() => setSelected(template.id)}
               className={cn(
-                "rounded-lg border px-3 py-2 text-left text-xs font-extrabold transition-colors",
+                "rounded-lg border px-3 py-2 text-left text-xs font-semibold transition-colors",
                 template.id === selected
                   ? "border-ink bg-ink text-surface"
                   : "border-line bg-surface text-ink hover:border-brand",
@@ -166,14 +166,14 @@ export function TemplateGallery({ open, onClose, onPick }: Props) {
         {active && (
           <div className="grid min-w-0 gap-4 rounded-xl border border-line bg-surfaceMuted p-4 text-sm">
             <div>
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Name
               </div>
-              <div className="mt-0.5 font-black text-ink">{active.name}</div>
+              <div className="mt-0.5 font-semibold text-ink">{active.name}</div>
             </div>
 
             <div>
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Description
               </div>
               <div className="mt-0.5 text-xs text-ink">
@@ -188,7 +188,7 @@ export function TemplateGallery({ open, onClose, onPick }: Props) {
             </div>
 
             <div>
-              <div className="mb-2 text-xs font-black uppercase tracking-wide text-muted">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
                 Flow preview
               </div>
               <div className="rounded-lg border border-line bg-surface p-3">
@@ -197,7 +197,7 @@ export function TemplateGallery({ open, onClose, onPick }: Props) {
             </div>
 
             <div>
-              <div className="mb-1.5 text-xs font-black uppercase tracking-wide text-muted">
+              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
                 Composition
               </div>
               <div className="grid max-h-[220px] gap-1 overflow-auto font-mono text-[11px] text-ink">

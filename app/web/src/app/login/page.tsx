@@ -108,7 +108,7 @@ export default function LoginPage() {
   return (
     <section className="grid min-h-screen place-items-center p-4 sm:p-6">
       <div className="grid w-full max-w-[980px] gap-5 lg:grid-cols-[1fr_420px]">
-        <div className="order-last rounded-2xl border border-[#1e334a] bg-[#07111e] p-8 text-white shadow-hero lg:order-none">
+        <div className="order-last rounded-2xl border border-[#1e334a] bg-code p-8 text-white shadow-hero lg:order-none">
           <TrustOpsLogo
             href="/dashboard"
             inverted

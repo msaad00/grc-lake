@@ -50,7 +50,7 @@ function UserRow({
     <div className="grid gap-3 rounded-xl border border-line bg-surface p-4 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto] lg:items-center">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-black text-ink">
+          <span className="truncate text-sm font-semibold text-ink">
             {row.email}
           </span>
           {!row.is_active && <Badge tone="critical">inactive</Badge>}
@@ -64,7 +64,7 @@ function UserRow({
         value={role}
         disabled={saving}
         onChange={(e) => setRole(e.target.value)}
-        className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+        className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
       >
         {ROLES.map((item) => (
           <option key={item} value={item}>
@@ -72,7 +72,7 @@ function UserRow({
           </option>
         ))}
       </select>
-      <label className="flex items-center gap-2 text-xs font-bold text-muted">
+      <label className="flex items-center gap-2 text-xs font-semibold text-muted">
         <input
           type="checkbox"
           checked={active}
@@ -137,7 +137,7 @@ export function UsersPanel() {
         <CardContent>
           <p className="rounded-lg border border-line bg-surfaceMuted p-4 text-sm text-muted">
             Only workspace admins can change user roles. Your current role is{" "}
-            <span className="font-black text-ink">{whoami.data?.role}</span>.
+            <span className="font-semibold text-ink">{whoami.data?.role}</span>.
           </p>
         </CardContent>
       </Card>
@@ -160,7 +160,7 @@ export function UsersPanel() {
         <QueryState queries={[users]} label="users">
           {(users.data ?? []).length === 0 ? (
             <div className="grid gap-2 rounded-lg border border-dashed border-line bg-surfaceMuted p-4 text-sm">
-              <p className="font-black text-ink">No users yet</p>
+              <p className="font-semibold text-ink">No users yet</p>
               <p className="text-muted">
                 Invite teammates below, or let them sign in with SSO — they
                 appear here after their first sign-in.
@@ -184,7 +184,7 @@ export function UsersPanel() {
           )}
         </QueryState>
         <details className="text-xs leading-5 text-muted">
-          <summary className="w-fit cursor-pointer font-bold text-muted hover:text-ink">
+          <summary className="w-fit cursor-pointer font-semibold text-muted hover:text-ink">
             Details
           </summary>
           <p className="mt-1">

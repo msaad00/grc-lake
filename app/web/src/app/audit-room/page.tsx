@@ -52,7 +52,6 @@ export default function AuditRoomPage() {
   return (
     <div className="page-shell grid gap-2">
       <PageHeader
-        eyebrow="Audit center"
         title={ROUTE_LABELS["/audit-room"]}
         description="Review posture, freshness, snapshots, and proof gaps without leaving the trust workflow."
       />
@@ -75,7 +74,7 @@ export default function AuditRoomPage() {
                     {STATE_COPY[audit.data.state]?.label ?? audit.data.state}
                   </Badge>
                   {connected ? <Badge tone="ready">Live</Badge> : null}
-                  <span className="text-xs font-bold text-muted">
+                  <span className="text-xs font-semibold text-muted">
                     {new Date(audit.data.evaluated_at).toLocaleString()}
                   </span>
                 </div>
@@ -150,9 +149,9 @@ export default function AuditRoomPage() {
                     <button
                       key={tab}
                       aria-selected={activeAuditTab === tab}
-                      className={`rounded-md px-3 py-2 text-sm font-black transition ${
+                      className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
                         activeAuditTab === tab
-                          ? "bg-brand text-white shadow-sm"
+                          ? "bg-surface text-ink shadow-card ring-1 ring-line"
                           : "text-muted hover:bg-surface hover:text-ink"
                       }`}
                       onClick={() => setActiveAuditTab(tab)}
@@ -195,8 +194,8 @@ export default function AuditRoomPage() {
                               href={consoleHref(gap.href)}
                               className="flex items-center justify-between rounded-lg border border-line bg-surface px-3 py-2 text-sm hover:bg-surfaceMuted"
                             >
-                              <span className="flex items-center gap-2 font-bold text-ink">
-                                <CircleAlert className="h-4 w-4 text-brand-orange" />
+                              <span className="flex items-center gap-2 font-semibold text-ink">
+                                <CircleAlert className="h-4 w-4 text-serious-fg" />
                                 {gap.label}
                               </span>
                               <ArrowRight className="h-4 w-4 text-muted" />

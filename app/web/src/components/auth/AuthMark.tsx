@@ -49,7 +49,7 @@ export function AuthMark({
     >
       <span
         className={[
-          "grid shrink-0 place-items-center rounded-lg font-black tracking-wide ring-1 ring-line",
+          "grid shrink-0 place-items-center rounded-lg font-semibold tracking-wide ring-1 ring-line",
           dim.mark,
         ].join(" ")}
         style={boxStyle}
@@ -57,7 +57,7 @@ export function AuthMark({
         {visual.mark}
       </span>
       {showProtocol && (
-        <span className="min-w-0 truncate text-[10px] font-bold text-muted">
+        <span className="min-w-0 truncate text-[10px] font-semibold text-muted">
           {visual.protocol}
           {providerLabel ? ` · ${providerLabel}` : ""}
         </span>

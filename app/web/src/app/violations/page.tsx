@@ -34,11 +34,9 @@ import {
 import type { Severity, Violation } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
 import { assetLabel } from "@/lib/format";
+import { severityTone } from "@/lib/severity";
 
 const helper = createColumnHelper<typeof sortableTableFeatures, Violation>();
-
-const toneForSeverity = (s: string) =>
-  s === "critical" ? "critical" : s === "high" ? "attention" : "info";
 
 const SURFACE = "violations";
 const UNASSIGNED = "__unassigned__";
@@ -178,18 +176,9 @@ function ViolationsPageContent() {
           <div className="break-words text-xs leading-5 text-ink [overflow-wrap:anywhere]">
             {assetLabel(info.row.original) || "Unknown asset"}
           </div>
-          <Badge
-            className="mt-1"
-            tone={
-              ["prod", "production"].includes(
-                environmentFor(info.row.original.environment),
-              )
-                ? "attention"
-                : "default"
-            }
-          >
-            {info.row.original.environment?.trim() || "Unknown"}
-          </Badge>
+          <div className="mt-0.5 text-xs text-muted">
+            {info.row.original.environment?.trim() || "Unknown environment"}
+          </div>
         </div>
       ),
     }),
@@ -197,7 +186,7 @@ function ViolationsPageContent() {
       header: "Severity",
       cell: (info) => (
         <div>
-          <Badge tone={toneForSeverity(info.row.original.severity)}>
+          <Badge tone={severityTone(info.row.original.severity)}>
             {info.row.original.severity}
           </Badge>
           <div className="mt-1 text-xs text-muted">Score {info.getValue()}</div>
@@ -246,7 +235,6 @@ function ViolationsPageContent() {
   return (
     <div className="page-shell grid gap-5">
       <PageHeader
-        eyebrow="Triage"
         title={ROUTE_LABELS["/violations"]}
         description="Prioritize findings, assign owners, and review evidence."
       />
@@ -308,7 +296,7 @@ function ViolationsPageContent() {
               aria-label="Filter by owner"
               value={ownerFilter}
               onChange={(e) => setOwnerFilter(e.target.value)}
-              className="max-w-[12rem] rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+              className="ui-input h-9 max-w-[12rem] text-ink"
             >
               <option value="all">All owners</option>
               <option value={UNASSIGNED}>Unassigned</option>
@@ -330,7 +318,7 @@ function ViolationsPageContent() {
               aria-label="Filter by environment"
               value={environment}
               onChange={(e) => setEnvironment(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
+              className="ui-input h-9 text-ink"
             >
               <option value="all">All environments</option>
               {environments.map((value) => (
@@ -364,7 +352,7 @@ function ViolationsPageContent() {
                       <th
                         key={h.id}
                         scope="col"
-                        className="cursor-pointer px-4 py-3 text-left text-[11px] font-black uppercase tracking-wide text-muted"
+                        className="cursor-pointer px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
                       >
                         <button
                           type="button"
@@ -399,7 +387,7 @@ function ViolationsPageContent() {
                         selectFinding(r.original);
                       }
                     }}
-                    className="cursor-pointer border-b border-line last:border-0 hover:bg-blue-50/40 focus-visible:bg-blue-50/40 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand dark:hover:bg-blue-500/10 dark:focus-visible:bg-blue-500/10"
+                    className="cursor-pointer border-b border-line last:border-0 hover:bg-info-bg focus-visible:bg-info-bg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
                   >
                     {r.getVisibleCells().map((c) => (
                       <td key={c.id} className="px-4 py-3 align-top">

@@ -148,7 +148,6 @@ export default function TrustCenterPage() {
   return (
     <div className="page-shell grid gap-4">
       <PageHeader
-        eyebrow="Trust assurance"
         title={ROUTE_LABELS["/trust-center"]}
         description="Share your evaluated posture with customers and auditors without exposing private evidence. Every link is read-only, expires automatically, and can be revoked."
         actions={
@@ -198,7 +197,7 @@ export default function TrustCenterPage() {
                   )}
                 >
                   <span className="flex items-center justify-between gap-2">
-                    <span className="text-base font-black text-ink">
+                    <span className="text-base font-semibold text-ink">
                       {item.label}
                     </span>
                     {selected && (
@@ -215,7 +214,7 @@ export default function TrustCenterPage() {
               );
             })}
             <div className="grid min-w-0 content-start gap-1 rounded-xl border border-dashed border-line bg-surface p-4">
-              <span className="text-base font-black text-ink">
+              <span className="text-base font-semibold text-ink">
                 Internal team
               </span>
               <span className="text-sm leading-5 text-muted">
@@ -226,7 +225,7 @@ export default function TrustCenterPage() {
                 link needed.{" "}
                 <Link
                   href="/auth/#users"
-                  className="font-bold text-brand hover:underline"
+                  className="font-semibold text-brand hover:underline"
                 >
                   Manage users
                 </Link>
@@ -235,13 +234,13 @@ export default function TrustCenterPage() {
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
-            <label className="grid w-full gap-1 text-xs font-black uppercase tracking-wide text-muted sm:w-[180px]">
+            <label className="grid w-full gap-1 text-xs font-semibold uppercase tracking-wide text-muted sm:w-[180px]">
               Expires in
               <select
                 aria-label="Share expiry window"
                 value={expiresInHours}
                 onChange={(e) => setExpiresInHours(Number(e.target.value))}
-                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-extrabold normal-case tracking-normal text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-semibold normal-case tracking-normal text-ink focus:outline-none focus:ring-1 focus:ring-brand"
                 disabled={auditor}
               >
                 {HOURS_OPTIONS.map((h) => (
@@ -267,8 +266,8 @@ export default function TrustCenterPage() {
           </div>
 
           {createdToken && createdUrl && (
-            <div className="grid min-w-0 gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <div className="flex flex-wrap items-center justify-between gap-2 font-black">
+            <div className="grid min-w-0 gap-2 rounded-xl border border-success/40 bg-success-bg p-3 text-xs text-success-fg">
+              <div className="flex flex-wrap items-center justify-between gap-2 font-semibold">
                 <span>
                   {audienceLabel(createdToken.sensitivity_ceiling)} link — shown
                   once, copy it now
@@ -319,7 +318,7 @@ export default function TrustCenterPage() {
               key={item.label}
               className="rounded-xl border border-line bg-surface p-3"
             >
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 {item.label}
               </div>
               <div className="mt-1 text-xs leading-relaxed text-muted">
@@ -356,7 +355,7 @@ export default function TrustCenterPage() {
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-black text-ink">
+                    <span className="font-semibold text-ink">
                       {audienceLabel(share.sensitivity_ceiling)}
                     </span>
                     <Badge tone={share.expired ? "critical" : "ready"}>

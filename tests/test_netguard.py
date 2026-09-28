@@ -245,3 +245,43 @@ def test_proxied_request_connects_to_the_operator_proxy(monkeypatch: pytest.Monk
     with netguard.open_public(urllib.request.Request("http://api.example.com/v1"), timeout=2) as resp:
         assert resp.read() == b"ok"
     assert addresses == [("10.1.2.3", 3128)]
+
+
+# --- IPv6 forms that embed an IPv4 address (NAT64, IPv4-compatible) -------------
+
+
+def _resolve_to(monkeypatch: pytest.MonkeyPatch, address: str) -> None:
+    family = socket.AF_INET6 if ":" in address else socket.AF_INET
+
+    def fake_getaddrinfo(host, port, family_=0, type=0, proto=0, flags=0):
+        return [(family, socket.SOCK_STREAM, 6, "", (address, 0))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", fake_getaddrinfo)
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "64:ff9b::a9fe:a9fe",  # NAT64 of 169.254.169.254 (cloud metadata)
+        "64:ff9b::7f00:1",  # NAT64 of 127.0.0.1
+        "64:ff9b::a00:1",  # NAT64 of 10.0.0.1
+        "::127.0.0.1",  # IPv4-compatible loopback
+        "::a00:1",  # IPv4-compatible 10.0.0.1
+        "::a9fe:a9fe",  # IPv4-compatible metadata address
+        "64:ff9b:1::1",  # local-use NAT64 prefix (RFC 8215)
+        "64:ff9b:1::808:808",  # local-use NAT64 even with a public-looking suffix
+        "::ffff:127.0.0.1",  # IPv4-mapped loopback
+    ],
+)
+def test_ipv6_embedded_private_ipv4_is_blocked(monkeypatch, address: str) -> None:
+    _resolve_to(monkeypatch, address)
+    with pytest.raises(ValueError, match="non-public"):
+        assert_resolved_ip_is_public("nat64.example")
+
+
+@pytest.mark.parametrize("address", ["64:ff9b::808:808", "::808:808"])
+def test_ipv6_embedded_public_ipv4_follows_ipv4_policy(monkeypatch, address: str) -> None:
+    # The embedded IPv4 decides: a public v4 behind the well-known NAT64 prefix
+    # or the IPv4-compatible form is as reachable as the v4 itself.
+    _resolve_to(monkeypatch, address)
+    assert assert_resolved_ip_is_public("nat64.example") == [address]

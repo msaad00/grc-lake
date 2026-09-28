@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.connector_ids import stable_id_slug
+from security_lakehouse.delegation import require_aws_delegation, server_env_override
 from security_lakehouse.io import read_json
 from security_lakehouse.models import parse_event_time, utc_iso
 
@@ -35,6 +36,7 @@ class S3Client:
         external_id: str | None = None,
         session_name: str = "trustops-object-storage",
     ) -> None:
+        require_aws_delegation(role_arn, external_id, label="object-storage-evidence")
         try:
             import boto3  # noqa: PLC0415
         except ImportError as exc:  # pragma: no cover - live S3 only
@@ -246,8 +248,13 @@ def _connection_params(
     region = (
         str(options.get("region") or credentials.get("region") or environment.get("AWS_REGION") or "").strip() or None
     )
-    role_arn = str(credentials.get("role_arn") or environment.get("AWS_ROLE_ARN") or "").strip() or None
-    external_id = str(credentials.get("external_id") or environment.get("AWS_EXTERNAL_ID") or "").strip() or None
+    role_arn = (
+        str(credentials.get("role_arn") or server_env_override(environment.get("AWS_ROLE_ARN")) or "").strip() or None
+    )
+    external_id = (
+        str(credentials.get("external_id") or server_env_override(environment.get("AWS_EXTERNAL_ID")) or "").strip()
+        or None
+    )
     return bucket, prefix, region, role_arn, external_id
 
 

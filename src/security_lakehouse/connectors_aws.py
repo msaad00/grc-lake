@@ -33,6 +33,7 @@ from security_lakehouse.connector_errors import (
     ConnectorConfigError,
 )
 from security_lakehouse.connector_ids import stable_id_slug
+from security_lakehouse.delegation import require_aws_delegation
 from security_lakehouse.identity import classify_identity_type
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -116,6 +117,7 @@ class AWSClient:
         external_id: str | None = None,
         session_name: str = "trustops-posture",
     ) -> None:
+        require_aws_delegation(role_arn, external_id, label="aws-posture")
         try:
             import boto3  # noqa: PLC0415
         except ImportError as exc:  # pragma: no cover - exercised only with live AWS

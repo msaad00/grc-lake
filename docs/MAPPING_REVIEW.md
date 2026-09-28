@@ -71,6 +71,27 @@ log is hash-chained (`prev_hash`, `record_hash`) and serialized across
 processes, like the other TrustOps ledgers. `GET /api/v1/mapping-reviews/summary`
 and `frameworks review export` report whether the chain verifies.
 
+### Integrity
+
+- Decisions are applied only from a log that verifies. If the chain is broken
+  (an edited record, a torn line after a crash, a missing or wrong tip MAC),
+  every mapping falls back to its shipped review state, no new decision can be
+  recorded, and each coverage surface says so with `review_log_verified: false`:
+  `GET /api/v1/ccf/coverage`, `GET /api/v1/frameworks/coverage` (each framework
+  row and the summary), `GET /api/v1/mapping-reviews/summary`, and the snapshot
+  `mapping_review.summary`. Restore `gold/mapping_reviews.jsonl` (and its
+  `mapping_reviews.tip.json` sidecar) from backup to recover.
+- Each decision batch is written with one append and `fsync`, so a batch lands
+  whole or, after a crash mid-write, as a torn line that verification reports.
+- When `TRUSTOPS_COOKIE_SIGNING_KEY` is set (always, when server auth is on),
+  the chain tip is also MACed with a key derived from it and stored in
+  `gold/mapping_reviews.tip.json`. Someone who can write the lake but does not
+  hold the key cannot rewrite the log and recompute every hash undetected.
+  `decision_log.tip_mac` reports `verified`, `missing`, `invalid`, or
+  `not_configured` (no key; local mode). Rotating the key makes an existing
+  tip MAC report `invalid`, and there is no re-sign command yet, so plan a
+  rotation together with a verified backup of the log.
+
 Each assessment snapshot also pins a `mapping_review` block: the counts above
 plus the decision-log tip hash. An auditor can then tie a snapshot's coverage to
 the exact decisions in force when it was frozen.

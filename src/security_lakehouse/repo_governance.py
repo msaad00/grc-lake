@@ -25,6 +25,7 @@ from security_lakehouse import netguard
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json, write_jsonl
 from security_lakehouse.models import utc_iso
+from security_lakehouse.secret_refs import resolve_ref_or_default
 
 # Runaway guard for page-number pagination, matched to the shared paginator so a
 # repo with thousands of alerts is not silently truncated.
@@ -380,11 +381,14 @@ def sync_repo_governance(
     collected_at: datetime | None = None,
 ) -> list[dict[str, Any]]:
     spec = parse_governance_repo_spec(repo, provider=provider)
-    if token_env is None:
-        token_env = (
-            "TRUSTOPS_GITLAB_ACCESS_TOKEN" if spec.provider == "gitlab" else "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"
+    default_env = (
+        "TRUSTOPS_GITLAB_ACCESS_TOKEN" if spec.provider == "gitlab" else "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"
+    )
+    secret = token
+    if not secret:
+        secret = resolve_ref_or_default(
+            token_env, default_env, dict(os.environ), field="credential_ref", file_first=False
         )
-    secret = token or os.environ.get(token_env)
     client: GovernanceClient
     if fixture_dir:
         client = FixtureGovernanceClient(fixture_dir)

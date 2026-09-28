@@ -21,6 +21,7 @@ from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.paginate import paginate
 from security_lakehouse.io import read_json
 from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.secret_refs import resolve_ref_or_default
 
 CONNECTOR_ID = "siem-alerts"
 SOURCE = "siem-alerts"
@@ -276,8 +277,17 @@ def _connection_params(
 ) -> tuple[str, str, str]:
     environment = env or {}
     host = str(credentials.get("host") or environment.get("SIEM_EXPORT_URL") or "").strip()
-    credential_ref = str(credentials.get("credential_ref") or "TRUSTOPS_SIEM_TOKEN").strip()
-    token = str(credentials.get("token") or environment.get(credential_ref) or "").strip()
+    token = str(
+        credentials.get("token")
+        or resolve_ref_or_default(
+            credentials.get("credential_ref"),
+            "TRUSTOPS_SIEM_TOKEN",
+            environment,
+            field="credential_ref",
+            file_first=False,
+        )
+        or ""
+    ).strip()
     index = str(options.get("index") or "alerts").strip() or "alerts"
     return host, token, index
 

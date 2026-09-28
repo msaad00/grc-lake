@@ -38,8 +38,30 @@ from urllib.parse import urlparse, urlsplit
 
 ALLOWED_SCHEMES = {"http", "https"}
 
+# IPv6 prefixes that carry an IPv4 address in their low 32 bits. A resolver
+# (or a literal) can hand back one of these to reach an internal IPv4 target
+# through a NAT64 gateway or a dual-stack host, and ``ipaddress`` reports most of
+# them as global, so the embedded IPv4 is checked instead.
+_NAT64_WELL_KNOWN = ipaddress.IPv6Network("64:ff9b::/96")
+_NAT64_LOCAL_USE = ipaddress.IPv6Network("64:ff9b:1::/48")
+_IPV4_COMPATIBLE = ipaddress.IPv6Network("::/96")
+_IPV4_MAPPED = ipaddress.IPv6Network("::ffff:0:0/96")
+
 # Credential-bearing headers that must not ride a cross-origin redirect.
 _SENSITIVE_HEADERS = ("Authorization", "Cookie", "Proxy-Authorization")
+
+
+def _is_public_address(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """True for a globally routable unicast address, judging embedded IPv4 by the IPv4 rules."""
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip in _NAT64_LOCAL_USE:
+            # RFC 8215 local-use translation prefix: always an operator-internal path.
+            return False
+        if ip in _NAT64_WELL_KNOWN or ip in _IPV4_COMPATIBLE or ip in _IPV4_MAPPED:
+            return _is_public_address(ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF))
+    # is_global also excludes shared/CGNAT space (100.64.0.0/10), which
+    # is_private does not flag.
+    return ip.is_global and not ip.is_multicast
 
 
 def assert_resolved_ip_is_public(host: str, *, label: str = "target") -> list[str]:
@@ -65,9 +87,7 @@ def assert_resolved_ip_is_public(host: str, *, label: str = "target") -> list[st
     for raw_ip in addresses:
         # Strip any IPv6 scope id (e.g. fe80::1%eth0) before parsing.
         ip = ipaddress.ip_address(raw_ip.split("%", 1)[0])
-        # is_global also excludes shared/CGNAT space (100.64.0.0/10), which
-        # is_private does not flag.
-        if not ip.is_global or ip.is_multicast:
+        if not _is_public_address(ip):
             raise ValueError(f"{label} resolves to non-public address {raw_ip} (SSRF blocked)")
     return addresses
 

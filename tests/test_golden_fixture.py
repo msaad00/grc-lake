@@ -80,6 +80,26 @@ def test_committed_golden_fixture_asset_types_match_event_types() -> None:
             assert not row["entity"]["asset_id"].startswith("golden:asset:soc2-"), row["event_id"]
 
 
+def test_golden_sources_match_their_event_types() -> None:
+    """A model-drift alert comes from the SIEM, never from AWS Config."""
+    from security_lakehouse.golden_fixture import golden_fixture_path
+
+    expected = {
+        "cloud.config": {"aws_config"},
+        "iam.access_review": {"okta"},
+        "monitoring.audit": {"audit_log"},
+        "monitoring.detection": {"siem"},
+        "scm.branch_protection": {"github"},
+        "scanner.dependency": {"github"},
+        "model.lineage": {"model_registry"},
+        "runtime.inference": {"runtime_gateway"},
+    }
+    for line in golden_fixture_path().read_text(encoding="utf-8").splitlines():
+        row = json.loads(line)
+        if row["event_type"] in expected:
+            assert row["source"] in expected[row["event_type"]], (row["event_id"], row["event_type"], row["source"])
+
+
 def test_committed_golden_fixture_is_exactly_the_generator_output() -> None:
     """The demo loads the committed JSONL, so it must not drift from the generator."""
     from security_lakehouse.golden_fixture import golden_fixture_path, render_golden_fixture

@@ -25,6 +25,7 @@ const ROLES = [
   "contributor",
   "read_only",
   "auditor",
+  "compliance_reviewer",
   "security_admin",
   "admin",
 ] as const;

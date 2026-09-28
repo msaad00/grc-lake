@@ -85,13 +85,14 @@ sequenceDiagram
 
 ## Roles (summary)
 
-| Role             | Typical access                   |
-| ---------------- | -------------------------------- |
-| `admin`          | Full platform + key admin        |
-| `security_admin` | Connectors, workflows, snapshots |
-| `contributor`    | Triage, evidence requests        |
-| `auditor`        | Read-only + redaction            |
-| `read_only`      | Internal read                    |
+| Role                  | Typical access                   |
+| --------------------- | -------------------------------- |
+| `admin`               | Full platform + key admin        |
+| `security_admin`      | Connectors, workflows, snapshots |
+| `compliance_reviewer` | Read + mapping review decisions  |
+| `contributor`         | Triage, evidence requests        |
+| `auditor`             | Read-only + redaction            |
+| `read_only`           | Internal read                    |
 
 See [SERVER_AUTH.md](../SERVER_AUTH.md) and
 [identity boundary SVG](../images/trustops-identity-boundary.svg).

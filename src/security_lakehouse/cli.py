@@ -32,6 +32,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+# Mirrors security_lakehouse.db.models.USER_ROLES without importing the optional
+# server extra at CLI parse time; tests pin the two together.
+_USER_ROLE_CHOICES = ("admin", "security_admin", "compliance_reviewer", "contributor", "auditor", "read_only")
 _REVIEW_LAKE_HELP = "apply this lake's org mapping review decisions (default: shipped review status only)"
 
 
@@ -638,8 +641,8 @@ def _parser() -> argparse.ArgumentParser:
     auth_user.add_argument(
         "--role",
         default="read_only",
-        choices=["admin", "security_admin", "contributor", "auditor", "read_only"],
-        help="role: admin/security_admin/contributor/auditor/read_only",
+        choices=list(_USER_ROLE_CHOICES),
+        help="role: " + "/".join(_USER_ROLE_CHOICES),
     )
     auth_user.set_defaults(func=_auth_create_user)
     auth_key = auth_sub.add_parser("issue-key", help="mint an API key for a user")
@@ -714,7 +717,7 @@ def _parser() -> argparse.ArgumentParser:
     agents_review.add_argument(
         "--role",
         default="read_only",
-        choices=["admin", "security_admin", "contributor", "auditor", "read_only"],
+        choices=list(_USER_ROLE_CHOICES),
         help="role lens used for redaction",
     )
     agents_review.add_argument(
@@ -774,7 +777,7 @@ def _parser() -> argparse.ArgumentParser:
     agents_soc.add_argument(
         "--role",
         default="read_only",
-        choices=["admin", "security_admin", "contributor", "auditor", "read_only"],
+        choices=list(_USER_ROLE_CHOICES),
         help="role lens used for redaction",
     )
     agents_soc.add_argument(

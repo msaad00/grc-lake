@@ -87,6 +87,12 @@ import type {
   VendorAssessmentStatus,
   VendorQuestionnaireTemplate,
   VendorQuestionnaireTemplateSummary,
+  MappingReviewDecision,
+  MappingReviewDecisionRequest,
+  MappingReviewItem,
+  MappingReviewQueuePage,
+  MappingReviewQueueParams,
+  MappingReviewSummary,
   Violation,
   Workflow,
   WorkflowEdge,
@@ -543,6 +549,31 @@ export const api = {
       count,
       frameworks: items,
     })),
+  mappingReviewQueue: (params: MappingReviewQueueParams) => {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== "") query.set(key, String(value));
+    }
+    return get<{ data: MappingReviewItem[]; meta: { count: number } }>(
+      `/v1/mapping-reviews/queue?${query.toString()}`,
+    ).then((body): MappingReviewQueuePage => ({
+      items: body.data,
+      count: body.meta?.count ?? body.data.length,
+    }));
+  },
+  mappingReviewSummary: () =>
+    get<{ data: MappingReviewSummary }>("/v1/mapping-reviews/summary").then(
+      (body) => body.data,
+    ),
+  mappingReviewHistory: (safeguardId: string, controlId: string) =>
+    get<{ data: MappingReviewDecision[] }>(
+      `/v1/mapping-reviews/decisions?safeguard_id=${encodeURIComponent(safeguardId)}&control_id=${encodeURIComponent(controlId)}&limit=1000`,
+    ).then((body) => body.data),
+  recordMappingReview: (payload: MappingReviewDecisionRequest) =>
+    post<{ data: MappingReviewDecision[]; meta: { recorded: number } }>(
+      "/v1/mapping-reviews/decisions",
+      payload,
+    ).then((body) => body.data),
   frameworkCoverage: () =>
     get<{ data: FrameworkCoveragePayload }>("/v1/frameworks/coverage").then(
       (body) => body.data,

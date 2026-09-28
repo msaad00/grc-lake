@@ -26,4 +26,8 @@ def test_framework_roster_separates_readiness_from_unavailable_evaluation() -> N
     assert "Readiness tracked" in roster
     assert "Not evaluated" in roster
     assert "${formatCount(mapped)}/${formatCount(total)} controls mapped" in roster
-    assert "${formatCount(attestable)} fully reviewed" in roster
+    # Attestable means at least one confirmed mapping, not every mapping, so
+    # the roster must not say "fully"; org confirmations are called out.
+    assert "${formatCount(attestable)} reviewed" in roster
+    assert "fully reviewed" not in roster
+    assert "by your org" in roster

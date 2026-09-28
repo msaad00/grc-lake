@@ -25,6 +25,7 @@ export const ROUTE_LABELS = {
   "/vendor-risk": "Vendor risk",
   "/controls": "Controls",
   "/frameworks": "Frameworks",
+  "/mapping-review": "Mapping review",
   "/violations": "Findings",
   "/risks": "Risk register",
   "/policies": "Policies",

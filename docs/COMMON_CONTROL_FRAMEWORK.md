@@ -181,6 +181,8 @@ does not claim expert review or full compliance automation.
 framework and risk-domain filters and source references. The
 `get_mapping_review_queue` MCP tool exposes the same review ledger. A reviewer
 must confirm semantic equivalence; source provenance alone does not do so.
+Your organization records that confirmation, or a rejection, per tenant; see
+[Mapping review](MAPPING_REVIEW.md).
 
 Safeguard rules are executable, but the current assessment pipeline still
 operates framework controls. Mapped coverage is not the number of safeguards

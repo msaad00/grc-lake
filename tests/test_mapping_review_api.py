@@ -60,6 +60,20 @@ def test_mapping_review_scope_is_granted_to_admin_and_compliance_reviewer_only()
     assert ROLE_SCOPES["compliance_reviewer"] == frozenset({"read", "mapping_review"})
 
 
+def test_every_role_list_offers_the_compliance_reviewer_role() -> None:
+    from pathlib import Path as _Path
+
+    from security_lakehouse.auth.idp_roles import ROLE_RANK
+    from security_lakehouse.cli import _USER_ROLE_CHOICES
+    from security_lakehouse.data_policy import ROLE_SENSITIVITY_CEILING
+
+    assert set(_USER_ROLE_CHOICES) == set(USER_ROLES) == set(ROLE_SCOPES) == set(ROLE_RANK)
+    assert set(USER_ROLES) <= set(ROLE_SENSITIVITY_CEILING)
+    web = _Path(__file__).parents[1] / "app/web/src/components/auth"
+    for panel in ("UsersPanel.tsx", "InvitesPanel.tsx"):
+        assert '"compliance_reviewer"' in (web / panel).read_text(encoding="utf-8"), panel
+
+
 def test_decision_route_requires_mapping_review_scope_in_v1_and_legacy_tables() -> None:
     assert api_v1.required_post_scope("/api/v1/mapping-reviews/decisions") == "mapping_review"
     assert api_legacy.required_post_scope("/api/mapping-reviews/decisions") == "mapping_review"
@@ -142,6 +156,11 @@ def test_local_post_records_decision_and_updates_queue_summary_coverage_and_osca
     _status, summary = _get("/api/v1/mapping-reviews/summary", tmp_path)
     assert summary["data"]["totals"]["org_reviewed"] == 2
     assert summary["data"]["decision_log"]["ok"] is True
+    families = summary["data"]["families"]
+    assert families and all(set(row) == {"family_id", "label"} for row in families)
+    assert {row["family_id"] for row in families} == {
+        str(entry["risk_domain"]) for entry in load_safeguards()["safeguards"]
+    }
 
     _status, coverage = _get("/api/v1/ccf/coverage", tmp_path)
     assert coverage["data"]["frameworks"]["org_reviewed_mappings"] == 2

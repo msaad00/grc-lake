@@ -141,6 +141,8 @@ not, and neither is a certification. Some packs are limited: PCI DSS v4.0.1
 covers its 12 principal requirements, ISO/IEC 27701:2025 seeds 10 of its 78
 Annex A controls, and NIST RMF mappings are all proposed. SOC 1 is planned. The
 [coverage matrix](docs/FRAMEWORK_COVERAGE.md) has the exact boundary per framework.
+Your own reviewers can approve or reject mappings for your tenant, with an
+attributable audit trail: [mapping review](docs/MAPPING_REVIEW.md).
 
 <details>
 <summary><strong>How the Common Control Framework evaluates</strong></summary>

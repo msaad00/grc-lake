@@ -1,0 +1,115 @@
+import { expect, test, type Page } from "@playwright/test";
+
+async function openQueue(page: Page) {
+  await page.goto("/console/mapping-review/");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Mapping review" }),
+  ).toBeVisible({ timeout: 20_000 });
+  const table = page.getByRole("table", { name: "Mappings to review" });
+  await expect(table.getByRole("row").nth(1)).toBeVisible({ timeout: 20_000 });
+  return table;
+}
+
+test.describe("mapping review", () => {
+  test("shows per-framework progress with the review states kept apart", async ({
+    page,
+  }) => {
+    await openQueue(page);
+    const progress = page.getByRole("region", { name: "Review progress" });
+    await expect(progress).toBeVisible();
+    for (const label of [
+      "Maintainer-reviewed",
+      "Org-reviewed",
+      "Needs changes",
+      "Rejected",
+      "Pending",
+    ]) {
+      await expect(progress.getByText(label, { exact: true })).toBeVisible();
+    }
+    await expect(
+      progress.getByText(/org-reviewed \d[\d,]* of \d[\d,]* mapped/).first(),
+    ).toBeVisible();
+  });
+
+  test("approves a pending mapping with a rationale and records it in history", async ({
+    page,
+  }) => {
+    const table = await openQueue(page);
+    const rationale = `Evidence confirms the requirement (e2e ${Date.now()})`;
+
+    const firstRow = table.getByRole("row").nth(1);
+    const requirement = (await firstRow.getAttribute("data-mapping")) ?? "";
+    expect(requirement).toContain("|");
+    const [safeguardId, controlId] = requirement.split("|");
+
+    // Keyboard: the row checkbox is reachable and toggles with Space.
+    const checkbox = firstRow.getByRole("checkbox");
+    await checkbox.focus();
+    await page.keyboard.press("Space");
+    await expect(checkbox).toBeChecked();
+
+    const decision = page.getByRole("region", { name: "Record a decision" });
+    await expect(decision.getByText("1 selected")).toBeVisible();
+    const approve = decision.getByRole("button", { name: "Approve" });
+    await expect(approve).toBeDisabled();
+    await decision.getByLabel("Rationale").fill(rationale);
+    await approve.click();
+
+    await expect(page.getByText("Recorded 1 decision")).toBeVisible();
+    await expect(
+      table.locator(`tr[data-mapping="${safeguardId}|${controlId}"]`),
+    ).toHaveCount(0);
+
+    await page
+      .getByRole("combobox", { name: "Filter by review status" })
+      .selectOption("org_reviewed");
+    await page
+      .getByRole("searchbox", { name: "Search mappings" })
+      .fill(controlId);
+    const reviewedRow = table.locator(
+      `tr[data-mapping="${safeguardId}|${controlId}"]`,
+    );
+    await expect(reviewedRow).toBeVisible();
+    await expect(reviewedRow.getByText("org-reviewed")).toBeVisible();
+
+    await reviewedRow
+      .getByRole("button", { name: `History for ${safeguardId} ${controlId}` })
+      .click();
+    const drawer = page.getByRole("dialog");
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByText(rationale)).toBeVisible();
+    await expect(drawer.getByText("insecure@localhost").first()).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(drawer).toHaveCount(0);
+  });
+
+  test("works at 390px without horizontal page scroll", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openQueue(page);
+    const overflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(1);
+    await expect(
+      page.getByRole("combobox", { name: "Filter by framework" }),
+    ).toBeVisible();
+  });
+
+  test("frameworks page links to the review queue and splits reviewer types", async ({
+    page,
+  }) => {
+    await page.goto("/console/frameworks/");
+    const portfolio = page.getByRole("region", {
+      name: "Framework coverage summary",
+    });
+    await expect(portfolio).toBeVisible({ timeout: 20_000 });
+    await expect(portfolio.getByText(/maintainer-reviewed/)).toBeVisible();
+    await expect(portfolio.getByText(/org-reviewed/)).toBeVisible();
+    await portfolio.getByRole("link", { name: "Review mappings" }).click();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Mapping review" }),
+    ).toBeVisible({ timeout: 20_000 });
+  });
+});

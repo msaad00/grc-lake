@@ -27,6 +27,7 @@ const ROUTES = [
   "risks",
   "graph",
   "crosswalk",
+  "mapping-review",
   "automation",
   "trust-center",
   "agents",

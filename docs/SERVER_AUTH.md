@@ -186,13 +186,19 @@ applies at startup.
 
 ## Roles
 
-| Role             | Access                                                            |
-| ---------------- | ----------------------------------------------------------------- |
-| `admin`          | Full access, including user and API key administration            |
-| `security_admin` | Evidence requests, connectors, workflows, snapshots, and controls |
-| `contributor`    | Evidence request, workflow action, and triage operations          |
-| `auditor`        | Read-only, with owner, credential, and note fields redacted       |
-| `read_only`      | Internal read-only view without mutation                          |
+| Role                  | Access                                                                   |
+| --------------------- | ------------------------------------------------------------------------ |
+| `admin`               | Full access, including user and API key administration                   |
+| `security_admin`      | Evidence requests, connectors, workflows, snapshots, and controls        |
+| `compliance_reviewer` | Read, plus approve or reject safeguard mappings (`mapping_review` scope) |
+| `contributor`         | Evidence request, workflow action, and triage operations                 |
+| `auditor`             | Read-only, with owner, credential, and note fields redacted              |
+| `read_only`           | Internal read-only view without mutation                                 |
+
+Mapping review decisions also require a signed-in console session: an API key
+used as a bearer token can read the review queue but is refused on
+`POST /api/v1/mapping-reviews/decisions` whatever its role. See
+[Mapping review](MAPPING_REVIEW.md).
 
 All non-health `/api/v1/*` and `/api/*` requests are authenticated in server
 mode. Request audit events include a correlation ID, actor, tenant, route,
@@ -206,14 +212,15 @@ Supported labels are `public`, `internal`, `confidential`, `restricted`, and
 
 Recommended default ceilings:
 
-| Principal        | Maximum visibility | Notes                                                                              |
-| ---------------- | ------------------ | ---------------------------------------------------------------------------------- |
-| `admin`          | `restricted`       | Can operate the platform; raw secrets still should not be persisted                |
-| `security_admin` | `restricted`       | Can operate evidence sources, workflows, snapshots, and controls                   |
-| `contributor`    | `confidential`     | Can triage and request evidence without broad admin access                         |
-| `read_only`      | `confidential`     | Internal read-only posture and evidence view                                       |
-| `auditor`        | `internal`         | Read-only with owner, actor, assignee, note, and credential fields redacted        |
-| trust share      | `public`           | External reviewer summary only; no raw evidence, owners, notes, or asset internals |
+| Principal             | Maximum visibility | Notes                                                                              |
+| --------------------- | ------------------ | ---------------------------------------------------------------------------------- |
+| `admin`               | `restricted`       | Can operate the platform; raw secrets still should not be persisted                |
+| `security_admin`      | `restricted`       | Can operate evidence sources, workflows, snapshots, and controls                   |
+| `compliance_reviewer` | `confidential`     | Reviews safeguard mappings; otherwise read-only                                    |
+| `contributor`         | `confidential`     | Can triage and request evidence without broad admin access                         |
+| `read_only`           | `confidential`     | Internal read-only posture and evidence view                                       |
+| `auditor`             | `internal`         | Read-only with owner, actor, assignee, note, and credential fields redacted        |
+| trust share           | `public`           | External reviewer summary only; no raw evidence, owners, notes, or asset internals |
 
 Trust-share records include a `sensitivity_ceiling` and default to `public`.
 The public trust endpoint returns a curated posture summary tagged

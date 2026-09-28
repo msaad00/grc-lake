@@ -3,6 +3,7 @@ export * from "./auth";
 export * from "./assessment";
 export * from "./connectors";
 export * from "./frameworks";
+export * from "./mappingReview";
 export * from "./workflows";
 export * from "./graph";
 export * from "./agents";

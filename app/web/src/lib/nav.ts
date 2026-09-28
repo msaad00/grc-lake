@@ -12,6 +12,7 @@ import {
   Layers,
   LayoutDashboard,
   Library,
+  ListChecks,
   Network,
   Plug,
   Scale,
@@ -90,6 +91,12 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/frameworks",
     label: ROUTE_LABELS["/frameworks"],
     Icon: Library,
+    group: "Evaluate",
+  },
+  {
+    href: "/mapping-review",
+    label: ROUTE_LABELS["/mapping-review"],
+    Icon: ListChecks,
     group: "Evaluate",
   },
   {

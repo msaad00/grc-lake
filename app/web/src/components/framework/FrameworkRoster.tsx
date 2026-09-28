@@ -30,6 +30,7 @@ function FrameworkLine({
     framework.implemented_control_count;
   const total = coverage?.seeded_control_count ?? framework.control_count;
   const attestable = coverage?.attestable_requirement_count ?? 0;
+  const orgReviewed = coverage?.org_reviewed_requirement_count ?? 0;
 
   return (
     <li className="flex min-w-0 items-center gap-3 border-b border-line py-3.5 last:border-b-0">
@@ -46,7 +47,7 @@ function FrameworkLine({
         <div className="mt-0.5 truncate text-xs font-medium leading-5 text-muted">
           {notEvaluated
             ? `Not evaluated · ${total ? `${formatCount(total)} controls in catalog` : "catalog pack pending"}`
-            : `${formatCount(mapped)}/${formatCount(total)} controls mapped · ${formatCount(attestable)} fully reviewed`}
+            : `${formatCount(mapped)}/${formatCount(total)} controls mapped · ${formatCount(attestable)} reviewed${orgReviewed ? ` (${formatCount(orgReviewed)} by your org)` : ""}`}
         </div>
       </div>
       <Badge

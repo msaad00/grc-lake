@@ -24,8 +24,17 @@ test.describe("mapping review", () => {
       "Rejected",
       "Pending",
     ]) {
-      await expect(progress.getByText(label, { exact: true })).toBeVisible();
+      await expect(
+        progress.locator("summary").getByText(label, { exact: true }),
+      ).toBeVisible();
     }
+    // The shared glossary defines each state on demand.
+    await progress.getByText("What these mean").click();
+    await expect(
+      progress.getByText(
+        "Approved by a reviewer in your organization, with a rationale.",
+      ),
+    ).toBeVisible();
     await expect(
       progress.getByText(/org-reviewed \d[\d,]* of \d[\d,]* mapped/).first(),
     ).toBeVisible();

@@ -42,6 +42,7 @@ from security_lakehouse.connectors_snowflake import CONNECTOR_ID as SNOWFLAKE_CO
 from security_lakehouse.connectors_snowflake import discover_snowflake_scope, probe_snowflake_access
 from security_lakehouse.lake_scale import apply_split_schedule_defaults
 from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.secret_refs import ref_payload_error
 
 CONFIG_FILE = "connector_config.jsonl"
 RUNS_FILE = "connector_runs.jsonl"
@@ -274,7 +275,14 @@ def configure_payload_error(
     ``append_config_event`` is a low-level append helper that does not validate;
     the API and CLI configure paths call this first so an empty form cannot
     create an enabled connector.
+
+    In hosted server mode every ``*_ref``/``*_env`` value is also checked
+    against the secret-reference policy (see :mod:`secret_refs`), whatever the
+    state, so a server secret can never be stored as a tenant's reference.
     """
+    ref_error = ref_payload_error(credentials or {}, options or {})
+    if ref_error:
+        return ref_error
     if state != "enabled":
         return None
     catalog = load_connector_catalog()

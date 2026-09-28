@@ -957,6 +957,8 @@ export interface FrameworkView {
   source_sha256: string | null;
   pulled_at: string | null;
   implementation_status: string;
+  /** Registry entries without seeded requirements are stubs, not packs. */
+  pack_state?: FrameworkPackState;
   copyright_guardrail: string;
   coverage_boundary?: string;
   evidence_focus?: string[];
@@ -970,8 +972,14 @@ export interface FrameworkView {
   next_pull_due: string | null;
 }
 
+export type FrameworkPackState = "seeded" | "planned" | "superseded";
+
 export interface FrameworkCoverageSummary {
+  /** Every registry entry, stubs included; use seeded_framework_count for packs. */
   framework_count: number;
+  seeded_framework_count?: number;
+  stub_framework_count?: number;
+  superseded_framework_count?: number;
   implemented_framework_count: number;
   planned_framework_count: number;
   seeded_control_count: number;
@@ -1008,6 +1016,8 @@ export interface FrameworkCoverageRow {
   source_sha256: string | null;
   pulled_at: string | null;
   freshness_state: FrameworkFreshness;
+  superseded_by?: string | null;
+  pack_state?: FrameworkPackState;
   seeded_control_count: number;
   /** Every seeded requirement with an official-source identifier mapping. */
   source_cited_mapping_count?: number;
@@ -1230,6 +1240,7 @@ export interface AuditLogEntry {
     | "snapshot"
     | "workflow"
     | "trust_share"
+    | "mapping_review"
     | "request";
   actor: string;
   occurred_at: string;
@@ -1411,6 +1422,7 @@ export interface FrameworkReadiness {
   control_count: number;
   mapped_control_count: number;
   coverage_pct: number;
+  pack_state?: FrameworkPackState;
   gates: Record<ReadinessStage, boolean>;
   stage: ReadinessStage;
   is_ready: boolean;

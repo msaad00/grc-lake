@@ -37,6 +37,7 @@ from security_lakehouse.connector_errors import (
     ConnectorConfigError,
 )
 from security_lakehouse.connector_ids import stable_id_slug
+from security_lakehouse.delegation import gcp_credentials
 from security_lakehouse.identity import classify_identity_type
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -164,7 +165,7 @@ class GCPClient:
     workload identity / metadata server).
     """
 
-    def __init__(self, project_id: str) -> None:
+    def __init__(self, project_id: str, *, credentials: Any = None) -> None:
         self.project_id = project_id
         try:
             from google.cloud import (  # noqa: PLC0415
@@ -176,8 +177,8 @@ class GCPClient:
                 "gcp-posture live collection requires google-cloud-resource-manager and "
                 "google-cloud-asset; install the cloud extra or use --fixture-dir"
             ) from exc
-        self._projects = resourcemanager_v3.ProjectsClient()
-        self._assets = asset_v1.AssetServiceClient()
+        self._projects = resourcemanager_v3.ProjectsClient(credentials=credentials)
+        self._assets = asset_v1.AssetServiceClient(credentials=credentials)
         # Org Policy lives in the separate google-cloud-org-policy distribution
         # (google.cloud.orgpolicy_v2), not resourcemanager_v3. Missing support
         # is reported as a coverage gap so the incomplete scope stays visible.
@@ -185,7 +186,7 @@ class GCPClient:
         try:
             from google.cloud import orgpolicy_v2  # noqa: PLC0415
 
-            self._org_policies = orgpolicy_v2.OrgPolicyClient()
+            self._org_policies = orgpolicy_v2.OrgPolicyClient(credentials=credentials)
         except ImportError:  # pragma: no cover - optional dependency
             self._org_policies = None
 
@@ -290,7 +291,8 @@ def probe_gcp_access(*, credentials: dict[str, Any], options: dict[str, Any]) ->
     if not project_id:
         raise ConnectorConfigError("GCP probe requires project_id")
     try:
-        client = GCPClient(project_id)
+        delegated = gcp_credentials(credentials)
+        client = GCPClient(project_id, credentials=delegated) if delegated is not None else GCPClient(project_id)
     except ConnectorConfigError:
         raise
     except Exception as exc:  # noqa: BLE001 - classified into an operator-safe error

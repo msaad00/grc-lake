@@ -22,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { displayLabel } from "@/lib/display";
 
 const helper = createColumnHelper<typeof sortableTableFeatures, ControlTest>();
 
@@ -82,7 +83,7 @@ export function ControlTestTable({
         return (
           <div>
             <Badge tone={toneFor(v) as "ready" | "critical" | "attention"}>
-              {v}
+              {displayLabel(v)}
             </Badge>
             <div className="mt-1 text-xs text-muted">
               {info.row.original.confidence_score}% confidence
@@ -93,7 +94,9 @@ export function ControlTestTable({
     }),
     helper.accessor("freshness_status", {
       header: "Freshness",
-      cell: (info) => <Badge tone="info">{info.getValue()}</Badge>,
+      cell: (info) => (
+        <Badge tone="info">{displayLabel(info.getValue())}</Badge>
+      ),
     }),
     helper.accessor("agent_skill", {
       header: "Skill",

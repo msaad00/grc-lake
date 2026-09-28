@@ -247,7 +247,9 @@ def test_glue_catalog_uses_assumed_role_and_pins_file_io(monkeypatch: pytest.Mon
     assert catalog.properties["s3.access-key-id"] == "AK"
     assert catalog.properties["s3.region"] == "us-east-1"
     io = catalog._load_file_io({"s3.endpoint": "https://attacker.example", "py-io-impl": "evil.Module"})
-    assert type(io).__name__ == "PyArrowFileIO"
+    from pyiceberg.io.pyarrow import PyArrowFileIO
+
+    assert isinstance(io, PyArrowFileIO)
     assert "s3.endpoint" not in io.properties
 
 

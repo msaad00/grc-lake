@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { displayLabel } from "@/lib/display";
 
 function toneForState(state?: string): "ready" | "attention" | "critical" {
   if (state === "active") return "ready";
@@ -354,7 +355,7 @@ export function IngestionStatusPanel({
                           : "attention"
                     }
                   >
-                    {run.result}
+                    {displayLabel(run.result)}
                   </Badge>
                 </div>
               ))}
@@ -425,8 +426,10 @@ export function IngestionStatusPanel({
                             : "attention"
                       }
                     >
-                      {connector.latest_sync.result ??
-                        connector.freshness_state}
+                      {displayLabel(
+                        connector.latest_sync.result ??
+                          connector.freshness_state,
+                      )}
                     </Badge>
                   </div>
                 ))
@@ -505,7 +508,7 @@ export function IngestionStatusPanel({
                           : "attention"
                     }
                   >
-                    {job.status}
+                    {displayLabel(job.status)}
                   </Badge>
                 </div>
               ))}

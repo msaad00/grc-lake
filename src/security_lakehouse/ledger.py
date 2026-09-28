@@ -95,6 +95,7 @@ def append_chained_jsonl_batch(
     *,
     prev_field: str = "prev_hash",
     hash_field: str = "record_hash",
+    on_appended: Callable[[int, str | None], None] | None = None,
 ) -> list[dict[str, Any]]:
     """Append the records ``build(existing_rows)`` returns, chained, under one lock.
 
@@ -102,7 +103,15 @@ def append_chained_jsonl_batch(
     reference earlier rows (for example "this supersedes decision X") are
     derived from the same state they are appended to, even with concurrent
     writers in other processes.
+
+    The whole batch goes to disk in one ``O_APPEND`` write followed by
+    ``fsync``, so a crash leaves either the full batch or, at worst, a torn
+    trailing line that chain verification reports; never a silent partial
+    batch. ``on_appended(length, tip_hash)`` runs after the write while the lock
+    is still held, for callers that keep a sidecar over the chain tip.
     """
+    from security_lakehouse.generations import assert_mutable
+
     target = Path(path)
     with chain_lock(target):
         rows = read_jsonl(target, missing_ok=True)
@@ -114,10 +123,28 @@ def append_chained_jsonl_batch(
         for record in build(rows):
             chained = {**record, prev_field: prev_hash}
             chained[hash_field] = canonical_record_hash(chained, hash_field=hash_field)
-            append_jsonl(target, chained)
             written.append(chained)
             prev_hash = chained[hash_field]
+        if written:
+            assert_mutable(target)
+            blob = "".join(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in written)
+            _append_once(target, blob.encode("utf-8"))
+        if on_appended is not None:
+            on_appended(len(rows) + len(written), prev_hash)
         return written
+
+
+def _append_once(target: Path, data: bytes) -> None:
+    """Append ``data`` with a single write and fsync it before returning."""
+    fd = os.open(target, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+    try:
+        view = memoryview(data)
+        while view:
+            written = os.write(fd, view)
+            view = view[written:]
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
 def verify_chained_jsonl(

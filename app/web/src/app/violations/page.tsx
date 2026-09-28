@@ -35,6 +35,7 @@ import type { Severity, Violation } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
 import { assetLabel } from "@/lib/format";
 import { severityTone } from "@/lib/severity";
+import { displayLabel } from "@/lib/display";
 
 const helper = createColumnHelper<typeof sortableTableFeatures, Violation>();
 
@@ -157,12 +158,37 @@ function ViolationsPageContent() {
     ],
   );
 
+  // Zero-count chips are noise; only show what needs a look.
+  const summaryChips = [
+    {
+      label: "critical",
+      tone: "critical" as const,
+      count: filtered.filter((v) => v.severity === "critical").length,
+    },
+    {
+      label: "unassigned",
+      tone: "default" as const,
+      count: filtered.filter((v) => !v.asset_owner?.trim()).length,
+    },
+    {
+      label: "unknown environment",
+      tone: "default" as const,
+      count: filtered.filter((v) => environmentFor(v.environment) === "unknown")
+        .length,
+    },
+  ].filter((chip) => chip.count > 0);
+
   const columns: SortableColumnDefs<Violation> = [
     helper.accessor("control_id", {
       header: "Finding",
       cell: (info) => (
         <div className="max-w-[320px]">
-          <div className="font-semibold leading-5 text-ink">
+          <div
+            className="line-clamp-2 font-semibold leading-5 text-ink"
+            title={
+              controlTitles.get(info.getValue()) ?? info.row.original.event_type
+            }
+          >
             {controlTitles.get(info.getValue()) ?? info.row.original.event_type}
           </div>
           <div className="mt-1 text-xs text-muted">{info.getValue()}</div>
@@ -187,7 +213,7 @@ function ViolationsPageContent() {
       cell: (info) => (
         <div>
           <Badge tone={severityTone(info.row.original.severity)}>
-            {info.row.original.severity}
+            {displayLabel(info.row.original.severity)}
           </Badge>
           <div className="mt-1 text-xs text-muted">Score {info.getValue()}</div>
         </div>
@@ -274,20 +300,11 @@ function ViolationsPageContent() {
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2 text-xs">
-          <Badge tone="critical">
-            {filtered.filter((v) => v.severity === "critical").length} critical
-          </Badge>
-          <Badge>
-            {filtered.filter((v) => !v.asset_owner?.trim()).length} unassigned
-          </Badge>
-          <Badge>
-            {
-              filtered.filter(
-                (v) => environmentFor(v.environment) === "unknown",
-              ).length
-            }{" "}
-            unknown environment
-          </Badge>
+          {summaryChips.map((chip) => (
+            <Badge key={chip.label} tone={chip.tone}>
+              {chip.count} {chip.label}
+            </Badge>
+          ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-xs font-medium text-muted">

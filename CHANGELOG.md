@@ -3,8 +3,32 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.2.19 - 2026-09-28
 
+- Operator note (hosted / multi-tenant server mode only; self-hosted
+  single-tenant and CLI installs are unaffected): connector and workflow
+  secrets now resolve only from tenant-prefixed variables
+  (`TRUSTOPS_TENANT_<ID>__…`) or names the operator allowlists in
+  `TRUSTOPS_CONNECTOR_SECRET_REFS` / `TRUSTOPS_WORKFLOW_SHARED_SECRETS`; move
+  shared secrets before upgrading. Hosted AWS connectors need `role_arn` and
+  `external_id`, GCP and BigQuery need `impersonate_service_account`, and Azure
+  and Intune need a tenant-owned app registration. After rotating
+  `TRUSTOPS_COOKIE_SIGNING_KEY`, run `frameworks review resign` once per tenant
+  lake.
+- Live-cloud readiness, verified against real AWS, Azure, and GCP tenants:
+  `connectors probe` accepts the same credentials as sync (including a local
+  CLI profile for AWS) and makes a real read-only call for Azure and GCP; GCP
+  keeps collecting when an API is disabled or a permission is missing and
+  reports it as a named coverage gap; connector errors say what to fix instead
+  of only an exception name; and long asset IDs no longer collide, so every
+  synced GCP row is counted.
+- Console consistency: framework counts include only seeded packs (planned or
+  superseded packs are listed separately), the superseded ISO/IEC 27701:2019
+  row says so, badges use one set of labels, Preview has a keyboard-reachable
+  explanation, and the overview and audit room name their different scores.
+  Server-mode requests now record the signed-in user as the actor even if the
+  request body names someone else. README screenshots are cropped to their
+  content and include Mapping review and a phone-width overview.
 - Org mapping review: your reviewers can approve, reject, or request changes
   to safeguard mappings for your tenant (console **Mapping review**, API
   `/api/v1/mapping-reviews/*`, CLI `frameworks review`). Decisions go to an
@@ -13,6 +37,49 @@ Python package, Helm chart, and bundled web console.
   snapshots report maintainer-reviewed, org-reviewed, and rejected separately.
   New `compliance_reviewer` role and `mapping_review` scope; API keys, agents,
   and MCP tools can list the queue but never decide.
+- Hosted tenant isolation: in server mode, connector secret references resolve
+  only under the tenant's `TRUSTOPS_TENANT_<TENANT_ID>__` prefix or the new
+  operator allowlist `TRUSTOPS_CONNECTOR_SECRET_REFS`, and server secrets
+  (`TRUSTOPS_*`, `DATABASE_*`, `AWS_*`, `STRIPE_*`, and similar) are always
+  refused. Cloud readers need delegated access: AWS `role_arn` plus
+  `external_id`, GCP and BigQuery `impersonate_service_account`, a tenant
+  `kubeconfig_ref` for Kubernetes. Local Parquet paths are scoped to
+  `$TRUSTOPS_LAKE_LOCAL_ROOT/<tenant_id>`. Iceberg REST and Glue readers keep
+  only vended credentials from catalog metadata and accept only object-store
+  locations (`s3://`, or the warehouse's `gs://`); local `file:` warehouses
+  stay available in local and CLI mode only. Local and CLI runs are otherwise
+  unchanged. Operator note: hosted
+  tenants whose connectors name a shared or default secret must move it to a
+  tenant-prefixed variable or add it to `TRUSTOPS_CONNECTOR_SECRET_REFS`; see
+  docs/SERVER_AUTH.md#hosted-connector-credentials.
+- Hosted Azure isolation: in server mode `azure-posture` and `intune-devices`
+  authenticate only as the customer's own Entra app registration (`tenant_id`,
+  `client_id`, and one of `client_secret_ref`, `client_certificate_ref`, or
+  `federated_token_file_ref`). `DefaultAzureCredential`, the `az` CLI login,
+  and the server-wide `AZURE_SUBSCRIPTION_ID`/`AZURE_TENANT_ID` overrides are
+  refused for tenants. Local and CLI runs keep `DefaultAzureCredential`.
+  Operator note: hosted Azure and Intune connectors that relied on the
+  server's identity stop syncing until the tenant configures an app
+  registration and the operator provisions its secret under the tenant prefix.
+- Hosted workflow secrets: in server mode `{{secret.NAME}}` resolves from the
+  calling tenant's `TRUSTOPS_TENANT_<TENANT_ID>__SECRET_<NAME>`, not the shared
+  `TRUSTOPS_SECRET_<NAME>`. Operator note: before upgrading, copy each
+  tenant's workflow secrets to its prefixed name (tenant `acme`:
+  `TRUSTOPS_SECRET_SLACK_WEBHOOK` becomes
+  `TRUSTOPS_TENANT_ACME__SECRET_SLACK_WEBHOOK`), or list a secret that is
+  deliberately shared by every tenant in `TRUSTOPS_WORKFLOW_SHARED_SECRETS`.
+  Unmigrated webhook, Slack, and Jira actions fail without sending. Local
+  mode is unchanged.
+- Mapping review: the new `frameworks review resign` command
+  (`--lake <dir> --previous-key-env <NAME>`) re-signs the decision-log tip
+  after `TRUSTOPS_COOKIE_SIGNING_KEY` is rotated. It verifies the hash chain and the old tip MAC with the
+  previous key first, refuses and writes nothing if either fails, and records
+  a `tip_resigned` entry in the workbench audit log. Operator note: after
+  rotating the key, run it once per tenant lake. See
+  docs/MAPPING_REVIEW.md#rotating-the-signing-key.
+- SSRF guard: 6to4 (`2002::/16`) and Teredo (`2001::/32`) addresses are
+  judged by the IPv4 addresses they embed, so one that tunnels to a private,
+  loopback, or metadata IPv4 is refused on every supported Python version.
 
 ## 0.2.18 - 2026-09-27
 

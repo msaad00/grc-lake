@@ -14,7 +14,9 @@ def test_connected_cloud_drawer_stays_compact_at_narrow_widths() -> None:
     shell = DRAWER_SHELL.read_text(encoding="utf-8")
 
     assert '"w-[min(560px,calc(100vw-16px))]"' in shell
-    assert 'className="flex-1 overflow-auto px-4 py-5 sm:px-5"' in shell
+    assert '"flex-1 overflow-auto px-4 py-5 sm:px-5"' in shell
+    # With a sticky footer the scroll area pads its end so the last field clears it.
+    assert 'footer && "scroll-pb-24 pb-10"' in shell
     assert 'className="border-t border-line px-4 py-3 sm:px-5"' in shell
     assert 'size="sm"' in drawer
     assert 'aria-label="Connected connector view"' in drawer
@@ -172,7 +174,8 @@ def test_snowflake_linking_uses_secret_references_not_passwords() -> None:
     assert "Use SSO for a human proof or a service user with key-pair/OAuth" not in drawer
     assert "Connect with a read-only Snowflake service identity." not in drawer
     assert "do not paste a key or password" in forms
-    assert "Snowflake is the existing security-data-lake path." in readme
+    assert "Snowflake is one of the existing-lake readers." in readme
+    assert "the existing security-data-lake path" not in readme
     assert "key-pair or OAuth token reference" in readme
     assert "not passwords or private-key contents" in readme
 

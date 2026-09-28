@@ -21,6 +21,7 @@ from collections import defaultdict
 from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
+from security_lakehouse.framework_provenance import framework_pack_state
 from security_lakehouse.mappings import article_mapping_reviewed, load_control_article_mappings
 
 STAGES = (
@@ -92,6 +93,7 @@ def build_readiness_view() -> list[dict[str, Any]]:
                 "framework_id": framework_id,
                 "name": framework.get("name"),
                 "version": framework.get("version"),
+                "pack_state": framework_pack_state(framework, control_count),
                 "control_count": control_count,
                 "mapped_control_count": mapped_count,
                 "coverage_pct": round(coverage_pct, 1),

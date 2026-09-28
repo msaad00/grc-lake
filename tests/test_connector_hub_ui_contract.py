@@ -19,7 +19,12 @@ def test_connector_hub_uses_compact_interactive_filters_and_grid() -> None:
     assert "Needs attention" in page
     assert "Needs setup" in page
     assert "All categories" in page
-    assert "{totals.runnable} available" in page
+    # The card header already counts sources; no second "N available" pill.
+    assert "{totals.runnable} available" not in page
+    # Unconfigured sources are all "disabled"; that default is not a badge.
+    assert 'connector.state !== "disabled"' in page
+    assert "{connector.state}</Badge>" not in page
+    assert "line-clamp-2" in page
     assert "if (!isRunnableConnector(c)) return false;" in page
     assert "RunnerFilter" not in page
     assert "RUNNER_TABS" not in page
@@ -89,7 +94,14 @@ def test_preview_connectors_are_wired_into_the_console_and_badged() -> None:
     drawer = (ROOT / "app/web/src/components/drawers/ConnectorDrawer.tsx").read_text(encoding="utf-8")
     for source in (page, drawer):
         assert 'release_stage === "preview"' in source
-        assert re.search(r">\s*Preview\s*</Badge>", source)
+        assert "<PreviewBadge" in source
+        # One shared explanation, reachable by keyboard (not a title-only hint).
+        assert "not yet verified against a live tenant" not in source
+    badge = (ROOT / "app/web/src/components/ui/preview-badge.tsx").read_text(encoding="utf-8")
+    assert "PREVIEW_COPY" in badge
+    assert 'type="button"' in badge
+    assert "Tooltip.Content" in badge
+    assert "PREVIEW_COPY.definition" in page, "legend under the filter bar"
 
 
 def test_connector_surfaces_use_theme_tokens_and_catalog_driven_lake_copy() -> None:

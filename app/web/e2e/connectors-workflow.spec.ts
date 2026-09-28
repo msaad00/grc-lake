@@ -93,9 +93,11 @@ test.describe("connectors workflow", () => {
         .getByRole("heading", { name: "GitHub Security" }),
     ).toBeVisible({ timeout: 15_000 });
 
+    // Server mode resolves only tenant-prefixed (or operator-allowlisted) refs;
+    // the no-auth e2e server acts for the synthetic "insecure" tenant.
     await page
       .getByLabel(/GitHub App installation token env/i)
-      .fill("TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN");
+      .fill("TRUSTOPS_TENANT_INSECURE__GITHUB_TOKEN");
     await page.getByLabel(/Repository \(owner\/name\)/i).fill("acme/platform");
 
     const dialog = page.getByRole("dialog");

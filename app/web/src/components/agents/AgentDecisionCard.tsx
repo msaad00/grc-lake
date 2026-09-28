@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/hooks";
 import type { AgentDecision, AgentRun } from "@/lib/api/types";
 import { notify } from "@/lib/toast";
+import { displayLabel } from "@/lib/display";
 
 function toneForStatus(status: string | undefined) {
   if (status === "completed" || status === "executed") return "ready" as const;
@@ -108,7 +109,7 @@ export function AgentDecisionCard({
             {decision.action}
           </span>
           <Badge tone={toneForStatus(decision.status)}>
-            {decision.status ?? "proposed"}
+            {displayLabel(decision.status ?? "proposed")}
           </Badge>
           {decision.requires_approval && (
             <Badge tone="attention">approval</Badge>
@@ -199,7 +200,7 @@ export function AgentDecisionCard({
           </>
         ) : (
           <Badge tone={toneForStatus(decision.status)}>
-            {decision.status ?? "done"}
+            {displayLabel(decision.status ?? "done")}
           </Badge>
         )}
       </div>

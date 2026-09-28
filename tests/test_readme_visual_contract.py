@@ -154,7 +154,30 @@ def test_readme_hero_counts_the_read_only_sources_it_leaves_out() -> None:
         and entry.get("release_stage") != "preview"
         and entry["collection_mode"] in {"direct_api_read", "existing_lake_read"}
     ]
-    assert f"+{len(generally_available) - 8} more" in copy
+    preview = [
+        entry
+        for entry in connectors
+        if entry.get("is_implemented") is True
+        and entry.get("release_stage") == "preview"
+        and entry["collection_mode"] in {"direct_api_read", "existing_lake_read"}
+    ]
+    assert "GENERALLY AVAILABLE READ-ONLY SOURCES" in copy
+    assert f"+{len(generally_available) - 8} more · +{len(preview)} in preview" in copy
+    # GA + preview is the executable count the README states once.
+    executable = [entry for entry in connectors if entry.get("is_implemented") is True]
+    assert len(generally_available) + len(preview) == len(executable)
+    readme = README.read_text(encoding="utf-8")
+    assert f"{len(executable)} executable" in readme
+
+
+def test_readme_hero_does_not_repeat_itself() -> None:
+    root = ElementTree.parse(ASSETS[0]).getroot()
+    texts = ["".join(node.itertext()) for node in root.iter(f"{SVG}text")]
+    # The subtitle already says evidence -> controls -> findings -> exports.
+    assert not any("evidence → controls → findings → proof" in text for text in texts)
+    # One text run for the headline, so the browser spaces the words evenly.
+    headline = [text for text in texts if text.startswith("Collect.")]
+    assert headline == ["Collect. Evaluate. Resolve. Export."]
 
 
 def test_readme_visuals_are_accessible_scalable_svg_assets() -> None:

@@ -9,6 +9,7 @@ import { useAuditLog } from "@/lib/api/hooks";
 import { usePersistentState } from "@/lib/state/preferences";
 import type { AuditLogEntry } from "@/lib/api/types";
 import { CONNECT_FLOW } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const CATEGORY_TONE: Record<
   AuditLogEntry["category"],
@@ -19,6 +20,7 @@ const CATEGORY_TONE: Record<
   snapshot: "ready",
   workflow: "ready",
   trust_share: "critical",
+  mapping_review: "attention",
   request: "default",
 };
 
@@ -89,7 +91,7 @@ export function NotificationBell() {
                 className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 rounded-md px-2 py-2 text-xs outline-none data-[highlighted]:bg-surfaceMuted"
               >
                 <Badge tone={CATEGORY_TONE[entry.category]}>
-                  {entry.category}
+                  {displayLabel(entry.category)}
                 </Badge>
                 <span className="min-w-0">
                   <span className="block truncate text-ink">
@@ -99,7 +101,7 @@ export function NotificationBell() {
                     {entry.actor} · {entry.occurred_at}
                   </span>
                 </span>
-                {entry.result && <Badge>{entry.result}</Badge>}
+                {entry.result && <Badge>{displayLabel(entry.result)}</Badge>}
               </Link>
             </DropdownMenu.Item>
           ))}

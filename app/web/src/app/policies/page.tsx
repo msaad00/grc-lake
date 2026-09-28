@@ -24,6 +24,7 @@ import type {
   PolicyTemplateSummary,
 } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -114,7 +115,9 @@ function PolicyDetail({ documentId }: { documentId: string }) {
       <CardHeader className="p-0">
         <CardTitle className="flex flex-wrap items-center gap-2">
           {doc.title}
-          <Badge tone={STATUS_TONE[doc.status]}>{doc.status}</Badge>
+          <Badge tone={STATUS_TONE[doc.status]}>
+            {displayLabel(doc.status)}
+          </Badge>
         </CardTitle>
       </CardHeader>
       <p className="text-xs text-muted">
@@ -211,7 +214,9 @@ function PolicyRow({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-medium text-ink">{policy.title}</span>
-        <Badge tone={STATUS_TONE[policy.status]}>{policy.status}</Badge>
+        <Badge tone={STATUS_TONE[policy.status]}>
+          {displayLabel(policy.status)}
+        </Badge>
       </div>
       <p className="mt-1 text-xs text-muted">Owner {policy.owner || "—"}</p>
     </button>

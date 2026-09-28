@@ -3,6 +3,8 @@
 Block merges and deployments when TrustOps posture regresses. Platform engineers should
 wire this **before** the human console — same `/api/v1` routes agents and MCP use.
 
+Start with [CI gate](../CI_GATE.md) for the inputs, outputs, and a sample-data demo.
+
 Related: [AGENT_SKILLS.md](../api/AGENT_SKILLS.md) (`ci.gate`) ·
 [AGENT_API.md](../api/AGENT_API.md) ·
 [HEADLESS_GRC.md](../HEADLESS_GRC.md)
@@ -33,7 +35,7 @@ Example step:
 
 ```yaml
 - name: TrustOps posture gate
-  uses: ./.github/actions/posture-gate
+  uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.19
   with:
     trustops-url: ${{ secrets.TRUSTOPS_URL }}
     api-token: ${{ secrets.TRUSTOPS_API_TOKEN }}

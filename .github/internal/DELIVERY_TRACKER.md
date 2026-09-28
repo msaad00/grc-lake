@@ -16,11 +16,11 @@ Last updated: **2026-07-13** (Wave 2 merged #482–#488; maintainer closeout pen
 | **N — Console copy**        | `cursor/console-human-polish-d259` | #480  | ✅ #487 — **close #480** |
 | **Brand — TrustOps mark**   | `cursor/trustops-mark-d259`        | —     | ✅ #488                  |
 
-**Positioning:** headless/agents/CI first; human console second. Default connect path is **agentless read-only API** — no customer SDL required ([CONNECTORS.md](CONNECTORS.md), [HEADLESS_CONNECTOR_SETUP.md](playbooks/HEADLESS_CONNECTOR_SETUP.md)).
+**Positioning:** headless/agents/CI first; human console second. Default connect path is **agentless read-only API** — no customer SDL required ([CONNECTORS.md](../../docs/CONNECTORS.md), [HEADLESS_CONNECTOR_SETUP.md](../../docs/playbooks/HEADLESS_CONNECTOR_SETUP.md)).
 
 ## Wave 3 — managed GRC console (#96)
 
-Managed GRC-style trust command center and connector health. See [issues/WAVE3_TRACKER.md](issues/WAVE3_TRACKER.md).
+Managed GRC-style trust command center and connector health. See [issues/WAVE3_TRACKER.md](../../docs/issues/WAVE3_TRACKER.md).
 
 | Stream                      | Branch                             | Issue | Status     |
 | --------------------------- | ---------------------------------- | ----- | ---------- |

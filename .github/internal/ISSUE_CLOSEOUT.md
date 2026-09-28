@@ -43,6 +43,6 @@ Already closed on GitHub: #418, #430, #93.
 ## After closeout
 
 - **Keep open:** #474 (mark complete), #96 (Wave 3), #411, #22, #14, #18, #15, #434, #436
-- **Wave 3 work:** [issues/WAVE3_TRACKER.md](issues/WAVE3_TRACKER.md)
+- **Wave 3 work:** [issues/WAVE3_TRACKER.md](../../docs/issues/WAVE3_TRACKER.md)
 
 See [DELIVERY_TRACKER.md](DELIVERY_TRACKER.md) and [ISSUE_CONSOLIDATION.md](ISSUE_CONSOLIDATION.md).

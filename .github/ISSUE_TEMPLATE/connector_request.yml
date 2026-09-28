@@ -1,0 +1,46 @@
+name: Connector request
+description: Ask for a new read-only evidence source, or more evidence from an existing one.
+labels: ["enhancement", "area-connectors"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Connectors are read-only and agentless. See docs/CONNECTORS.md for the current catalog and
+        docs/ADDING_CONNECTORS.md if you want to build one yourself.
+  - type: input
+    id: source
+    attributes:
+      label: Source system
+      placeholder: "e.g. an identity provider, MDM, ticketing, or cloud service"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence needed
+      description: Which records or settings, and which controls or framework requirements they would prove.
+      placeholder: "MFA enrollment per user -> SOC2-CC6.1, ISO27001-A.5.17"
+    validations:
+      required: true
+  - type: textarea
+    id: api
+    attributes:
+      label: API and access
+      description: Link the vendor's official API docs. Which read-only scopes or roles are needed? Does it support short-lived or federated credentials?
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Collection mode
+      options:
+        - Snapshot (current state)
+        - Event log (append-only history)
+        - Not sure
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I can test against a real tenant.
+        - label: I would like to open a pull request for this.

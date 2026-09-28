@@ -1,0 +1,78 @@
+# TrustOps with Docker Compose.
+#
+# Local demo (default):
+#
+#   docker compose up
+#   open http://127.0.0.1:8787/console/dashboard/
+#
+#   Loads the bundled "golden" sample company on first start into the
+#   `trustops-demo-lake` volume and serves it with AUTHENTICATION DISABLED.
+#   The port is published on 127.0.0.1 only. Never expose this service to a
+#   network, and never load real evidence into it.
+#   Reset the demo: docker compose down -v
+#
+# Real use (profile "server"):
+#
+#   cp deploy/compose/trustops.env.example trustops.env   # fill in secrets
+#   docker compose up -d trustops-server
+#   open http://127.0.0.1:8788/
+#
+#   Authentication on, no demo data, secrets from trustops.env (gitignored),
+#   its own `trustops-lake` volume. See docs/DEPLOYMENT.md for TLS and backups.
+#
+# Pin a different release with TRUSTOPS_VERSION, e.g.
+#   TRUSTOPS_VERSION=0.2.18 docker compose up
+
+name: trustops
+
+services:
+  trustops:
+    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.19}
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - trustops-demo-lake:/lake
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "======================================================================"
+        echo " TrustOps LOCAL DEMO: NO AUTHENTICATION. Sample data only."
+        echo " Published on 127.0.0.1:8787. Do not expose this port."
+        echo " For real use: docker compose up -d trustops-server"
+        echo "======================================================================"
+        if [ ! -e /lake/.trustops-demo-seeded ]; then
+          security-lakehouse fixtures load --company golden --out /lake --rebase-times
+          touch /lake/.trustops-demo-seeded
+        fi
+        exec security-lakehouse serve --server --allow-insecure-no-auth --lake /lake --host 0.0.0.0 --port 8787
+
+  trustops-server:
+    profiles: ["server"]
+    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.19}
+    # The image's default command serves with authentication required.
+    env_file:
+      - trustops.env
+    environment:
+      # Refuses TRUSTOPS_ALLOW_INSECURE_NO_AUTH at startup.
+      TRUSTOPS_ENV: production
+    ports:
+      # Loopback only: put a TLS-terminating reverse proxy in front before
+      # publishing on another interface.
+      - "127.0.0.1:8788:8787"
+    volumes:
+      - trustops-lake:/lake
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+
+volumes:
+  trustops-demo-lake:
+  trustops-lake:

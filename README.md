@@ -41,7 +41,9 @@ make demo-local
 
 Open [localhost:8787/console/dashboard/](http://127.0.0.1:8787/console/dashboard/).
 This loads fixture data and disables authentication; for a shared environment,
-see [Self-host](#self-host).
+see [Self-host](#self-host). With Docker, `docker compose up` does the same from
+the published image. The [5-minute tutorial](docs/TUTORIAL_5_MIN.md) continues
+from there to a real cloud account, a mapping review, and an OSCAL export.
 
 <details>
 <summary><strong>Other setup paths</strong> — pip, CLI only, and MCP</summary>
@@ -283,13 +285,13 @@ Existing-lake readers are evidence sources; they do not host TrustOps.
 <details>
 <summary><strong>04 · API, agents, and CI</strong></summary>
 
-| Surface                                 | Purpose                                                      |
-| --------------------------------------- | ------------------------------------------------------------ |
-| [API](docs/api/AGENT_API.md)            | Versioned `/api/v1` access for integrations.                 |
-| [MCP](docs/HEADLESS_GRC.md)             | Read assessments and propose actions through governed tools. |
-| [CI](docs/playbooks/CI_POSTURE_GATE.md) | Posture and control-test thresholds in delivery workflows.   |
-| [OSCAL](docs/OSCAL_EXPORT.md)           | Component-definition and assessment-results JSON.            |
-| [Webhooks](docs/WEBHOOKS.md)            | Signed event delivery to your systems.                       |
+| Surface                       | Purpose                                                      |
+| ----------------------------- | ------------------------------------------------------------ |
+| [API](docs/api/AGENT_API.md)  | Versioned `/api/v1` access for integrations.                 |
+| [MCP](docs/HEADLESS_GRC.md)   | Read assessments and propose actions through governed tools. |
+| [CI](docs/CI_GATE.md)         | Posture and control-test thresholds in delivery workflows.   |
+| [OSCAL](docs/OSCAL_EXPORT.md) | Component-definition and assessment-results JSON.            |
+| [Webhooks](docs/WEBHOOKS.md)  | Signed event delivery to your systems.                       |
 
 [Operator skill](agent-skills/trustops-operator/SKILL.md) ·
 [specialist skills](agent-skills/FRAMEWORK_SKILLS.md) ·
@@ -316,6 +318,7 @@ make security    # dependency audits and pre-commit checks
 | `deploy/`                               | Deployment and infrastructure examples.            |
 | `docs/`                                 | Product, architecture, operations, and API guides. |
 
+[Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md) ·
 [Benchmarks](docs/BENCHMARKS.md) · [Third-party assets](docs/THIRD_PARTY_ASSETS.md) ·
 [Apache-2.0 license](LICENSE)
 

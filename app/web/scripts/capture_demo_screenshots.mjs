@@ -176,6 +176,128 @@ async function waitForShell(page) {
   await page.waitForTimeout(1000);
 }
 
+/** Space kept below the lowest content, below the last nav group, and
+ * between that group and the rail footer (Docs · Feedback · version). */
+const CONTENT_PAD = 40;
+const NAV_PAD = 32;
+const RAIL_GAP = 16;
+
+/**
+ * Where a page capture should end (CSS px from the top of the page):
+ * `content` is the lowest visible element in `main`, clipped by its scroll
+ * containers; `nav` is the last rail nav group; `rail` also fits the rail
+ * footer right under the nav.
+ */
+async function measureBottoms(page) {
+  return page.evaluate(
+    ({ contentPad, navPad, railGap }) => {
+      const main = document.querySelector("main");
+      const clips = new Map();
+      const clipOf = (element) => {
+        if (!clips.has(element)) {
+          const style = getComputedStyle(element);
+          clips.set(
+            element,
+            style.overflowX === "visible" && style.overflowY === "visible"
+              ? Infinity
+              : element.getBoundingClientRect().bottom,
+          );
+        }
+        return clips.get(element);
+      };
+      let contentBottom = main ? main.getBoundingClientRect().top : 0;
+      for (const element of main ? main.querySelectorAll("*") : []) {
+        const box = element.getBoundingClientRect();
+        if (box.width <= 1 || box.height <= 1) continue;
+        const style = getComputedStyle(element);
+        if (style.visibility === "hidden") continue;
+        // A bare layout wrapper is measured through its children; its own
+        // box (and bottom padding) is spacing, not content.
+        const painted =
+          style.backgroundColor !== "rgba(0, 0, 0, 0)" ||
+          style.borderBottomWidth !== "0px" ||
+          style.boxShadow !== "none";
+        const hasText = [...element.childNodes].some(
+          (node) => node.nodeType === Node.TEXT_NODE && node.data.trim(),
+        );
+        if (!painted && !hasText && element.children.length) continue;
+        let bottom = box.bottom;
+        for (
+          let parent = element.parentElement;
+          parent && parent !== main;
+          parent = parent.parentElement
+        )
+          bottom = Math.min(bottom, clipOf(parent));
+        contentBottom = Math.max(contentBottom, bottom);
+      }
+      const rail = document.querySelector("aside");
+      const nav = rail?.querySelector("nav");
+      let navBottom = 0;
+      let railBottom = 0;
+      let footer = 0;
+      if (rail && nav && rail.getBoundingClientRect().width > 0) {
+        // The nav fills its grid row, so measure its groups, not the nav.
+        const groups = [...nav.children].map(
+          (group) => group.getBoundingClientRect().bottom,
+        );
+        navBottom =
+          Math.max(nav.getBoundingClientRect().top, ...groups) +
+          parseFloat(getComputedStyle(nav).paddingBottom);
+        footer = rail.lastElementChild?.getBoundingClientRect().height ?? 0;
+        railBottom = navBottom + railGap + footer;
+        navBottom += navPad;
+      }
+      const y = window.scrollY;
+      return {
+        content: Math.ceil(y + contentBottom + contentPad),
+        nav: Math.ceil(y + navBottom),
+        rail: Math.ceil(y + railBottom),
+        footer: Math.ceil(footer),
+      };
+    },
+    { contentPad: CONTENT_PAD, navPad: NAV_PAD, railGap: RAIL_GAP },
+  );
+}
+
+/**
+ * Size a page capture to its content, never past the configured viewport
+ * height. The capture ends below whichever is lower, the content or the last
+ * nav group. When the whole rail (nav + footer) fits in that height the
+ * viewport is set to it, so the footer sits right under the nav; otherwise
+ * the viewport is made one footer taller than the capture, so the footer
+ * (which would sit below the content) lands just outside the clip.
+ * Re-measures until the layout settles, since resizing can reflow the page.
+ */
+async function fitPage(page, viewport) {
+  // An open drawer spans the viewport; shrinking it would cut the drawer.
+  if (await page.getByRole("dialog").count())
+    return { viewport: { ...viewport }, height: viewport.height };
+  let frame = { viewport: { ...viewport }, height: viewport.height };
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const bottoms = await measureBottoms(page);
+    const height = Math.min(
+      viewport.height,
+      Math.max(bottoms.content, bottoms.nav),
+    );
+    const next = {
+      viewport: {
+        width: viewport.width,
+        height: bottoms.rail <= height ? height : height + bottoms.footer,
+      },
+      height,
+    };
+    if (
+      next.height === frame.height &&
+      next.viewport.height === frame.viewport.height
+    )
+      return frame;
+    frame = next;
+    await page.setViewportSize(frame.viewport);
+    await page.waitForTimeout(300);
+  }
+  throw new Error("page layout kept changing while fitting the capture");
+}
+
 async function unionBox(locators, pad = 16) {
   const boxes = [];
   for (const locator of locators) {
@@ -213,9 +335,14 @@ async function postureFingerprint() {
   ]);
 }
 
-async function capture(shot, theme) {
+/**
+ * Capture one theme. `frame` ({ viewport, clip }) is measured by the first
+ * theme of a pair; later themes reuse it so a light/dark pair always has
+ * identical dimensions.
+ */
+async function capture(shot, theme, frame) {
   const context = await browser.newContext({
-    viewport: shot.viewport ?? WIDE,
+    viewport: frame?.viewport ?? shot.viewport ?? WIDE,
     deviceScaleFactor: 2,
     colorScheme: theme,
     reducedMotion: "reduce",
@@ -270,15 +397,20 @@ async function capture(shot, theme) {
   }
 
   const target = path.join(outDir, file);
-  if (shot.crop) {
+  if (!frame && shot.crop) {
     const clip = await unionBox(shot.crop(page), shot.pad ?? 16);
+    const viewport = page.viewportSize();
+    clip.width = Math.min(clip.width, viewport.width - clip.x);
+    clip.height = Math.min(clip.height, viewport.height - clip.y);
     if (shot.maxHeight) clip.height = Math.min(clip.height, shot.maxHeight);
-    await page.screenshot({ path: target, clip });
-  } else {
-    await page.screenshot({ path: target, fullPage: false });
+    frame = { viewport, clip };
+  } else if (!frame) {
+    const { viewport, height } = await fitPage(page, shot.viewport ?? WIDE);
+    frame = { viewport, clip: { x: 0, y: 0, width: viewport.width, height } };
   }
+  await page.screenshot({ path: target, clip: frame.clip });
   await context.close();
-  return file;
+  return { file, frame };
 }
 
 for (const shot of selected) {
@@ -286,7 +418,13 @@ for (const shot of selected) {
   for (let attempt = 1; ; attempt += 1) {
     const before = await postureFingerprint();
     const written = [];
-    for (const theme of pair) written.push(await capture(shot, theme));
+    let frame;
+    for (const theme of pair) {
+      const result = await capture(shot, theme, frame);
+      frame = result.frame;
+      const { width, height } = frame.clip;
+      written.push(`${result.file} ${width}x${height}`);
+    }
     if ((await postureFingerprint()) === before) {
       written.forEach((file) => console.log("wrote", file));
       break;

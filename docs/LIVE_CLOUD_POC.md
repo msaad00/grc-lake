@@ -71,19 +71,47 @@ MFA enrollment, access-key hygiene, password policy, and account summary. Use
 SSO, an assumed role, or workload identity to run the connector; do not generate
 long-lived access keys.
 
+Every connector follows **probe → configure → sync**. `configure --state enabled`
+is rejected until a probe with the exact same `--credentials-json` and
+`--options-json` has passed. The probe calls `sts:GetCallerIdentity` and fails
+if the credentials resolve to a different account than `account_id`, then
+proves `iam:ListUsers`.
+
+**Assume-role (recommended, and required over the API/console):**
+
+```bash
+creds='{"account_id":"<account-id>","role_arn":"arn:aws:iam::<account-id>:role/TrustOpsPostureReadOnlyRole","external_id":"<external-id>"}'
+
+security-lakehouse connectors probe --lake build/lakehouse \
+  --connector-id aws-posture --credentials-json "$creds"
+security-lakehouse connectors configure --lake build/lakehouse \
+  --connector-id aws-posture --credentials-json "$creds" --state enabled
+security-lakehouse connectors sync --lake build/lakehouse --connector-id aws-posture
+```
+
+**Local SSO or CLI profile (local CLI lake only):** omit `role_arn`, and the
+CLI probe reads with the standard `boto3` credential chain (`AWS_PROFILE`, SSO,
+environment). The API and console never accept this mode, so a server cannot
+prove access with its own runtime identity.
+
 ```bash
 aws sso login --profile trustops-poc
-security-lakehouse connectors configure \
-  --lake build/lakehouse \
-  --connector-id aws-posture \
-  --state enabled
+export AWS_PROFILE=trustops-poc
+creds='{"account_id":"<account-id>"}'
 
-AWS_PROFILE=trustops-poc \
-AWS_ACCOUNT_ID=<account-id> \
-security-lakehouse connectors sync \
-  --lake build/lakehouse \
-  --connector-id aws-posture
+security-lakehouse connectors probe --lake build/lakehouse \
+  --connector-id aws-posture --credentials-json "$creds"
+security-lakehouse connectors configure --lake build/lakehouse \
+  --connector-id aws-posture --credentials-json "$creds" --state enabled
+security-lakehouse connectors sync --lake build/lakehouse --connector-id aws-posture
 ```
+
+`AWS_ACCOUNT_ID`, `AWS_ROLE_ARN`, and `AWS_EXTERNAL_ID` still override the
+stored values at sync time, and sync repeats the account check. Optional
+inventory services selected with `--options-json '{"services":[...]}'` that the
+role cannot read land as coverage gaps (see
+[Partial collection](#partial-collection-and-coverage-gaps)) instead of being
+dropped silently.
 
 Expected artifact:
 
@@ -156,17 +184,80 @@ If the tenant blocks role-assignment reads for that identity, grant a
 customer-owned read role that includes
 `Microsoft.Authorization/roleAssignments/read`.
 
-```bash
-security-lakehouse connectors configure \
-  --lake build/lakehouse \
-  --connector-id azure-posture \
-  --credentials-json '{"subscription_id":"<subscription-id>"}' \
-  --state enabled
+The probe reads the subscription (`Microsoft.Resources/subscriptions/read`)
+through `DefaultAzureCredential`, or the `az` CLI when the Azure SDK is not
+installed, so "Test connection" proves the identity can see the subscription.
 
-security-lakehouse connectors sync \
-  --lake build/lakehouse \
-  --connector-id azure-posture
+```bash
+creds='{"subscription_id":"<subscription-id>"}'
+
+security-lakehouse connectors probe --lake build/lakehouse \
+  --connector-id azure-posture --credentials-json "$creds"
+security-lakehouse connectors configure --lake build/lakehouse \
+  --connector-id azure-posture --credentials-json "$creds" --state enabled
+security-lakehouse connectors sync --lake build/lakehouse --connector-id azure-posture
 ```
+
+## GCP Project
+
+The GCP runner uses Application Default Credentials (`gcloud auth
+application-default login` for a local proof; workload identity or an attached
+service account in production). It reads three sub-collections:
+
+| Sub-collection     | API                                   | Permission                              |
+| ------------------ | ------------------------------------- | --------------------------------------- |
+| project IAM policy | `cloudresourcemanager.googleapis.com` | `resourcemanager.projects.getIamPolicy` |
+| org policies       | `orgpolicy.googleapis.com`            | `orgpolicy.policies.list`               |
+| asset inventory    | `cloudasset.googleapis.com`           | `cloudasset.assets.listResource`        |
+
+Grant the identity a read-only role that carries these permissions (for asset
+inventory, Google documents `roles/cloudasset.viewer`). Enable the APIs you want
+collected:
+
+```bash
+gcloud services enable orgpolicy.googleapis.com cloudasset.googleapis.com --project <project-id>
+```
+
+The probe reads the project IAM policy, the one read every sync needs:
+
+```bash
+creds='{"project_id":"<project-id>"}'
+
+security-lakehouse connectors probe --lake build/lakehouse \
+  --connector-id gcp-posture --credentials-json "$creds"
+security-lakehouse connectors configure --lake build/lakehouse \
+  --connector-id gcp-posture --credentials-json "$creds" --state enabled
+security-lakehouse connectors sync --lake build/lakehouse --connector-id gcp-posture
+```
+
+If the Org Policy or Cloud Asset API is disabled, or the permission is denied,
+the sync still lands everything readable and reports the missing piece as a
+coverage gap. It fails only when no sub-collection is readable.
+
+## Partial collection and coverage gaps
+
+A sub-collection the provider refuses (API disabled, permission denied, optional
+client library missing) becomes one `<source>.collection_gap` evidence row
+instead of failing the sync. The row is an open, low-severity item with no
+control mapping, so it never counts as passing or failing evidence; its
+`attributes` name the `collection`, `reason` (`api_disabled`,
+`permission_denied`, `client_unavailable`, `read_failed`), and the `api` or
+`permission` to fix. The sync result stays `ok`; the run record adds
+`metadata.partial: true` and `metadata.coverage_gaps`, and `connectors sync`
+prints the same list as `coverage_gaps`. Example message:
+
+```text
+Org Policy API (orgpolicy.googleapis.com) is not enabled on project <project-id>; organization policies were not collected
+```
+
+Other provider failures (network, authentication, server errors) still fail
+the sync closed. Messages that TrustOps writes itself, such as a missing
+`account_id`, an account mismatch, or missing Application Default Credentials,
+are shown in the run record. Raw provider text is not.
+
+`evidence_count` on a sync is the number of distinct evidence rows landed, and
+it matches the per-source count in `assessment status` evidence freshness after
+materialization.
 
 ## Snowflake Evidence Lake
 

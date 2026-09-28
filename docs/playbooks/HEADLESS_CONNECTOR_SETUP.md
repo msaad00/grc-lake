@@ -128,8 +128,12 @@ curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/connectors/aws-posture/discover" \
 curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/connectors/aws-posture/probe" \
   -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"credentials": {"account_id": "123456789012"}, "options": {"region": "us-east-1"}}' | jq .
+  -d '{"credentials": {"account_id": "123456789012", "role_arn": "arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole", "external_id": "<external-id>"}, "options": {"region": "us-east-1"}}' | jq .
 ```
+
+Over the API the AWS probe always assumes `role_arn`; the local credential chain
+(`AWS_PROFILE`, SSO) is accepted only by the local CLI probe. See
+[LIVE_CLOUD_POC.md](../LIVE_CLOUD_POC.md#aws-trial-account).
 
 Then configure → sync → eval as above.
 

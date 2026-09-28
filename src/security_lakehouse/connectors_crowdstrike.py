@@ -28,7 +28,6 @@ serial numbers, and user names are dropped at the client.
 from __future__ import annotations
 
 import json
-import re
 import time
 import urllib.error
 import urllib.parse
@@ -38,6 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.oauth import ClientCredentialsToken
 from security_lakehouse.ingestion.paginate import paginate
@@ -470,7 +470,7 @@ def _event(
     now: datetime,
     tenant_id: str,
 ) -> dict[str, Any]:
-    stable = re.sub(r"[^a-z0-9_.:-]+", "-", f"{client.cloud}:{signal}:{key}".lower()).strip("-")[:96]
+    stable = stable_id_slug(f"{client.cloud}:{signal}:{key}", fallback="crowdstrike")
     return {
         "event_id": f"{SOURCE}-{stable}",
         "tenant_id": tenant_id,

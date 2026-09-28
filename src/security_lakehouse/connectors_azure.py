@@ -34,6 +34,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_errors import (
+    ConnectorAccessError,
+    ConnectorConfigError,
+    ConnectorOperatorError,
+)
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.identity import classify_identity_type
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -49,6 +55,69 @@ RESOURCE_CONTROLS = ["SOC2-CC6.1", "ISO27001-A.5.15"]
 # holding one of these at subscription scope is the noteworthy assignment for an
 # auditor to review, so we surface it as an open finding.
 PRIVILEGED_ROLE_NAMES = {"owner", "contributor", "user access administrator"}
+
+_SAFE_ERROR_CODE = re.compile(r"^[A-Za-z][A-Za-z0-9.]{0,63}$")
+_CREDENTIALS_UNAVAILABLE = (
+    "Azure credentials are unavailable: DefaultAzureCredential found no usable identity "
+    "(run az login, or configure a managed identity or service-principal environment variables)"
+)
+
+
+def _azure_access_error(exc: Exception, subscription_id: str) -> ConnectorOperatorError | None:
+    """Map an Azure SDK or CLI failure to an operator-safe error, or ``None``.
+
+    Duck-typed on ``azure.core.exceptions.HttpResponseError`` (``status_code``
+    and ``error.code``) so the base install needs no Azure packages. Provider
+    text is never copied; only a validated error code is.
+    """
+    if isinstance(exc, ConnectorOperatorError):
+        return exc
+    if type(exc).__name__ in {"CredentialUnavailableError", "ClientAuthenticationError"}:
+        return ConnectorAccessError(_CREDENTIALS_UNAVAILABLE)
+    status = getattr(exc, "status_code", None)
+    raw_code = str(getattr(getattr(exc, "error", None), "code", "") or "")
+    code = raw_code if _SAFE_ERROR_CODE.match(raw_code) else ""
+    if status == 403 or code == "AuthorizationFailed":
+        return ConnectorAccessError(
+            f"Azure identity cannot read subscription {subscription_id} ({code or 'AuthorizationFailed'}); "
+            "assign the Reader role at subscription scope"
+        )
+    if status == 404 or code in {"SubscriptionNotFound", "InvalidSubscriptionId"}:
+        return ConnectorAccessError(
+            f"Azure subscription {subscription_id} is not visible to this identity ({code or 'not found'})"
+        )
+    return None
+
+
+def probe_azure_access(*, credentials: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
+    """Prove live, read-only access to the configured subscription.
+
+    Reads the subscription itself (``Microsoft.Resources/subscriptions/read``)
+    through the SDK, or the ``az`` CLI when the SDK is not installed, the same
+    fallback sync uses.
+    """
+    del options
+    subscription_id = str(credentials.get("subscription_id") or "").strip()
+    if not subscription_id:
+        raise ConnectorConfigError("Azure probe requires subscription_id")
+    client: AzureClient | AzureCliClient
+    try:
+        try:
+            client = AzureClient(subscription_id)
+        except (ConnectorConfigError, RuntimeError):
+            client = AzureCliClient(subscription_id)
+        subscription = client.subscription()
+    except Exception as exc:
+        mapped = _azure_access_error(exc, subscription_id)
+        if mapped is None:
+            raise
+        raise mapped from None
+    return {
+        "ok": True,
+        "subscription_id": subscription_id,
+        "subscription_state": str(subscription.get("state") or "unknown"),
+        "capabilities": ["Microsoft.Resources/subscriptions/read"],
+    }
 
 
 class AzureClient:
@@ -78,15 +147,23 @@ class AzureClient:
             except ImportError:
                 from azure.mgmt.resource import PolicyClient  # type: ignore[attr-defined]  # noqa: PLC0415
         except ImportError as exc:  # pragma: no cover - exercised only with live Azure
-            raise RuntimeError(
+            raise ConnectorConfigError(
                 "azure-posture live collection requires azure-identity and azure-mgmt-* "
                 "packages with resource and policy clients; install the cloud extra or use --fixture-dir"
             ) from exc
         self.subscription_id = subscription_id
         credential = DefaultAzureCredential()
+        self._credential = credential
         self._authz = AuthorizationManagementClient(credential, subscription_id)
         self._policy = PolicyClient(credential, subscription_id)
         self._resources = ResourceManagementClient(credential, subscription_id)
+
+    def subscription(self) -> dict[str, Any]:
+        from azure.mgmt.resource.subscriptions import (
+            SubscriptionClient,  # type: ignore[import-not-found]  # noqa: PLC0415
+        )
+
+        return self._as_dict(SubscriptionClient(self._credential).subscriptions.get(self.subscription_id))
 
     def role_assignments(self) -> list[dict[str, Any]]:
         return [self._as_dict(item) for item in self._authz.role_assignments.list_for_subscription()]
@@ -97,7 +174,7 @@ class AzureClient:
 
     def policy_assignments(self) -> list[dict[str, Any]]:
         if self._policy is None:
-            raise RuntimeError("Azure policy collection unavailable; assessment was not completed")
+            raise ConnectorAccessError("Azure policy collection unavailable; assessment was not completed")
         return [self._as_dict(item) for item in self._policy.policy_assignments.list()]
 
     def resources(self) -> list[dict[str, Any]]:
@@ -127,8 +204,14 @@ class AzureCliClient:
         self.subscription_id = subscription_id
         resolved = shutil.which(executable)
         if resolved is None:
-            raise RuntimeError("azure-posture live collection requires the az CLI on PATH")
+            raise ConnectorConfigError(
+                "azure-posture live access requires the Azure SDK (cloud extra) or the az CLI on PATH"
+            )
         self._az = resolved
+
+    def subscription(self) -> dict[str, Any]:
+        rows = self._run_json(["account", "show"])
+        return rows[0] if rows else {}
 
     def role_assignments(self) -> list[dict[str, Any]]:
         return self._run_json(["role", "assignment", "list", "--include-inherited"])
@@ -153,15 +236,24 @@ class AzureCliClient:
                 timeout=90,
             )
         except subprocess.TimeoutExpired as exc:
-            raise RuntimeError("azure CLI command timed out during azure-posture collection") from exc
+            raise ConnectorAccessError("azure CLI command timed out during azure-posture collection") from exc
         except subprocess.CalledProcessError as exc:
             detail = _scrub_cli_error(exc.stderr)
+            if "az login" in detail:
+                raise ConnectorAccessError(
+                    "azure CLI is not logged in; run az login for the subscription before syncing"
+                ) from exc
+            if "AuthorizationFailed" in detail:
+                raise ConnectorAccessError(
+                    f"Azure identity cannot read subscription {self.subscription_id} (AuthorizationFailed); "
+                    "assign the Reader role at subscription scope"
+                ) from exc
             raise RuntimeError(f"azure CLI command failed during azure-posture collection: {detail}") from exc
 
         try:
             payload = json.loads(completed.stdout or "[]")
         except json.JSONDecodeError as exc:
-            raise RuntimeError("azure CLI returned invalid JSON during azure-posture collection") from exc
+            raise ConnectorAccessError("azure CLI returned invalid JSON during azure-posture collection") from exc
         if isinstance(payload, list):
             return [item for item in payload if isinstance(item, dict)]
         if isinstance(payload, dict):
@@ -477,7 +569,7 @@ def _subscription_slug(subscription_id: str) -> str:
 
 
 def _id_slug(value: str) -> str:
-    return _truncate_tail(re.sub(r"[^a-z0-9_.:-]+", "-", str(value).lower()).strip("-")) or "azure"
+    return stable_id_slug(str(value), fallback="azure", keep="tail")
 
 
 def _stable_suffix(*, subscription: str, signal: str, asset_id: str, dedupe_key: str | None) -> str:
@@ -487,17 +579,10 @@ def _stable_suffix(*, subscription: str, signal: str, asset_id: str, dedupe_key:
     IDs only need to be stable for connector upserts and evidence-room links.
     Azure resource IDs share long common prefixes (the subscription and provider
     path) and carry their distinguishing name in the tail, so the slug keeps the
-    tail when it exceeds the length cap.
+    tail when it exceeds the length cap, plus a digest so two resources that
+    share a tail (same name, different resource group) stay distinct.
     """
-    seed = f"{subscription}:{signal}:{dedupe_key or asset_id}".lower()
-    return _truncate_tail(re.sub(r"[^a-z0-9_.:-]+", "-", seed).strip("-")) or "azure"
-
-
-def _truncate_tail(slug: str, *, limit: int = 96) -> str:
-    """Cap a slug at ``limit`` chars, preserving the distinguishing tail."""
-    if len(slug) <= limit:
-        return slug
-    return slug[-limit:].strip("-")
+    return stable_id_slug(f"{subscription}:{signal}:{dedupe_key or asset_id}", fallback="azure", keep="tail")
 
 
 def _scrub_cli_error(stderr: str | None) -> str:

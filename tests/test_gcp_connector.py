@@ -134,18 +134,32 @@ def test_gcp_connector_sync_without_fixture_or_creds_errors(tmp_path: Path, monk
         run_connector_sync(tmp_path, connector_id="gcp-posture")
 
 
-def test_gcp_adapter_is_registered_and_probe_reports_ok(tmp_path: Path) -> None:
+def test_gcp_adapter_is_registered_and_probe_reads_live(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert has_adapter("gcp-posture") is True
     # Before enablement the probe is skipped (no synthetic collection signal).
     skipped = run_probe(tmp_path, connector_id="gcp-posture")
     assert skipped["result"] == "skipped"
     assert "not enabled" in skipped["error"]
 
-    append_config_event(tmp_path, connector_id="gcp-posture", state="enabled", actor="a")
+    monkeypatch.setattr(
+        "security_lakehouse.connectors_gcp.GCPClient",
+        lambda project_id: GCPFixtureClient(FIXTURE, project_id=project_id),
+    )
+    append_config_event(
+        tmp_path, connector_id="gcp-posture", state="enabled", actor="a", credentials={"project_id": PROJECT}
+    )
     ok = run_probe(tmp_path, connector_id="gcp-posture")
-    # Adapter-available -> probe is "ok", not "skipped", and reports no count.
+    # The probe proves the IAM-policy read; it never reports an evidence count.
     assert ok["result"] == "ok"
+    assert ok["metadata"]["probe_mode"] == "live"
     assert ok["evidence_count"] is None
+
+
+def test_gcp_probe_without_project_id_is_an_actionable_error(tmp_path: Path) -> None:
+    append_config_event(tmp_path, connector_id="gcp-posture", state="enabled", actor="a")
+    rec = run_probe(tmp_path, connector_id="gcp-posture")
+    assert rec["result"] == "error"
+    assert rec["error"] == "GCP probe requires project_id"
 
 
 def test_gcp_required_config_is_project_id_only() -> None:
@@ -209,9 +223,12 @@ def test_gcp_read_failure_is_not_empty_success(method: str) -> None:
 
 
 def test_gcp_missing_org_policy_client_is_not_empty_success() -> None:
+    from security_lakehouse.connector_errors import CollectionGapError
     from security_lakehouse.connectors_gcp import GCPClient
 
     client = object.__new__(GCPClient)
     client._org_policies = None
-    with pytest.raises(RuntimeError, match="incomplete"):
+    # Surfaces as a named coverage gap, never as an empty (passing) policy list.
+    with pytest.raises(CollectionGapError, match="google-cloud-org-policy is not installed") as caught:
         client.org_policies()
+    assert caught.value.reason == "client_unavailable"

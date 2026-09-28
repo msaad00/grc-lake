@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import base64
 import json
-import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -35,6 +34,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -450,4 +450,4 @@ def _stable_suffix(*, site: str, signal: str, asset_id: str, dedupe_key: str | N
     IDs only need to be stable for connector upserts and evidence-room links.
     """
     seed = f"{site}:{signal}:{dedupe_key or asset_id}".lower()
-    return re.sub(r"[^a-z0-9_.:-]+", "-", seed).strip("-")[:96] or "jira"
+    return stable_id_slug(seed, fallback="jira")

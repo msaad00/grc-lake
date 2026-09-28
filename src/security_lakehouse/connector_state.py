@@ -21,14 +21,17 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_errors import ConnectorOperatorError
 from security_lakehouse.connectors import (
     SENSITIVE_FIELD_NAMES,
     load_connector_catalog,
 )
 from security_lakehouse.connectors_aws import CONNECTOR_ID as AWS_CONNECTOR_ID
 from security_lakehouse.connectors_aws import probe_aws_access
+from security_lakehouse.connectors_azure import probe_azure_access
 from security_lakehouse.connectors_clickhouse import CONNECTOR_ID as CLICKHOUSE_CONNECTOR_ID
 from security_lakehouse.connectors_clickhouse import discover_clickhouse_scope, probe_clickhouse_access
+from security_lakehouse.connectors_gcp import probe_gcp_access
 from security_lakehouse.connectors_runtime import CONNECTOR_ID as RUNTIME_GATEWAY_CONNECTOR_ID
 from security_lakehouse.connectors_runtime import discover_runtime_gateway_scope, probe_runtime_gateway_access
 from security_lakehouse.connectors_s3 import CONNECTOR_ID as S3_CONNECTOR_ID
@@ -1085,15 +1088,28 @@ def has_adapter(connector_id: str) -> bool:
     return connector_id in _implemented_adapters()
 
 
+# Cloud posture connectors whose probe makes one fast, read-only provider call.
+LIVE_CLOUD_PROBES = {
+    "gcp-posture": probe_gcp_access,
+    "azure-posture": probe_azure_access,
+}
+
+
 def _safe_run_error(exc: Exception, *, include_provider_message: bool = False) -> str:
     """Bounded, safe error text for a run record surfaced at the HTTP boundary.
 
     A probe run record is returned to the caller over the API, and a raw
     exception string can carry connection detail or internal paths. By default
-    record only the exception class name. Cloud SDK errors can include a short,
+    record only the exception class name. ``ConnectorOperatorError`` messages are
+    written by our own connector code for operators and are surfaced as-is
+    (bounded). Cloud SDK errors can include a short,
     structured provider message so operators can fix trust, network, or
     credential issues without seeing a traceback.
     """
+    if isinstance(exc, ConnectorOperatorError):
+        message = " ".join(str(exc).split())
+        if message:
+            return message[:400]
     name = type(exc).__name__
     if not include_provider_message:
         return name
@@ -1120,6 +1136,7 @@ def run_probe(
     actor: str = "console",
     credentials: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
+    allow_ambient_credentials: bool = False,
 ) -> dict[str, Any]:
     """Validate a connector's configuration and persist the probe result.
 
@@ -1129,6 +1146,11 @@ def run_probe(
     collect evidence, so it never reports an evidence count. Connectors without
     an implemented collection adapter report ``skipped`` (contract validated
     only) rather than implying live collection.
+
+    ``allow_ambient_credentials`` lets an AWS probe use the local SDK credential
+    chain instead of assume-role. Only the local CLI sets it; API callers keep
+    the role_arn requirement so a server never proves access with its own
+    runtime identity.
     """
     catalog = load_connector_catalog()
     if connector_id not in catalog:
@@ -1206,7 +1228,11 @@ def run_probe(
             effective_credentials = dict(config.get("credentials") or {})
             effective_options = dict(config.get("options") or {})
         try:
-            probe = probe_aws_access(credentials=effective_credentials, options=effective_options)
+            probe = probe_aws_access(
+                credentials=effective_credentials,
+                options=effective_options,
+                allow_ambient_credentials=allow_ambient_credentials,
+            )
         except Exception as exc:  # noqa: BLE001 - cloud SDK failures are persisted safely
             return append_run_event(
                 lake_dir,
@@ -1225,6 +1251,36 @@ def run_probe(
             actor=actor,
             duration_ms=12,
             evidence_count=int(probe.get("principal_count") or 0),
+            access_fingerprint=staged_access_fingerprint,
+            metadata={**probe, "probe_mode": "live"},
+        )
+    if connector_id in LIVE_CLOUD_PROBES:
+        if has_staged_payload:
+            effective_credentials = credentials or {}
+            effective_options = options or {}
+        else:
+            config = latest_config(lake_dir, connector_id) or {}
+            effective_credentials = dict(config.get("credentials") or {})
+            effective_options = dict(config.get("options") or {})
+        try:
+            probe = LIVE_CLOUD_PROBES[connector_id](credentials=effective_credentials, options=effective_options)
+        except Exception as exc:  # noqa: BLE001 - only operator errors surface their message
+            return append_run_event(
+                lake_dir,
+                connector_id=connector_id,
+                kind="probe",
+                result="error",
+                actor=actor,
+                error=_safe_run_error(exc),
+                access_fingerprint=staged_access_fingerprint,
+            )
+        return append_run_event(
+            lake_dir,
+            connector_id=connector_id,
+            kind="probe",
+            result="ok",
+            actor=actor,
+            duration_ms=12,
             access_fingerprint=staged_access_fingerprint,
             metadata={**probe, "probe_mode": "live"},
         )

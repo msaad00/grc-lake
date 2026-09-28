@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.io import read_json
 from security_lakehouse.models import parse_event_time, utc_iso
 
@@ -404,6 +405,8 @@ def _prefix_before_filename(key: str) -> str:
     return key.rsplit("/", 1)[0] + "/"
 
 
+_S3_UNSAFE = re.compile(r"[^a-z0-9_.:@/-]+")
+
+
 def _slug(value: str) -> str:
-    slug = re.sub(r"[^a-z0-9_.:@/-]+", "-", value.lower()).strip("-")
-    return slug[:96] or "s3"
+    return stable_id_slug(value, fallback="s3", unsafe=_S3_UNSAFE)

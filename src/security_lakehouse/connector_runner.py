@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_errors import ConnectorConfigError, collection_gaps
 from security_lakehouse.connector_state import _safe_run_error, append_run_event, latest_config
 from security_lakehouse.connectors import load_connector_catalog
 from security_lakehouse.connectors_aws import (
@@ -28,6 +29,7 @@ from security_lakehouse.connectors_aws import (
     AWSFixtureClient,
     collect_aws_evidence,
     collect_aws_inventory_evidence,
+    verify_aws_account,
 )
 from security_lakehouse.connectors_azure import (
     AzureCliClient,
@@ -330,6 +332,10 @@ class ConnectorSyncResult:
     # High-water cursor this connector has synced through (append/event-log
     # connectors only); ``None`` for snapshot connectors that replace state.
     watermark_cursor: str | None = None
+    # Sub-collections the provider would not serve (API disabled, permission
+    # missing). The sync still lands everything readable; each gap is also a
+    # ``*.collection_gap`` evidence row.
+    coverage_gaps: list[dict[str, Any]] = field(default_factory=list)
 
 
 def run_connector_sync(
@@ -378,6 +384,15 @@ def run_connector_sync(
         if materialize:
             _materialize_after_sync(lake, raw_path, connector_id=connector_id)
             _fire_evidence_changed(lake, connector_id)
+        # Rows sharing an event_id upsert onto one evidence row, so the landed
+        # count is the distinct ids, not the collected list length.
+        evidence_count = len({str(row.get("event_id")) for row in rows})
+        gaps = collection_gaps(rows)
+        run_metadata: dict[str, Any] = {}
+        if gaps:
+            run_metadata = {"partial": True, "coverage_gaps": gaps}
+        if evidence_count != len(rows):
+            run_metadata["collected_rows"] = len(rows)
         run = append_run_event(
             lake,
             connector_id=connector_id,
@@ -385,16 +400,18 @@ def run_connector_sync(
             result="ok",
             actor=actor,
             duration_ms=_duration_ms(start),
-            evidence_count=len(rows),
+            evidence_count=evidence_count,
+            metadata=run_metadata or None,
         )
         return ConnectorSyncResult(
             connector_id=connector_id,
             result="ok",
             raw_path=str(raw_path),
-            evidence_count=len(rows),
+            evidence_count=evidence_count,
             materialized=materialize,
             run=run,
             watermark_cursor=cursor,
+            coverage_gaps=gaps,
         )
     except Exception as exc:
         run = append_run_event(
@@ -950,7 +967,7 @@ def _collect_aws(
     # connector's stored credentials, with env overrides for operators.
     account_id = env.get(AWS_ACCOUNT_ID_ENV) or str(creds.get("account_id") or "").strip()
     if not account_id:
-        raise ValueError(
+        raise ConnectorConfigError(
             "aws-posture sync requires --fixture-dir, a configured account_id, or "
             f"{AWS_ACCOUNT_ID_ENV}, plus read-only AWS credentials "
             "(SSO profile, assumed role, instance role, or the standard provider chain)"
@@ -959,6 +976,8 @@ def _collect_aws(
     external_id = (env.get(AWS_EXTERNAL_ID_ENV) or str(creds.get("external_id") or "")).strip() or None
     default_region = env.get(AWS_REGION_ENV) or str(scope.get("region") or "us-east-1")
     client = AWSClient(region_name=default_region, role_arn=role_arn, external_id=external_id)
+    # Never label one account's evidence with another account's id.
+    verify_aws_account(client, account_id)
     rows = collect_aws_evidence(client, account_id=account_id)
     raw_regions = scope.get("regions") or [default_region]
     regions = (
@@ -1056,10 +1075,11 @@ def _collect_gcp(
     # enabled connector syncs without re-exporting GCP_PROJECT_ID.
     project_id = env.get(GCP_PROJECT_ID_ENV) or stored_project
     if not project_id:
-        raise ValueError(
+        raise ConnectorConfigError(
             "gcp-posture sync requires --fixture-dir, a configured project_id, or "
             f"{GCP_PROJECT_ID_ENV}, plus read-only GCP credentials "
-            "(GOOGLE_APPLICATION_CREDENTIALS / workload identity via Application Default Credentials)"
+            "(Application Default Credentials: gcloud auth application-default login, "
+            "GOOGLE_APPLICATION_CREDENTIALS, or workload identity)"
         )
     client = GCPClient(project_id)
     return collect_gcp_evidence(client, project_id=project_id)
@@ -1081,15 +1101,15 @@ def _collect_azure(
     # captured at configure time so an enabled connector syncs without re-exporting it.
     subscription_id = env.get(AZURE_SUBSCRIPTION_ID_ENV) or stored_subscription
     if not subscription_id:
-        raise ValueError(
+        raise ConnectorConfigError(
             "azure-posture sync requires --fixture-dir, a configured subscription_id, or "
             f"{AZURE_SUBSCRIPTION_ID_ENV}, plus read-only Azure credentials "
-            "(DefaultAzureCredential: service-principal env vars / managed identity / az login)"
+            "(DefaultAzureCredential: service-principal env vars, managed identity, or az login)"
         )
     client: AzureClient | AzureCliClient
     try:
         client = AzureClient(subscription_id)
-    except RuntimeError:
+    except (ConnectorConfigError, RuntimeError):
         client = AzureCliClient(subscription_id)
     return collect_azure_evidence(client)
 

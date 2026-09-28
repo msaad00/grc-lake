@@ -186,7 +186,7 @@ def test_aws_adapter_runs_live_probe_before_enable(tmp_path: Path, monkeypatch: 
     assert skipped["result"] == "skipped"
     assert "not enabled" in skipped["error"]
 
-    def fake_probe(*, credentials: dict, options: dict) -> dict:
+    def fake_probe(*, credentials: dict, options: dict, **_kwargs: object) -> dict:
         assert credentials["role_arn"].endswith(":role/TrustOpsPostureReadOnlyRole")
         assert credentials["external_id"] == "tenant-binding"
         assert options["region"] == "us-east-1"
@@ -209,7 +209,7 @@ def test_aws_adapter_runs_live_probe_before_enable(tmp_path: Path, monkeypatch: 
 
 
 def test_aws_adapter_records_safe_error_when_live_probe_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    def denied_probe(*, credentials: dict, options: dict) -> dict:
+    def denied_probe(*, credentials: dict, options: dict, **_kwargs: object) -> dict:
         raise RuntimeError("credential detail that must not be persisted")
 
     monkeypatch.setattr(
@@ -241,7 +241,7 @@ def test_aws_adapter_records_bounded_provider_error_when_sts_fails(
             }
         }
 
-    def denied_probe(*, credentials: dict, options: dict) -> dict:
+    def denied_probe(*, credentials: dict, options: dict, **_kwargs: object) -> dict:
         raise ClientError("raw sdk text that should not be used")
 
     monkeypatch.setattr("security_lakehouse.connector_state.probe_aws_access", denied_probe)
@@ -264,6 +264,10 @@ def test_probe_aws_access_uses_assumed_role_and_read_permission(monkeypatch: pyt
         def __init__(self, **kwargs: object) -> None:
             calls["init"] = kwargs
 
+        def caller_identity(self) -> dict:
+            calls["caller_identity"] = True
+            return {"Account": ACCOUNT}
+
         def users(self) -> list[dict]:
             calls["users"] = True
             return [{"UserName": "one"}, {"UserName": "two"}]
@@ -283,12 +287,14 @@ def test_probe_aws_access_uses_assumed_role_and_read_permission(monkeypatch: pyt
         "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole",
         "external_id": "tenant-binding",
     }
+    assert calls["caller_identity"] is True
     assert calls["users"] is True
     assert result == {
         "ok": True,
         "account_id": ACCOUNT,
+        "credential_mode": "assume_role",
         "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole",
-        "capabilities": ["sts:AssumeRole", "iam:ListUsers"],
+        "capabilities": ["sts:AssumeRole", "sts:GetCallerIdentity", "iam:ListUsers"],
         "principal_count": 2,
     }
 
@@ -409,10 +415,31 @@ def test_selected_aws_inventory_is_normalized_and_partial_failures_are_isolated(
     )
 
     assert validate_raw_events(rows) == []
-    assert len(rows) == 1
-    assert rows[0]["event_type"] == "aws.inventory.ec2"
+    # The denied service no longer vanishes silently: it lands as a coverage gap.
+    assert [row["event_type"] for row in rows] == ["aws.inventory.ec2", "aws.collection_gap"]
     assert rows[0]["entity"]["asset_id"] == "aws:ec2:us-east-1:i-123"
     assert rows[0]["attributes"]["region"] == "us-east-1"
+    assert rows[1]["attributes"]["message"] == "AWS rds inventory in us-east-1 was not collected (read failed)"
+    assert "RDS is unavailable" not in json.dumps(rows)
+
+
+def test_global_inventory_gap_clears_when_a_later_region_succeeds() -> None:
+    from security_lakehouse.connectors_aws import collect_aws_inventory_evidence
+
+    class InventoryClient:
+        def inventory(self, service: str, *, region_name: str) -> list[dict]:
+            if region_name == "us-east-1":
+                raise RuntimeError("regional endpoint unavailable")
+            return [{"id": "bucket-a"}]
+
+    rows = collect_aws_inventory_evidence(
+        InventoryClient(),
+        account_id=ACCOUNT,
+        regions=["us-east-1", "us-west-2"],
+        services=["s3"],
+        collected_at=datetime(2026, 5, 28, tzinfo=UTC),
+    )
+    assert [row["event_type"] for row in rows] == ["aws.inventory.s3"]
 
 
 def test_aws_client_uses_ambient_chain_without_role_arn(monkeypatch: pytest.MonkeyPatch) -> None:

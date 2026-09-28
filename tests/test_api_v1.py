@@ -463,7 +463,9 @@ def test_v1_connector_configure_requires_matching_ok_probe(tmp_path: Path) -> No
 
 
 def test_v1_aws_connector_enable_reuses_verified_role_after_disable(tmp_path: Path, monkeypatch) -> None:
-    def fake_probe_aws_access(*, credentials: dict[str, object], options: dict[str, object]) -> dict[str, object]:
+    def fake_probe_aws_access(
+        *, credentials: dict[str, object], options: dict[str, object], **_kwargs: object
+    ) -> dict[str, object]:
         assert credentials["account_id"] == "123456789012"
         assert credentials["role_arn"] == "arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole"
         assert credentials["external_id"] == "external-demo"

@@ -33,7 +33,6 @@ aliases, and custom fields are dropped before anything is stored.
 from __future__ import annotations
 
 import json
-import re
 import time
 import urllib.error
 import urllib.parse
@@ -44,6 +43,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.oauth import CredentialRejectedError
 from security_lakehouse.ingestion.paginate import paginate
@@ -381,7 +381,7 @@ def _event(
     collected_at: datetime,
     tenant_id: str,
 ) -> dict[str, Any]:
-    stable = re.sub(r"[^a-z0-9_.:-]+", "-", f"{region}:{stable_key}".lower()).strip("-")[:96]
+    stable = stable_id_slug(f"{region}:{stable_key}", fallback="knowbe4")
     return {
         "event_id": f"knowbe4-{stable}",
         "tenant_id": tenant_id,

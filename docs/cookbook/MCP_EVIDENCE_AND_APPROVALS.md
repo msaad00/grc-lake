@@ -185,6 +185,11 @@ Or open `/console/remediation/` in the TrustOps console.
 
 `read_only` keys can inspect runs but receive `403 Forbidden` on approve.
 
+Safeguard mapping review is deliberately different: `get_mapping_review_queue`
+and `list_mapping_review_decisions` are read-only, and no MCP tool or API key
+can approve or reject a mapping. Those decisions need a signed-in reviewer; see
+[Mapping review](../MAPPING_REVIEW.md).
+
 ## End-To-End Agent Flow
 
 ```text

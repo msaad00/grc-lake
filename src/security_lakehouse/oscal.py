@@ -18,13 +18,17 @@ Two models are covered:
   ``finding``/``observation`` pair per evaluated control in a lake's current
   (or a pinned point-in-time) posture.
 
-Only ``review_status: "reviewed"`` safeguard→requirement mappings become OSCAL
-``implemented-requirements``. A ``proposed`` mapping is curation-queue state —
-a human has not confirmed the equivalence — and OSCAL carries no field to mark
-an implemented requirement as unconfirmed, so emitting it at all would read to
-auditor tooling as an asserted claim. This mirrors the same distinction
-``safeguards_by_requirement(reviewed_only=True)`` enforces elsewhere (see
-:mod:`security_lakehouse.safeguards`).
+Only confirmed safeguard→requirement mappings become OSCAL
+``implemented-requirements``: maintainer-reviewed ones shipped in
+``controls/safeguards.json``, plus mappings the tenant's own reviewers approved
+(pass the payload from
+:func:`security_lakehouse.mapping_review.effective_safeguards`). Each carries a
+``trustops-review-state`` prop, and org-reviewed ones also name the reviewer,
+decision time, and decision id. A ``proposed`` mapping is curation-queue state
+and OSCAL has no field to mark an implemented requirement as unconfirmed, so
+emitting it would read to auditor tooling as an asserted claim; org-rejected
+mappings are withheld for the same reason. The state is decided by
+:func:`security_lakehouse.safeguards.effective_review_state`.
 
 Schema reference: <https://pages.nist.gov/OSCAL/>. Structural correctness is
 checked in ``tests/test_oscal.py`` against the vendored OSCAL v1.2.3 JSON
@@ -46,7 +50,12 @@ from security_lakehouse.catalog import load_control_catalog, load_framework_regi
 from security_lakehouse.generations import generation_identity
 from security_lakehouse.io import read_jsonl, resolve_path
 from security_lakehouse.models import utc_iso
-from security_lakehouse.safeguards import load_safeguards
+from security_lakehouse.safeguards import (
+    ATTESTABLE_STATES,
+    REVIEW_STATE_LABELS,
+    effective_review_state,
+    load_safeguards,
+)
 
 # The exact OSCAL release this module targets and is structurally validated
 # against (controls/oscal/*.json). Bump together with the vendored schemas.
@@ -110,11 +119,12 @@ def build_component_definition(
     catalog: dict[str, JsonObject] | None = None,
     *,
     now: datetime | None = None,
+    lake_dir: str | Path | None = None,
 ) -> JsonObject:
     """Build an OSCAL component-definition from the CCF safeguards + catalog.
 
     Each safeguard in ``safeguards_payload`` (default: ``controls/safeguards.json``
-    via :func:`security_lakehouse.safeguards.load_safeguards`) becomes one OSCAL
+    with the org review decisions recorded in ``lake_dir``, when given) becomes one OSCAL
     ``component`` of type ``process-procedure`` -- a safeguard is an operated
     control, not shipped software. Its reviewed ``satisfies`` entries are
     grouped by ``framework_id`` into one ``control-implementation`` per
@@ -124,7 +134,14 @@ def build_component_definition(
     (OSCAL requires the array to be nonempty when present, and does not
     require at least one).
     """
-    payload = safeguards_payload if safeguards_payload is not None else load_safeguards()
+    if safeguards_payload is not None:
+        payload = safeguards_payload
+    elif lake_dir is not None:
+        from security_lakehouse.mapping_review import effective_safeguards
+
+        payload = effective_safeguards(lake_dir)
+    else:
+        payload = load_safeguards()
     controls = catalog if catalog is not None else load_control_catalog()
     registry = load_framework_registry()
     moment = now or datetime.now(UTC)
@@ -133,7 +150,7 @@ def build_component_definition(
     for entry in payload.get("safeguards", []):
         safeguard_id = str(entry["safeguard_id"])
         reviewed = [
-            member for member in entry.get("satisfies", []) if member.get("review_status", "reviewed") == "reviewed"
+            member for member in entry.get("satisfies", []) if effective_review_state(member) in ATTESTABLE_STATES
         ]
         by_framework: dict[str, list[JsonObject]] = {}
         for member in reviewed:
@@ -148,6 +165,22 @@ def build_component_definition(
             for member in members:
                 control_id = str(member["control_id"])
                 control = controls.get(control_id, {})
+                state = effective_review_state(member)
+                props = [
+                    _prop("trustops-control-id", control_id),
+                    _prop("trustops-safeguard-id", safeguard_id),
+                    _prop("trustops-role", member.get("role", "equivalent")),
+                    _prop("trustops-review-state", REVIEW_STATE_LABELS[state]),
+                ]
+                org_review = member.get("org_review")
+                if state == "org_reviewed" and isinstance(org_review, dict):
+                    props.extend(
+                        [
+                            _prop("trustops-reviewed-by", org_review.get("reviewer")),
+                            _prop("trustops-reviewed-at", org_review.get("decided_at")),
+                            _prop("trustops-review-decision-id", org_review.get("decision_id")),
+                        ]
+                    )
                 implemented_requirements.append(
                     {
                         "uuid": _uuid5("implemented-requirement", safeguard_id, control_id),
@@ -157,11 +190,7 @@ def build_component_definition(
                             or entry.get("evidence_requirement")
                             or f"{safeguard_id} implements {control_id}."
                         ),
-                        "props": [
-                            _prop("trustops-control-id", control_id),
-                            _prop("trustops-safeguard-id", safeguard_id),
-                            _prop("trustops-role", member.get("role", "equivalent")),
-                        ],
+                        "props": props,
                     }
                 )
             control_implementations.append(

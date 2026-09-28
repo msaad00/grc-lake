@@ -3,6 +3,17 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Org mapping review: your reviewers can approve, reject, or request changes
+  to safeguard mappings for your tenant (console **Mapping review**, API
+  `/api/v1/mapping-reviews/*`, CLI `frameworks review`). Decisions go to an
+  append-only, hash-chained log in the tenant lake with reviewer, rationale,
+  and time; `controls/safeguards.json` is never modified. Coverage, OSCAL, and
+  snapshots report maintainer-reviewed, org-reviewed, and rejected separately.
+  New `compliance_reviewer` role and `mapping_review` scope; API keys, agents,
+  and MCP tools can list the queue but never decide.
+
 ## 0.2.18 - 2026-09-27
 
 - Operator note: this release adds database migration `0020`

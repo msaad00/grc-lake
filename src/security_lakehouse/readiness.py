@@ -21,7 +21,7 @@ from collections import defaultdict
 from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
-from security_lakehouse.mappings import load_control_article_mappings
+from security_lakehouse.mappings import article_mapping_reviewed, load_control_article_mappings
 
 STAGES = (
     "source_pulled",
@@ -32,14 +32,6 @@ STAGES = (
 )
 
 COVERAGE_THRESHOLD = 95.0
-
-
-def _reviewed(mapping: dict[str, Any] | None) -> bool:
-    """A mapping counts only if it has articles and none is still ``proposed``."""
-    if not mapping:
-        return False
-    articles = mapping.get("articles") or []
-    return bool(articles) and all(str(a.get("review_status") or "reviewed") != "proposed" for a in articles)
 
 
 def build_readiness_view() -> list[dict[str, Any]]:
@@ -65,7 +57,9 @@ def build_readiness_view() -> list[dict[str, Any]]:
             mapped_count = 0
             mapped = False
         else:
-            mapped_count = sum(1 for c in framework_controls if _reviewed(mappings.get(str(c.get("control_id") or ""))))
+            mapped_count = sum(
+                1 for c in framework_controls if article_mapping_reviewed(mappings.get(str(c.get("control_id") or "")))
+            )
             mapped = mapped_count == control_count
 
         # Gate 3: every control has evidence_requirement

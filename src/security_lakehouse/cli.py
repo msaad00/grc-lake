@@ -32,6 +32,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+# Mirrors security_lakehouse.db.models.USER_ROLES without importing the optional
+# server extra at CLI parse time; tests pin the two together.
+_USER_ROLE_CHOICES = ("admin", "security_admin", "compliance_reviewer", "contributor", "auditor", "read_only")
+_REVIEW_LAKE_HELP = "apply this lake's org mapping review decisions (default: shipped review status only)"
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="security-lakehouse")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -334,6 +340,11 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help="with --assessment-results, pin metadata to a point-in-time snapshot id (default: current posture)",
     )
+    oscal_export.add_argument(
+        "--lake",
+        default=None,
+        help="with --component-definition, include this lake's org-reviewed mappings (and withhold org rejections)",
+    )
     oscal_export.add_argument("--out", default=None, help="write JSON to this path (default stdout)")
     oscal_export.set_defaults(func=_oscal_export)
 
@@ -527,6 +538,7 @@ def _parser() -> argparse.ArgumentParser:
     frameworks_readiness.set_defaults(func=_frameworks_readiness)
     frameworks_coverage = frameworks_sub.add_parser("coverage", help="show the source-linked framework coverage ledger")
     frameworks_coverage.add_argument("--format", choices=["json", "markdown"], default="json", help="output format")
+    frameworks_coverage.add_argument("--lake", default=None, help=_REVIEW_LAKE_HELP)
     frameworks_coverage.set_defaults(func=_frameworks_coverage)
     frameworks_review = frameworks_sub.add_parser(
         "review-queue",
@@ -538,12 +550,34 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help="filter to one normalized category/family (for example governance or identity)",
     )
+    frameworks_review.add_argument("--lake", default=None, help=_REVIEW_LAKE_HELP)
     frameworks_review.set_defaults(func=_frameworks_review_queue)
+    review = frameworks_sub.add_parser(
+        "review",
+        help="record org mapping review decisions (approve/reject/needs-changes) or export the decision log",
+    )
+    review_sub = review.add_subparsers(dest="review_command", required=True)
+    for verb, decision in (("approve", "approve"), ("reject", "reject"), ("needs-changes", "needs_changes")):
+        decide = review_sub.add_parser(verb, help=f"record a {verb} decision for one safeguard mapping")
+        decide.add_argument("--lake", required=True, help="lake whose decision log records the decision")
+        decide.add_argument("--safeguard", required=True, help="safeguard_id, e.g. SG-IDENTITY-001")
+        decide.add_argument("--framework", required=True, help="framework_id of the requirement")
+        decide.add_argument("--control", required=True, help="requirement control_id")
+        decide.add_argument("--rationale", required=True, help="why (required; recorded in the audit trail)")
+        decide.add_argument("--reviewer", required=True, help="who is deciding (local mode has no login)")
+        decide.add_argument("--evidence-ref", default=None, help="optional evidence or ticket reference")
+        decide.set_defaults(func=_frameworks_review_decide, decision=decision)
+    review_export = review_sub.add_parser("export", help="export the decision log with its chain verification")
+    review_export.add_argument("--lake", required=True, help="lake whose decision log to export")
+    review_export.add_argument("--format", choices=["json", "csv"], default="json", help="output format")
+    review_export.add_argument("--out", default=None, help="write to this path (default stdout)")
+    review_export.set_defaults(func=_frameworks_review_export)
     controls_ccf = frameworks_sub.add_parser(
         "safeguards",
         help="show Common Control Framework coverage (safeguards -> framework requirements)",
     )
     controls_ccf.add_argument("--format", choices=["json", "table"], default="json", help="output format")
+    controls_ccf.add_argument("--lake", default=None, help=_REVIEW_LAKE_HELP)
     controls_ccf.set_defaults(func=_frameworks_safeguards)
     frameworks_enrich = frameworks_sub.add_parser(
         "enrich",
@@ -607,8 +641,8 @@ def _parser() -> argparse.ArgumentParser:
     auth_user.add_argument(
         "--role",
         default="read_only",
-        choices=["admin", "security_admin", "contributor", "auditor", "read_only"],
-        help="role: admin/security_admin/contributor/auditor/read_only",
+        choices=list(_USER_ROLE_CHOICES),
+        help="role: " + "/".join(_USER_ROLE_CHOICES),
     )
     auth_user.set_defaults(func=_auth_create_user)
     auth_key = auth_sub.add_parser("issue-key", help="mint an API key for a user")
@@ -683,7 +717,7 @@ def _parser() -> argparse.ArgumentParser:
     agents_review.add_argument(
         "--role",
         default="read_only",
-        choices=["admin", "security_admin", "contributor", "auditor", "read_only"],
+        choices=list(_USER_ROLE_CHOICES),
         help="role lens used for redaction",
     )
     agents_review.add_argument(
@@ -743,7 +777,7 @@ def _parser() -> argparse.ArgumentParser:
     agents_soc.add_argument(
         "--role",
         default="read_only",
-        choices=["admin", "security_admin", "contributor", "auditor", "read_only"],
+        choices=list(_USER_ROLE_CHOICES),
         help="role lens used for redaction",
     )
     agents_soc.add_argument(
@@ -1317,8 +1351,10 @@ def _oscal_export(args: argparse.Namespace) -> int:
     if args.component_definition:
         if args.snapshot:
             raise SystemExit("--snapshot only applies to --assessment-results")
-        document = build_component_definition()
+        document = build_component_definition(lake_dir=args.lake)
     else:
+        if args.lake:
+            raise SystemExit("--lake only applies to --component-definition; --assessment-results takes the lake")
         document = build_assessment_results(args.assessment_results, snapshot_id=args.snapshot)
     text = json.dumps(document, indent=2, sort_keys=True)
     if args.out:
@@ -1944,6 +1980,10 @@ def _frameworks_safeguards(args: argparse.Namespace) -> int:
             print(f"invalid safeguard: {problem}", file=sys.stderr)
         return 1
 
+    if args.lake:
+        from security_lakehouse.mapping_review import effective_safeguards
+
+        payload = effective_safeguards(args.lake, payload=payload)
     coverage = coverage_by_framework(payload)
     if args.format == "json":
         print(json.dumps(coverage, indent=2))
@@ -1952,7 +1992,9 @@ def _frameworks_safeguards(args: argparse.Namespace) -> int:
     print(
         f"{coverage['safeguards']} safeguards map {coverage['covered']} of "
         f"{coverage['controls']} requirements ({coverage['coverage_pct']}%) — "
-        f"{coverage['reviewed']} reviewed ({coverage['reviewed_pct']}%), {coverage['proposed']} proposed"
+        f"{coverage['maintainer_reviewed']} maintainer-reviewed, {coverage['org_reviewed']} org-reviewed "
+        f"({coverage['reviewed_pct']}% attestable), {coverage['proposed']} proposed; "
+        f"{coverage['rejected_mappings']} mapping(s) rejected by the org"
     )
     print()
     print(f"{'framework':26s} {'requirements':>12s} {'covered':>8s} {'pct':>7s}")
@@ -1977,7 +2019,7 @@ def _frameworks_coverage(args: argparse.Namespace) -> int:
         render_framework_coverage_markdown,
     )
 
-    rows = build_framework_coverage()
+    rows = build_framework_coverage(lake_dir=args.lake)
     applicability = build_control_asset_applicability()
     if args.format == "markdown":
         print(render_framework_coverage_markdown(rows, applicability))
@@ -1999,7 +2041,12 @@ def _frameworks_coverage(args: argparse.Namespace) -> int:
 def _frameworks_review_queue(args: argparse.Namespace) -> int:
     from security_lakehouse.safeguards import mapping_review_report
 
-    report = mapping_review_report(framework_id=args.framework, risk_domain=args.risk_domain)
+    payload = None
+    if args.lake:
+        from security_lakehouse.mapping_review import effective_safeguards
+
+        payload = effective_safeguards(args.lake)
+    report = mapping_review_report(payload, framework_id=args.framework, risk_domain=args.risk_domain)
     print(
         json.dumps(
             {
@@ -2010,6 +2057,75 @@ def _frameworks_review_queue(args: argparse.Namespace) -> int:
             sort_keys=True,
         )
     )
+    return 0
+
+
+def _frameworks_review_decide(args: argparse.Namespace) -> int:
+    """Record one local-mode org review decision; the reviewer is named on the command line."""
+    from security_lakehouse.mapping_review import record_decisions
+
+    record = record_decisions(
+        args.lake,
+        items=[{"safeguard_id": args.safeguard, "framework_id": args.framework, "control_id": args.control}],
+        decision=args.decision,
+        rationale=args.rationale,
+        reviewer=args.reviewer,
+        auth_method="cli-local",
+        evidence_ref=args.evidence_ref,
+    )[0]
+    print(json.dumps(record, indent=2, sort_keys=True))
+    return 0
+
+
+_REVIEW_EXPORT_FIELDS = (
+    "decided_at",
+    "decision_id",
+    "decision",
+    "safeguard_id",
+    "framework_id",
+    "control_id",
+    "reviewer",
+    "reviewer_role",
+    "auth_method",
+    "rationale",
+    "evidence_ref",
+    "shipped_review_status",
+    "supersedes",
+    "batch_id",
+    "prev_hash",
+    "record_hash",
+)
+
+
+def _frameworks_review_export(args: argparse.Namespace) -> int:
+    """Export the org decision log (oldest first) with its hash-chain verification."""
+    import csv
+    import io
+
+    from security_lakehouse.mapping_review import list_decisions, verify_review_log
+
+    decisions = list_decisions(args.lake)
+    if args.format == "csv":
+        buffer = io.StringIO()
+        writer = csv.DictWriter(buffer, fieldnames=_REVIEW_EXPORT_FIELDS, extrasaction="ignore")
+        writer.writeheader()
+        for row in decisions:
+            writer.writerow(
+                {field: "" if row.get(field) is None else row.get(field) for field in _REVIEW_EXPORT_FIELDS}
+            )
+        text = buffer.getvalue()
+    else:
+        text = json.dumps(
+            {"decision_log": verify_review_log(args.lake), "decisions": decisions}, indent=2, sort_keys=True
+        )
+        text += "\n"
+    if args.out:
+        out_path = Path(args.out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(text, encoding="utf-8")
+        print(f"wrote {len(decisions)} decision(s): {args.out}", file=sys.stderr)
+    else:
+        sys.stdout.write(text)
     return 0
 
 

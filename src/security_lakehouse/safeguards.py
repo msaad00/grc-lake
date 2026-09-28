@@ -35,6 +35,20 @@ SCHEMA = "trustops.safeguards.v1"
 VALID_ROLES = {"primary", "equivalent"}
 VALID_REVIEW_STATES = {"reviewed", "proposed"}
 
+# Effective review state of one safeguard->requirement mapping for one tenant.
+# The shipped ``review_status`` is the maintainer's call; an org decision from
+# the tenant's review log (see :mod:`security_lakehouse.mapping_review`) is
+# layered on top and never written back to ``controls/safeguards.json``.
+REVIEW_STATE_LABELS = {
+    "maintainer_reviewed": "maintainer-reviewed",
+    "org_reviewed": "org-reviewed",
+    "proposed": "proposed",
+    "needs_changes": "needs changes",
+    "rejected": "rejected",
+}
+ATTESTABLE_STATES = frozenset({"maintainer_reviewed", "org_reviewed"})
+PENDING_STATES = frozenset({"proposed", "needs_changes"})
+
 # These labels describe the operated CCF safeguard families, not official
 # framework names. Keep the ids stable so the CLI, API, and console can join on
 # the same family even when a safeguard title changes.
@@ -138,19 +152,53 @@ def validate_safeguards(payload: JsonObject, *, catalog: dict[str, Any] | None =
     return problems
 
 
+def effective_review_state(member: JsonObject, decision: str | None = None) -> str:
+    """Return a mapping's effective review state. Every "is it reviewed" check calls this.
+
+    Coverage counts, the review queue, OSCAL, and the snapshot attestation all
+    read it. ``decision`` is the tenant's latest org decision for the mapping
+    (``approve`` / ``reject`` / ``needs_changes``) or ``None``; with ``None`` a
+    member already annotated by the org overlay keeps its annotated state.
+
+    * no org decision: shipped ``reviewed`` (the default for legacy rows) is
+      ``maintainer_reviewed``; anything else is ``proposed``
+    * ``approve``: ``org_reviewed`` for a proposed mapping; a maintainer-reviewed
+      mapping stays ``maintainer_reviewed`` so the two are never double counted
+    * ``needs_changes``: not attestable for this tenant, still evaluatable
+    * ``reject``: removed from this tenant's evaluated coverage
+    """
+    if decision is None:
+        annotated = member.get("effective_review_state")
+        if isinstance(annotated, str) and annotated in REVIEW_STATE_LABELS:
+            return annotated
+    if decision == "reject":
+        return "rejected"
+    if decision == "needs_changes":
+        return "needs_changes"
+    if member.get("review_status", "reviewed") == "reviewed":
+        return "maintainer_reviewed"
+    if decision == "approve":
+        return "org_reviewed"
+    return "proposed"
+
+
 def safeguards_by_requirement(
     payload: JsonObject | None = None, *, reviewed_only: bool = False
 ) -> dict[str, list[str]]:
     """Map each framework control_id to the safeguard ids that satisfy it.
 
-    ``reviewed_only`` drops mappings a human has not confirmed. Attestation
-    should use it; discovery and curation queues should not.
+    ``reviewed_only`` drops mappings nobody has confirmed (maintainer or org).
+    Attestation should use it; discovery and curation queues should not.
+    Org-rejected mappings are never returned.
     """
     data = payload or load_safeguards()
     out: dict[str, list[str]] = {}
     for entry in data["safeguards"]:
         for member in entry.get("satisfies", []):
-            if reviewed_only and member.get("review_status", "reviewed") != "reviewed":
+            state = effective_review_state(member)
+            if state == "rejected":
+                continue
+            if reviewed_only and state not in ATTESTABLE_STATES:
                 continue
             out.setdefault(str(member.get("control_id")), []).append(str(entry["safeguard_id"]))
     return out
@@ -171,6 +219,44 @@ def mapping_review_queue(
     the published crosswalk provenance and exact locator. This is the backlog
     whose review grows the *attestable* coverage number.
     """
+    items: list[JsonObject] = []
+    for item in mapping_review_items(payload, framework_id=framework_id, risk_domain=risk_domain):
+        if item["review_state"] not in PENDING_STATES:
+            continue
+        if item["mapping_source"] is None:
+            del item["mapping_source"]
+        items.append(item)
+    return items
+
+
+def member_mapping_source(entry: JsonObject, member: JsonObject) -> JsonObject | None:
+    """Return the published citation backing one mapping, if any.
+
+    A member proposed by title theme has no citation of its own and must not
+    inherit the safeguard's crosswalk citation, which covers other frameworks'
+    members.
+    """
+    if "mapping_source" in member:
+        source = member.get("mapping_source")
+    elif member.get("mapping_basis") == "title_theme":
+        source = None
+    else:
+        source = entry.get("mapping_source")
+    return source if isinstance(source, dict) else None
+
+
+def mapping_review_items(
+    payload: JsonObject | None = None,
+    *,
+    framework_id: str | None = None,
+    risk_domain: str | None = None,
+) -> list[JsonObject]:
+    """Every safeguard->requirement mapping with its effective review state.
+
+    ``reviewed_anchors`` lists the other requirements on the same safeguard that
+    are already confirmed, so a reviewer can judge a proposed equivalence
+    against mappings they already trust.
+    """
     data = payload or load_safeguards()
     items: list[JsonObject] = []
     for entry in data["safeguards"]:
@@ -179,34 +265,29 @@ def mapping_review_queue(
         anchors = [
             str(member.get("control_id"))
             for member in entry.get("satisfies", [])
-            if member.get("review_status", "reviewed") == "reviewed"
+            if effective_review_state(member) in ATTESTABLE_STATES
         ]
         for member in entry.get("satisfies", []):
-            if member.get("review_status", "reviewed") == "reviewed":
-                continue
             if framework_id and str(member.get("framework_id")) != framework_id:
                 continue
-            item: JsonObject = {
-                "safeguard_id": str(entry["safeguard_id"]),
-                "safeguard_title": entry.get("title"),
-                "risk_domain": entry.get("risk_domain"),
-                "control_id": str(member.get("control_id")),
-                "framework_id": str(member.get("framework_id")),
-                "role": member.get("role"),
-                "reviewed_anchors": anchors,
-            }
-            # A member proposed by title theme has no citation of its own and must
-            # not inherit the safeguard's crosswalk citation, which covers other
-            # frameworks' members.
-            if "mapping_source" in member:
-                source = member.get("mapping_source")
-            elif member.get("mapping_basis") == "title_theme":
-                source = None
-            else:
-                source = entry.get("mapping_source")
-            if source is not None:
-                item["mapping_source"] = source
-            items.append(item)
+            control_id = str(member.get("control_id"))
+            state = effective_review_state(member)
+            items.append(
+                {
+                    "safeguard_id": str(entry["safeguard_id"]),
+                    "safeguard_title": entry.get("title"),
+                    "risk_domain": entry.get("risk_domain"),
+                    "control_id": control_id,
+                    "framework_id": str(member.get("framework_id")),
+                    "role": member.get("role"),
+                    "shipped_review_status": member.get("review_status", "reviewed"),
+                    "review_state": state,
+                    "review_label": REVIEW_STATE_LABELS[state],
+                    "mapping_basis": member.get("mapping_basis"),
+                    "reviewed_anchors": [anchor for anchor in anchors if anchor != control_id],
+                    "mapping_source": member_mapping_source(entry, member),
+                }
+            )
     return items
 
 
@@ -299,25 +380,25 @@ def coverage_by_family(payload: JsonObject | None = None) -> list[JsonObject]:
                 "frameworks": set(),
                 "control_ids": set(),
                 "mapping_count": 0,
-                "reviewed_mapping_count": 0,
-                "proposed_mapping_count": 0,
+                "states": dict.fromkeys(REVIEW_STATE_LABELS, 0),
             },
         )
         row["safeguard_count"] += 1
         for member in entry.get("satisfies", []):
+            state = effective_review_state(member)
             row["mapping_count"] += 1
+            row["states"][state] += 1
+            if state == "rejected":
+                continue
             row["control_ids"].add(str(member.get("control_id")))
             framework_id = member.get("framework_id")
             if framework_id:
                 row["frameworks"].add(str(framework_id))
-            if member.get("review_status", "reviewed") == "reviewed":
-                row["reviewed_mapping_count"] += 1
-            else:
-                row["proposed_mapping_count"] += 1
 
     rows: list[JsonObject] = []
     for family_id, row in sorted(grouped.items()):
-        reviewed = int(row["reviewed_mapping_count"])
+        states = row["states"]
+        reviewed = int(states["maintainer_reviewed"] + states["org_reviewed"])
         rows.append(
             {
                 "family_id": family_id,
@@ -330,8 +411,14 @@ def coverage_by_family(payload: JsonObject | None = None) -> list[JsonObject]:
                 "frameworks": sorted(row["frameworks"]),
                 "mapped_requirement_count": len(row["control_ids"]),
                 "mapping_count": row["mapping_count"],
+                # reviewed = maintainer + org; the split is reported alongside so
+                # the two kinds of confirmation are never blended.
                 "reviewed_mapping_count": reviewed,
-                "proposed_mapping_count": row["proposed_mapping_count"],
+                "maintainer_reviewed_mapping_count": states["maintainer_reviewed"],
+                "org_reviewed_mapping_count": states["org_reviewed"],
+                "proposed_mapping_count": states["proposed"] + states["needs_changes"],
+                "needs_changes_mapping_count": states["needs_changes"],
+                "rejected_mapping_count": states["rejected"],
                 "state": "reviewed" if reviewed else "proposed_only",
             }
         )
@@ -339,30 +426,82 @@ def coverage_by_family(payload: JsonObject | None = None) -> list[JsonObject]:
 
 
 def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[str, Any] | None = None) -> JsonObject:
-    """Report how much of each framework the CCF currently covers."""
+    """Report how much of each framework the CCF currently covers.
+
+    Requirement counts are disjoint: ``maintainer_reviewed`` requirements have at
+    least one maintainer-reviewed mapping; ``org_reviewed`` requirements are
+    attestable only through an org approval; ``proposed`` are evaluatable but not
+    attestable. ``*_mappings`` counts are per safeguard->requirement link.
+    ``rejected_requirements`` lost all evaluated coverage to org rejections.
+    """
     controls = catalog if catalog is not None else load_control_catalog()
-    mapped = safeguards_by_requirement(payload)
+    data = payload or load_safeguards()
+    mapped = safeguards_by_requirement(data)
+    states_by_control: dict[str, set[str]] = {}
+    mapping_states: dict[str, dict[str, int]] = {}
+    for entry in data["safeguards"]:
+        for member in entry.get("satisfies", []):
+            control_id = str(member.get("control_id"))
+            state = effective_review_state(member)
+            states_by_control.setdefault(control_id, set()).add(state)
+            framework = str(controls.get(control_id, {}).get("framework_id") or member.get("framework_id") or "unknown")
+            counts = mapping_states.setdefault(framework, dict.fromkeys(REVIEW_STATE_LABELS, 0))
+            counts[state] += 1
+
+    def requirement_bucket(control_id: str) -> str | None:
+        states = states_by_control.get(control_id, set())
+        if not states:
+            return None
+        if "maintainer_reviewed" in states:
+            return "maintainer_reviewed"
+        if "org_reviewed" in states:
+            return "org_reviewed"
+        if states & PENDING_STATES:
+            return "proposed"
+        return "rejected"
 
     per_framework: dict[str, dict[str, int]] = {}
+    buckets: dict[str, int] = dict.fromkeys(("maintainer_reviewed", "org_reviewed", "proposed", "rejected"), 0)
     for control_id, control in controls.items():
         framework = str(control.get("framework_id") or "unknown")
-        row = per_framework.setdefault(framework, {"controls": 0, "covered": 0})
+        row = per_framework.setdefault(
+            framework,
+            {"controls": 0, "covered": 0, "maintainer_reviewed": 0, "org_reviewed": 0, "rejected_requirements": 0},
+        )
         row["controls"] += 1
         if control_id in mapped:
             row["covered"] += 1
+        bucket = requirement_bucket(control_id)
+        if bucket is not None:
+            buckets[bucket] += 1
+        if bucket in {"maintainer_reviewed", "org_reviewed"}:
+            row[bucket] += 1
+        elif bucket == "rejected":
+            row["rejected_requirements"] += 1
+    for framework, row in per_framework.items():
+        counts = mapping_states.get(framework, dict.fromkeys(REVIEW_STATE_LABELS, 0))
+        row["rejected_mappings"] = counts["rejected"]
+        row["needs_changes_mappings"] = counts["needs_changes"]
 
     total = len(controls)
     covered = sum(1 for cid in controls if cid in mapped)
-    reviewed_map = safeguards_by_requirement(payload, reviewed_only=True)
-    reviewed = sum(1 for cid in controls if cid in reviewed_map)
-    data = payload or load_safeguards()
+    reviewed = buckets["maintainer_reviewed"] + buckets["org_reviewed"]
+    all_states = {state: sum(counts[state] for counts in mapping_states.values()) for state in REVIEW_STATE_LABELS}
     return {
         "safeguards": len(data["safeguards"]),
         "controls": total,
         "covered": covered,
-        # Split so unconfirmed curation is never reported as attested coverage.
+        # Split so unconfirmed curation is never reported as attested coverage,
+        # and org confirmation is never blended into maintainer review.
         "reviewed": reviewed,
+        "maintainer_reviewed": buckets["maintainer_reviewed"],
+        "org_reviewed": buckets["org_reviewed"],
         "proposed": covered - reviewed,
+        "rejected_requirements": buckets["rejected"],
+        "maintainer_reviewed_mappings": all_states["maintainer_reviewed"],
+        "org_reviewed_mappings": all_states["org_reviewed"],
+        "needs_changes_mappings": all_states["needs_changes"],
+        "rejected_mappings": all_states["rejected"],
         "reviewed_pct": round(100.0 * reviewed / total, 1) if total else 0.0,
         "uncovered": total - covered,
         "coverage_pct": round(100.0 * covered / total, 1) if total else 0.0,

@@ -745,6 +745,72 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "MappingRef": {
+        "additionalProperties": false,
+        "properties": {
+          "control_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Control Id",
+            "type": "string"
+          },
+          "framework_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Framework Id",
+            "type": "string"
+          },
+          "safeguard_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Safeguard Id",
+            "type": "string"
+          }
+        },
+        "required": ["safeguard_id", "control_id", "framework_id"],
+        "title": "MappingRef",
+        "type": "object"
+      },
+      "MappingReviewDecisionRequest": {
+        "additionalProperties": false,
+        "description": "One org review decision over one or more mappings.\n\nThere is deliberately no ``reviewer`` field: the reviewer is the signed-in\nuser, and a client-supplied one is rejected as an unknown field.",
+        "properties": {
+          "decision": {
+            "enum": ["approve", "reject", "needs_changes"],
+            "title": "Decision",
+            "type": "string"
+          },
+          "evidence_ref": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Ref"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MappingRef"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "rationale": {
+            "maxLength": 4000,
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": ["decision", "rationale", "items"],
+        "title": "MappingReviewDecisionRequest",
+        "type": "object"
+      },
       "RecordPolicyAcknowledgmentRequest": {
         "additionalProperties": false,
         "properties": {
@@ -4069,6 +4135,163 @@
         },
         "summary": "Accept Invite Route",
         "tags": ["commercial"]
+      }
+    },
+    "/api/v1/mapping-reviews/decisions": {
+      "post": {
+        "description": "Approve, reject, or request changes to safeguard mappings for this tenant.\n\nRequires the ``mapping_review`` scope and a signed-in console session.\nBearer API keys, which agents, CI, and MCP clients use, can read the\nqueue and history but are refused here whatever their role.",
+        "operationId": "mapping_review_decide_api_v1_mapping_reviews_decisions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MappingReviewDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Mapping Review Decide",
+        "tags": ["mapping-review"]
+      }
+    },
+    "/api/v1/mapping-reviews/queue": {
+      "get": {
+        "description": "Requires scope: read.",
+        "operationId": "get_mapping_reviews_queue",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "framework_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "family",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "safeguard_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "v1 envelope"
+          }
+        },
+        "summary": "List mapping-reviews.queue",
+        "tags": ["mapping-reviews"]
+      }
+    },
+    "/api/v1/mapping-reviews/summary": {
+      "get": {
+        "description": "Requires scope: read.",
+        "operationId": "get_mapping_reviews_summary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "v1 envelope"
+          }
+        },
+        "summary": "Get mapping-reviews.summary",
+        "tags": ["mapping-reviews"]
       }
     },
     "/api/v1/mappings": {

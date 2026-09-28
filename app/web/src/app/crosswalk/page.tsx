@@ -24,6 +24,7 @@ import { FrameworkBadge } from "@/components/framework/FrameworkBadge";
 import {
   useCrosswalk,
   useFrameworkEquivalence,
+  useMappingReviewSummary,
   useMappings,
   useReviewedCrosswalk,
 } from "@/lib/api/hooks";
@@ -141,6 +142,7 @@ export default function CrosswalkPage() {
   ).size;
   const equivalenceGroups = equivalence.data?.groups ?? [];
   const crosswalkQueries = [heuristic, reviewed, equivalence, mappings];
+  const reviewSummary = useMappingReviewSummary();
   const loaded = crosswalkQueries.every((query) => query.isSuccess);
 
   return (
@@ -170,6 +172,32 @@ export default function CrosswalkPage() {
           ) : undefined
         }
       />
+
+      {reviewSummary.data ? (
+        <section
+          aria-label="Safeguard mapping review"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm sm:px-5"
+        >
+          <p className="min-w-0 text-muted">
+            <span className="font-semibold text-ink">
+              Safeguard mappings for your organization:
+            </span>{" "}
+            {reviewSummary.data.totals.maintainer_reviewed.toLocaleString()}{" "}
+            maintainer-reviewed ·{" "}
+            {reviewSummary.data.totals.org_reviewed.toLocaleString()}{" "}
+            org-reviewed ·{" "}
+            {(
+              reviewSummary.data.totals.pending +
+              reviewSummary.data.totals.needs_changes
+            ).toLocaleString()}{" "}
+            awaiting a decision ·{" "}
+            {reviewSummary.data.totals.rejected.toLocaleString()} rejected
+          </p>
+          <Link href="/mapping-review" className="ui-link text-sm">
+            Review mappings
+          </Link>
+        </section>
+      ) : null}
 
       <QueryState queries={crosswalkQueries} label="crosswalk mappings">
         <Card className="overflow-hidden border-brand/20">

@@ -57,6 +57,12 @@ attestable framework coverage (`src/security_lakehouse/safeguards.py`). A
 safeguard whose only mappings are proposed still becomes a component (nothing
 is silently dropped); it simply carries no `control-implementations`.
 
+With `--lake` (CLI) or through the API, the export also includes mappings your
+organization approved and leaves out any it rejected. Every implemented
+requirement carries a `trustops-review-state` prop (`maintainer-reviewed` or
+`org-reviewed`), and org-reviewed ones name the reviewer, decision time, and
+decision id. See [Mapping review](MAPPING_REVIEW.md).
+
 TrustOps control ids are not always valid OSCAL tokens — HIPAA ids carry
 parentheses (`HIPAA-164.308(a)(1)(ii)(A)`), which the OSCAL token grammar
 forbids. The export sanitizes these into a valid token

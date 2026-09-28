@@ -631,7 +631,16 @@ function FrameworksPageContent() {
             </dd>
             <dd className="mt-1.5 text-xs text-muted">
               {formatCount(coverageSummary?.attestable_requirement_count)}{" "}
-              requirements with every mapping reviewed
+              requirements with a reviewed mapping:{" "}
+              {formatCount(
+                coverageSummary?.maintainer_reviewed_requirement_count ??
+                  coverageSummary?.attestable_requirement_count,
+              )}{" "}
+              maintainer-reviewed ·{" "}
+              {formatCount(
+                coverageSummary?.org_reviewed_requirement_count ?? 0,
+              )}{" "}
+              org-reviewed
             </dd>
           </div>
           <div className="px-4 py-4 sm:px-5">
@@ -646,6 +655,14 @@ function FrameworksPageContent() {
             </dd>
             <dd className="mt-1.5 text-xs text-muted">
               Requirements with a proposed link awaiting review
+              {coverageSummary?.rejected_mapping_count
+                ? ` · ${formatCount(coverageSummary.rejected_mapping_count)} mapping(s) rejected by your org`
+                : ""}
+            </dd>
+            <dd className="mt-2">
+              <Link href="/mapping-review" className="ui-link text-xs">
+                Review mappings
+              </Link>
             </dd>
           </div>
         </dl>

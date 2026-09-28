@@ -985,6 +985,13 @@ export interface FrameworkCoverageSummary {
   attestable_requirement_count: number;
   evaluatable_coverage_pct: number;
   attestable_coverage_pct: number;
+  /** Attestable requirements with a maintainer-reviewed mapping. */
+  maintainer_reviewed_requirement_count?: number;
+  /** Attestable only through this organization's own approvals. */
+  org_reviewed_requirement_count?: number;
+  org_reviewed_mapping_count?: number;
+  needs_changes_mapping_count?: number;
+  rejected_mapping_count?: number;
   asset_type_count: number;
   control_asset_applicability_link_count: number;
   official_logo_count: number;
@@ -1013,6 +1020,11 @@ export interface FrameworkCoverageRow {
   attestable_requirement_count: number;
   evaluatable_coverage_pct: number;
   attestable_coverage_pct: number;
+  maintainer_reviewed_requirement_count?: number;
+  org_reviewed_requirement_count?: number;
+  org_reviewed_mapping_count?: number;
+  needs_changes_mapping_count?: number;
+  rejected_mapping_count?: number;
   implementation_status: string;
   source_policy: string;
   asset_policy: string;
@@ -1856,4 +1868,113 @@ export interface BillingStatus {
   past_due_since: string | null;
   grace_days: number;
   self_serve_plans: string[];
+}
+
+// --- Mapping review (org overlay over shipped safeguard mappings) ---
+
+export type MappingReviewState =
+  | "maintainer_reviewed"
+  | "org_reviewed"
+  | "proposed"
+  | "needs_changes"
+  | "rejected";
+
+export type MappingReviewDecisionKind = "approve" | "reject" | "needs_changes";
+
+export interface MappingSourceAnchor {
+  name: string;
+  url: string;
+  sha256: string;
+  locator: string;
+}
+
+export interface MappingReviewDecisionSummary {
+  decision_id: string;
+  decision: MappingReviewDecisionKind;
+  rationale: string;
+  reviewer: string;
+  reviewer_role: string | null;
+  decided_at: string;
+  evidence_ref: string | null;
+}
+
+export interface MappingReviewItem {
+  safeguard_id: string;
+  safeguard_title: string | null;
+  risk_domain: string | null;
+  control_id: string;
+  control_title: string | null;
+  framework_id: string;
+  role: string | null;
+  shipped_review_status: string;
+  review_state: MappingReviewState;
+  review_label: string;
+  mapping_basis: string | null;
+  reviewed_anchors: string[];
+  mapping_source: MappingSourceAnchor | null;
+  latest_decision: MappingReviewDecisionSummary | null;
+  decision_count: number;
+}
+
+export interface MappingReviewDecision extends MappingReviewDecisionSummary {
+  batch_id: string;
+  safeguard_id: string;
+  control_id: string;
+  framework_id: string;
+  reviewer_id: string | null;
+  auth_method: string;
+  source_anchor: MappingSourceAnchor | null;
+  shipped_review_status: string;
+  supersedes: string | null;
+  prev_hash: string | null;
+  record_hash: string;
+}
+
+export interface MappingReviewProgressRow {
+  framework_id: string;
+  mapped: number;
+  maintainer_reviewed: number;
+  org_reviewed: number;
+  needs_changes: number;
+  rejected: number;
+  pending: number;
+}
+
+export interface MappingReviewSummary {
+  frameworks: MappingReviewProgressRow[];
+  framework_names: Record<string, string>;
+  families: Array<{ family_id: string; label: string }>;
+  totals: Omit<MappingReviewProgressRow, "framework_id">;
+  states: Record<MappingReviewState, string>;
+  decision_log: {
+    ok: boolean;
+    length: number | null;
+    tip_hash: string | null;
+    issues: string[];
+  };
+}
+
+export interface MappingReviewQueueParams {
+  framework_id?: string;
+  family?: string;
+  status?: string;
+  q?: string;
+  limit: number;
+  offset: number;
+}
+
+export interface MappingReviewQueuePage {
+  items: MappingReviewItem[];
+  count: number;
+}
+
+export interface MappingReviewDecisionRequest {
+  decision: MappingReviewDecisionKind;
+  rationale: string;
+  evidence_ref?: string;
+  items: Array<{
+    safeguard_id: string;
+    control_id: string;
+    framework_id: string;
+  }>;
 }

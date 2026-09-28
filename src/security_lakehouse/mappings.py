@@ -38,6 +38,18 @@ def load_control_article_mappings(
     return out
 
 
+def article_mapping_reviewed(mapping: dict[str, Any] | None) -> bool:
+    """A control->article mapping counts as reviewed only if it has articles and none is ``proposed``.
+
+    This is the catalog's source-citation review, separate from safeguard
+    mapping review (see :func:`security_lakehouse.safeguards.effective_review_state`).
+    """
+    if not mapping:
+        return False
+    articles = mapping.get("articles") or []
+    return bool(articles) and all(str(a.get("review_status") or "reviewed") != "proposed" for a in articles)
+
+
 def validate_control_article_mappings(
     path: str | Path | None = None,
 ) -> list[str]:

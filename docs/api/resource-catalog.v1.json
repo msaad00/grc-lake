@@ -372,6 +372,48 @@
     },
     {
       "kind": "collection",
+      "methods": ["GET", "POST"],
+      "path": "/api/v1/mapping-reviews/decisions",
+      "query": [
+        "safeguard_id",
+        "control_id",
+        "framework_id",
+        "reviewer",
+        "decision",
+        "limit",
+        "offset",
+        "sort"
+      ],
+      "resource": "mapping-reviews.decisions",
+      "scopes": ["read", "mapping_review"]
+    },
+    {
+      "kind": "collection",
+      "methods": ["GET"],
+      "path": "/api/v1/mapping-reviews/queue",
+      "query": [
+        "framework_id",
+        "family",
+        "safeguard_id",
+        "status",
+        "q",
+        "limit",
+        "offset",
+        "cursor",
+        "sort"
+      ],
+      "resource": "mapping-reviews.queue",
+      "scopes": ["read"]
+    },
+    {
+      "kind": "singleton",
+      "methods": ["GET"],
+      "path": "/api/v1/mapping-reviews/summary",
+      "resource": "mapping-reviews.summary",
+      "scopes": ["read"]
+    },
+    {
+      "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/mappings",
       "query": ["limit", "offset", "sort", "<field>=<value>"],

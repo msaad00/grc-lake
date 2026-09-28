@@ -25,6 +25,7 @@ import { formatWhen } from "@/lib/utils";
 const ROLES = [
   "admin",
   "security_admin",
+  "compliance_reviewer",
   "contributor",
   "auditor",
   "read_only",

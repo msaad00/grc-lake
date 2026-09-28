@@ -322,7 +322,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             framework_coverage_summary,
         )
 
-        rows = build_framework_coverage()
+        rows = build_framework_coverage(lake_dir=lake)
         return {"summary": framework_coverage_summary(rows), "frameworks": rows}
 
     @trustops_tool(title="Mapping Review Queue")
@@ -335,11 +335,38 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         equivalence against mappings they already trust. Source-backed items also
         carry their verified crosswalk name, URL, SHA-256, and exact locator. It is
         read-only and never promotes a mapping — accepting one is a human
-        equivalence judgment.
+        equivalence judgment made in the console or CLI, never by an agent.
+        Mappings this organization already approved or rejected are not listed.
         """
+        from security_lakehouse.mapping_review import effective_safeguards
         from security_lakehouse.safeguards import mapping_review_report
 
-        return mapping_review_report(framework_id=framework_id, risk_domain=risk_domain)
+        return mapping_review_report(effective_safeguards(lake), framework_id=framework_id, risk_domain=risk_domain)
+
+    @trustops_tool(title="Mapping Review Decisions")
+    def list_mapping_review_decisions(
+        framework_id: str | None = None,
+        safeguard_id: str | None = None,
+        control_id: str | None = None,
+    ) -> JsonObject:
+        """The organization's mapping review decisions, oldest first, with log verification.
+
+        Each decision names the reviewer, rationale, time, and the decision it
+        supersedes. Read-only: there is deliberately no MCP tool that approves,
+        rejects, or requests changes to a mapping.
+        """
+        summary = _get_lake_or_remote("/api/v1/mapping-reviews/summary", lake)
+        filters = {
+            key: value
+            for key, value in (
+                ("framework_id", framework_id),
+                ("safeguard_id", safeguard_id),
+                ("control_id", control_id),
+            )
+            if value
+        }
+        decisions = _get_lake_or_remote("/api/v1/mapping-reviews/decisions", lake, limit="1000", **filters)
+        return {"decision_log": summary["decision_log"], "decisions": decisions}
 
     @trustops_tool(title="Ingestion Status")
     def get_ingestion_status() -> JsonObject:

@@ -56,6 +56,15 @@ from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import read_jsonl, resolve_path
 from security_lakehouse.lake_eval import list_eval_runs, run_lake_eval
 from security_lakehouse.lake_scale import connector_materialize_on_sync
+from security_lakehouse.mapping_review import (
+    MappingReviewError,
+    effective_safeguards,
+    list_decisions,
+    list_review_items,
+    record_decisions,
+    review_progress,
+    verify_review_log,
+)
 from security_lakehouse.mappings import (
     build_framework_equivalence,
     build_reviewed_crosswalk,
@@ -63,7 +72,12 @@ from security_lakehouse.mappings import (
 )
 from security_lakehouse.oscal import build_assessment_results, build_component_definition
 from security_lakehouse.readiness import build_readiness_view
-from security_lakehouse.safeguards import coverage_by_family, coverage_by_framework
+from security_lakehouse.safeguards import (
+    PENDING_STATES,
+    REVIEW_STATE_LABELS,
+    coverage_by_family,
+    coverage_by_framework,
+)
 from security_lakehouse.tracking import ALLOWED_STATES, append_event, latest_state, list_events, verify_tracking_chain
 from security_lakehouse.trust_share import create_share, list_shares, revoke_share
 from security_lakehouse.verification import verify_event
@@ -134,6 +148,11 @@ def list_snapshots(lake_dir: str | Path) -> list[JsonObject]:
     return out
 
 
+def _ccf_coverage(lake: Path) -> JsonObject:
+    effective = effective_safeguards(lake)
+    return {"families": coverage_by_family(effective), "frameworks": coverage_by_framework(effective)}
+
+
 # Route -> (resource name, loader) for endpoints returning a single object.
 SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
     "/api/v1/healthz": ("healthz", lambda _lake: {"ok": True, "service": "trustops-assessment"}),
@@ -148,13 +167,13 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
     "/api/v1/crosswalk": ("crosswalk", lambda _lake: build_framework_crosswalk()),
     "/api/v1/crosswalk/reviewed": ("crosswalk.reviewed", lambda _lake: build_reviewed_crosswalk()),
     "/api/v1/mappings/equivalence": ("mappings.equivalence", lambda _lake: build_framework_equivalence()),
-    "/api/v1/ccf/coverage": (
-        "ccf.coverage",
-        lambda _lake: {"families": coverage_by_family(), "frameworks": coverage_by_framework()},
+    # CCF coverage and the OSCAL component definition read the shipped safeguards
+    # with this lake's org review decisions layered on (mapping_review).
+    "/api/v1/ccf/coverage": ("ccf.coverage", _ccf_coverage),
+    "/api/v1/oscal/component-definition": (
+        "oscal.component-definition",
+        lambda lake: build_component_definition(lake_dir=lake),
     ),
-    # Component definition is built from the CCF safeguards + control catalog,
-    # not from the lake, so it ignores the lake path like crosswalk/ccf.coverage.
-    "/api/v1/oscal/component-definition": ("oscal.component-definition", lambda _lake: build_component_definition()),
 }
 
 # Route -> (resource name, loader) for endpoints returning a row collection.
@@ -287,6 +306,8 @@ def required_post_scope(path: str) -> str:
         return "workflow_manage"
     if _suffix_match(path, "/api/v1/workflows/runs/", "/reject") is not None:
         return "workflow_manage"
+    if path == "/api/v1/mapping-reviews/decisions":
+        return "mapping_review"
     if path == "/api/v1/ingestion/eval":
         return "connector_manage"
     if path == "/api/v1/scheduler/tick":
@@ -318,6 +339,41 @@ def required_post_scope(path: str) -> str:
 # Paths, methods, and scopes are kept in lockstep with the ``@app.<verb>``
 # decorators and their ``Depends(_require_*)`` defaults in ``server_app``.
 EXTENDED_RESOURCES: list[JsonObject] = [
+    {
+        "resource": "mapping-reviews.queue",
+        "path": "/api/v1/mapping-reviews/queue",
+        "kind": "collection",
+        "methods": ["GET"],
+        "scopes": ["read"],
+        "query": [
+            "framework_id",
+            "family",
+            "safeguard_id",
+            "status",
+            "q",
+            "limit",
+            "offset",
+            "cursor",
+            "sort",
+        ],
+    },
+    {
+        "resource": "mapping-reviews.decisions",
+        "path": "/api/v1/mapping-reviews/decisions",
+        "kind": "collection",
+        "methods": ["GET", "POST"],
+        # POST also requires a signed-in console session in server mode: bearer
+        # API keys (agents, CI, MCP) may list but never decide.
+        "scopes": ["read", "mapping_review"],
+        "query": ["safeguard_id", "control_id", "framework_id", "reviewer", "decision", "limit", "offset", "sort"],
+    },
+    {
+        "resource": "mapping-reviews.summary",
+        "path": "/api/v1/mapping-reviews/summary",
+        "kind": "singleton",
+        "methods": ["GET"],
+        "scopes": ["read"],
+    },
     {
         "resource": "workflows",
         "path": "/api/v1/workflows/{workflow_id}",
@@ -1469,6 +1525,8 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
                 "bad_request", f"invalid 'as_of' value: {as_of!r}", resource="posture.as_of"
             )
         return HTTPStatus.OK, envelope("posture.as_of", data)
+    if path.startswith("/api/v1/mapping-reviews/"):
+        return _mapping_review_get(path, params, lake)
     if path == "/api/v1/oscal/assessment-results":
         snapshot_values = params.get("snapshot_id") or []
         snapshot_id = snapshot_values[0] if snapshot_values else None
@@ -1493,6 +1551,104 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
                 "bad_request", "invalid request parameters", resource=resource
             )
     return HTTPStatus.NOT_FOUND, error_envelope("not_found", "unknown route")
+
+
+MAPPING_REVIEW_DECISIONS_PATH = "/api/v1/mapping-reviews/decisions"
+_QUEUE_STATUS_ALIASES = {"pending": PENDING_STATES}
+
+
+def _mapping_review_queue_rows(lake: Path, params: Params) -> tuple[list[JsonObject], dict[str, list[str]]]:
+    """Apply the queue's own filters (status, family, q) before the generic ones.
+
+    The queue defaults to pending mappings (proposed or needs changes);
+    ``status=all`` lists every mapping. ``family`` is an alias for
+    ``risk_domain`` and ``q`` searches ids and titles.
+    """
+    rest = {key: list(values) for key, values in params.items()}
+    raw_status = rest.pop("status", None) or rest.pop("review_state", None) or ["pending"]
+    wanted: set[str] = set()
+    for value in (part.strip() for raw in raw_status for part in raw.split(",")):
+        if not value:
+            continue
+        if value == "all":
+            wanted = set(REVIEW_STATE_LABELS)
+            break
+        if value in _QUEUE_STATUS_ALIASES:
+            wanted |= _QUEUE_STATUS_ALIASES[value]
+        elif value in REVIEW_STATE_LABELS:
+            wanted.add(value)
+        else:
+            raise ValueError(f"unknown status {value!r}")
+    if "family" in rest:
+        rest["risk_domain"] = rest.pop("family")
+    query = " ".join(rest.pop("q", [])).strip().lower()
+    rows = [row for row in list_review_items(lake) if row["review_state"] in wanted]
+    if query:
+        fields = ("safeguard_id", "safeguard_title", "control_id", "control_title", "framework_id")
+        rows = [row for row in rows if query in " ".join(str(row.get(field) or "") for field in fields).lower()]
+    return rows, rest
+
+
+def _mapping_review_get(path: str, params: Params, lake: Path) -> tuple[HTTPStatus, JsonObject]:
+    if path == "/api/v1/mapping-reviews/queue":
+        try:
+            rows, rest = _mapping_review_queue_rows(lake, params)
+            return HTTPStatus.OK, collection_response("mapping-reviews.queue", rows, rest)
+        except ValueError as exc:
+            return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", str(exc), resource="mapping-reviews.queue")
+    if path == MAPPING_REVIEW_DECISIONS_PATH:
+        try:
+            return HTTPStatus.OK, collection_response("mapping-reviews.decisions", list_decisions(lake), params)
+        except ValueError as exc:
+            return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", str(exc), resource="mapping-reviews.decisions")
+    if path == "/api/v1/mapping-reviews/summary":
+        try:
+            log = verify_review_log(lake)
+        except ValueError as exc:
+            log = {"ok": False, "length": None, "tip_hash": None, "issues": [str(exc)]}
+        return HTTPStatus.OK, envelope("mapping-reviews.summary", {**review_progress(lake), "decision_log": log})
+    return HTTPStatus.NOT_FOUND, error_envelope("not_found", "unknown route")
+
+
+def record_mapping_review(
+    payload: JsonObject,
+    lake: Path,
+    *,
+    reviewer: str,
+    auth_method: str,
+    reviewer_id: str | None = None,
+    reviewer_role: str | None = None,
+) -> tuple[HTTPStatus, JsonObject]:
+    """Record one org review decision over one or more mappings.
+
+    The caller supplies the reviewer: server mode passes the authenticated
+    user, never a value from the request body.
+    """
+    resource = "mapping-reviews.decisions"
+    items = payload.get("items")
+    if not isinstance(items, list):
+        return HTTPStatus.BAD_REQUEST, error_envelope(
+            "bad_request", "items must be a list of mappings", resource=resource
+        )
+    try:
+        records = record_decisions(
+            lake,
+            items=items,
+            decision=str(payload.get("decision") or ""),
+            rationale=str(payload.get("rationale") or ""),
+            reviewer=reviewer,
+            reviewer_id=reviewer_id,
+            reviewer_role=reviewer_role,
+            auth_method=auth_method,
+            evidence_ref=payload.get("evidence_ref") if isinstance(payload.get("evidence_ref"), str) else None,
+        )
+    except MappingReviewError as exc:
+        return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", str(exc), resource=resource)
+    return HTTPStatus.CREATED, envelope(
+        resource,
+        records,
+        meta={"recorded": len(records), "batch_id": records[0]["batch_id"] if records else None},
+    )
 
 
 # `fixture_dir` points the connector runner at a directory of canned evidence
@@ -1538,6 +1694,17 @@ def handle_post(
     """
     lake = resolve_path(lake_dir)
     payload = body or {}
+    if path == MAPPING_REVIEW_DECISIONS_PATH:
+        # Local mode has no authenticated principal, so the reviewer is named in
+        # the body and the record says it was unauthenticated. Server mode never
+        # reaches this branch: it serves the path from its own route with the
+        # signed-in user as reviewer.
+        return record_mapping_review(
+            payload,
+            lake,
+            reviewer=str(payload.get("reviewer") or ""),
+            auth_method="local-unauthenticated",
+        )
     if path == "/api/v1/snapshots":
         reason = str(payload.get("reason") or "api_request")
         snapshot_path = write_assessment_snapshot(lake, reason=reason, on_snapshot_written=on_snapshot_written)

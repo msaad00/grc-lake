@@ -23,9 +23,11 @@ frameworks stay seed-and-expand.
 | ISO/IEC 27017:2015 Cloud     | `iso-27017-2015`      | **47** clauses (40 ISO 27002 + 7 CLD)                                                 | [ISO/IEC 27017:2015](https://www.iso.org/standard/43757.html)                                                                                      |
 | ISO/IEC 42001:2023 Annex A   | `iso-42001-2023`      | **38** AI controls                                                                    | [ISO/IEC 42001:2023](https://www.iso.org/standard/42001)                                                                                           |
 
-**Important:** 100% here means **every official criterion ID is seeded, mapped,
-and evaluable in TrustOps**. It does not mean certification, audit opinion, or
-that every point-of-focus has bespoke automated evidence yet.
+**Important:** 100% here means **every official criterion ID is seeded and
+evaluable in TrustOps**. How many are mapped to safeguards, and how many of those
+mappings are reviewed, is per pack in the [coverage matrix](FRAMEWORK_COVERAGE.md).
+It does not mean certification, audit opinion, or that every point-of-focus has
+bespoke automated evidence yet.
 
 **FedRAMP note:** FedRAMP Rev 5 Moderate authorization selects **323** controls
 from NIST SP 800-53 Rev 5 with FedRAMP overlays. This pack seeds the **NIST

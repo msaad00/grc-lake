@@ -34,6 +34,30 @@ Python package, Helm chart, and bundled web console.
   assessment title, which is Article 27. It is now "Registration" (version
   1.1.0; the old version stays in history), its risk-assessment mapping moved
   to the AI governance safeguard, and Article 27 is added.
+- AI governance: 16 new life-cycle safeguards (evaluation, drift monitoring,
+  AI incidents, model and dataset provenance, human oversight, and more), all
+  proposed. NIST AI RMF coverage rises from 28 to 69 of 72 requirements and
+  ISO/IEC 42001 from 26 to 37 of 39; the requirements left unmapped on
+  purpose are listed in docs/CCF_AI_CONTEXT.md.
+- Control categories: the 21 control families are grouped into 10 categories.
+  `GET /api/v1/ccf/coverage` returns a `categories` ledger, `frameworks
+safeguards --format table` prints families under their category, OSCAL
+  components carry a `trustops-category` property, and the console Control
+  families tab groups families by category and links to each family's review
+  queue.
+- Adoption kit: a root `compose.yaml` (a loopback-only sample-data demo, and
+  a `trustops-server` profile with authentication on), a
+  [5-minute tutorial](docs/TUTORIAL_5_MIN.md), [CI gate](docs/CI_GATE.md)
+  docs with a sample-data workflow, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT,
+  and issue forms.
+- Security: mapping-review endpoints return fixed error messages instead of
+  exception text; the server logs only the exception class.
+- CI builds with the same uv version as the container image, and a test fails
+  when the pins drift apart.
+- Console: GDPR, NIS2, and DORA use their own neutral marks instead of the EU
+  AI Act badge; the crosswalk overlap matrices name each framework once, and
+  the Control families tab states its category, family, and safeguard counts.
+  README screenshots add the Control families tab and the crosswalk.
 
 ## 0.2.19 - 2026-09-28
 

@@ -53,6 +53,13 @@ def test_mapping_review_and_mobile_captures_exist() -> None:
     } <= names
 
 
+def test_control_families_and_crosswalk_captures_are_linked_from_the_readme() -> None:
+    readme = (IMAGES.parents[1] / "README.md").read_text(encoding="utf-8")
+    for name in ("trustops-demo-control-families.png", "trustops-demo-crosswalk.png"):
+        assert (IMAGES / name).is_file(), name
+        assert f"docs/images/{name}" in readme, name
+
+
 @pytest.mark.parametrize("dark", DARK, ids=lambda path: path.name)
 def test_light_and_dark_pairs_share_dimensions(dark: Path) -> None:
     light = dark.with_name(dark.name.replace("-dark.png", ".png"))

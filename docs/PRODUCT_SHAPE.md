@@ -160,9 +160,10 @@ These are real surfaces — not roadmap slides:
 - **Audit workflow (headless + UI)** — continuous control tests, audit readiness API,
   audit room, trust shares, auditor role redaction, access reviews, evidence
   requests → remediation, point-in-time snapshots, unified audit log, executive PDF
-- **Framework depth** — 17 packs, including SOC 2, ISO 27001/27017/42001, NIST CSF 2.0,
-  NIST 800-53, NIST RMF, NIST AI RMF, FedRAMP Moderate, CMMC 2.0, CIS, HIPAA, PCI DSS,
-  GDPR, EU AI Act, and a limited ISO 27701:2025 pack
+- **Framework depth** — 20 packs, including SOC 2, ISO 27001/27017/42001, NIST CSF 2.0,
+  NIST 800-53, NIST 800-171 Rev 3, NIST RMF, NIST AI RMF, FedRAMP Moderate, CMMC 2.0,
+  CIS, HIPAA, PCI DSS, GDPR, NIS2, DORA, EU AI Act, and a limited ISO 27701:2025 pack;
+  NIST 800-171 Rev 3, NIS2, and DORA mappings are all proposed
 - **Identity & access** (PR [#345](https://github.com/msaad00/trustops-security-data-lake/pull/345)) —
   user/role admin, API-key → browser session, IdP group → role mapping, SCIM 2.0
   users and groups
@@ -245,7 +246,7 @@ actually delivered.
 | Priority | Issue                                                                        | Closes                                       | Status                                       |
 | -------- | ---------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- |
 | **P0**   | [#96](https://github.com/msaad00/trustops-security-data-lake/issues/96) Epic | Premium GRC SaaS feel — biggest UX gap       | **Mostly shipped** (#89–#95, #91)            |
-| **P0**   | [#14](https://github.com/msaad00/trustops-security-data-lake/issues/14)      | Source-linked framework/control expansion    | **Partial** (17 packs; SOC 1 planned)        |
+| **P0**   | [#14](https://github.com/msaad00/trustops-security-data-lake/issues/14)      | Source-linked framework/control expansion    | **Partial** (20 packs; SOC 1 planned)        |
 | **P1**   | [#13](https://github.com/msaad00/trustops-security-data-lake/issues/13)      | Evidence freshness SLA + stale → remediation | **Shipped**                                  |
 | **P1**   | [#15](https://github.com/msaad00/trustops-security-data-lake/issues/15)      | Audit snapshot room + reviewer trust center  | **Shipped** (trends + timeline)              |
 | **P1**   | [#18](https://github.com/msaad00/trustops-security-data-lake/issues/18)      | Product-grade topology, trend, workflow viz  | **Partial** (framework/freshness/SLA charts) |

@@ -30,41 +30,36 @@ in your own cloud or VPC, on your own data lake.
 
 ## Quick start
 
-Use Python 3.11+, [uv](https://docs.astral.sh/uv/), and Node 22+:
+With Docker Compose v2:
 
 ```bash
 git clone https://github.com/msaad00/trustops-security-data-lake.git
 cd trustops-security-data-lake
+docker compose up
+```
+
+Open [localhost:8787/console/dashboard/](http://127.0.0.1:8787/console/dashboard/).
+It serves the bundled sample company with authentication off, on `127.0.0.1`
+only. The [5-minute tutorial](docs/TUTORIAL_5_MIN.md) continues to a real cloud
+account, a mapping review, and an OSCAL export.
+
+<details>
+<summary><strong>Other setup paths</strong> — source, pip, CLI only, and MCP</summary>
+
+From source (Python 3.11+, [uv](https://docs.astral.sh/uv/), Node 22+):
+
+```bash
 uv sync --frozen --extra dev --extra server
 make demo-local
 ```
 
-Open [localhost:8787/console/dashboard/](http://127.0.0.1:8787/console/dashboard/).
-This loads fixture data and disables authentication; for a shared environment,
-see [Self-host](#self-host). With Docker, `docker compose up` does the same from
-the published image. The [5-minute tutorial](docs/TUTORIAL_5_MIN.md) continues
-from there to a real cloud account, a mapping review, and an OSCAL export.
-
-<details>
-<summary><strong>Other setup paths</strong> — pip, CLI only, and MCP</summary>
-
-Source install without uv:
+From PyPI, as a server or CLI only:
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev,server]"
-make web-install web-build
-security-lakehouse fixtures load --company golden --out build/lakehouse --rebase-times
-security-lakehouse db upgrade --lake build/lakehouse
-security-lakehouse serve --lake build/lakehouse --server --allow-insecure-no-auth --port 8787
-```
-
-CLI and local lake only:
-
-```bash
-pip install trustops-security-data-lake
+pip install "trustops-security-data-lake[server]"
 security-lakehouse fixtures load --company golden --out ./lake --rebase-times
 security-lakehouse assessment status --lake ./lake
+security-lakehouse serve --server --allow-insecure-no-auth --lake ./lake --port 8787
 ```
 
 The same lake over MCP (stdio); see [headless GRC](docs/HEADLESS_GRC.md) for the trust boundary:
@@ -98,16 +93,18 @@ lists all 28 contracts: 25 executable (18 generally available, 7 in preview).
 
 ## Self-host
 
-| Path                                                                                                 | Use it for                                                                          |
-| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [Docker image](Dockerfile)                                                                           | One host: `docker run -p 8787:8787 -v $PWD/lake:/lake ghcr.io/msaad00/trustops:0.2` |
-| [Helm chart](deploy/helm/trustops/)                                                                  | Kubernetes, with a persistent `/lake` volume and the scheduler.                     |
-| [EKS Terraform](deploy/eks-terraform/)                                                               | Reference infrastructure for the chart on Amazon EKS.                               |
-| [AWS](deploy/aws/) · [Azure](deploy/azure/) · [GCP](deploy/gcp/)                                     | Read-only posture roles for each cloud (see Connector credentials below).           |
-| [Snowflake](deploy/snowflake/) · [Databricks](deploy/databricks/) · [ClickHouse](deploy/clickhouse/) | Schema and bootstrap SQL for each existing-lake reader.                             |
+| Path                                                                                                 | Use it for                                                                |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [Docker Compose](compose.yaml)                                                                       | One host: `docker compose up -d trustops-server`, with authentication on. |
+| [Helm chart](deploy/helm/trustops/)                                                                  | Kubernetes, with a persistent `/lake` volume and the scheduler.           |
+| [EKS Terraform](deploy/eks-terraform/)                                                               | Reference infrastructure for the chart on Amazon EKS.                     |
+| [AWS](deploy/aws/) · [Azure](deploy/azure/) · [GCP](deploy/gcp/)                                     | Read-only posture roles for each cloud (see Connector credentials below). |
+| [Snowflake](deploy/snowflake/) · [Databricks](deploy/databricks/) · [ClickHouse](deploy/clickhouse/) | Schema and bootstrap SQL for each existing-lake reader.                   |
 
 Server mode requires [authentication](docs/SERVER_AUTH.md) (OIDC, SAML, or API
-keys). Start with the [deployment guide](deploy/README.md).
+keys). In hosted mode each tenant's connector secrets and cloud access stay
+tenant-scoped: [hosted connector credentials](docs/SERVER_AUTH.md#hosted-connector-credentials).
+Start with the [deployment guide](deploy/README.md).
 
 ## Frameworks and common controls
 
@@ -142,18 +139,20 @@ Control families by category:
 <tr>
 <td align="center"><img src="app/web/public/frameworks/badges/cis.svg" width="38" alt="CIS"><br><strong>CIS Controls · CIS AWS</strong></td>
 <td align="center"><img src="app/web/public/frameworks/badges/cmmc.svg" width="38" alt="CMMC"><br><strong>CMMC 2.0</strong></td>
-<td align="center"><img src="app/web/public/frameworks/badges/eu-ai-act.svg" width="38" alt="European framework family"><br><strong>EU AI Act · GDPR</strong></td>
-<td align="center"><strong>NIST 800-53 · NIST RMF<br>FedRAMP · HIPAA · PCI DSS</strong></td>
+<td align="center"><img src="app/web/public/frameworks/badges/eu-ai-act.svg" width="38" alt="EU AI Act"><br><strong>EU AI Act</strong></td>
+<td align="center"><strong>NIST 800-53 · 800-171 Rev 3 · RMF<br>FedRAMP · HIPAA · PCI DSS<br>GDPR · NIS2 · DORA</strong></td>
 </tr>
 </table>
 
 A **reviewed** mapping has been confirmed by a person; a **proposed** one has
 not, and neither is a certification. Some packs are limited: PCI DSS v4.0.1
 covers its 12 principal requirements, ISO/IEC 27701:2025 seeds 10 of its 78
-Annex A controls, and NIST RMF mappings are all proposed. SOC 1 is planned. The
-[coverage matrix](docs/FRAMEWORK_COVERAGE.md) has the exact boundary per framework.
-Your own reviewers can approve or reject mappings for your tenant, with an
-attributable audit trail: [mapping review](docs/MAPPING_REVIEW.md).
+Annex A controls, and every NIST RMF, NIST 800-171 Rev 3, NIS2, and DORA mapping
+is proposed. SOC 1 is planned. The AI governance family's 13 safeguards map 80
+requirements across NIST AI RMF, ISO/IEC 42001, the EU AI Act, and GDPR, mostly
+proposed. The [coverage matrix](docs/FRAMEWORK_COVERAGE.md) has the exact
+boundary per framework. Your own reviewers can approve or reject mappings for
+your tenant, with an attributable audit trail: [mapping review](docs/MAPPING_REVIEW.md).
 
 <details>
 <summary><strong>How the Common Control Framework evaluates</strong></summary>
@@ -227,6 +226,8 @@ Images show the bundled demo fixture, not live customer evidence.
 </p>
 
 [Walkthrough](docs/PRODUCT_WALKTHROUGH.md) ·
+[Control families](docs/images/trustops-demo-control-families.png) ·
+[Crosswalk](docs/images/trustops-demo-crosswalk.png) ·
 [Connections](docs/images/trustops-demo-connectors.png) ·
 [Findings](docs/images/trustops-demo-findings.png) ·
 [Graph](docs/images/trustops-demo-graph.png) ·

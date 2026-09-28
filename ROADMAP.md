@@ -1,19 +1,32 @@
 # TrustOps Roadmap
 
-Status as of v0.2.18. Remaining gaps come first; the shipped priority lists below are
+Status as of v0.2.20. Remaining gaps come first; the shipped priority lists below are
 kept as the delivery record. Track work in GitHub issues.
 
 ## Remaining gaps
 
 The linked epics are closed on GitHub; each row names what is still left.
 
-| Epic                                                                      | Area           | What remains                                                                                                                  |
-| ------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks     | ISO 27701:2025 is a limited pack (10 of 78 Annex A controls); SOC 1 stays planned (no official catalog)                       |
-| [#608](https://github.com/msaad00/trustops-security-data-lake/issues/608) | Connectors     | CIS Azure/GCP benchmarks, ISO 27001 clauses 4–10; live-tenant runs for the Jamf, CrowdStrike, Kubernetes, KnowBe4 previews    |
-| [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Existing lakes | Databricks, Iceberg/Parquet, and BigQuery readers are preview and lake mappings are experimental; live verification pending   |
-| [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform       | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                               |
-| —                                                                         | Mapping review | 832 proposed safeguard mappings (including all NIST RMF and ISO 27701 mappings) await human review before they are attestable |
+| Epic                                                                      | Area           | What remains                                                                                                                                                          |
+| ------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [#611](https://github.com/msaad00/trustops-security-data-lake/issues/611) | Frameworks     | ISO 27701:2025 is a limited pack (10 of 78 Annex A controls); SOC 1 stays planned (no official catalog); NIST 800-171 Rev 3, NIS2, and DORA are new and proposed-only |
+| [#608](https://github.com/msaad00/trustops-security-data-lake/issues/608) | Connectors     | CIS Azure/GCP benchmarks, ISO 27001 clauses 4–10; live-tenant runs for the Jamf, CrowdStrike, Kubernetes, KnowBe4 previews                                            |
+| [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Existing lakes | Databricks, Iceberg/Parquet, and BigQuery readers are preview and lake mappings are experimental; live verification pending                                           |
+| [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform       | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                                                                       |
+| —                                                                         | Mapping review | 1,348 proposed safeguard mappings (including all NIST RMF, ISO 27701, NIST 800-171 Rev 3, NIS2, and DORA mappings) await human review before they are attestable      |
+
+## Shipped for 0.2.20
+
+- [x] NIST SP 800-171 Rev 3, NIS2, and DORA framework packs from pinned official sources, with proposed mappings ([#776](https://github.com/msaad00/trustops-security-data-lake/pull/776))
+- [x] AI governance life-cycle safeguards and a category layer over the 21 control families ([#774](https://github.com/msaad00/trustops-security-data-lake/pull/774))
+- [x] Docker Compose quickstart, 5-minute tutorial, CI gate guide, contributor guide, and security policy ([#772](https://github.com/msaad00/trustops-security-data-lake/pull/772))
+- [x] Hosted cloud-link forms for tenant-owned Azure and GCP identities ([#775](https://github.com/msaad00/trustops-security-data-lake/pull/775)); posture gate fails closed ([#773](https://github.com/msaad00/trustops-security-data-lake/pull/773))
+
+## Shipped for 0.2.19
+
+- [x] Org mapping review: approve, reject, or request changes with an append-only, attributable decision log ([#750](https://github.com/msaad00/trustops-security-data-lake/pull/750))
+- [x] Tenant-scoped connector and workflow secrets and delegated cloud credentials in hosted mode ([#755](https://github.com/msaad00/trustops-security-data-lake/pull/755), [#761](https://github.com/msaad00/trustops-security-data-lake/pull/761))
+- [x] Live-cloud probe parity, partial GCP collection, and actionable connector errors ([#749](https://github.com/msaad00/trustops-security-data-lake/pull/749))
 
 ## Shipped for 0.2.18
 

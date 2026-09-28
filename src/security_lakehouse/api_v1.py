@@ -1596,18 +1596,29 @@ def _mapping_review_queue_rows(lake: Path, params: Params) -> tuple[list[JsonObj
     return rows, rest
 
 
+MAPPING_REVIEW_QUERY_INVALID = (
+    "invalid mapping review query; status must be pending, proposed, needs_changes, rejected, "
+    "org_reviewed, maintainer_reviewed, or all, and sort and cursor must come from a previous response"
+)
+MAPPING_REVIEW_DECISIONS_UNREADABLE = "the mapping review decision log could not be read"
+
+
 def _mapping_review_get(path: str, params: Params, lake: Path) -> tuple[HTTPStatus, JsonObject]:
     if path == "/api/v1/mapping-reviews/queue":
         try:
             rows, rest = _mapping_review_queue_rows(lake, params)
             return HTTPStatus.OK, collection_response("mapping-reviews.queue", rows, rest)
-        except ValueError as exc:
-            return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", str(exc), resource="mapping-reviews.queue")
+        except ValueError:
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", MAPPING_REVIEW_QUERY_INVALID, resource="mapping-reviews.queue"
+            )
     if path == MAPPING_REVIEW_DECISIONS_PATH:
         try:
             return HTTPStatus.OK, collection_response("mapping-reviews.decisions", list_decisions(lake), params)
-        except ValueError as exc:
-            return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", str(exc), resource="mapping-reviews.decisions")
+        except ValueError:
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", MAPPING_REVIEW_DECISIONS_UNREADABLE, resource="mapping-reviews.decisions"
+            )
     if path == "/api/v1/mapping-reviews/summary":
         log = verify_review_log(lake)
         return HTTPStatus.OK, envelope("mapping-reviews.summary", {**review_progress(lake), "decision_log": log})

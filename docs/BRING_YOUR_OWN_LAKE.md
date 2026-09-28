@@ -343,9 +343,10 @@ Parquet rather than Iceberg; read them with `catalog_type: "parquet"` and the
 Glue and S3 calls go to the AWS regional endpoints; no endpoint override is
 accepted, and the reader ignores storage settings (endpoint, proxy, signer,
 FileIO class) carried in table metadata. Every metadata, manifest, and data
-location must be an `s3://` (or `s3a://`, `s3n://`) URI: a table whose metadata
-points at `file:`, a bare path, or an HTTP URL is refused. In hosted server mode
-`role_arn` and `external_id` are required (see
+location must be an `s3://` (or `s3a://`, `s3n://`) URI; HTTP and other schemes
+are refused. A local `file:` location or bare path is accepted only in local and
+CLI mode, where the operator owns the disk, and refused in hosted server mode.
+In hosted server mode `role_arn` and `external_id` are required (see
 [Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials)).
 
 ### Iceberg REST catalog
@@ -361,8 +362,9 @@ expiry, and the region (`s3.access-key-id`, `s3.secret-access-key`,
 `s3.session-token`, `s3.region`, their `client.*` forms, and
 `gcs.oauth2.token`/`gcs.oauth2.token-expires-at`); endpoint, proxy, signer,
 role, retry, and FileIO settings are dropped. Storage locations must be `s3://`,
-or `gs://` when `warehouse` itself is a `gs://` location; `file:`, bare paths,
-and HTTP are refused. The catalog must still scope vended credentials to read.
+or `gs://` when `warehouse` itself is a `gs://` location; HTTP and other schemes
+are refused, and local `file:` warehouses (such as a loopback test catalog) work
+only in local and CLI mode. The catalog must still scope vended credentials to read.
 In hosted server mode `credential_ref` is required and must pass the
 [secret-reference policy](SERVER_AUTH.md#hosted-connector-credentials).
 

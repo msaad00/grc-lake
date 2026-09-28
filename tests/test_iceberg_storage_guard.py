@@ -18,6 +18,7 @@ from pyiceberg.io.pyarrow import PyArrowFileIO  # noqa: E402
 
 from security_lakehouse import connectors_iceberg as ice  # noqa: E402
 from security_lakehouse import iceberg_export  # noqa: E402
+from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, server_execution  # noqa: E402
 
 HOSTILE_PROPERTIES = {
     "s3.endpoint": "http://169.254.169.254",
@@ -49,26 +50,58 @@ def test_storage_properties_keep_only_vended_credentials() -> None:
     assert filtered == VENDED
 
 
-@pytest.mark.parametrize(
-    "location",
-    [
-        "file:///etc/passwd",
-        "/etc/passwd",
-        "relative/metadata.json",
-        "http://169.254.169.254/latest/meta-data",
-        "https://attacker.example/x.parquet",
-        "hdfs://10.0.0.5/x",
-        "gs://bucket/x",
-        "abfss://c@acct.dfs.core.windows.net/x",
-        "oss://bucket/x",
-    ],
-)
-def test_guarded_file_io_rejects_non_object_store_locations(location: str) -> None:
-    io = iceberg_export.guarded_file_io(VENDED)
+@pytest.fixture(autouse=True)
+def _no_hosted_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(COMMERCIAL_HOSTED_ENV, raising=False)
+
+
+LOCAL_LOCATIONS = ["file:///etc/passwd", "/etc/passwd", "relative/metadata.json"]
+REMOTE_NON_OBJECT_STORE = [
+    "http://169.254.169.254/latest/meta-data",
+    "https://attacker.example/x.parquet",
+    "hdfs://10.0.0.5/x",
+    "gs://bucket/x",
+    "abfss://c@acct.dfs.core.windows.net/x",
+    "oss://bucket/x",
+]
+
+
+@pytest.mark.parametrize("location", REMOTE_NON_OBJECT_STORE)
+def test_guarded_file_io_rejects_non_object_store_schemes_in_every_mode(location: str) -> None:
+    for io in (iceberg_export.guarded_file_io(VENDED), _server_io(VENDED)):
+        with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
+            io.new_input(location)
+        with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
+            io.new_output(location)
+
+
+@pytest.mark.parametrize("location", LOCAL_LOCATIONS)
+def test_guarded_file_io_refuses_local_files_in_server_mode(location: str) -> None:
+    io = _server_io(VENDED)
     with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
         io.new_input(location)
     with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
         io.new_output(location)
+
+
+def test_guarded_file_io_allows_a_local_file_warehouse_in_local_mode(tmp_path: Any) -> None:
+    target = tmp_path / "metadata.json"
+    target.write_text("{}", encoding="utf-8")
+    io = iceberg_export.guarded_file_io(VENDED)
+    assert io.new_input(target.as_uri()).open().read() == b"{}"
+    assert io.new_input(str(target)).exists()
+
+
+def test_server_mode_is_fixed_when_the_file_io_is_built() -> None:
+    """Scans read data files on executor threads that lack the request context."""
+    io = _server_io(VENDED)
+    with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
+        io.new_input("file:///etc/passwd")  # read outside server_execution
+
+
+def _server_io(properties: dict[str, str]) -> Any:
+    with server_execution("tenant-a"):
+        return iceberg_export.guarded_file_io(properties)
 
 
 def test_guarded_file_io_allows_s3_and_opted_in_warehouse_scheme() -> None:
@@ -103,7 +136,8 @@ def test_rest_catalog_filters_config_and_table_properties(rest_stub: Any, monkey
         url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
     )
     try:
-        io = catalog._load_file_io({**HOSTILE_PROPERTIES, **VENDED}, location="s3://bucket/t")
+        with server_execution("tenant-a"):
+            io = catalog._load_file_io({**HOSTILE_PROPERTIES, **VENDED}, location="s3://bucket/t")
         assert isinstance(io, PyArrowFileIO)
         assert dict(io.properties) == VENDED
         with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
@@ -124,9 +158,29 @@ def test_glue_catalog_file_io_rejects_local_metadata_locations(monkeypatch: pyte
 
     monkeypatch.setattr(boto3, "Session", FakeSession)
     catalog = ice.glue_catalog(region="us-east-1")
-    io = catalog._load_file_io(HOSTILE_PROPERTIES, location="file:///etc/passwd")
+    with server_execution("tenant-a"):
+        io = catalog._load_file_io(HOSTILE_PROPERTIES, location="file:///etc/passwd")
     assert "s3.endpoint" not in io.properties
     with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
         io.new_input("file:///var/lib/trustops/tenants/other/metadata.json")
     with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
         io.new_input("/etc/passwd")
+
+
+def test_loopback_test_catalog_may_use_a_local_file_warehouse(rest_stub: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Local catalog testing (loopback opt-in) can use a local FILE warehouse; server mode cannot."""
+    url, _state = rest_stub
+    monkeypatch.setenv("TRUSTOPS_TEST_BEARER", "synthetic-ephemeral-bearer")
+    catalog = iceberg_export.rest_catalog(
+        url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
+    )
+    try:
+        io = catalog._load_file_io({"s3.endpoint": "http://169.254.169.254"})
+        assert "s3.endpoint" not in io.properties
+        assert io.new_input("file:///tmp/warehouse/metadata.json").location.startswith("file:")
+        with pytest.raises(iceberg_export.IcebergPublicationError, match="storage location"):
+            io.new_input("http://169.254.169.254/x")
+        with server_execution("tenant-a"), pytest.raises(iceberg_export.IcebergPublicationError):
+            catalog._load_file_io({}).new_input("file:///tmp/warehouse/metadata.json")
+    finally:
+        catalog.close()

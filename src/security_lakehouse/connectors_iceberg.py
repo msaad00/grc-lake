@@ -19,7 +19,7 @@ filtered, not trusted: FileIO keeps only vended short-lived credentials and the
 region from a REST catalog's config/table responses (endpoint, proxy, signer,
 role, retry and FileIO implementation keys are dropped), and every metadata,
 manifest, and data location must use an s3 scheme (or the configured REST
-warehouse's object-store scheme). ``file:``, bare paths, and HTTP are refused
+warehouse's object-store scheme). HTTP is always refused; ``file:`` and bare paths are refused
 for REST and Glue alike (see ``iceberg_export.guarded_file_io``). A REST catalog
 URI must be HTTPS and resolve to a public address (netguard); the hardened REST
 client from ``iceberg_export`` refuses redirects and endpoint relocation.

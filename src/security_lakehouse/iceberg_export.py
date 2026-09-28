@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.parquet_export import SCHEMA_VERSION, export_parquet
 from security_lakehouse.secret_refs import resolve_secret_ref
 
@@ -19,6 +20,8 @@ FORMAT_VERSION = "trustops.iceberg_evidence.v1"
 # else -- file paths, bare paths, http(s), hdfs, other clouds -- is refused, so
 # table metadata cannot read the TrustOps host's disk or reach internal hosts.
 OBJECT_STORE_SCHEMES = ("s3", "s3a", "s3n")
+# Local warehouses (file: and bare paths) are allowed only outside server mode.
+LOCAL_STORAGE_SCHEMES = ("file",)
 # A REST warehouse configured on another object store opts in its scheme.
 _WAREHOUSE_SCHEME_GROUPS = {"gs": ("gs", "gcs"), "gcs": ("gs", "gcs")}
 # The only FileIO properties a catalog (config or table response) may supply:
@@ -74,7 +77,8 @@ def _guarded_io_class():
 
             def _check(self, location):
                 text = location.location if isinstance(location, InputFile | OutputFile) else str(location)
-                if urlsplit(text).scheme.lower() not in self.allowed_schemes:
+                # A bare path is a local file to pyiceberg.
+                if (urlsplit(text).scheme.lower() or "file") not in self.allowed_schemes:
                     raise IcebergPublicationError(
                         "storage location must use an object-store scheme such as s3; "
                         "local paths, HTTP, and other schemes are refused"
@@ -102,9 +106,17 @@ def _guarded_io_class():
 
 
 def guarded_file_io(properties, *, extra_schemes=()):
-    """A PyArrow FileIO limited to vended credentials and object-store locations."""
+    """A PyArrow FileIO limited to vended credentials and allowed storage locations.
+
+    Locations must use an object-store scheme (plus ``extra_schemes``). Local
+    ``file`` locations are also allowed in local/CLI mode, where the operator
+    owns the filesystem, and refused in hosted server mode. The mode is fixed
+    when the FileIO is built: pyiceberg reads data files on executor threads
+    that do not carry the request's server-mode context.
+    """
     io = _guarded_io_class()(storage_properties(properties))
-    io.allowed_schemes = frozenset(OBJECT_STORE_SCHEMES) | frozenset(extra_schemes)
+    local_schemes = () if in_server_mode() else LOCAL_STORAGE_SCHEMES
+    io.allowed_schemes = frozenset(OBJECT_STORE_SCHEMES) | frozenset(extra_schemes) | frozenset(local_schemes)
     return io
 
 

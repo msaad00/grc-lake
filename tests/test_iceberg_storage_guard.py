@@ -88,8 +88,11 @@ def test_guarded_file_io_allows_a_local_file_warehouse_in_local_mode(tmp_path: A
     target = tmp_path / "metadata.json"
     target.write_text("{}", encoding="utf-8")
     io = iceberg_export.guarded_file_io(VENDED)
-    assert io.new_input(target.as_uri()).open().read() == b"{}"
-    assert io.new_input(str(target)).exists()
+    with io.new_input(target.as_uri()).open() as stream:
+        content = stream.read()
+    assert content == b"{}"
+    exists = io.new_input(str(target)).exists()
+    assert exists
 
 
 def test_server_mode_is_fixed_when_the_file_io_is_built() -> None:

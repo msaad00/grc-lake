@@ -630,8 +630,8 @@ function FrameworksPageContent() {
                 : "—"}
             </dd>
             <dd className="mt-1.5 text-xs text-muted">
-              {formatCount(coverageSummary?.attestable_requirement_count)} with
-              every mapping reviewed
+              {formatCount(coverageSummary?.attestable_requirement_count)}{" "}
+              requirements with every mapping reviewed
             </dd>
           </div>
           <div className="px-4 py-4 sm:px-5">

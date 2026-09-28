@@ -35,6 +35,20 @@ import { displayLabel } from "@/lib/display";
 
 const PAGE_SIZE = 25;
 const CHIP_LIMIT = 6;
+const EQUIVALENCE_PREVIEW = 6;
+
+// Overlap matrices grow with the square of the framework count, so they scroll
+// inside a bounded region with the header row and framework column pinned.
+const MATRIX_REGION = "max-h-[70vh] overflow-auto border-t border-line";
+const MATRIX_TABLE =
+  "w-max min-w-full border-separate border-spacing-0 text-sm";
+const MATRIX_HEAD = "sticky top-0 z-[2] border-b border-line bg-surfaceMuted";
+const MATRIX_CORNER =
+  "sticky left-0 top-0 z-[3] border-b border-line bg-surfaceMuted";
+const MATRIX_ROW_HEAD =
+  "sticky left-0 z-[1] border-t border-line bg-surfaceMuted";
+const MATRIX_CELL =
+  "min-w-[200px] max-w-[260px] border-l border-t border-line p-3 align-top text-xs";
 
 type ReviewFilter = "all" | "reviewed" | "proposed";
 
@@ -79,6 +93,7 @@ export default function CrosswalkPage() {
   const [framework, setFramework] = useState("all");
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [page, setPage] = useState(0);
+  const [showAllGroups, setShowAllGroups] = useState(false);
 
   const heuristicFrameworks = heuristic.data?.frameworks ?? [];
   const heuristicMatrix = heuristic.data?.matrix ?? [];
@@ -142,6 +157,9 @@ export default function CrosswalkPage() {
     mappingRows.map((row) => `${row.framework_id}:${row.article_id}`),
   ).size;
   const equivalenceGroups = equivalence.data?.groups ?? [];
+  const visibleGroups = showAllGroups
+    ? equivalenceGroups
+    : equivalenceGroups.slice(0, EQUIVALENCE_PREVIEW);
   const crosswalkQueries = [heuristic, reviewed, equivalence, mappings];
   const reviewSummary = useMappingReviewSummary();
   const loaded = crosswalkQueries.every((query) => query.isSuccess);
@@ -212,8 +230,8 @@ export default function CrosswalkPage() {
               Reviewed groups of related controls.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3">
-            {equivalenceGroups.map((group) => (
+          <CardContent id="equivalence-groups" className="grid gap-3">
+            {visibleGroups.map((group) => (
               <div
                 key={group.group_id}
                 className="rounded-lg border border-line bg-surfaceMuted p-3"
@@ -254,6 +272,21 @@ export default function CrosswalkPage() {
                 No equivalence groups loaded.
               </p>
             )}
+            {equivalenceGroups.length > EQUIVALENCE_PREVIEW ? (
+              <div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-expanded={showAllGroups}
+                  aria-controls="equivalence-groups"
+                  onClick={() => setShowAllGroups((value) => !value)}
+                >
+                  {showAllGroups
+                    ? "Show fewer groups"
+                    : `Show all ${equivalenceGroups.length} groups`}
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -444,17 +477,24 @@ export default function CrosswalkPage() {
             Reviewed framework overlap matrix
             <Badge tone="info">{reviewedFrameworks.length} frameworks</Badge>
           </summary>
-          <div className="overflow-x-auto border-t border-line">
-            <table className="w-full min-w-[720px] border-collapse text-sm">
+          <div
+            role="region"
+            aria-label="Reviewed framework overlap matrix"
+            tabIndex={0}
+            className={MATRIX_REGION}
+          >
+            <table className={MATRIX_TABLE}>
               <thead>
                 <tr>
-                  <th className="bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
+                  <th
+                    className={`${MATRIX_CORNER} px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted`}
+                  >
                     Framework
                   </th>
                   {reviewedFrameworks.map((f) => (
                     <th
                       key={f}
-                      className="border-l border-line bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
+                      className={`${MATRIX_HEAD} border-l px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted`}
                     >
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
@@ -470,8 +510,10 @@ export default function CrosswalkPage() {
               </thead>
               <tbody>
                 {reviewedMatrix.map((row) => (
-                  <tr key={row.framework_id} className="border-t border-line">
-                    <th className="bg-surfaceMuted px-3 py-3 text-left text-xs font-semibold text-ink">
+                  <tr key={row.framework_id}>
+                    <th
+                      className={`${MATRIX_ROW_HEAD} px-3 py-3 text-left text-xs font-semibold text-ink`}
+                    >
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
                           frameworkId={row.framework_id}
@@ -489,7 +531,7 @@ export default function CrosswalkPage() {
                       <td
                         key={cell.framework_id}
                         className={[
-                          "border-l border-line p-3 align-top text-xs",
+                          MATRIX_CELL,
                           cell.is_self ? "bg-surfaceMuted" : "bg-surface",
                         ].join(" ")}
                       >
@@ -529,17 +571,24 @@ export default function CrosswalkPage() {
             Heuristic domain overlap matrix
             <Badge>{heuristicFrameworks.length} frameworks</Badge>
           </summary>
-          <div className="overflow-x-auto border-t border-line">
-            <table className="w-full min-w-[720px] border-collapse text-sm">
+          <div
+            role="region"
+            aria-label="Heuristic domain overlap matrix"
+            tabIndex={0}
+            className={MATRIX_REGION}
+          >
+            <table className={MATRIX_TABLE}>
               <thead>
                 <tr>
-                  <th className="bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted">
+                  <th
+                    className={`${MATRIX_CORNER} px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted`}
+                  >
                     Framework
                   </th>
                   {heuristicFrameworks.map((f) => (
                     <th
                       key={f}
-                      className="border-l border-line bg-surfaceMuted px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
+                      className={`${MATRIX_HEAD} border-l px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted`}
                     >
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
@@ -555,8 +604,10 @@ export default function CrosswalkPage() {
               </thead>
               <tbody>
                 {heuristicMatrix.map((row) => (
-                  <tr key={row.framework_id} className="border-t border-line">
-                    <th className="bg-surfaceMuted px-3 py-3 text-left text-xs font-semibold text-ink">
+                  <tr key={row.framework_id}>
+                    <th
+                      className={`${MATRIX_ROW_HEAD} px-3 py-3 text-left text-xs font-semibold text-ink`}
+                    >
                       <span className="inline-flex items-center gap-1.5">
                         <FrameworkBadge
                           frameworkId={row.framework_id}
@@ -570,7 +621,7 @@ export default function CrosswalkPage() {
                       <td
                         key={cell.framework_id}
                         className={[
-                          "border-l border-line p-3 align-top text-xs",
+                          MATRIX_CELL,
                           cell.is_self ? "bg-surfaceMuted" : "bg-surface",
                         ].join(" ")}
                       >

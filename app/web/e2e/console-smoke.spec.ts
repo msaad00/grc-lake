@@ -28,13 +28,11 @@ test.describe("console smoke", () => {
     await expect(
       page.getByRole("tab", { name: "Sources", exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("tab", { name: "Exports", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Exports" })).toHaveCount(0);
     await expect(page.getByText("Scale tier")).toHaveCount(0);
   });
 
-  test("dashboard framework portfolio expands, scrolls, and collapses", async ({
+  test("dashboard framework portfolio sorts, expands, scrolls, and collapses", async ({
     page,
   }) => {
     await page.goto("/console/dashboard/");
@@ -43,14 +41,41 @@ test.describe("console smoke", () => {
     });
     await expect(portfolio).toBeVisible();
     await expect(portfolio.getByText("SOC 2", { exact: true })).toBeVisible();
-    const priorityCount = await portfolio.getByRole("link").count();
-    await page.getByRole("button", { name: "All", exact: true }).click();
+    // One sort control, one expander: no parallel Priority/All filter.
+    await expect(
+      page.getByRole("button", { name: "Priority", exact: true }),
+    ).toHaveCount(0);
+    const sort = page.getByRole("combobox", { name: "Sort" });
+    await expect(sort).toHaveValue("priority");
+    const previewCount = await portfolio.getByRole("link").count();
+    expect(previewCount).toBe(4);
+    const expand = page.getByRole("button", {
+      name: /^Show all \d+ frameworks/,
+    });
+    await expand.click();
     expect(await portfolio.getByRole("link").count()).toBeGreaterThan(
-      priorityCount,
+      previewCount,
     );
     expect(
       await portfolio.evaluate((node) => node.scrollHeight > node.clientHeight),
     ).toBe(true);
+    await sort.selectOption("name");
+    const names = await portfolio
+      .getByRole("link")
+      .evaluateAll((links) =>
+        links.map(
+          (link) => link.querySelector(".font-medium")?.textContent ?? "",
+        ),
+      );
+    const { data: assessment } = await (
+      await page.request.get("/api/v1/posture/current")
+    ).json();
+    const assessed = (assessment.frameworks as { framework: string }[])
+      .map((f) => f.framework)
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    expect(names.slice(0, assessed.length)).toEqual(assessed);
+    await page.getByRole("button", { name: "Show fewer", exact: true }).click();
+    await expect(portfolio.getByRole("link")).toHaveCount(previewCount);
     const toggle = page.getByRole("button", {
       name: /^Compliance$/,
     });
@@ -58,8 +83,6 @@ test.describe("console smoke", () => {
     await expect(portfolio).not.toBeVisible();
     await toggle.click();
     await expect(portfolio).toBeVisible();
-    await page.getByRole("button", { name: "Priority", exact: true }).click();
-    await expect(portfolio.getByRole("link")).toHaveCount(priorityCount);
     const families = page.getByRole("tab", {
       name: "Control families",
       exact: true,
@@ -167,18 +190,26 @@ test.describe("console smoke", () => {
     ).toBeVisible();
   });
 
-  test("dashboard progressively discloses operational detail", async ({
+  test("dashboard shows each number once, with no duplicate detail section", async ({
     page,
   }) => {
     await page.goto("/console/dashboard/");
     await expect(page.getByRole("main")).toBeVisible({ timeout: 20_000 });
-    const detail = page.getByRole("button", { name: /Operational detail/ });
-    await expect(detail).toHaveAttribute("aria-expanded", "false");
-    await detail.click();
-    await expect(detail).toHaveAttribute("aria-expanded", "true");
     await expect(
-      page.getByRole("tab", { name: "Frameworks", exact: true }),
-    ).toBeVisible();
+      page.getByRole("button", { name: /Operational detail/ }),
+    ).toHaveCount(0);
+    await expect(page.getByText("At a glance", { exact: true })).toHaveCount(0);
+    // Findings preview is a fixed-length list: nothing scrolls or clips.
+    const findings = page.getByRole("region", { name: "Findings to triage" });
+    const rows = findings.getByRole("link");
+    expect(await rows.count()).toBeLessThanOrEqual(5);
+    expect(
+      await findings.evaluate((node) => node.scrollHeight <= node.clientHeight),
+    ).toBe(true);
+    await expect(findings.getByText(/Owner:/)).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "View all findings →" }),
+    ).toHaveAttribute("href", "/console/violations/");
   });
 
   test("default navigation exposes the full trust workflow", async ({

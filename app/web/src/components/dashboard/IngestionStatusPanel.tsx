@@ -54,10 +54,10 @@ function Metric({
 }) {
   return (
     <div className="rounded-lg border border-line bg-panel px-3 py-2">
-      <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
         {label}
       </div>
-      <div className="mt-1 text-xl font-black leading-none text-ink">
+      <div className="mt-1 text-xl font-semibold leading-none text-ink">
         {value}
       </div>
       <div className="mt-1 truncate text-xs text-muted">{detail}</div>
@@ -247,7 +247,7 @@ export function IngestionStatusPanel({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <Layers className="h-4 w-4 text-brand" />
-                  <span className="text-sm font-black text-ink">
+                  <span className="text-sm font-semibold text-ink">
                     Processing mode
                   </span>
                   <Badge tone={toneForScaleMode(scale.mode)}>
@@ -327,7 +327,7 @@ export function IngestionStatusPanel({
 
         {recentEvidenceSyncs.length > 0 && (
           <div className="rounded-lg border border-line">
-            <div className="border-b border-line px-3 py-2 text-xs font-black uppercase tracking-wide text-muted">
+            <div className="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
               Recent evidence syncs
             </div>
             <div className="divide-y divide-line">
@@ -336,7 +336,7 @@ export function IngestionStatusPanel({
                   key={`${run.connector_id}-${run.occurred_at}-${index}`}
                   className="grid gap-2 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_120px_90px]"
                 >
-                  <div className="min-w-0 truncate text-sm font-bold text-ink">
+                  <div className="min-w-0 truncate text-sm font-semibold text-ink">
                     {run.connector_id} ·{" "}
                     {run.evidence_count == null
                       ? "sync attempt"
@@ -365,7 +365,7 @@ export function IngestionStatusPanel({
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 rounded-lg border border-line">
             <div className="flex items-center justify-between border-b border-line px-3 py-2">
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-muted">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
                 <Database className="h-3.5 w-3.5" />
                 Evidence sources
               </div>
@@ -378,7 +378,7 @@ export function IngestionStatusPanel({
                 status?.sources.map((source) => (
                   <span
                     key={source.source}
-                    className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-1 text-xs font-bold text-muted"
+                    className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-muted"
                   >
                     {source.source}
                     <strong className="text-ink">
@@ -391,7 +391,7 @@ export function IngestionStatusPanel({
                   {CONNECT_FLOW.emptyEvidence}{" "}
                   <Link
                     href="/connectors?onboarding=1"
-                    className="font-bold text-brand hover:underline"
+                    className="font-semibold text-brand hover:underline"
                   >
                     Connect a source
                   </Link>
@@ -406,7 +406,7 @@ export function IngestionStatusPanel({
                     className="grid gap-2 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_160px_110px]"
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-black text-ink">
+                      <div className="truncate text-sm font-semibold text-ink">
                         {connector.name}
                       </div>
                       <div className="truncate text-xs text-muted">
@@ -440,11 +440,11 @@ export function IngestionStatusPanel({
 
           <div className="grid gap-3">
             <div className="rounded-lg border border-line bg-panel p-3">
-              <div className="flex items-center gap-2 text-sm font-black text-ink">
+              <div className="flex items-center gap-2 text-sm font-semibold text-ink">
                 {proofReady ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <CheckCircle2 className="h-4 w-4 text-success-fg" />
                 ) : (
-                  <FileCheck2 className="h-4 w-4 text-amber-600" />
+                  <FileCheck2 className="h-4 w-4 text-warning-fg" />
                 )}
                 Reviewer proof
               </div>
@@ -455,9 +455,9 @@ export function IngestionStatusPanel({
               </p>
             </div>
             <div className="rounded-lg border border-line bg-surface p-3">
-              <div className="flex items-center gap-2 text-sm font-black text-ink">
+              <div className="flex items-center gap-2 text-sm font-semibold text-ink">
                 {action?.priority === "p0" ? (
-                  <AlertTriangle className="h-4 w-4 text-rose-600" />
+                  <AlertTriangle className="h-4 w-4 text-danger-fg" />
                 ) : (
                   <RefreshCw className="h-4 w-4 text-brand" />
                 )}
@@ -473,7 +473,7 @@ export function IngestionStatusPanel({
         {(platformJobs.data?.jobs.length ?? 0) > 0 && (
           <div className="rounded-lg border border-line bg-surface p-3">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Recent platform jobs
               </div>
               <Badge tone="info">
@@ -488,7 +488,7 @@ export function IngestionStatusPanel({
                   className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-panel px-2.5 py-2 text-xs"
                 >
                   <div className="min-w-0">
-                    <div className="truncate font-black text-ink">
+                    <div className="truncate font-semibold text-ink">
                       {job.label}
                     </div>
                     <div className="truncate text-muted">

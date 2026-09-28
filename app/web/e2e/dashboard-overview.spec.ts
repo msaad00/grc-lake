@@ -38,28 +38,49 @@ test("assessment overview links to workspaces and discloses provenance", async (
   await expect(
     overview.getByRole("link", { name: /Assessment export/ }),
   ).toHaveAttribute("href", "/console/audit-room/");
+  // "Evaluated …" is the one disclosure for the assessment provenance.
+  const details = overview.locator("summary", { hasText: /^Evaluated / });
+  await expect(details).toContainText("assessment details");
   await expect(
     overview.getByText("Assessment ID", { exact: true }),
   ).not.toBeVisible();
-  await overview.getByText("Assessment details", { exact: true }).click();
+  await details.click();
   await expect(
     overview.getByText("Assessment ID", { exact: true }),
   ).toBeVisible();
-  await overview.getByText("Assessment details", { exact: true }).click();
+  await details.click();
   await expect(
     overview.getByText("Assessment ID", { exact: true }),
   ).not.toBeVisible();
   // Escape and an outside click both dismiss it, like the popovers around it.
-  await overview.getByText("Assessment details", { exact: true }).click();
+  await details.click();
   await page.keyboard.press("Escape");
   await expect(
     overview.getByText("Assessment ID", { exact: true }),
   ).not.toBeVisible();
-  await overview.getByText("Assessment details", { exact: true }).click();
+  await details.click();
   await page.getByRole("heading", { level: 1, name: "Overview" }).click();
   await expect(
     overview.getByText("Assessment ID", { exact: true }),
   ).not.toBeVisible();
+});
+
+test("every overview KPI is a label, one number, one line, no icon", async ({
+  page,
+}) => {
+  await page.goto("/console/dashboard/");
+  const overview = page.getByRole("region", {
+    name: "Current assessment",
+    exact: true,
+  });
+  const tiles = overview.getByRole("link").filter({
+    hasText:
+      /^(Assessment score|Control pass rate|Open findings|Evidence to refresh)/,
+  });
+  await expect(tiles).toHaveCount(4);
+  for (const tile of await tiles.all()) {
+    await expect(tile.locator("svg")).toHaveCount(0);
+  }
 });
 
 test("command palette is a combobox whose active option follows the keyboard", async ({
@@ -132,20 +153,15 @@ test("overview leads with overall posture and distinguishes score from test pass
     "aria-valuenow",
     String(Math.round(ingestion.eval_accuracy.pass_rate * 100)),
   );
-  await expect(
-    overview.getByText(
-      `${ingestion.eval_accuracy.passing} of ${ingestion.eval_accuracy.total_tests} tests passing`,
-      { exact: true },
-    ),
-  ).toBeVisible();
   const accuracy = ingestion.eval_accuracy;
   // Unevaluated tests are named for what they need, not lumped into "Other".
   await expect(
     overview
       .getByRole("link", { name: /Control pass rate/ })
-      .getByText(`${ingestion.eval_accuracy.needs_evidence} Needs evidence`, {
-        exact: true,
-      }),
+      .getByText(
+        `${accuracy.passing} of ${accuracy.total_tests} tests passing · ${accuracy.needs_evidence} need evidence`,
+        { exact: true },
+      ),
   ).toBeVisible();
   expect(accuracy.needs_evidence).toBeGreaterThan(0);
 });
@@ -194,10 +210,14 @@ test("overview shows actual finding severity and stays compact at tablet width",
     exact: true,
   });
   await expect(
-    overview.getByRole("img", {
-      name: `Finding severity: ${critical} critical, ${high} high, ${Math.max(0, total - critical - high)} medium or low`,
-      exact: true,
-    }),
+    overview
+      .getByRole("link", { name: /Open findings/ })
+      .getByText(`${critical} critical · ${high} high`, { exact: true }),
+  ).toBeVisible();
+  await expect(
+    overview
+      .getByRole("link", { name: /Open findings/ })
+      .getByText(String(total), { exact: true }),
   ).toBeVisible();
   const bounds = await overview.boundingBox();
   expect(bounds).not.toBeNull();

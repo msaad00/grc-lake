@@ -67,8 +67,8 @@ export function ControlTestTable({
     helper.accessor("owner", {
       header: "Owner",
       cell: (info) => (
-        <span className="inline-flex items-center gap-2 text-xs font-extrabold">
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-blue-50 text-[11px] font-black text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+        <span className="inline-flex items-center gap-2 text-xs font-semibold">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-info-bg text-[11px] font-semibold text-info-fg">
             {info.getValue().slice(0, 1).toUpperCase()}
           </span>
           {info.getValue()}
@@ -131,7 +131,7 @@ export function ControlTestTable({
                   <th
                     key={h.id}
                     onClick={h.column.getToggleSortingHandler()}
-                    className="cursor-pointer px-4 py-3 text-left text-[11px] font-black uppercase tracking-wide text-muted"
+                    className="cursor-pointer px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
                   >
                     <span className="inline-flex items-center gap-1">
                       {flexRender(h.column.columnDef.header, h.getContext())}
@@ -160,7 +160,7 @@ export function ControlTestTable({
                       },
                     }
                   : {})}
-                className={`border-b border-line last:border-0 hover:bg-blue-50/40 dark:hover:bg-blue-500/10 ${onSelect ? "cursor-pointer focus-visible:bg-blue-50/40 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand dark:focus-visible:bg-blue-500/10" : ""}`}
+                className={`border-b border-line last:border-0 hover:bg-info-bg ${onSelect ? "cursor-pointer focus-visible:bg-info-bg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand " : ""}`}
               >
                 {r.getVisibleCells().map((c) => (
                   <td key={c.id} className="px-4 py-3 align-top">

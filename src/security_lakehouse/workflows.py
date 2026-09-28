@@ -38,9 +38,13 @@ duplicated. Egress is deny-by-default: a target host must match
 run. Every target is additionally SSRF-guarded — only ``http``/``https`` is
 allowed and the *resolved* IP(s) must be public (private, loopback, link-local,
 reserved and multicast ranges are rejected, as is ``localhost``). Secrets are
-referenced as ``{{secret.NAME}}`` and resolved from ``TRUSTOPS_SECRET_<NAME>``
-at run time; the resolved value is never written to the run log — the persisted
-params keep the ``{{secret.NAME}}`` token.
+referenced as ``{{secret.NAME}}`` and resolved at run time; the resolved value is
+never written to the run log — the persisted params keep the ``{{secret.NAME}}``
+token. Locally a token resolves from ``TRUSTOPS_SECRET_<NAME>``. In hosted server
+mode it resolves from the calling tenant's ``TRUSTOPS_TENANT_<ID>__SECRET_<NAME>``
+(see :func:`security_lakehouse.secret_refs.tenant_secret_prefix`); the shared
+``TRUSTOPS_SECRET_<NAME>`` is used there only for names the operator lists in
+``TRUSTOPS_WORKFLOW_SHARED_SECRETS``.
 
 Every action declares its input schema (the params the user fills in) and
 its output schema (the keys downstream nodes can read), so the canvas can
@@ -66,7 +70,9 @@ from urllib.parse import urlsplit
 
 from security_lakehouse import netguard
 from security_lakehouse.assessment import SnapshotWrittenHook, write_assessment_snapshot
+from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.secret_refs import tenant_secret_prefix
 from security_lakehouse.tracking import append_event as append_triage_event
 
 WORKFLOWS_FILE = "workflows.jsonl"
@@ -77,6 +83,7 @@ _RUN_ACTORS = {"console", "scheduler", "api"}
 # --- webhook egress safety -------------------------------------------------
 EGRESS_ALLOWLIST_ENV = "TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST"
 SECRET_ENV_PREFIX = "TRUSTOPS_SECRET_"
+WORKFLOW_SHARED_SECRETS_ENV = "TRUSTOPS_WORKFLOW_SHARED_SECRETS"
 _WEBHOOK_TIMEOUT_SECONDS = 15
 _WEBHOOK_BACKOFF_CAP_SECONDS = 2.0
 _SECRET_RE = re.compile(r"\{\{\s*secret\.([A-Za-z0-9_]+)\s*\}\}")
@@ -257,28 +264,48 @@ def _assert_resolved_ip_is_public(host: str) -> list[str]:
     return netguard.assert_resolved_ip_is_public(host, label="webhook target")
 
 
-def _resolve_secrets(value: Any) -> Any:
-    """Replace ``{{secret.NAME}}`` tokens from ``TRUSTOPS_SECRET_<NAME>`` env.
+def _shared_secret_allowlist() -> frozenset[str]:
+    raw = os.environ.get(WORKFLOW_SHARED_SECRETS_ENV, "")
+    return frozenset(item.strip() for item in raw.split(",") if item.strip())
+
+
+def _resolve_secret(name: str, lake_dir: str | Path | None) -> str:
+    """One ``{{secret.NAME}}`` value for the current mode (see the module docstring)."""
+    shared_key = f"{SECRET_ENV_PREFIX}{name}"
+    if not in_server_mode():
+        secret = os.environ.get(shared_key)
+        if secret is None:
+            raise ValueError(f"secret {name!r} is not set (expected env {shared_key})")
+        return secret
+    tenant_id = server_tenant_id(lake_dir)
+    prefix = tenant_secret_prefix(tenant_id) if tenant_id else None
+    if prefix:
+        # The key is built from the validated tenant prefix and a [A-Za-z0-9_]
+        # name, so a token can never step outside the tenant's namespace.
+        tenant_value = os.environ.get(f"{prefix}SECRET_{name}")
+        if tenant_value is not None:
+            return tenant_value
+    if name in _shared_secret_allowlist():
+        shared = os.environ.get(shared_key)
+        if shared is not None:
+            return shared
+    expected = f"{prefix}SECRET_{name}" if prefix else "a tenant-scoped secret"
+    raise ValueError(f"secret {name!r} is not set for this tenant (expected env {expected})")
+
+
+def _resolve_secrets(value: Any, lake_dir: str | Path | None = None) -> Any:
+    """Replace ``{{secret.NAME}}`` tokens with their values for the current tenant.
 
     Applied to the request actually sent on the wire. The caller must NOT feed
     the resolved result back into anything that is persisted — the run log keeps
     the pre-resolution token form so the secret value never lands on disk.
     """
     if isinstance(value, str):
-
-        def repl(match: re.Match[str]) -> str:
-            name = match.group(1)
-            env_key = f"{SECRET_ENV_PREFIX}{name}"
-            secret = os.environ.get(env_key)
-            if secret is None:
-                raise ValueError(f"secret {name!r} is not set (expected env {env_key})")
-            return secret
-
-        return _SECRET_RE.sub(repl, value)
+        return _SECRET_RE.sub(lambda match: _resolve_secret(match.group(1), lake_dir), value)
     if isinstance(value, list):
-        return [_resolve_secrets(item) for item in value]
+        return [_resolve_secrets(item, lake_dir) for item in value]
     if isinstance(value, dict):
-        return {k: _resolve_secrets(v) for k, v in value.items()}
+        return {k: _resolve_secrets(v, lake_dir) for k, v in value.items()}
     return value
 
 
@@ -343,6 +370,7 @@ def _http_post(
     max_retries: int = 2,
     idempotency_key: str | None = None,
     what: str = "webhook",
+    lake_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """Shared outbound POST: allowlist + SSRF guard + secret resolver + retry.
 
@@ -367,9 +395,9 @@ def _http_post(
     # exact host we will connect to (so a url passed as {{secret.NAME}} — e.g. a
     # Slack incoming-webhook URL — is still gated, and guard-vs-connect can't
     # disagree). The caller's params stay token-form; nothing resolved is persisted.
-    url = str(_resolve_secrets(url_template))
+    url = str(_resolve_secrets(url_template, lake_dir))
     _assert_egress_allowed(url, what=what)
-    body_value = _resolve_secrets(body) if body is not None else None
+    body_value = _resolve_secrets(body, lake_dir) if body is not None else None
     if body_value is None:
         data = None
     elif isinstance(body_value, str):
@@ -380,7 +408,7 @@ def _http_post(
     header_template = headers or {}
     if not isinstance(header_template, dict):
         raise ValueError(f"{what} 'headers' must be an object")
-    out_headers: dict[str, str] = {str(k): str(_resolve_secrets(v)) for k, v in header_template.items()}
+    out_headers: dict[str, str] = {str(k): str(_resolve_secrets(v, lake_dir)) for k, v in header_template.items()}
     out_headers.setdefault("Idempotency-Key", idempotency_key)
     if data is not None and not any(k.lower() == "content-type" for k in out_headers):
         out_headers["Content-Type"] = "application/json"
@@ -446,7 +474,7 @@ def _coerce_max_retries(params: dict[str, Any], default: int = 2) -> int:
         return default
 
 
-def _action_webhook(_lake: Path, params: dict[str, Any], *, dry_run: bool = False) -> dict[str, Any]:
+def _action_webhook(lake: Path, params: dict[str, Any], *, dry_run: bool = False) -> dict[str, Any]:
     """POST to an allowlisted, SSRF-guarded URL with retry + idempotency.
 
     ``params`` arrives already templated for ``{{node.output.*}}`` (resolved by
@@ -472,10 +500,11 @@ def _action_webhook(_lake: Path, params: dict[str, Any], *, dry_run: bool = Fals
         # Preserve the historical idempotency key derived from the full params.
         idempotency_key=_webhook_idempotency_key(params),
         what="webhook",
+        lake_dir=lake,
     )
 
 
-def _action_slack(_lake: Path, params: dict[str, Any], *, dry_run: bool = False) -> dict[str, Any]:
+def _action_slack(lake: Path, params: dict[str, Any], *, dry_run: bool = False) -> dict[str, Any]:
     """POST a Slack incoming-webhook message via the shared egress path.
 
     ``webhook_url`` is typically ``{{secret.SLACK_WEBHOOK}}`` — it still flows
@@ -508,6 +537,7 @@ def _action_slack(_lake: Path, params: dict[str, Any], *, dry_run: bool = False)
         body=payload,
         max_retries=_coerce_max_retries(params),
         what="slack",
+        lake_dir=lake,
     )
     return {
         "status_code": result["status_code"],
@@ -519,7 +549,7 @@ def _action_slack(_lake: Path, params: dict[str, Any], *, dry_run: bool = False)
     }
 
 
-def _action_jira(_lake: Path, params: dict[str, Any], *, dry_run: bool = False) -> dict[str, Any]:
+def _action_jira(lake: Path, params: dict[str, Any], *, dry_run: bool = False) -> dict[str, Any]:
     """Create a Jira issue via the shared egress path.
 
     Auth is built from a resolved ``{{secret.JIRA_TOKEN}}`` token: with an
@@ -567,7 +597,7 @@ def _action_jira(_lake: Path, params: dict[str, Any], *, dry_run: bool = False) 
     # the {{secret.NAME}} token form so _http_post resolves it on the wire only and
     # the caller's persisted params never hold the secret value.
     email = params.get("email")
-    auth_header = _jira_basic_auth(str(email), token) if email else f"Bearer {token}"
+    auth_header = _jira_basic_auth(str(email), token, lake) if email else f"Bearer {token}"
 
     url = base_url.rstrip("/") + "/rest/api/3/issue"
     result = _http_post(
@@ -576,6 +606,7 @@ def _action_jira(_lake: Path, params: dict[str, Any], *, dry_run: bool = False) 
         headers={"Authorization": auth_header, "Accept": "application/json"},
         max_retries=_coerce_max_retries(params),
         what="jira",
+        lake_dir=lake,
     )
 
     issue_key: str | None = None
@@ -599,7 +630,7 @@ def _action_jira(_lake: Path, params: dict[str, Any], *, dry_run: bool = False) 
     }
 
 
-def _jira_basic_auth(email: str, token: str) -> str:
+def _jira_basic_auth(email: str, token: str, lake_dir: str | Path | None = None) -> str:
     """Build a Basic-auth header value, deferring secret resolution to the wire.
 
     When ``token`` is a ``{{secret.NAME}}`` token we cannot base64 it here without
@@ -611,7 +642,7 @@ def _jira_basic_auth(email: str, token: str) -> str:
     to this call, the persisted node params are untouched. The encoded credential
     is built fresh each run and never written to the run log.
     """
-    resolved_token = str(_resolve_secrets(token))
+    resolved_token = str(_resolve_secrets(token, lake_dir))
     raw = f"{email}:{resolved_token}".encode()
     return "Basic " + base64.b64encode(raw).decode("ascii")
 

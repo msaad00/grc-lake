@@ -299,6 +299,61 @@ the flat root lake is bound to nobody: each tenant reads its own `tenants/<id>`
 subtree (initially empty) rather than another tenant's data. Provision
 per-tenant lakes by running the pipeline with `--out <root>/tenants/<tenant_id>`.
 
+## Hosted connector credentials
+
+In server mode a tenant admin configures connectors, and chooses both the
+credential reference and the host the credential is sent to. The server
+therefore never lets a tenant reach its own secrets, cloud identity, or disk.
+Local and CLI runs act for the operator and are unchanged.
+
+**Secret references.** A `*_ref` or `*_env` field (for example
+`client_secret_ref`, `credential_ref`, `kubeconfig_ref`, `options.token_env`)
+names an environment variable. In server mode a name resolves only when it is:
+
+- under the tenant's own prefix `TRUSTOPS_TENANT_<TENANT_ID>_`, where the tenant
+  id is upper-cased with every non-alphanumeric replaced by `_` (for tenant
+  `3f2b8c1e-9a4d-...`, `TRUSTOPS_TENANT_3F2B8C1E_9A4D_..._JAMF_SECRET`), or
+- listed in `TRUSTOPS_CONNECTOR_SECRET_REFS`, a comma-separated list of exact
+  names or `PREFIX*` patterns set by the operator.
+
+Server secrets are always refused, whatever the allowlist says: every
+`TRUSTOPS_*` name other than the tenant's own prefix, and names starting with
+`AWS_`, `GOOGLE_`, `GCLOUD_`, `CLOUDSDK_`, `AZURE_`, `ARM_`, `STRIPE_`,
+`DATABASE_`, `POSTGRES`, `PG`, `REDIS_`, `SMTP_`, `KUBERNETES_`, `KUBECONFIG`,
+`VAULT_`, `GITHUB_`, and similar (the full list is `DENIED_PREFIXES` in
+`src/security_lakehouse/secret_refs.py`). The same decision covers the
+`<NAME>_FILE` mounted-secret variant. A disallowed reference is rejected when the
+connector is configured or probed, and again at sync for configs saved earlier.
+A connector's built-in default variable (for example `JAMF_CLIENT_SECRET` when no
+ref is set) is the operator's global credential and follows the same rule, so
+hosted tenants must set an explicit ref.
+
+**Delegated cloud access.** The server never collects with its own identity:
+
+- AWS readers (`aws-posture`, `object-storage-evidence`, Iceberg on Glue, Parquet
+  on S3) require the tenant's `role_arn` and `external_id`. The server-wide
+  `AWS_ROLE_ARN` and `AWS_EXTERNAL_ID` overrides are ignored for tenants.
+- GCP readers (`gcp-posture`, `bigquery-evidence-lake`) require
+  `impersonate_service_account`: a service account in the customer's project
+  that grants the TrustOps runtime identity `roles/iam.serviceAccountTokenCreator`.
+  The server's Application Default Credentials only mint that impersonated
+  token. GCP has no external-id equivalent, so run each hosted deployment's
+  runtime under a service account that customers grant only to TrustOps.
+- BigQuery refuses a fully qualified source table in another project than the
+  configured `project_id` unless `options.allow_cross_project` is true.
+- Kubernetes requires `kubeconfig_ref` naming the tenant's kubeconfig; the
+  in-cluster service account and the server's `KUBECONFIG` are refused.
+- Snowflake refuses an inline `private_key_file` path and `externalbrowser` auth.
+
+**Local lake paths.** `TRUSTOPS_LAKE_LOCAL_ROOT` is shared by the whole server,
+so a hosted tenant may read local Parquet only under
+`$TRUSTOPS_LAKE_LOCAL_ROOT/<tenant_id>`.
+
+A request is in server mode when the FastAPI server (`serve --server`) handles it. A
+process with `TRUSTOPS_COMMERCIAL_HOSTED=1` applies the same policy to runs
+without a request, such as a scheduler pass over `<root>/tenants/<tenant_id>`,
+and takes the tenant from that lake path.
+
 The bundled console redirects unauthenticated browser traffic to `/console/login`.
 That page reads `GET /api/v1/auth/methods` and only enables login buttons for
 configured OIDC or SAML providers. Agent and CI access should continue to use

@@ -342,7 +342,11 @@ Parquet rather than Iceberg; read them with `catalog_type: "parquet"` and the
 
 Glue and S3 calls go to the AWS regional endpoints; no endpoint override is
 accepted, and the reader ignores storage settings (endpoint, proxy, signer,
-FileIO class) carried in table metadata.
+FileIO class) carried in table metadata. Every metadata, manifest, and data
+location must be an `s3://` (or `s3a://`, `s3n://`) URI: a table whose metadata
+points at `file:`, a bare path, or an HTTP URL is refused. In hosted server mode
+`role_arn` and `external_id` are required (see
+[Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials)).
 
 ### Iceberg REST catalog
 
@@ -351,9 +355,16 @@ address), `warehouse`, and `credential_ref`, the name of an environment variable
 holding a short-lived bearer token (default `TRUSTOPS_ICEBERG_TOKEN`). The client
 is the hardened one used by [Iceberg publication](ICEBERG_REST.md): no redirects,
 no endpoint relocation, no refresh credentials. The token needs read access
-(load table and scan) to the mapped namespaces only. Storage credentials vended
-by the catalog are used as the catalog returns them, so the catalog must scope
-them to read.
+(load table and scan) to the mapped namespaces only. From the catalog's config
+and table responses the reader keeps only vended storage credentials, their
+expiry, and the region (`s3.access-key-id`, `s3.secret-access-key`,
+`s3.session-token`, `s3.region`, their `client.*` forms, and
+`gcs.oauth2.token`/`gcs.oauth2.token-expires-at`); endpoint, proxy, signer,
+role, retry, and FileIO settings are dropped. Storage locations must be `s3://`,
+or `gs://` when `warehouse` itself is a `gs://` location; `file:`, bare paths,
+and HTTP are refused. The catalog must still scope vended credentials to read.
+In hosted server mode `credential_ref` is required and must pass the
+[secret-reference policy](SERVER_AUTH.md#hosted-connector-credentials).
 
 ### Parquet on S3 or local disk
 
@@ -364,8 +375,10 @@ on the prefix and `s3:GetObject` on its objects. Hive-style partition
 directories (`region=us-east-1/...`) become filterable columns.
 
 Local paths are refused unless `TRUSTOPS_LAKE_LOCAL_ROOT` names the directory
-they may read, and resolved paths cannot escape it. Anything other than `s3://`
-or an absolute local path is rejected.
+they may read, and resolved paths cannot escape it. In hosted server mode each
+tenant may read only `$TRUSTOPS_LAKE_LOCAL_ROOT/<tenant_id>`, and S3 paths need
+`role_arn` plus `external_id`. Anything other than `s3://` or an absolute local
+path is rejected.
 
 ### BigQuery (`bigquery-evidence-lake`, preview)
 
@@ -374,7 +387,10 @@ Credentials: `project_id` (the project that runs the queries), and optionally
 `dataset` (qualifies one-part table names) and `location`. Authentication is
 Application Default Credentials: workload identity, an attached service
 account, or `gcloud auth application-default login` for a trial. No key file is
-configured in TrustOps.
+configured in TrustOps. Set `impersonate_service_account` to have that identity
+impersonate a service account in your project; hosted server mode requires it,
+and there a fully qualified table in another project than `project_id` needs
+`options.allow_cross_project: true`.
 
 Grant `roles/bigquery.jobUser` on the query project and
 `roles/bigquery.dataViewer` on the source dataset or tables. Views also need

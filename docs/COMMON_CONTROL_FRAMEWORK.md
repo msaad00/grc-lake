@@ -64,7 +64,7 @@ an auditor, which is the failure this system exists to prevent.
 modelled this yet" and "we tested it and it failed" are different answers, and
 collapsing them would overstate both coverage and failure.
 
-## Control families
+## Control families and categories
 
 Every safeguard belongs to exactly one family defined in
 [`controls/families.json`](../controls/families.json); the validator rejects any
@@ -72,35 +72,52 @@ other value. Each family records the NIST SP 800-53 families and CIS Controls it
 corresponds to, and `GET /api/v1/ccf/coverage` returns those definitions with the
 family ledger.
 
-| Family                    | ID                         | Safeguards | NIST SP 800-53 families | CIS Controls |
-| ------------------------- | -------------------------- | ---------: | ----------------------- | ------------ |
-| AI governance             | `ai-governance`            |          6 | —                       | —            |
-| Availability and recovery | `availability`             |          1 | CP                      | 11           |
-| Change management         | `change-management`        |          3 | CM                      | —            |
-| Configuration management  | `configuration-management` |          4 | CM                      | 2, 4         |
-| Data protection           | `data-protection`          |          3 | SC, MP                  | 1, 3         |
-| Detection                 | `detection`                |          2 | SI                      | 10, 13       |
-| Governance                | `governance`               |          8 | PL, PM                  | —            |
-| Identity and access       | `identity`                 |          5 | AC, IA                  | 5, 6         |
-| Incident response         | `incident-response`        |          4 | IR                      | 17           |
-| Audit logging             | `logging`                  |          2 | AU                      | 8            |
-| Network security          | `network-security`         |          1 | SC                      | 12           |
-| People security           | `people-security`          |          2 | AT, PS                  | 14           |
-| Physical security         | `physical-security`        |          2 | PE                      | —            |
-| Privacy                   | `privacy`                  |          5 | PT                      | —            |
-| Processing integrity      | `processing-integrity`     |          3 | SI                      | —            |
-| Risk management           | `risk-management`          |         10 | RA, CA, PM              | 18           |
-| Secure architecture       | `secure-architecture`      |          4 | SA, SC                  | —            |
-| Secure development        | `secure-development`       |          3 | SA                      | 16           |
-| System maintenance        | `system-maintenance`       |          4 | MA                      | —            |
-| Third-party risk          | `third-party-risk`         |          3 | SR, SA                  | 15           |
-| Vulnerability management  | `vulnerability-management` |          3 | RA, SI                  | 7            |
+Above the families sits a small, stable set of ten **categories**, also defined in
+`controls/families.json`. Each family names exactly one category, and the
+validator rejects a family with a missing or unknown category, a duplicate
+category id, or a category no family uses. Categories are a navigation and
+roll-up layer only: they carry no evaluation rule and no mapping of their own.
+`GET /api/v1/ccf/coverage` returns a `categories` ledger (distinct requirement and
+framework counts, reviewed and proposed mappings), every family row carries
+`category_id` and `category_label`, `security-lakehouse frameworks safeguards
+--format table` prints families under their category, and each OSCAL component
+carries a `trustops-category` property.
+
+A family is placed by what it operates, not by which framework asked for it. AI
+safeguards that operate a general control, such as access control on inference
+endpoints or AI incident handling, sit in that control's family (Identity and
+access, Incident response) rather than in AI governance, so they roll up with the
+rest of that control.
+
+| Category                     | Family                    | ID                         | Safeguards | NIST SP 800-53 families | CIS Controls |
+| ---------------------------- | ------------------------- | -------------------------- | ---------: | ----------------------- | ------------ |
+| Governance and risk          | Risk management           | `risk-management`          |         12 | RA, CA, PM              | 18           |
+| Governance and risk          | Governance                | `governance`               |          8 | PL, PM                  | —            |
+| Identity and access          | Identity and access       | `identity`                 |          6 | AC, IA                  | 5, 6         |
+| Data protection and privacy  | Data protection           | `data-protection`          |          3 | SC, MP                  | 1, 3         |
+| Data protection and privacy  | Privacy                   | `privacy`                  |          5 | PT                      | —            |
+| Secure engineering           | Change management         | `change-management`        |          4 | CM                      | —            |
+| Secure engineering           | Secure development        | `secure-development`       |          4 | SA                      | 16           |
+| Secure engineering           | Secure architecture       | `secure-architecture`      |          4 | SA, SC                  | —            |
+| Infrastructure security      | Configuration management  | `configuration-management` |          4 | CM                      | 2, 4         |
+| Infrastructure security      | Vulnerability management  | `vulnerability-management` |          3 | RA, SI                  | 7            |
+| Infrastructure security      | Network security          | `network-security`         |          1 | SC                      | 12           |
+| Detection and response       | Detection                 | `detection`                |          3 | SI                      | 10, 13       |
+| Detection and response       | Audit logging             | `logging`                  |          2 | AU                      | 8            |
+| Detection and response       | Incident response         | `incident-response`        |          5 | IR                      | 17           |
+| Resilience and integrity     | Availability and recovery | `availability`             |          2 | CP                      | 11           |
+| Resilience and integrity     | System maintenance        | `system-maintenance`       |          4 | MA                      | —            |
+| Resilience and integrity     | Processing integrity      | `processing-integrity`     |          3 | SI                      | —            |
+| Third-party and supply chain | Third-party risk          | `third-party-risk`         |          4 | SR, SA                  | 15           |
+| People and physical          | People security           | `people-security`          |          2 | AT, PS                  | 14           |
+| People and physical          | Physical security         | `physical-security`        |          2 | PE                      | —            |
+| AI governance                | AI governance             | `ai-governance`            |         13 | —                       | —            |
 
 ## Where it stands
 
 ```
 $ security-lakehouse frameworks safeguards --format table
-78 safeguards map 1182 of 2031 requirements (58.2%) — 350 reviewed (17.2%), 832 proposed
+94 safeguards map 1235 of 2031 requirements (60.8%) — 350 reviewed (17.2%), 885 proposed
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -124,20 +141,20 @@ cannot become a false certification claim.
 | ------------------- | -----------: | -----: | -----: |
 | cmmc-2-level2       |          110 |    110 | 100.0% |
 | eu-ai-act-2024-1689 |           15 |     15 | 100.0% |
+| gdpr-2016-679       |           20 |     20 | 100.0% |
 | hipaa-security-rule |           18 |     18 | 100.0% |
 | pci-dss-v4          |           12 |     12 | 100.0% |
 | soc2                |           61 |     61 | 100.0% |
 | nist-rmf-800-37r2   |           47 |     46 |  97.9% |
+| nist-ai-rmf         |           72 |     69 |  95.8% |
 | nist-csf-2.0        |          106 |    101 |  95.3% |
-| gdpr-2016-679       |           20 |     19 |  95.0% |
+| iso-42001-2023      |           39 |     37 |  94.9% |
 | iso-27017-2015      |           47 |     44 |  93.6% |
 | fedramp-moderate    |          287 |    262 |  91.3% |
 | iso-27001-2022      |           93 |     81 |  87.1% |
 | cis-controls-v8.1   |           18 |     15 |  83.3% |
 | cis_aws             |           62 |     51 |  82.3% |
 | iso-27701-2025      |           10 |      8 |  80.0% |
-| iso-42001-2023      |           39 |     26 |  66.7% |
-| nist-ai-rmf         |           72 |     28 |  38.9% |
 | nist-800-53-rev5    |         1014 |    285 |  28.1% |
 
 ### What a safeguard applies to

@@ -110,7 +110,7 @@ test.describe("console smoke", () => {
     await family.locator("summary").click();
     await expect(family.getByRole("link").first()).toHaveAttribute(
       "href",
-      /frameworks.*control=/,
+      /mapping-review\/\?family=/,
     );
     await page.setViewportSize({ width: 390, height: 844 });
     expect(

@@ -1,7 +1,11 @@
 import {
   Activity,
   Bot,
+  Boxes,
   Bug,
+  Building2,
+  CheckCheck,
+  Code2,
   Database,
   FileClock,
   Fingerprint,
@@ -10,11 +14,15 @@ import {
   Landmark,
   Layers,
   LockKeyhole,
+  Network,
   Radar,
   Scale,
   ShieldAlert,
+  SlidersHorizontal,
+  UserCheck,
   Users,
   Workflow,
+  Wrench,
 } from "lucide-react";
 
 const FAMILIES = {
@@ -33,6 +41,17 @@ const FAMILIES = {
   privacy: { label: "Privacy", icon: LockKeyhole },
   "controls-operations": { label: "Control operations", icon: Workflow },
   monitoring: { label: "Monitoring", icon: Activity },
+  "configuration-management": {
+    label: "Configuration management",
+    icon: SlidersHorizontal,
+  },
+  "secure-development": { label: "Secure development", icon: Code2 },
+  "secure-architecture": { label: "Secure architecture", icon: Boxes },
+  "network-security": { label: "Network security", icon: Network },
+  "people-security": { label: "People security", icon: UserCheck },
+  "physical-security": { label: "Physical security", icon: Building2 },
+  "system-maintenance": { label: "System maintenance", icon: Wrench },
+  "processing-integrity": { label: "Processing integrity", icon: CheckCheck },
 };
 
 export function controlFamily(domain: string) {

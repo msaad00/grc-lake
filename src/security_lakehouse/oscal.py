@@ -54,6 +54,7 @@ from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
     REVIEW_STATE_LABELS,
     effective_review_state,
+    load_ccf_families,
     load_safeguards,
 )
 
@@ -144,6 +145,7 @@ def build_component_definition(
         payload = load_safeguards()
     controls = catalog if catalog is not None else load_control_catalog()
     registry = load_framework_registry()
+    families = load_ccf_families()
     moment = now or datetime.now(UTC)
 
     components: list[JsonObject] = []
@@ -215,6 +217,7 @@ def build_component_definition(
             "props": [
                 _prop("trustops-safeguard-id", safeguard_id),
                 _prop("risk-domain", entry.get("risk_domain", "")),
+                _prop("trustops-category", families.get(str(entry.get("risk_domain")), {}).get("category", "")),
                 _prop("owner", entry.get("owner", "")),
             ],
         }

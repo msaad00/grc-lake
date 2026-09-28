@@ -228,9 +228,14 @@ def test_readme_ccf_summary_matches_the_generator_and_names_every_family() -> No
     )[0]
     assert block == f"\n\n{render_readme_summary()}\n\n"
 
-    families = json.loads((ROOT / "controls" / "families.json").read_text(encoding="utf-8"))["families"]
+    taxonomy = json.loads((ROOT / "controls" / "families.json").read_text(encoding="utf-8"))
+    families = taxonomy["families"]
     assert len(families) == 21
     for family in families:
         assert family["label"] in block
+    assert f"{len(families)} control families in {len(taxonomy['categories'])} categories" in block
+    for category in taxonomy["categories"]:
+        members = " · ".join(f["label"] for f in families if f["category"] == category["category_id"])
+        assert f"**{category['label']}:** {members}" in block
     coverage = coverage_by_framework()
     assert f"{coverage['controls']:,} catalogued requirements" in block

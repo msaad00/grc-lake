@@ -76,6 +76,7 @@ from security_lakehouse.readiness import build_readiness_view
 from security_lakehouse.safeguards import (
     PENDING_STATES,
     REVIEW_STATE_LABELS,
+    coverage_by_category,
     coverage_by_family,
     coverage_by_framework,
 )
@@ -152,6 +153,7 @@ def list_snapshots(lake_dir: str | Path) -> list[JsonObject]:
 def _ccf_coverage(lake: Path) -> JsonObject:
     effective = effective_safeguards(lake)
     return {
+        "categories": coverage_by_category(effective),
         "families": coverage_by_family(effective),
         "frameworks": coverage_by_framework(effective),
         "review_log_verified": bool(effective["review_log_verified"]),

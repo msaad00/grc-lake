@@ -52,6 +52,7 @@ import type {
   FrameworkReadinessTrends,
   FrameworkCoveragePayload,
   FrameworkDetail,
+  CcfCoverage,
   FrameworkEquivalence,
   FrameworkView,
   ReviewedCrosswalk,
@@ -672,6 +673,8 @@ export const api = {
     get<{ data: ReviewedCrosswalk }>("/v1/crosswalk/reviewed").then(
       (b) => b.data,
     ),
+  ccfCoverage: () =>
+    get<{ data: CcfCoverage }>("/v1/ccf/coverage").then((b) => b.data),
   frameworkEquivalence: () =>
     get<{ data: FrameworkEquivalence }>("/v1/mappings/equivalence").then(
       (b) => b.data,

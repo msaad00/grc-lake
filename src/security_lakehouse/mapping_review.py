@@ -34,7 +34,12 @@ from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
 from security_lakehouse.io import read_jsonl
-from security_lakehouse.ledger import append_chained_jsonl_batch, chain_lock, verify_chained_jsonl
+from security_lakehouse.ledger import (
+    append_chained_jsonl,
+    append_chained_jsonl_batch,
+    chain_lock,
+    verify_chained_jsonl,
+)
 from security_lakehouse.models import utc_iso
 from security_lakehouse.safeguards import (
     DEFAULT_SAFEGUARDS,
@@ -72,7 +77,9 @@ __all__ = [
     "list_decisions",
     "list_review_items",
     "record_decisions",
+    "resign_review_tip",
     "review_attestation",
+    "review_audit_path",
     "review_log_path",
     "review_log_verified",
     "review_progress",
@@ -95,11 +102,20 @@ def review_tip_path(lake_dir: str | Path) -> Path:
     return Path(lake_dir) / "gold" / "mapping_reviews.tip.json"
 
 
+def review_audit_path(lake_dir: str | Path) -> Path:
+    """Return the hash-chained log of operator actions on the decision log (key rotations)."""
+    return Path(lake_dir) / "gold" / "mapping_review_audit.jsonl"
+
+
+def _derive_tip_key(secret: str) -> bytes:
+    return hmac.new(secret.encode("utf-8"), _TIP_MAC_DOMAIN, hashlib.sha256).digest()
+
+
 def _tip_key() -> bytes | None:
     secret = os.environ.get(SIGNING_KEY_ENV, "").strip()
     if not secret:
         return None
-    return hmac.new(secret.encode("utf-8"), _TIP_MAC_DOMAIN, hashlib.sha256).digest()
+    return _derive_tip_key(secret)
 
 
 def _tip_mac(key: bytes, length: int, tip_hash: str | None) -> str:
@@ -204,7 +220,8 @@ def record_decisions(
         if not _verify_review_log_unlocked(lake_dir)["ok"]:
             raise MappingReviewError(
                 "the decision log failed verification, so no new decision can be recorded on it; "
-                "restore gold/mapping_reviews.jsonl from backup (see docs/MAPPING_REVIEW.md)"
+                "restore gold/mapping_reviews.jsonl from backup, or after a signing-key rotation run "
+                "frameworks review resign (see docs/MAPPING_REVIEW.md)"
             )
         latest: dict[MappingKey, str] = {}
         for row in rows:
@@ -320,6 +337,78 @@ def _verify_review_log_unlocked(lake_dir: str | Path) -> JsonObject:
     if not hmac.compare_digest(expected, recorded):
         return {**log, "ok": False, "tip_mac": "invalid", "issues": [*log["issues"], "tip MAC does not match the log"]}
     return {**log, "tip_mac": "verified"}
+
+
+def resign_review_tip(
+    lake_dir: str | Path,
+    *,
+    previous_key: str,
+    actor: str,
+    now: datetime | None = None,
+) -> JsonObject:
+    """Re-sign the decision-log tip with the current signing key after a rotation.
+
+    ``previous_key`` is the value ``TRUSTOPS_COOKIE_SIGNING_KEY`` held before the
+    rotation. Under the chain lock this verifies the hash chain, then the
+    recorded tip MAC against the previous key, and only then writes a new tip
+    MAC with the current key and appends a ``tip_resigned`` entry to
+    :func:`review_audit_path`. A broken chain, a missing sidecar, or a MAC the
+    previous key does not produce is refused and nothing is written, so a log
+    rewritten by someone without the old key can never be re-signed.
+
+    Returns ``status`` ``resigned``, or ``already_current`` when the tip already
+    verifies with the current key (nothing is written).
+    """
+    old_secret = (previous_key or "").strip()
+    if not old_secret:
+        raise MappingReviewError("the previous key is empty")
+    who = _clean_text(actor, field="actor", limit=MAX_REVIEWER_CHARS, required=True)
+    current = _tip_key()
+    if current is None:
+        raise MappingReviewError(f"{SIGNING_KEY_ENV} is not set; there is no current key to sign with")
+    previous = _derive_tip_key(old_secret)
+    with chain_lock(review_log_path(lake_dir)):
+        try:
+            log = verify_chained_jsonl(review_log_path(lake_dir))
+        except ValueError as exc:
+            raise MappingReviewError(f"the decision log hash chain does not verify: {exc}") from exc
+        if not log["ok"]:
+            raise MappingReviewError(
+                "the decision log hash chain does not verify; restore it from backup before re-signing"
+            )
+        length = int(log["length"] or 0)
+        tip_hash = log["tip_hash"]
+        if length == 0:
+            return {"status": "already_current", "length": 0, "tip_hash": None}
+        try:
+            sidecar = json.loads(review_tip_path(lake_dir).read_text(encoding="utf-8"))
+        except FileNotFoundError as exc:
+            raise MappingReviewError(
+                "the tip MAC sidecar is missing, so the log cannot be proven unmodified; restore it from backup"
+            ) from exc
+        except (OSError, ValueError) as exc:
+            raise MappingReviewError("the tip MAC sidecar is unreadable; restore it from backup") from exc
+        recorded = str(sidecar.get("mac") or "") if isinstance(sidecar, dict) else ""
+        if hmac.compare_digest(_tip_mac(current, length, tip_hash), recorded):
+            return {"status": "already_current", "length": length, "tip_hash": tip_hash}
+        if not hmac.compare_digest(_tip_mac(previous, length, tip_hash), recorded):
+            raise MappingReviewError(
+                "the recorded tip MAC does not match the previous key, so the log cannot be re-signed; "
+                "check the previous key or restore the log from backup"
+            )
+        _write_tip(lake_dir, length, tip_hash)
+        append_chained_jsonl(
+            review_audit_path(lake_dir),
+            {
+                "event_id": uuid.uuid4().hex,
+                "event": "tip_resigned",
+                "actor": who,
+                "occurred_at": utc_iso(now or datetime.now(UTC)),
+                "log_length": length,
+                "tip_hash": tip_hash,
+            },
+        )
+    return {"status": "resigned", "length": length, "tip_hash": tip_hash}
 
 
 def _verified_latest_decisions(lake_dir: str | Path | None) -> tuple[bool, dict[MappingKey, JsonObject]]:

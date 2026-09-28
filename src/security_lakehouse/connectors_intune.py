@@ -8,10 +8,11 @@ evidence shape.
 Two clients sit behind one interface, mirroring ``connectors_azure``:
 
 * :class:`IntuneClient` — bearer-authenticated ``urllib`` reads against
-  Microsoft Graph v1.0. The token comes from ``DefaultAzureCredential`` (the
-  same identity model ``azure-posture`` uses) scoped to Graph, so no stored
-  secret is needed. Requires the application permission
-  ``DeviceManagementManagedDevices.Read.All``.
+  Microsoft Graph v1.0. The token comes from the tenant's own app registration
+  when one is configured (see :func:`security_lakehouse.delegation.azure_credential`;
+  required in hosted server mode), and otherwise locally from
+  ``DefaultAzureCredential``, scoped to Graph. Requires the application
+  permission ``DeviceManagementManagedDevices.Read.All``.
 * :class:`IntuneFixtureClient` — reads ``managed_devices.json`` from a fixture
   directory.
 
@@ -32,7 +33,9 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_errors import ConnectorConfigError
 from security_lakehouse.connector_ids import stable_id_slug
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.paginate import paginate
 from security_lakehouse.io import read_json
@@ -77,10 +80,13 @@ class IntuneClient:
         tenant_id: str,
         *,
         token_provider: Callable[[], str] | None = None,
+        credential: Any = None,
         timeout: int = DEFAULT_TIMEOUT,
     ) -> None:
         self.tenant_id = tenant_id
         self.timeout = timeout
+        if token_provider is None and credential is not None:
+            token_provider = _credential_token(credential)
         self._token_provider = token_provider or _default_credential_token(tenant_id)
 
     def managed_devices(self) -> list[dict[str, Any]]:
@@ -120,7 +126,17 @@ class IntuneClient:
             return json.loads(resp.read().decode("utf-8"))
 
 
+def _credential_token(credential: Any) -> Callable[[], str]:
+    # A delegated credential is bound to its own Entra tenant.
+    return lambda: str(credential.get_token(GRAPH_SCOPE).token)
+
+
 def _default_credential_token(tenant_id: str) -> Callable[[], str]:
+    if in_server_mode():
+        raise ConnectorConfigError(
+            "intune-devices in hosted mode requires the tenant's app registration credentials; "
+            "the server never collects with its own Azure identity"
+        )
     try:
         from azure.identity import DefaultAzureCredential  # type: ignore[import-not-found]  # noqa: PLC0415
     except ImportError as exc:  # pragma: no cover - exercised only with live Graph

@@ -346,7 +346,31 @@ hosted tenants must set an explicit ref.
   configured `project_id` unless `options.allow_cross_project` is true.
 - Kubernetes requires `kubeconfig_ref` naming the tenant's kubeconfig; the
   in-cluster service account and the server's `KUBECONFIG` are refused.
+- Azure readers (`azure-posture`, `intune-devices`) authenticate as the
+  customer's own Entra app registration: `tenant_id`, `client_id`, and exactly
+  one of `client_secret_ref` (the app's client secret),
+  `client_certificate_ref` (a PEM certificate with its private key, inline or
+  mounted via `<NAME>_FILE`), or `federated_token_file_ref` (a path to a
+  workload identity token that the app's federated credential trusts). Each
+  reference follows the secret-reference rule above, so it names a
+  `TRUSTOPS_TENANT_<TENANT_ID>__` variable the operator provisions for that
+  tenant. `DefaultAzureCredential` and the `az` CLI login are refused, and the
+  server-wide `AZURE_SUBSCRIPTION_ID` and `AZURE_TENANT_ID` overrides are
+  ignored for tenants. Grant the app `Reader` on the subscription
+  (`azure-posture`) or the Graph application permission
+  `DeviceManagementManagedDevices.Read.All` with admin consent (`intune-devices`).
 - Snowflake refuses an inline `private_key_file` path and `externalbrowser` auth.
+
+**Workflow secrets.** A workflow action's `{{secret.NAME}}` token resolves
+locally from `TRUSTOPS_SECRET_<NAME>`. In server mode it resolves from the
+calling tenant's `TRUSTOPS_TENANT_<TENANT_ID>__SECRET_<NAME>` (for tenant
+`acme`, `{{secret.SLACK_WEBHOOK}}` reads `TRUSTOPS_TENANT_ACME__SECRET_SLACK_WEBHOOK`).
+The token names only the suffix, so a tenant can never reach another tenant's
+variable. The shared `TRUSTOPS_SECRET_<NAME>` is used in server mode only for
+names the operator lists in `TRUSTOPS_WORKFLOW_SHARED_SECRETS`
+(comma-separated, for example `STATUSPAGE_TOKEN`), and only when the tenant has
+no variable of its own with that name. Any other name fails the action, and
+nothing is sent.
 
 **Local lake paths.** `TRUSTOPS_LAKE_LOCAL_ROOT` is shared by the whole server,
 so a hosted tenant may read local Parquet only under

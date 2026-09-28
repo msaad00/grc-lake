@@ -30,7 +30,8 @@ EXEMPT = {
     "auth/idp_roles.py": "operator-set IdP role map env",
     "auth/saml.py": "operator-set SAML config env",
     "commercial/billing.py": "operator-set Stripe config",
-    "workflows.py": "fixed TRUSTOPS_SECRET_ namespace for workflow webhooks",
+    "cli.py": "operator-typed --*-env flags on the local CLI, never tenant input",
+    "workflows.py": "workflow secrets: TRUSTOPS_SECRET_ locally, the tenant's own prefix in server mode",
 }
 
 _ENV_RECEIVERS = {"env", "environment", "environ", "source_env", "process_env"}
@@ -98,6 +99,8 @@ REF_FIELDS = (
     "private_key_file_ref",
     "private_key_file_pwd_ref",
     "kubeconfig_ref",
+    "client_certificate_ref",
+    "federated_token_file_ref",
 )
 
 

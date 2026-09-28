@@ -20,6 +20,7 @@ const CATEGORY_TONE: Record<
   snapshot: "ready",
   workflow: "ready",
   trust_share: "critical",
+  mapping_review: "attention",
   request: "default",
 };
 

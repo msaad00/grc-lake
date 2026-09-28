@@ -46,9 +46,27 @@ _NAT64_WELL_KNOWN = ipaddress.IPv6Network("64:ff9b::/96")
 _NAT64_LOCAL_USE = ipaddress.IPv6Network("64:ff9b:1::/48")
 _IPV4_COMPATIBLE = ipaddress.IPv6Network("::/96")
 _IPV4_MAPPED = ipaddress.IPv6Network("::ffff:0:0/96")
+# 6to4 (RFC 3056) and Teredo (RFC 4380) tunnel to IPv4 hosts named inside the
+# address. Some Python releases report these prefixes as global, so every
+# embedded IPv4 must itself be public.
+_SIXTOFOUR = ipaddress.IPv6Network("2002::/16")
+_TEREDO = ipaddress.IPv6Network("2001::/32")
 
 # Credential-bearing headers that must not ride a cross-origin redirect.
 _SENSITIVE_HEADERS = ("Authorization", "Cookie", "Proxy-Authorization")
+
+
+def _embedded_ipv4s(ip: ipaddress.IPv6Address) -> list[ipaddress.IPv4Address]:
+    """IPv4 addresses a 6to4 or Teredo address tunnels to (server first for Teredo)."""
+    if ip in _SIXTOFOUR:
+        # Bits 16-47 (RFC 3056 section 2).
+        return [ipaddress.IPv4Address((int(ip) >> 80) & 0xFFFFFFFF)]
+    if ip in _TEREDO:
+        # Server IPv4 in bits 32-63; client IPv4 bit-inverted in the last 32 (RFC 4380 section 4).
+        server = ipaddress.IPv4Address((int(ip) >> 64) & 0xFFFFFFFF)
+        client = ipaddress.IPv4Address(~int(ip) & 0xFFFFFFFF)
+        return [server, client]
+    return []
 
 
 def _is_public_address(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
@@ -59,6 +77,8 @@ def _is_public_address(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> boo
             return False
         if ip in _NAT64_WELL_KNOWN or ip in _IPV4_COMPATIBLE or ip in _IPV4_MAPPED:
             return _is_public_address(ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF))
+        if not all(_is_public_address(embedded) for embedded in _embedded_ipv4s(ip)):
+            return False
     # is_global also excludes shared/CGNAT space (100.64.0.0/10), which
     # is_private does not flag.
     return ip.is_global and not ip.is_multicast

@@ -103,7 +103,8 @@ have not yet been verified against a live tenant.
 In hosted server mode, secret references must use the tenant's
 `TRUSTOPS_TENANT_<TENANT_ID>__` prefix or the operator's
 `TRUSTOPS_CONNECTOR_SECRET_REFS` allowlist, and cloud readers need delegated
-access (AWS role plus external ID, GCP `impersonate_service_account`, a tenant
+access (AWS role plus external ID, GCP `impersonate_service_account`, the
+customer's own Entra app registration for Azure and Intune, a tenant
 kubeconfig). See [Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials).
 
 | Connector ID                | Source                  | Runner status                           |
@@ -546,11 +547,15 @@ Graph and emits two current-state events per managed device:
 open finding; `inGracePeriod` is low; `unknown` and `configManager` are medium,
 because Intune has no verdict to rely on.
 
-**Identity.** The same `DefaultAzureCredential` model as `azure-posture`: an Entra
-app registration (workload identity federation or managed identity) with the Graph
-**application** permission `DeviceManagementManagedDevices.Read.All` and admin
-consent. The only stored field is `tenant_id` (`AZURE_TENANT_ID` overrides it); no
-client secret is stored in TrustOps. The tenant needs an active Intune license.
+**Identity.** An Entra identity with the Graph **application** permission
+`DeviceManagementManagedDevices.Read.All` and admin consent. Locally that is
+`DefaultAzureCredential` (managed identity, workload identity, or service-principal
+environment variables), with `tenant_id` stored and `AZURE_TENANT_ID` overriding it.
+To name the customer's own app registration instead, set `client_id` and one of
+`client_secret_ref`, `client_certificate_ref`, or `federated_token_file_ref`; hosted
+server mode requires this and ignores `AZURE_TENANT_ID` (see
+[Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials)). Only
+references are stored, never a secret value. The tenant needs an active Intune license.
 
 **Data minimization.** The list call uses `$select` for posture fields only.
 IMEI, serial number, MAC addresses, phone number, user display name, and admin

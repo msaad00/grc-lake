@@ -12135,6 +12135,1455 @@
         "s3_bucket",
         "service"
       ]
+    },
+    {
+      "safeguard_id": "SG-AIEVALUATION-001",
+      "title": "Pre-deployment AI evaluation (TEVV)",
+      "risk_domain": "ai-governance",
+      "objective": "Test, evaluate, verify and validate each AI system version against documented metrics under deployment-like conditions, and record a go/no-go decision before it is deployed.",
+      "evidence_requirement": "Attested evidence per AI system version: the test sets, metrics and TEVV tools used, performance and assurance results under conditions similar to deployment, documented limits of generalizability, and a go/no-go decision by an accountable approver before deployment. A deployment without a current evaluation record is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.1"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-2.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 2.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-1.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 1.1"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.5",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.5"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-1.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 1.1"
+          }
+        },
+        {
+          "control_id": "ISO42001-6.2.4",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-6.2.5",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.15",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AITRUSTWORTHINESS-001",
+      "title": "AI safety, fairness and explainability evaluation",
+      "risk_domain": "ai-governance",
+      "objective": "Evaluate AI systems regularly for safety, fairness and bias, and explainability against the risks identified for their context, and track the risks that current metrics cannot measure.",
+      "evidence_requirement": "Attested evidence of the latest safety evaluation, including fail-safe behaviour beyond knowledge limits; fairness and bias results with the populations tested; model explanation and output-interpretation documentation; and a tracking record for trustworthiness risks that current metrics cannot measure. An overdue evaluation or an unresolved result above risk tolerance is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.6",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.6"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.11",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.11"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.9",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.9"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-3.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 3.2"
+          }
+        }
+      ],
+      "asset_types": ["ai_agent", "ai_model", "data_store", "service"]
+    },
+    {
+      "safeguard_id": "SG-AIPERFORMANCEMONITORING-001",
+      "title": "Production AI performance and drift monitoring",
+      "risk_domain": "detection",
+      "objective": "Measure deployed AI systems in their deployment context against their intended performance, detect drift and degradation, and act on declines so the system keeps delivering its intended value.",
+      "evidence_requirement": "`clickhouse-telemetry-lake` telemetry metrics, or Attested evidence, track model quality, drift and error rates per deployed AI system against documented thresholds, with results reviewed by domain experts. A threshold breach without a linked `ticketing` record is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-4.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 4.2"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-4.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 4.1"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-4.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 4.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-2.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 2.2"
+          }
+        },
+        {
+          "control_id": "ISO42001-6.2.6",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.72",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIINCIDENT-001",
+      "title": "AI incident handling and reporting",
+      "risk_domain": "incident-response",
+      "objective": "Identify, triage, respond to and recover from AI incidents and previously unknown AI risks, and communicate them to affected AI actors, providers and authorities where required.",
+      "evidence_requirement": "`siem-alerts` detections and `ticketing` incident records classify AI incidents, such as harmful output, model misuse, data leakage through an AI system or a safety failure, with owner, severity and timeline. Attested evidence shows notifications to providers, affected users and authorities where required. An open AI incident past its response SLA is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-2.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 2.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-4.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 1, GOVERN 4.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-4.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 4.3"
+          }
+        },
+        {
+          "control_id": "ISO42001-8.4",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.26",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIPROVENANCE-001",
+      "title": "Third-party model and dataset provenance (AI-BOM)",
+      "risk_domain": "third-party-risk",
+      "objective": "Record the origin, version, license and supplier of every third-party model, dataset and AI component in an AI bill of materials, monitor the pre-trained models in use, and keep contingency plans for failures in high-risk third-party AI.",
+      "evidence_requirement": "Attested evidence: a current AI bill of materials (CycloneDX or SPDX, importable through the AIBOM store) lists each pre-trained model, dataset and AI service with source, version, license, supplier and responsible party. `kubernetes-cluster` image provenance covers the serving container images, not model weights. A production model missing from the AI-BOM, or a high-risk third-party AI dependency without a contingency plan, is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-3.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 3.2"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-6.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 1, GOVERN 6.2"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-6.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 1, GOVERN 6.1"
+          }
+        },
+        {
+          "control_id": "ISO42001-4.2",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-4.4",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-10.2",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-10.3",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.5.21",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIOVERSIGHT-001",
+      "title": "Human oversight of AI systems",
+      "risk_domain": "ai-governance",
+      "objective": "Define, staff and exercise human oversight for each AI system, with documented knowledge limits and trained operators who can intervene in, override or stop its outputs.",
+      "evidence_requirement": "`runtime-gateway` policy decisions show human-approval and intervention steps on agent tool calls. Attested evidence documents the oversight design per AI system, its knowledge limits and output-use guidance, and operator competence records. A high-risk AI system without an assigned, trained overseer is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MAP-3.5",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 3.5"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-2.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 2.2"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-3.4",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 3.4"
+          }
+        },
+        {
+          "control_id": "ISO42001-4.6",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.14",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.26",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIDATAGOVERNANCE-001",
+      "title": "AI training and evaluation data governance",
+      "risk_domain": "ai-governance",
+      "objective": "Govern the data used to train, fine-tune and evaluate AI systems: its lineage, quality, representativeness and preparation, and the lawful basis or consent for any personal data in it.",
+      "evidence_requirement": "Attested evidence per dataset: source and lineage, collection and preparation steps, quality and representativeness checks including bias examination, personal-data content with its lawful basis or consent, human-subject protections for evaluation data drawn from people, and approval for use. A dataset in use without a lineage record, or personal data without a documented lawful basis, is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "EU-AI-ACT-Art.10",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-7.2",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-7.3",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-7.4",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-7.5",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-7.6",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-4.3",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.2"
+          }
+        },
+        {
+          "control_id": "GDPR-Art.5",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "GDPR-Art.6",
+          "framework_id": "gdpr-2016-679",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AITRANSPARENCY-001",
+      "title": "AI transparency and user disclosure",
+      "risk_domain": "ai-governance",
+      "objective": "Tell users and deployers that they are dealing with an AI system, what it is for, its capabilities and limits, and where to get more information, and examine the accountability risks of what is disclosed.",
+      "evidence_requirement": "Attested evidence of the user-facing AI disclosures and instructions for use per AI system (purpose, capabilities, limitations, human-oversight measures, contact point), the technical documentation provided to each audience, and a review of transparency and accountability risks. An AI system that interacts with people without a current disclosure is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "EU-AI-ACT-Art.13",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-8.2",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-8.5",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-6.2.7",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.8",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.8"
+          }
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIRUNTIMEACCESS-001",
+      "title": "Access control for AI inference endpoints and agent tools",
+      "risk_domain": "identity",
+      "objective": "Authenticate callers of AI inference endpoints and authorize each agent tool call against a least-privilege policy at runtime, recording every decision.",
+      "evidence_requirement": "`runtime-gateway` tool-call, policy-decision and runtime-block events show each agent tool call and inference request evaluated against policy with the caller identity and the decision recorded. A tool call allowed in breach of policy, or an unauthenticated inference endpoint, is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "security-platform",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-CSF-PR.AA-05",
+          "framework_id": "nist-csf-2.0",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST Cybersecurity Framework (CSF) 2.0",
+            "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+            "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
+            "locator": "NIST CSF 2.0 Core, Appendix A, PR.AA-05"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.7",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.7"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-4.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 4.2"
+          }
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.12",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.15",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-6.2.8",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO27001-A.8.3",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "data_store",
+        "iam_role",
+        "identity_group",
+        "identity_user",
+        "okta_user",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIFEEDBACK-001",
+      "title": "AI feedback, appeals and concern reporting",
+      "risk_domain": "ai-governance",
+      "objective": "Give end users, affected communities and staff a way to report problems, raise concerns and appeal AI outcomes, and feed adjudicated feedback into system design and evaluation.",
+      "evidence_requirement": "`jira-ticketing` or `ticketing` intake records for AI feedback, concerns and appeals show triage, adjudication and the resulting design change or evaluation-metric update. Attested evidence shows the published reporting channel. An appeal or concern past its response SLA is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-3.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 3.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-5.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 1, GOVERN 5.1"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-5.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 1, GOVERN 5.2"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-5.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 5.2"
+          }
+        },
+        {
+          "control_id": "ISO42001-3.3",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-8.3",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AILIFECYCLECHANGE-001",
+      "title": "AI model change, rollback and decommissioning",
+      "risk_domain": "change-management",
+      "objective": "Control AI model and system updates, keep the ability to supersede, disengage or roll back a system performing outside its intended use, and retire AI systems without increasing risk.",
+      "evidence_requirement": "`ticketing` change records and Attested evidence per AI system version: approved updates with the measured improvement, a tested rollback or disengagement path with a named owner, and decommissioning records covering model, data and endpoint retirement. A production AI system without a tested disengagement path is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-GOVERN-1.7",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 1, GOVERN 1.7"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-2.4",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 2.4"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-4.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 4.2"
+          }
+        },
+        {
+          "control_id": "ISO27001-A.8.32",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "cloud_policy",
+        "cloud_resource",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIIMPACT-001",
+      "title": "AI benefit, cost and impact assessment",
+      "risk_domain": "ai-governance",
+      "objective": "Assess the benefits and costs of each AI system and the likelihood and magnitude of its impacts on individuals, groups and society, including viable non-AI alternatives, before and during use.",
+      "evidence_requirement": "Attested evidence of a current impact assessment per AI system recording expected benefits, potential costs of errors, the likelihood and magnitude of each identified impact drawn from past incidents and external feedback, the non-AI alternatives considered, and the resources required to manage the risks. An AI system in production without a current assessment is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MAP-5.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 5.1"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-3.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 3.1"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-3.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 3.2"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-2.1",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 2.1"
+          }
+        },
+        {
+          "control_id": "ISO42001-5.2",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-5.3",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-5.4",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-5.5",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AISYSTEMSPEC-001",
+      "title": "AI system requirements and design documentation",
+      "risk_domain": "secure-development",
+      "objective": "Elicit and document requirements for each AI system, including socio-technical requirements such as privacy and safety, its targeted application scope, and its design and development decisions.",
+      "evidence_requirement": "Attested evidence of the requirements specification, targeted application scope and design documentation per AI system, reviewed by the relevant AI actors and kept current across versions. A deployed AI system without a current specification is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "ai-governance",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MAP-1.6",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 1.6"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MAP-3.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 2, MAP 3.3"
+          }
+        },
+        {
+          "control_id": "ISO42001-6.2.2",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "ISO42001-6.2.3",
+          "framework_id": "iso-42001-2023",
+          "role": "equivalent",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.11",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "data_store",
+        "service"
+      ]
+    },
+    {
+      "safeguard_id": "SG-AIRISKTREATMENT-001",
+      "title": "AI risk treatment and residual risk",
+      "risk_domain": "risk-management",
+      "objective": "Plan and document a response to each high-priority AI risk (mitigate, transfer, avoid or accept) and document the residual risk passed to downstream acquirers and end users.",
+      "evidence_requirement": "`ticketing` risk records, or Attested evidence of the AI risk register, show a treatment decision, owner and due date for each high-priority AI risk, and the residual risk documented for downstream acquirers and end users. A high-priority AI risk without a treatment decision is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "risk-owner",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-1.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 1.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MANAGE-1.4",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 4, MANAGE 1.4"
+          }
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.9",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": ["ai_agent", "ai_model", "data_store", "service"]
+    },
+    {
+      "safeguard_id": "SG-AIMEASUREMENTREVIEW-001",
+      "title": "Independent review of AI measurement",
+      "risk_domain": "risk-management",
+      "objective": "Have assessors independent of the front-line developers regularly review whether AI metrics, TEVV processes and existing controls remain appropriate and effective.",
+      "evidence_requirement": "Attested evidence of periodic reviews by internal experts who were not front-line developers, or by independent assessors, covering metric appropriateness, control effectiveness, reported errors and TEVV effectiveness, with the resulting updates. A review older than its scheduled interval is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "risk-owner",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-1.3",
+          "framework_id": "nist-ai-rmf",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 1.3"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-1.2",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 1.2"
+          }
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.13",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.13"
+          }
+        }
+      ],
+      "asset_types": ["ai_agent", "ai_model", "data_store", "service"]
+    },
+    {
+      "safeguard_id": "SG-AICOMPUTE-001",
+      "title": "AI compute capacity and environmental footprint",
+      "risk_domain": "availability",
+      "objective": "Document the compute that AI training and serving depend on, including GPU capacity from cloud and neocloud providers, plan capacity against demand, and assess the energy and environmental impact of training and operation.",
+      "evidence_requirement": "Attested evidence of the compute resources per AI system (provider, accelerator type, region, reserved and used capacity), a capacity plan against expected demand, and an assessment of energy use and environmental impact for training and serving. A production AI system with an undocumented compute dependency is an open violation.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "platform-engineering",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "ISO42001-4.5",
+          "framework_id": "iso-42001-2023",
+          "role": "primary",
+          "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-AI-RMF-MEASURE-2.12",
+          "framework_id": "nist-ai-rmf",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+            "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+            "sha256": "7576edb531d9848825814ee88e28b1795d3a84b435b4b797d3670eafdc4a89f1",
+            "locator": "AI RMF Core, Table 3, MEASURE 2.12"
+          }
+        },
+        {
+          "control_id": "ISO27001-A.8.6",
+          "framework_id": "iso-27001-2022",
+          "role": "equivalent",
+          "review_status": "proposed"
+        }
+      ],
+      "asset_types": [
+        "ai_agent",
+        "ai_model",
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "data_store",
+        "service"
+      ]
     }
   ]
 }

@@ -15,10 +15,11 @@ COVERED_FLOORS = {
     "iso-27001-2022": 81,
     "nist-csf-2.0": 101,
     "iso-27017-2015": 44,
-    "nist-ai-rmf": 28,
+    "nist-ai-rmf": 69,
+    "iso-42001-2023": 37,
     "fedramp-moderate": 262,
     "nist-800-53-rev5": 285,
-    "gdpr-2016-679": 19,
+    "gdpr-2016-679": 20,
     "nist-rmf-800-37r2": 46,
 }
 

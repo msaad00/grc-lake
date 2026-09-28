@@ -174,7 +174,7 @@ def _without_new(payload: dict) -> dict:
 def test_new_safeguards_are_appended_after_the_existing_ones() -> None:
     ids = [entry["safeguard_id"] for entry in load_safeguards()["safeguards"]]
     assert ids[: len(ORIGINAL_IDS)] == ORIGINAL_IDS
-    assert set(ids[len(ORIGINAL_IDS) :]) == set(NEW_SAFEGUARDS)
+    assert set(ids[len(ORIGINAL_IDS) : len(ORIGINAL_IDS) + len(NEW_SAFEGUARDS)]) == set(NEW_SAFEGUARDS)
     assert len(ids) == len(set(ids))
 
 

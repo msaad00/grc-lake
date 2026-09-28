@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import {
   useCloudLinkCompleteMutation,
   useCloudLinkStartMutation,
+  useCredentialPolicy,
 } from "@/lib/api/hooks";
 import type { CloudLinkSession } from "@/lib/api/types";
 import type { ConnectorView } from "@/lib/api/types";
@@ -24,12 +25,20 @@ import { BRAND } from "@/lib/brand";
 import {
   awsRoleArnFromIdentifier,
   awsRoleIdentifierError,
+  azureDelegationError,
   azureSubscriptionIdError,
   cloudLinkFieldError,
+  gcpImpersonationError,
   gcpProjectIdError,
   sanitizeAzureSubscriptionId,
   sanitizeGcpProjectId,
+  TENANT_PREFIX_PLACEHOLDER,
+  type CredentialPolicy,
 } from "@/lib/cloud-link-validation";
+import {
+  HOSTED_CLOUD_LINK_COPY,
+  type AzureSecretKind,
+} from "@/lib/console-copy";
 import { getIntegrationPreset } from "@/lib/integration-presets";
 
 const CLOUD_LINK_IDS = new Set(["aws-posture", "azure-posture", "gcp-posture"]);
@@ -54,7 +63,17 @@ export function supportsCloudLink(connectorId: string) {
   return CLOUD_LINK_IDS.has(connectorId);
 }
 
-function linkDescription(connectorId: string): string {
+const AZURE_SECRET_KINDS = Object.keys(
+  HOSTED_CLOUD_LINK_COPY.azureSecretKinds,
+) as AzureSecretKind[];
+
+function linkDescription(connectorId: string, hosted: boolean): string {
+  if (hosted && connectorId === "azure-posture") {
+    return HOSTED_CLOUD_LINK_COPY.azureSummary;
+  }
+  if (hosted && connectorId === "gcp-posture") {
+    return HOSTED_CLOUD_LINK_COPY.gcpSummary;
+  }
   if (connectorId === "aws-posture") {
     return "Deploy the customer-owned AWS role, then save the account target. TrustOps verifies STS assume-role after deployment.";
   }
@@ -145,6 +164,26 @@ terraform -chdir=${terraformChdir} apply -auto-approve \\
 terraform -chdir=${terraformChdir} output -raw role_arn`;
 }
 
+function hostedAzureCloudShellCommand(clientId: string): string {
+  const appId = clientId.trim()
+    ? shellQuote(clientId.trim())
+    : '"${APP_CLIENT_ID:?set APP_CLIENT_ID to your app registration client ID}"';
+  return `subscription_id="$(az account show --query id -o tsv)"
+tenant_id="$(az account show --query tenantId -o tsv)"
+
+# Your own app registration: hosted TrustOps authenticates as this app.
+app_id=${appId}
+principal_object_id="$(az ad sp show --id "$app_id" --query id -o tsv)"
+
+az role assignment create \\
+  --assignee-object-id "$principal_object_id" \\
+  --assignee-principal-type ServicePrincipal \\
+  --role Reader \\
+  --scope "/subscriptions/$subscription_id"
+
+printf "Tenant ID: %s\\nSubscription ID: %s\\n" "$tenant_id" "$subscription_id"`;
+}
+
 function azureCloudShellCommand(session: CloudLinkSession): string {
   const configuredAppId = session.azure_app_id
     ? shellQuote(session.azure_app_id)
@@ -195,6 +234,23 @@ export function CloudLinkPanel({
   const [awsAccountScope, setAwsAccountScope] =
     useState<AwsAccountScope>("single");
   const [awsAccountTargets, setAwsAccountTargets] = useState<string[]>([""]);
+  const [azureTenantId, setAzureTenantId] = useState("");
+  const [azureClientId, setAzureClientId] = useState("");
+  const [azureSecretKind, setAzureSecretKind] =
+    useState<AzureSecretKind>("client_secret_ref");
+  const [azureSecretRef, setAzureSecretRef] = useState("");
+  const [gcpServiceAccount, setGcpServiceAccount] = useState("");
+  const [delegationTouched, setDelegationTouched] = useState(false);
+  const whoamiPolicy = useCredentialPolicy();
+  // The session's own report wins: it is computed for this tenant at start.
+  const policy: CredentialPolicy = session?.delegation
+    ? {
+        hosted: session.delegation.required,
+        secretRefPrefix: session.delegation.secret_ref_prefix,
+      }
+    : whoamiPolicy;
+  const hosted = policy.hosted;
+  const refPrefix = policy.secretRefPrefix ?? TENANT_PREFIX_PLACEHOLDER;
   const awsRoleIdentifier = roleArn;
   const integrationPreset = getIntegrationPreset(connector.connector_id);
 
@@ -226,11 +282,40 @@ export function CloudLinkPanel({
       }),
     [awsRoleIdentifier, connector.connector_id, projectId, subscriptionId],
   );
+  const delegationError = !hosted
+    ? null
+    : connector.connector_id === "azure-posture"
+      ? azureDelegationError(
+          {
+            tenantId: azureTenantId,
+            clientId: azureClientId,
+            secretRef: azureSecretRef,
+          },
+          policy,
+        )
+      : connector.connector_id === "gcp-posture"
+        ? gcpImpersonationError(gcpServiceAccount, policy)
+        : null;
+  const delegationPayload = (): Record<string, string> | undefined => {
+    if (!hosted) return undefined;
+    if (connector.connector_id === "azure-posture") {
+      return {
+        tenant_id: azureTenantId.trim(),
+        client_id: azureClientId.trim(),
+        [azureSecretKind]: azureSecretRef.trim(),
+      };
+    }
+    if (connector.connector_id === "gcp-posture") {
+      return { impersonate_service_account: gcpServiceAccount.trim() };
+    }
+    return undefined;
+  };
 
   const canComplete =
     Boolean(session?.session_id) &&
     !complete.isPending &&
-    validationError === null;
+    validationError === null &&
+    delegationError === null;
   const awsCloudFormationCommand = useMemo(() => {
     if (!session) return null;
     if (connector.connector_id === "aws-posture") {
@@ -246,13 +331,12 @@ export function CloudLinkPanel({
     if (!session || connector.connector_id === "aws-posture") return null;
     return session.deploy_command ?? null;
   }, [connector.connector_id, session]);
-  const azureDeployCommand = useMemo(
-    () =>
-      connector.connector_id === "azure-posture" && session
-        ? azureCloudShellCommand(session)
-        : null,
-    [connector.connector_id, session],
-  );
+  const azureDeployCommand = useMemo(() => {
+    if (connector.connector_id !== "azure-posture" || !session) return null;
+    return hosted
+      ? hostedAzureCloudShellCommand(azureClientId)
+      : azureCloudShellCommand(session);
+  }, [azureClientId, connector.connector_id, hosted, session]);
   const quickCreateUrl = useMemo(() => {
     if (!session || connector.connector_id !== "aws-posture") {
       return session?.quick_create_url ?? null;
@@ -351,19 +435,26 @@ export function CloudLinkPanel({
     setAwsDeployMode("cloudformation");
     setAwsAccountScope("single");
     setAwsAccountTargets([""]);
+    setAzureTenantId("");
+    setAzureClientId("");
+    setAzureSecretKind("client_secret_ref");
+    setAzureSecretRef("");
+    setGcpServiceAccount("");
+    setDelegationTouched(false);
   };
 
   const finish = async () => {
     if (!session?.session_id) return;
     setTouched(true);
+    setDelegationTouched(true);
     const error = cloudLinkFieldError(connector.connector_id, {
       roleArn: awsRoleIdentifier,
       subscriptionId,
       projectId,
     });
-    if (error) {
+    if (error || delegationError) {
       setFieldError(error);
-      onToast(error);
+      onToast(error ?? delegationError ?? "");
       return;
     }
     setFieldError(null);
@@ -383,6 +474,7 @@ export function CloudLinkPanel({
           connector.connector_id === "gcp-posture"
             ? sanitizeGcpProjectId(projectId)
             : undefined,
+        delegation: delegationPayload(),
       });
       const creds = (result.configure?.credentials ?? {}) as Record<
         string,
@@ -430,7 +522,10 @@ export function CloudLinkPanel({
         {isAzurePosture && <Badge>Reader role</Badge>}
       </div>
       <p className="mt-1 max-w-3xl break-words text-xs leading-5 text-muted">
-        {integrationPreset?.summary ?? linkDescription(connector.connector_id)}
+        {hosted && connector.connector_id !== "aws-posture"
+          ? linkDescription(connector.connector_id, true)
+          : (integrationPreset?.summary ??
+            linkDescription(connector.connector_id, false))}
       </p>
       {isAwsPosture && (
         <div
@@ -738,6 +833,7 @@ export function CloudLinkPanel({
             </div>
           )}
           {connector.connector_id === "gcp-posture" &&
+            !hosted &&
             !session.workload_identity_member && (
               <p className="text-xs text-muted">
                 Set <code>TRUSTOPS_GCP_WIF_MEMBER</code> to include Workload
@@ -878,6 +974,105 @@ export function CloudLinkPanel({
                 className="rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </label>
+          )}
+          {hosted && connector.connector_id === "azure-posture" && (
+            <fieldset
+              aria-describedby="hosted-delegation-rule"
+              className="grid gap-2 rounded-lg border border-line bg-surface p-2.5"
+            >
+              <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-muted">
+                Your Entra app registration
+              </legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="grid min-w-0 gap-1 text-xs font-semibold text-muted">
+                  Entra tenant ID
+                  <input
+                    value={azureTenantId}
+                    onChange={(e) => setAzureTenantId(e.target.value.trim())}
+                    onBlur={() => setDelegationTouched(true)}
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder="00000000-0000-0000-0000-000000000000"
+                    className="min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+                  />
+                </label>
+                <label className="grid min-w-0 gap-1 text-xs font-semibold text-muted">
+                  Application (client) ID
+                  <input
+                    value={azureClientId}
+                    onChange={(e) => setAzureClientId(e.target.value.trim())}
+                    onBlur={() => setDelegationTouched(true)}
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder="00000000-0000-0000-0000-000000000000"
+                    className="min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+                  />
+                </label>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
+                <label className="grid min-w-0 gap-1 text-xs font-semibold text-muted">
+                  Credential type
+                  <select
+                    value={azureSecretKind}
+                    onChange={(e) =>
+                      setAzureSecretKind(e.target.value as AzureSecretKind)
+                    }
+                    className="min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+                  >
+                    {AZURE_SECRET_KINDS.map((kind) => (
+                      <option key={kind} value={kind}>
+                        {HOSTED_CLOUD_LINK_COPY.azureSecretKinds[kind].label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid min-w-0 gap-1 text-xs font-semibold text-muted">
+                  Environment variable name
+                  <input
+                    value={azureSecretRef}
+                    onChange={(e) => setAzureSecretRef(e.target.value.trim())}
+                    onBlur={() => setDelegationTouched(true)}
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder={`${refPrefix}${HOSTED_CLOUD_LINK_COPY.azureSecretKinds[azureSecretKind].suffix}`}
+                    className="min-w-0 rounded-lg border border-line bg-surface px-3 py-2 font-mono text-xs text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+                  />
+                </label>
+              </div>
+              <p
+                id="hosted-delegation-rule"
+                className="break-words text-xs leading-5 text-muted"
+              >
+                {HOSTED_CLOUD_LINK_COPY.refRule} Names start with{" "}
+                <code className="break-all rounded bg-surfaceMuted px-1 text-ink">
+                  {refPrefix}
+                </code>
+                .
+              </p>
+            </fieldset>
+          )}
+          {hosted && connector.connector_id === "gcp-posture" && (
+            <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
+              Service account to impersonate
+              <input
+                value={gcpServiceAccount}
+                onChange={(e) => setGcpServiceAccount(e.target.value.trim())}
+                onBlur={() => setDelegationTouched(true)}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="trustops-reader@my-gcp-project.iam.gserviceaccount.com"
+                className="rounded-lg border border-line bg-surface px-3 py-2 text-sm normal-case tracking-normal text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+              <span className="font-medium normal-case tracking-normal text-muted">
+                Grant the {BRAND.name} identity Service Account Token Creator on
+                this account; it never reads your project as itself.
+              </span>
+            </label>
+          )}
+          {delegationTouched && delegationError && (
+            <p role="alert" className="text-xs font-semibold text-danger-fg">
+              {delegationError}
+            </p>
           )}
           {showFieldError && (
             <p className="text-xs font-semibold text-danger-fg">

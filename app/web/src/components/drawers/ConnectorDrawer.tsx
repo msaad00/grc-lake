@@ -21,6 +21,7 @@ import { PreviewBadge } from "@/components/ui/preview-badge";
 import {
   useConfigureMutation,
   useConnectorRuns,
+  useCredentialPolicy,
   useDiscoverMutation,
   useProbeMutation,
   useSyncMutation,
@@ -47,6 +48,7 @@ import {
 } from "@/lib/connector-forms";
 import { getIntegrationPreset } from "@/lib/integration-presets";
 import { displayLabel } from "@/lib/display";
+import { hostedCredentialFields } from "@/lib/hosted-credentials";
 
 interface Props {
   connector: ConnectorView | null;
@@ -412,6 +414,7 @@ export function ConnectorDrawer({
   const probe = useProbeMutation();
   const sync = useSyncMutation();
   const runs = useConnectorRuns(connector?.connector_id ?? null);
+  const credentialPolicy = useCredentialPolicy();
   const [creds, setCreds] = useState<Record<string, string>>({});
   const [options, setOptions] = useState<Record<string, string>>({});
   const [accessValidated, setAccessValidated] = useState(false);
@@ -483,9 +486,9 @@ export function ConnectorDrawer({
     );
   }
 
-  const credentialFields = credentialFieldsFor(
-    connector.connector_id,
-    connector.credential_type,
+  const credentialFields = hostedCredentialFields(
+    credentialFieldsFor(connector.connector_id, connector.credential_type),
+    credentialPolicy,
   );
   const scopeFields = scopeFieldsFor(connector.connector_id);
   const schedulerFields = schedulerFieldsFor(isRunnableConnector(connector));

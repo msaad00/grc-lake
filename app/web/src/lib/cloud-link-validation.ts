@@ -96,3 +96,130 @@ export function cloudLinkFieldError(
   if (connectorId === "gcp-posture") return gcpProjectIdError(values.projectId);
   return "Unsupported cloud link connector.";
 }
+
+/** The caller's connector credential policy, from whoami or a link session. */
+export interface CredentialPolicy {
+  hosted: boolean;
+  secretRefPrefix: string | null;
+}
+
+// Mirrors security_lakehouse.secret_refs; tests/test_cloud_link_ui_contract.py
+// pins these lists to the server's.
+export const SERVER_SECRET_PREFIXES = [
+  "TRUSTOPS_",
+  "AWS_",
+  "AMAZON_",
+  "ECS_CONTAINER_",
+  "GOOGLE_",
+  "GCLOUD_",
+  "CLOUDSDK_",
+  "GCE_",
+  "AZURE_",
+  "ARM_",
+  "MSI_",
+  "IDENTITY_",
+  "STRIPE_",
+  "DATABASE_",
+  "POSTGRES",
+  "PG",
+  "MYSQL_",
+  "REDIS_",
+  "SMTP_",
+  "SENDGRID_",
+  "KUBERNETES_",
+  "KUBECONFIG",
+  "VAULT_",
+  "SENTRY_",
+  "GITHUB_",
+  "ACTIONS_",
+  "SSH_",
+  "OTEL_",
+] as const;
+export const SERVER_SECRET_NAMES = [
+  "SECRET_KEY",
+  "DJANGO_SECRET_KEY",
+  "FLASK_SECRET_KEY",
+  "HOME",
+  "PATH",
+] as const;
+
+// Mirrors security_lakehouse.delegation.
+const ENV_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const AZURE_TENANT_RE = /^[A-Za-z0-9][A-Za-z0-9.-]{0,252}$/;
+const AZURE_CLIENT_RE =
+  /^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/;
+const GCP_SERVICE_ACCOUNT_RE =
+  /^[a-z][a-z0-9-]{4,28}[a-z0-9]@[a-z][a-z0-9-]{4,28}[a-z0-9]\.iam\.gserviceaccount\.com$/;
+
+export const TENANT_PREFIX_PLACEHOLDER = "TRUSTOPS_TENANT_<ID>__";
+
+function prefixHint(policy: CredentialPolicy): string {
+  return `use the tenant prefix ${policy.secretRefPrefix ?? TENANT_PREFIX_PLACEHOLDER}`;
+}
+
+function isServerSecretName(name: string, tenantPrefix: string | null) {
+  if (tenantPrefix && name.startsWith(tenantPrefix)) return false;
+  const upper = name.toUpperCase();
+  const base = upper.endsWith("_FILE") ? upper.slice(0, -5) : upper;
+  const names: readonly string[] = SERVER_SECRET_NAMES;
+  return (
+    names.includes(base) ||
+    names.includes(upper) ||
+    SERVER_SECRET_PREFIXES.some((prefix) => upper.startsWith(prefix))
+  );
+}
+
+/** An env-var reference: a name only, never the secret; hosted refuses server secrets. */
+export function secretRefError(
+  raw: string,
+  policy: CredentialPolicy,
+): string | null {
+  const name = raw.trim();
+  if (!name) return "Enter the environment variable that holds the secret.";
+  if (!ENV_NAME_RE.test(name)) {
+    return "Use an environment variable name (letters, digits, underscores); never paste the secret itself.";
+  }
+  if (policy.hosted && isServerSecretName(name, policy.secretRefPrefix)) {
+    return `That name is reserved for server secrets in hosted mode; ${prefixHint(policy)}.`;
+  }
+  return null;
+}
+
+export interface AzureDelegationValues {
+  tenantId: string;
+  clientId: string;
+  secretRef: string;
+}
+
+export function azureDelegationError(
+  values: AzureDelegationValues,
+  policy: CredentialPolicy,
+): string | null {
+  const tenantId = values.tenantId.trim();
+  const clientId = values.clientId.trim();
+  const secretRef = values.secretRef.trim();
+  if (!policy.hosted && !tenantId && !clientId && !secretRef) return null;
+  if (!AZURE_TENANT_RE.test(tenantId)) {
+    return "Enter your Entra tenant ID (a GUID or verified domain).";
+  }
+  if (!AZURE_CLIENT_RE.test(clientId)) {
+    return "Enter the app registration's client ID (the application ID GUID).";
+  }
+  return secretRefError(secretRef, policy);
+}
+
+export function gcpImpersonationError(
+  raw: string,
+  policy: CredentialPolicy,
+): string | null {
+  const target = raw.trim();
+  if (!target) {
+    return policy.hosted
+      ? "Enter the service account to impersonate in your project."
+      : null;
+  }
+  if (!GCP_SERVICE_ACCOUNT_RE.test(target)) {
+    return "Use a service account email ending in .iam.gserviceaccount.com.";
+  }
+  return null;
+}

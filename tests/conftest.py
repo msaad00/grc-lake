@@ -4,11 +4,38 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+from pathlib import Path
 
 import pytest
 
 # Signed session cookies are mandatory whenever server auth is enabled.
 os.environ.setdefault("TRUSTOPS_COOKIE_SIGNING_KEY", "test-cookie-signing-key-for-pytest-only")
+
+_ENTRY_POINT_FIXTURE_MODULES = frozenset(
+    path.stem for path in (Path(__file__).parent / "fixtures" / "entry_point_connectors").glob("*.py")
+)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_connector_registry():
+    """Restore process-global connector state after every test.
+
+    ``connector_runner.REGISTRY`` is a module-level dict, and the entry-point
+    fixture connectors stay importable from ``sys.modules`` after their
+    ``sys.path`` entry is removed. Either would let one test's connectors leak
+    into a later test's registry or catalog view.
+    """
+    runner = sys.modules.get("security_lakehouse.connector_runner")
+    snapshot = dict(runner.REGISTRY) if runner is not None else None
+    try:
+        yield
+    finally:
+        if runner is not None and snapshot is not None and snapshot != runner.REGISTRY:
+            runner.REGISTRY.clear()
+            runner.REGISTRY.update(snapshot)
+        for name in _ENTRY_POINT_FIXTURE_MODULES & sys.modules.keys():
+            del sys.modules[name]
 
 
 # Minimal Iceberg REST catalog on loopback for REST client hardening tests.

@@ -261,6 +261,10 @@ export interface AuthWhoami {
   email: string;
   role: string;
   scopes: string[];
+  /** True when connectors must use tenant-delegated access (hosted server mode). */
+  hosted?: boolean;
+  /** Env-var prefix the hosted secret-ref policy accepts for this tenant. */
+  secret_ref_prefix?: string | null;
 }
 
 export interface AuthApiKey {
@@ -625,6 +629,10 @@ export interface CloudLinkSession {
   role_name?: string | null;
   deploy_command?: string | null;
   workload_identity_member?: string | null;
+  delegation?: {
+    required: boolean;
+    secret_ref_prefix: string | null;
+  } | null;
   deployment_methods?: Array<{
     id: string;
     label: string;

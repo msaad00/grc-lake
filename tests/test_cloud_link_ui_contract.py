@@ -359,3 +359,51 @@ def test_connected_cloud_drawer_is_compact_and_non_redundant() -> None:
     assert "open={!usesManagedCloudLink && !showConnectedCloudSummary}" in drawer
     assert "Run history" in drawer
     assert "see history" not in drawer
+
+
+def _ts_string_array(source: str, name: str) -> list[str]:
+    import re
+
+    match = re.search(rf"export const {name} = \[(.*?)\] as const;", source, re.S)
+    assert match, name
+    return re.findall(r'"([^"]*)"', match.group(1))
+
+
+def _ts_regex(source: str, name: str) -> str:
+    import re
+
+    match = re.search(rf"const {name} =\s*/(.*?)/;", source, re.S)
+    assert match, name
+    return match.group(1)
+
+
+def test_console_hosted_validation_mirrors_the_server_rules() -> None:
+    from security_lakehouse import delegation, secret_refs
+
+    validation = VALIDATION.read_text(encoding="utf-8")
+    assert _ts_string_array(validation, "SERVER_SECRET_PREFIXES") == list(secret_refs.DENIED_PREFIXES)
+    assert set(_ts_string_array(validation, "SERVER_SECRET_NAMES")) == set(secret_refs.DENIED_NAMES)
+    assert _ts_regex(validation, "ENV_NAME_RE") == f"^{secret_refs.ENV_NAME_RE.pattern}$"
+    assert _ts_regex(validation, "AZURE_TENANT_RE") == delegation._AZURE_TENANT_ID.pattern  # noqa: SLF001
+    assert _ts_regex(validation, "AZURE_CLIENT_RE") == delegation._AZURE_CLIENT_ID.pattern  # noqa: SLF001
+    assert (
+        _ts_regex(validation, "GCP_SERVICE_ACCOUNT_RE").replace("\\.", ".")
+        == delegation._SERVICE_ACCOUNT_EMAIL.pattern.replace("\\.", ".")  # noqa: SLF001
+    )
+    assert secret_refs.TENANT_PREFIX_ROOT + "<ID>__" in validation
+
+
+def test_hosted_cloud_link_panel_collects_delegation_and_never_trusts_the_callback() -> None:
+    panel = PANEL.read_text(encoding="utf-8")
+
+    assert "useCredentialPolicy" in panel
+    assert "session?.delegation" in panel
+    assert "delegation: delegationPayload()" in panel
+    assert "impersonate_service_account:" in panel
+    assert "tenant_id: azureTenantId.trim()" in panel
+    assert "client_id: azureClientId.trim()" in panel
+    assert "[azureSecretKind]: azureSecretRef.trim()" in panel
+    # The consent callback's tenant is unauthenticated input; never pre-fill it.
+    assert "azure_tenant_id" not in panel
+    assert "Environment variable name" in panel
+    assert 'type="password"' not in panel

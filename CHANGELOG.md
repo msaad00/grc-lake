@@ -9,6 +9,20 @@ Python package, Helm chart, and bundled web console.
   the control-tests request fails, the gate now fails instead of reporting zero
   failing tests, and failing tests beyond the fetched page count as unexpected
   instead of being dropped. Empty lists no longer crash on macOS bash 3.2.
+- Hosted cloud linking: the console's Azure and GCP link forms collect the
+  tenant's own app registration (tenant ID, client ID, and one secret,
+  certificate, or federated token file reference) or service account to
+  impersonate, validated in the browser and on the server with the readers'
+  rules. Reference fields take env-var names only and show the tenant's
+  `TRUSTOPS_TENANT_<ID>__` prefix, and connector form placeholders use it in
+  hosted mode. `GET /api/v1/auth/whoami` reports `hosted` and
+  `secret_ref_prefix`.
+- The Azure admin-consent callback no longer copies the tenant it reports into
+  connector options, and hosted mode offers no consent URL for an
+  operator-owned multi-tenant app.
+- Test reliability: the API rate-limit tests run on a frozen clock, and the
+  connector registry tests restore process-global state and ignore connectors
+  from installed packages.
 
 ## 0.2.19 - 2026-09-28
 

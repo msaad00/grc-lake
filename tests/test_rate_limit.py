@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from http import HTTPStatus
 from pathlib import Path
 
@@ -120,12 +121,22 @@ def test_build_rate_limiter_selects_redis_when_url_configured(monkeypatch: pytes
 
 
 @pytest.fixture
-def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    # A tiny limit so a couple of requests trip it deterministically.
+def frozen_clock() -> _Clock:
+    return _Clock()
+
+
+@pytest.fixture
+def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, frozen_clock: _Clock):
+    # A tiny limit so a couple of requests trip it.
     monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_RPS", "1")
     monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_BURST", "2")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
+    # Time only moves when a test advances it, so a slow run cannot refill the
+    # bucket between requests and admit one that should be throttled.
+    assert isinstance(app.state.rate_limiter, RateLimiter)
+    assert app.state.rate_limiter.config == RateLimitConfig.from_env(dict(os.environ))
+    app.state.rate_limiter = RateLimiter(app.state.rate_limiter.config, clock=frozen_clock)
     with session_scope(app.state.sessionmaker) as session:
         tenant = create_tenant(session, slug="acme", name="Acme")
         user = create_user(session, tenant_id=tenant.id, email="dev@acme.test", role="contributor")
@@ -147,6 +158,18 @@ def test_api_returns_429_with_retry_after_when_over_limit(client) -> None:
     assert throttled.status_code == HTTPStatus.TOO_MANY_REQUESTS
     assert int(throttled.headers["Retry-After"]) >= 1
     assert throttled.json()["errors"][0]["code"] == "rate_limited"
+
+
+def test_throttled_credential_recovers_only_when_the_clock_advances(client, frozen_clock: _Clock) -> None:
+    test_client, token = client
+    for _ in range(3):
+        test_client.get("/api/v1/risks", headers=_bearer(token))
+    assert test_client.get("/api/v1/risks", headers=_bearer(token)).status_code == HTTPStatus.TOO_MANY_REQUESTS
+    # Wall-clock time spent on a slow machine must not refill the bucket.
+    assert test_client.get("/api/v1/risks", headers=_bearer(token)).status_code == HTTPStatus.TOO_MANY_REQUESTS
+    frozen_clock.advance(1.0)  # rps=1 -> one token
+    assert test_client.get("/api/v1/risks", headers=_bearer(token)).status_code == HTTPStatus.OK
+    assert test_client.get("/api/v1/risks", headers=_bearer(token)).status_code == HTTPStatus.TOO_MANY_REQUESTS
 
 
 def test_health_probe_is_never_throttled(client) -> None:

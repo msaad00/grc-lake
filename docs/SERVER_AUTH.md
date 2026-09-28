@@ -361,6 +361,21 @@ hosted tenants must set an explicit ref.
   `DeviceManagementManagedDevices.Read.All` with admin consent (`intune-devices`).
 - Snowflake refuses an inline `private_key_file` path and `externalbrowser` auth.
 
+The console's one-click cloud link collects these fields in server mode. A
+`POST /api/v1/connectors/{id}/link/start` session reports
+`delegation: {required, secret_ref_prefix}`, and `GET /api/v1/auth/whoami`
+reports the same as `hosted` and `secret_ref_prefix`, so forms show the
+tenant's prefix in placeholders and hints. `link/complete` takes a
+`delegation` object: `tenant_id`, `client_id`, and one secret reference for
+`azure-posture`, or `impersonate_service_account` for `gcp-posture`. It is
+validated with the readers' rules before anything is staged. References are
+env-var names only; a value that is not a variable name is refused, so a
+pasted secret is never stored. In server mode the link offers no admin-consent
+URL for an operator-owned multi-tenant app (`TRUSTOPS_AZURE_LINK_CLIENT_ID`),
+because tenants never collect through it. The consent callback is
+unauthenticated, so the Entra tenant it reports is kept on the link session for
+display only and is never written into a connector config.
+
 **Workflow secrets.** A workflow action's `{{secret.NAME}}` token resolves
 locally from `TRUSTOPS_SECRET_<NAME>`. In server mode it resolves from the
 calling tenant's `TRUSTOPS_TENANT_<TENANT_ID>__SECRET_<NAME>` (for tenant

@@ -531,6 +531,7 @@ export const api = {
       role_arn?: string;
       subscription_id?: string;
       project_id?: string;
+      delegation?: Record<string, string>;
     },
   ) =>
     post<{ data: CloudLinkCompleteResult }>(

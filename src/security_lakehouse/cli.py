@@ -1014,6 +1014,9 @@ def _connectors_probe(args: argparse.Namespace) -> int:
         actor=args.actor,
         credentials=_json_object(args.credentials_json, flag="--credentials-json"),
         options=_json_object(args.options_json, flag="--options-json"),
+        # The CLI runs as the operator on their own machine, so the local SDK
+        # credential chain (AWS_PROFILE, SSO) is a legitimate identity here.
+        allow_ambient_credentials=True,
     )
     print(json.dumps({"run": run}, indent=2, sort_keys=True))
     return 0 if run.get("result") == "ok" else 1

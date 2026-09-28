@@ -93,6 +93,36 @@ function probeToastMessage(run: ConnectorRun, isEnabled: boolean): string {
   return `Probe error: ${runErrorDetail(run)}`;
 }
 
+function runCoverageGapMessages(run: ConnectorRun): string[] {
+  const gaps = run.metadata?.coverage_gaps;
+  if (!Array.isArray(gaps)) return [];
+  return gaps
+    .map((gap) =>
+      gap && typeof gap === "object" && "message" in gap
+        ? String((gap as { message?: unknown }).message ?? "")
+        : "",
+    )
+    .filter(Boolean);
+}
+
+function RunCoverageGaps({ run }: { run: ConnectorRun }) {
+  const messages = runCoverageGapMessages(run);
+  if (messages.length === 0) return null;
+  return (
+    <div className="mt-1 text-warning-fg">
+      <div className="font-medium">
+        Partial collection · {messages.length} coverage gap
+        {messages.length === 1 ? "" : "s"}
+      </div>
+      <ul className="mt-0.5 list-disc pl-4">
+        {messages.map((message) => (
+          <li key={message}>{message}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function runErrorDetail(run: ConnectorRun, connector?: ConnectorView): string {
   const error = run.error?.trim();
   if (!error) return "see connector runs";
@@ -963,6 +993,7 @@ export function ConnectorDrawer({
                         {runErrorDetail(run, connector)}
                       </div>
                     )}
+                    <RunCoverageGaps run={run} />
                   </div>
                 ))}
                 {operationalRuns.length === 0 && (
@@ -1346,6 +1377,7 @@ export function ConnectorDrawer({
                         {r.error && (
                           <div className="mt-1 text-danger-fg">{r.error}</div>
                         )}
+                        <RunCoverageGaps run={r} />
                       </div>
                     ))}
                   </div>

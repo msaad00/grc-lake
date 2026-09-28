@@ -22,7 +22,6 @@ never mutates Okta state.
 from __future__ import annotations
 
 import json
-import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -31,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -384,7 +384,7 @@ def _stable_suffix(*, org: str, signal: str, asset_id: str, dedupe_key: str | No
     IDs only need to be stable for connector upserts and evidence-room links.
     """
     seed = f"{org}:{signal}:{dedupe_key or asset_id}".lower()
-    return re.sub(r"[^a-z0-9_.:-]+", "-", seed).strip("-")[:96] or "okta"
+    return stable_id_slug(seed, fallback="okta")
 
 
 SYSTEM_LOG_CONTROLS = ["SOC2-CC6.1", "FEDRAMP-AC-7"]

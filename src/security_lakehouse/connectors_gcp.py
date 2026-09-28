@@ -25,10 +25,18 @@ mutates GCP state.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_errors import (
+    CollectionGapError,
+    ConnectorAccessError,
+    ConnectorConfigError,
+)
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.identity import classify_identity_type
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -57,6 +65,96 @@ EXPECTED_ENFORCED_CONSTRAINTS = {
 }
 
 
+# Each sub-collection, the API that serves it, and the IAM permission it needs.
+# A disabled API or denied permission becomes a coverage gap for that
+# sub-collection instead of failing the whole sync.
+@dataclass(frozen=True)
+class _Collection:
+    key: str
+    label: str
+    api_label: str
+    api: str
+    permission: str
+
+
+IAM_COLLECTION = _Collection(
+    "iam_bindings",
+    "project IAM bindings",
+    "Cloud Resource Manager API",
+    "cloudresourcemanager.googleapis.com",
+    "resourcemanager.projects.getIamPolicy",
+)
+ORG_POLICY_COLLECTION = _Collection(
+    "org_policies",
+    "organization policies",
+    "Org Policy API",
+    "orgpolicy.googleapis.com",
+    "orgpolicy.policies.list",
+)
+ASSET_COLLECTION = _Collection(
+    "assets",
+    "asset inventory",
+    "Cloud Asset API",
+    "cloudasset.googleapis.com",
+    "cloudasset.assets.listResource",
+)
+_READ_FAILED = {
+    "iam_bindings": "GCP collection incomplete: project IAM policy read failed",
+    "org_policies": "GCP collection incomplete: organization policy read failed",
+    "assets": "GCP collection incomplete: asset inventory read failed",
+}
+_SERVICE_NAME = re.compile(r"^[a-z0-9-]+(\.[a-z0-9-]+)*\.googleapis\.com$")
+_PERMISSION_NAME = re.compile(r"^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+){2,}$")
+_PERMISSION_IN_MESSAGE = re.compile(r"[Pp]ermission '([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+){2,})'")
+_ADC_MISSING = (
+    "GCP Application Default Credentials were not found; run "
+    "'gcloud auth application-default login' or set GOOGLE_APPLICATION_CREDENTIALS"
+)
+
+
+def _collection_error(exc: Exception, collection: _Collection, project_id: str) -> ConnectorAccessError:
+    """Map a Google client failure to an operator-safe error.
+
+    Classification is duck-typed on ``google.api_core`` ``GoogleAPICallError``
+    (``reason`` / ``metadata`` from the ``google.rpc.ErrorInfo`` detail, plus the
+    HTTP ``code``) so the base install needs no Google packages. Provider text is
+    never copied into the message; only a validated API or permission name is.
+    """
+    if type(exc).__name__ == "DefaultCredentialsError":
+        return ConnectorAccessError(_ADC_MISSING)
+    reason = str(getattr(exc, "reason", "") or "")
+    raw_metadata = getattr(exc, "metadata", None)
+    # ErrorInfo metadata is a protobuf map (a Mapping, not a dict).
+    metadata = {str(k): str(v) for k, v in raw_metadata.items()} if isinstance(raw_metadata, Mapping) else {}
+    message = str(getattr(exc, "message", "") or exc)
+    code = getattr(exc, "code", None)
+    project = _project_slug(project_id)
+    not_collected = f"{collection.label} {'were' if collection.label.endswith('s') else 'was'} not collected"
+    if reason == "SERVICE_DISABLED" or "has not been used in project" in message or "it is disabled" in message:
+        service = metadata.get("service", "")
+        api = service if _SERVICE_NAME.match(service) else collection.api
+        label = collection.api_label if api == collection.api else api
+        return CollectionGapError(
+            f"{label} ({api}) is not enabled on project {project}; {not_collected}",
+            collection=collection.key,
+            reason="api_disabled",
+            api=api,
+        )
+    if reason == "IAM_PERMISSION_DENIED" or type(exc).__name__ in {"PermissionDenied", "Forbidden"} or code == 403:
+        permission = metadata.get("permission", "")
+        if not _PERMISSION_NAME.match(permission):
+            found = _PERMISSION_IN_MESSAGE.search(message)
+            permission = found.group(1) if found else collection.permission
+        return CollectionGapError(
+            f"permission {permission} denied on project {project}; {not_collected}",
+            collection=collection.key,
+            reason="permission_denied",
+            api=None,
+            permission=permission,
+        )
+    return ConnectorAccessError(_READ_FAILED[collection.key])
+
+
 class GCPClient:
     """Authenticated, read-only GCP posture client.
 
@@ -74,15 +172,15 @@ class GCPClient:
                 resourcemanager_v3,
             )
         except ImportError as exc:  # pragma: no cover - exercised only with live GCP
-            raise RuntimeError(
+            raise ConnectorConfigError(
                 "gcp-posture live collection requires google-cloud-resource-manager and "
-                "google-cloud-asset; install them or use --fixture-dir"
+                "google-cloud-asset; install the cloud extra or use --fixture-dir"
             ) from exc
         self._projects = resourcemanager_v3.ProjectsClient()
         self._assets = asset_v1.AssetServiceClient()
         # Org Policy lives in the separate google-cloud-org-policy distribution
         # (google.cloud.orgpolicy_v2), not resourcemanager_v3. Missing support
-        # is reported during collection so an incomplete scope cannot succeed.
+        # is reported as a coverage gap so the incomplete scope stays visible.
         self._org_policies: Any | None = None
         try:
             from google.cloud import orgpolicy_v2  # noqa: PLC0415
@@ -92,7 +190,10 @@ class GCPClient:
             self._org_policies = None
 
     def iam_bindings(self) -> list[dict[str, Any]]:
-        policy = self._projects.get_iam_policy(resource=f"projects/{self.project_id}")
+        try:
+            policy = self._projects.get_iam_policy(resource=f"projects/{self.project_id}")
+        except Exception as exc:  # noqa: BLE001 - classified into an operator-safe error
+            raise _collection_error(exc, IAM_COLLECTION, self.project_id) from None
         bindings: list[dict[str, Any]] = []
         for binding in getattr(policy, "bindings", []):
             bindings.append(
@@ -105,8 +206,10 @@ class GCPClient:
 
     def org_policies(self) -> list[dict[str, Any]]:
         if self._org_policies is None:
-            raise RuntimeError(
-                "GCP collection incomplete: install google-cloud-org-policy to read organization policies"
+            raise CollectionGapError(
+                "google-cloud-org-policy is not installed; organization policies were not collected",
+                collection=ORG_POLICY_COLLECTION.key,
+                reason="client_unavailable",
             )
         policies: list[dict[str, Any]] = []
         try:
@@ -122,8 +225,8 @@ class GCPClient:
                         "enforced": enforced,
                     }
                 )
-        except Exception:  # noqa: BLE001 - provider details must not enter stored errors
-            raise RuntimeError("GCP collection incomplete: organization policy read failed") from None
+        except Exception as exc:  # noqa: BLE001 - provider details must not enter stored errors
+            raise _collection_error(exc, ORG_POLICY_COLLECTION, self.project_id) from None
         return policies
 
     def assets(self) -> list[dict[str, Any]]:
@@ -137,8 +240,8 @@ class GCPClient:
                         "asset_type": getattr(asset, "asset_type", ""),
                     }
                 )
-        except Exception:  # noqa: BLE001 - provider details must not enter stored errors
-            raise RuntimeError("GCP collection incomplete: asset inventory read failed") from None
+        except Exception as exc:  # noqa: BLE001 - provider details must not enter stored errors
+            raise _collection_error(exc, ASSET_COLLECTION, self.project_id) from None
         return assets
 
 
@@ -175,6 +278,32 @@ class GCPFixtureClient:
         return []
 
 
+def probe_gcp_access(*, credentials: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
+    """Prove live, read-only access to the configured project.
+
+    Reads the project IAM policy (``resourcemanager.projects.getIamPolicy``),
+    the one read every sync needs. Org Policy and Cloud Asset reads are optional
+    at sync time (reported as coverage gaps), so the probe does not require them.
+    """
+    del options
+    project_id = str(credentials.get("project_id") or "").strip()
+    if not project_id:
+        raise ConnectorConfigError("GCP probe requires project_id")
+    try:
+        client = GCPClient(project_id)
+    except ConnectorConfigError:
+        raise
+    except Exception as exc:  # noqa: BLE001 - classified into an operator-safe error
+        raise _collection_error(exc, IAM_COLLECTION, project_id) from None
+    bindings = client.iam_bindings()
+    return {
+        "ok": True,
+        "project_id": project_id,
+        "capabilities": [IAM_COLLECTION.permission],
+        "binding_count": len(bindings),
+    }
+
+
 def collect_gcp_evidence(
     client: GCPClient | GCPFixtureClient,
     *,
@@ -197,26 +326,56 @@ def collect_gcp_evidence(
     now = collected_at or datetime.now(UTC)
     project = _project_slug(project_id or client.project_id)
     rows: list[dict[str, Any]] = []
+    gaps: list[CollectionGapError] = []
 
-    for binding in client.iam_bindings():
+    def read(method: Any) -> list[dict[str, Any]]:
+        try:
+            return list(method())
+        except CollectionGapError as gap:
+            gaps.append(gap)
+            return []
+
+    for binding in read(client.iam_bindings):
         role = str(binding.get("role") or "").strip()
         if not role:
             continue
         rows.append(_iam_event(project, binding, now, tenant_id))
 
-    for policy in client.org_policies():
+    for policy in read(client.org_policies):
         constraint = str(policy.get("constraint") or policy.get("name") or "").strip()
         if not constraint:
             continue
         rows.append(_policy_event(project, policy, now, tenant_id))
 
-    for asset in client.assets():
+    for asset in read(client.assets):
         name = str(asset.get("name") or "").strip()
         if not name:
             continue
         rows.append(_asset_event(project, asset, now, tenant_id))
 
+    if len(gaps) == 3:
+        raise ConnectorAccessError("GCP collection failed: " + "; ".join(gap.message for gap in gaps))
+    rows.extend(_gap_event(project, gap, now, tenant_id) for gap in gaps)
     return rows
+
+
+def _gap_event(project: str, gap: CollectionGapError, collected_at: datetime, tenant_id: str) -> dict[str, Any]:
+    """A coverage-gap row: an actionable open item that neither passes nor fails a control."""
+    return _event(
+        project=project,
+        collected_at=collected_at,
+        tenant_id=tenant_id,
+        signal="collection_gap",
+        dedupe_key=gap.collection,
+        event_type="gcp.collection_gap",
+        asset_id=f"gcp:project:{project}",
+        asset_type="collection_scope",
+        controls=[],
+        status="open",
+        severity="low",
+        evidence_ref=f"gcp:{project}:collection-gap:{gap.collection}",
+        attributes=gap.attributes(),
+    )
 
 
 def _iam_event(
@@ -377,5 +536,4 @@ def _stable_suffix(*, project: str, signal: str, asset_id: str, dedupe_key: str 
     The pipeline computes the canonical raw evidence hash after collection. These
     IDs only need to be stable for connector upserts and evidence-room links.
     """
-    seed = f"{project}:{signal}:{dedupe_key or asset_id}".lower()
-    return re.sub(r"[^a-z0-9_.:-]+", "-", seed).strip("-")[:96] or "gcp"
+    return stable_id_slug(f"{project}:{signal}:{dedupe_key or asset_id}", fallback="gcp")

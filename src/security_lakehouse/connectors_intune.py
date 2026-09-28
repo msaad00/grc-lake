@@ -24,7 +24,6 @@ identity-provider users.
 from __future__ import annotations
 
 import json
-import re
 import urllib.parse
 import urllib.request
 from collections.abc import Callable
@@ -33,6 +32,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.paginate import paginate
 from security_lakehouse.io import read_json
@@ -239,7 +239,7 @@ def _event(
     collected_at: datetime,
     tenant_id: str,
 ) -> dict[str, Any]:
-    stable = re.sub(r"[^a-z0-9_.:-]+", "-", f"{graph_tenant}:{signal}:{device_id}".lower()).strip("-")[:96]
+    stable = stable_id_slug(f"{graph_tenant}:{signal}:{device_id}", fallback="intune")
     return {
         "event_id": f"intune-{stable}",
         "tenant_id": tenant_id,

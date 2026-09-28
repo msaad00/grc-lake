@@ -417,17 +417,33 @@ def test_azure_sync_uses_stored_subscription_id_when_env_absent(
     assert captured["subscription_id"] == SUBSCRIPTION
 
 
-def test_azure_adapter_is_registered_and_probe_reports_ok(tmp_path: Path) -> None:
+def test_azure_adapter_is_registered_and_probe_reads_live(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert has_adapter("azure-posture") is True
     # Before enablement the probe is skipped (no synthetic collection signal).
     skipped = run_probe(tmp_path, connector_id="azure-posture")
     assert skipped["result"] == "skipped"
     assert "not enabled" in skipped["error"]
 
-    append_config_event(tmp_path, connector_id="azure-posture", state="enabled", actor="a")
+    class SubscriptionReader:
+        def __init__(self, subscription_id: str) -> None:
+            self.subscription_id = subscription_id
+
+        def subscription(self) -> dict[str, str]:
+            return {"subscriptionId": self.subscription_id, "state": "Enabled"}
+
+    monkeypatch.setattr("security_lakehouse.connectors_azure.AzureClient", SubscriptionReader)
+    append_config_event(
+        tmp_path,
+        connector_id="azure-posture",
+        state="enabled",
+        actor="a",
+        credentials={"subscription_id": SUBSCRIPTION},
+    )
     ok = run_probe(tmp_path, connector_id="azure-posture")
-    # Adapter-available -> probe is "ok", not "skipped", and reports no count.
+    # The probe proves a live subscription read; it never reports an evidence count.
     assert ok["result"] == "ok"
+    assert ok["metadata"]["probe_mode"] == "live"
+    assert ok["metadata"]["subscription_state"] == "Enabled"
     assert ok["evidence_count"] is None
 
 

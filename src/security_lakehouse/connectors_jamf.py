@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.connectors_intune import COMPLIANCE_CONTROLS, ENCRYPTION_CONTROLS
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.oauth import ClientCredentialsToken
@@ -410,9 +411,7 @@ class _Device:
 
     def event(self, signal: str, verdict: tuple[str, str, str | None], extra: dict[str, Any]) -> dict[str, Any]:
         status, severity, reason = verdict
-        stable = re.sub(r"[^a-z0-9_.:-]+", "-", f"{self.ctx.org}:{signal}:{self.kind}:{self.device_id}".lower()).strip(
-            "-"
-        )[:120]
+        stable = stable_id_slug(f"{self.ctx.org}:{signal}:{self.kind}:{self.device_id}", fallback="jamf", limit=120)
         return {
             "event_id": f"jamf-{stable}",
             "tenant_id": self.ctx.tenant_id,

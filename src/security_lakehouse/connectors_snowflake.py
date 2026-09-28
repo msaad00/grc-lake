@@ -23,6 +23,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.io import read_json
 from security_lakehouse.lake_mapping import (
     MappingSpec,
@@ -656,7 +657,7 @@ def _slug(value: Any) -> str:
 
 def _stable_suffix(*, account: str, signal: str, asset_id: str, dedupe_key: str | None) -> str:
     seed = f"{account}:{signal}:{dedupe_key or asset_id}".lower()
-    return re.sub(r"[^a-z0-9_.:-]+", "-", seed).strip("-")[:96] or "snowflake"
+    return stable_id_slug(seed, fallback="snowflake")
 
 
 def _connection_context(cursor: Any) -> dict[str, Any]:

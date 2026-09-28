@@ -27,6 +27,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_errors import (
+    CollectionGapError,
+    ConnectorAccessError,
+    ConnectorConfigError,
+)
+from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.identity import classify_identity_type
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -52,6 +58,20 @@ MIN_PASSWORD_LENGTH = 14
 # relevant control is key hygiene, not MFA: an active access key older than this,
 # or more than one active key, is the finding an auditor should review.
 MAX_ACCESS_KEY_AGE_DAYS = 90
+
+# The read action each optional inventory service needs, matching
+# deploy/aws/trustops-posture-readonly-role.yaml, so a denied read names the
+# permission to grant.
+INVENTORY_PERMISSIONS = {
+    "ec2": "ec2:DescribeInstances",
+    "s3": "s3:ListAllMyBuckets",
+    "rds": "rds:DescribeDBInstances",
+    "cloudtrail": "cloudtrail:DescribeTrails",
+    "config": "config:DescribeConfigurationRecorders",
+    "securityhub": "securityhub:DescribeHub",
+    "organizations": "organizations:DescribeOrganization",
+}
+_SAFE_ERROR_CODE = re.compile(r"^[A-Za-z][A-Za-z0-9.]{0,63}$")
 
 
 def _aws_error_code(exc: Exception) -> str:
@@ -99,7 +119,9 @@ class AWSClient:
         try:
             import boto3  # noqa: PLC0415
         except ImportError as exc:  # pragma: no cover - exercised only with live AWS
-            raise RuntimeError("aws-posture live collection requires boto3; install it or use --fixture-dir") from exc
+            raise ConnectorConfigError(
+                "aws-posture live collection requires boto3; install the cloud extra or use --fixture-dir"
+            ) from exc
         if role_arn:
             sts = boto3.client("sts", region_name=region_name)
             assume_kwargs: dict[str, Any] = {"RoleArn": role_arn, "RoleSessionName": session_name}
@@ -124,6 +146,10 @@ class AWSClient:
         if self._session is not None:
             return self._session.client(service, region_name=region_name)
         return self._boto3.client(service, region_name=region_name)
+
+    def caller_identity(self) -> dict[str, Any]:
+        """``sts:GetCallerIdentity`` for the identity this client reads as."""
+        return dict(self.service_client("sts").get_caller_identity())
 
     def users(self) -> list[dict[str, Any]]:
         users: list[dict[str, Any]] = []
@@ -298,32 +324,68 @@ class AWSFixtureClient:
         return []
 
 
-def probe_aws_access(*, credentials: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
-    """Prove the staged cross-account role and one required read capability.
+def probe_aws_access(
+    *,
+    credentials: dict[str, Any],
+    options: dict[str, Any],
+    allow_ambient_credentials: bool = False,
+) -> dict[str, Any]:
+    """Prove live AWS access for the configured account, fail-closed.
 
-    This is deliberately a live, fail-closed probe. Construction exercises
-    ``sts:AssumeRole`` and ``users`` exercises ``iam:ListUsers``. The remaining
-    catalog reads are exercised by sync; the probe reports only what it proved.
+    Two credential modes, matching sync:
+
+    * ``role_arn`` (+ ``external_id``): ``sts:AssumeRole`` into the customer's
+      read-only role. This is the production path and the only one accepted
+      unless the caller opts in to ambient credentials.
+    * local credential chain (``AWS_PROFILE`` / SSO / env), only when
+      ``allow_ambient_credentials`` is set. The CLI sets it; the API does not,
+      so a server never probes with its own runtime identity by default.
+
+    Either way ``sts:GetCallerIdentity`` must resolve to the configured
+    ``account_id`` and ``iam:ListUsers`` must succeed.
     """
     account_id = str(credentials.get("account_id") or "").strip()
     role_arn = str(credentials.get("role_arn") or "").strip()
     external_id = str(credentials.get("external_id") or "").strip()
     region = str(options.get("region") or credentials.get("region") or "").strip() or None
-    if not account_id or not role_arn:
-        raise ValueError("AWS live probe requires account_id and role_arn")
+    if not account_id:
+        raise ConnectorConfigError("AWS probe requires account_id")
+    if not role_arn and not allow_ambient_credentials:
+        raise ConnectorConfigError(
+            "AWS probe requires role_arn (and external_id) to assume the read-only role; "
+            "the local AWS credential chain can only be probed from the CLI"
+        )
     client = AWSClient(
         region_name=region,
-        role_arn=role_arn,
+        role_arn=role_arn or None,
         external_id=external_id or None,
     )
+    verify_aws_account(client, account_id)
     users = client.users()
-    return {
+    result: dict[str, Any] = {
         "ok": True,
         "account_id": account_id,
-        "role_arn": role_arn,
-        "capabilities": ["sts:AssumeRole", "iam:ListUsers"],
+        "credential_mode": "assume_role" if role_arn else "local_credential_chain",
+        "capabilities": [
+            *(["sts:AssumeRole"] if role_arn else []),
+            "sts:GetCallerIdentity",
+            "iam:ListUsers",
+        ],
         "principal_count": len(users),
     }
+    if role_arn:
+        result["role_arn"] = role_arn
+    return result
+
+
+def verify_aws_account(client: Any, account_id: str) -> None:
+    """Fail when the resolved AWS identity belongs to a different account."""
+    actual = str(client.caller_identity().get("Account") or "").strip()
+    if actual != account_id:
+        raise ConnectorAccessError(
+            f"AWS credentials resolve to account {actual or 'unknown'}, "
+            f"but the connector is configured for account {account_id}"
+        )
 
 
 def collect_aws_evidence(
@@ -379,16 +441,20 @@ def collect_aws_inventory_evidence(
     rows: list[dict[str, Any]] = []
     global_services = {"s3", "organizations"}
     seen_global: set[str] = set()
+    gaps: dict[str, CollectionGapError] = {}
     for region in regions:
         for service in services:
             if service in global_services and service in seen_global:
                 continue
+            collection = f"inventory:{service}" if service in global_services else f"inventory:{service}:{region}"
             try:
                 resources = client.inventory(service, region_name=region)
-            except Exception:  # noqa: BLE001 - one denied service must not discard successful inventory
+            except Exception as exc:  # noqa: BLE001 - one denied service must not discard successful inventory
+                gaps[collection] = _inventory_gap(exc, service=service, region=region, collection=collection)
                 continue
             if service in global_services:
                 seen_global.add(service)
+                gaps.pop(collection, None)
             for resource in resources:
                 resource_id = str(resource.get("id") or "").strip()
                 if not resource_id:
@@ -410,7 +476,46 @@ def collect_aws_inventory_evidence(
                         attributes={**resource, "account_id": account, "region": region, "service": service},
                     )
                 )
+    rows.extend(_gap_event(account, gap, now, tenant_id) for gap in gaps.values())
     return rows
+
+
+def _inventory_gap(exc: Exception, *, service: str, region: str, collection: str) -> CollectionGapError:
+    code = _aws_error_code(exc)
+    safe_code = code if _SAFE_ERROR_CODE.match(code) else ""
+    denied = "AccessDenied" in safe_code or safe_code.startswith("Unauthorized")
+    scope = (
+        f"AWS {service} inventory" if collection == f"inventory:{service}" else f"AWS {service} inventory in {region}"
+    )
+    permission = INVENTORY_PERMISSIONS.get(service) if denied else None
+    detail = safe_code or "read failed"
+    if permission:
+        detail = f"{detail}; grant {permission}"
+    return CollectionGapError(
+        f"{scope} was not collected ({detail})",
+        collection=collection,
+        reason="permission_denied" if denied else "read_failed",
+        permission=permission,
+    )
+
+
+def _gap_event(account: str, gap: CollectionGapError, collected_at: datetime, tenant_id: str) -> dict[str, Any]:
+    """A coverage-gap row: an actionable open item that neither passes nor fails a control."""
+    return _event(
+        account=account,
+        collected_at=collected_at,
+        tenant_id=tenant_id,
+        signal="collection_gap",
+        dedupe_key=gap.collection,
+        event_type="aws.collection_gap",
+        asset_id=f"aws:account:{account}",
+        asset_type="collection_scope",
+        controls=[],
+        status="open",
+        severity="low",
+        evidence_ref=f"aws:{account}:collection-gap:{gap.collection}",
+        attributes=gap.attributes(),
+    )
 
 
 def _user_event(
@@ -687,5 +792,4 @@ def _stable_suffix(*, account: str, signal: str, asset_id: str, dedupe_key: str 
     The pipeline computes the canonical raw evidence hash after collection. These
     IDs only need to be stable for connector upserts and evidence-room links.
     """
-    seed = f"{account}:{signal}:{dedupe_key or asset_id}".lower()
-    return re.sub(r"[^a-z0-9_.:-]+", "-", seed).strip("-")[:96] or "aws"
+    return stable_id_slug(f"{account}:{signal}:{dedupe_key or asset_id}", fallback="aws")

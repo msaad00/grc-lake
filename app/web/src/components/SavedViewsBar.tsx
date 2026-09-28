@@ -91,12 +91,12 @@ export function SavedViewsBar({
             onChange={(e) => setSaveViewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSaveView()}
             placeholder="View name…"
-            className="rounded border border-line px-2 py-0.5 text-[11px] focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="rounded border border-line px-2 py-0.5 text-[11px] focus:outline-none focus:ring-2 focus:ring-brand"
           />
           <button
             type="button"
             onClick={handleSaveView}
-            className="rounded bg-violet-600 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-violet-700"
+            className="rounded bg-info-bg px-2 py-0.5 text-[11px] font-medium text-info-fg hover:bg-info"
           >
             Save
           </button>

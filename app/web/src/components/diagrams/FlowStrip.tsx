@@ -12,11 +12,9 @@ export interface FlowStep {
 
 const TONE: Record<NonNullable<FlowStep["tone"]>, string> = {
   brand: "bg-brand/10 text-brand ring-brand/20",
-  lake: "bg-cyan-50 text-cyan-800 ring-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300",
-  assess:
-    "bg-amber-50 text-amber-900 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300",
-  share:
-    "bg-violet-50 text-violet-800 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300",
+  lake: "bg-info-bg text-info-fg ring-info/40",
+  assess: "bg-warning-bg text-warning-fg ring-warning/40",
+  share: "bg-info-bg text-info-fg ring-info/40",
   neutral: "bg-panel text-ink ring-line",
 };
 
@@ -42,14 +40,14 @@ export function FlowStrip({
           <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] gap-3 overflow-hidden rounded-xl border border-line bg-surface p-3 shadow-card">
             <span
               className={cn(
-                "grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[10px] font-black ring-1",
+                "grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[10px] font-semibold ring-1",
                 TONE[item.tone ?? "neutral"],
               )}
             >
               {item.step}
             </span>
             <span className="min-w-0 overflow-hidden">
-              <span className="block line-clamp-2 text-sm font-black text-ink">
+              <span className="block line-clamp-2 text-sm font-semibold text-ink">
                 {item.title}
               </span>
               <span className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted">

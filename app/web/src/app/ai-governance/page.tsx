@@ -18,7 +18,6 @@ export default function AiGovernancePage() {
   return (
     <div className="page-shell grid gap-6">
       <PageHeader
-        eyebrow="AI programs"
         title={ROUTE_LABELS["/ai-governance"]}
         description="Model inventory, lineage, runtime signals, and framework mapping for NIST AI RMF, ISO 42001, and EU AI Act evidence loops."
         actions={
@@ -37,19 +36,19 @@ export default function AiGovernancePage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <BrainCircuit className="h-4 w-4 text-brand" />
-                  <span className="text-sm font-black text-ink">
+                  <span className="text-sm font-semibold text-ink">
                     Full inventory
                   </span>
                 </div>
                 <Link
                   href="/controls?domain=ai-governance"
-                  className="text-xs font-bold text-brand hover:underline"
+                  className="text-xs font-semibold text-brand hover:underline"
                 >
                   AI controls
                 </Link>
               </div>
               {inventory.data.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm font-bold text-muted">
+                <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm font-semibold text-muted">
                   No AI assets in the lake yet.
                 </div>
               ) : (
@@ -57,10 +56,10 @@ export default function AiGovernancePage() {
                   <table className="w-full min-w-[640px] text-left text-xs">
                     <thead>
                       <tr className="border-b border-line text-muted">
-                        <th className="px-2 py-2 font-bold">Asset</th>
-                        <th className="px-2 py-2 font-bold">Type</th>
-                        <th className="px-2 py-2 font-bold">Owner</th>
-                        <th className="px-2 py-2 font-bold">Signals</th>
+                        <th className="px-2 py-2 font-semibold">Asset</th>
+                        <th className="px-2 py-2 font-semibold">Type</th>
+                        <th className="px-2 py-2 font-semibold">Owner</th>
+                        <th className="px-2 py-2 font-semibold">Signals</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -70,7 +69,7 @@ export default function AiGovernancePage() {
                           className="border-b border-line/70"
                         >
                           <td
-                            className="px-2 py-2 font-bold text-ink"
+                            className="px-2 py-2 font-semibold text-ink"
                             title={item.asset_id}
                           >
                             {assetLabel(item)}

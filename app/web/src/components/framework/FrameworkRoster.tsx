@@ -40,7 +40,7 @@ function FrameworkLine({
         variant="mark-only"
       />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-black text-ink">
+        <div className="truncate text-sm font-semibold text-ink">
           {framework.name}
         </div>
         <div className="mt-0.5 truncate text-xs font-medium leading-5 text-muted">
@@ -84,12 +84,12 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
     <Card aria-label="Framework roster" className="overflow-hidden">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line px-4 py-3">
         <div>
-          <h2 className="text-lg font-black text-ink">Framework roster</h2>
+          <h2 className="text-lg font-semibold text-ink">Framework roster</h2>
           <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted">
             Mapping and review status by framework.
           </p>
         </div>
-        <div className="text-right text-xs font-bold text-muted">
+        <div className="text-right text-xs font-semibold text-muted">
           <div>
             {evaluated.length} tracked · {notEvaluated.length} not evaluated
           </div>
@@ -100,7 +100,7 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
         <section aria-labelledby="framework-roster-tracked">
           <h3
             id="framework-roster-tracked"
-            className="pt-3 text-[10px] font-black uppercase tracking-[0.18em] text-muted"
+            className="pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted"
           >
             Readiness tracked
           </h3>
@@ -118,7 +118,7 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
         <section aria-labelledby="framework-roster-unavailable">
           <h3
             id="framework-roster-unavailable"
-            className="pt-3 text-[10px] font-black uppercase tracking-[0.18em] text-muted"
+            className="pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted"
           >
             Not evaluated
           </h3>

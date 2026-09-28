@@ -137,10 +137,10 @@ function ConnectorRow({
     <button
       type="button"
       onClick={onSelect}
-      className={`grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden rounded-lg border bg-white p-3 text-left transition-colors hover:border-brand hover:shadow-card ${
+      className={`grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden rounded-lg border bg-surface p-3 text-left transition-colors hover:border-brand hover:shadow-card ${
         runnable
           ? "border-line"
-          : "border-dashed border-amber-200/80 bg-amber-50/30 dark:border-amber-500/30 dark:bg-amber-500/10"
+          : "border-dashed border-warning/40 bg-warning-bg "
       }`}
     >
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg">
@@ -153,10 +153,12 @@ function ConnectorRow({
       </span>
       <span className="min-w-0 overflow-hidden">
         <span className="flex flex-wrap items-center gap-2">
-          <span className="truncate font-black text-ink">{connector.name}</span>
+          <span className="truncate font-semibold text-ink">
+            {connector.name}
+          </span>
           <Badge tone={toneForState(connector.state)}>{connector.state}</Badge>
           {connector.release_stage === "preview" && (
-            <Badge tone="info" title={PREVIEW_TITLE}>
+            <Badge tone="outline" title={PREVIEW_TITLE}>
               Preview
             </Badge>
           )}
@@ -264,19 +266,18 @@ export default function ConnectorsPage() {
         />
       )}
       <PageHeader
-        eyebrow="Sources"
         title={ROUTE_LABELS["/connectors"]}
         description="Connect a source, test access, then sync evidence. You can also read an existing lake, normalize evidence, then evaluate it."
         actions={
           totals.unhealthy > 0 ? (
-            <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+            <span className="rounded-full border border-danger/40 bg-danger-bg px-3 py-1.5 text-xs font-semibold text-danger-fg">
               {totals.unhealthy} need attention
             </span>
           ) : null
         }
       />
 
-      <EvidencePathPanel />
+      <EvidencePathPanel connectors={connectors.data ?? []} />
 
       <div className="grid min-w-0 gap-2 overflow-hidden rounded-lg border border-line bg-surface p-2 shadow-card">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -300,9 +301,9 @@ export default function ConnectorsPage() {
                 type="button"
                 role="tab"
                 aria-selected={viewFilter === tab.id}
-                className={`shrink-0 rounded-md px-3 py-2 text-xs font-black ${
+                className={`shrink-0 rounded-md px-3 py-2 text-xs font-semibold ${
                   viewFilter === tab.id
-                    ? "bg-brand text-white"
+                    ? "bg-surface text-ink shadow-card ring-1 ring-line"
                     : "text-muted hover:bg-surface"
                 }`}
                 onClick={() => setViewFilter(tab.id)}
@@ -321,7 +322,7 @@ export default function ConnectorsPage() {
             onChange={(event) =>
               setCategoryFilter(event.target.value as CategoryFilter)
             }
-            className="min-w-[150px] rounded-lg border border-line bg-panel px-3 py-2.5 text-xs font-black text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+            className="min-w-[150px] rounded-lg border border-line bg-panel px-3 py-2.5 text-xs font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
           >
             {CATEGORY_OPTIONS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -329,7 +330,7 @@ export default function ConnectorsPage() {
               </option>
             ))}
           </select>
-          <span className="rounded-full border border-line bg-surface px-3 py-2 text-xs font-black text-muted">
+          <span className="rounded-full border border-line bg-surface px-3 py-2 text-xs font-semibold text-muted">
             {totals.runnable} available
           </span>
         </div>

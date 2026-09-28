@@ -132,7 +132,7 @@ function ResolveTaskModal({
         </div>
       }
     >
-      <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+      <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
         Evidence link or note
         <textarea
           rows={3}
@@ -149,7 +149,7 @@ function ResolveTaskModal({
       {failed && (
         <p
           role="alert"
-          className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+          className="mt-3 rounded-lg bg-danger-bg p-3 text-sm text-danger-fg"
         >
           Unable to resolve task. Your note is still here. Try again.
         </p>
@@ -350,7 +350,7 @@ function TasksSection() {
       {(create.isError || update.isError) && (
         <p
           role="alert"
-          className="mx-5 mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+          className="mx-5 mb-4 rounded-lg bg-danger-bg p-3 text-sm text-danger-fg"
         >
           Unable to save task. Try again.
         </p>
@@ -489,17 +489,14 @@ function EvidenceRequestsSection() {
       {(create.isError || setStatus.isError) && (
         <p
           role="alert"
-          className="mx-5 mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+          className="mx-5 mb-4 rounded-lg bg-danger-bg p-3 text-sm text-danger-fg"
         >
           Unable to save evidence request. Your entries are still here. Try
           again.
         </p>
       )}
       {create.isSuccess && (
-        <p
-          role="status"
-          className="px-5 pb-4 text-sm text-emerald-700 dark:text-emerald-300"
-        >
+        <p role="status" className="px-5 pb-4 text-sm text-success-fg">
           Evidence request saved.
         </p>
       )}
@@ -622,7 +619,7 @@ function ExceptionsSection() {
       {(create.isError || revoke.isError) && (
         <p
           role="alert"
-          className="mx-5 mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+          className="mx-5 mb-4 rounded-lg bg-danger-bg p-3 text-sm text-danger-fg"
         >
           Unable to save exception. Try again.
         </p>
@@ -682,14 +679,13 @@ function RemediationContent() {
   return (
     <div className="page-shell grid gap-4">
       <PageHeader
-        eyebrow="Resolve"
         title={ROUTE_LABELS["/remediation"]}
         description="Tasks, evidence requests, and exceptions."
       />
       <div
         role="tablist"
         aria-label="Remediation view"
-        className="flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-2"
+        className="flex flex-wrap gap-5 border-b border-line"
       >
         {TABS.map((item) => (
           <button
@@ -697,7 +693,7 @@ function RemediationContent() {
             type="button"
             role="tab"
             aria-selected={tab === item.id}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === item.id ? "bg-brand text-white" : "text-muted hover:bg-surfaceMuted"}`}
+            className={`-mb-px border-b-2 py-2.5 text-[13px] font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand ${tab === item.id ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"}`}
             onClick={() => {
               const params = new URLSearchParams(searchParams.toString());
               params.set("tab", item.id);

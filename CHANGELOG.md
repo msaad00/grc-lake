@@ -12,6 +12,24 @@ Python package, Helm chart, and bundled web console.
   requirements; NIST RMF mapped, ISO 27701:2025 limited), and stale "scaffold"
   wording is gone. The Databricks reader is now marked preview in the connector
   catalog, matching its docs.
+- Console visual system: neutral light and dark themes with clear elevation
+  steps (page, rail, card, raised) and visible borders; one brand accent for
+  primary actions, the active page, links, and focus; and a status palette
+  (success, warning, serious, danger, info) whose tinted chips meet WCAG AA in
+  both themes. Light mode now has a light shell. A contract test checks every
+  text/surface pair.
+- Overview is decluttered so each number appears once: one status line, KPI
+  tiles with a label, number, one line of context, and an optional meter, a
+  framework list with a single sort control, and a five-row findings preview
+  (severity, title, control ID) that no longer clips. The collapsed
+  "Operational detail" section and the duplicate Exports tab are gone; owner,
+  environment, and source live in the finding drawer.
+- The finding drawer is grouped into Summary, Details, Remediation (with
+  button actions), and Triage. Page headers, tabs, filters, and the pipeline
+  stepper share one pattern across routes, and graph layers use validated
+  categorical colours with dimmed nodes that stay legible.
+- Golden demo data: each event's source now follows its event type (a model
+  drift alert comes from the SIEM, not AWS Config).
 - Deepen the common control framework: 34 new safeguards split thin families
   (governance, incident response, privacy, change, vulnerability, configuration,
   secure development, architecture, processing integrity, third-party risk,

@@ -4,12 +4,36 @@ import Link from "next/link";
 import { useState } from "react";
 import { Check, Clipboard, Database, FileJson2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { ConnectorView } from "@/lib/api/types";
 
 const NORMALIZE_COMMAND = `security-lakehouse ingestion normalize \\
   --raw ./raw/connector_events.jsonl \\
   --out ./lake`;
 
-export function EvidencePathPanel() {
+const LAKE_CATEGORIES = new Set(["warehouse", "analytics_lake"]);
+
+function joinNames(names: string[]) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")}, or ${names[names.length - 1]}`;
+}
+
+/** Lake readers straight from the connector catalog, so the copy never drifts. */
+function lakeReaders(connectors: ConnectorView[]) {
+  const lakes = connectors.filter((c) => LAKE_CATEGORIES.has(c.category));
+  const label = (c: ConnectorView) =>
+    c.vendor || c.name.replace(/\s+(Evidence|Telemetry)?\s*Lake$/, "");
+  return {
+    ga: lakes.filter((c) => c.release_stage !== "preview").map(label),
+    preview: lakes.filter((c) => c.release_stage === "preview").map(label),
+  };
+}
+
+export function EvidencePathPanel({
+  connectors = [],
+}: {
+  connectors?: ConnectorView[];
+}) {
+  const readers = lakeReaders(connectors);
   const [copied, setCopied] = useState(false);
 
   async function copyCommand() {
@@ -25,14 +49,10 @@ export function EvidencePathPanel() {
   return (
     <section
       aria-labelledby="evidence-path-title"
-      className="grid gap-3 rounded-xl border border-line bg-panel p-3 shadow-card sm:p-4"
+      className="grid gap-4 rounded-lg border border-line bg-surface p-4 sm:p-5"
     >
       <div>
-        <div className="ui-eyebrow">Evidence paths</div>
-        <h2
-          id="evidence-path-title"
-          className="mt-1 text-lg font-black text-ink"
-        >
+        <h2 id="evidence-path-title" className="ui-section-title">
           Choose an evidence path
         </h2>
         <p className="mt-1 max-w-3xl text-sm leading-5 text-muted">
@@ -44,14 +64,20 @@ export function EvidencePathPanel() {
       <div className="grid gap-3 md:grid-cols-2">
         <div className="grid gap-3 rounded-lg border border-line bg-surface p-3">
           <div className="flex items-start gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-brand dark:bg-blue-500/10">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-info-bg text-brand">
               <Database className="h-4 w-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h3 className="font-black text-ink">Read an existing lake</h3>
+              <h3 className="font-semibold text-ink">Read an existing lake</h3>
               <p className="mt-1 text-xs leading-5 text-muted">
-                Connect Snowflake or ClickHouse with a read-only role. TrustOps
-                reads the granted evidence surfaces and normalizes them.
+                {readers.ga.length
+                  ? `Connect ${joinNames(readers.ga)} with a read-only role.`
+                  : "Connect a data lake with a read-only role."}{" "}
+                TrustOps reads the granted evidence surfaces and normalizes
+                them.
+                {readers.preview.length
+                  ? ` Preview: ${joinNames(readers.preview).replace(", or ", " and ")}.`
+                  : null}
               </p>
             </div>
           </div>
@@ -68,7 +94,7 @@ export function EvidencePathPanel() {
               <FileJson2 className="h-4 w-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h3 className="font-black text-ink">
+              <h3 className="font-semibold text-ink">
                 Normalize pre-landed evidence
               </h3>
               <p className="mt-1 text-xs leading-5 text-muted">

@@ -114,9 +114,9 @@ function LaunchStep({
           className={[
             "grid h-11 w-11 shrink-0 place-items-center rounded-xl ring-1",
             ready
-              ? "bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300"
+              ? "bg-success-bg text-success-fg ring-success/40"
               : active
-                ? "bg-blue-50 text-brand ring-blue-100 dark:bg-blue-500/10"
+                ? "bg-info-bg text-brand ring-info/40"
                 : "bg-panel text-muted ring-line",
           ].join(" ")}
         >
@@ -127,7 +127,7 @@ function LaunchStep({
           )}
         </span>
         <div className="sm:hidden">
-          <div className="text-xs font-black uppercase tracking-wide text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
             Step {index + 1}
           </div>
           <Badge tone={stepTone(step.status)}>
@@ -137,11 +137,11 @@ function LaunchStep({
       </div>
 
       <div className="min-w-0">
-        <div className="hidden text-xs font-black uppercase tracking-wide text-muted sm:block">
+        <div className="hidden text-xs font-semibold uppercase tracking-wide text-muted sm:block">
           Step {index + 1}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-2">
-          <div className="text-base font-black text-ink">{step.label}</div>
+          <div className="text-base font-semibold text-ink">{step.label}</div>
           <Badge tone={stepTone(step.status)}>
             {stepBadgeLabel(step.status)}
           </Badge>
@@ -186,10 +186,10 @@ function Metric({
 }) {
   return (
     <div className="rounded-lg border border-line bg-panel p-3">
-      <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
         {label}
       </div>
-      <div className="mt-1 truncate text-2xl font-black leading-none text-ink">
+      <div className="mt-1 truncate text-2xl font-semibold leading-none text-ink">
         {value}
       </div>
       <div className="mt-1 truncate text-xs text-muted">{detail}</div>
@@ -217,7 +217,7 @@ function Signal({
       </span>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="min-w-0 text-sm font-black text-ink">{label}</div>
+          <div className="min-w-0 text-sm font-semibold text-ink">{label}</div>
           <Badge tone={tone}>{value}</Badge>
         </div>
         <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
@@ -242,7 +242,6 @@ export default function PocPage() {
   return (
     <div className="page-shell grid gap-3">
       <PageHeader
-        eyebrow="Launch"
         title="First-run launch"
         description="Connect a source, prove the sync path, and prepare a shareable trust workspace."
         actions={
@@ -256,7 +255,7 @@ export default function PocPage() {
 
       {readiness.isLoading && (
         <Card>
-          <CardContent className="p-6 text-sm font-bold text-muted">
+          <CardContent className="p-6 text-sm font-semibold text-muted">
             Checking launch readiness...
           </CardContent>
         </Card>
@@ -266,9 +265,9 @@ export default function PocPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
-              <CircleAlert className="mt-0.5 h-5 w-5 text-amber-600" />
+              <CircleAlert className="mt-0.5 h-5 w-5 text-warning-fg" />
               <div>
-                <div className="font-black text-ink">
+                <div className="font-semibold text-ink">
                   Admin access is required.
                 </div>
                 <p className="mt-1 text-sm leading-6 text-muted">
@@ -287,14 +286,14 @@ export default function PocPage() {
             <CardContent className="grid gap-0 p-0 lg:grid-cols-[340px_minmax(0,1fr)]">
               <div className="border-b border-line bg-panel p-5 lg:border-b-0 lg:border-r">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
                     Launch state
                   </div>
                   <Badge tone={state.tone}>
                     {data.shareable ? "shareable" : state.label}
                   </Badge>
                 </div>
-                <div className="mt-4 text-3xl font-black leading-none text-ink">
+                <div className="mt-4 text-3xl font-semibold leading-none text-ink">
                   {state.label}
                 </div>
                 <p className="mt-3 text-sm leading-6 text-muted">
@@ -303,15 +302,15 @@ export default function PocPage() {
                     : "Finish the active gate before sharing this workspace externally."}
                 </p>
                 <div className="mt-5">
-                  <div className="flex items-center justify-between text-xs font-black text-muted">
+                  <div className="flex items-center justify-between text-xs font-semibold text-muted">
                     <span>Progress</span>
                     <span>
                       {readySteps}/{totalSteps}
                     </span>
                   </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#315dff] to-[#21c6c7]"
+                      className="h-full rounded-full bg-brand"
                       style={{
                         width: totalSteps
                           ? `${Math.round((readySteps / totalSteps) * 100)}%`
@@ -406,7 +405,7 @@ export default function PocPage() {
               </CardHeader>
               <CardContent className="grid gap-4">
                 <div className="rounded-xl border border-line bg-panel p-4">
-                  <div className="text-lg font-black text-ink">
+                  <div className="text-lg font-semibold text-ink">
                     {data.next_step?.label ?? "Ready for review"}
                   </div>
                   <p className="mt-2 text-sm leading-6 text-muted">
@@ -431,7 +430,7 @@ export default function PocPage() {
                         key={String(action.action)}
                         className="rounded-lg border border-line bg-surface p-3"
                       >
-                        <div className="text-sm font-black text-ink">
+                        <div className="text-sm font-semibold text-ink">
                           {titleFromAction(String(action.action))}
                         </div>
                         <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
@@ -440,7 +439,7 @@ export default function PocPage() {
                       </div>
                     ))}
                   {data.ingestion.recommended_actions.length === 0 && (
-                    <div className="rounded-lg border border-line bg-surface p-3 text-sm font-bold text-muted">
+                    <div className="rounded-lg border border-line bg-surface p-3 text-sm font-semibold text-muted">
                       No ingestion actions are currently recommended.
                     </div>
                   )}

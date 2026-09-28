@@ -14,9 +14,9 @@ export function RemediationGuidance({
   return (
     <section
       aria-label="Suggested remediation"
-      className="rounded-xl border border-line bg-blue-50/40 p-3 dark:bg-blue-500/10"
+      className="rounded-lg border border-line bg-surfaceMuted p-3"
     >
-      <div className="mb-1 text-xs font-black uppercase tracking-wide text-muted">
+      <div className="mb-1 text-xs font-medium text-muted">
         Suggested remediation
         {!matched && (
           <Badge tone="default" className="ml-2 normal-case">

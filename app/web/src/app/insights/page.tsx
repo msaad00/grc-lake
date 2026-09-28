@@ -55,22 +55,22 @@ function StatCard({
 }) {
   const bg =
     tone === "bad"
-      ? "bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30"
+      ? "bg-danger-bg border-danger/40"
       : tone === "warn"
-        ? "bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30"
+        ? "bg-warning-bg border-warning/40"
         : "bg-surface border-line";
   const text =
     tone === "bad"
-      ? "text-red-700 dark:text-red-300"
+      ? "text-danger-fg"
       : tone === "warn"
-        ? "text-amber-700 dark:text-amber-300"
+        ? "text-warning-fg"
         : "text-ink";
   return (
     <div className={`rounded-2xl border p-5 ${bg}`}>
-      <div className="text-[11px] font-black uppercase tracking-wider text-muted">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
         {label}
       </div>
-      <div className={`mt-1 text-3xl font-black ${text}`}>{value}</div>
+      <div className={`mt-1 text-3xl font-semibold ${text}`}>{value}</div>
       {hint && <p className="mt-1 text-xs leading-5 text-muted">{hint}</p>}
     </div>
   );
@@ -96,10 +96,10 @@ export default function InsightsPage() {
       {/* header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-[12px] font-black uppercase tracking-wider text-brand">
+          <div className="text-[12px] font-semibold uppercase tracking-wider text-brand">
             Metrics &amp; trends
           </div>
-          <h1 className="mt-1 text-3xl font-black text-ink">
+          <h1 className="mt-1 text-3xl font-semibold text-ink">
             {ROUTE_LABELS["/insights"]}
           </h1>
           <p className="mt-2 max-w-[720px] text-sm text-muted">
@@ -110,7 +110,7 @@ export default function InsightsPage() {
               href={docsUrl("api/AGENT_API.md")}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold text-brand hover:underline"
+              className="font-semibold text-brand hover:underline"
             >
               API reference
             </a>

@@ -148,7 +148,7 @@ function PolicyDetail({ documentId }: { documentId: string }) {
         <div className="space-y-3 rounded-lg border border-line bg-surfaceMuted p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-sm font-bold text-ink">
+              <p className="text-sm font-semibold text-ink">
                 Employee acknowledgments
               </p>
               <p className="text-xs text-muted">
@@ -249,7 +249,6 @@ export default function PoliciesPage() {
   return (
     <div className="page-shell space-y-6">
       <PageHeader
-        eyebrow="Governance"
         title={ROUTE_LABELS["/policies"]}
         description="Browse bundled SOC 2 and ISO-aligned policy templates, adopt them for your tenant, edit markdown drafts, and publish to prove control coverage."
       />
@@ -262,25 +261,25 @@ export default function PoliciesPage() {
           <Card className="grid gap-2 p-5 sm:grid-cols-4">
             <div>
               <p className="text-xs text-muted">Published policies</p>
-              <p className="text-lg font-bold text-ink">
+              <p className="text-lg font-semibold text-ink">
                 {attestation.data.published}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted">With acknowledgments</p>
-              <p className="text-lg font-bold text-ink">
+              <p className="text-lg font-semibold text-ink">
                 {attestation.data.acknowledged}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted">Unattested</p>
-              <p className="text-lg font-bold text-ink">
+              <p className="text-lg font-semibold text-ink">
                 {attestation.data.unattested}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted">Total attestations</p>
-              <p className="text-lg font-bold text-ink">
+              <p className="text-lg font-semibold text-ink">
                 {attestation.data.total_acknowledgments}
               </p>
             </div>

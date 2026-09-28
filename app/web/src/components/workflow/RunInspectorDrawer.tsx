@@ -119,7 +119,7 @@ export function RunInspectorDrawer({
               className="rounded-lg border border-line bg-surface p-3 text-xs"
             >
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <span className="font-black text-ink">
+                <span className="font-semibold text-ink">
                   {node.node_id} · {node.node_type}
                 </span>
                 <Badge
@@ -138,7 +138,7 @@ export function RunInspectorDrawer({
                 <p className="mb-2 text-muted">{node.reason}</p>
               ) : null}
               {node.error ? (
-                <pre className="mb-2 overflow-x-auto rounded bg-rose-50 p-2 text-[11px] text-rose-800 dark:bg-rose-500/10 dark:text-rose-300">
+                <pre className="mb-2 overflow-x-auto rounded bg-danger-bg p-2 text-[11px] text-danger-fg">
                   {node.error}
                 </pre>
               ) : null}

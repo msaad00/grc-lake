@@ -28,8 +28,8 @@ export function TagFilterBar({
           key={tag.id}
           type="button"
           onClick={() => onSelect(activeTagId === tag.id ? null : tag.id)}
-          className={`rounded-full outline-none ring-offset-1 focus:ring-2 focus:ring-violet-500 ${
-            activeTagId === tag.id ? "ring-2 ring-violet-500 ring-offset-1" : ""
+          className={`rounded-full outline-none ring-offset-1 focus:ring-2 focus:ring-brand ${
+            activeTagId === tag.id ? "ring-2 ring-brand ring-offset-1" : ""
           }`}
         >
           <TagChip tag={tag} />

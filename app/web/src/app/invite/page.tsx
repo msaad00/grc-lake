@@ -53,7 +53,7 @@ function InviteAcceptForm() {
         ) : (
           <form className="grid gap-3" onSubmit={submit}>
             <label className="grid gap-1 text-sm">
-              <span className="font-bold text-ink">Display name</span>
+              <span className="font-semibold text-ink">Display name</span>
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -71,7 +71,7 @@ function InviteAcceptForm() {
           </form>
         )}
         <p className="mt-4 text-sm text-muted">
-          <Link href="/login" className="font-bold text-brand underline">
+          <Link href="/login" className="font-semibold text-brand underline">
             Back to sign in
           </Link>
         </p>

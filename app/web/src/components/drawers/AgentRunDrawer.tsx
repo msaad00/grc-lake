@@ -52,7 +52,7 @@ export function AgentRunDrawer({ runId, onClose }: Props) {
         </div>
       ) : null}
       {detail.isError ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+        <div className="rounded-lg border border-danger/40 bg-danger-bg px-3 py-2 text-sm font-semibold text-danger-fg">
           Could not load agent run detail.
         </div>
       ) : null}
@@ -60,7 +60,7 @@ export function AgentRunDrawer({ runId, onClose }: Props) {
         <div className="grid gap-5">
           <dl className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1.5 text-sm">
             <dt className="text-muted">Harness</dt>
-            <dd className="font-bold capitalize text-ink">
+            <dd className="font-semibold capitalize text-ink">
               {run.harness.replaceAll("_", " ")}
             </dd>
             <dt className="text-muted">Status</dt>
@@ -86,13 +86,13 @@ export function AgentRunDrawer({ runId, onClose }: Props) {
           </dl>
 
           {run.errors.length > 0 ? (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+            <div className="rounded-lg border border-danger/40 bg-danger-bg px-3 py-2 text-sm font-semibold text-danger-fg">
               {run.errors.join(" ")}
             </div>
           ) : null}
 
           <div className="grid gap-3">
-            <span className="text-xs font-bold uppercase tracking-wide text-muted">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted">
               Evaluation summary
             </span>
             <pre className="max-h-40 overflow-auto rounded-lg bg-surfaceMuted p-3 text-xs text-ink">
@@ -102,7 +102,7 @@ export function AgentRunDrawer({ runId, onClose }: Props) {
 
           {run.state ? (
             <div className="grid gap-3">
-              <span className="text-xs font-bold uppercase tracking-wide text-muted">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Persisted state
               </span>
               <pre className="max-h-48 overflow-auto rounded-lg bg-surfaceMuted p-3 text-xs text-ink">
@@ -112,11 +112,11 @@ export function AgentRunDrawer({ runId, onClose }: Props) {
           ) : null}
 
           <div className="grid gap-3">
-            <span className="text-xs font-bold uppercase tracking-wide text-muted">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted">
               Proposed decisions
             </span>
             {run.decisions.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-line px-4 py-6 text-sm font-bold text-muted">
+              <div className="rounded-lg border border-dashed border-line px-4 py-6 text-sm font-semibold text-muted">
                 No proposed writes for this run.
               </div>
             ) : (

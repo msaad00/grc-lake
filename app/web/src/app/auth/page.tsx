@@ -43,7 +43,7 @@ function MethodRow({ method }: { method: AuthMethod }) {
       />
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-black text-ink">{method.label}</span>
+          <span className="text-sm font-semibold text-ink">{method.label}</span>
           <Badge tone={method.configured ? "ready" : "attention"}>
             {method.configured ? "live" : "setup needed"}
           </Badge>
@@ -102,7 +102,6 @@ export default function AuthPage() {
   return (
     <div className="page-shell grid gap-3">
       <PageHeader
-        eyebrow="Access"
         title={ROUTE_LABELS["/auth"]}
         description="OIDC, SAML, and API keys share one tenant, role, and audit boundary — the same identity model as hosted enterprise GRC workspaces."
         actions={<Badge tone="ready">Server auth</Badge>}
@@ -121,34 +120,34 @@ export default function AuthPage() {
             </CardHeader>
             <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg border border-line bg-panel p-3">
-                <div className="text-[10px] font-black uppercase text-muted">
+                <div className="text-[11px] font-semibold uppercase text-muted">
                   User
                 </div>
-                <div className="mt-1 truncate text-sm font-black text-ink">
+                <div className="mt-1 truncate text-sm font-semibold text-ink">
                   {whoami.data.email}
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-panel p-3">
-                <div className="text-[10px] font-black uppercase text-muted">
+                <div className="text-[11px] font-semibold uppercase text-muted">
                   Role
                 </div>
-                <div className="mt-1 text-sm font-black text-ink">
+                <div className="mt-1 text-sm font-semibold text-ink">
                   {whoami.data.role}
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-panel p-3">
-                <div className="text-[10px] font-black uppercase text-muted">
+                <div className="text-[11px] font-semibold uppercase text-muted">
                   Tenant
                 </div>
-                <div className="mt-1 truncate text-sm font-black text-ink">
+                <div className="mt-1 truncate text-sm font-semibold text-ink">
                   {whoami.data.tenant_id}
                 </div>
               </div>
               <div className="rounded-lg border border-line bg-panel p-3">
-                <div className="text-[10px] font-black uppercase text-muted">
+                <div className="text-[11px] font-semibold uppercase text-muted">
                   Scopes
                 </div>
-                <div className="mt-1 text-sm font-black text-ink">
+                <div className="mt-1 text-sm font-semibold text-ink">
                   {whoami.data.scopes.length}
                 </div>
               </div>

@@ -33,6 +33,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { GRAPH_LAYER, tint } from "@/lib/graph-palette";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -106,38 +107,8 @@ const KIND_LABEL: Record<GraphNodeKind, string> = {
   evidence: "Evidence refs",
 };
 
-const KIND_TONE: Record<
-  GraphNodeKind,
-  "info" | "ready" | "attention" | "critical"
-> = {
-  framework: "info",
-  control: "ready",
-  evidence_type: "attention",
-  asset: "critical",
-  repository: "info",
-  directory: "ready",
-  language: "ready",
-  evidence_signal: "attention",
-  governance_signal: "info",
-  signal_gap: "critical",
-  workflow: "attention",
-  dependency_manifest: "attention",
-  ownership_file: "ready",
-  security_file: "ready",
-  file: "info",
-  principal: "critical",
-  team: "info",
-  review_rule: "ready",
-  status_check: "ready",
-  workflow_permission: "attention",
-  evidence: "info",
-};
-
 const KIND_SWATCH: Record<GraphNodeKind, string> = {
-  framework: "#4f7cff",
-  control: "#12b76a",
-  evidence_type: "#f79009",
-  asset: "#7a35ff",
+  ...GRAPH_LAYER,
   repository: "#0ea5e9",
   directory: "#64748b",
   language: "#059669",
@@ -613,11 +584,6 @@ function GraphPageContent() {
   return (
     <div className="page-shell grid gap-3">
       <PageHeader
-        eyebrow={
-          graphMode === "compliance"
-            ? "Compliance mapping"
-            : "Repository topology and governance"
-        }
         title={ROUTE_LABELS["/graph"]}
         description={
           graphMode === "compliance"
@@ -644,7 +610,7 @@ function GraphPageContent() {
                   type="button"
                   onClick={() => setGraphMode(mode)}
                   className={[
-                    "inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-black",
+                    "inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold",
                     graphMode === mode
                       ? "bg-ink text-surface"
                       : "text-muted hover:bg-surfaceMuted",
@@ -713,7 +679,7 @@ function GraphPageContent() {
                           </span>
                         )}
                       </span>
-                      <span className="shrink-0 text-[10px] font-black uppercase tracking-wide text-muted">
+                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted">
                         {pathMode === "from"
                           ? "set start"
                           : pathMode === "to"
@@ -743,7 +709,7 @@ function GraphPageContent() {
                   type="button"
                   onClick={() => setLayout(dir)}
                   className={[
-                    "rounded-md px-2 py-1 text-[11px] font-black uppercase tracking-wide",
+                    "rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide",
                     layout === dir
                       ? "bg-ink text-surface"
                       : "text-muted hover:bg-surfaceMuted",
@@ -786,10 +752,10 @@ function GraphPageContent() {
 
         <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <Card className="p-2.5">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               Focus
             </div>
-            <div className="mt-0.5 truncate text-lg font-black text-ink">
+            <div className="mt-0.5 truncate text-lg font-semibold text-ink">
               {graphMode === "compliance"
                 ? filterFramework || "All frameworks"
                 : "Repository"}
@@ -800,10 +766,10 @@ function GraphPageContent() {
             </div>
           </Card>
           <Card className="p-2.5">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               {graphMode === "compliance" ? "Controls" : "Governance signals"}
             </div>
-            <div className="mt-0.5 text-lg font-black text-ink">
+            <div className="mt-0.5 text-lg font-semibold text-ink">
               {graphMode === "compliance"
                 ? visibleSummary.controls
                 : visibleSummary.signals}
@@ -813,10 +779,10 @@ function GraphPageContent() {
             </div>
           </Card>
           <Card className="p-2.5">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               {graphMode === "compliance" ? "Evidence types" : "Repositories"}
             </div>
-            <div className="mt-0.5 text-lg font-black text-ink">
+            <div className="mt-0.5 text-lg font-semibold text-ink">
               {graphMode === "compliance"
                 ? visibleSummary.evidenceTypes
                 : visibleSummary.repositories}
@@ -826,10 +792,10 @@ function GraphPageContent() {
             </div>
           </Card>
           <Card className="p-2.5">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               {graphMode === "compliance" ? "Covered assets" : "Signal gaps"}
             </div>
-            <div className="mt-0.5 text-lg font-black text-ink">
+            <div className="mt-0.5 text-lg font-semibold text-ink">
               {graphMode === "compliance"
                 ? visibleSummary.assets
                 : (counts.signal_gap ?? 0)}
@@ -864,7 +830,7 @@ function GraphPageContent() {
             </CardHeader>
             <div className="grid gap-2 p-3 pt-0">
               <section>
-                <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-muted">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Layers
                 </div>
                 <div className="grid gap-1">
@@ -878,7 +844,7 @@ function GraphPageContent() {
                         type="button"
                         onClick={() => toggle(kind)}
                         className={[
-                          "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-[11px] font-extrabold",
+                          "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-[11px] font-semibold",
                           on
                             ? "bg-surface text-ink shadow-sm"
                             : "border-line bg-surfaceMuted text-muted hover:border-brand",
@@ -887,14 +853,12 @@ function GraphPageContent() {
                       >
                         <span
                           className="grid h-6 w-6 place-items-center rounded-lg"
-                          style={{ background: `${color}18`, color }}
+                          style={{ background: tint(color), color }}
                         >
                           <Icon className="h-3.5 w-3.5" />
                         </span>
                         <span className="truncate">{KIND_LABEL[kind]}</span>
-                        <Badge tone={KIND_TONE[kind]}>
-                          {formatCount(counts[kind] ?? 0)}
-                        </Badge>
+                        <Badge>{formatCount(counts[kind] ?? 0)}</Badge>
                       </button>
                     );
                   })}
@@ -902,7 +866,7 @@ function GraphPageContent() {
               </section>
 
               <section>
-                <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-muted">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Framework
                 </div>
                 <select
@@ -924,7 +888,7 @@ function GraphPageContent() {
               {graphMode === "repository" && (
                 <>
                   <section>
-                    <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-muted">
+                    <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                       Control
                     </div>
                     <select
@@ -943,7 +907,7 @@ function GraphPageContent() {
                   </section>
 
                   <section>
-                    <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-muted">
+                    <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                       Workflow signal
                     </div>
                     <select
@@ -962,7 +926,7 @@ function GraphPageContent() {
                   </section>
 
                   <section>
-                    <label className="flex items-center gap-2 rounded-lg border border-line bg-surface px-2 py-2 text-xs font-extrabold text-ink">
+                    <label className="flex items-center gap-2 rounded-lg border border-line bg-surface px-2 py-2 text-xs font-semibold text-ink">
                       <input
                         type="checkbox"
                         checked={filterStaleOnly}
@@ -976,7 +940,7 @@ function GraphPageContent() {
               )}
 
               <section>
-                <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-muted">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Owner
                 </div>
                 <select
@@ -995,7 +959,7 @@ function GraphPageContent() {
               </section>
 
               <section>
-                <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-muted">
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Environment
                 </div>
                 <select
@@ -1014,7 +978,7 @@ function GraphPageContent() {
               </section>
 
               <section className="rounded-lg border border-line bg-surfaceMuted p-2.5 text-[11px] text-muted">
-                <div className="mb-1 font-black uppercase tracking-wide text-muted">
+                <div className="mb-1 font-semibold uppercase tracking-wide text-muted">
                   Legend
                 </div>
                 <div className="grid gap-1">
@@ -1026,7 +990,7 @@ function GraphPageContent() {
                         return (
                           <span
                             className="grid h-5 w-5 place-items-center rounded-md"
-                            style={{ background: `${color}16`, color }}
+                            style={{ background: tint(color), color }}
                           >
                             <Icon className="h-3 w-3" />
                           </span>
@@ -1037,11 +1001,11 @@ function GraphPageContent() {
                   ))}
                   <div className="mt-1 border-t border-line pt-1">
                     <div className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded bg-amber-400" />
+                      <span className="h-2.5 w-2.5 rounded bg-warning" />
                       <span>path trace</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded bg-emerald-500" />
+                      <span className="h-2.5 w-2.5 rounded bg-success" />
                       <span>search match</span>
                     </div>
                   </div>
@@ -1061,7 +1025,7 @@ function GraphPageContent() {
               </div>
             )}
             {pathFrom && pathTo && (
-              <div className="min-w-0 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+              <div className="min-w-0 rounded-xl border border-warning/40 bg-warning-bg p-3 text-xs text-warning-fg">
                 <b>Path trace:</b>{" "}
                 <code className="break-all text-ink">{pathFrom}</code> →{" "}
                 <code className="break-all text-ink">{pathTo}</code>. Dimmed
@@ -1076,7 +1040,7 @@ function GraphPageContent() {
               </div>
             )}
             {pathMode && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+              <div className="rounded-xl border border-info/40 bg-info-bg p-3 text-xs text-info-fg">
                 {pathMode === "from"
                   ? "Click a node or search above to set the path start."
                   : "Click a node or search above to set the path end. Esc cancels."}
@@ -1126,7 +1090,7 @@ function GraphPageContent() {
                         >
                           <div className="flex min-w-0 items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <div className="truncate text-sm font-black text-ink">
+                              <div className="truncate text-sm font-semibold text-ink">
                                 {control.label}
                               </div>
                               <div className="mt-0.5 truncate text-[11px] text-muted">
@@ -1141,7 +1105,7 @@ function GraphPageContent() {
                                 ? evidenceTypes.map((e) => e.label).join(", ")
                                 : "No evidence type mapped"}
                             </span>
-                            <span className="font-black text-ink">
+                            <span className="font-semibold text-ink">
                               {assetCount} assets
                             </span>
                           </div>
@@ -1166,7 +1130,7 @@ function GraphPageContent() {
                       >
                         <div className="flex min-w-0 items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <div className="truncate text-sm font-black text-ink">
+                            <div className="truncate text-sm font-semibold text-ink">
                               {repository.label}
                             </div>
                             <div className="mt-0.5 truncate text-[11px] text-muted">
@@ -1184,7 +1148,7 @@ function GraphPageContent() {
                           {gapCount > 0 && (
                             <Badge tone="critical">{gapCount} auth gaps</Badge>
                           )}
-                          <span className="font-black text-ink">
+                          <span className="font-semibold text-ink">
                             {controlIds.length} controls
                           </span>
                         </div>

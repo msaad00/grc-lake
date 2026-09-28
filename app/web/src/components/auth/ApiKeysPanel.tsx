@@ -165,7 +165,8 @@ export function ApiKeysPanel() {
         <CardContent>
           <p className="rounded-lg border border-line bg-surfaceMuted p-4 text-sm text-muted">
             Only workspace admins can mint or revoke API keys. Your current role
-            is <span className="font-black text-ink">{whoami.data?.role}</span>.
+            is{" "}
+            <span className="font-semibold text-ink">{whoami.data?.role}</span>.
           </p>
         </CardContent>
       </Card>
@@ -198,7 +199,7 @@ export function ApiKeysPanel() {
         <CardContent className="grid gap-3">
           <QueryState queries={[keys]} label="API keys">
             {keys.data && keys.data.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center text-sm font-bold text-muted">
+              <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center text-sm font-semibold text-muted">
                 No API keys yet. Create one for Cursor MCP or CI gates.
               </div>
             ) : (
@@ -210,7 +211,7 @@ export function ApiKeysPanel() {
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <code className="text-sm font-black text-ink">
+                        <code className="text-sm font-semibold text-ink">
                           {keyRow.prefix}…
                         </code>
                         <KeyStatusBadge keyRow={keyRow} />
@@ -221,7 +222,7 @@ export function ApiKeysPanel() {
                       </div>
                       <p className="mt-1 text-xs text-muted">
                         User{" "}
-                        <span className="font-bold text-ink">
+                        <span className="font-semibold text-ink">
                           {keyRow.user_email}
                         </span>
                         {" · "}
@@ -289,30 +290,30 @@ export function ApiKeysPanel() {
         }
       >
         <div className="grid gap-4">
-          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+          <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             User email
             <input
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
               placeholder="you@company.com"
             />
           </label>
-          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+          <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             Label
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
               placeholder="cursor-mcp"
             />
           </label>
-          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wide text-muted">
+          <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             Expires
             <select
               value={expiresDays}
               onChange={(e) => setExpiresDays(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-bold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink focus:outline-none focus:ring-1 focus:ring-brand"
             >
               {EXPIRY_OPTIONS.map((opt) => (
                 <option key={opt.label} value={opt.value}>
@@ -342,16 +343,17 @@ export function ApiKeysPanel() {
       >
         {revealed && (
           <div className="grid gap-4">
-            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
               <AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />
               <p>
-                Prefix <code className="font-bold">{revealed.prefix}</code> for
-                listings only. The bearer token below cannot be recovered later.
+                Prefix <code className="font-semibold">{revealed.prefix}</code>{" "}
+                for listings only. The bearer token below cannot be recovered
+                later.
               </p>
             </div>
             <div className="grid gap-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-black uppercase tracking-wide text-muted">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Bearer token
                 </span>
                 <Button
@@ -363,13 +365,13 @@ export function ApiKeysPanel() {
                   Copy
                 </Button>
               </div>
-              <pre className="overflow-x-auto rounded-lg bg-[#07111e] p-3 text-xs text-emerald-200">
+              <pre className="overflow-x-auto rounded-lg bg-code p-3 text-xs text-code-fg">
                 {revealed.token}
               </pre>
             </div>
             <div className="grid gap-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-black uppercase tracking-wide text-muted">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Cursor MCP config
                 </span>
                 <Button
@@ -386,7 +388,7 @@ export function ApiKeysPanel() {
                   Copy
                 </Button>
               </div>
-              <pre className="max-h-48 overflow-auto rounded-lg bg-[#07111e] p-3 text-xs text-slate-100">
+              <pre className="max-h-48 overflow-auto rounded-lg bg-code p-3 text-xs text-code-fg">
                 {mcpConfigSnippet(apiBaseUrl, revealed.token)}
               </pre>
             </div>

@@ -28,13 +28,10 @@ const COLUMN_TONE: Record<SlaHeatmapColumn, "ok" | "warn" | "bad" | "neutral"> =
   };
 
 function cellClass(tone: "ok" | "warn" | "bad" | "neutral", active: boolean) {
-  if (!active) return "bg-surfaceMuted text-slate-400";
-  if (tone === "bad")
-    return "bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-300";
-  if (tone === "warn")
-    return "bg-amber-100 text-amber-900 dark:bg-amber-500/10 dark:text-amber-300";
-  if (tone === "ok")
-    return "bg-emerald-100 text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-300";
+  if (!active) return "bg-surfaceMuted text-muted";
+  if (tone === "bad") return "bg-danger-bg text-danger-fg";
+  if (tone === "warn") return "bg-warning-bg text-warning-fg";
+  if (tone === "ok") return "bg-success-bg text-success-fg";
   return "bg-surfaceMuted text-ink";
 }
 
@@ -65,13 +62,13 @@ export function SlaHeatmapPanel() {
           <table className="min-w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th className="px-2 py-2 text-left text-[11px] font-black uppercase tracking-wider text-muted">
+                <th className="px-2 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
                   Owner
                 </th>
                 {columns.map((column) => (
                   <th
                     key={column}
-                    className="px-2 py-2 text-center text-[11px] font-black uppercase tracking-wider text-muted"
+                    className="px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-muted"
                   >
                     {COLUMN_LABELS[column]}
                   </th>
@@ -93,13 +90,13 @@ export function SlaHeatmapPanel() {
                           <Link
                             href={`/remediation?owner=${encodeURIComponent(row.owner === "Unassigned" ? "" : row.owner)}`}
                             aria-label={`${row.owner}: ${value} ${COLUMN_LABELS[column].toLowerCase()} remediation task${value === 1 ? "" : "s"}`}
-                            className={`inline-flex min-w-[2.25rem] justify-center rounded-lg px-2 py-1 text-xs font-bold ring-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-brand ${cellClass(tone, true)}`}
+                            className={`inline-flex min-w-[2.25rem] justify-center rounded-lg px-2 py-1 text-xs font-semibold ring-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-brand ${cellClass(tone, true)}`}
                           >
                             {value}
                           </Link>
                         ) : (
                           <span
-                            className={`inline-flex min-w-[2.25rem] justify-center rounded-lg px-2 py-1 text-xs font-bold ${cellClass(tone, false)}`}
+                            className={`inline-flex min-w-[2.25rem] justify-center rounded-lg px-2 py-1 text-xs font-semibold ${cellClass(tone, false)}`}
                           >
                             0
                           </span>

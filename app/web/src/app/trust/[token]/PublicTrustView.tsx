@@ -63,14 +63,14 @@ function roundScore(score: number | null | undefined): string {
 
 function ResidencyBanner() {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-cyan-950 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-50">
-      <Lock className="mt-0.5 h-5 w-5 shrink-0 text-cyan-700 dark:text-cyan-300" />
+    <div className="flex items-start gap-3 rounded-xl border border-info/40 bg-info-bg p-4 text-info-fg">
+      <Lock className="mt-0.5 h-5 w-5 shrink-0 text-info-fg" />
       <div className="min-w-0">
-        <p className="text-sm font-extrabold">
+        <p className="text-sm font-semibold">
           Evidence stays with the issuing organization — only this summary is
           shared.
         </p>
-        <p className="mt-1 text-xs leading-5 text-cyan-900/80 dark:text-cyan-100/80">
+        <p className="mt-1 text-xs leading-5 text-info-fg">
           This is a read-only posture summary issued for an external reviewer.
           Owners, notes, raw evidence, and asset details are not included.
         </p>
@@ -83,7 +83,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="min-w-0">
       <dt className="text-muted">{label}</dt>
-      <dd className="font-extrabold text-ink">{value}</dd>
+      <dd className="font-semibold text-ink">{value}</dd>
     </div>
   );
 }
@@ -151,14 +151,14 @@ export default function PublicTrustView() {
         )}
 
         {status === "invalid" && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-8 text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-100">
+          <div className="rounded-xl border border-danger/40 bg-danger-bg p-8 text-danger-fg">
             <div className="flex items-center gap-3">
-              <ShieldAlert className="h-6 w-6 shrink-0 text-rose-600 dark:text-rose-300" />
-              <h2 className="text-lg font-extrabold">
+              <ShieldAlert className="h-6 w-6 shrink-0 text-danger-fg" />
+              <h2 className="text-lg font-semibold">
                 This trust link is invalid or has expired.
               </h2>
             </div>
-            <p className="mt-3 text-sm leading-6 text-rose-800 dark:text-rose-200/80">
+            <p className="mt-3 text-sm leading-6 text-danger-fg">
               The link may have been revoked, reached its expiry, or was never
               issued. Ask the issuing organization for a fresh link.
             </p>
@@ -176,7 +176,7 @@ export default function PublicTrustView() {
                   <p className="text-xs uppercase tracking-wide text-muted">
                     Overall posture
                   </p>
-                  <p className="mt-1 text-5xl font-black">
+                  <p className="mt-1 text-5xl font-semibold">
                     {roundScore(data.posture.score)}
                     <span className="ml-1 text-xl text-muted">/ 100</span>
                   </p>
@@ -202,7 +202,7 @@ export default function PublicTrustView() {
             </div>
 
             <div className="rounded-xl border border-line bg-surface p-4 text-ink shadow-sm sm:p-6">
-              <h2 className="mb-4 text-sm font-extrabold uppercase tracking-wide text-muted">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
                 Framework readiness
               </h2>
               <div className="grid gap-2">
@@ -226,7 +226,7 @@ export default function PublicTrustView() {
                       className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-line bg-surfaceMuted px-4 py-3"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="font-extrabold [overflow-wrap:anywhere]">
+                        <p className="font-semibold [overflow-wrap:anywhere]">
                           {row.framework ?? "—"}
                         </p>
                         <p className="text-xs text-muted">
@@ -237,7 +237,7 @@ export default function PublicTrustView() {
                         data-testid="framework-score"
                         className="flex shrink-0 items-center gap-3"
                       >
-                        <span className="text-lg font-black">
+                        <span className="text-lg font-semibold">
                           {roundScore(row.score)}
                         </span>
                         <Badge tone={state.tone}>{state.label}</Badge>
@@ -250,7 +250,7 @@ export default function PublicTrustView() {
 
             <footer className="rounded-xl border border-line bg-surface px-6 py-4 text-xs text-muted">
               Issued by{" "}
-              <span className="font-extrabold text-ink">
+              <span className="font-semibold text-ink">
                 {data.issued_by ?? "the data owner"}
               </span>
               {data.evaluated_at && (

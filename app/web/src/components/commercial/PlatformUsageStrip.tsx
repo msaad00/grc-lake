@@ -66,7 +66,7 @@ export function PlatformUsageStrip() {
           <CardContent className="border-t border-line pt-3">
             <Link
               href="/deploy"
-              className="text-xs font-bold text-brand hover:underline"
+              className="text-xs font-semibold text-brand hover:underline"
             >
               Deployment models →
             </Link>

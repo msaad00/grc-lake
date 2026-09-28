@@ -32,7 +32,6 @@ export default function OnboardingPage() {
   return (
     <div className="mx-auto grid w-full max-w-3xl min-w-0 gap-2 px-3 py-2 sm:px-4">
       <PageHeader
-        eyebrow="Getting started"
         title={ROUTE_LABELS["/onboarding"]}
         description="Connect sources, prove sync, reach a shareable workspace."
       />
@@ -84,10 +83,10 @@ export default function OnboardingPage() {
                   >
                     {ready || skipped ? (
                       <CheckCircle2
-                        className={`mt-0.5 h-4 w-4 shrink-0 ${ready ? "text-emerald-600" : "text-muted"}`}
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${ready ? "text-success-fg" : "text-muted"}`}
                       />
                     ) : (
-                      <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                      <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-fg" />
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">

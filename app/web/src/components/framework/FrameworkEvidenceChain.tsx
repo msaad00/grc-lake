@@ -28,11 +28,11 @@ function ChainStep({
 }) {
   const body = (
     <div className="min-w-[120px] flex-1 rounded-lg border border-line bg-surface p-2.5">
-      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-muted">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
         <Icon className="h-3 w-3" />
         {label}
       </div>
-      <div className="mt-1 text-xs font-black text-ink">{value}</div>
+      <div className="mt-1 text-xs font-semibold text-ink">{value}</div>
       {detail && <div className="mt-0.5 text-[11px] text-muted">{detail}</div>}
     </div>
   );
@@ -45,7 +45,7 @@ function ChainStep({
       className="group min-w-[120px] flex-1 transition-colors hover:text-brand"
     >
       {body}
-      <span className="mt-1 inline-flex items-center gap-0.5 text-[10px] font-bold text-brand opacity-0 transition-opacity group-hover:opacity-100">
+      <span className="mt-1 inline-flex items-center gap-0.5 text-[10px] font-semibold text-brand opacity-0 transition-opacity group-hover:opacity-100">
         Open <ArrowRight className="h-3 w-3" />
       </span>
     </Link>

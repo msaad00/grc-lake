@@ -30,7 +30,7 @@ export function ApiHealthBanner() {
   return (
     <div
       role="alert"
-      className="mx-3 mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 sm:mx-4"
+      className="mx-3 mt-2 rounded-lg border border-danger/40 bg-danger-bg px-3 py-2 text-sm font-semibold text-danger-fg sm:mx-4"
     >
       Can&apos;t reach the assessment API — some data failed to load. What you
       see may be incomplete, not an all-clear. Check that the server is

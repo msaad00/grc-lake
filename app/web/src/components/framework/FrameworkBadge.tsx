@@ -52,13 +52,13 @@ export function FrameworkBadge({
       />
       {variant !== "compact" && (
         <span className="min-w-0">
-          <span className="block text-xs font-black leading-tight text-ink">
+          <span className="block text-xs font-semibold leading-tight text-ink">
             {visual.label}
           </span>
         </span>
       )}
       {variant === "compact" && (
-        <span className="text-xs font-bold text-ink">{visual.label}</span>
+        <span className="text-xs font-semibold text-ink">{visual.label}</span>
       )}
     </span>
   );

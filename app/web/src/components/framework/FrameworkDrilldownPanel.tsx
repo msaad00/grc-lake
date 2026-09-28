@@ -96,7 +96,7 @@ function ControlRow({
         expanded && "shadow-card",
         control.posture.status === "fail" &&
           !expanded &&
-          "border-l-4 border-l-rose-500",
+          "border-l-4 border-l-danger",
       )}
     >
       <button
@@ -106,10 +106,10 @@ function ControlRow({
         aria-expanded={expanded}
       >
         <div className="min-w-0">
-          <code className="text-xs font-black text-brand">
+          <code className="text-xs font-semibold text-brand">
             {control.control_id}
           </code>
-          <div className="mt-1 font-black leading-snug text-ink">
+          <div className="mt-1 font-semibold leading-snug text-ink">
             {control.title}
           </div>
           <div className="mt-1 text-xs text-muted">
@@ -137,14 +137,14 @@ function ControlRow({
 
           <div className="grid gap-3 lg:grid-cols-2">
             <div className="rounded-lg bg-surfaceMuted p-3">
-              <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
                 Requirement
               </div>
               <p className="mt-1 text-xs text-muted">
                 {control.evidence_requirement}
               </p>
               {control.posture.rule_reasons.length > 0 && (
-                <ul className="mt-2 space-y-1 text-xs text-rose-700 dark:text-rose-300">
+                <ul className="mt-2 space-y-1 text-xs text-danger-fg">
                   {control.posture.rule_reasons.map((reason) => (
                     <li key={reason}>• {reason}</li>
                   ))}
@@ -153,7 +153,7 @@ function ControlRow({
             </div>
 
             <div className="rounded-lg bg-surfaceMuted p-3">
-              <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
                 Evidence + test state
               </div>
               <div className="mt-1 flex flex-wrap gap-1.5">
@@ -180,7 +180,7 @@ function ControlRow({
           </div>
 
           <div className="rounded-lg border border-line p-3">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               Recommended connectors
             </div>
             <p className="mt-1 text-xs text-muted">
@@ -193,7 +193,7 @@ function ControlRow({
           </div>
 
           <div className="rounded-lg border border-line p-3">
-            <div className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               Source article mapping
             </div>
             {control.articles.length === 0 ? (
@@ -210,7 +210,7 @@ function ControlRow({
                     rel="noreferrer"
                     className="rounded-lg border border-line p-2 text-xs hover:border-brand"
                   >
-                    <span className="font-black text-ink">
+                    <span className="font-semibold text-ink">
                       {article.article_id}
                     </span>{" "}
                     <span className="text-muted">{article.title}</span>
@@ -304,7 +304,7 @@ export function FrameworkDrilldownPanel({
 
   if (detail.isError) {
     return (
-      <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+      <div className="rounded-lg border border-danger/40 bg-danger-bg p-3 text-xs text-danger-fg">
         Framework detail could not be loaded.
       </div>
     );
@@ -316,7 +316,7 @@ export function FrameworkDrilldownPanel({
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-xs font-black uppercase tracking-wide text-muted">
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted">
             Control-to-evidence drill-down
           </div>
           <p className="mt-1 text-xs text-muted">
@@ -341,42 +341,42 @@ export function FrameworkDrilldownPanel({
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
         <div className="rounded-lg bg-surfaceMuted p-3">
-          <div className="text-[10px] font-black uppercase text-muted">
+          <div className="text-[11px] font-semibold uppercase text-muted">
             Evidence facts
           </div>
-          <div className="mt-1 text-2xl font-black text-ink">
+          <div className="mt-1 text-2xl font-semibold text-ink">
             {data.summary.evidence_count}
           </div>
         </div>
         <div className="rounded-lg bg-surfaceMuted p-3">
-          <div className="text-[10px] font-black uppercase text-muted">
+          <div className="text-[11px] font-semibold uppercase text-muted">
             Sources
           </div>
-          <div className="mt-1 text-2xl font-black text-ink">
+          <div className="mt-1 text-2xl font-semibold text-ink">
             {data.summary.source_count}
           </div>
         </div>
         <div className="rounded-lg bg-surfaceMuted p-3">
-          <div className="text-[10px] font-black uppercase text-muted">
+          <div className="text-[11px] font-semibold uppercase text-muted">
             Mapped
           </div>
-          <div className="mt-1 text-2xl font-black text-ink">
+          <div className="mt-1 text-2xl font-semibold text-ink">
             {data.summary.mapped_control_count}
           </div>
         </div>
         <div className="rounded-lg bg-surfaceMuted p-3">
-          <div className="text-[10px] font-black uppercase text-muted">
+          <div className="text-[11px] font-semibold uppercase text-muted">
             Failing
           </div>
-          <div className="mt-1 text-2xl font-black text-rose-600">
+          <div className="mt-1 text-2xl font-semibold text-danger-fg">
             {data.summary.failing_control_count}
           </div>
         </div>
         <div className="rounded-lg bg-surfaceMuted p-3">
-          <div className="text-[10px] font-black uppercase text-muted">
+          <div className="text-[11px] font-semibold uppercase text-muted">
             Connectors
           </div>
-          <div className="mt-1 text-2xl font-black text-ink">
+          <div className="mt-1 text-2xl font-semibold text-ink">
             {data.summary.configured_recommended_connector_count ?? 0}/
             {data.summary.recommended_connector_count ?? 0}
           </div>
@@ -385,7 +385,7 @@ export function FrameworkDrilldownPanel({
       </div>
 
       <div className="rounded-lg border border-line p-3">
-        <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-muted">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
           <Database className="h-3.5 w-3.5" /> Evidence sources
         </div>
         <SourcePills sources={data.sources} />
@@ -404,7 +404,7 @@ export function FrameworkDrilldownPanel({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-extrabold focus:outline-none focus:ring-1 focus:ring-brand"
+          className="min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand"
         >
           <option value="all">All statuses</option>
           <option value="pass">Passing</option>

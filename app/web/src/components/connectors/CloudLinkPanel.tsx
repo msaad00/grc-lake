@@ -422,7 +422,7 @@ export function CloudLinkPanel({
     <section className="min-w-0 rounded-xl border border-brand/30 bg-brand/5 p-3">
       <div className="flex flex-wrap items-center gap-1.5">
         <Link2 className="h-4 w-4 text-brand" />
-        <div className="text-xs font-black uppercase tracking-wide text-ink">
+        <div className="text-xs font-semibold uppercase tracking-wide text-ink">
           {headerLabel}
         </div>
         <Badge tone="ready">{isAwsPosture ? "STS" : "Read-only access"}</Badge>
@@ -445,7 +445,7 @@ export function CloudLinkPanel({
           ].map((label, index) => (
             <div
               key={label}
-              className={`min-w-0 rounded-md border px-2 py-1.5 text-[11px] font-bold leading-4 ${(!session && index === 0) || (session && index === 1) ? "border-brand bg-surface text-brand" : "border-line bg-white/60 text-muted"}`}
+              className={`min-w-0 rounded-md border px-2 py-1.5 text-[11px] font-semibold leading-4 ${(!session && index === 0) || (session && index === 1) ? "border-brand bg-surface text-brand" : "border-line bg-surfaceMuted text-muted"}`}
             >
               <span className="block break-words">{label}</span>
             </div>
@@ -471,7 +471,7 @@ export function CloudLinkPanel({
       ) : (
         <div className="mt-2 grid gap-2 text-sm">
           {linkSessionId && session.status === "pending" && (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <p className="rounded-lg border border-warning/40 bg-warning-bg px-2.5 py-2 text-xs text-warning-fg">
               Returned from identity provider — confirm consent completed, then
               enter your account identifier below.
             </p>
@@ -480,7 +480,7 @@ export function CloudLinkPanel({
             awsDeployOptions.length > 0 && (
               <div className="grid gap-3">
                 <div>
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     1. Choose scope
                   </div>
                   <div className="mt-2 grid gap-1.5 md:grid-cols-3">
@@ -518,7 +518,7 @@ export function CloudLinkPanel({
                             <Check className="absolute right-3 top-3 h-4 w-4 text-brand" />
                           )}
                           <Icon className="h-4 w-4 text-brand" />
-                          <div className="mt-1.5 pr-5 text-sm font-black leading-5 text-ink">
+                          <div className="mt-1.5 pr-5 text-sm font-semibold leading-5 text-ink">
                             {option.label}
                           </div>
                           <div className="mt-0.5 text-xs leading-4 text-muted">
@@ -530,7 +530,7 @@ export function CloudLinkPanel({
                   </div>
                 </div>
                 <div className="border-t border-line pt-2.5">
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     2. Deploy read-only access
                   </div>
                   <p className="mt-0.5 text-xs leading-4 text-muted">
@@ -542,7 +542,7 @@ export function CloudLinkPanel({
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                  <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+                  <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
                     Deployment method
                     <select
                       value={effectiveAwsDeployMode}
@@ -580,7 +580,7 @@ export function CloudLinkPanel({
                 {activeAwsDeployCommand && (
                   <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-2">
                     <details className="text-xs text-muted">
-                      <summary className="cursor-pointer list-none font-bold text-brand">
+                      <summary className="cursor-pointer list-none font-semibold text-brand">
                         View script
                       </summary>
                       <code className="mt-2 block max-h-32 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-surface px-2 py-1.5 text-[11px] font-medium text-ink">
@@ -588,10 +588,10 @@ export function CloudLinkPanel({
                       </code>
                     </details>
                     <details className="text-xs text-muted">
-                      <summary className="cursor-pointer list-none font-bold text-ink">
+                      <summary className="cursor-pointer list-none font-semibold text-ink">
                         Customize role
                       </summary>
-                      <label className="mt-2 grid gap-1 font-bold text-muted">
+                      <label className="mt-2 grid gap-1 font-semibold text-muted">
                         IAM role name
                         <input
                           value={awsRoleName}
@@ -641,7 +641,7 @@ export function CloudLinkPanel({
             <div className="rounded-lg border border-line bg-surface p-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="text-xs font-black uppercase tracking-wide text-muted">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Deploy Azure access
                   </div>
                 </div>
@@ -657,7 +657,7 @@ export function CloudLinkPanel({
                 </Button>
               </div>
               <details className="mt-2 text-xs text-muted">
-                <summary className="cursor-pointer list-none font-bold text-brand">
+                <summary className="cursor-pointer list-none font-semibold text-brand">
                   View command
                 </summary>
                 <code className="mt-2 block max-h-28 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-surface px-2 py-1.5 text-[11px] font-medium text-ink">
@@ -665,7 +665,7 @@ export function CloudLinkPanel({
                 </code>
               </details>
               <details className="mt-2 text-xs text-muted">
-                <summary className="cursor-pointer list-none font-bold text-ink">
+                <summary className="cursor-pointer list-none font-semibold text-ink">
                   Scale and permissions
                 </summary>
                 <div className="mt-2 grid gap-1">
@@ -687,7 +687,7 @@ export function CloudLinkPanel({
               <div className="rounded-lg border border-line bg-surface p-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-xs font-black uppercase tracking-wide text-muted">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                       Deploy GCP access
                     </div>
                   </div>
@@ -713,7 +713,7 @@ export function CloudLinkPanel({
           {deployCommand && connector.connector_id === "gcp-posture" && (
             <div className="rounded-lg border border-line bg-surface p-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-xs font-black uppercase tracking-wide text-muted">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Deploy GCP access
                 </div>
                 <Button
@@ -728,7 +728,7 @@ export function CloudLinkPanel({
                 </Button>
               </div>
               <details className="mt-2 text-xs text-muted">
-                <summary className="cursor-pointer list-none font-bold text-brand">
+                <summary className="cursor-pointer list-none font-semibold text-brand">
                   View command
                 </summary>
                 <code className="mt-2 block max-h-28 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-surface px-2 py-1.5 text-[11px] font-medium text-ink">
@@ -747,14 +747,14 @@ export function CloudLinkPanel({
             )}
           {connector.connector_id === "aws-posture" && (
             <div className="border-t border-line pt-2.5">
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 3. Add account targets
               </div>
               <div className="mt-1.5 grid gap-2">
                 {awsAccountTargets.map((target, index) => (
                   <label
                     key={index}
-                    className="grid gap-1 text-xs font-bold text-muted"
+                    className="grid gap-1 text-xs font-semibold text-muted"
                   >
                     {awsAccountScope === "organization"
                       ? "Management account ID or Role ARN"
@@ -806,11 +806,11 @@ export function CloudLinkPanel({
           )}
           {connector.connector_id === "aws-posture" && (
             <details className="text-xs text-muted">
-              <summary className="cursor-pointer list-none font-black uppercase tracking-wide text-ink">
+              <summary className="cursor-pointer list-none font-semibold uppercase tracking-wide text-ink">
                 View permissions
               </summary>
               <div className="mt-2 grid gap-2 border-t border-line pt-2">
-                <div className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+                <div className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
                   Read-only IAM posture
                   <span
                     aria-label="IAM posture read-only"
@@ -823,7 +823,7 @@ export function CloudLinkPanel({
                   </span>
                 </div>
                 {session.external_id && (
-                  <label className="grid gap-1 font-black uppercase tracking-wide text-muted">
+                  <label className="grid gap-1 font-semibold uppercase tracking-wide text-muted">
                     External ID
                     <code className="break-all rounded-lg border border-line bg-surface px-2 py-1.5 font-medium normal-case tracking-normal text-ink">
                       {session.external_id}
@@ -834,7 +834,7 @@ export function CloudLinkPanel({
             </details>
           )}
           {connector.connector_id === "azure-posture" && (
-            <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+            <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
               Azure subscription ID
               <input
                 value={subscriptionId}
@@ -860,7 +860,7 @@ export function CloudLinkPanel({
             </label>
           )}
           {connector.connector_id === "gcp-posture" && (
-            <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-muted">
+            <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
               GCP project ID
               <input
                 value={projectId}
@@ -880,13 +880,13 @@ export function CloudLinkPanel({
             </label>
           )}
           {showFieldError && (
-            <p className="text-xs font-semibold text-rose-700 dark:text-rose-300">
+            <p className="text-xs font-semibold text-danger-fg">
               {showFieldError}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2">
             {connector.connector_id === "aws-posture" && (
-              <div className="w-full text-xs font-black uppercase tracking-wide text-muted">
+              <div className="w-full text-xs font-semibold uppercase tracking-wide text-muted">
                 4. Verify and finish
               </div>
             )}

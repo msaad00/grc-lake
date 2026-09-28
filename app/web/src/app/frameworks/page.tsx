@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
   Calendar,
-  CheckCircle2,
   ChevronDown,
   ExternalLink,
   FileCheck2,
@@ -16,6 +15,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
@@ -83,7 +83,7 @@ function Row({
             variant="mark-only"
           />
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-black text-ink">
+            <h2 className="truncate text-sm font-semibold text-ink">
               {framework.name}
             </h2>
             <div className="mt-0.5 truncate text-[11px] text-muted">
@@ -115,7 +115,7 @@ function Row({
       <div className="grid gap-3">
         <div>
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="font-black text-ink">Mapped</span>
+            <span className="font-semibold text-ink">Mapped</span>
             <span className="text-muted">
               <b className="text-ink">{evaluatablePct}%</b> ·{" "}
               {formatCount(evaluatableCount)}/{formatCount(seededCount)}
@@ -123,14 +123,14 @@ function Row({
           </div>
           <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surfaceMuted">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-brand to-cyan-400"
+              className="h-full rounded-full bg-brand"
               style={{ width: `${evaluatablePct}%` }}
             />
           </div>
         </div>
         <div>
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="font-black text-ink">Reviewed</span>
+            <span className="font-semibold text-ink">Reviewed</span>
             <span className="text-muted">
               <b className="text-ink">{attestablePct}%</b> ·{" "}
               {formatCount(attestableCount)}/{formatCount(seededCount)}
@@ -138,7 +138,7 @@ function Row({
           </div>
           <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surfaceMuted">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-brand-green"
+              className="h-full rounded-full bg-success"
               style={{ width: `${attestablePct}%` }}
             />
           </div>
@@ -148,7 +148,7 @@ function Row({
       {isPlanned &&
       (framework.coverage_boundary || framework.evidence_focus?.length) ? (
         <div className="grid gap-2 rounded-xl border border-dashed border-line bg-surfaceMuted/50 p-3 text-[11px] text-muted">
-          <div className="font-black uppercase tracking-wide text-ink">
+          <div className="font-semibold uppercase tracking-wide text-ink">
             Planned boundary
           </div>
           {framework.coverage_boundary ? (
@@ -175,7 +175,7 @@ function Row({
             href={framework.official_source_url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 font-extrabold text-brand hover:underline"
+            className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
           >
             official source <ExternalLink className="h-3 w-3" />
           </a>
@@ -197,13 +197,13 @@ function Row({
           type="button"
           onClick={onSelect}
           aria-label={`Inspect ${framework.name}`}
-          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surfaceMuted px-3 text-xs font-black text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surfaceMuted px-3 text-xs font-semibold text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           Inspect <ArrowUpRight className="h-3.5 w-3.5" />
         </button>
       </div>
       {!isPlanned && !readiness?.is_ready ? (
-        <div className="-mt-1 text-[11px] font-bold text-amber-700 dark:text-amber-300">
+        <div className="-mt-1 text-[11px] font-semibold text-warning-fg">
           Next gate: {STAGE_LABEL[readiness?.stage ?? "mapped"]}
         </div>
       ) : null}
@@ -256,7 +256,7 @@ function Detail({
               size={56}
             />
             <div>
-              <div className="font-black text-ink">{framework.name}</div>
+              <div className="font-semibold text-ink">{framework.name}</div>
               <div className="text-xs text-muted">{framework.version}</div>
             </div>
           </div>
@@ -264,15 +264,15 @@ function Detail({
             className={[
               "rounded-xl border p-3",
               framework.freshness_state === "fresh"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                ? "border-success/40 bg-success-bg text-success-fg"
                 : framework.freshness_state === "stale"
-                  ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                  ? "border-warning/40 bg-warning-bg text-warning-fg"
                   : framework.freshness_state === "expired"
-                    ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+                    ? "border-danger/40 bg-danger-bg text-danger-fg"
                     : "border-line bg-surfaceMuted text-ink",
             ].join(" ")}
           >
-            <div className="flex items-center gap-2 font-black">
+            <div className="flex items-center gap-2 font-semibold">
               {framework.freshness_state === "fresh" ? (
                 <FileCheck2 className="h-4 w-4" />
               ) : (
@@ -288,7 +288,7 @@ function Detail({
             framework.evidence_focus?.length ||
             framework.next_step) ? (
             <section className="grid gap-2 rounded-xl border border-dashed border-line bg-surfaceMuted/50 p-3">
-              <div className="text-xs font-black uppercase tracking-wide text-muted">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Planned boundary
               </div>
               {framework.coverage_boundary ? (
@@ -304,7 +304,7 @@ function Detail({
                 </ul>
               ) : null}
               {framework.next_step ? (
-                <p className="text-xs font-bold text-ink">
+                <p className="text-xs font-semibold text-ink">
                   Next step: {framework.next_step}
                 </p>
               ) : null}
@@ -325,12 +325,12 @@ function Detail({
               </a>
             </dd>
             <dt className="text-muted">Effective date</dt>
-            <dd className="font-extrabold">
+            <dd className="font-semibold">
               <Calendar className="mr-1 inline h-3 w-3" />
               {framework.effective_date ?? "—"}
             </dd>
             <dt className="text-muted">Last pulled</dt>
-            <dd className="font-extrabold">
+            <dd className="font-semibold">
               {framework.pulled_at ?? "Not yet synced"}
             </dd>
             <dt className="text-muted">Source sha256</dt>
@@ -340,18 +340,18 @@ function Detail({
               </code>
             </dd>
             <dt className="text-muted">Next pull due</dt>
-            <dd className="font-extrabold">{framework.next_pull_due ?? "—"}</dd>
+            <dd className="font-semibold">{framework.next_pull_due ?? "—"}</dd>
             <dt className="text-muted">Superseded by</dt>
-            <dd className="font-extrabold">{framework.superseded_by ?? "—"}</dd>
+            <dd className="font-semibold">{framework.superseded_by ?? "—"}</dd>
           </dl>
 
           <section className="rounded-xl border border-line p-3">
-            <div className="text-xs font-black uppercase tracking-wide text-muted">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted">
               Control results
             </div>
             {results ? (
               <>
-                <div className="mt-2 text-base font-black text-ink">
+                <div className="mt-2 text-base font-semibold text-ink">
                   {results.pass} passing · {results.fail} failing ·{" "}
                   {results.notEvaluated} not evaluated
                 </div>
@@ -364,11 +364,11 @@ function Detail({
                   aria-hidden="true"
                 >
                   <div
-                    className="h-full bg-emerald-500"
+                    className="h-full bg-success"
                     style={{ width: `${share(results.pass)}%` }}
                   />
                   <div
-                    className="h-full bg-rose-500"
+                    className="h-full bg-danger"
                     style={{ width: `${share(results.fail)}%` }}
                   />
                 </div>
@@ -381,7 +381,7 @@ function Detail({
               </p>
             )}
             <div className="mt-3 border-t border-line pt-2 text-xs text-muted">
-              <span className="font-bold text-ink">
+              <span className="font-semibold text-ink">
                 {framework.implemented_control_count} of{" "}
                 {framework.control_count} controls mapped
               </span>{" "}
@@ -434,7 +434,7 @@ function ReadinessRow({ row }: { row: FrameworkReadiness }) {
             fallbackLabel={row.name}
             size={28}
           />
-          <code className="text-sm font-black text-ink">
+          <code className="text-sm font-semibold text-ink">
             {row.framework_id}
           </code>
         </span>
@@ -449,11 +449,11 @@ function ReadinessRow({ row }: { row: FrameworkReadiness }) {
       <div className="mt-3 flex items-center gap-3">
         <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-surfaceMuted">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-brand to-brand-green"
+            className="h-full rounded-full bg-brand"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="shrink-0 text-[11px] font-bold text-muted">
+        <span className="shrink-0 text-[11px] font-semibold text-muted">
           {passedGateCount}/{STAGE_ORDER.length} gates
         </span>
       </div>
@@ -550,22 +550,18 @@ function FrameworksPageContent() {
   }
 
   return (
-    <div className="page-shell ui-page-canvas grid min-h-full gap-5">
+    <div className="page-shell grid min-h-full gap-5">
       <PageHeader
-        eyebrow="Framework coverage"
         title={ROUTE_LABELS["/frameworks"]}
         description="Review requirement coverage, mapping status, readiness gates, and source records for each framework."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link
-              href="/crosswalk"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-black text-ink shadow-sm transition-colors hover:border-brand hover:text-brand"
-            >
+            <Link href="/crosswalk" className={buttonVariants({ size: "sm" })}>
               <GitCompareArrows className="h-3.5 w-3.5" /> Crosswalk
             </Link>
             <Link
               href="/controls"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand px-3 text-xs font-black text-white shadow-sm transition-opacity hover:opacity-90"
+              className={buttonVariants({ size: "sm", variant: "primary" })}
             >
               Explore controls <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
@@ -576,19 +572,14 @@ function FrameworksPageContent() {
 
       <section
         aria-label="Framework coverage summary"
-        className="ui-command-center overflow-hidden"
+        className="overflow-hidden rounded-lg border border-line bg-surface"
       >
-        <div className="relative z-10 flex flex-wrap items-end justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5">
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
-              Coverage summary
-            </div>
-            <h2 className="mt-1 text-xl font-black text-white">
-              Requirement coverage
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm text-slate-300">
-              Catalogued, evaluatable, and reviewed counts are reported
-              separately. Proposed mappings remain in the review queue.
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
+          <div className="min-w-0">
+            <h2 className="ui-section-title">Requirement coverage</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              Catalogued, mapped, and reviewed counts are reported separately.
+              Proposed mappings stay in the review queue.
             </p>
           </div>
           <Badge
@@ -601,72 +592,63 @@ function FrameworksPageContent() {
             {portfolio.ready}/{data.length} packs ready
           </Badge>
         </div>
-        <div className="relative z-10 grid gap-px bg-white/10 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="bg-[#09182a]/95 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Catalogued requirements
-            </div>
-            <div className="mt-1 text-3xl font-black text-white">
+        <dl className="grid divide-line sm:grid-cols-2 sm:divide-x xl:grid-cols-4 [&>div]:border-line max-sm:divide-y">
+          <div className="px-4 py-4 sm:px-5">
+            <dt className="ui-label">Catalogued requirements</dt>
+            <dd className="ui-kpi-value mt-1.5">
               {formatCount(coverageSummary?.seeded_control_count)}
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
+            </dd>
+            <dd className="mt-1.5 text-xs text-muted">
               Across {coverageSummary?.framework_count ?? "—"} framework packs
-            </p>
+            </dd>
           </div>
-          <div className="bg-[#09182a]/95 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Mapped requirements
-            </div>
-            <div className="mt-1 text-3xl font-black text-white">
+          <div className="px-4 py-4 sm:px-5">
+            <dt className="ui-label">Mapped requirements</dt>
+            <dd className="ui-kpi-value mt-1.5">
               {coverageSummary
                 ? `${coverageSummary.evaluatable_coverage_pct}%`
                 : "—"}
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+            </dd>
+            <dd className="mt-1.5 text-xs text-muted">
+              {formatCount(coverageSummary?.evaluatable_requirement_count)}{" "}
+              mapped to safeguards
+            </dd>
+            <dd className="mt-2 h-1 overflow-hidden rounded-full bg-surfaceMuted">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-brand to-brand-green"
+                className="h-full rounded-full bg-line-strong"
                 style={{
                   width: `${coverageSummary?.evaluatable_coverage_pct ?? 0}%`,
                 }}
               />
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              {formatCount(coverageSummary?.evaluatable_requirement_count)}{" "}
-              mapped to safeguards
-            </p>
+            </dd>
           </div>
-          <div className="bg-[#09182a]/95 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Reviewed requirements
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-3xl font-black text-white">
-              <CheckCircle2 className="h-6 w-6 text-emerald-300" />
+          <div className="px-4 py-4 sm:px-5">
+            <dt className="ui-label">Reviewed requirements</dt>
+            <dd className="ui-kpi-value mt-1.5">
               {coverageSummary
                 ? `${coverageSummary.attestable_coverage_pct}%`
                 : "—"}
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              {formatCount(coverageSummary?.attestable_requirement_count)}{" "}
-              requirements with every mapping reviewed
-            </p>
+            </dd>
+            <dd className="mt-1.5 text-xs text-muted">
+              {formatCount(coverageSummary?.attestable_requirement_count)} with
+              every mapping reviewed
+            </dd>
           </div>
-          <div className="bg-[#09182a]/95 p-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-              Review backlog
-            </div>
-            <div className="mt-1 text-3xl font-black text-white">
+          <div className="px-4 py-4 sm:px-5">
+            <dt className="ui-label">Review backlog</dt>
+            <dd className="ui-kpi-value mt-1.5">
               {coverageSummary
                 ? formatCount(
                     coverageSummary.evaluatable_requirement_count -
                       coverageSummary.attestable_requirement_count,
                   )
                 : "—"}
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
+            </dd>
+            <dd className="mt-1.5 text-xs text-muted">
               Requirements with a proposed link awaiting review
-            </p>
+            </dd>
           </div>
-        </div>
+        </dl>
       </section>
 
       <FrameworkRoster
@@ -677,11 +659,13 @@ function FrameworksPageContent() {
 
       <section
         aria-label="Framework catalog"
-        className="grid gap-3 rounded-2xl border border-line bg-surface/85 p-3 shadow-card sm:p-4"
+        className="grid gap-3 rounded-lg border border-line bg-surface p-4 sm:p-5"
       >
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-lg font-black text-ink">Framework catalog</h2>
+            <h2 className="text-lg font-semibold text-ink">
+              Framework catalog
+            </h2>
             <p className="mt-0.5 text-xs text-muted">
               {filtered.length} of {data.length} packs · source URL, hash, and
               mapping counts
@@ -708,7 +692,7 @@ function FrameworksPageContent() {
               aria-expanded={showFilters}
               aria-controls="framework-filters"
               onClick={() => setShowFilters((value) => !value)}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-black text-ink shadow-sm transition-colors hover:border-brand hover:text-brand"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-ink shadow-sm transition-colors hover:border-brand hover:text-brand"
             >
               <SlidersHorizontal className="h-4 w-4" />
               {showFilters ? "Hide filters" : "Show filters"}
@@ -720,7 +704,7 @@ function FrameworksPageContent() {
                 aria-label="Filter by readiness"
                 value={readinessFilter}
                 onChange={(event) => setReadinessFilter(event.target.value)}
-                className="h-10 min-w-0 rounded-lg border border-line bg-surface px-3 text-sm font-bold text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                className="h-10 min-w-0 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               >
                 <option value="all">All readiness</option>
                 <option value="ready">Ready</option>
@@ -731,7 +715,7 @@ function FrameworksPageContent() {
                 aria-label="Filter by source health"
                 value={freshnessFilter}
                 onChange={(event) => setFreshnessFilter(event.target.value)}
-                className="h-10 min-w-0 rounded-lg border border-line bg-surface px-3 text-sm font-bold text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                className="h-10 min-w-0 rounded-lg border border-line bg-surface px-3 text-sm font-semibold text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               >
                 <option value="all">All source health</option>
                 <option value="fresh">Fresh</option>
@@ -781,7 +765,7 @@ function FrameworksPageContent() {
             aria-expanded={showReadiness}
             aria-controls="framework-readiness-details"
             onClick={() => setShowReadiness((value) => !value)}
-            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-line bg-surfaceMuted px-3 text-xs font-black text-ink transition-colors hover:border-brand hover:text-brand"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-line bg-surfaceMuted px-3 text-xs font-semibold text-ink transition-colors hover:border-brand hover:text-brand"
           >
             {showReadiness
               ? "Hide readiness details"

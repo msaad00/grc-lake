@@ -59,7 +59,7 @@ function ControlRow({
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <code className="text-sm font-black text-ink">
+        <code className="text-sm font-semibold text-ink">
           {control.control_id}
         </code>
         <Badge tone={toneForStatus(control.status)}>{control.status}</Badge>
@@ -220,7 +220,6 @@ function ControlsPageContent() {
   return (
     <div className="page-shell grid gap-5">
       <PageHeader
-        eyebrow="Continuous control monitoring"
         title={ROUTE_LABELS["/controls"]}
         description="Results, evidence, and owners."
       />
@@ -307,7 +306,7 @@ function ControlsPageContent() {
               aria-pressed={view === id}
               onClick={() => setView(id)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-black",
+                "rounded-md px-3 py-1.5 text-xs font-semibold",
                 view === id
                   ? "bg-ink text-surface"
                   : "text-muted hover:bg-surfaceMuted",

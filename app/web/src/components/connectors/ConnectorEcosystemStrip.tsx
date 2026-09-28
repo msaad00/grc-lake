@@ -27,8 +27,8 @@ export function ConnectorEcosystemStrip({
     <Card
       className={
         compact
-          ? "border-line bg-gradient-to-r from-surfaceMuted to-surface p-3"
-          : "overflow-hidden border-line bg-gradient-to-br from-surfaceMuted via-surface to-blue-50/40 dark:to-blue-500/10"
+          ? "border-line bg-surface p-3"
+          : "overflow-hidden border-line bg-surface"
       }
     >
       <div
@@ -37,10 +37,10 @@ export function ConnectorEcosystemStrip({
         {!compact && (
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.14em] text-brand">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-brand">
                 Read-only integrations
               </div>
-              <h2 className="mt-1 text-lg font-black text-ink">
+              <h2 className="mt-1 text-lg font-semibold text-ink">
                 Connect AWS, Azure, GCP, Snowflake, and identity sources
               </h2>
               <p className="mt-1 max-w-[720px] text-sm text-muted">
@@ -51,7 +51,7 @@ export function ConnectorEcosystemStrip({
             {showLink && (
               <Link
                 href="/connectors"
-                className="inline-flex items-center gap-1 text-sm font-extrabold text-brand hover:underline"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"
               >
                 Open connectors
                 <ArrowRight className="h-4 w-4" />
@@ -61,7 +61,7 @@ export function ConnectorEcosystemStrip({
         )}
         <div className="flex flex-wrap items-center gap-2">
           {compact && (
-            <span className="text-[10px] font-black uppercase tracking-wide text-muted">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
               Live sources
             </span>
           )}
@@ -74,7 +74,9 @@ export function ConnectorEcosystemStrip({
             >
               <ConnectorMark connectorId={id} name={label} size="sm" />
               {!compact && (
-                <span className="pr-1 text-xs font-bold text-ink">{label}</span>
+                <span className="pr-1 text-xs font-semibold text-ink">
+                  {label}
+                </span>
               )}
             </Link>
           ))}

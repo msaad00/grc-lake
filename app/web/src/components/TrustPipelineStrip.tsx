@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import {
+  ChevronRight,
   ClipboardCheck,
   Database,
   FileCheck2,
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type StageId = "frameworks" | "evidence" | "controls" | "findings" | "proof";
@@ -51,6 +51,7 @@ const stages = [
   },
 ] as const;
 
+/** A slim stepper: where this page sits in map → collect → evaluate → triage → prove. */
 export function TrustPipelineStrip({
   activeStage,
   className,
@@ -59,48 +60,38 @@ export function TrustPipelineStrip({
   className?: string;
 }) {
   return (
-    <div
+    <nav
       aria-label="Trust pipeline"
-      className={cn(
-        "overflow-x-auto rounded-xl border border-line bg-surface",
-        className,
-      )}
+      className={cn("-mx-1 overflow-x-auto", className)}
     >
-      <div className="grid min-w-[660px] grid-cols-5 divide-x divide-line">
-        {stages.map(({ id, label, title, href, Icon }) => {
+      <ol className="flex min-w-max items-center gap-1 px-1 text-[13px]">
+        {stages.map(({ id, title, href, Icon }, index) => {
           const active = id === activeStage;
           return (
-            <Link
-              key={id}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "grid min-w-0 gap-2 p-3 text-left transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-500/10",
-                active ? "bg-blue-50/80 dark:bg-blue-500/10" : "bg-surface",
-              )}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-lg border",
-                    active
-                      ? "border-brand bg-brand text-white"
-                      : "border-line bg-panel text-brand",
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-                <Badge tone={active ? "info" : "default"}>{label}</Badge>
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-black text-ink">
-                  {title}
-                </div>
-              </div>
-            </Link>
+            <li key={id} className="flex items-center gap-1">
+              {index > 0 ? (
+                <ChevronRight
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 text-line-strong"
+                />
+              ) : null}
+              <Link
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand",
+                  active
+                    ? "bg-surface font-medium text-ink shadow-card ring-1 ring-line"
+                    : "text-muted hover:text-ink",
+                )}
+              >
+                <Icon aria-hidden="true" className="h-3.5 w-3.5" />
+                {title}
+              </Link>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ol>
+    </nav>
   );
 }

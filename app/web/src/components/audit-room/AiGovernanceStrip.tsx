@@ -64,7 +64,7 @@ export function AiGovernanceStrip() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <BrainCircuit className="h-4 w-4 text-brand" />
-                  <span className="text-sm font-black text-ink">
+                  <span className="text-sm font-semibold text-ink">
                     AI governance evidence
                   </span>
                   <Badge
@@ -83,7 +83,7 @@ export function AiGovernanceStrip() {
               </div>
               <Link
                 href="/ai-governance"
-                className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline"
               >
                 <Bot className="h-3.5 w-3.5" />
                 Full inventory
@@ -146,7 +146,7 @@ export function AiGovernanceStrip() {
                   className="rounded-lg border border-line bg-surface px-3 py-2"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-ink">
+                    <span className="text-xs font-semibold text-ink">
                       {framework.label}
                     </span>
                     <Badge tone={framework.score >= 85 ? "ready" : "attention"}>
@@ -163,7 +163,7 @@ export function AiGovernanceStrip() {
 
             {sample.length > 0 ? (
               <div className="grid gap-2">
-                <span className="text-xs font-bold uppercase tracking-wide text-muted">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Inventory sample
                 </span>
                 {sample.map((item) => (
@@ -173,7 +173,7 @@ export function AiGovernanceStrip() {
                   >
                     <div className="min-w-0 [overflow-wrap:anywhere]">
                       <span
-                        className="font-bold text-ink"
+                        className="font-semibold text-ink"
                         title={item.asset_id}
                       >
                         {assetLabel(item)}
@@ -219,8 +219,8 @@ export function AiGovernanceStrip() {
                     }
                     className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-xs hover:bg-surfaceMuted"
                   >
-                    <CircleAlert className="h-3.5 w-3.5 shrink-0 text-brand-orange" />
-                    <span className="font-bold text-ink">
+                    <CircleAlert className="h-3.5 w-3.5 shrink-0 text-serious-fg" />
+                    <span className="font-semibold text-ink">
                       {GAP_COPY[gap.id] ?? gap.label}
                     </span>
                   </Link>

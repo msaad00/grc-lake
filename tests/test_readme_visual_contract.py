@@ -4,7 +4,15 @@ import json
 from pathlib import Path
 from xml.etree import ElementTree
 
-from tools.render_readme_header import render_logo, render_open_graph, render_readme_summary, render_social_preview
+import pytest
+from tools.render_readme_header import (
+    CCF_COLUMN,
+    estimate_text_width,
+    render_logo,
+    render_open_graph,
+    render_readme_summary,
+    render_social_preview,
+)
 
 from security_lakehouse.safeguards import coverage_by_framework
 
@@ -41,7 +49,7 @@ def test_readme_hero_names_only_shipped_capabilities() -> None:
     assert "deterministic controls" in copy
     assert "owned findings" in copy
     assert "assessment exports" in copy
-    assert f"{coverage['safeguards']} safeguards · {coverage['controls']} catalogued requirements" in copy
+    assert f"{coverage['safeguards']:,} safeguards · {coverage['controls']:,} catalogued requirements" in copy
     assert f"{len(coverage['frameworks'])} framework packs" in copy
     assert "Console · API · CLI · MCP · CI" in copy
     source_ids = {
@@ -76,6 +84,77 @@ def test_readme_hero_names_only_shipped_capabilities() -> None:
         "NIST AI RMF",
     ):
         assert framework in copy
+
+
+SVG = "{http://www.w3.org/2000/svg}"
+
+
+def _translate(element: ElementTree.Element) -> tuple[float, float]:
+    transform = element.attrib.get("transform", "")
+    if not transform.startswith("translate("):
+        return 0.0, 0.0
+    x, _, y = transform.removeprefix("translate(").removesuffix(")").partition(" ")
+    return float(x), float(y or 0)
+
+
+def _placed_text(element: ElementTree.Element, origin: tuple[float, float] = (0.0, 0.0)):
+    """Yield (absolute left, absolute right, text) for every <text> in the hero."""
+    dx, dy = _translate(element)
+    origin = (origin[0] + dx, origin[1] + dy)
+    for child in element:
+        if child.tag == f"{SVG}text":
+            copy = "".join(child.itertext())
+            size = float(child.attrib.get("font-size", "16"))
+            spacing = float(child.attrib.get("letter-spacing", "0"))
+            width = estimate_text_width(copy, size, letter_spacing=spacing)
+            x = origin[0] + float(child.attrib.get("x", "0"))
+            anchor = child.attrib.get("text-anchor", "start")
+            left = x - width if anchor == "end" else x - width / 2 if anchor == "middle" else x
+            yield left, left + width, copy
+        elif child.tag == f"{SVG}g":
+            yield from _placed_text(child, origin)
+
+
+def test_readme_hero_text_fits_the_view_box_and_the_ccf_column() -> None:
+    root = ElementTree.parse(ASSETS[0]).getroot()
+    width = float(root.attrib["viewBox"].split()[2])
+    column_left, column_right = CCF_COLUMN
+    placed = list(_placed_text(root))
+    for left, right, copy in placed:
+        assert left >= 0 and right <= width, f"{copy!r} overflows the header"
+    column = [(left, right, copy) for left, right, copy in placed if left >= column_left - 1 and "Console" not in copy]
+    assert any("framework packs" in copy for _, _, copy in column)
+    for _, right, copy in column:
+        assert right <= column_right, f"{copy!r} overflows the control framework column"
+
+
+@pytest.mark.parametrize(
+    ("copy", "size", "rendered"),
+    [
+        # Widths Chromium rendered for these hero lines with the system-ui fallback.
+        ("SOC 2 · ISO 27001 · NIST 800-53 · NIST RMF · FedRAMP · CMMC · NIST CSF", 12, 446),
+        ("CIS Controls · CIS AWS · HIPAA · PCI DSS · GDPR · EU AI Act · ISO 27017", 12, 422),
+        ("78 safeguards · 2,031 catalogued requirements", 13, 302),
+        ("Read-only evidence → deterministic controls → owned findings → assessment exports.", 17, 678),
+    ],
+)
+def test_estimated_text_width_never_undershoots_a_real_render(copy: str, size: float, rendered: int) -> None:
+    assert estimate_text_width(copy, size) >= rendered
+    assert estimate_text_width("", size) == 0
+
+
+def test_readme_hero_counts_the_read_only_sources_it_leaves_out() -> None:
+    root = ElementTree.parse(ASSETS[0]).getroot()
+    copy = " ".join(text.strip() for text in root.itertext() if text.strip())
+    connectors = json.loads((ROOT / "connectors" / "catalog.json").read_text(encoding="utf-8"))["connectors"]
+    generally_available = [
+        entry
+        for entry in connectors
+        if entry.get("is_implemented") is True
+        and entry.get("release_stage") != "preview"
+        and entry["collection_mode"] in {"direct_api_read", "existing_lake_read"}
+    ]
+    assert f"+{len(generally_available) - 8} more" in copy
 
 
 def test_readme_visuals_are_accessible_scalable_svg_assets() -> None:

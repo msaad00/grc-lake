@@ -285,3 +285,53 @@ def test_ipv6_embedded_public_ipv4_follows_ipv4_policy(monkeypatch, address: str
     # or the IPv4-compatible form is as reachable as the v4 itself.
     _resolve_to(monkeypatch, address)
     assert assert_resolved_ip_is_public("nat64.example") == [address]
+
+
+# --- 6to4 (2002::/16) and Teredo (2001::/32) carry IPv4 addresses too ----------
+# 6to4 holds an IPv4 in bits 16-47. Teredo holds the relay server's IPv4 in bits
+# 32-63 and the client's IPv4, bit-inverted, in the last 32 bits. Some Python
+# releases classify these prefixes as global, so the embedded IPv4s must decide.
+
+_SIXTOFOUR_AND_TEREDO_PRIVATE = [
+    "2002:a9fe:a9fe::1",  # 6to4 of 169.254.169.254 (cloud metadata)
+    "2002:7f00:1::1",  # 6to4 of 127.0.0.1
+    "2002:a00:1::1",  # 6to4 of 10.0.0.1
+    "2002:c0a8:101::1",  # 6to4 of 192.168.1.1
+    "2002:6440:1::1",  # 6to4 of 100.64.0.1 (shared/CGNAT)
+    "2001:0:4136:e378:8000:63bf:f5ff:fffe",  # Teredo, public server, client ~0xf5fffffe = 10.0.0.1
+    "2001:0:4136:e378::5601:5601",  # Teredo, public server, client 169.254.169.254
+    "2001:0:c0a8:101::f7f7:f7f7",  # Teredo, server 192.168.1.1, public client 8.8.8.8
+    "2001:0:7f00:1::f7f7:f7f7",  # Teredo, server 127.0.0.1
+]
+
+
+@pytest.mark.parametrize("address", _SIXTOFOUR_AND_TEREDO_PRIVATE)
+def test_6to4_and_teredo_with_private_embedded_ipv4_are_blocked(monkeypatch, address: str) -> None:
+    _resolve_to(monkeypatch, address)
+    with pytest.raises(ValueError, match="non-public"):
+        assert_resolved_ip_is_public("tunnel.example")
+
+
+@pytest.mark.parametrize("address", _SIXTOFOUR_AND_TEREDO_PRIVATE)
+def test_6to4_and_teredo_are_judged_even_where_python_calls_them_global(monkeypatch, address: str) -> None:
+    # Older interpreters (3.9, early 3.11/3.12 patches) report 2002::/16 as
+    # global; the guard must not depend on the interpreter's registry snapshot.
+    import ipaddress
+
+    monkeypatch.setattr(ipaddress.IPv6Address, "is_global", property(lambda self: True))
+    _resolve_to(monkeypatch, address)
+    with pytest.raises(ValueError, match="non-public"):
+        assert_resolved_ip_is_public("tunnel.example")
+
+
+def test_embedded_ipv4_extraction_matches_the_rfc_layouts() -> None:
+    import ipaddress
+
+    assert netguard._embedded_ipv4s(ipaddress.IPv6Address("2002:c0a8:101::1")) == [
+        ipaddress.IPv4Address("192.168.1.1")
+    ]
+    assert netguard._embedded_ipv4s(ipaddress.IPv6Address("2001:0:4136:e378:8000:63bf:f5ff:fffe")) == [
+        ipaddress.IPv4Address("65.54.227.120"),
+        ipaddress.IPv4Address("10.0.0.1"),
+    ]
+    assert netguard._embedded_ipv4s(ipaddress.IPv6Address("2606:4700::1111")) == []

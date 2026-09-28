@@ -11,6 +11,7 @@ import { EntityTagsEditor } from "@/components/EntityTagsEditor";
 import { resolveFrameworkId } from "@/lib/framework-visuals";
 import type { ControlPosture } from "@/lib/api/types";
 import { assetLabel } from "@/lib/format";
+import { displayLabel } from "@/lib/display";
 
 interface Props {
   control: ControlPosture | null;
@@ -52,13 +53,13 @@ export function ControlDrawer({ control, onClose, onOpenViolation }: Props) {
                   tone={toneFor(test.result)}
                   className="shrink-0 whitespace-nowrap"
                 >
-                  {test.status}
+                  {displayLabel(test.status)}
                 </Badge>
               </div>
               <div className="mt-1 text-xs text-muted">{test.next_action}</div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <Badge>{test.agent_skill}</Badge>
-                <Badge tone="info">{test.freshness_status}</Badge>
+                <Badge tone="info">{displayLabel(test.freshness_status)}</Badge>
                 <Badge
                   tone={test.confidence_score >= 75 ? "ready" : "attention"}
                 >
@@ -80,7 +81,7 @@ export function ControlDrawer({ control, onClose, onOpenViolation }: Props) {
             <dt className="text-muted">Owner</dt>
             <dd className="font-semibold">{control.owner}</dd>
             <dt className="text-muted">Status</dt>
-            <dd className="font-semibold">{control.status}</dd>
+            <dd className="font-semibold">{displayLabel(control.status)}</dd>
             <dt className="text-muted">Risk score</dt>
             <dd className="font-semibold">{control.risk_score}</dd>
             <dt className="text-muted">Evidence</dt>
@@ -128,7 +129,7 @@ export function ControlDrawer({ control, onClose, onOpenViolation }: Props) {
                         v.severity === "critical" ? "critical" : "attention"
                       }
                     >
-                      {v.severity}
+                      {displayLabel(v.severity)}
                     </Badge>
                     <Badge>{v.asset_owner?.trim() || "Unassigned"}</Badge>
                     <Badge tone="info">open triage →</Badge>

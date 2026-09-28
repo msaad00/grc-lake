@@ -552,9 +552,16 @@ def _parser() -> argparse.ArgumentParser:
     )
     frameworks_review.add_argument("--lake", default=None, help=_REVIEW_LAKE_HELP)
     frameworks_review.set_defaults(func=_frameworks_review_queue)
+    from security_lakehouse.safeguards import REVIEW_STATE_DEFINITIONS, REVIEW_STATE_LABELS
+
     review = frameworks_sub.add_parser(
         "review",
         help="record org mapping review decisions (approve/reject/needs-changes) or export the decision log",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="review states:\n"
+        + "\n".join(
+            f"  {REVIEW_STATE_LABELS[state]}: {definition}" for state, definition in REVIEW_STATE_DEFINITIONS.items()
+        ),
     )
     review_sub = review.add_subparsers(dest="review_command", required=True)
     for verb, decision in (("approve", "approve"), ("reject", "reject"), ("needs-changes", "needs_changes")):

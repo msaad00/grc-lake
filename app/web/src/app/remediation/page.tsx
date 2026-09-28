@@ -32,6 +32,7 @@ import type {
 } from "@/lib/api/types";
 import { findingHref, safeHttpUrl } from "@/lib/finding-links";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -327,7 +328,7 @@ function TasksSection() {
         >
           {TASK_PRIORITIES.map((p) => (
             <option key={p} value={p}>
-              {p}
+              {displayLabel(p)}
             </option>
           ))}
         </select>
@@ -390,14 +391,19 @@ function TasksSection() {
                   <ResolutionNote note={task.resolution_note} />
                 )}
               </div>
-              <Badge tone={PRIORITY_TONE[task.priority]}>{task.priority}</Badge>
-              <Badge tone={STATUS_TONE[task.status]}>{task.status}</Badge>
-              {task.overdue && <Badge tone="critical">overdue</Badge>}
+              <Badge tone={PRIORITY_TONE[task.priority]}>
+                {displayLabel(task.priority)}
+              </Badge>
+              {task.status !== "open" ? (
+                <Badge tone={STATUS_TONE[task.status]}>
+                  {displayLabel(task.status)}
+                </Badge>
+              ) : null}
+              {task.overdue && <Badge tone="critical">Overdue</Badge>}
               {task.status !== "resolved" && task.status !== "dismissed" && (
                 <div className="flex gap-1.5">
                   <Button
                     size="sm"
-                    variant="ghost"
                     onClick={() => {
                       resolveMutation.reset();
                       setResolving(task);
@@ -408,6 +414,7 @@ function TasksSection() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="font-medium text-muted hover:text-ink"
                     onClick={() =>
                       update.mutate({
                         id: task.id,
@@ -521,7 +528,9 @@ function EvidenceRequestsSection() {
                   {fmtDate(req.created_at)}
                 </div>
               </div>
-              <Badge tone={STATUS_TONE[req.status]}>{req.status}</Badge>
+              <Badge tone={STATUS_TONE[req.status]}>
+                {displayLabel(req.status)}
+              </Badge>
               {req.status === "open" && (
                 <div className="flex gap-1.5">
                   <Button

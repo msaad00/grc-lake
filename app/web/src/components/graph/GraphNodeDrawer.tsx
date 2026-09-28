@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import type { GraphNode, GraphNodeKind } from "@/lib/api/types";
+import { displayLabel } from "@/lib/display";
 
 const KIND_TONE: Record<
   GraphNodeKind,
@@ -91,9 +92,7 @@ export function GraphNodeDrawer({ node, graphMode, onClose }: Props) {
       {node && (
         <div className="grid gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={KIND_TONE[node.kind]}>
-              {node.kind.replace(/_/g, " ")}
-            </Badge>
+            <Badge tone={KIND_TONE[node.kind]}>{displayLabel(node.kind)}</Badge>
             {node.framework_id && (
               <Badge tone="info">{node.framework_id}</Badge>
             )}
@@ -155,7 +154,7 @@ export function GraphNodeDrawer({ node, graphMode, onClose }: Props) {
             {node.severity && (
               <>
                 <dt className="text-muted">Severity</dt>
-                <dd className="font-semibold">{node.severity}</dd>
+                <dd className="font-semibold">{displayLabel(node.severity)}</dd>
               </>
             )}
           </dl>

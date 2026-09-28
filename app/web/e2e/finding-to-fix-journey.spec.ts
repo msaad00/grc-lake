@@ -142,7 +142,7 @@ test("create task from a finding, then resolve it with proof", async ({
     status: "resolved",
     resolution_note: proof,
   });
-  await expect(taskRow).toContainText("resolved");
+  await expect(taskRow).toContainText("Resolved");
   await expect(taskRow).toContainText(proof);
 });
 
@@ -258,7 +258,7 @@ test("control queue rows open the drawer and obey the filters", async ({
   await result.selectOption("pass");
   const rows = queue.locator("tbody tr");
   await expect(rows.first()).toBeVisible();
-  for (const text of await rows.allInnerTexts()) expect(text).toContain("pass");
+  for (const text of await rows.allInnerTexts()) expect(text).toContain("Pass");
 
   const owner = page.getByRole("combobox", { name: "Filter by owner" });
   await owner.selectOption("grc");

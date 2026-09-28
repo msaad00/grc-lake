@@ -5,6 +5,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { ChevronDown, CircleCheck, ShieldAlert } from "lucide-react";
 import type { Assessment, IngestionStatus } from "@/lib/api/types";
 import { Badge } from "@/components/ui/badge";
+import { SCORE_COPY } from "@/lib/console-copy";
 import { formatDateTime, formatRelative } from "@/lib/format";
 
 const TILE_SURFACE =
@@ -152,6 +153,7 @@ export function AssessmentOverview({
 }: {
   assessment?: Assessment;
   ingestion?: IngestionStatus;
+  /** Framework packs with catalogued requirements; registry stubs excluded. */
   frameworkCount: number;
 }) {
   const posture = assessment?.posture;
@@ -214,14 +216,14 @@ export function AssessmentOverview({
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Tile
           href="/frameworks"
-          label="Assessment score"
+          label={SCORE_COPY.assessment.label}
           value={posture ? Math.round(posture.score) : "—"}
           suffix={posture ? "/ 100" : undefined}
-          detail={`${assessed} of ${frameworkCount} frameworks assessed`}
+          detail={`${assessed} of ${frameworkCount} framework packs assessed`}
         >
           {posture ? (
             <Meter
-              label="Assessment score"
+              label={SCORE_COPY.assessment.label}
               value={Math.round(posture.score)}
               tone={state ? STATE_BAR[state] : "bg-line-strong"}
             />

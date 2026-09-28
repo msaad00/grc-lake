@@ -19,6 +19,7 @@ import type {
 } from "@/lib/api/types";
 import { FrameworkEvidenceChain } from "@/components/framework/FrameworkEvidenceChain";
 import { cn } from "@/lib/utils";
+import { displayLabel } from "@/lib/display";
 
 type StatusFilter = "all" | "pass" | "fail" | "not_evaluated";
 
@@ -121,7 +122,7 @@ function ControlRow({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Badge tone={statusTone}>
-            {control.posture.status.replace("_", " ")}
+            {displayLabel(control.posture.status)}
           </Badge>
           {expanded ? (
             <ChevronUp className="h-4 w-4 text-muted" />
@@ -157,7 +158,7 @@ function ControlRow({
                 Evidence + test state
               </div>
               <div className="mt-1 flex flex-wrap gap-1.5">
-                <Badge>{control.test.result}</Badge>
+                <Badge>{displayLabel(control.test.result)}</Badge>
                 <Badge
                   tone={
                     control.test.freshness_status === "expired"
@@ -165,7 +166,9 @@ function ControlRow({
                       : "info"
                   }
                 >
-                  {control.test.freshness_status ?? "not evaluated"}
+                  {displayLabel(
+                    control.test.freshness_status ?? "not_evaluated",
+                  )}
                 </Badge>
                 <Badge>{control.test.confidence_score ?? 0}% confidence</Badge>
               </div>
@@ -220,7 +223,7 @@ function ControlRow({
                       article.review_status !== "reviewed" ? (
                         <>
                           <Badge tone="attention">
-                            {article.review_status}
+                            {displayLabel(article.review_status)}
                           </Badge>{" "}
                           Suggested by {article.reviewed_by}; awaiting human
                           review

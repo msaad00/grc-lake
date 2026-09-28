@@ -24,8 +24,6 @@ in your own cloud or VPC, on your own data lake.
 
 - **Your cloud, your evidence.** Evidence stays in storage you run. Data leaves
   only through the connectors, sinks, and model integrations you configure.
-- **Two modes.** Ingest evidence into a lake you own, or connect read-only to the
-  security lake you already run. [How it works](#how-it-works).
 - **Deterministic and API-first.** Rules decide pass or fail, and every result
   links to its evidence; models may summarize or propose, never decide. The
   console, API, CLI, MCP server, and CI gates share one engine.
@@ -94,7 +92,7 @@ Evidence arrives in one of two modes; both feed the same rules and assessments.
 
 \* **Preview:** implemented and fixture-tested, not yet verified against a live
 tenant. Lake mappings are experimental. The [connector catalog](docs/CONNECTORS.md)
-lists all 28 contracts, 25 of them executable.
+lists all 28 contracts: 25 executable (18 generally available, 7 in preview).
 
 ## Self-host
 
@@ -103,7 +101,7 @@ lists all 28 contracts, 25 of them executable.
 | [Docker image](Dockerfile)                                                                           | One host: `docker run -p 8787:8787 -v $PWD/lake:/lake ghcr.io/msaad00/trustops:0.2` |
 | [Helm chart](deploy/helm/trustops/)                                                                  | Kubernetes, with a persistent `/lake` volume and the scheduler.                     |
 | [EKS Terraform](deploy/eks-terraform/)                                                               | Reference infrastructure for the chart on Amazon EKS.                               |
-| [AWS](deploy/aws/) · [Azure](deploy/azure/) · [GCP](deploy/gcp/)                                     | Read-only posture roles for each cloud; no static keys.                             |
+| [AWS](deploy/aws/) · [Azure](deploy/azure/) · [GCP](deploy/gcp/)                                     | Read-only posture roles for each cloud (see Connector credentials below).           |
 | [Snowflake](deploy/snowflake/) · [Databricks](deploy/databricks/) · [ClickHouse](deploy/clickhouse/) | Schema and bootstrap SQL for each existing-lake reader.                             |
 
 Server mode requires [authentication](docs/SERVER_AUTH.md) (OIDC, SAML, or API
@@ -113,7 +111,7 @@ keys). Start with the [deployment guide](deploy/README.md).
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**17 framework packs · 78 reusable safeguards · 21 control families · 2,031 catalogued requirements.**
+**17 framework packs · 78 reusable safeguards · 21 control families · 2,031 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
 
 1,182 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 
@@ -173,7 +171,7 @@ security-lakehouse frameworks safeguards --format table
 | Audit workflow           | Audit room, readiness, frozen assessments, trust-center shares, access reviews, OSCAL export. |
 | Policies and vendor risk | MVP: policy templates with attestation, vendor questionnaires.                                |
 | Automation               | Versioned API, CLI, MCP server, CI posture gate, webhooks.                                    |
-| Integrations             | 25 executable connectors; add your own as a separately installed Python package.              |
+| Integrations             | The read-only connectors above; add your own as a separately installed Python package.        |
 | Not offered              | A managed service, or certification. Results are evidence for your auditor.                   |
 
 Details: [product status](docs/PRODUCT_SHAPE.md) · [roadmap](ROADMAP.md).
@@ -201,8 +199,13 @@ Images show the bundled demo fixture, not live customer evidence.
 </p>
 
 <p align="center">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-graph-dark.png"><img src="docs/images/trustops-demo-graph.png" alt="TrustOps compliance graph" width="100%"></picture>
-  <br><sub><strong>Graph</strong></sub>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-mapping-review-dark.png"><img src="docs/images/trustops-demo-mapping-review.png" alt="TrustOps mapping review queue with three mappings selected" width="100%"></picture>
+  <br><sub><strong>Mapping review</strong></sub>
+</p>
+
+<p align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-control-drawer-dark.png"><img src="docs/images/trustops-demo-control-drawer.png" alt="TrustOps control drawer: result, evidence, open finding, and remediation" width="55%"></picture>
+  <br><sub><strong>Control detail</strong></sub>
 </p>
 
 <p align="center">
@@ -213,10 +216,14 @@ Images show the bundled demo fixture, not live customer evidence.
 [Walkthrough](docs/PRODUCT_WALKTHROUGH.md) ·
 [Connections](docs/images/trustops-demo-connectors.png) ·
 [Findings](docs/images/trustops-demo-findings.png) ·
+[Graph](docs/images/trustops-demo-graph.png) ·
 [Remediation](docs/images/trustops-demo-remediation.png) ·
+[Policies](docs/images/trustops-demo-policies.png) ·
+[Vendor risk](docs/images/trustops-demo-vendor-risk.png) ·
 [Audit room](docs/images/trustops-demo-audit-room.png) ·
 [Workflows](docs/images/trustops-demo-workflows.png) ·
-[Trust center](docs/images/trustops-demo-trust-center.png)
+[Trust center](docs/images/trustops-demo-trust-center.png) ·
+[Phone](docs/images/trustops-demo-overview-mobile.png)
 
 </details>
 
@@ -225,16 +232,16 @@ Images show the bundled demo fixture, not live customer evidence.
 
 In the console: **Connections → choose a source → Test → Enable → Sync**. For
 automation, use the [headless setup playbook](docs/playbooks/HEADLESS_CONNECTOR_SETUP.md).
-Cloud connectors use short-lived or workload identity credentials; for GCP,
-Application Default Credentials (a service-account key file also works). SaaS
-connectors use scoped API tokens or an integration-user login. Settings keep a
-credential reference (an environment variable name or mounted secret file),
+Cloud connectors use short-lived or workload identity credentials. Settings keep
+a credential reference (an environment variable name or mounted secret file),
 not the secret itself.
 
-- **AWS** uses STS AssumeRole, one External ID per deployed role, short-lived session credentials, and read-only IAM posture APIs. Temporary credentials expire after each session; TrustOps stores no long-lived access keys. Roll out with CloudFormation StackSets or Terraform workspaces; Bulk account import is planned. See the [cloud setup guide](docs/LIVE_CLOUD_POC.md) and the [credential lifecycle](docs/images/trustops-aws-sts-lifecycle.svg).
+- **AWS** uses STS AssumeRole, one External ID per deployed role, short-lived session credentials, and read-only IAM posture APIs. Temporary credentials expire after each session; TrustOps stores no long-lived access keys. Roll out with CloudFormation StackSets or Terraform workspaces; bulk account import is planned. See the [cloud setup guide](docs/LIVE_CLOUD_POC.md) and the [credential lifecycle](docs/images/trustops-aws-sts-lifecycle.svg).
 - **Azure** uses a customer-owned Entra application, managed identity, or federated workload identity with Reader scope.
-- **Snowflake** uses a read-only service identity with a key-pair or OAuth token reference. TrustOps stores identifiers, not passwords or private-key contents. Snowflake is the existing security-data-lake path.
+- **GCP** uses Application Default Credentials or workload identity; a service-account key file also works.
+- **Snowflake** uses a read-only service identity with a key-pair or OAuth token reference. TrustOps stores identifiers, not passwords or private-key contents. Snowflake is one of the existing-lake readers.
 - **GitHub** uses a GitHub App installation token, which expires within an hour.
+- **SaaS sources** use scoped API tokens or an integration-user login.
 
 Ship your own connector as a Python package: [adding connectors](docs/ADDING_CONNECTORS.md#shipping-a-connector-as-a-package).
 

@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
+from security_lakehouse.framework_provenance import framework_pack_state
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import read_jsonl
 
@@ -89,8 +90,12 @@ def build_compliance_graph(lake_dir: str | Path) -> dict[str, Any]:
         nodes.append(node)
         existing_ids.add(node["id"])
 
-    # Framework nodes
+    # Framework nodes: only packs with seeded controls. A planned or
+    # superseded registry stub would be an isolated node with no path.
+    seeded_frameworks = {str(control.get("framework_id") or "") for control in controls.values()}
     for framework_id, framework in frameworks.items():
+        if framework_pack_state(framework, int(framework_id in seeded_frameworks)) != "seeded":
+            continue
         _add_node(
             {
                 "id": f"framework:{framework_id}",

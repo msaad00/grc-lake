@@ -150,6 +150,12 @@ test("evidence paths name every lake reader from the connector catalog", async (
     expect(text).toContain(label);
     expect(preview.includes(label)).toBe(lake.release_stage === "preview");
   }
+  // Two names join as "A or B", never "A, or B".
+  const ga = lakes.filter((lake) => lake.release_stage !== "preview");
+  if (ga.length === 2)
+    expect(text).toContain(
+      `${ga[0].vendor || ga[0].name} or ${ga[1].vendor || ga[1].name}`,
+    );
 });
 
 test("connector drawer setup header spans the drawer at 390px", async ({
@@ -167,4 +173,34 @@ test("connector drawer setup header spans the drawer at 390px", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("preview badge explains itself on keyboard focus", async ({ page }) => {
+  await page.goto("/console/connectors/");
+  const badge = page.getByRole("button", { name: /^Preview:/ }).first();
+  await expect(badge).toBeVisible({ timeout: 20_000 });
+  // Retry the focus: a focus event that lands before hydration is lost.
+  await expect(async () => {
+    await badge.blur();
+    await badge.focus();
+    await expect(page.getByRole("tooltip")).toContainText(
+      "not yet verified against a live tenant",
+      { timeout: 1_000 },
+    );
+  }).toPass({ timeout: 15_000 });
+  // Unconfigured sources do not repeat a "Disabled" chip on every card.
+  await expect(page.getByText("disabled", { exact: true })).toHaveCount(0);
+});
+
+test("triage records the signed-in principal, not an editable actor", async ({
+  page,
+}) => {
+  await page.goto("/console/violations/");
+  await page
+    .getByRole("button", { name: /Review finding/ })
+    .first()
+    .click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByText("Recorded as")).toBeVisible();
+  await expect(drawer.getByRole("textbox", { name: "Actor" })).toHaveCount(0);
 });

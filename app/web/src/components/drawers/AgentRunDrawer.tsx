@@ -9,6 +9,7 @@ import {
   modeTone,
 } from "@/components/agents/AgentDecisionCard";
 import { useAgentRun } from "@/lib/api/hooks";
+import { displayLabel } from "@/lib/display";
 
 interface Props {
   runId: string | null;
@@ -65,7 +66,9 @@ export function AgentRunDrawer({ runId, onClose }: Props) {
             </dd>
             <dt className="text-muted">Status</dt>
             <dd>
-              <Badge tone={toneForStatus(run.status)}>{run.status}</Badge>
+              <Badge tone={toneForStatus(run.status)}>
+                {displayLabel(run.status)}
+              </Badge>
             </dd>
             <dt className="text-muted">Mode</dt>
             <dd>

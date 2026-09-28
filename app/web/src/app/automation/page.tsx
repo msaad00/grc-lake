@@ -51,6 +51,8 @@ import type { WorkflowTemplate } from "@/lib/workflow/templates";
 import { WORKFLOW_TEMPLATES } from "@/lib/workflow/templates";
 import { ROUTE_LABELS } from "@/lib/console-copy";
 import { QueryState } from "@/components/QueryState";
+import { displayLabel } from "@/lib/display";
+import { plural } from "@/lib/format";
 
 const NEW_WORKFLOW_ID = "__new__";
 
@@ -241,16 +243,16 @@ function WorkflowHealthStrip({
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
       <Badge tone={connected ? "ready" : "attention"}>
-        {connected ? `${counts.edges} edges` : "connect nodes"}
+        {connected ? plural(counts.edges, "edge") : "Connect nodes"}
       </Badge>
       <span className="rounded-full bg-info-bg px-2.5 py-1 font-semibold text-info-fg">
-        {counts.triggers} trigger
+        {plural(counts.triggers, "trigger")}
       </span>
       <span className="rounded-full bg-warning-bg px-2.5 py-1 font-semibold text-warning-fg">
-        {counts.checks} check
+        {plural(counts.checks, "check")}
       </span>
       <span className="rounded-full bg-success-bg px-2.5 py-1 font-semibold text-success-fg">
-        {counts.actions} action
+        {plural(counts.actions, "action")}
       </span>
     </div>
   );
@@ -608,7 +610,7 @@ export default function AutomationPage() {
         description="Design and run trust automation from a populated canvas."
         actions={
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <Button variant="primary" onClick={startNewWorkflow}>
+            <Button onClick={startNewWorkflow}>
               <Plus className="h-4 w-4" /> New starter
             </Button>
             <select
@@ -792,7 +794,7 @@ export default function AutomationPage() {
                           : "critical"
                     }
                   >
-                    {r.result}
+                    {displayLabel(r.result)}
                   </Badge>
                 </div>
                 <div className="text-muted">

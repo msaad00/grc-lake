@@ -1,5 +1,15 @@
 import { BRAND } from "@/lib/brand";
 
+/** "A", "A and B", "A, B, and C" (serial comma); `conjunction` may be "or". */
+export function joinList(
+  items: readonly string[],
+  conjunction: "and" | "or" = "and",
+): string {
+  if (items.length <= 1) return items.join("");
+  if (items.length === 2) return `${items[0]} ${conjunction} ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, ${conjunction} ${items[items.length - 1]}`;
+}
+
 /** "1 record" / "3 records"; pass `pluralWord` for irregular nouns. */
 export function plural(count: number, word: string, pluralWord?: string) {
   return `${count} ${count === 1 ? word : (pluralWord ?? `${word}s`)}`;

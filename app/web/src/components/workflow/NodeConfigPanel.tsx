@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useTestAction } from "@/lib/api/hooks";
 import type { ActionSchemaField, ActionSpec } from "@/lib/api/types";
 import type { FlowNode } from "./WorkflowCanvas";
+import { displayLabel } from "@/lib/display";
 
 interface Props {
   node: FlowNode | null;
@@ -97,7 +98,7 @@ export function NodeConfigPanel({
       <header className="flex items-start justify-between gap-3 border-b border-line p-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Badge tone="info">{spec.kind}</Badge>
+            <Badge tone="info">{displayLabel(spec.kind)}</Badge>
             <code className="truncate text-xs text-ink">{spec.node_type}</code>
           </div>
           <div className="mt-1 text-sm font-semibold text-ink">

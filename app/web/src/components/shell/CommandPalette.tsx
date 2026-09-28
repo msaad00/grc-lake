@@ -30,7 +30,12 @@ import { assetLabel } from "@/lib/format";
 interface PaletteItem {
   id: string;
   group:
-    "Actions" | "Routes" | "Controls" | "Findings" | "Evidence" | "Workflows";
+    | "Actions"
+    | "Routes"
+    | "Controls"
+    | "Findings"
+    | "Evidence"
+    | "Workflows";
   label: string;
   subtitle?: string;
   href?: string;
@@ -251,7 +256,7 @@ export function CommandPalette({
               placeholder="Search controls, findings, evidence, workflows, pages…"
               className="flex-1 bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
             />
-            <kbd className="rounded border border-line bg-surfaceMuted px-1.5 py-0.5 text-[10px] font-bold text-muted">
+            <kbd className="rounded border border-line bg-surfaceMuted px-1.5 py-0.5 text-[10px] font-semibold text-muted">
               esc
             </kbd>
           </div>
@@ -279,7 +284,7 @@ export function CommandPalette({
                 <div
                   id={`${LISTBOX_ID}-${group}`}
                   role="presentation"
-                  className="px-2 pb-1 pt-3 text-[10px] font-black uppercase tracking-wider text-muted"
+                  className="px-2 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted"
                 >
                   {group}
                 </div>
@@ -308,7 +313,7 @@ export function CommandPalette({
                         }
                       />
                       <span className="min-w-0">
-                        <span className="block truncate font-extrabold">
+                        <span className="block truncate font-semibold">
                           {item.label}
                         </span>
                         {item.subtitle && (
@@ -325,7 +330,7 @@ export function CommandPalette({
                       <kbd
                         aria-hidden="true"
                         className={[
-                          "rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-bold text-muted",
+                          "rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted",
                           active ? "visible" : "invisible",
                         ].join(" ")}
                       >
@@ -339,15 +344,15 @@ export function CommandPalette({
           </div>
           <div className="flex items-center justify-between gap-3 border-t border-line bg-surfaceMuted px-4 py-2 text-[11px] text-muted">
             <span>
-              <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 font-bold">
+              <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 font-semibold">
                 ↑↓
               </kbd>{" "}
               navigate{" "}
-              <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 font-bold">
+              <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 font-semibold">
                 ↵
               </kbd>{" "}
               open{" "}
-              <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 font-bold">
+              <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 font-semibold">
                 esc
               </kbd>{" "}
               close

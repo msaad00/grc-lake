@@ -2,20 +2,22 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+// Status tones carry meaning (tinted fill + strong text, AA in both themes);
+// `default` and `info` stay neutral so status is the only colour in a row.
 const badgeVariants = cva(
-  "inline-flex max-w-full min-w-0 items-center rounded-full px-2 py-0.5 text-xs font-extrabold",
+  "inline-flex max-w-full min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium leading-4",
   {
     variants: {
       tone: {
-        default:
-          "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200",
-        ready:
-          "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
-        attention:
-          "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
-        critical:
-          "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
-        info: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+        default: "bg-neutral-bg text-neutral-fg",
+        info: "bg-neutral-bg text-neutral-fg",
+        brand: "bg-brand/10 text-brand",
+        outline:
+          "bg-transparent text-muted ring-1 ring-inset ring-line-strong/60",
+        ready: "bg-success-bg text-success-fg",
+        attention: "bg-warning-bg text-warning-fg",
+        serious: "bg-serious-bg text-serious-fg",
+        critical: "bg-danger-bg text-danger-fg",
       },
     },
     defaultVariants: { tone: "default" },

@@ -39,7 +39,7 @@ export function Modal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm"
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
               />
             </Dialog.Overlay>
             <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center p-4">
@@ -52,7 +52,7 @@ export function Modal({
                 >
                   <header className="flex items-start justify-between gap-4 border-b border-line p-5">
                     <div>
-                      <Dialog.Title className="text-lg font-black text-ink">
+                      <Dialog.Title className="text-lg font-semibold text-ink">
                         {title}
                       </Dialog.Title>
                       {description && (

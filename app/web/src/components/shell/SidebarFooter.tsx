@@ -7,7 +7,7 @@ import { BRAND } from "@/lib/brand";
 const VERSION = BRAND.version;
 
 const LINK_FOCUS =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-rail";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-rail";
 
 interface Props {
   collapsed: boolean;
@@ -16,7 +16,7 @@ interface Props {
 
 export function SidebarFooter({ collapsed, toggle }: Props) {
   return (
-    <div className="mt-auto grid gap-1 border-t border-rail-line p-3 text-[11px] text-slate-300">
+    <div className="mt-auto grid gap-1 border-t border-rail-line p-3 text-[11px] text-muted">
       {!collapsed ? (
         <>
           <a
@@ -45,7 +45,7 @@ export function SidebarFooter({ collapsed, toggle }: Props) {
             </span>
             <ExternalLink aria-hidden="true" className="h-3 w-3 opacity-60" />
           </a>
-          <div className="mt-1 flex min-h-7 items-center justify-between pl-2 text-[10px] text-slate-400">
+          <div className="mt-1 flex min-h-7 items-center justify-between pl-2 text-[10px] text-muted">
             <span>v{VERSION}</span>
             {toggle}
           </div>
@@ -62,7 +62,7 @@ export function SidebarFooter({ collapsed, toggle }: Props) {
           >
             <BookText aria-hidden="true" className="h-3.5 w-3.5" />
           </a>
-          <div className="text-[9px] text-slate-400">v{VERSION}</div>
+          <div className="text-[9px] text-muted">v{VERSION}</div>
           {toggle}
         </div>
       )}

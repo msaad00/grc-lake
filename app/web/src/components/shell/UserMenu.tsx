@@ -53,9 +53,9 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           aria-label={`${sessionLabel} — account menu`}
-          className={`${compact ? "h-8 w-8 justify-center !border-transparent !bg-transparent !p-0" : ""} inline-flex items-center gap-2 rounded-lg border border-[#27364a] bg-[#101926] px-3 py-2 text-sm font-extrabold text-[#d9e4f2] hover:bg-[#152030] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-rail`}
+          className={`${compact ? "h-8 w-8 justify-center !border-transparent !bg-transparent !p-0" : ""} inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink hover:bg-rail-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-rail`}
         >
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-brand to-brand-cyan text-[11px] text-white">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-brand text-[11px] text-onBrand">
             {avatar}
           </span>
           <span
@@ -76,14 +76,14 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
         >
           {whoami.data && (
             <>
-              <DropdownMenu.Label className="px-2 py-2 text-[10px] font-black uppercase tracking-wider text-muted">
+              <DropdownMenu.Label className="px-2 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
                 Signed in
               </DropdownMenu.Label>
               <DropdownMenu.Item className="grid cursor-default grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none">
                 <User className="h-4 w-4 text-muted" />
                 <span className="min-w-0 truncate text-ink">
                   {whoami.data.email}
-                  <span className="block text-[10px] font-bold text-muted">
+                  <span className="block text-[10px] font-semibold text-muted">
                     {whoami.data.role}
                   </span>
                 </span>
@@ -91,7 +91,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
               <DropdownMenu.Separator className="my-1 h-px bg-line" />
             </>
           )}
-          <DropdownMenu.Label className="px-2 py-2 text-[10px] font-black uppercase tracking-wider text-muted">
+          <DropdownMenu.Label className="px-2 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
             Organization
           </DropdownMenu.Label>
           <DropdownMenu.Item className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-surfaceMuted">
@@ -99,7 +99,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
             <span className="truncate text-ink">
               {workspaceIdentity.orgName} — {workspaceIdentity.environmentName}
             </span>
-            <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <span className="rounded-full bg-success-bg px-1.5 py-0.5 text-[10px] font-semibold text-success-fg">
               active
             </span>
           </DropdownMenu.Item>
@@ -108,7 +108,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
             {workspaceIdentity.secondaryLabel}
           </DropdownMenu.Item>
           <DropdownMenu.Separator className="my-1 h-px bg-line" />
-          <DropdownMenu.Label className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted">
+          <DropdownMenu.Label className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
             Theme
           </DropdownMenu.Label>
           <div className="grid grid-cols-3 gap-1 px-1.5 pb-1.5">
@@ -118,7 +118,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
                 type="button"
                 onClick={() => setTheme(mode as ThemeMode)}
                 className={[
-                  "inline-flex items-center justify-center gap-1 rounded-md border px-2 py-1.5 text-[11px] font-extrabold",
+                  "inline-flex items-center justify-center gap-1 rounded-md border px-2 py-1.5 text-[11px] font-semibold",
                   theme === mode
                     ? "border-ink bg-ink text-panel"
                     : "border-line bg-surface text-muted hover:bg-surfaceMuted",
@@ -132,7 +132,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
             ))}
           </div>
           <DropdownMenu.Separator className="my-1 h-px bg-line" />
-          <DropdownMenu.Label className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted">
+          <DropdownMenu.Label className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
             You
           </DropdownMenu.Label>
           <DropdownMenu.Item asChild>

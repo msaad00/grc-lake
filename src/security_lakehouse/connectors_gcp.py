@@ -291,7 +291,8 @@ def probe_gcp_access(*, credentials: dict[str, Any], options: dict[str, Any]) ->
     if not project_id:
         raise ConnectorConfigError("GCP probe requires project_id")
     try:
-        client = GCPClient(project_id, credentials=gcp_credentials(credentials))
+        delegated = gcp_credentials(credentials)
+        client = GCPClient(project_id, credentials=delegated) if delegated is not None else GCPClient(project_id)
     except ConnectorConfigError:
         raise
     except Exception as exc:  # noqa: BLE001 - classified into an operator-safe error

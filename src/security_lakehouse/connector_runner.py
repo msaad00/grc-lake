@@ -1088,7 +1088,8 @@ def _collect_gcp(
             "(Application Default Credentials: gcloud auth application-default login, "
             "GOOGLE_APPLICATION_CREDENTIALS, or workload identity)"
         )
-    client = GCPClient(project_id, credentials=gcp_credentials(credentials or {}))
+    delegated = gcp_credentials(credentials or {})
+    client = GCPClient(project_id, credentials=delegated) if delegated is not None else GCPClient(project_id)
     return collect_gcp_evidence(client, project_id=project_id)
 
 

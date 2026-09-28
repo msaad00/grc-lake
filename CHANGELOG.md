@@ -3,8 +3,32 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.2.19 - 2026-09-28
 
+- Operator note (hosted / multi-tenant server mode only; self-hosted
+  single-tenant and CLI installs are unaffected): connector and workflow
+  secrets now resolve only from tenant-prefixed variables
+  (`TRUSTOPS_TENANT_<ID>__…`) or names the operator allowlists in
+  `TRUSTOPS_CONNECTOR_SECRET_REFS` / `TRUSTOPS_WORKFLOW_SHARED_SECRETS`; move
+  shared secrets before upgrading. Hosted AWS connectors need `role_arn` and
+  `external_id`, GCP and BigQuery need `impersonate_service_account`, and Azure
+  and Intune need a tenant-owned app registration. After rotating
+  `TRUSTOPS_COOKIE_SIGNING_KEY`, run `frameworks review resign` once per tenant
+  lake.
+- Live-cloud readiness, verified against real AWS, Azure, and GCP tenants:
+  `connectors probe` accepts the same credentials as sync (including a local
+  CLI profile for AWS) and makes a real read-only call for Azure and GCP; GCP
+  keeps collecting when an API is disabled or a permission is missing and
+  reports it as a named coverage gap; connector errors say what to fix instead
+  of only an exception name; and long asset IDs no longer collide, so every
+  synced GCP row is counted.
+- Console consistency: framework counts include only seeded packs (planned or
+  superseded packs are listed separately), the superseded ISO/IEC 27701:2019
+  row says so, badges use one set of labels, Preview has a keyboard-reachable
+  explanation, and the overview and audit room name their different scores.
+  Server-mode requests now record the signed-in user as the actor even if the
+  request body names someone else. README screenshots are cropped to their
+  content and include Mapping review and a phone-width overview.
 - Org mapping review: your reviewers can approve, reject, or request changes
   to safeguard mappings for your tenant (console **Mapping review**, API
   `/api/v1/mapping-reviews/*`, CLI `frameworks review`). Decisions go to an

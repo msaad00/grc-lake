@@ -25,6 +25,7 @@ import copy
 import hashlib
 import hmac
 import json
+import logging
 import os
 import uuid
 from collections.abc import Iterable, Mapping
@@ -51,6 +52,11 @@ from security_lakehouse.safeguards import (
     mapping_review_items,
     member_mapping_source,
 )
+
+logger = logging.getLogger(__name__)
+
+DECISION_LOG_UNPARSEABLE = "the decision log could not be parsed"
+DECISION_LOG_UNREADABLE = "the decision log could not be read"
 
 JsonObject = dict[str, Any]
 MappingKey = tuple[str, str]
@@ -320,7 +326,8 @@ def _verify_review_log_unlocked(lake_dir: str | Path) -> JsonObject:
     try:
         log = verify_chained_jsonl(review_log_path(lake_dir))
     except ValueError as exc:
-        log = {"ok": False, "length": None, "tip_hash": None, "issues": [str(exc)]}
+        logger.warning("mapping review decision log could not be parsed (%s)", exc.__class__.__name__)
+        log = {"ok": False, "length": None, "tip_hash": None, "issues": [DECISION_LOG_UNPARSEABLE]}
     key = _tip_key()
     if key is None:
         return {**log, "tip_mac": "not_configured"}
@@ -557,7 +564,8 @@ def review_attestation(lake_dir: str | Path) -> JsonObject:
         effective = effective_safeguards(lake_dir)
         coverage = coverage_by_framework(effective)
     except (OSError, ValueError) as exc:
-        return {"summary": None, "decision_log": {"ok": False, "error": str(exc)}}
+        logger.warning("mapping review attestation could not be built (%s)", exc.__class__.__name__)
+        return {"summary": None, "decision_log": {"ok": False, "error": DECISION_LOG_UNREADABLE}}
     return {
         "summary": {
             "catalogued": coverage["controls"],

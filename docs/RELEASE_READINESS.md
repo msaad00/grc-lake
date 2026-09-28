@@ -1,9 +1,11 @@
 # Release readiness
 
-TrustOps **0.2.17** is a security and hardening release: parameterized
-ClickHouse cursor queries, fail-closed signup, SAML replay protection, local
-server CSRF guards, a CI-gated and attested release pipeline, and an accessible,
-mobile-ready console. See [the
+TrustOps **0.2.18** connects to the security lake you already run (declarative
+lake mappings, OCSF presets, Iceberg/Parquet and BigQuery readers in preview),
+adds Jamf, CrowdStrike, Kubernetes, and KnowBe4 connectors (preview), deepens
+the common control framework to 78 safeguards with NIST RMF and an ISO/IEC
+27701:2025 limited pack, and pins egress to validated IPs with a replica-safe
+SAML replay cache. See [the
 changelog](../CHANGELOG.md) for release scope.
 
 ## Release gates

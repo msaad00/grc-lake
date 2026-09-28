@@ -7,8 +7,8 @@ description: |
   Iceberg REST export commands. Catalogs and remote storage require separate provisioning;
   egress depends on configured connectors and sinks.
 type: application
-version: 0.2.17
-appVersion: "0.2.17"
+version: 0.2.18
+appVersion: "0.2.18"
 kubeVersion: ">=1.27.0"
 home: https://github.com/msaad00/trustops-security-data-lake
 sources:

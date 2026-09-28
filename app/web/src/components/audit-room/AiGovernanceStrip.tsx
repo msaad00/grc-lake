@@ -9,6 +9,7 @@ import { KpiTile } from "@/components/ui/KpiTile";
 import { useAiGovernance, useAiInventory } from "@/lib/api/hooks";
 import type { AiInventoryItem } from "@/lib/api/types";
 import { assetLabel, plural } from "@/lib/format";
+import { displayLabel } from "@/lib/display";
 
 const STATE_COPY: Record<
   string,
@@ -16,7 +17,7 @@ const STATE_COPY: Record<
 > = {
   governed: { label: "Governed", tone: "ready" },
   on_track: { label: "On track", tone: "attention" },
-  needs_work: { label: "Needs work", tone: "critical" },
+  needs_work: { label: "Needs attention", tone: "critical" },
 };
 
 function loopTone(active: boolean): "ready" | "attention" {
@@ -73,7 +74,7 @@ export function AiGovernanceStrip() {
                     }
                   >
                     {STATE_COPY[governance.data.state]?.label ??
-                      governance.data.state}
+                      displayLabel(governance.data.state)}
                   </Badge>
                 </div>
                 <p className="mt-1 text-xs leading-5 text-muted">

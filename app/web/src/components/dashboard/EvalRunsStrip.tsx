@@ -12,6 +12,7 @@ import {
 import { QueryState } from "@/components/QueryState";
 import { useEvalRuns, useIngestionStatus } from "@/lib/api/hooks";
 import { shortDate } from "@/lib/utils";
+import { displayLabel } from "@/lib/display";
 
 function toneForResult(result?: string): "ready" | "attention" | "critical" {
   if (result === "ok") return "ready";
@@ -145,7 +146,9 @@ export function EvalRunsStrip({
                     <div className="text-xs text-muted">
                       {shortDate(run.occurred_at)}
                     </div>
-                    <Badge tone={toneForResult(run.result)}>{run.result}</Badge>
+                    <Badge tone={toneForResult(run.result)}>
+                      {displayLabel(run.result)}
+                    </Badge>
                     <div className="text-xs text-muted">
                       {run.event_count != null
                         ? `${run.event_count.toLocaleString()} events`

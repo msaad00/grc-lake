@@ -5,17 +5,13 @@ import { useState } from "react";
 import { Check, Clipboard, Database, FileJson2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ConnectorView } from "@/lib/api/types";
+import { joinList } from "@/lib/format";
 
 const NORMALIZE_COMMAND = `security-lakehouse ingestion normalize \\
   --raw ./raw/connector_events.jsonl \\
   --out ./lake`;
 
 const LAKE_CATEGORIES = new Set(["warehouse", "analytics_lake"]);
-
-function joinNames(names: string[]) {
-  if (names.length <= 1) return names.join("");
-  return `${names.slice(0, -1).join(", ")}, or ${names[names.length - 1]}`;
-}
 
 /** Lake readers straight from the connector catalog, so the copy never drifts. */
 function lakeReaders(connectors: ConnectorView[]) {
@@ -71,12 +67,12 @@ export function EvidencePathPanel({
               <h3 className="font-semibold text-ink">Read an existing lake</h3>
               <p className="mt-1 text-xs leading-5 text-muted">
                 {readers.ga.length
-                  ? `Connect ${joinNames(readers.ga)} with a read-only role.`
+                  ? `Connect ${joinList(readers.ga, "or")} with a read-only role.`
                   : "Connect a data lake with a read-only role."}{" "}
                 TrustOps reads the granted evidence surfaces and normalizes
                 them.
                 {readers.preview.length
-                  ? ` Preview: ${joinNames(readers.preview).replace(", or ", " and ")}.`
+                  ? ` Preview: ${joinList(readers.preview)}.`
                   : null}
               </p>
             </div>

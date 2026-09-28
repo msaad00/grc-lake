@@ -22,7 +22,7 @@ import type {
   MappingReviewState,
   MappingReviewSummary,
 } from "@/lib/api/types";
-import { ROUTE_LABELS } from "@/lib/console-copy";
+import { MAPPING_REVIEW_GLOSSARY, ROUTE_LABELS } from "@/lib/console-copy";
 import { formatCount, formatDateTime } from "@/lib/format";
 import { notify } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -61,23 +61,49 @@ const SEGMENTS: Array<{
 }> = [
   {
     key: "maintainer_reviewed",
-    label: "Maintainer-reviewed",
+    label: MAPPING_REVIEW_GLOSSARY.maintainer_reviewed.label,
     fill: "bg-success",
   },
-  { key: "org_reviewed", label: "Org-reviewed", fill: "bg-brand" },
-  { key: "needs_changes", label: "Needs changes", fill: "bg-warning" },
-  { key: "rejected", label: "Rejected", fill: "bg-danger" },
+  {
+    key: "org_reviewed",
+    label: MAPPING_REVIEW_GLOSSARY.org_reviewed.label,
+    fill: "bg-brand",
+  },
+  {
+    key: "needs_changes",
+    label: MAPPING_REVIEW_GLOSSARY.needs_changes.label,
+    fill: "bg-warning",
+  },
+  {
+    key: "rejected",
+    label: MAPPING_REVIEW_GLOSSARY.rejected.label,
+    fill: "bg-danger",
+  },
   { key: "pending", label: "Pending", fill: "bg-line-strong" },
 ];
 
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "pending", label: "Pending review" },
-  { value: "needs_changes", label: "Needs changes" },
-  { value: "org_reviewed", label: "Org-reviewed" },
-  { value: "maintainer_reviewed", label: "Maintainer-reviewed" },
-  { value: "rejected", label: "Rejected" },
+  {
+    value: "needs_changes",
+    label: MAPPING_REVIEW_GLOSSARY.needs_changes.label,
+  },
+  { value: "org_reviewed", label: MAPPING_REVIEW_GLOSSARY.org_reviewed.label },
+  {
+    value: "maintainer_reviewed",
+    label: MAPPING_REVIEW_GLOSSARY.maintainer_reviewed.label,
+  },
+  { value: "rejected", label: MAPPING_REVIEW_GLOSSARY.rejected.label },
   { value: "all", label: "All mappings" },
 ];
+
+// Opaque so sticky columns hide what scrolls beneath them.
+const ROW_BG = "bg-surface";
+const SELECTED_BG =
+  "bg-[color-mix(in_srgb,var(--color-brand)_6%,var(--color-surface))]";
+const STICKY_SELECT = "sticky left-0 z-[1] w-12 min-w-12";
+const STICKY_REQUIREMENT =
+  "sticky left-12 z-[1] shadow-[1px_0_0_var(--color-line)] sm:shadow-none";
 
 const ANCHOR_PREVIEW = 8;
 
@@ -139,8 +165,10 @@ function ReviewProgress({
         <div className="min-w-0">
           <h2 className="ui-section-title">Review progress</h2>
           <p className="mt-0.5 text-xs text-muted">
-            {formatCount(totals.org_reviewed)} org-reviewed ·{" "}
-            {formatCount(totals.maintainer_reviewed)} maintainer-reviewed ·{" "}
+            {formatCount(totals.org_reviewed)}{" "}
+            {MAPPING_REVIEW_GLOSSARY.org_reviewed.label.toLowerCase()} ·{" "}
+            {formatCount(totals.maintainer_reviewed)}{" "}
+            {MAPPING_REVIEW_GLOSSARY.maintainer_reviewed.label.toLowerCase()} ·{" "}
             {formatCount(totals.pending + totals.needs_changes)} awaiting a
             decision, of {formatCount(totals.mapped)} mappings.
           </p>
@@ -151,17 +179,31 @@ function ReviewProgress({
             : "Decision log failed verification"}
         </Badge>
       </div>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 border-b border-line px-4 py-2 text-xs text-muted sm:px-5">
-        {SEGMENTS.map((segment) => (
-          <li key={segment.key} className="flex items-center gap-1.5">
-            <span
-              className={cn("h-2 w-2 rounded-full", segment.fill)}
-              aria-hidden="true"
-            />
-            <span>{segment.label}</span>
-          </li>
-        ))}
-      </ul>
+      <details className="group border-b border-line px-4 py-2 text-xs text-muted sm:px-5">
+        <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand [&::-webkit-details-marker]:hidden">
+          {SEGMENTS.map((segment) => (
+            <span key={segment.key} className="flex items-center gap-1.5">
+              <span
+                className={cn("h-2 w-2 rounded-full", segment.fill)}
+                aria-hidden="true"
+              />
+              <span>{segment.label}</span>
+            </span>
+          ))}
+          <span className="ui-link">
+            <span className="group-open:hidden">What these mean</span>
+            <span className="hidden group-open:inline">Hide definitions</span>
+          </span>
+        </summary>
+        <dl className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-2">
+          {Object.entries(MAPPING_REVIEW_GLOSSARY).map(([key, entry]) => (
+            <div key={key} className="flex gap-1.5">
+              <dt className="shrink-0 font-semibold text-ink">{entry.label}</dt>
+              <dd>{entry.definition}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
       <ul className="grid gap-x-6 px-4 sm:grid-cols-2 sm:px-5 xl:grid-cols-3">
         {visible.map((row) => (
           <li key={row.framework_id} className="border-b border-line py-3">
@@ -177,8 +219,9 @@ function ReviewProgress({
                     row.framework_id}
                 </span>
                 <span className="shrink-0 text-xs tabular-nums text-muted">
-                  org-reviewed {formatCount(row.org_reviewed)} of{" "}
-                  {formatCount(row.mapped)} mapped
+                  {MAPPING_REVIEW_GLOSSARY.org_reviewed.label.toLowerCase()}{" "}
+                  {formatCount(row.org_reviewed)} of {formatCount(row.mapped)}{" "}
+                  mapped
                 </span>
               </span>
               <ProgressBar row={row} />
@@ -369,8 +412,11 @@ function HistoryDrawer({
               <dt className="ui-label">Status</dt>
               <dd className="mt-1">
                 <Badge tone={STATE_TONE[item.review_state]}>
-                  {item.review_label}
+                  {MAPPING_REVIEW_GLOSSARY[item.review_state].label}
                 </Badge>
+                <p className="mt-1 text-xs text-muted">
+                  {MAPPING_REVIEW_GLOSSARY[item.review_state].definition}
+                </p>
               </dd>
             </div>
             <div>
@@ -539,7 +585,7 @@ function MappingReviewContent() {
     <div className="page-shell grid min-h-full grid-cols-[minmax(0,1fr)] gap-5">
       <PageHeader
         title={ROUTE_LABELS["/mapping-review"]}
-        description="Confirm or reject how shipped safeguards map to each framework requirement for your organization. Every decision is attributed, time-stamped, and kept in an append-only log; org-reviewed and maintainer-reviewed coverage are reported separately."
+        description="Approve, reject, or send back safeguard-to-requirement mappings; every decision is attributed and logged."
       />
 
       <QueryState queries={summary} label="review progress">
@@ -671,7 +717,10 @@ function MappingReviewContent() {
             >
               <thead className="border-b border-line text-xs text-muted">
                 <tr>
-                  <th scope="col" className="w-10 px-4 py-2 sm:px-5">
+                  <th
+                    scope="col"
+                    className={cn(STICKY_SELECT, ROW_BG, "px-4 py-2 sm:px-5")}
+                  >
                     <input
                       type="checkbox"
                       aria-label="Select all mappings on this page"
@@ -681,7 +730,14 @@ function MappingReviewContent() {
                       className="h-4 w-4 accent-brand"
                     />
                   </th>
-                  <th scope="col" className="px-2 py-2 font-medium">
+                  <th
+                    scope="col"
+                    className={cn(
+                      STICKY_REQUIREMENT,
+                      ROW_BG,
+                      "px-2 py-2 font-medium",
+                    )}
+                  >
                     Requirement
                   </th>
                   <th scope="col" className="px-2 py-2 font-medium">
@@ -704,16 +760,20 @@ function MappingReviewContent() {
               <tbody className="divide-y divide-line">
                 {items.map((item) => {
                   const key = mappingKey(item);
+                  const rowBg = selected.has(key) ? SELECTED_BG : ROW_BG;
                   return (
                     <tr
                       key={key}
                       data-mapping={key}
-                      className={cn(
-                        "align-top",
-                        selected.has(key) && "bg-brand/5",
-                      )}
+                      className={cn("align-top", rowBg)}
                     >
-                      <td className="px-4 py-3 sm:px-5">
+                      <td
+                        className={cn(
+                          STICKY_SELECT,
+                          rowBg,
+                          "px-4 py-3 sm:px-5",
+                        )}
+                      >
                         <input
                           type="checkbox"
                           aria-label={`Select ${item.safeguard_id} ${item.control_id}`}
@@ -722,7 +782,13 @@ function MappingReviewContent() {
                           className="h-4 w-4 accent-brand"
                         />
                       </td>
-                      <td className="max-w-[18rem] px-2 py-3">
+                      <td
+                        className={cn(
+                          STICKY_REQUIREMENT,
+                          rowBg,
+                          "w-[11rem] min-w-[11rem] max-w-[18rem] px-2 py-3 sm:w-auto",
+                        )}
+                      >
                         <div className="font-semibold text-ink">
                           {item.control_id}
                         </div>
@@ -745,7 +811,7 @@ function MappingReviewContent() {
                       <td className="px-2 py-3 text-xs text-ink">
                         {basisLabel(item)}
                         {item.role === "primary" ? (
-                          <div className="text-muted">primary</div>
+                          <div className="text-muted">Primary</div>
                         ) : null}
                       </td>
                       <td className="max-w-[14rem] px-2 py-3 text-xs">
@@ -753,7 +819,7 @@ function MappingReviewContent() {
                       </td>
                       <td className="px-2 py-3">
                         <Badge tone={STATE_TONE[item.review_state]}>
-                          {item.review_label}
+                          {MAPPING_REVIEW_GLOSSARY[item.review_state].label}
                         </Badge>
                         {item.latest_decision ? (
                           <div className="mt-1 text-xs text-muted">

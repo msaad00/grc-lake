@@ -24,6 +24,7 @@ import {
 } from "@/lib/api/hooks";
 import { shortDate } from "@/lib/utils";
 import { notify } from "@/lib/toast";
+import { displayLabel } from "@/lib/display";
 
 function toneForState(state?: string): "ready" | "attention" | "critical" {
   if (state === "active") return "ready";
@@ -91,7 +92,7 @@ export function IngestionLoopStrip() {
                     Continuous ingestion loop
                   </span>
                   <Badge tone={toneForState(ingestion.data.state)}>
-                    {ingestion.data.state.replace(/_/g, " ")}
+                    {displayLabel(ingestion.data.state)}
                   </Badge>
                   {scale?.eval_overdue ? (
                     <Badge tone="critical">eval overdue</Badge>
@@ -245,7 +246,7 @@ export function IngestionLoopStrip() {
                         <Badge
                           tone={run.result === "ok" ? "ready" : "critical"}
                         >
-                          {run.result}
+                          {displayLabel(run.result)}
                         </Badge>
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted">

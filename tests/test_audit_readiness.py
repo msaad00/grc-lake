@@ -216,6 +216,22 @@ def test_audit_score_is_evidence_based_only(tmp_path: Path) -> None:
     assert data["audit_score"] == round((posture * 0.4 + pass_rate * 0.3 + ready_rate * 0.2) / 0.9)
 
 
+def test_assessment_score_is_rounded_like_the_overview(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The audit room and Overview show one assessment score: round, never truncate."""
+    from security_lakehouse import audit_readiness
+
+    _seed_lake(tmp_path)
+    real = audit_readiness.build_current_posture
+
+    def _posture(lake: Path) -> dict[str, object]:
+        payload = real(lake)
+        payload["posture"] = {**(payload.get("posture") or {}), "score": 6.8}
+        return payload
+
+    monkeypatch.setattr(audit_readiness, "build_current_posture", _posture)
+    assert _readiness(tmp_path, "rounding")["posture"]["score"] == 7
+
+
 def test_connector_gap_suppressed_when_evidence_sources_exist(tmp_path: Path) -> None:
     _seed_lake(tmp_path)
     data = _readiness(tmp_path, "sources-present")

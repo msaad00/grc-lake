@@ -483,6 +483,22 @@ export function WorkflowCanvas({
     }));
   }, [nodes, catalog]);
 
+  // `fitView` on the component only fits the nodes present at mount; a
+  // workflow that loads afterwards would sit off-centre. Fit once it arrives.
+  const hasNodes = nodes.length > 0;
+  const fittedRef = useRef(false);
+  useEffect(() => {
+    if (!hasNodes) {
+      fittedRef.current = false;
+      return;
+    }
+    if (fittedRef.current) return;
+    fittedRef.current = true;
+    window.requestAnimationFrame(() => {
+      instanceRef.current?.fitView({ padding: 0.22 });
+    });
+  }, [hasNodes]);
+
   useEffect(() => {
     if (fitTrigger) {
       window.requestAnimationFrame(() => {

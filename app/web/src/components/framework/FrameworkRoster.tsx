@@ -7,6 +7,11 @@ import type {
   FrameworkView,
 } from "@/lib/api/types";
 import { formatCount } from "@/lib/format";
+import {
+  splitFrameworkPacks,
+  stubCountLabel,
+  stubStatusLabel,
+} from "@/lib/framework-packs";
 
 interface Props {
   frameworks: FrameworkView[];
@@ -18,13 +23,18 @@ function FrameworkLine({
   framework,
   coverage,
   readiness,
-  notEvaluated = false,
+  stubLabel,
+  showStatus = true,
 }: {
   framework: FrameworkView;
   coverage?: FrameworkCoverageRow;
   readiness?: FrameworkReadiness;
-  notEvaluated?: boolean;
+  /** Set for registry stubs (planned or superseded); replaces the counts. */
+  stubLabel?: string;
+  /** Hidden when every tracked row shares one status. */
+  showStatus?: boolean;
 }) {
+  const notEvaluated = Boolean(stubLabel);
   const mapped =
     coverage?.evaluatable_requirement_count ??
     framework.implemented_control_count;
@@ -46,21 +56,26 @@ function FrameworkLine({
         </div>
         <div className="mt-0.5 truncate text-xs font-medium leading-5 text-muted">
           {notEvaluated
-            ? `Not evaluated · ${total ? `${formatCount(total)} controls in catalog` : "catalog pack pending"}`
+            ? stubLabel
             : `${formatCount(mapped)}/${formatCount(total)} controls mapped · ${formatCount(attestable)} reviewed${orgReviewed ? ` (${formatCount(orgReviewed)} by your org)` : ""}`}
         </div>
       </div>
-      <Badge
-        tone={
-          notEvaluated ? "default" : readiness?.is_ready ? "ready" : "attention"
-        }
-      >
-        {notEvaluated
-          ? "Not evaluated"
-          : readiness?.is_ready
-            ? "Ready"
-            : "Needs attention"}
-      </Badge>
+      {notEvaluated ? (
+        <Badge tone="default">
+          {framework.superseded_by ? "Superseded" : "Planned"}
+        </Badge>
+      ) : showStatus ? (
+        <Badge tone={readiness?.is_ready ? "ready" : "attention"}>
+          {readiness?.is_ready ? "Ready" : "Needs attention"}
+        </Badge>
+      ) : (
+        <span
+          className="shrink-0 text-xs font-semibold tabular-nums text-ink"
+          title="Requirements with a reviewed mapping"
+        >
+          {total ? Math.round((attestable / total) * 100) : 0}% reviewed
+        </span>
+      )}
     </li>
   );
 }
@@ -70,16 +85,16 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
   const readinessById = new Map(
     readiness.map((row) => [row.framework_id, row]),
   );
-  const evaluated = frameworks.filter(
-    (framework) =>
-      framework.implementation_status !== "planned" &&
-      framework.control_count > 0,
+  const { packs: evaluated, stubs: notEvaluated } =
+    splitFrameworkPacks(frameworks);
+  const names = new Map(frameworks.map((row) => [row.framework_id, row.name]));
+  const readyStates = new Set(
+    evaluated.map((row) =>
+      Boolean(readinessById.get(row.framework_id)?.is_ready),
+    ),
   );
-  const notEvaluated = frameworks.filter(
-    (framework) =>
-      framework.implementation_status === "planned" ||
-      framework.control_count === 0,
-  );
+  // One status on every row is noise; show each row's review progress instead.
+  const sharedStatus = evaluated.length > 1 && readyStates.size === 1;
 
   return (
     <Card aria-label="Framework roster" className="overflow-hidden">
@@ -92,9 +107,16 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
         </div>
         <div className="text-right text-xs font-semibold text-muted">
           <div>
-            {evaluated.length} tracked · {notEvaluated.length} not evaluated
+            {evaluated.length} packs
+            {notEvaluated.length
+              ? ` · ${stubCountLabel(notEvaluated.length)}`
+              : ""}
           </div>
-          <div className="mt-0.5 font-normal">Catalog and mapping status</div>
+          <div className="mt-0.5 font-normal">
+            {sharedStatus
+              ? `All packs: ${readyStates.has(true) ? "Ready" : "Needs attention"}`
+              : "Catalog and mapping status"}
+          </div>
         </div>
       </div>
       <div className="grid gap-5 px-4 pb-3 md:grid-cols-2 md:gap-6">
@@ -112,6 +134,7 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
                 framework={framework}
                 coverage={coverageById.get(framework.framework_id)}
                 readiness={readinessById.get(framework.framework_id)}
+                showStatus={!sharedStatus}
               />
             ))}
           </ul>
@@ -121,7 +144,7 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
             id="framework-roster-unavailable"
             className="pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted"
           >
-            Not evaluated
+            Planned or superseded
           </h3>
           <ul role="list" className="mt-1">
             {notEvaluated.length > 0 ? (
@@ -131,12 +154,12 @@ export function FrameworkRoster({ frameworks, coverage, readiness }: Props) {
                   framework={framework}
                   coverage={coverageById.get(framework.framework_id)}
                   readiness={readinessById.get(framework.framework_id)}
-                  notEvaluated
+                  stubLabel={stubStatusLabel(framework, names)}
                 />
               ))
             ) : (
               <li className="py-3 text-xs text-muted">
-                All registered framework packs have an evaluation surface.
+                Every registry entry has catalogued requirements.
               </li>
             )}
           </ul>

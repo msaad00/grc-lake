@@ -21,6 +21,7 @@ import {
 import type { BillingStatus } from "@/lib/api/types";
 import { notify } from "@/lib/toast";
 import { formatWhen } from "@/lib/utils";
+import { displayLabel } from "@/lib/display";
 
 const ACCESS_COPY: Record<
   BillingStatus["access"],
@@ -123,7 +124,9 @@ export function BillingPanel() {
                 </span>
                 <Badge tone={access.tone}>{access.label}</Badge>
                 {status.subscription_status ? (
-                  <Badge tone="default">{status.subscription_status}</Badge>
+                  <Badge tone="default">
+                    {displayLabel(status.subscription_status)}
+                  </Badge>
                 ) : null}
               </div>
               {status.current_period_end ? (

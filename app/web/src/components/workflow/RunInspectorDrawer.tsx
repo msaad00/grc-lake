@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { WorkflowRun } from "@/lib/api/types";
+import { displayLabel } from "@/lib/display";
 
 function runTone(run: WorkflowRun) {
   if (run.result === "ok") return "ready" as const;
@@ -49,7 +50,7 @@ export function RunInspectorDrawer({
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          <Badge tone={runTone(run)}>{run.result}</Badge>
+          <Badge tone={runTone(run)}>{displayLabel(run.result)}</Badge>
           <Button variant="ghost" size="sm" onClick={onClose}>
             Close
           </Button>
@@ -131,7 +132,7 @@ export function RunInspectorDrawer({
                         : "critical"
                   }
                 >
-                  {node.result}
+                  {displayLabel(node.result)}
                 </Badge>
               </div>
               {node.reason ? (

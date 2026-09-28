@@ -104,7 +104,7 @@
       "source_sha256": null,
       "pulled_at": null,
       "implementation_status": "implemented_limited_mapping",
-      "copyright_guardrail": "US federal regulation text is in the public domain. Cite the CFR section directly (e.g., 45 CFR \u00a7164.312(b)).",
+      "copyright_guardrail": "US federal regulation text is in the public domain. Cite the CFR section directly (e.g., 45 CFR §164.312(b)).",
       "sync_cadence_days": 90
     },
     {
@@ -114,7 +114,7 @@
       "version": "v4.0.1",
       "effective_date": "2024-06-11",
       "superseded_by": null,
-      "official_source_name": "PCI Security Standards Council \u2014 PCI DSS v4.0.1",
+      "official_source_name": "PCI Security Standards Council — PCI DSS v4.0.1",
       "official_source_url": "https://www.pcisecuritystandards.org/document_library/?category=pcidss",
       "source_sha256": null,
       "pulled_at": null,
@@ -125,11 +125,11 @@
     {
       "framework_id": "gdpr-2016-679",
       "family": "privacy",
-      "name": "GDPR \u2014 EU General Data Protection Regulation (2016/679)",
+      "name": "GDPR — EU General Data Protection Regulation (2016/679)",
       "version": "Regulation (EU) 2016/679",
       "effective_date": "2018-05-25",
       "superseded_by": null,
-      "official_source_name": "EUR-Lex \u2014 Regulation (EU) 2016/679",
+      "official_source_name": "EUR-Lex — Regulation (EU) 2016/679",
       "official_source_url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
       "source_sha256": null,
       "pulled_at": null,
@@ -140,11 +140,11 @@
     {
       "framework_id": "eu-ai-act-2024-1689",
       "family": "ai-governance",
-      "name": "EU AI Act \u2014 Regulation (EU) 2024/1689",
+      "name": "EU AI Act — Regulation (EU) 2024/1689",
       "version": "Regulation (EU) 2024/1689",
       "effective_date": "2024-08-01",
       "superseded_by": null,
-      "official_source_name": "EUR-Lex \u2014 Regulation (EU) 2024/1689",
+      "official_source_name": "EUR-Lex — Regulation (EU) 2024/1689",
       "official_source_url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
       "source_sha256": null,
       "pulled_at": null,
@@ -189,7 +189,7 @@
       "version": "v8.1",
       "effective_date": "2024-06-25",
       "superseded_by": null,
-      "official_source_name": "Center for Internet Security \u2014 CIS Controls v8.1",
+      "official_source_name": "Center for Internet Security — CIS Controls v8.1",
       "official_source_url": "https://www.cisecurity.org/controls/v8-1",
       "source_sha256": null,
       "pulled_at": null,
@@ -228,6 +228,28 @@
       "implementation_status": "implemented_full_pack",
       "copyright_guardrail": "NIST SP 800-171 Rev 2 is public-domain U.S. government work. Pack stores official requirement IDs (3.x.y) and short internal titles only; CMMC assessment overlays ship separately.",
       "sync_cadence_days": 90
+    },
+    {
+      "framework_id": "nist-800-171-rev3",
+      "family": "security",
+      "name": "NIST SP 800-171 Rev 3 (Protecting CUI in Nonfederal Systems)",
+      "version": "Revision 3",
+      "effective_date": "2024-05-14",
+      "superseded_by": null,
+      "official_source_name": "NIST SP 800-171 Rev. 3 (OSCAL catalog, usnistgov/oscal-content)",
+      "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+      "source_sha256": "21b6f3b118b6e5b305aaed3a0e4b70fa5d1d9aa388a0b92e7d6ddfed69e93ac3",
+      "pulled_at": "2026-09-28",
+      "implementation_status": "implemented_limited_mapping",
+      "copyright_guardrail": "NIST SP 800-171 is a U.S. Government work not subject to copyright in the United States. The pack stores requirement identifiers and official short titles only.",
+      "coverage_boundary": "All 97 Rev 3 security requirements across 17 families are catalogued from the pinned OSCAL catalog, each with its Rev 2 predecessors from NIST's r2-to-r3 change analysis. CMMC 2.0 Level 2 (cmmc-2-level2) stays on Rev 2. CCF mappings are proposed; 14 requirements have no CCF safeguard yet.",
+      "evidence_focus": [
+        "Account, access, and authentication evidence for CUI systems",
+        "Configuration baselines, inventory, and change control",
+        "Incident response, supply chain risk, and system security plan"
+      ],
+      "next_step": "Review the proposed mappings; add safeguards for the unmapped requirements listed in frameworks/packs/data/nist_800_171_rev3.json.",
+      "sync_cadence_days": 180
     },
     {
       "framework_id": "iso-27017-2015",
@@ -287,6 +309,50 @@
       ],
       "next_step": "Verify the remaining 68 Annex A identifiers against a second standards or certification body source, or a licensed copy, then seed them.",
       "sync_cadence_days": 90
+    },
+    {
+      "framework_id": "nis2-2022-2555",
+      "family": "security",
+      "name": "NIS2 Directive (EU) 2022/2555",
+      "version": "Directive (EU) 2022/2555",
+      "effective_date": "2023-01-16",
+      "superseded_by": null,
+      "official_source_name": "EUR-Lex, Directive (EU) 2022/2555 (CELEX 32022L2555)",
+      "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+      "source_sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+      "pulled_at": "2026-09-28",
+      "implementation_status": "implemented_limited_mapping",
+      "copyright_guardrail": "EU legislation published in EUR-Lex may be reused with attribution. The pack stores article, paragraph and point identifiers with short paraphrased titles and cites the Official Journal text.",
+      "coverage_boundary": "17 entity obligations are seeded: the Article 21(2)(a)-(j) cybersecurity risk-management measures and the Article 23(1), (2) and (4)(a)-(e) reporting obligations. Other articles, national transposition measures and Implementing Regulation (EU) 2024/2690 are not seeded.",
+      "evidence_focus": [
+        "Risk analysis, security policies, and effectiveness assessment",
+        "Incident handling, business continuity, and supply chain security",
+        "Significant incident early warning, notification, and final report"
+      ],
+      "next_step": "Review the proposed mappings; consider Article 20 governance and the Implementing Regulation (EU) 2024/2690 sector requirements.",
+      "sync_cadence_days": 180
+    },
+    {
+      "framework_id": "dora-2022-2554",
+      "family": "sector",
+      "name": "DORA - Digital Operational Resilience Act (EU) 2022/2554",
+      "version": "Regulation (EU) 2022/2554",
+      "effective_date": "2025-01-17",
+      "superseded_by": null,
+      "official_source_name": "EUR-Lex, Regulation (EU) 2022/2554 (CELEX 32022R2554)",
+      "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+      "source_sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+      "pulled_at": "2026-09-28",
+      "implementation_status": "implemented_limited_mapping",
+      "copyright_guardrail": "EU legislation published in EUR-Lex may be reused with attribution. The pack stores article, paragraph and point identifiers with short paraphrased titles and cites the Official Journal text.",
+      "coverage_boundary": "99 financial-entity obligations are seeded at article or paragraph level: ICT risk management (Articles 5-14, 16), incident management and reporting (17-19), resilience testing (24-27), ICT third-party risk (28-30) and information sharing (45). Authority and ESA provisions are not seeded, nor are the regulatory technical standards.",
+      "evidence_focus": [
+        "ICT risk management framework, asset inventory, and protection policies",
+        "Major ICT incident classification and reporting",
+        "Resilience testing, register of information, and ICT contract provisions"
+      ],
+      "next_step": "Seed Commission Delegated Regulation (EU) 2024/1774 (RTS on the ICT risk management framework), pinned in the DORA manifest under related_acts.",
+      "sync_cadence_days": 180
     },
     {
       "framework_id": "soc1",

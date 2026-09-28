@@ -1,6 +1,6 @@
 {
   "schema": "trustops.evidence_connector_hints.v1",
-  "note": "Maps control risk domains and framework families to recommended read-only connectors. Hints are guidance only — customers enable connectors that match their stack.",
+  "note": "Maps control risk domains and framework families to recommended read-only connectors. Hints are guidance only \u2014 customers enable connectors that match their stack.",
   "risk_domain_connectors": {
     "identity": {
       "primary": ["okta-identity", "google-workspace-identity", "aws-posture"],
@@ -117,6 +117,112 @@
         "object-storage-evidence",
         "ticketing"
       ]
+    },
+    "nist-800-171-rev3": {
+      "03.01": ["okta-identity", "aws-posture", "google-workspace-identity"],
+      "03.02": ["knowbe4-training", "managed-local-evidence"],
+      "03.03": ["okta-system-log", "siem-alerts", "clickhouse-telemetry-lake"],
+      "03.04": ["aws-posture", "azure-posture", "gcp-posture"],
+      "03.05": ["okta-identity", "aws-posture", "identity-provider"],
+      "03.06": ["siem-alerts", "ticketing", "jira-ticketing"],
+      "03.07": ["ticketing", "managed-local-evidence"],
+      "03.08": ["object-storage-evidence", "aws-posture"],
+      "03.09": [
+        "bamboohr-personnel",
+        "workday-personnel",
+        "rippling-personnel",
+        "okta-identity"
+      ],
+      "03.10": ["managed-local-evidence"],
+      "03.11": ["github-security", "aws-posture", "managed-local-evidence"],
+      "03.12": ["managed-local-evidence", "ticketing", "jira-ticketing"],
+      "03.13": ["aws-posture", "azure-posture", "gcp-posture"],
+      "03.14": ["crowdstrike-falcon", "siem-alerts", "github-security"],
+      "03.15": ["managed-local-evidence", "object-storage-evidence"],
+      "03.16": ["managed-local-evidence", "github-security"],
+      "03.17": ["managed-local-evidence", "ticketing"]
+    },
+    "nis2-2022-2555": {
+      "Art21.2(a)": ["managed-local-evidence", "object-storage-evidence"],
+      "Art21.2(b)": ["siem-alerts", "ticketing", "jira-ticketing"],
+      "Art21.2(c)": [
+        "aws-posture",
+        "azure-posture",
+        "gcp-posture",
+        "managed-local-evidence"
+      ],
+      "Art21.2(d)": ["managed-local-evidence", "ticketing"],
+      "Art21.2(e)": ["github-security", "gitlab-security", "aws-posture"],
+      "Art21.2(f)": ["managed-local-evidence", "ticketing"],
+      "Art21.2(g)": ["knowbe4-training", "managed-local-evidence"],
+      "Art21.2(h)": ["aws-posture", "azure-posture", "gcp-posture"],
+      "Art21.2(i)": [
+        "okta-identity",
+        "workday-personnel",
+        "bamboohr-personnel",
+        "aws-posture"
+      ],
+      "Art21.2(j)": [
+        "okta-identity",
+        "google-workspace-identity",
+        "identity-provider"
+      ],
+      "Art23.1": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "Art23.2": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "Art23.4(a)": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "Art23.4(b)": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "Art23.4(c)": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "Art23.4(d)": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "Art23.4(e)": ["ticketing", "jira-ticketing", "managed-local-evidence"]
+    },
+    "dora-2022-2554": {
+      "Art5": [
+        "managed-local-evidence",
+        "ticketing",
+        "object-storage-evidence"
+      ],
+      "Art6": [
+        "managed-local-evidence",
+        "ticketing",
+        "object-storage-evidence"
+      ],
+      "Art7": ["aws-posture", "azure-posture", "gcp-posture"],
+      "Art8": [
+        "aws-posture",
+        "azure-posture",
+        "gcp-posture",
+        "managed-local-evidence"
+      ],
+      "Art9": ["aws-posture", "okta-identity", "github-security"],
+      "Art10": ["siem-alerts", "okta-system-log", "clickhouse-telemetry-lake"],
+      "Art11": [
+        "aws-posture",
+        "managed-local-evidence",
+        "object-storage-evidence"
+      ],
+      "Art12": [
+        "aws-posture",
+        "managed-local-evidence",
+        "object-storage-evidence"
+      ],
+      "Art13": ["siem-alerts", "knowbe4-training", "managed-local-evidence"],
+      "Art14": ["managed-local-evidence"],
+      "Art16": ["managed-local-evidence"],
+      "Art17": ["siem-alerts", "ticketing", "jira-ticketing"],
+      "Art18": ["siem-alerts", "ticketing", "jira-ticketing"],
+      "Art19": ["ticketing", "jira-ticketing", "managed-local-evidence"],
+      "Art24": [
+        "managed-local-evidence",
+        "github-security",
+        "object-storage-evidence"
+      ],
+      "Art25": ["github-security", "gitlab-security", "aws-posture"],
+      "Art26": ["managed-local-evidence", "object-storage-evidence"],
+      "Art27": ["managed-local-evidence", "object-storage-evidence"],
+      "Art28": ["managed-local-evidence", "ticketing"],
+      "Art29": ["managed-local-evidence", "ticketing"],
+      "Art30": ["managed-local-evidence", "ticketing"],
+      "Art45": ["managed-local-evidence"]
     }
   },
   "asset_type_connectors": {

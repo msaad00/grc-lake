@@ -2682,6 +2682,1491 @@
       ]
     },
     {
+      "control_id": "DORA-Art10.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art10.1",
+          "title": "Prompt detection of anomalous activities",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 10(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art10.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art10.2",
+          "title": "Layered detection with alert thresholds and response triggers",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 10(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art10.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art10.3",
+          "title": "Resources to monitor user activity, anomalies and cyber-attacks",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 10(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.1",
+          "title": "ICT business continuity policy",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.10",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.10",
+          "title": "Estimate of annual costs and losses of major ICT incidents",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(10)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.2",
+          "title": "Continuity arrangements, plans, procedures and mechanisms",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.3",
+          "title": "ICT response and recovery plans",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.4",
+          "title": "Maintain and periodically test ICT business continuity plans",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.5",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.5",
+          "title": "Business impact analysis of severe disruptions",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(5)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.6",
+          "title": "Yearly tests of continuity, recovery and crisis communication plans",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.7",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.7",
+          "title": "Crisis management function",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(7)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art11.8",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art11.8",
+          "title": "Records of activities during disruption events",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 11(8)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art12.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art12.1",
+          "title": "Backup policies and restoration and recovery procedures",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 12(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art12.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art12.2",
+          "title": "Backup systems and periodic backup and restoration testing",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 12(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art12.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art12.3",
+          "title": "Restore onto segregated, protected ICT systems",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 12(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art12.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art12.4",
+          "title": "Redundant ICT capacities",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 12(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art12.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art12.6",
+          "title": "Recovery time and recovery point objectives per function",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 12(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art12.7",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art12.7",
+          "title": "Data integrity checks when recovering from incidents",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 12(7)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art13.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art13.1",
+          "title": "Gather vulnerability and cyber threat information",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 13(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art13.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art13.2",
+          "title": "Post-incident reviews after major ICT-related incidents",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 13(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art13.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art13.3",
+          "title": "Feed testing and incident lessons into ICT risk assessment",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 13(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art13.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art13.4",
+          "title": "Monitor effectiveness of the resilience strategy",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 13(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art13.5",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art13.5",
+          "title": "Senior ICT staff report to the management body at least yearly",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 13(5)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art13.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art13.6",
+          "title": "ICT security awareness and resilience training for all staff",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 13(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art13.7",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art13.7",
+          "title": "Monitor relevant technological developments",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 13(7)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art14.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art14.1",
+          "title": "Crisis communication plans for major incidents and vulnerabilities",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 14(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art14.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art14.2",
+          "title": "Communication policies for staff and external stakeholders",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 14(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art14.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art14.3",
+          "title": "Person responsible for incident communication and media",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 14(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art16.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art16.1",
+          "title": "Simplified ICT risk management framework",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 16(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art17.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art17.1",
+          "title": "ICT-related incident management process",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 17(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art17.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art17.2",
+          "title": "Record ICT incidents and significant threats; root-cause follow-up",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 17(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art17.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art17.3",
+          "title": "Incident process: indicators, classification, roles, escalation, response",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 17(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art18.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art18.1",
+          "title": "Classify ICT-related incidents and determine their impact",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 18(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art18.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art18.2",
+          "title": "Classify significant cyber threats",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 18(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art19.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art19.1",
+          "title": "Report major ICT-related incidents to the competent authority",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 19(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art19.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art19.3",
+          "title": "Inform clients of major incidents affecting their financial interests",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 19(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art19.4(a)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art19.4(a)",
+          "title": "Initial notification",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 19(4)(a)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art19.4(b)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art19.4(b)",
+          "title": "Intermediate report",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 19(4)(b)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art19.4(c)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art19.4(c)",
+          "title": "Final report after root cause analysis",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 19(4)(c)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art24.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art24.1",
+          "title": "Digital operational resilience testing programme",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 24(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art24.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art24.2",
+          "title": "Programme covers a range of assessments, tests and tools",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 24(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art24.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art24.3",
+          "title": "Risk-based approach to resilience testing",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 24(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art24.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art24.4",
+          "title": "Tests performed by independent testers",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 24(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art24.5",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art24.5",
+          "title": "Prioritise, classify and remedy test findings",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 24(5)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art24.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art24.6",
+          "title": "Yearly tests of systems supporting critical or important functions",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 24(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art25.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art25.1",
+          "title": "Appropriate tests: vulnerability scans, code reviews, penetration tests",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 25(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art26.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art26.1",
+          "title": "Threat-led penetration testing at least every three years",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 26(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art26.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art26.2",
+          "title": "TLPT scope covers critical functions on live production systems",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 26(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art26.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art26.3",
+          "title": "ICT third-party providers participate in TLPT scope",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 26(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art26.5",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art26.5",
+          "title": "Risk management controls during TLPT",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 26(5)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art26.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art26.6",
+          "title": "Submit TLPT findings, remediation plans and documentation",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 26(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art26.8",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art26.8",
+          "title": "TLPT testers contracted per Article 27; external every third test",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 26(8)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art27.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art27.1",
+          "title": "TLPT tester suitability, certification and insurance",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 27(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art27.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art27.2",
+          "title": "Conditions for using internal TLPT testers",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 27(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art27.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art27.3",
+          "title": "External tester contracts govern TLPT results and data",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 27(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.1",
+          "title": "Manage ICT third-party risk within the ICT risk framework",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.2",
+          "title": "ICT third-party risk strategy and policy",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.3",
+          "title": "Register of information on ICT third-party arrangements",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.4",
+          "title": "Pre-contract assessment and due diligence of ICT providers",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.5",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.5",
+          "title": "Contract only with providers meeting information security standards",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(5)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.6",
+          "title": "Risk-based access, inspection and audit of ICT providers",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.7",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.7",
+          "title": "Contractual termination rights",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(7)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art28.8",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art28.8",
+          "title": "Exit strategies for services supporting critical or important functions",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 28(8)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art29.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art29.1",
+          "title": "Assess ICT concentration risk before contracting",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 29(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art29.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art29.2",
+          "title": "Assess subcontracting chains for critical or important functions",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 29(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art30.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art30.1",
+          "title": "Contract rights and obligations set out in one written document",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 30(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art30.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art30.2",
+          "title": "Minimum contractual provisions for ICT services",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 30(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art30.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art30.3",
+          "title": "Additional provisions for critical or important functions",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 30(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art45.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art45.1",
+          "title": "Cyber threat information-sharing arrangements",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 45(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art45.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art45.3",
+          "title": "Notify authorities of joining or leaving information-sharing arrangements",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 45(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art5.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art5.1",
+          "title": "Internal governance and control framework for ICT risk",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 5(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art5.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art5.2",
+          "title": "Management body defines, approves and oversees the ICT risk framework",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 5(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art5.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art5.3",
+          "title": "Role monitoring ICT third-party service arrangements",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 5(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art5.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art5.4",
+          "title": "Management body ICT risk knowledge and regular training",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 5(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.1",
+          "title": "Documented ICT risk management framework",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.2",
+          "title": "Framework strategies, policies, procedures, protocols and tools",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.3",
+          "title": "Minimise ICT risk impact; inform authorities on request",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.4",
+          "title": "Independent ICT risk control function",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.5",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.5",
+          "title": "Framework reviewed at least yearly and after major incidents",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(5)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.6",
+          "title": "Internal audit of the ICT risk management framework",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.7",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.7",
+          "title": "Follow-up and remediation of ICT audit findings",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(7)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art6.8",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art6.8",
+          "title": "Digital operational resilience strategy",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 6(8)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art7",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art7",
+          "title": "Updated, reliable, adequate and resilient ICT systems and tools",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 7."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art8.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art8.1",
+          "title": "Identify and classify ICT-supported functions and assets",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 8(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art8.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art8.2",
+          "title": "Continuously identify ICT risk sources, threats and vulnerabilities",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 8(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art8.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art8.3",
+          "title": "Risk assessment on each major infrastructure or process change",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 8(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art8.4",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art8.4",
+          "title": "Identify and map information and ICT assets and their configuration",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 8(4)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art8.5",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art8.5",
+          "title": "Document processes dependent on ICT third-party providers",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 8(5)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art8.6",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art8.6",
+          "title": "Maintain and update asset and dependency inventories",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 8(6)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art8.7",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art8.7",
+          "title": "Yearly ICT risk assessment of legacy ICT systems",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 8(7)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.1",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.1",
+          "title": "Continuously monitor and control ICT system security and functioning",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.2",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.2",
+          "title": "ICT security policies for resilience, continuity and data protection",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.3",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.3",
+          "title": "Secure data transfer and protect data availability, integrity and confidentiality",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(3)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.4(a)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.4(a)",
+          "title": "Information security policy",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(4)(a)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.4(b)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.4(b)",
+          "title": "Network and infrastructure management with segregation",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(4)(b)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.4(c)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.4(c)",
+          "title": "Limit physical and logical access to what is required",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(4)(c)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.4(d)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.4(d)",
+          "title": "Strong authentication and cryptographic key protection",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(4)(d)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.4(e)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.4(e)",
+          "title": "ICT change management",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(4)(e)."
+        }
+      ]
+    },
+    {
+      "control_id": "DORA-Art9.4(f)",
+      "framework_id": "dora-2022-2554",
+      "articles": [
+        {
+          "article_id": "Art9.4(f)",
+          "title": "Patch and update policies",
+          "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Regulation (EU) 2022/2554 Article 9(4)(f)."
+        }
+      ]
+    },
+    {
       "control_id": "EU-AI-ACT-Art.10",
       "framework_id": "eu-ai-act-2024-1689",
       "articles": [
@@ -10094,6 +11579,1716 @@
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
           "rationale": "Pack mapping to ISO 42001:2023 A.9.4."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(a)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(a)",
+          "title": "Risk analysis and information system security policies",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(a)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(b)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(b)",
+          "title": "Incident handling",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(b)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(c)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(c)",
+          "title": "Business continuity, backup, disaster recovery and crisis management",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(c)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(d)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(d)",
+          "title": "Supply chain security with direct suppliers and service providers",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(d)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(e)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(e)",
+          "title": "Secure acquisition, development and maintenance; vulnerability handling and disclosure",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(e)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(f)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(f)",
+          "title": "Assessing the effectiveness of risk-management measures",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(f)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(g)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(g)",
+          "title": "Basic cyber hygiene practices and cybersecurity training",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(g)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(h)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(h)",
+          "title": "Cryptography and encryption policies",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(h)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(i)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(i)",
+          "title": "Human resources security, access control and asset management",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(i)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art21.2(j)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art21.2(j)",
+          "title": "Multi-factor or continuous authentication and secured communications",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 21(2)(j)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art23.1",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art23.1",
+          "title": "Notify significant incidents to the CSIRT or competent authority",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 23(1)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art23.2",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art23.2",
+          "title": "Inform affected service recipients of significant cyber threats",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 23(2)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art23.4(a)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art23.4(a)",
+          "title": "Early warning within 24 hours",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 23(4)(a)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art23.4(b)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art23.4(b)",
+          "title": "Incident notification within 72 hours",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 23(4)(b)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art23.4(c)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art23.4(c)",
+          "title": "Intermediate report on request",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 23(4)(c)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art23.4(d)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art23.4(d)",
+          "title": "Final report within one month of the incident notification",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 23(4)(d)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIS2-Art23.4(e)",
+      "framework_id": "nis2-2022-2555",
+      "articles": [
+        {
+          "article_id": "Art23.4(e)",
+          "title": "Progress report while an incident is ongoing",
+          "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to Directive (EU) 2022/2555 Article 23(4)(e)."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.01",
+          "title": "03.01.01 \u2014 Account Management",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.02",
+          "title": "03.01.02 \u2014 Access Enforcement",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.03",
+          "title": "03.01.03 \u2014 Information Flow Enforcement",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.04",
+          "title": "03.01.04 \u2014 Separation of Duties",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.05",
+          "title": "03.01.05 \u2014 Least Privilege",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.06",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.06",
+          "title": "03.01.06 \u2014 Least Privilege \u2013 Privileged Accounts",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.06."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.07",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.07",
+          "title": "03.01.07 \u2014 Least Privilege \u2013 Privileged Functions",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.07."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.08",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.08",
+          "title": "03.01.08 \u2014 Unsuccessful Logon Attempts",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.08."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.09",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.09",
+          "title": "03.01.09 \u2014 System Use Notification",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.09."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.10",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.10",
+          "title": "03.01.10 \u2014 Device Lock",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.10."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.11",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.11",
+          "title": "03.01.11 \u2014 Session Termination",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.11."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.12",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.12",
+          "title": "03.01.12 \u2014 Remote Access",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.12."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.16",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.16",
+          "title": "03.01.16 \u2014 Wireless Access",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.16."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.18",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.18",
+          "title": "03.01.18 \u2014 Access Control for Mobile Devices",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.18."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.20",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.20",
+          "title": "03.01.20 \u2014 Use of External Systems",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.20."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.22",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.01.22",
+          "title": "03.01.22 \u2014 Publicly Accessible Content",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.01.22."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.02.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.02.01",
+          "title": "03.02.01 \u2014 Literacy Training and Awareness",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.02.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.02.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.02.02",
+          "title": "03.02.02 \u2014 Role-Based Training",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.02.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.01",
+          "title": "03.03.01 \u2014 Event Logging",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.02",
+          "title": "03.03.02 \u2014 Audit Record Content",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.03",
+          "title": "03.03.03 \u2014 Audit Record Generation",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.04",
+          "title": "03.03.04 \u2014 Response to Audit Logging Process Failures",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.05",
+          "title": "03.03.05 \u2014 Audit Record Review, Analysis, and Reporting",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.06",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.06",
+          "title": "03.03.06 \u2014 Audit Record Reduction and Report Generation",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.06."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.07",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.07",
+          "title": "03.03.07 \u2014 Time Stamps",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.07."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.08",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.03.08",
+          "title": "03.03.08 \u2014 Protection of Audit Information",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.03.08."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.01",
+          "title": "03.04.01 \u2014 Baseline Configuration",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.02",
+          "title": "03.04.02 \u2014 Configuration Settings",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.03",
+          "title": "03.04.03 \u2014 Configuration Change Control",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.04",
+          "title": "03.04.04 \u2014 Impact Analyses",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.05",
+          "title": "03.04.05 \u2014 Access Restrictions for Change",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.06",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.06",
+          "title": "03.04.06 \u2014 Least Functionality",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.06."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.08",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.08",
+          "title": "03.04.08 \u2014 Authorized Software \u2013 Allow by Exception",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.08."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.10",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.10",
+          "title": "03.04.10 \u2014 System Component Inventory",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.10."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.11",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.11",
+          "title": "03.04.11 \u2014 Information Location",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.11."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.12",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.04.12",
+          "title": "03.04.12 \u2014 System and Component Configuration for High-Risk Areas",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.04.12."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.01",
+          "title": "03.05.01 \u2014 User Identification and Authentication",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.02",
+          "title": "03.05.02 \u2014 Device Identification and Authentication",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.03",
+          "title": "03.05.03 \u2014 Multi-Factor Authentication",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.04",
+          "title": "03.05.04 \u2014 Replay-Resistant Authentication",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.05",
+          "title": "03.05.05 \u2014 Identifier Management",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.07",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.07",
+          "title": "03.05.07 \u2014 Password Management",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.07."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.11",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.11",
+          "title": "03.05.11 \u2014 Authentication Feedback",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.11."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.12",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.05.12",
+          "title": "03.05.12 \u2014 Authenticator Management",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.05.12."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.06.01",
+          "title": "03.06.01 \u2014 Incident Handling",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.06.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.06.02",
+          "title": "03.06.02 \u2014 Incident Monitoring, Reporting, and Response Assistance",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.06.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.06.03",
+          "title": "03.06.03 \u2014 Incident Response Testing",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.06.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.06.04",
+          "title": "03.06.04 \u2014 Incident Response Training",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.06.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.06.05",
+          "title": "03.06.05 \u2014 Incident Response Plan",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.06.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.07.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.07.04",
+          "title": "03.07.04 \u2014 Maintenance Tools",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.07.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.07.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.07.05",
+          "title": "03.07.05 \u2014 Nonlocal Maintenance",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.07.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.07.06",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.07.06",
+          "title": "03.07.06 \u2014 Maintenance Personnel",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.07.06."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.08.01",
+          "title": "03.08.01 \u2014 Media Storage",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.08.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.08.02",
+          "title": "03.08.02 \u2014 Media Access",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.08.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.08.03",
+          "title": "03.08.03 \u2014 Media Sanitization",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.08.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.08.04",
+          "title": "03.08.04 \u2014 Media Marking",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.08.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.08.05",
+          "title": "03.08.05 \u2014 Media Transport",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.08.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.07",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.08.07",
+          "title": "03.08.07 \u2014 Media Use",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.08.07."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.09",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.08.09",
+          "title": "03.08.09 \u2014 System Backup \u2013 Cryptographic Protection",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.08.09."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.09.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.09.01",
+          "title": "03.09.01 \u2014 Personnel Screening",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.09.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.09.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.09.02",
+          "title": "03.09.02 \u2014 Personnel Termination and Transfer",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.09.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.10.01",
+          "title": "03.10.01 \u2014 Physical Access Authorizations",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.10.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.10.02",
+          "title": "03.10.02 \u2014 Monitoring Physical Access",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.10.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.06",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.10.06",
+          "title": "03.10.06 \u2014 Alternate Work Site",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.10.06."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.07",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.10.07",
+          "title": "03.10.07 \u2014 Physical Access Control",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.10.07."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.08",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.10.08",
+          "title": "03.10.08 \u2014 Access Control for Transmission",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.10.08."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.11.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.11.01",
+          "title": "03.11.01 \u2014 Risk Assessment",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.11.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.11.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.11.02",
+          "title": "03.11.02 \u2014 Vulnerability Monitoring and Scanning",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.11.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.11.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.11.04",
+          "title": "03.11.04 \u2014 Risk Response",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.11.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.12.01",
+          "title": "03.12.01 \u2014 Security Assessment",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.12.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.12.02",
+          "title": "03.12.02 \u2014 Plan of Action and Milestones",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.12.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.12.03",
+          "title": "03.12.03 \u2014 Continuous Monitoring",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.12.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.05",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.12.05",
+          "title": "03.12.05 \u2014 Information Exchange",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.12.05."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.01",
+          "title": "03.13.01 \u2014 Boundary Protection",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.04",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.04",
+          "title": "03.13.04 \u2014 Information in Shared System Resources",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.04."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.06",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.06",
+          "title": "03.13.06 \u2014 Network Communications \u2013 Deny by Default \u2013 Allow by Exception",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.06."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.08",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.08",
+          "title": "03.13.08 \u2014 Transmission and Storage Confidentiality",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.08."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.09",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.09",
+          "title": "03.13.09 \u2014 Network Disconnect",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.09."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.10",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.10",
+          "title": "03.13.10 \u2014 Cryptographic Key Establishment and Management",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.10."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.11",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.11",
+          "title": "03.13.11 \u2014 Cryptographic Protection",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.11."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.12",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.12",
+          "title": "03.13.12 \u2014 Collaborative Computing Devices and Applications",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.12."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.13",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.13",
+          "title": "03.13.13 \u2014 Mobile Code",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.13."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.15",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.13.15",
+          "title": "03.13.15 \u2014 Session Authenticity",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.13.15."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.14.01",
+          "title": "03.14.01 \u2014 Flaw Remediation",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.14.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.14.02",
+          "title": "03.14.02 \u2014 Malicious Code Protection",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.14.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.14.03",
+          "title": "03.14.03 \u2014 Security Alerts, Advisories, and Directives",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.14.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.06",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.14.06",
+          "title": "03.14.06 \u2014 System Monitoring",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.14.06."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.08",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.14.08",
+          "title": "03.14.08 \u2014 Information Management and Retention",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.14.08."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.15.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.15.01",
+          "title": "03.15.01 \u2014 Policy and Procedures",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.15.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.15.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.15.02",
+          "title": "03.15.02 \u2014 System Security Plan",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.15.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.15.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.15.03",
+          "title": "03.15.03 \u2014 Rules of Behavior",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.15.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.16.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.16.01",
+          "title": "03.16.01 \u2014 Security Engineering Principles",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.16.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.16.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.16.02",
+          "title": "03.16.02 \u2014 Unsupported System Components",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.16.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.16.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.16.03",
+          "title": "03.16.03 \u2014 External System Services",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.16.03."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.17.01",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.17.01",
+          "title": "03.17.01 \u2014 Supply Chain Risk Management Plan",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.17.01."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.17.02",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.17.02",
+          "title": "03.17.02 \u2014 Acquisition Strategies, Tools, and Methods",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.17.02."
+        }
+      ]
+    },
+    {
+      "control_id": "NIST-800-171R3-03.17.03",
+      "framework_id": "nist-800-171-rev3",
+      "articles": [
+        {
+          "article_id": "03.17.03",
+          "title": "03.17.03 \u2014 Supply Chain Requirements and Processes",
+          "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-09-28T00:00:00Z",
+          "rationale": "Pack mapping to NIST SP 800-171 Rev 3 03.17.03."
         }
       ]
     },

@@ -46,6 +46,12 @@ def _family_key(framework_id: str, article_ids: list[str]) -> str | None:
         return article_id.split(".", 1)[0]
     if framework_id == "iso-27701-2025":
         return ".".join(article_id.split(".")[:3])
+    if framework_id == "nist-800-171-rev3":
+        return ".".join(article_id.split(".")[:2])
+    if framework_id == "nis2-2022-2555":
+        return article_id
+    if framework_id == "dora-2022-2554":
+        return article_id.split(".", 1)[0]
     if framework_id == "fedramp-moderate":
         token = article_id.split("-", 1)[0].upper()
         return token if token.isalpha() else None

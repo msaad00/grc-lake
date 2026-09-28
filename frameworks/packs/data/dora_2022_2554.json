@@ -1,0 +1,1041 @@
+{
+  "schema": "trustops.framework_pack_manifest.v1",
+  "source": {
+    "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+    "celex": "32022R2554",
+    "eli": "http://data.europa.eu/eli/reg/2022/2554/oj",
+    "url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+    "official_journal": "OJ L 333, 27.12.2022, p. 1-79",
+    "pdf": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+    "pdf_sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+    "pulled_at": "2026-09-28",
+    "note": "English Official Journal PDF served by the EU Publications Office for the CELEX number. Rows store article, paragraph and point identifiers with short paraphrased titles; the legal text is not reproduced. Rows are financial-entity obligations; applies_to records a narrower scope where the article sets one.",
+    "scope": "ICT risk management (Articles 5-14 and 16), ICT-related incident management and reporting (Articles 17-19), digital operational resilience testing (Articles 24-27), ICT third-party risk (Articles 28-30) and information-sharing arrangements (Article 45)."
+  },
+  "rows": [
+    {
+      "id": "Art5.1",
+      "title": "Internal governance and control framework for ICT risk",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art5.2",
+      "title": "Management body defines, approves and oversees the ICT risk framework",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art5.3",
+      "title": "Role monitoring ICT third-party service arrangements",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art5.4",
+      "title": "Management body ICT risk knowledge and regular training",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art6.1",
+      "title": "Documented ICT risk management framework",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art6.2",
+      "title": "Framework strategies, policies, procedures, protocols and tools",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art6.3",
+      "title": "Minimise ICT risk impact; inform authorities on request",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art6.4",
+      "title": "Independent ICT risk control function",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art6.5",
+      "title": "Framework reviewed at least yearly and after major incidents",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art6.6",
+      "title": "Internal audit of the ICT risk management framework",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art6.7",
+      "title": "Follow-up and remediation of ICT audit findings",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "compliance.evidence_bundle",
+        "remediation.ticket"
+      ]
+    },
+    {
+      "id": "Art6.8",
+      "title": "Digital operational resilience strategy",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art7",
+      "title": "Updated, reliable, adequate and resilient ICT systems and tools",
+      "risk_domain": "controls-operations",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "host", "cloud_resource"],
+      "required_evidence_types": ["cloud.config"]
+    },
+    {
+      "id": "Art8.1",
+      "title": "Identify and classify ICT-supported functions and assets",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service", "cloud_resource", "data_store"],
+      "required_evidence_types": ["cloud.config", "compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art8.2",
+      "title": "Continuously identify ICT risk sources, threats and vulnerabilities",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "compliance.evidence_bundle",
+        "vulnerability.finding"
+      ]
+    },
+    {
+      "id": "Art8.3",
+      "title": "Risk assessment on each major infrastructure or process change",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art8.4",
+      "title": "Identify and map information and ICT assets and their configuration",
+      "risk_domain": "controls-operations",
+      "owner": "platform-engineering",
+      "asset_types": ["cloud_resource", "host", "data_store"],
+      "required_evidence_types": ["cloud.config"]
+    },
+    {
+      "id": "Art8.5",
+      "title": "Document processes dependent on ICT third-party providers",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["third_party.register"]
+    },
+    {
+      "id": "Art8.6",
+      "title": "Maintain and update asset and dependency inventories",
+      "risk_domain": "controls-operations",
+      "owner": "platform-engineering",
+      "asset_types": ["cloud_resource", "service"],
+      "required_evidence_types": ["cloud.config", "third_party.register"]
+    },
+    {
+      "id": "Art8.7",
+      "title": "Yearly ICT risk assessment of legacy ICT systems",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art9.1",
+      "title": "Continuously monitor and control ICT system security and functioning",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["detection.alert", "cloud.config"]
+    },
+    {
+      "id": "Art9.2",
+      "title": "ICT security policies for resilience, continuity and data protection",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art9.3",
+      "title": "Secure data transfer and protect data availability, integrity and confidentiality",
+      "risk_domain": "confidentiality",
+      "owner": "security-platform",
+      "asset_types": ["data_store", "s3_bucket", "cloud_resource"],
+      "required_evidence_types": ["cloud.config"]
+    },
+    {
+      "id": "Art9.4(a)",
+      "title": "Information security policy",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art9.4(b)",
+      "title": "Network and infrastructure management with segregation",
+      "risk_domain": "controls-operations",
+      "owner": "security-platform",
+      "asset_types": ["cloud_resource", "cloud_policy"],
+      "required_evidence_types": ["cloud.config"]
+    },
+    {
+      "id": "Art9.4(c)",
+      "title": "Limit physical and logical access to what is required",
+      "risk_domain": "identity",
+      "owner": "security-platform",
+      "asset_types": ["identity_user", "iam_role", "identity_group"],
+      "required_evidence_types": ["identity.access_review", "cloud.config"]
+    },
+    {
+      "id": "Art9.4(d)",
+      "title": "Strong authentication and cryptographic key protection",
+      "risk_domain": "identity",
+      "owner": "security-platform",
+      "asset_types": ["identity_user", "iam_role"],
+      "required_evidence_types": ["identity.access_review", "cloud.config"]
+    },
+    {
+      "id": "Art9.4(e)",
+      "title": "ICT change management",
+      "risk_domain": "change-management",
+      "owner": "platform-engineering",
+      "asset_types": ["repo", "service"],
+      "required_evidence_types": ["remediation.ticket", "cloud.config"]
+    },
+    {
+      "id": "Art9.4(f)",
+      "title": "Patch and update policies",
+      "risk_domain": "change-management",
+      "owner": "platform-engineering",
+      "asset_types": ["host", "container_image", "service"],
+      "required_evidence_types": ["vulnerability.finding", "remediation.ticket"]
+    },
+    {
+      "id": "Art10.1",
+      "title": "Prompt detection of anomalous activities",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["detection.alert"]
+    },
+    {
+      "id": "Art10.2",
+      "title": "Layered detection with alert thresholds and response triggers",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["detection.alert"]
+    },
+    {
+      "id": "Art10.3",
+      "title": "Resources to monitor user activity, anomalies and cyber-attacks",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["detection.alert", "audit.chain"]
+    },
+    {
+      "id": "Art11.1",
+      "title": "ICT business continuity policy",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art11.2",
+      "title": "Continuity arrangements, plans, procedures and mechanisms",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": [
+        "compliance.evidence_bundle",
+        "resilience.test_report"
+      ]
+    },
+    {
+      "id": "Art11.3",
+      "title": "ICT response and recovery plans",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art11.4",
+      "title": "Maintain and periodically test ICT business continuity plans",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["resilience.test_report"]
+    },
+    {
+      "id": "Art11.5",
+      "title": "Business impact analysis of severe disruptions",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art11.6",
+      "title": "Yearly tests of continuity, recovery and crisis communication plans",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["resilience.test_report"]
+    },
+    {
+      "id": "Art11.7",
+      "title": "Crisis management function",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art11.8",
+      "title": "Records of activities during disruption events",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["compliance.evidence_bundle", "audit.chain"]
+    },
+    {
+      "id": "Art11.10",
+      "title": "Estimate of annual costs and losses of major ICT incidents",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art12.1",
+      "title": "Backup policies and restoration and recovery procedures",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["compliance.evidence_bundle", "cloud.config"]
+    },
+    {
+      "id": "Art12.2",
+      "title": "Backup systems and periodic backup and restoration testing",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["cloud.config", "resilience.test_report"]
+    },
+    {
+      "id": "Art12.3",
+      "title": "Restore onto segregated, protected ICT systems",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["resilience.test_report"]
+    },
+    {
+      "id": "Art12.4",
+      "title": "Redundant ICT capacities",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["cloud.config"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art12.6",
+      "title": "Recovery time and recovery point objectives per function",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art12.7",
+      "title": "Data integrity checks when recovering from incidents",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["resilience.test_report"]
+    },
+    {
+      "id": "Art13.1",
+      "title": "Gather vulnerability and cyber threat information",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["vulnerability.finding", "detection.alert"]
+    },
+    {
+      "id": "Art13.2",
+      "title": "Post-incident reviews after major ICT-related incidents",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "compliance.evidence_bundle",
+        "remediation.ticket"
+      ]
+    },
+    {
+      "id": "Art13.3",
+      "title": "Feed testing and incident lessons into ICT risk assessment",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art13.4",
+      "title": "Monitor effectiveness of the resilience strategy",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art13.5",
+      "title": "Senior ICT staff report to the management body at least yearly",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art13.6",
+      "title": "ICT security awareness and resilience training for all staff",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["identity_user"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art13.7",
+      "title": "Monitor relevant technological developments",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art14.1",
+      "title": "Crisis communication plans for major incidents and vulnerabilities",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art14.2",
+      "title": "Communication policies for staff and external stakeholders",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art14.3",
+      "title": "Person responsible for incident communication and media",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art16.1",
+      "title": "Simplified ICT risk management framework",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Only entities listed in Article 16(1), first subparagraph, for which Articles 5 to 15 do not apply."
+    },
+    {
+      "id": "Art17.1",
+      "title": "ICT-related incident management process",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["detection.alert", "remediation.ticket"]
+    },
+    {
+      "id": "Art17.2",
+      "title": "Record ICT incidents and significant threats; root-cause follow-up",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["remediation.ticket"]
+    },
+    {
+      "id": "Art17.3",
+      "title": "Incident process: indicators, classification, roles, escalation, response",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": [
+        "compliance.evidence_bundle",
+        "remediation.ticket"
+      ]
+    },
+    {
+      "id": "Art18.1",
+      "title": "Classify ICT-related incidents and determine their impact",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["remediation.ticket"]
+    },
+    {
+      "id": "Art18.2",
+      "title": "Classify significant cyber threats",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["detection.alert"]
+    },
+    {
+      "id": "Art19.1",
+      "title": "Report major ICT-related incidents to the competent authority",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art19.3",
+      "title": "Inform clients of major incidents affecting their financial interests",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art19.4(a)",
+      "title": "Initial notification",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art19.4(b)",
+      "title": "Intermediate report",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art19.4(c)",
+      "title": "Final report after root cause analysis",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art24.1",
+      "title": "Digital operational resilience testing programme",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art24.2",
+      "title": "Programme covers a range of assessments, tests and tools",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"]
+    },
+    {
+      "id": "Art24.3",
+      "title": "Risk-based approach to resilience testing",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art24.4",
+      "title": "Tests performed by independent testers",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art24.5",
+      "title": "Prioritise, classify and remedy test findings",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "resilience.test_report",
+        "remediation.ticket"
+      ],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art24.6",
+      "title": "Yearly tests of systems supporting critical or important functions",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities other than microenterprises."
+    },
+    {
+      "id": "Art25.1",
+      "title": "Appropriate tests: vulnerability scans, code reviews, penetration tests",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "resilience.test_report",
+        "vulnerability.finding"
+      ]
+    },
+    {
+      "id": "Art26.1",
+      "title": "Threat-led penetration testing at least every three years",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art26.2",
+      "title": "TLPT scope covers critical functions on live production systems",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art26.3",
+      "title": "ICT third-party providers participate in TLPT scope",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art26.5",
+      "title": "Risk management controls during TLPT",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art26.6",
+      "title": "Submit TLPT findings, remediation plans and documentation",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art26.8",
+      "title": "TLPT testers contracted per Article 27; external every third test",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art27.1",
+      "title": "TLPT tester suitability, certification and insurance",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art27.2",
+      "title": "Conditions for using internal TLPT testers",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art27.3",
+      "title": "External tester contracts govern TLPT results and data",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["resilience.test_report"],
+      "applies_to": "Financial entities identified by the competent authority for TLPT under Article 26(8)."
+    },
+    {
+      "id": "Art28.1",
+      "title": "Manage ICT third-party risk within the ICT risk framework",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "third_party.register",
+        "compliance.evidence_bundle"
+      ]
+    },
+    {
+      "id": "Art28.2",
+      "title": "ICT third-party risk strategy and policy",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Financial entities other than Article 16(1) entities and microenterprises."
+    },
+    {
+      "id": "Art28.3",
+      "title": "Register of information on ICT third-party arrangements",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["third_party.register"]
+    },
+    {
+      "id": "Art28.4",
+      "title": "Pre-contract assessment and due diligence of ICT providers",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "third_party.register",
+        "compliance.evidence_bundle"
+      ]
+    },
+    {
+      "id": "Art28.5",
+      "title": "Contract only with providers meeting information security standards",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "third_party.register",
+        "compliance.evidence_bundle"
+      ]
+    },
+    {
+      "id": "Art28.6",
+      "title": "Risk-based access, inspection and audit of ICT providers",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art28.7",
+      "title": "Contractual termination rights",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["third_party.register"]
+    },
+    {
+      "id": "Art28.8",
+      "title": "Exit strategies for services supporting critical or important functions",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art29.1",
+      "title": "Assess ICT concentration risk before contracting",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "third_party.register",
+        "compliance.evidence_bundle"
+      ]
+    },
+    {
+      "id": "Art29.2",
+      "title": "Assess subcontracting chains for critical or important functions",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["third_party.register"]
+    },
+    {
+      "id": "Art30.1",
+      "title": "Contract rights and obligations set out in one written document",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["third_party.register"]
+    },
+    {
+      "id": "Art30.2",
+      "title": "Minimum contractual provisions for ICT services",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "third_party.register",
+        "compliance.evidence_bundle"
+      ]
+    },
+    {
+      "id": "Art30.3",
+      "title": "Additional provisions for critical or important functions",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "third_party.register",
+        "compliance.evidence_bundle"
+      ]
+    },
+    {
+      "id": "Art45.1",
+      "title": "Cyber threat information-sharing arrangements",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Optional; conditions apply where an entity participates."
+    },
+    {
+      "id": "Art45.3",
+      "title": "Notify authorities of joining or leaving information-sharing arrangements",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"],
+      "applies_to": "Entities that participate in Article 45(1) arrangements."
+    }
+  ],
+  "not_seeded": [
+    {
+      "article": 15,
+      "reason": "Mandate for the ESAs to draft regulatory technical standards; not an entity obligation."
+    },
+    {
+      "article": 20,
+      "reason": "Mandate for the ESAs to draft reporting standards and templates; not an entity obligation."
+    },
+    {
+      "article": 21,
+      "reason": "ESA feasibility report on a single EU incident reporting hub."
+    },
+    {
+      "article": 22,
+      "reason": "Supervisory feedback from competent authorities and the ESAs."
+    },
+    {
+      "article": 23,
+      "reason": "Applies Chapter III to payment-related incidents of credit, payment and e-money institutions; a scope rule, not a separate obligation."
+    },
+    {
+      "article": 6,
+      "paragraphs": [9, 10],
+      "reason": "Optional multi-vendor strategy and optional outsourcing of compliance verification."
+    },
+    {
+      "article": 10,
+      "paragraphs": [4],
+      "reason": "Data reporting service providers only."
+    },
+    {
+      "article": 11,
+      "paragraphs": [9, 11],
+      "reason": "Central securities depositories only; ESA guideline mandate."
+    },
+    {
+      "article": 12,
+      "paragraphs": [5],
+      "reason": "Central securities depositories only."
+    },
+    {
+      "article": 19,
+      "paragraphs": [2, 5, 6, 7, 8],
+      "reason": "Voluntary threat notification, optional outsourcing, and authority obligations."
+    },
+    {
+      "article": 25,
+      "paragraphs": [2, 3],
+      "reason": "Central securities depositories and central counterparties only; microenterprise variant."
+    },
+    {
+      "article": 26,
+      "paragraphs": [4, 7, 9, 10, 11],
+      "reason": "Optional pooled testing and authority or ESA obligations."
+    },
+    {
+      "article": 28,
+      "paragraphs": [9, 10],
+      "reason": "ESA technical standards mandates."
+    },
+    {
+      "article": 30,
+      "paragraphs": [4, 5],
+      "reason": "Consider standard contractual clauses; ESA technical standards mandate."
+    },
+    {
+      "article": 45,
+      "paragraphs": [2],
+      "reason": "Describes the content of the sharing arrangements themselves."
+    }
+  ],
+  "related_acts": [
+    {
+      "name": "Commission Delegated Regulation (EU) 2024/1774 (RTS on ICT risk management tools, methods, processes and policies and the simplified ICT risk management framework)",
+      "celex": "32024R1774",
+      "official_journal": "OJ L, 2024/1774, 25.6.2024",
+      "pdf": "https://publications.europa.eu/resource/cellar/dc25b21e-328d-11ef-a61b-01aa75ed71a1.0006.01/DOC_1",
+      "pdf_sha256": "0643fbe55849bea1800066ce0da2996339eca57d0d183f52269b536f9ce3ffff",
+      "pulled_at": "2026-09-28",
+      "status": "not_seeded",
+      "note": "Officially published and pinned for a follow-up pack that seeds the RTS articles under the Article 15 and 16(3) mandates."
+    }
+  ],
+  "unmapped": [
+    {
+      "id": "Art6.3",
+      "reason": "General duty restated by the more specific Article 6 and 9 rows; no single safeguard evidences it."
+    },
+    {
+      "id": "Art11.7",
+      "reason": "No CCF safeguard for a standing crisis management function."
+    },
+    {
+      "id": "Art11.10",
+      "reason": "No CCF safeguard estimates incident costs and losses."
+    },
+    {
+      "id": "Art13.7",
+      "reason": "No CCF safeguard for technology horizon scanning."
+    },
+    {
+      "id": "Art14.2",
+      "reason": "No CCF safeguard for internal and external communication policies."
+    },
+    {
+      "id": "Art16.1",
+      "reason": "Umbrella alternative to Articles 5 to 15; mapping it would restate every other row."
+    },
+    {
+      "id": "Art18.2",
+      "reason": "Cyber threat significance classification has no safeguard; incident classification does."
+    },
+    {
+      "id": "Art24.3",
+      "reason": "Risk-based testing approach is a qualifier of Article 24(1), not separately evidenced."
+    },
+    {
+      "id": "Art26.1",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art26.2",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art26.3",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art26.5",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art26.6",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art26.8",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art27.1",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art27.2",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art27.3",
+      "reason": "No CCF safeguard for threat-led penetration testing."
+    },
+    {
+      "id": "Art29.1",
+      "reason": "No CCF safeguard assesses provider concentration or substitutability."
+    },
+    {
+      "id": "Art45.1",
+      "reason": "Optional arrangement; no CCF safeguard for threat-intelligence sharing."
+    },
+    {
+      "id": "Art45.3",
+      "reason": "Notification of information-sharing membership has no CCF safeguard."
+    }
+  ]
+}

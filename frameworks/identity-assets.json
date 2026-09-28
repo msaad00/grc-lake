@@ -116,6 +116,13 @@
       "asset_path": null,
       "restriction": "No CMMC certification mark is bundled; a control mapping must not imply assessment or certification."
     },
+    "nist-800-171-rev3": {
+      "official_name": "NIST SP 800-171 Rev. 3",
+      "official_source_url": "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+      "display_mode": "neutral_icon",
+      "asset_path": null,
+      "restriction": "NIST publishes no mark for SP 800-171; NIST does not endorse TrustOps or its control evaluations."
+    },
     "iso-27017-2015": {
       "official_name": "ISO/IEC 27017:2015",
       "official_source_url": "https://www.iso.org/standard/43757.html",
@@ -136,6 +143,20 @@
       "display_mode": "neutral_icon",
       "asset_path": null,
       "restriction": "ISO prohibits third-party use or copying of its logo without written permission."
+    },
+    "nis2-2022-2555": {
+      "official_name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+      "official_source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+      "display_mode": "neutral_icon",
+      "asset_path": null,
+      "restriction": "NIS2 has no official framework logo; EU institutional marks are not used as compliance badges."
+    },
+    "dora-2022-2554": {
+      "official_name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act)",
+      "official_source_url": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+      "display_mode": "neutral_icon",
+      "asset_path": null,
+      "restriction": "DORA has no official framework logo; EU institutional marks are not used as compliance badges."
     },
     "soc1": {
       "official_name": "SOC 1®",

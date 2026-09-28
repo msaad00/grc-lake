@@ -1,14 +1,14 @@
 {
   "schema_version": "trustops.catalog_bundle.v1",
   "as_of": null,
-  "framework_count": 19,
-  "control_count": 2031,
-  "crosswalk_count": 2031,
+  "framework_count": 22,
+  "control_count": 2244,
+  "crosswalk_count": 2244,
   "components": {
-    "frameworks": "4334f6df92ae7cd15f907a53126c219a0678a94573d90bb5df681dfc0c1f683c",
-    "controls": "daf40f2001b233c1c3839dc6428bddaa4829a8ce7c92a7c32de11a1b3e656472",
-    "crosswalk": "90b0495ff082338763188dfe1864d71f9a25ad8c687085da677bf7e03aa66437",
-    "safeguards": "cb9ed479932c4a51cf99d0e1ff9aa96d2c302a4f5624fcb27c59349a9134c791"
+    "frameworks": "2b46444467ecf7d5c645826f234291c934329934f0e74c15711e7732fef8ebf5",
+    "controls": "68c4c782886f6f491ab782bec5c9bb78aaddc497d9519c6ddd2c17f45f1f9755",
+    "crosswalk": "747f9642f51127d29a3072f35c5b7a578e5046d31678b1a6b86094711c39e0c4",
+    "safeguards": "2c37ff7f5814570ff5827b2317f4c0b629a7a1c667bbfff0227eac5d1d6db997"
   },
   "framework_versions": [
     {
@@ -31,6 +31,13 @@
       "effective_date": "2024-10-15",
       "superseded_by": null,
       "source_sha256": null
+    },
+    {
+      "framework_id": "dora-2022-2554",
+      "version": "Regulation (EU) 2022/2554",
+      "effective_date": "2025-01-17",
+      "superseded_by": null,
+      "source_sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c"
     },
     {
       "framework_id": "eu-ai-act-2024-1689",
@@ -94,6 +101,20 @@
       "effective_date": "2023-12-18",
       "superseded_by": null,
       "source_sha256": null
+    },
+    {
+      "framework_id": "nis2-2022-2555",
+      "version": "Directive (EU) 2022/2555",
+      "effective_date": "2023-01-16",
+      "superseded_by": null,
+      "source_sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3"
+    },
+    {
+      "framework_id": "nist-800-171-rev3",
+      "version": "Revision 3",
+      "effective_date": "2024-05-14",
+      "superseded_by": null,
+      "source_sha256": "21b6f3b118b6e5b305aaed3a0e4b70fa5d1d9aa388a0b92e7d6ddfed69e93ac3"
     },
     {
       "framework_id": "nist-800-53-rev5",
@@ -1474,6 +1495,699 @@
       "framework_id": "cmmc-2-level2",
       "version": "1.0.0",
       "valid_from": "2026-06-30",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art10.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art10.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art10.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.10",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.5",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.7",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art11.8",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art12.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art12.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art12.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art12.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art12.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art12.7",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art13.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art13.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art13.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art13.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art13.5",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art13.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art13.7",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art14.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art14.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art14.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art16.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art17.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art17.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art17.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art18.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art18.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art19.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art19.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art19.4(a)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art19.4(b)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art19.4(c)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art24.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art24.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art24.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art24.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art24.5",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art24.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art25.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art26.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art26.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art26.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art26.5",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art26.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art26.8",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art27.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art27.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art27.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.5",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.7",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art28.8",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art29.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art29.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art30.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art30.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art30.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art45.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art45.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art5.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art5.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art5.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art5.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.5",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.7",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art6.8",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art7",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art8.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art8.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art8.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art8.4",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art8.5",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art8.6",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art8.7",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.1",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.2",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.3",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.4(a)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.4(b)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.4(c)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.4(d)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.4(e)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "DORA-Art9.4(f)",
+      "framework_id": "dora-2022-2554",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
       "lifecycle_status": "active"
     },
     {
@@ -5177,6 +5891,804 @@
       "framework_id": "iso-42001-2023",
       "version": "1.0.0",
       "valid_from": "2026-06-30",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(a)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(b)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(c)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(d)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(e)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(f)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(g)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(h)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(i)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art21.2(j)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art23.1",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art23.2",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art23.4(a)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art23.4(b)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art23.4(c)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art23.4(d)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIS2-Art23.4(e)",
+      "framework_id": "nis2-2022-2555",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.06",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.07",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.08",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.09",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.10",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.11",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.12",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.16",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.18",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.20",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.01.22",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.02.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.02.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.06",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.07",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.03.08",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.06",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.08",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.10",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.11",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.04.12",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.07",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.11",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.05.12",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.06.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.07.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.07.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.07.06",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.07",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.08.09",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.09.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.09.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.06",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.07",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.10.08",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.11.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.11.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.11.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.12.05",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.04",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.06",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.08",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.09",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.10",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.11",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.12",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.13",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.13.15",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.06",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.14.08",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.15.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.15.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.15.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.16.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.16.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.16.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.17.01",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.17.02",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "NIST-800-171R3-03.17.03",
+      "framework_id": "nist-800-171-rev3",
+      "version": "1.0.0",
+      "valid_from": "2026-09-28",
       "lifecycle_status": "active"
     },
     {
@@ -14364,5 +15876,5 @@
       "lifecycle_status": "active"
     }
   ],
-  "bundle_sha256": "ae5a5515cd181f4ef105ec200503f25c607f90ab5cdcb9f7ea4e9ba69aea2e3b"
+  "bundle_sha256": "7166b91b496eb380610c1844630ee3c62fc28c4e6fdf6b921fdcb037ad60d58b"
 }

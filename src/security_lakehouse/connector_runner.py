@@ -32,9 +32,8 @@ from security_lakehouse.connectors_aws import (
     verify_aws_account,
 )
 from security_lakehouse.connectors_azure import (
-    AzureCliClient,
-    AzureClient,
     AzureFixtureClient,
+    build_azure_client,
     collect_azure_evidence,
 )
 from security_lakehouse.connectors_bamboohr import (
@@ -150,7 +149,7 @@ from security_lakehouse.connectors_workday import (
     WorkdayReportFixtureClient,
     collect_workday_evidence,
 )
-from security_lakehouse.delegation import gcp_credentials, server_env_override
+from security_lakehouse.delegation import azure_credential, gcp_credentials, server_env_override
 from security_lakehouse.execution_mode import in_server_mode, server_execution, server_tenant_id
 from security_lakehouse.ingestion.merge import dedupe_by_key
 from security_lakehouse.ingestion.watermark import read_watermark, write_watermark
@@ -263,8 +262,10 @@ GOOGLE_WORKSPACE_OAUTH_CLIENT_SECRET_ENV = "GOOGLE_WORKSPACE_OAUTH_CLIENT_SECRET
 GCP_PROJECT_ID_ENV = "GCP_PROJECT_ID"
 
 # Environment variable carrying the Azure subscription id for live collection.
-# Credentials resolve through DefaultAzureCredential (service-principal env vars
-# AZURE_CLIENT_ID/AZURE_TENANT_ID/AZURE_CLIENT_SECRET, managed identity, CLI).
+# Locally, credentials resolve through DefaultAzureCredential (service-principal
+# env vars, managed identity, CLI) unless the connector names its own app
+# registration; hosted server mode requires the latter and ignores both env
+# overrides (see delegation.azure_credential).
 AZURE_SUBSCRIPTION_ID_ENV = "AZURE_SUBSCRIPTION_ID"
 # DefaultAzureCredential's own tenant variable; intune-devices reuses it as the
 # operator override for the configured tenant_id.
@@ -1100,26 +1101,21 @@ def _collect_azure(
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     stored_subscription = str((credentials or {}).get("subscription_id") or "").strip()
+    env_subscription = server_env_override(env.get(AZURE_SUBSCRIPTION_ID_ENV))
     if fixture_dir:
-        subscription_id = (
-            env.get(AZURE_SUBSCRIPTION_ID_ENV) or stored_subscription or "00000000-0000-0000-0000-000000000000"
-        )
+        subscription_id = env_subscription or stored_subscription or "00000000-0000-0000-0000-000000000000"
         return collect_azure_evidence(AzureFixtureClient(fixture_dir, subscription_id=subscription_id))
-    # Prefer the env var (operator override) but fall back to the subscription_id
+    # Prefer the env var (operator override, local only) but fall back to the subscription_id
     # captured at configure time so an enabled connector syncs without re-exporting it.
-    subscription_id = env.get(AZURE_SUBSCRIPTION_ID_ENV) or stored_subscription
+    subscription_id = env_subscription or stored_subscription
     if not subscription_id:
         raise ConnectorConfigError(
             "azure-posture sync requires --fixture-dir, a configured subscription_id, or "
-            f"{AZURE_SUBSCRIPTION_ID_ENV}, plus read-only Azure credentials "
-            "(DefaultAzureCredential: service-principal env vars, managed identity, or az login)"
+            f"{AZURE_SUBSCRIPTION_ID_ENV} (local only), plus read-only Azure credentials "
+            "(the tenant's app registration, or locally DefaultAzureCredential: service-principal "
+            "env vars, managed identity, or az login)"
         )
-    client: AzureClient | AzureCliClient
-    try:
-        client = AzureClient(subscription_id)
-    except (ConnectorConfigError, RuntimeError):
-        client = AzureCliClient(subscription_id)
-    return collect_azure_evidence(client)
+    return collect_azure_evidence(build_azure_client(subscription_id, credentials or {}, env))
 
 
 def _collect_intune(
@@ -1128,18 +1124,22 @@ def _collect_intune(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    tenant_id = env.get(AZURE_TENANT_ID_ENV) or str((credentials or {}).get("tenant_id") or "").strip()
+    tenant_id = (
+        server_env_override(env.get(AZURE_TENANT_ID_ENV)) or str((credentials or {}).get("tenant_id") or "").strip()
+    )
     if fixture_dir:
         return collect_intune_evidence(
             IntuneFixtureClient(fixture_dir, tenant_id=tenant_id or "00000000-0000-0000-0000-000000000000")
         )
     if not tenant_id:
-        raise ValueError(
+        raise ConnectorConfigError(
             "intune-devices sync requires --fixture-dir, a configured tenant_id, or "
-            f"{AZURE_TENANT_ID_ENV}, plus a DefaultAzureCredential identity granted the Microsoft Graph "
-            "application permission DeviceManagementManagedDevices.Read.All"
+            f"{AZURE_TENANT_ID_ENV} (local only), plus an identity granted the Microsoft Graph "
+            "application permission DeviceManagementManagedDevices.Read.All (the tenant's app "
+            "registration, or locally DefaultAzureCredential)"
         )
-    return collect_intune_evidence(IntuneClient(tenant_id))
+    delegated = azure_credential({**(credentials or {}), "tenant_id": tenant_id}, env, label="intune-devices")
+    return collect_intune_evidence(IntuneClient(tenant_id, credential=delegated))
 
 
 def _collect_bamboohr(

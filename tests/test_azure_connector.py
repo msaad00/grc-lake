@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 import security_lakehouse.connector_runner as connector_runner
+import security_lakehouse.connectors_azure as connectors_azure
 from security_lakehouse.connector_state import (
     append_config_event,
     has_adapter,
@@ -172,8 +173,8 @@ def test_azure_connector_sync_falls_back_to_az_cli_when_sdk_unavailable(
             super().__init__(FIXTURE, subscription_id=subscription_id)
 
     monkeypatch.setenv("AZURE_SUBSCRIPTION_ID", SUBSCRIPTION)
-    monkeypatch.setattr(connector_runner, "AzureClient", BrokenAzureClient)
-    monkeypatch.setattr(connector_runner, "AzureCliClient", FixtureBackedAzureCliClient)
+    monkeypatch.setattr(connectors_azure, "AzureClient", BrokenAzureClient)
+    monkeypatch.setattr(connectors_azure, "AzureCliClient", FixtureBackedAzureCliClient)
 
     append_config_event(tmp_path, connector_id="azure-posture", state="enabled", actor="a")
     result = connector_runner.run_connector_sync(tmp_path, connector_id="azure-posture")
@@ -401,7 +402,7 @@ def test_azure_sync_uses_stored_subscription_id_when_env_absent(
             captured["subscription_id"] = subscription_id
             super().__init__(FIXTURE, subscription_id=subscription_id)
 
-    monkeypatch.setattr(connector_runner, "AzureClient", FixtureBackedAzureClient)
+    monkeypatch.setattr(connectors_azure, "AzureClient", FixtureBackedAzureClient)
 
     append_config_event(
         tmp_path,

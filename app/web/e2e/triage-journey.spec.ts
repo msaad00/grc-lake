@@ -48,13 +48,13 @@ test("environment filtering preserves unknown context and severity", async ({
   await expect(filter).toBeVisible();
   await filter.selectOption("prod");
   await expect(page.locator("tbody tr")).toHaveCount(1);
-  await expect(page.locator("tbody")).toContainText("critical");
+  await expect(page.locator("tbody")).toContainText("Critical");
   await filter.selectOption("unknown");
   await expect(page.locator("tbody tr")).toHaveCount(1);
   await expect(page.locator("tbody")).toContainText("Unknown");
   await page.getByRole("button", { name: /Review finding/ }).click();
   await expect(page.getByRole("dialog")).toContainText("Unknown");
-  await expect(page.getByRole("dialog")).toContainText("critical");
+  await expect(page.getByRole("dialog")).toContainText("Critical");
 });
 
 test("control evidence request opens a prefilled form and reports save failure", async ({

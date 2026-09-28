@@ -237,7 +237,7 @@ def build_audit_readiness(
     framework_total = len(frameworks)
     framework_readiness = _framework_readiness(frameworks)
     frameworks_ready = sum(1 for row in framework_readiness if row["ready"])
-    posture_score = int(posture.get("score") or 0)
+    posture_score = round(float(posture.get("score") or 0))
 
     open_evidence = remediation.list_evidence_requests(session, tenant_id=tenant_id, status="open", limit=500)
     campaigns = access_review_services.list_campaigns(session, tenant_id=tenant_id, limit=50)

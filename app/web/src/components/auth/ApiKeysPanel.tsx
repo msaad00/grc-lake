@@ -30,6 +30,7 @@ import {
 import type { AuthApiKey, CreatedAuthApiKey } from "@/lib/api/types";
 import { notify } from "@/lib/toast";
 import { formatWhen } from "@/lib/utils";
+import { displayLabel } from "@/lib/display";
 
 const EXPIRY_OPTIONS = [
   { label: "Never", value: "" },
@@ -218,7 +219,9 @@ export function ApiKeysPanel() {
                         {keyRow.name && (
                           <Badge tone="info">{keyRow.name}</Badge>
                         )}
-                        <Badge tone="default">{keyRow.role}</Badge>
+                        <Badge tone="default">
+                          {displayLabel(keyRow.role)}
+                        </Badge>
                       </div>
                       <p className="mt-1 text-xs text-muted">
                         User{" "}

@@ -16,7 +16,12 @@ import { Drawer } from "@/components/ui/drawer";
 import { EntityTagsEditor } from "@/components/EntityTagsEditor";
 import { RemediationGuidance } from "@/components/remediation/RemediationGuidance";
 import { severityTone } from "@/lib/severity";
-import { useControls, useTracking, useTriageMutation } from "@/lib/api/hooks";
+import {
+  useAuthWhoami,
+  useControls,
+  useTracking,
+  useTriageMutation,
+} from "@/lib/api/hooks";
 import {
   controlGraphFocusHref,
   taskFromFindingHref,
@@ -24,6 +29,7 @@ import {
 import { formatDateTime } from "@/lib/format";
 import { useAuditorMode } from "@/lib/state/auditor";
 import type { TrackingState, Violation } from "@/lib/api/types";
+import { displayLabel } from "@/lib/display";
 
 interface Props {
   violation: Violation | null;
@@ -45,7 +51,8 @@ const STATE_TONE: Record<
 const SECTION_TITLE = "text-sm font-semibold text-ink";
 const FIELD_LABEL = "grid gap-1.5 text-xs font-medium text-muted";
 const FIELD =
-  "rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30";
+  "h-10 rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30";
+const DATE_FIELD = `${FIELD} tabular-nums [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70 hover:[&::-webkit-calendar-picker-indicator]:opacity-100`;
 
 const STATES: TrackingState[] = [
   "open",
@@ -62,7 +69,9 @@ export function ViolationDrawer({ violation, onClose, onToast }: Props) {
   const controls = useControls();
   const [state, setState] = useState<TrackingState>("open");
   const stateTouched = useRef(false);
-  const [actor, setActor] = useState("trust-admin");
+  const whoami = useAuthWhoami();
+  // The server records the signed-in principal; the body actor is ignored.
+  const actor = whoami.data?.email || "local console";
   const [assignee, setAssignee] = useState("");
   const [note, setNote] = useState("");
   const [dueAt, setDueAt] = useState("");
@@ -72,7 +81,6 @@ export function ViolationDrawer({ violation, onClose, onToast }: Props) {
     if (!violation) return;
     setSaveError(false);
     stateTouched.current = false;
-    setActor("trust-admin");
     setAssignee(violation.asset_owner ?? "");
     setNote("");
     setDueAt("");
@@ -117,7 +125,7 @@ export function ViolationDrawer({ violation, onClose, onToast }: Props) {
     () =>
       STATES.map((s) => (
         <option key={s} value={s}>
-          {s.replace("_", " ")}
+          {displayLabel(s)}
         </option>
       )),
     [],
@@ -164,13 +172,13 @@ export function ViolationDrawer({ violation, onClose, onToast }: Props) {
                 tone={severityTone(violation.severity)}
                 className="capitalize"
               >
-                {violation.severity} · {violation.severity_score}
+                {displayLabel(violation.severity)} · {violation.severity_score}
               </Badge>
               <Badge
                 tone={STATE_TONE[currentState as TrackingState] ?? "default"}
                 className="capitalize"
               >
-                {currentState.replace("_", " ")}
+                {displayLabel(currentState)}
               </Badge>
               <span
                 className="text-xs text-muted"
@@ -284,25 +292,26 @@ export function ViolationDrawer({ violation, onClose, onToast }: Props) {
                     value={dueAt}
                     onChange={(e) => setDueAt(e.target.value)}
                     type="datetime-local"
-                    className={FIELD}
+                    className={DATE_FIELD}
                   />
                 </label>
-                <label className={FIELD_LABEL}>
-                  Actor
-                  <input
-                    value={actor}
-                    onChange={(e) => setActor(e.target.value)}
-                    className={FIELD}
-                  />
-                </label>
+                <div className={FIELD_LABEL}>
+                  <span id="triage-actor-label">Recorded as</span>
+                  <output
+                    aria-labelledby="triage-actor-label"
+                    className="flex h-10 min-w-0 items-center truncate rounded-md border border-line bg-surfaceMuted px-3 text-sm text-ink"
+                  >
+                    {actor}
+                  </output>
+                </div>
               </div>
               <label className={FIELD_LABEL}>
                 Note
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className={FIELD}
+                  className={`${FIELD} h-auto min-h-[5rem]`}
                 />
               </label>
             </fieldset>
@@ -352,7 +361,7 @@ export function ViolationDrawer({ violation, onClose, onToast }: Props) {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <Badge tone={STATE_TONE[event.state] ?? "default"}>
-                      {event.state}
+                      {displayLabel(event.state)}
                     </Badge>
                     <span className="text-muted">{event.occurred_at}</span>
                   </div>

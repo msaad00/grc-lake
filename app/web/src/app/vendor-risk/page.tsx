@@ -23,6 +23,7 @@ import type {
   VendorRiskLevel,
 } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -257,7 +258,7 @@ function AssessmentDetail({
         <CardTitle className="flex flex-wrap items-center gap-2">
           {assessment.vendor_name}
           <Badge tone={STATUS_TONE[assessment.status]}>
-            {assessment.status}
+            {displayLabel(assessment.status)}
           </Badge>
           {assessment.risk_level ? (
             <Badge tone={RISK_TONE[assessment.risk_level]}>
@@ -356,11 +357,11 @@ function AssessmentRow({
         <span className="font-medium text-ink">{assessment.vendor_name}</span>
         <div className="flex flex-wrap gap-2">
           <Badge tone={STATUS_TONE[assessment.status]}>
-            {assessment.status}
+            {displayLabel(assessment.status)}
           </Badge>
           {assessment.risk_level ? (
             <Badge tone={RISK_TONE[assessment.risk_level]}>
-              {assessment.risk_level}
+              {displayLabel(assessment.risk_level)}
             </Badge>
           ) : null}
         </div>
@@ -411,7 +412,7 @@ export default function VendorRiskPage() {
                         : "attention"
                     }
                   >
-                    {template.mapping_status}
+                    {displayLabel(template.mapping_status)}
                   </Badge>
                   <span>
                     {template.mapped_question_count}/{template.question_count}{" "}

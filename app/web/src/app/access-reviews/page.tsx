@@ -22,6 +22,7 @@ import type {
 } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
 import { QueryState } from "@/components/QueryState";
+import { displayLabel } from "@/lib/display";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -145,7 +146,9 @@ function CampaignRow({
         </span>
       </button>
       <div className="flex items-center gap-2">
-        <Badge tone={STATUS_TONE[campaign.status]}>{campaign.status}</Badge>
+        <Badge tone={STATUS_TONE[campaign.status]}>
+          {displayLabel(campaign.status)}
+        </Badge>
         {next && (
           <Button
             size="sm"
@@ -210,7 +213,7 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Badge tone={DECISION_TONE[item.decision]}>
-                    {item.decision}
+                    {displayLabel(item.decision)}
                   </Badge>
                   {DECISIONS.map((d) => (
                     <Button

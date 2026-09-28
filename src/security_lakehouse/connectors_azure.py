@@ -27,6 +27,7 @@ list/read operations (``roleAssignments/read``, ``policyStates/read``,
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -40,6 +41,8 @@ from security_lakehouse.connector_errors import (
     ConnectorOperatorError,
 )
 from security_lakehouse.connector_ids import stable_id_slug
+from security_lakehouse.delegation import azure_credential
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.identity import classify_identity_type
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
@@ -94,18 +97,16 @@ def probe_azure_access(*, credentials: dict[str, Any], options: dict[str, Any]) 
 
     Reads the subscription itself (``Microsoft.Resources/subscriptions/read``)
     through the SDK, or the ``az`` CLI when the SDK is not installed, the same
-    fallback sync uses.
+    fallback sync uses. In hosted server mode the probe authenticates as the
+    tenant's app registration (see :func:`security_lakehouse.delegation.azure_credential`)
+    and never falls back to the CLI.
     """
     del options
     subscription_id = str(credentials.get("subscription_id") or "").strip()
     if not subscription_id:
         raise ConnectorConfigError("Azure probe requires subscription_id")
-    client: AzureClient | AzureCliClient
     try:
-        try:
-            client = AzureClient(subscription_id)
-        except (ConnectorConfigError, RuntimeError):
-            client = AzureCliClient(subscription_id)
+        client = build_azure_client(subscription_id, credentials, dict(os.environ))
         subscription = client.subscription()
     except Exception as exc:
         mapped = _azure_access_error(exc, subscription_id)
@@ -120,16 +121,35 @@ def probe_azure_access(*, credentials: dict[str, Any], options: dict[str, Any]) 
     }
 
 
+def build_azure_client(
+    subscription_id: str, credentials: dict[str, Any], env: dict[str, str]
+) -> AzureClient | AzureCliClient:
+    """The live client for ``subscription_id``: the tenant's app, or locally the ambient identity.
+
+    A delegated credential always uses the SDK. Without one (local mode only;
+    server mode raises), the SDK's ``DefaultAzureCredential`` is tried first and
+    the ``az`` CLI login is the fallback.
+    """
+    delegated = azure_credential(credentials, env, label="azure-posture")
+    if delegated is not None:
+        return AzureClient(subscription_id, credential=delegated)
+    try:
+        return AzureClient(subscription_id)
+    except (ConnectorConfigError, RuntimeError):
+        return AzureCliClient(subscription_id)
+
+
 class AzureClient:
     """Authenticated, read-only Azure subscription client backed by the SDK.
 
     The ``azure-identity`` / ``azure-mgmt-*`` imports are lazy so installs that
-    never touch live Azure do not need them. Credentials resolve through
+    never touch live Azure do not need them. ``credential`` is the tenant's
+    delegated credential; without one, credentials resolve through
     ``DefaultAzureCredential`` (service-principal env vars, managed identity,
-    Azure CLI login, etc.).
+    Azure CLI login, etc.), which hosted server mode refuses.
     """
 
-    def __init__(self, subscription_id: str) -> None:
+    def __init__(self, subscription_id: str, *, credential: Any = None) -> None:
         try:
             from azure.identity import DefaultAzureCredential  # type: ignore[import-not-found]  # noqa: PLC0415
             from azure.mgmt.authorization import (
@@ -152,7 +172,13 @@ class AzureClient:
                 "packages with resource and policy clients; install the cloud extra or use --fixture-dir"
             ) from exc
         self.subscription_id = subscription_id
-        credential = DefaultAzureCredential()
+        if credential is None:
+            if in_server_mode():
+                raise ConnectorConfigError(
+                    "azure-posture in hosted mode requires the tenant's app registration credentials; "
+                    "the server never collects with its own Azure identity"
+                )
+            credential = DefaultAzureCredential()
         self._credential = credential
         self._authz = AuthorizationManagementClient(credential, subscription_id)
         self._policy = PolicyClient(credential, subscription_id)
@@ -201,6 +227,8 @@ class AzureCliClient:
     """
 
     def __init__(self, subscription_id: str, *, executable: str = "az") -> None:
+        if in_server_mode():
+            raise ConnectorConfigError("the az CLI login is the server's own identity and is not used in hosted mode")
         self.subscription_id = subscription_id
         resolved = shutil.which(executable)
         if resolved is None:

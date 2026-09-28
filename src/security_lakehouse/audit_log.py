@@ -10,6 +10,9 @@ Aggregates posture-changing events from every append-only log in
     snapshot       point-in-time snapshot freezes (gold/snapshots/)
     workflow       workflow runs (gold/workflow_runs.jsonl)
     trust_share    trust portal share create / revoke (gold/trust_shares.jsonl)
+    mapping_review operator actions on the mapping-review decision log, such as
+                   re-signing its tip after a key rotation
+                   (gold/mapping_review_audit.jsonl)
 
 Request authorization decisions are also available with ``category="request"``
 for security debugging, but are excluded from the default activity stream so
@@ -33,6 +36,7 @@ from security_lakehouse.trust_share import SHARES_FILE as TRUST_SHARES_FILE
 from security_lakehouse.workflows import RUNS_FILE as WORKFLOW_RUNS_FILE
 
 TRIAGE_FILE = "violation_tracking.jsonl"
+MAPPING_REVIEW_AUDIT_FILE = "mapping_review_audit.jsonl"
 SNAPSHOTS_DIR = "snapshots"
 
 
@@ -215,6 +219,25 @@ def _trust_share_entries(lake: Path) -> list[dict[str, Any]]:
     return out
 
 
+def _mapping_review_entries(lake: Path) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for row in _read_log(_gold(lake) / MAPPING_REVIEW_AUDIT_FILE):
+        if row.get("event") != "tip_resigned":
+            continue
+        out.append(
+            _entry(
+                category="mapping_review",
+                actor=str(row.get("actor") or "operator"),
+                occurred_at=str(row.get("occurred_at") or ""),
+                summary=f"decision log tip re-signed with the current key ({row.get('log_length')} decisions)",
+                subject=str(row.get("tip_hash") or ""),
+                result="resigned",
+                payload=row,
+            )
+        )
+    return out
+
+
 def _request_entries(lake: Path) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for row in _read_log(_gold(lake) / REQUEST_AUDIT_FILE):
@@ -247,6 +270,7 @@ def build_audit_log(
         + _snapshot_entries(lake)
         + _workflow_entries(lake)
         + _trust_share_entries(lake)
+        + _mapping_review_entries(lake)
     )
     if include_requests or category == "request":
         entries += _request_entries(lake)

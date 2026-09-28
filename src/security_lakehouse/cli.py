@@ -552,9 +552,16 @@ def _parser() -> argparse.ArgumentParser:
     )
     frameworks_review.add_argument("--lake", default=None, help=_REVIEW_LAKE_HELP)
     frameworks_review.set_defaults(func=_frameworks_review_queue)
+    from security_lakehouse.safeguards import REVIEW_STATE_DEFINITIONS, REVIEW_STATE_LABELS
+
     review = frameworks_sub.add_parser(
         "review",
         help="record org mapping review decisions (approve/reject/needs-changes) or export the decision log",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="review states:\n"
+        + "\n".join(
+            f"  {REVIEW_STATE_LABELS[state]}: {definition}" for state, definition in REVIEW_STATE_DEFINITIONS.items()
+        ),
     )
     review_sub = review.add_subparsers(dest="review_command", required=True)
     for verb, decision in (("approve", "approve"), ("reject", "reject"), ("needs-changes", "needs_changes")):
@@ -572,6 +579,18 @@ def _parser() -> argparse.ArgumentParser:
     review_export.add_argument("--format", choices=["json", "csv"], default="json", help="output format")
     review_export.add_argument("--out", default=None, help="write to this path (default stdout)")
     review_export.set_defaults(func=_frameworks_review_export)
+    review_resign = review_sub.add_parser(
+        "resign",
+        help="re-sign the decision log tip with the current TRUSTOPS_COOKIE_SIGNING_KEY after rotating it",
+    )
+    review_resign.add_argument("--lake", required=True, help="lake whose decision log to re-sign")
+    review_resign.add_argument(
+        "--previous-key-env",
+        required=True,
+        help="environment variable holding the signing key in use before the rotation",
+    )
+    review_resign.add_argument("--actor", default=None, help="who is re-signing (default: the OS user)")
+    review_resign.set_defaults(func=_frameworks_review_resign)
     controls_ccf = frameworks_sub.add_parser(
         "safeguards",
         help="show Common Control Framework coverage (safeguards -> framework requirements)",
@@ -2126,6 +2145,25 @@ def _frameworks_review_export(args: argparse.Namespace) -> int:
         print(f"wrote {len(decisions)} decision(s): {args.out}", file=sys.stderr)
     else:
         sys.stdout.write(text)
+    return 0
+
+
+def _frameworks_review_resign(args: argparse.Namespace) -> int:
+    """Verify the chain and old tip MAC with the previous key, then re-sign with the current one."""
+    import getpass
+
+    from security_lakehouse.mapping_review import resign_review_tip, verify_review_log
+
+    previous = os.environ.get(args.previous_key_env, "").strip()
+    if not previous:
+        raise ValueError(f"{args.previous_key_env} is not set; export the pre-rotation signing key there")
+    try:
+        os_user = getpass.getuser()
+    except (KeyError, OSError):
+        os_user = "unknown"
+    actor = args.actor or f"cli-local:{os_user}"
+    result = resign_review_tip(args.lake, previous_key=previous, actor=actor)
+    print(json.dumps({**result, "decision_log": verify_review_log(args.lake)}, indent=2, sort_keys=True))
     return 0
 
 

@@ -29,21 +29,33 @@ if (Number.isNaN(frozenNow.getTime()))
 
 const WIDE = { width: 1440, height: 1024 };
 const TALL = { width: 1440, height: 1600 };
+// Tall so the capture can end on a row; fitPage trims it to the content.
+const MOBILE = { width: 390, height: 1800 };
 
 /**
+ * Crop policy: every page is captured with the app shell (rail + top bar),
+ * sized to its content by fitPage. Only drawer shots crop to the drawer.
+ *
  * file: output name; route: console path; viewport: capture size;
  * dark: also capture a -dark variant (README <picture> images);
- * setup: interaction before capture; crop: locators whose union is captured.
+ * setup: interaction before capture; crop: locators whose union is captured
+ * (drawers only); endAt: locator whose bottom ends the capture, so a long
+ * table stops on a row boundary instead of mid-row.
  */
 const shots = [
   { file: "trustops-demo-dashboard.png", route: "/dashboard/", dark: true },
-  { file: "trustops-demo-findings.png", route: "/violations/" },
   {
-    file: "trustops-demo-remediation.png",
-    route: "/remediation/",
-    crop: (page) => [page.locator("main .page-shell")],
-    pad: 0,
+    file: "trustops-demo-overview-mobile.png",
+    route: "/dashboard/",
+    viewport: MOBILE,
+    endAt: (page) =>
+      page
+        .getByRole("region", { name: "Framework posture list" })
+        .locator("a")
+        .nth(2),
   },
+  { file: "trustops-demo-findings.png", route: "/violations/" },
+  { file: "trustops-demo-remediation.png", route: "/remediation/" },
   {
     file: "trustops-demo-triage.png",
     route: "/violations/",
@@ -56,13 +68,8 @@ const shots = [
     file: "trustops-demo-evidence.png",
     route: "/evidence/",
     dark: true,
-    viewport: { width: 1920, height: 1600 },
-    crop: (page) => [
-      page.getByText(/matching records/).first(),
-      page.locator("table").first(),
-    ],
-    pad: 20,
-    maxHeight: 820,
+    viewport: TALL,
+    endAt: (page) => page.locator("table tbody tr").nth(7),
   },
   { file: "trustops-demo-insights.png", route: "/insights/" },
   { file: "trustops-demo-connectors.png", route: "/connectors/" },
@@ -71,15 +78,28 @@ const shots = [
     route: "/frameworks/",
     dark: true,
     viewport: TALL,
-    crop: (page) => [
-      page.getByRole("region", { name: "Framework coverage summary" }),
-      page.getByLabel("Framework roster"),
-    ],
-    maxHeight: 960,
+    endAt: (page) => page.getByLabel("Framework roster").locator("li").nth(7),
+  },
+  {
+    file: "trustops-demo-mapping-review.png",
+    route: "/mapping-review/",
+    dark: true,
+    viewport: TALL,
+    setup: "mapping-review-selection",
+    endAt: (page) =>
+      page
+        .getByRole("table", { name: "Mappings to review" })
+        .locator("tbody tr")
+        .nth(4),
   },
   { file: "trustops-demo-policies.png", route: "/policies/" },
   { file: "trustops-demo-vendor-risk.png", route: "/vendor-risk/" },
-  { file: "trustops-demo-workflows.png", route: "/automation/" },
+  {
+    file: "trustops-demo-workflows.png",
+    route: "/automation/",
+    // Tall enough for the whole canvas, so the fitted flow is not cut.
+    viewport: { width: 1440, height: 1240 },
+  },
   { file: "trustops-demo-trust-center.png", route: "/trust-center/" },
   { file: "trustops-demo-onboarding.png", route: "/onboarding/" },
   { file: "trustops-demo-auth.png", route: "/auth/" },
@@ -88,12 +108,13 @@ const shots = [
     route: "/graph/?focus=evidence:monitoring.detection",
     dark: true,
     setup: "graph-focus",
-    crop: (page) => [page.locator(".react-flow").first()],
   },
   {
     file: "trustops-demo-control-drawer.png",
-    route: "/controls/",
+    route: "/controls/?id=SOC2-CC6.4",
+    dark: true,
     setup: "control-drawer",
+    crop: (page) => [page.getByRole("dialog")],
   },
 ];
 
@@ -268,17 +289,24 @@ async function measureBottoms(page) {
  * (which would sit below the content) lands just outside the clip.
  * Re-measures until the layout settles, since resizing can reflow the page.
  */
-async function fitPage(page, viewport) {
+async function fitPage(page, viewport, endAt) {
   // An open drawer spans the viewport; shrinking it would cut the drawer.
   if (await page.getByRole("dialog").count())
     return { viewport: { ...viewport }, height: viewport.height };
   let frame = { viewport: { ...viewport }, height: viewport.height };
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const bottoms = await measureBottoms(page);
-    const height = Math.min(
-      viewport.height,
-      Math.max(bottoms.content, bottoms.nav),
-    );
+    let content = bottoms.content;
+    if (endAt) {
+      const target = endAt(page).first();
+      await target.waitFor({ state: "visible", timeout: 15_000 });
+      const box = await target.boundingBox();
+      if (!box) throw new Error("endAt target has no box");
+      content = Math.ceil(
+        (await page.evaluate(() => window.scrollY)) + box.y + box.height + 1,
+      );
+    }
+    const height = Math.min(viewport.height, Math.max(content, bottoms.nav));
     const next = {
       viewport: {
         width: viewport.width,
@@ -376,24 +404,35 @@ async function capture(shot, theme, frame) {
     await page.waitForTimeout(600);
   }
   if (shot.setup === "control-drawer") {
-    const row = page
-      .locator("button")
-      .filter({ hasText: /SOC2|CC6|NIST/i })
-      .first();
-    if (await row.count()) {
-      await row.click();
-      await page.waitForTimeout(1200);
-    }
+    // `?id=` opens the drawer; fail loudly rather than capture a bare page.
+    await page.getByRole("dialog").waitFor({ timeout: 15_000 });
+    await page.waitForTimeout(800);
+  }
+  if (shot.setup === "mapping-review-selection") {
+    // Select three rows so the decision form, progress, and verified decision
+    // log are all in frame.
+    const rows = page
+      .getByRole("table", { name: "Mappings to review" })
+      .locator("tbody tr");
+    await rows.nth(2).waitFor({ timeout: 20_000 });
+    for (const index of [0, 1, 2])
+      await rows.nth(index).getByRole("checkbox").check();
+    await page
+      .getByRole("region", { name: "Record a decision" })
+      .getByText("3 selected")
+      .waitFor();
+    await page.waitForTimeout(400);
   }
   if (shot.setup === "graph-focus") {
-    // `?focus=` centres one evidence type at a readable zoom, with the
-    // controls it proves above it and the assets it came from below.
+    // `?focus=` selects one evidence type and narrows the canvas to its
+    // framework slice; fit that slice so no node is cut at the canvas edge.
     await page.waitForTimeout(1500);
     await page.addStyleTag({
       content: ".react-flow__minimap { display: none !important; }",
     });
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /fit view/i }).click();
+    await page.waitForTimeout(600);
   }
 
   const target = path.join(outDir, file);
@@ -405,7 +444,11 @@ async function capture(shot, theme, frame) {
     if (shot.maxHeight) clip.height = Math.min(clip.height, shot.maxHeight);
     frame = { viewport, clip };
   } else if (!frame) {
-    const { viewport, height } = await fitPage(page, shot.viewport ?? WIDE);
+    const { viewport, height } = await fitPage(
+      page,
+      shot.viewport ?? WIDE,
+      shot.endAt,
+    );
     frame = { viewport, clip: { x: 0, y: 0, width: viewport.width, height } };
   }
   await page.screenshot({ path: target, clip: frame.clip });

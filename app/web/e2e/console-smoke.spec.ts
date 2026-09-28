@@ -49,9 +49,24 @@ test.describe("console smoke", () => {
     await expect(sort).toHaveValue("priority");
     const previewCount = await portfolio.getByRole("link").count();
     expect(previewCount).toBe(4);
+    // Only packs with catalogued requirements count; stubs are noted apart.
+    const { data: registry } = await (
+      await page.request.get("/api/v1/frameworks")
+    ).json();
+    const packs = (registry as Array<{ pack_state: string }>).filter(
+      (row) => row.pack_state === "seeded",
+    ).length;
+    const stubs = registry.length - packs;
+    expect(stubs).toBeGreaterThan(0);
     const expand = page.getByRole("button", {
-      name: /^Show all \d+ frameworks/,
+      name: new RegExp(`^Show all ${packs} framework packs`),
     });
+    await expect(
+      page.getByText(`Not counted: ${stubs} planned or superseded`),
+    ).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`of ${packs} framework packs assessed`)),
+    ).toBeVisible();
     await expand.click();
     expect(await portfolio.getByRole("link").count()).toBeGreaterThan(
       previewCount,
@@ -111,7 +126,13 @@ test.describe("console smoke", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Audit room" }),
     ).toBeVisible();
-    await expect(page.getByText("Audit score", { exact: true })).toBeVisible();
+    // Two scores, two names: each is defined once, then labels its tile.
+    await expect(
+      page.getByText("Audit readiness", { exact: true }),
+    ).toHaveCount(2);
+    await expect(page.getByText(/^Assessment score \d+\/100$/)).toBeVisible();
+    await expect(page.getByText("Audit score", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Fresh rate", { exact: true })).toHaveCount(0);
     await expect(
       page.getByRole("tab", { name: "Freshness", exact: true }),
     ).toBeVisible();

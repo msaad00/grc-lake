@@ -15,6 +15,7 @@ import { useAuditLog } from "@/lib/api/hooks";
 import type { AuditLogEntry } from "@/lib/api/types";
 import { formatDateTime, plural } from "@/lib/format";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const PAGE_LIMIT = 200;
 
@@ -27,6 +28,7 @@ const CATEGORIES: Array<Category | "all"> = [
   "snapshot",
   "workflow",
   "trust_share",
+  "mapping_review",
   "request",
 ];
 
@@ -37,6 +39,7 @@ const CATEGORY_LABEL: Record<Category | "all", string> = {
   snapshot: "Snapshots",
   workflow: "Workflows",
   trust_share: "Trust shares",
+  mapping_review: "Mapping review",
   request: "API requests",
 };
 
@@ -46,6 +49,7 @@ const CATEGORY_BADGE: Record<Category, string> = {
   snapshot: "Snapshot",
   workflow: "Workflow",
   trust_share: "Trust share",
+  mapping_review: "Mapping review",
   request: "API request",
 };
 
@@ -58,6 +62,7 @@ const CATEGORY_TONE: Record<
   snapshot: "ready",
   workflow: "ready",
   trust_share: "critical",
+  mapping_review: "attention",
   request: "default",
 };
 
@@ -96,7 +101,7 @@ function Row({ entry }: { entry: AuditLogEntry }) {
             Event <code className="break-all">{entry.event_id}</code>
           </div>
         </div>
-        {entry.result && <Badge>{entry.result}</Badge>}
+        {entry.result && <Badge>{displayLabel(entry.result)}</Badge>}
       </button>
       {open && (
         <div className="border-t border-line bg-surfaceMuted/40 p-3">

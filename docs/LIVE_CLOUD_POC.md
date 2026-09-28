@@ -130,7 +130,11 @@ provider-owned identity, not a pasted password:
 - service-principal credentials only by secret-manager reference
 
 Local `az login` is acceptable for developer proof only. Do not present it as
-the customer onboarding path. The connector reads:
+the customer onboarding path. Hosted TrustOps never uses its own Azure identity:
+the connector must name the customer's app registration (`tenant_id`,
+`client_id`, and a secret, certificate, or federated token file reference); see
+[Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials). The
+connector reads:
 
 - role assignments
 - policy assignments
@@ -185,7 +189,8 @@ customer-owned read role that includes
 `Microsoft.Authorization/roleAssignments/read`.
 
 The probe reads the subscription (`Microsoft.Resources/subscriptions/read`)
-through `DefaultAzureCredential`, or the `az` CLI when the Azure SDK is not
+through the configured app registration, or locally through
+`DefaultAzureCredential` and then the `az` CLI when the Azure SDK is not
 installed, so "Test connection" proves the identity can see the subscription.
 
 ```bash

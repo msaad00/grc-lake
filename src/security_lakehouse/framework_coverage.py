@@ -18,7 +18,7 @@ from security_lakehouse.catalog import (
     load_control_catalog,
     load_framework_registry,
 )
-from security_lakehouse.framework_provenance import build_framework_view
+from security_lakehouse.framework_provenance import build_framework_view, framework_pack_counts, framework_pack_state
 from security_lakehouse.mappings import DEFAULT_MAPPINGS, article_mapping_reviewed, load_control_article_mappings
 from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
@@ -87,6 +87,7 @@ def build_framework_coverage(
         safeguards = effective_safeguards(lake_dir)
     else:
         safeguards = load_safeguards()
+    review_log_verified = bool(safeguards.get("review_log_verified", True))
     evaluatable_by_framework: Counter[str] = Counter()
     attestable_by_framework: Counter[str] = Counter()
     for control_id in safeguards_by_requirement(safeguards):
@@ -140,6 +141,8 @@ def build_framework_coverage(
                 "official_source_name": framework["official_source_name"],
                 "official_source_url": framework["official_source_url"],
                 "effective_date": framework.get("effective_date"),
+                "superseded_by": framework.get("superseded_by"),
+                "pack_state": framework_pack_state(framework, seeded_count),
                 "source_sha256": framework.get("source_sha256"),
                 "pulled_at": framework.get("pulled_at"),
                 "freshness_state": source.get("freshness_state", "never_pulled"),
@@ -157,6 +160,9 @@ def build_framework_coverage(
                 "org_reviewed_mapping_count": mapping_states[framework_id]["org_reviewed"],
                 "needs_changes_mapping_count": mapping_states[framework_id]["needs_changes"],
                 "rejected_mapping_count": mapping_states[framework_id]["rejected"],
+                # False when the org decision log failed verification; the org
+                # counts above then fall back to the shipped review states.
+                "review_log_verified": review_log_verified,
                 "evaluatable_coverage_pct": (
                     round(evaluatable_by_framework.get(framework_id, 0) / seeded_count * 100, 1)
                     if seeded_count
@@ -188,10 +194,16 @@ def framework_coverage_summary(
     applicability = applicability_rows if applicability_rows is not None else build_control_asset_applicability()
     implemented = [row for row in rows if str(row.get("implementation_status", "")).startswith("implemented")]
     planned = [row for row in rows if str(row.get("implementation_status", "")) == "planned"]
+    pack_counts = framework_pack_counts(
+        str(row.get("pack_state") or framework_pack_state(row, int(row["seeded_control_count"]))) for row in rows
+    )
     return {
         "framework_count": len(rows),
         "implemented_framework_count": len(implemented),
         "planned_framework_count": len(planned),
+        "seeded_framework_count": pack_counts["seeded_framework_count"],
+        "stub_framework_count": pack_counts["stub_framework_count"],
+        "superseded_framework_count": pack_counts["superseded_framework_count"],
         "seeded_control_count": seeded,
         "source_cited_mapping_count": mapped,
         "reviewed_mapping_count": reviewed,
@@ -204,6 +216,7 @@ def framework_coverage_summary(
         "org_reviewed_mapping_count": sum(int(row.get("org_reviewed_mapping_count", 0)) for row in rows),
         "needs_changes_mapping_count": sum(int(row.get("needs_changes_mapping_count", 0)) for row in rows),
         "rejected_mapping_count": sum(int(row.get("rejected_mapping_count", 0)) for row in rows),
+        "review_log_verified": all(bool(row.get("review_log_verified", True)) for row in rows),
         "evaluatable_coverage_pct": round(evaluatable / seeded * 100, 1) if seeded else 0.0,
         "attestable_coverage_pct": round(attestable / seeded * 100, 1) if seeded else 0.0,
         "asset_type_count": len(applicability),
@@ -281,7 +294,8 @@ def render_framework_coverage_markdown(
         applicability_lines.append(f"| `{_markdown_text(row['asset_type'])}` | {row['applicable_control_count']} |")
     return "\n".join(
         [
-            f"Frameworks: {summary['framework_count']} ({summary['implemented_framework_count']} implemented, {summary['planned_framework_count']} planned)",
+            f"Framework packs: {summary['seeded_framework_count']} with catalogued requirements"
+            f" ({summary['stub_framework_count']} more registry entries planned or superseded)",
             f"Requirements catalogued: {summary['seeded_control_count']} (all source-cited)",
             f"Evaluatable (touched by a safeguard): {summary['evaluatable_requirement_count']} "
             f"({summary['evaluatable_coverage_pct']}%)",

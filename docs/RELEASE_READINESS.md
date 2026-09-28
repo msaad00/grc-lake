@@ -1,11 +1,9 @@
 # Release readiness
 
-TrustOps **0.2.18** connects to the security lake you already run (declarative
-lake mappings, OCSF presets, Iceberg/Parquet and BigQuery readers in preview),
-adds Jamf, CrowdStrike, Kubernetes, and KnowBe4 connectors (preview), deepens
-the common control framework to 78 safeguards with NIST RMF and an ISO/IEC
-27701:2025 limited pack, and pins egress to validated IPs with a replica-safe
-SAML replay cache. See [the
+TrustOps **0.2.19** adds an org mapping review workflow with attributable,
+tamper-evident approvals, verifies the AWS, Azure, and GCP connectors against
+live tenants, and isolates hosted tenants: tenant-scoped connector and workflow
+secrets, delegated cloud identities, and guarded Iceberg storage. See [the
 changelog](../CHANGELOG.md) for release scope.
 
 ## Release gates

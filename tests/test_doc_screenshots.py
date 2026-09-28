@@ -30,6 +30,29 @@ def test_screenshots_exist() -> None:
     assert len(FULL_WIDTH_PAGES) >= 10
 
 
+DRAWER_CROPS = {"trustops-demo-triage", "trustops-demo-control-drawer"}
+MOBILE_PAGES = {"trustops-demo-overview-mobile"}
+
+
+@pytest.mark.parametrize("path", SCREENSHOTS, ids=lambda path: path.name)
+def test_crop_policy_keeps_the_app_shell(path: Path) -> None:
+    """Pages are captured with the shell at desktop or phone width; only drawers crop."""
+    stem = path.stem.removesuffix("-dark")
+    if stem in DRAWER_CROPS:
+        return
+    expected = 390 if stem in MOBILE_PAGES else 1440
+    assert _width(path) == expected * SCALE, f"{path.name} is cropped"
+
+
+def test_mapping_review_and_mobile_captures_exist() -> None:
+    names = {path.name for path in SCREENSHOTS}
+    assert {
+        "trustops-demo-mapping-review.png",
+        "trustops-demo-mapping-review-dark.png",
+        "trustops-demo-overview-mobile.png",
+    } <= names
+
+
 @pytest.mark.parametrize("dark", DARK, ids=lambda path: path.name)
 def test_light_and_dark_pairs_share_dimensions(dark: Path) -> None:
     light = dark.with_name(dark.name.replace("-dark.png", ".png"))

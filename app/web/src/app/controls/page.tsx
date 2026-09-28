@@ -33,6 +33,7 @@ import { ControlMonitoringSummary } from "@/components/controls/ControlMonitorin
 import { ControlTestTable } from "@/components/dashboard/ControlTestTable";
 import type { ControlPosture, Violation } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const SURFACE = "controls";
 const selectClass =
@@ -62,7 +63,9 @@ function ControlRow({
         <code className="text-sm font-semibold text-ink">
           {control.control_id}
         </code>
-        <Badge tone={toneForStatus(control.status)}>{control.status}</Badge>
+        <Badge tone={toneForStatus(control.status)}>
+          {displayLabel(control.status)}
+        </Badge>
       </div>
       <div className="mt-1 text-sm text-ink">{control.title}</div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">

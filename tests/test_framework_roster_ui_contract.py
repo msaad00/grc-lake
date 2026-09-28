@@ -24,7 +24,12 @@ def test_framework_roster_separates_readiness_from_unavailable_evaluation() -> N
 
     assert "Framework roster" in roster
     assert "Readiness tracked" in roster
-    assert "Not evaluated" in roster
+    # Registry stubs are split by the shared pack rule and named for what they
+    # are ("Superseded by ...", "Planned"), never "catalog pack pending".
+    assert "Planned or superseded" in roster
+    assert "splitFrameworkPacks" in roster
+    assert "stubStatusLabel" in roster
+    assert "catalog pack pending" not in roster
     assert "${formatCount(mapped)}/${formatCount(total)} controls mapped" in roster
     # Attestable means at least one confirmed mapping, not every mapping, so
     # the roster must not say "fully"; org confirmations are called out.

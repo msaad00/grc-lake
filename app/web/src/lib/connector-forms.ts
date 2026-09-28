@@ -167,7 +167,31 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "Microsoft Entra tenant ID",
         placeholder: "00000000-0000-0000-0000-000000000000",
         required: true,
-        hint: "Tenant whose Intune devices TrustOps reads. The TrustOps app or managed identity needs the Graph application permission DeviceManagementManagedDevices.Read.All.",
+        hint: "Tenant whose Intune devices TrustOps reads. The app registration or managed identity needs the Graph application permission DeviceManagementManagedDevices.Read.All.",
+      },
+      {
+        name: "client_id",
+        label: "App registration client ID",
+        placeholder: "00000000-0000-0000-0000-000000000000",
+        hint: "Your Entra app registration. Required on hosted TrustOps, with one of the three references below.",
+      },
+      {
+        name: "client_secret_ref",
+        label: "Client secret env var",
+        placeholder: "TRUSTOPS_TENANT_<ID>__AZURE_CLIENT_SECRET",
+        hint: "Environment variable holding the app's client secret; do not paste the secret.",
+      },
+      {
+        name: "client_certificate_ref",
+        label: "Client certificate env var",
+        placeholder: "TRUSTOPS_TENANT_<ID>__AZURE_CLIENT_CERT",
+        hint: "PEM certificate with its private key, inline or mounted via <NAME>_FILE.",
+      },
+      {
+        name: "federated_token_file_ref",
+        label: "Federated token file env var",
+        placeholder: "TRUSTOPS_TENANT_<ID>__AZURE_TOKEN_FILE",
+        hint: "Path to a workload identity token that the app's federated credential trusts.",
       },
     ],
     "bamboohr-personnel": [

@@ -19,10 +19,11 @@ cron) so this module remains pure and deterministic.
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
+from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from security_lakehouse.catalog import (
     DEFAULT_CONTROL_CATALOG,
@@ -30,6 +31,35 @@ from security_lakehouse.catalog import (
     load_control_catalog,
     load_framework_registry,
 )
+
+PackState = Literal["seeded", "planned", "superseded"]
+
+
+def framework_pack_state(framework: Mapping[str, Any], seeded_control_count: int) -> PackState:
+    """Classify a registry entry. Only ``seeded`` entries count as framework packs.
+
+    A registry entry without seeded controls is a stub: a superseded edition
+    (``superseded_by`` set) or a pack that is planned but not catalogued.
+    """
+    if seeded_control_count > 0:
+        return "seeded"
+    if framework.get("superseded_by"):
+        return "superseded"
+    return "planned"
+
+
+def framework_pack_counts(states: Iterable[str]) -> dict[str, int]:
+    """Count pack states; the single source for every framework-pack count."""
+    counts = Counter(states)
+    planned = counts["planned"]
+    superseded = counts["superseded"]
+    return {
+        "registered_framework_count": sum(counts.values()),
+        "seeded_framework_count": counts["seeded"],
+        "planned_stub_framework_count": planned,
+        "superseded_framework_count": superseded,
+        "stub_framework_count": planned + superseded,
+    }
 
 
 def _parse_iso(value: str | None) -> datetime | None:
@@ -85,6 +115,8 @@ def build_framework_view(
         out.append(
             {
                 **framework,
+                "superseded_by": framework.get("superseded_by"),
+                "pack_state": framework_pack_state(framework, len(controls)),
                 "control_count": len(controls),
                 "implemented_control_count": mapped,
                 "mapping_coverage_pct": (round(mapped / len(controls) * 100, 1) if controls else 0.0),

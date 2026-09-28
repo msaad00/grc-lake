@@ -30,6 +30,7 @@ EXEMPT = {
     "auth/idp_roles.py": "operator-set IdP role map env",
     "auth/saml.py": "operator-set SAML config env",
     "commercial/billing.py": "operator-set Stripe config",
+    "cli.py": "operator-typed --*-env flags on the local CLI, never tenant input",
     "workflows.py": "workflow secrets: TRUSTOPS_SECRET_ locally, the tenant's own prefix in server mode",
 }
 
@@ -98,6 +99,8 @@ REF_FIELDS = (
     "private_key_file_ref",
     "private_key_file_pwd_ref",
     "kubeconfig_ref",
+    "client_certificate_ref",
+    "federated_token_file_ref",
 )
 
 

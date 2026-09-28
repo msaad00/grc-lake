@@ -89,8 +89,37 @@ and `frameworks review export` report whether the chain verifies.
   hold the key cannot rewrite the log and recompute every hash undetected.
   `decision_log.tip_mac` reports `verified`, `missing`, `invalid`, or
   `not_configured` (no key; local mode). Rotating the key makes an existing
-  tip MAC report `invalid`, and there is no re-sign command yet, so plan a
-  rotation together with a verified backup of the log.
+  tip MAC report `invalid` until you re-sign it (see
+  [Rotating the signing key](#rotating-the-signing-key)).
+
+### Rotating the signing key
+
+After changing `TRUSTOPS_COOKIE_SIGNING_KEY`, re-sign each lake's decision-log
+tip with the new key. Run it with the new key in `TRUSTOPS_COOKIE_SIGNING_KEY`
+and the old one in any other variable you name:
+
+```bash
+export TRUSTOPS_COOKIE_SIGNING_KEY="<new key>"
+export TRUSTOPS_PREVIOUS_SIGNING_KEY="<old key>"
+security-lakehouse frameworks review resign --lake <root>/tenants/<tenant_id> \
+  --previous-key-env TRUSTOPS_PREVIOUS_SIGNING_KEY --actor ops@example.com
+unset TRUSTOPS_PREVIOUS_SIGNING_KEY
+```
+
+The command holds the log's lock, verifies the hash chain, and checks the
+recorded tip MAC against the old key. Only then does it write a new tip MAC
+with the current key. It refuses, and writes nothing, when the chain is broken,
+the `mapping_reviews.tip.json` sidecar is missing, or the recorded MAC was not
+made with the old key. A log rewritten by someone without the old key can
+therefore never be re-signed. Restore that log from backup instead. A tip that
+already verifies with the current key is left as is (`status: already_current`).
+
+Each re-sign appends a `tip_resigned` entry (actor, time, log length, tip hash)
+to the hash-chained `gold/mapping_review_audit.jsonl`. It appears in the
+workbench audit log under **Mapping review**. Neither key is recorded. The
+output ends with the `decision_log` verification, which reports
+`tip_mac: verified` after a successful re-sign. In a multi-tenant deployment,
+run the command once per `tenants/<tenant_id>` lake.
 
 Each assessment snapshot also pins a `mapping_review` block: the counts above
 plus the decision-log tip hash. An auditor can then tie a snapshot's coverage to
@@ -153,6 +182,7 @@ security-lakehouse frameworks review approve --lake ./lake \
 security-lakehouse frameworks review reject ...        # same flags
 security-lakehouse frameworks review needs-changes ... # same flags
 security-lakehouse frameworks review export --lake ./lake --format csv --out decisions.csv
+security-lakehouse frameworks review resign --lake ./lake --previous-key-env OLD_KEY  # after a key rotation
 
 # Coverage, queue, and OSCAL with your decisions applied
 security-lakehouse frameworks safeguards --lake ./lake --format table

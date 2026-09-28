@@ -244,7 +244,9 @@ def render_open_graph() -> str:
 
 def render_readme_summary() -> str:
     safeguards = json.loads((ROOT / "controls" / "safeguards.json").read_text(encoding="utf-8"))["safeguards"]
-    families = json.loads((ROOT / "controls" / "families.json").read_text(encoding="utf-8"))["families"]
+    taxonomy = json.loads((ROOT / "controls" / "families.json").read_text(encoding="utf-8"))
+    families = taxonomy["families"]
+    categories = taxonomy["categories"]
     mapped = {item["control_id"] for safeguard in safeguards for item in safeguard["satisfies"]}
     reviewed = {
         item["control_id"]
@@ -253,15 +255,20 @@ def render_readme_summary() -> str:
         if item["review_status"] == "reviewed"
     }
     safeguard_count, requirement_count, framework_count = _coverage_summary()
-    labels = " · ".join(family["label"] for family in families)
+    grouped = "\n".join(
+        f"- **{category['label']}:** "
+        + " · ".join(family["label"] for family in families if family["category"] == category["category_id"])
+        for category in categories
+    )
     stubs = _pack_counts()["stub_framework_count"]
     stub_note = f" {stubs} more registry entries are planned or superseded and hold no requirements." if stubs else ""
     return (
         f"**{framework_count} framework packs · {safeguard_count} reusable safeguards · "
-        f"{len(families)} control families · {requirement_count:,} catalogued requirements.**{stub_note}\n\n"
+        f"{len(families)} control families in {len(categories)} categories · "
+        f"{requirement_count:,} catalogued requirements.**{stub_note}\n\n"
         f"{len(mapped):,} requirements have safeguard mappings; **{len(reviewed):,} have reviewed mappings**. "
         "Catalog coverage and evaluated customer posture are separate measures.\n\n"
-        f"Control families: {labels}."
+        f"Control families by category:\n\n{grouped}"
     )
 
 

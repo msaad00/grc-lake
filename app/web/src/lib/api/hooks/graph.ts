@@ -61,6 +61,14 @@ export function useReviewedCrosswalk() {
   });
 }
 
+export function useCcfCoverage() {
+  return useQuery({
+    queryKey: ["ccf", "coverage"],
+    queryFn: api.ccfCoverage,
+    staleTime: 60_000,
+  });
+}
+
 export function useFrameworkEquivalence() {
   return useQuery({
     queryKey: ["mappings", "equivalence"],

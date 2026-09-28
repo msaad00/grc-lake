@@ -57,6 +57,7 @@ export function useRecordMappingReviewMutation() {
       // Decisions change coverage everywhere it is shown.
       void qc.invalidateQueries({ queryKey: ["mapping-review"] });
       void qc.invalidateQueries({ queryKey: ["frameworks"] });
+      void qc.invalidateQueries({ queryKey: ["ccf"] });
     },
   });
 }

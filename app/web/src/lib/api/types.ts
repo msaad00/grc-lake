@@ -1391,6 +1391,47 @@ export interface FrameworkEquivalenceGroup {
   controls: EquivalenceControlRef[];
 }
 
+/** Mapping counts shared by the CCF family and category ledgers. */
+export interface CcfLedgerCounts {
+  safeguard_count: number;
+  framework_count: number;
+  frameworks: string[];
+  mapped_requirement_count: number;
+  mapping_count: number;
+  reviewed_mapping_count: number;
+  maintainer_reviewed_mapping_count: number;
+  org_reviewed_mapping_count: number;
+  proposed_mapping_count: number;
+  needs_changes_mapping_count: number;
+  rejected_mapping_count: number;
+  state: "reviewed" | "proposed_only";
+}
+
+export interface CcfFamilyRow extends CcfLedgerCounts {
+  family_id: string;
+  label: string;
+  description: string;
+  category_id: string;
+  category_label: string;
+  nist_800_53_families: string[];
+  cis_controls: string[];
+}
+
+export interface CcfCategoryRow extends CcfLedgerCounts {
+  category_id: string;
+  label: string;
+  description: string;
+  family_ids: string[];
+  family_count: number;
+}
+
+/** GET /api/v1/ccf/coverage — CCF ledger with this lake's org review decisions. */
+export interface CcfCoverage {
+  categories: CcfCategoryRow[];
+  families: CcfFamilyRow[];
+  review_log_verified: boolean;
+}
+
 export interface FrameworkEquivalence {
   schema?: string;
   group_count: number;
@@ -1955,7 +1996,12 @@ export interface MappingReviewProgressRow {
 export interface MappingReviewSummary {
   frameworks: MappingReviewProgressRow[];
   framework_names: Record<string, string>;
-  families: Array<{ family_id: string; label: string }>;
+  families: Array<{
+    family_id: string;
+    label: string;
+    category_id: string;
+    category_label: string;
+  }>;
   totals: Omit<MappingReviewProgressRow, "framework_id">;
   states: Record<MappingReviewState, string>;
   decision_log: {

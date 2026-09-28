@@ -64,13 +64,52 @@ PENDING_STATES = frozenset({"proposed", "needs_changes"})
 DEFAULT_FAMILIES = ROOT / "controls" / "families.json"
 
 
+JsonObject = dict[str, Any]
+
+
+def _families_payload(path: str | Path | None = None) -> JsonObject:
+    payload: JsonObject = json.loads(Path(path or DEFAULT_FAMILIES).read_text(encoding="utf-8"))
+    return payload
+
+
 def load_ccf_families(path: str | Path | None = None) -> dict[str, JsonObject]:
     """Return the canonical CCF control families keyed by ``family_id``."""
-    payload = json.loads(Path(path or DEFAULT_FAMILIES).read_text(encoding="utf-8"))
-    return {str(row["family_id"]): row for row in payload["families"]}
+    return {str(row["family_id"]): row for row in _families_payload(path)["families"]}
 
 
-JsonObject = dict[str, Any]
+def load_ccf_categories(path: str | Path | None = None) -> list[JsonObject]:
+    """Return the CCF categories in taxonomy order.
+
+    A category groups control families for navigation and roll-up. Each family
+    names exactly one category; see :func:`validate_ccf_taxonomy`.
+    """
+    return list(_families_payload(path).get("categories", []))
+
+
+def validate_ccf_taxonomy(payload: JsonObject) -> list[str]:
+    """Return problems with the category -> family taxonomy; empty means consistent."""
+    problems: list[str] = []
+    category_ids: list[str] = [str(row.get("category_id") or "") for row in payload.get("categories", [])]
+    seen: set[str] = set()
+    for category_id in category_ids:
+        if not category_id:
+            problems.append("a category is missing category_id")
+        elif category_id in seen:
+            problems.append(f"duplicate category {category_id!r}")
+        seen.add(category_id)
+    used: set[str] = set()
+    for family in payload.get("families", []):
+        family_id = family.get("family_id")
+        category = family.get("category")
+        if not category:
+            problems.append(f"family {family_id!r} is missing category")
+        elif category not in seen:
+            problems.append(f"family {family_id!r} names unknown category {category!r}")
+        else:
+            used.add(str(category))
+    for category_id in sorted(seen - used - {""}):
+        problems.append(f"category {category_id!r} has no families")
+    return problems
 
 
 def _validate_mapping_source(source: Any, *, context: str) -> list[str]:
@@ -113,6 +152,7 @@ def validate_safeguards(payload: JsonObject, *, catalog: dict[str, Any] | None =
 
     known = set(catalog if catalog is not None else load_control_catalog())
     families = load_ccf_families()
+    problems.extend(validate_ccf_taxonomy(_families_payload()))
     seen_ids: set[str] = set()
 
     for entry in payload.get("safeguards", []):
@@ -362,6 +402,51 @@ def safeguards_for_asset_type(asset_type: str, payload: JsonObject | None = None
     )
 
 
+def _mapping_ledger() -> dict[str, Any]:
+    return {
+        "safeguard_count": 0,
+        "frameworks": set(),
+        "control_ids": set(),
+        "mapping_count": 0,
+        "states": dict.fromkeys(REVIEW_STATE_LABELS, 0),
+    }
+
+
+def _add_safeguard(ledger: dict[str, Any], entry: JsonObject) -> None:
+    ledger["safeguard_count"] += 1
+    for member in entry.get("satisfies", []):
+        state = effective_review_state(member)
+        ledger["mapping_count"] += 1
+        ledger["states"][state] += 1
+        if state == "rejected":
+            continue
+        ledger["control_ids"].add(str(member.get("control_id")))
+        framework_id = member.get("framework_id")
+        if framework_id:
+            ledger["frameworks"].add(str(framework_id))
+
+
+def _ledger_counts(ledger: dict[str, Any]) -> JsonObject:
+    states = ledger["states"]
+    reviewed = int(states["maintainer_reviewed"] + states["org_reviewed"])
+    return {
+        "safeguard_count": ledger["safeguard_count"],
+        "framework_count": len(ledger["frameworks"]),
+        "frameworks": sorted(ledger["frameworks"]),
+        "mapped_requirement_count": len(ledger["control_ids"]),
+        "mapping_count": ledger["mapping_count"],
+        # reviewed = maintainer + org; the split is reported alongside so
+        # the two kinds of confirmation are never blended.
+        "reviewed_mapping_count": reviewed,
+        "maintainer_reviewed_mapping_count": states["maintainer_reviewed"],
+        "org_reviewed_mapping_count": states["org_reviewed"],
+        "proposed_mapping_count": states["proposed"] + states["needs_changes"],
+        "needs_changes_mapping_count": states["needs_changes"],
+        "rejected_mapping_count": states["rejected"],
+        "state": "reviewed" if reviewed else "proposed_only",
+    }
+
+
 def coverage_by_family(payload: JsonObject | None = None) -> list[JsonObject]:
     """Report CCF coverage by operated safeguard family.
 
@@ -373,62 +458,56 @@ def coverage_by_family(payload: JsonObject | None = None) -> list[JsonObject]:
     """
     data = payload or load_safeguards()
     families = load_ccf_families()
+    category_labels = {str(row["category_id"]): str(row["label"]) for row in load_ccf_categories()}
     grouped: dict[str, dict[str, Any]] = {}
     for entry in data["safeguards"]:
         family_id = str(entry.get("risk_domain") or "uncategorized")
+        _add_safeguard(grouped.setdefault(family_id, _mapping_ledger()), entry)
+
+    rows: list[JsonObject] = []
+    for family_id, ledger in sorted(grouped.items()):
         definition = families.get(family_id, {})
-        row = grouped.setdefault(
-            family_id,
+        category_id = str(definition.get("category") or "")
+        rows.append(
             {
                 "family_id": family_id,
                 "label": definition.get("label", family_id.replace("-", " ").title()),
                 "description": definition.get("description", ""),
+                "category_id": category_id,
+                "category_label": category_labels.get(category_id, ""),
                 "nist_800_53_families": list(definition.get("nist_800_53_families", [])),
                 "cis_controls": list(definition.get("cis_controls", [])),
-                "safeguard_count": 0,
-                "frameworks": set(),
-                "control_ids": set(),
-                "mapping_count": 0,
-                "states": dict.fromkeys(REVIEW_STATE_LABELS, 0),
-            },
+                **_ledger_counts(ledger),
+            }
         )
-        row["safeguard_count"] += 1
-        for member in entry.get("satisfies", []):
-            state = effective_review_state(member)
-            row["mapping_count"] += 1
-            row["states"][state] += 1
-            if state == "rejected":
-                continue
-            row["control_ids"].add(str(member.get("control_id")))
-            framework_id = member.get("framework_id")
-            if framework_id:
-                row["frameworks"].add(str(framework_id))
+    return rows
+
+
+def coverage_by_category(payload: JsonObject | None = None) -> list[JsonObject]:
+    """Roll the family ledger up to CCF categories, in taxonomy order.
+
+    Requirement and framework counts are distinct across the category, not a
+    sum over its families, because two families can map the same requirement.
+    """
+    data = payload or load_safeguards()
+    families = load_ccf_families()
+    ledgers: dict[str, dict[str, Any]] = {}
+    for entry in data["safeguards"]:
+        category_id = str(families.get(str(entry.get("risk_domain")), {}).get("category") or "")
+        _add_safeguard(ledgers.setdefault(category_id, _mapping_ledger()), entry)
 
     rows: list[JsonObject] = []
-    for family_id, row in sorted(grouped.items()):
-        states = row["states"]
-        reviewed = int(states["maintainer_reviewed"] + states["org_reviewed"])
+    for category in load_ccf_categories():
+        category_id = str(category["category_id"])
+        family_ids = [family_id for family_id, row in families.items() if row.get("category") == category_id]
         rows.append(
             {
-                "family_id": family_id,
-                "label": row["label"],
-                "description": row["description"],
-                "nist_800_53_families": row["nist_800_53_families"],
-                "cis_controls": row["cis_controls"],
-                "safeguard_count": row["safeguard_count"],
-                "framework_count": len(row["frameworks"]),
-                "frameworks": sorted(row["frameworks"]),
-                "mapped_requirement_count": len(row["control_ids"]),
-                "mapping_count": row["mapping_count"],
-                # reviewed = maintainer + org; the split is reported alongside so
-                # the two kinds of confirmation are never blended.
-                "reviewed_mapping_count": reviewed,
-                "maintainer_reviewed_mapping_count": states["maintainer_reviewed"],
-                "org_reviewed_mapping_count": states["org_reviewed"],
-                "proposed_mapping_count": states["proposed"] + states["needs_changes"],
-                "needs_changes_mapping_count": states["needs_changes"],
-                "rejected_mapping_count": states["rejected"],
-                "state": "reviewed" if reviewed else "proposed_only",
+                "category_id": category_id,
+                "label": category["label"],
+                "description": category.get("description", ""),
+                "family_ids": family_ids,
+                "family_count": len(family_ids),
+                **_ledger_counts(ledgers.get(category_id, _mapping_ledger())),
             }
         )
     return rows
@@ -522,4 +601,5 @@ def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[st
             for name, row in sorted(per_framework.items())
         },
         "families": coverage_by_family(data),
+        "categories": coverage_by_category(data),
     }

@@ -47,6 +47,7 @@ from security_lakehouse.safeguards import (
     REVIEW_STATE_LABELS,
     coverage_by_framework,
     effective_review_state,
+    load_ccf_categories,
     load_ccf_families,
     load_safeguards,
     mapping_review_items,
@@ -533,10 +534,16 @@ def review_progress(lake_dir: str | Path | None, *, payload: JsonObject | None =
     }
     names = {framework_id: str(registry.get(framework_id, {}).get("name") or framework_id) for framework_id in rows}
     family_labels = load_ccf_families()
+    category_labels = {str(row["category_id"]): str(row["label"]) for row in load_ccf_categories()}
     family_ids = sorted({str(entry.get("risk_domain")) for entry in effective.get("safeguards", [])})
     families = sorted(
         (
-            {"family_id": family_id, "label": str(family_labels.get(family_id, {}).get("label") or family_id)}
+            {
+                "family_id": family_id,
+                "label": str(family_labels.get(family_id, {}).get("label") or family_id),
+                "category_id": str(family_labels.get(family_id, {}).get("category") or ""),
+                "category_label": category_labels.get(str(family_labels.get(family_id, {}).get("category")), ""),
+            }
             for family_id in family_ids
         ),
         key=lambda row: row["label"],

@@ -34,7 +34,7 @@ from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
 from security_lakehouse.io import read_jsonl
-from security_lakehouse.ledger import append_chained_jsonl_batch, verify_chained_jsonl
+from security_lakehouse.ledger import append_chained_jsonl_batch, chain_lock, verify_chained_jsonl
 from security_lakehouse.models import utc_iso
 from security_lakehouse.safeguards import (
     DEFAULT_SAFEGUARDS,
@@ -199,6 +199,13 @@ def record_decisions(
     batch_id = uuid.uuid4().hex
 
     def build(rows: list[JsonObject]) -> list[JsonObject]:
+        # Runs under the chain lock, so no other writer is between its append
+        # and its tip re-sign while this verifies.
+        if not _verify_review_log_unlocked(lake_dir)["ok"]:
+            raise MappingReviewError(
+                "the decision log failed verification, so no new decision can be recorded on it; "
+                "restore gold/mapping_reviews.jsonl from backup (see docs/MAPPING_REVIEW.md)"
+            )
         latest: dict[MappingKey, str] = {}
         for row in rows:
             latest[(str(row.get("safeguard_id")), str(row.get("control_id")))] = str(row.get("decision_id"))
@@ -228,12 +235,6 @@ def record_decisions(
             latest[key] = decision_id
         return records
 
-    log = verify_review_log(lake_dir)
-    if not log["ok"]:
-        raise MappingReviewError(
-            "the decision log failed verification, so no new decision can be recorded on it; "
-            "restore gold/mapping_reviews.jsonl from backup (see docs/MAPPING_REVIEW.md)"
-        )
     return append_chained_jsonl_batch(
         review_log_path(lake_dir),
         build,
@@ -275,6 +276,10 @@ def latest_decisions(lake_dir: str | Path) -> dict[MappingKey, JsonObject]:
     return latest
 
 
+def _has_review_state(lake_dir: str | Path) -> bool:
+    return review_log_path(lake_dir).exists() or review_tip_path(lake_dir).exists()
+
+
 def verify_review_log(lake_dir: str | Path) -> JsonObject:
     """Verify the decision log hash chain and, when a signing key is set, the tip MAC.
 
@@ -282,7 +287,19 @@ def verify_review_log(lake_dir: str | Path) -> JsonObject:
     crash) is reported as not ok rather than raised. ``tip_mac`` is
     ``not_configured`` without a key, else ``verified``, ``missing`` or
     ``invalid``.
+
+    Runs under the chain lock: a writer appends its batch and then re-signs the
+    tip while holding it, so an unlocked reader could see the new rows with the
+    old MAC. A lake with no log is verified without taking the lock, so reads
+    never create files.
     """
+    if not _has_review_state(lake_dir):
+        return _verify_review_log_unlocked(lake_dir)
+    with chain_lock(review_log_path(lake_dir)):
+        return _verify_review_log_unlocked(lake_dir)
+
+
+def _verify_review_log_unlocked(lake_dir: str | Path) -> JsonObject:
     try:
         log = verify_chained_jsonl(review_log_path(lake_dir))
     except ValueError as exc:
@@ -303,6 +320,16 @@ def verify_review_log(lake_dir: str | Path) -> JsonObject:
     if not hmac.compare_digest(expected, recorded):
         return {**log, "ok": False, "tip_mac": "invalid", "issues": [*log["issues"], "tip MAC does not match the log"]}
     return {**log, "tip_mac": "verified"}
+
+
+def _verified_latest_decisions(lake_dir: str | Path | None) -> tuple[bool, dict[MappingKey, JsonObject]]:
+    """Verify and read the decisions in one lock hold, so only verified rows apply."""
+    if lake_dir is None or not _has_review_state(lake_dir):
+        return (True if lake_dir is None else bool(_verify_review_log_unlocked(lake_dir)["ok"])), {}
+    with chain_lock(review_log_path(lake_dir)):
+        if not _verify_review_log_unlocked(lake_dir)["ok"]:
+            return False, {}
+        return True, latest_decisions(lake_dir)
 
 
 def review_log_verified(lake_dir: str | Path | None) -> bool:
@@ -336,8 +363,7 @@ def effective_safeguards(lake_dir: str | Path | None = None, *, payload: JsonObj
     ``review_log_verified: False`` so each coverage surface can say so.
     """
     shipped = payload if payload is not None else load_safeguards()
-    verified = review_log_verified(lake_dir)
-    decisions = latest_decisions(lake_dir) if lake_dir is not None and verified else {}
+    verified, decisions = _verified_latest_decisions(lake_dir)
     effective = copy.deepcopy(shipped)
     effective["review_log_verified"] = verified
     for entry in effective.get("safeguards", []):

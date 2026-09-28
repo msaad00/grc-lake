@@ -209,6 +209,51 @@ def _append_from_process(lake: str, index: int) -> None:
     )
 
 
+def test_reader_during_a_write_waits_for_the_signed_tip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A write appends the batch and then re-signs the tip, both under the chain lock.
+
+    A reader that verified outside the lock could land between the two steps, see
+    a stale tip MAC, and wrongly report the log unverified (dropping every org
+    decision from coverage) or refuse the next writer.
+    """
+    import threading
+
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "k" * 48)
+    _decide(tmp_path, "approve", ISO)
+    appended, release = threading.Event(), threading.Event()
+    original = mapping_review._write_tip
+
+    def slow_write_tip(lake_dir, length, tip_hash):  # type: ignore[no-untyped-def]
+        appended.set()
+        release.wait(5)
+        original(lake_dir, length, tip_hash)
+
+    monkeypatch.setattr(mapping_review, "_write_tip", slow_write_tip)
+    writer = threading.Thread(target=_decide, args=(tmp_path, "reject", ISO))
+    writer.start()
+    assert appended.wait(5)
+    seen: dict[str, object] = {}
+    reader = threading.Thread(
+        target=lambda: seen.update(
+            log=verify_review_log(tmp_path)["ok"],
+            effective=mapping_review.effective_safeguards(tmp_path, payload=_PAYLOAD)["review_log_verified"],
+        )
+    )
+    reader.start()
+    reader.join(0.3)
+    release.set()
+    writer.join(5)
+    reader.join(5)
+    assert seen == {"log": True, "effective": True}
+    assert latest_decisions(tmp_path)[("SG-A", "ISO27001-A.5.15")]["decision"] == "reject"
+
+
+def test_verifying_a_lake_without_a_log_creates_nothing(tmp_path: Path) -> None:
+    lake = tmp_path / "unprovisioned"
+    assert verify_review_log(lake)["ok"] is True
+    assert not lake.exists()
+
+
 def test_concurrent_writers_across_processes_never_fork_the_chain(tmp_path: Path) -> None:
     ctx = multiprocessing.get_context("spawn")
     procs = [ctx.Process(target=_append_from_process, args=(str(tmp_path), i)) for i in range(6)]

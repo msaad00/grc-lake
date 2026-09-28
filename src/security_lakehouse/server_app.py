@@ -176,6 +176,11 @@ async def _json_object_body(request: Request) -> dict[str, Any]:
     return body
 
 
+def _attributed(body: dict[str, Any], identity: Identity) -> dict[str, Any]:
+    """Attribute a write to the authenticated principal; a body ``actor`` is ignored."""
+    return {**body, "actor": identity.email or identity.user_id}
+
+
 _LEGACY_ERROR_REASONS = {
     HTTPStatus.BAD_REQUEST: "invalid request",
     HTTPStatus.FORBIDDEN: "forbidden",
@@ -3379,7 +3384,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        body = await _json_object_body(request)
+        body = _attributed(await _json_object_body(request), identity)
         v1_path = f"/api/v1/{rest}"
         if request.headers.get("Idempotency-Key") and "idempotency_key" not in body:
             body = {**body, "idempotency_key": request.headers["Idempotency-Key"]}
@@ -3423,7 +3428,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        body = await _json_object_body(request)
+        body = _attributed(await _json_object_body(request), identity)
         legacy_path = f"/api/{rest}"
         required_scope = api_legacy.required_post_scope(legacy_path)
         if not identity.has_scope(required_scope):

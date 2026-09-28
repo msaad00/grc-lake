@@ -18,18 +18,14 @@ import { ConnectorMark } from "@/components/connectors/ConnectorMark";
 import { EvidencePathPanel } from "@/components/connectors/EvidencePathPanel";
 import { OnboardingGuideBanner } from "@/components/onboarding/OnboardingGuideBanner";
 import { connectorNotify } from "@/lib/connector-notify";
-import { CONNECT_FLOW, ROUTE_LABELS } from "@/lib/console-copy";
+import { CONNECT_FLOW, PREVIEW_COPY, ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
+import { PreviewBadge } from "@/components/ui/preview-badge";
 import { useConnectors } from "@/lib/api/hooks";
 import type { ConnectorView } from "@/lib/api/types";
 
 const isRunnableConnector = (connector: ConnectorView) =>
   Boolean(connector.is_implemented);
-
-const PREVIEW_TITLE =
-  "Implemented and fixture-tested; not yet verified against a live tenant.";
-
-const toneForState = (state: string) =>
-  state === "enabled" ? "ready" : "default";
 
 type Health = {
   label: string;
@@ -133,17 +129,26 @@ function ConnectorRow({
   const probe = connector.last_probe;
   const health = syncHealth(connector);
   const runnable = isRunnableConnector(connector);
+  const preview = connector.release_stage === "preview";
+  // "Disabled" is the default for every unconfigured source; only show state
+  // once it differs.
+  const showState = connector.state !== "disabled";
+  const hasBadges = preview || showState || Boolean(health);
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 overflow-hidden rounded-lg border bg-surface p-3 text-left transition-colors hover:border-brand hover:shadow-card ${
+    <div
+      className={`relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 overflow-hidden rounded-lg border bg-surface p-3 text-left transition-colors focus-within:border-brand hover:border-brand hover:shadow-card ${
         runnable
           ? "border-line"
           : "border-dashed border-warning/40 bg-warning-bg "
       }`}
     >
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg">
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-label={`Open ${connector.name}`}
+        className="absolute inset-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
+      />
+      <span className="pointer-events-none grid h-10 w-10 shrink-0 place-items-center rounded-lg">
         <ConnectorMark
           connectorId={connector.connector_id}
           name={connector.name}
@@ -151,29 +156,35 @@ function ConnectorRow({
           size="md"
         />
       </span>
-      <span className="min-w-0 overflow-hidden">
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="truncate font-semibold text-ink">
-            {connector.name}
-          </span>
-          <Badge tone={toneForState(connector.state)}>{connector.state}</Badge>
-          {connector.release_stage === "preview" && (
-            <Badge tone="outline" title={PREVIEW_TITLE}>
-              Preview
-            </Badge>
-          )}
-          {health && <Badge tone={health.tone}>{health.label}</Badge>}
+      <span className="pointer-events-none min-w-0 overflow-hidden">
+        <span className="block truncate font-semibold text-ink">
+          {connector.name}
         </span>
-        <span className="mt-1 block truncate text-xs text-muted">
+        {hasBadges ? (
+          <span className="mt-1 flex flex-wrap items-center gap-1.5">
+            {showState ? (
+              <Badge tone={connector.state === "enabled" ? "ready" : "default"}>
+                {displayLabel(connector.state)}
+              </Badge>
+            ) : null}
+            {preview ? (
+              <PreviewBadge className="pointer-events-auto relative z-10" />
+            ) : null}
+            {health ? (
+              <Badge tone={health.tone}>{displayLabel(health.label)}</Badge>
+            ) : null}
+          </span>
+        ) : null}
+        <span className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
           {connector.setup_hint ?? `Read-only ${connector.category} evidence`}
         </span>
       </span>
-      <span className="shrink-0 text-right">
+      <span className="pointer-events-none shrink-0 text-right">
         <Badge tone={probe ? toneForProbe(probe.result) : "default"}>
-          {probe ? `Probe ${probe.result}` : "Connect"}
+          {probe ? `Probe ${displayLabel(probe.result)}` : "Connect"}
         </Badge>
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -227,7 +238,6 @@ export default function ConnectorsPage() {
   );
 
   const totals = {
-    runnable: data.filter((c) => isRunnableConnector(c)).length,
     enabled: data.filter((c) => c.state === "enabled").length,
     unhealthy: data.filter((c) => {
       const h = syncHealth(c);
@@ -330,10 +340,11 @@ export default function ConnectorsPage() {
               </option>
             ))}
           </select>
-          <span className="rounded-full border border-line bg-surface px-3 py-2 text-xs font-semibold text-muted">
-            {totals.runnable} available
-          </span>
         </div>
+        <p className="px-1 text-xs text-muted">
+          <span className="font-semibold text-ink">{PREVIEW_COPY.label}</span>:{" "}
+          {PREVIEW_COPY.definition}
+        </p>
       </div>
 
       <QueryState queries={connectors} label="connectors">

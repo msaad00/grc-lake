@@ -20,6 +20,7 @@ import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { QueryState } from "@/components/QueryState";
 import { PageHeader } from "@/components/PageHeader";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { splitFrameworkPacks } from "@/lib/framework-packs";
 
 export default function DashboardPage() {
   const posture = usePosture();
@@ -29,8 +30,12 @@ export default function DashboardPage() {
   usePostureStream();
   const data = posture.data;
   const frameworks = data?.frameworks ?? [];
-  const registeredCount =
-    registeredFrameworks.data?.length ?? frameworks.length;
+  const { packs: frameworkPacks } = splitFrameworkPacks(
+    registeredFrameworks.data ?? [],
+  );
+  const packCount = registeredFrameworks.data
+    ? frameworkPacks.length
+    : frameworks.length;
   const ingestionNeedsAttention =
     ingestion.data?.state !== "active" ||
     Boolean(ingestion.data?.recommended_actions?.length) ||
@@ -48,7 +53,7 @@ export default function DashboardPage() {
         <AssessmentOverview
           assessment={data}
           ingestion={ingestion.data}
-          frameworkCount={registeredCount}
+          frameworkCount={packCount}
         />
 
         <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">

@@ -16,6 +16,7 @@ This page is the product review index for the public repo.
 | Workflow canvas screenshot     | `docs/images/trustops-demo-workflows.png`      |
 | Graph workbench screenshot     | `docs/images/trustops-demo-graph.png`          |
 | Framework workbench screenshot | `docs/images/trustops-demo-frameworks.png`     |
+| Mapping review screenshot      | `docs/images/trustops-demo-mapping-review.png` |
 | Control drawer screenshot      | `docs/images/trustops-demo-control-drawer.png` |
 | Evidence room screenshot       | `docs/images/trustops-demo-evidence.png`       |
 | Connector workbench screenshot | `docs/images/trustops-demo-connectors.png`     |

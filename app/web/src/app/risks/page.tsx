@@ -19,6 +19,7 @@ import {
 } from "@/lib/api/hooks";
 import type { Risk, RiskLevel, RiskStatus } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 
 const inputClass =
   "rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand";
@@ -177,10 +178,12 @@ function RiskRow({ risk }: { risk: Risk }) {
           due {fmtDate(risk.due_at)}
         </div>
       </div>
-      <Badge tone={LEVEL_TONE[risk.severity]}>sev {risk.severity}</Badge>
+      <Badge tone={LEVEL_TONE[risk.severity]}>
+        {displayLabel(risk.severity)} severity
+      </Badge>
       <Badge tone={LEVEL_TONE[risk.likelihood]}>likely {risk.likelihood}</Badge>
       <Badge tone={LEVEL_TONE[risk.impact]}>impact {risk.impact}</Badge>
-      <Badge tone={STATUS_TONE[risk.status]}>{risk.status}</Badge>
+      <Badge tone={STATUS_TONE[risk.status]}>{displayLabel(risk.status)}</Badge>
       <div className="flex gap-1.5">
         {next && (
           <Button

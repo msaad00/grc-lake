@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { useControls } from "@/lib/api/hooks";
 import { severityTone } from "@/lib/severity";
+import { displayLabel } from "@/lib/display";
 
 /** Fixed-length preview: rows never scroll or clip inside the card. */
 const PREVIEW = 5;
@@ -58,7 +59,7 @@ export function FixNext({
                     tone={severityTone(v.severity)}
                     className="justify-center capitalize"
                   >
-                    {v.severity}
+                    {displayLabel(v.severity)}
                   </Badge>
                   <span className="min-w-0">
                     <span

@@ -42,8 +42,15 @@ import type {
   FrameworkView,
   ReadinessStage,
 } from "@/lib/api/types";
-import { ROUTE_LABELS } from "@/lib/console-copy";
+import { MAPPING_REVIEW_GLOSSARY, ROUTE_LABELS } from "@/lib/console-copy";
+import { displayLabel } from "@/lib/display";
 import { formatCount } from "@/lib/format";
+import {
+  packState,
+  splitFrameworkPacks,
+  stubCountLabel,
+  stubStatusLabel,
+} from "@/lib/framework-packs";
 
 const TONE_TEXT: Record<FrameworkFreshness, string> = {
   fresh: "Source pulled recently",
@@ -56,14 +63,17 @@ function Row({
   framework,
   coverage,
   readiness,
+  frameworkNames,
   onSelect,
 }: {
   framework: FrameworkView;
   coverage?: FrameworkCoverageRow;
   readiness?: FrameworkReadiness;
+  frameworkNames: ReadonlyMap<string, string>;
   onSelect: () => void;
 }) {
-  const isPlanned = framework.implementation_status === "planned";
+  const state = packState(framework);
+  const isPlanned = state !== "seeded";
   const seededCount = coverage?.seeded_control_count ?? framework.control_count;
   const evaluatableCount = coverage?.evaluatable_requirement_count ?? 0;
   const evaluatablePct = coverage?.evaluatable_coverage_pct ?? 0;
@@ -104,10 +114,12 @@ function Row({
             }
           >
             {readiness?.is_ready
-              ? "ready"
-              : isPlanned
-                ? "planned"
-                : "in progress"}
+              ? "Ready"
+              : state === "superseded"
+                ? "Superseded"
+                : isPlanned
+                  ? "Planned"
+                  : "In progress"}
           </Badge>
         </div>
       </div>
@@ -148,8 +160,10 @@ function Row({
       {isPlanned &&
       (framework.coverage_boundary || framework.evidence_focus?.length) ? (
         <div className="grid gap-2 rounded-xl border border-dashed border-line bg-surfaceMuted/50 p-3 text-[11px] text-muted">
-          <div className="font-semibold uppercase tracking-wide text-ink">
-            Planned boundary
+          <div className="font-semibold text-ink">
+            {state === "superseded"
+              ? stubStatusLabel(framework, frameworkNames)
+              : "Planned boundary"}
           </div>
           {framework.coverage_boundary ? (
             <p>{framework.coverage_boundary}</p>
@@ -183,7 +197,7 @@ function Row({
             {sourceMappingPct}% source mapped ·{" "}
             {framework.pulled_age_days === null
               ? "Not yet synced"
-              : `${framework.freshness_state.replaceAll("_", " ")} · pulled ${
+              : `${displayLabel(framework.freshness_state)} · pulled ${
                   framework.pulled_age_days === 0
                     ? "today"
                     : `${framework.pulled_age_days}d ago`
@@ -283,13 +297,15 @@ function Detail({
             <p className="mt-1 text-xs">{framework.copyright_guardrail}</p>
           </section>
 
-          {framework.implementation_status === "planned" &&
+          {packState(framework) !== "seeded" &&
           (framework.coverage_boundary ||
             framework.evidence_focus?.length ||
             framework.next_step) ? (
             <section className="grid gap-2 rounded-xl border border-dashed border-line bg-surfaceMuted/50 p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted">
-                Planned boundary
+              <div className="text-xs font-semibold text-muted">
+                {packState(framework) === "superseded"
+                  ? stubStatusLabel(framework)
+                  : "Planned boundary"}
               </div>
               {framework.coverage_boundary ? (
                 <p className="text-xs text-ink">
@@ -439,7 +455,7 @@ function ReadinessRow({ row }: { row: FrameworkReadiness }) {
           </code>
         </span>
         <Badge tone={row.is_ready ? "ready" : "attention"}>
-          {row.is_ready ? "ready" : `blocked at ${row.stage}`}
+          {row.is_ready ? "Ready" : `Blocked: ${STAGE_LABEL[row.stage]}`}
         </Badge>
       </div>
       <div className="mt-1 text-xs text-muted">
@@ -495,11 +511,22 @@ function FrameworksPageContent() {
     [coverageRows],
   );
   const coverageSummary = coverage.data?.summary;
+  const frameworkNames = useMemo(
+    () => new Map(data.map((row) => [row.framework_id, row.name])),
+    [data],
+  );
+  const { packs, stubs } = useMemo(() => splitFrameworkPacks(data), [data]);
+  const packReadiness = useMemo(
+    () => splitFrameworkPacks(readinessRows).packs,
+    [readinessRows],
+  );
   const portfolio = useMemo(() => {
     return {
-      ready: readinessRows.filter((row) => row.is_ready).length,
+      ready: packReadiness.filter((row) => row.is_ready).length,
+      total: packReadiness.length,
     };
-  }, [readinessRows]);
+  }, [packReadiness]);
+  const stubNote = stubCountLabel(stubs.length);
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return data.filter((row) => {
@@ -508,10 +535,9 @@ function FrameworksPageContent() {
         readinessFilter === "all" ||
         (readinessFilter === "ready" && readinessRow?.is_ready) ||
         (readinessFilter === "needs_work" &&
-          row.implementation_status !== "planned" &&
+          packState(row) === "seeded" &&
           !readinessRow?.is_ready) ||
-        (readinessFilter === "planned" &&
-          row.implementation_status === "planned");
+        (readinessFilter === "planned" && packState(row) !== "seeded");
       const freshnessMatch =
         freshnessFilter === "all" || row.freshness_state === freshnessFilter;
       const queryMatch =
@@ -584,12 +610,12 @@ function FrameworksPageContent() {
           </div>
           <Badge
             tone={
-              data.length > 0 && portfolio.ready === data.length
+              portfolio.total > 0 && portfolio.ready === portfolio.total
                 ? "ready"
                 : "attention"
             }
           >
-            {portfolio.ready}/{data.length} packs ready
+            {portfolio.ready}/{portfolio.total} packs ready
           </Badge>
         </div>
         <dl className="grid divide-line sm:grid-cols-2 sm:divide-x xl:grid-cols-4 [&>div]:border-line max-sm:divide-y">
@@ -599,7 +625,9 @@ function FrameworksPageContent() {
               {formatCount(coverageSummary?.seeded_control_count)}
             </dd>
             <dd className="mt-1.5 text-xs text-muted">
-              Across {coverageSummary?.framework_count ?? "—"} framework packs
+              Across {coverageSummary?.seeded_framework_count ?? packs.length}{" "}
+              framework packs
+              {stubNote ? ` · ${stubNote} not counted` : ""}
             </dd>
           </div>
           <div className="px-4 py-4 sm:px-5">
@@ -636,11 +664,12 @@ function FrameworksPageContent() {
                 coverageSummary?.maintainer_reviewed_requirement_count ??
                   coverageSummary?.attestable_requirement_count,
               )}{" "}
-              maintainer-reviewed ·{" "}
+              {MAPPING_REVIEW_GLOSSARY.maintainer_reviewed.label.toLowerCase()}{" "}
+              ·{" "}
               {formatCount(
                 coverageSummary?.org_reviewed_requirement_count ?? 0,
               )}{" "}
-              org-reviewed
+              {MAPPING_REVIEW_GLOSSARY.org_reviewed.label.toLowerCase()}
             </dd>
           </div>
           <div className="px-4 py-4 sm:px-5">
@@ -684,8 +713,8 @@ function FrameworksPageContent() {
               Framework catalog
             </h2>
             <p className="mt-0.5 text-xs text-muted">
-              {filtered.length} of {data.length} packs · source URL, hash, and
-              mapping counts
+              {filtered.length} of {data.length} shown · {packs.length} packs
+              {stubNote ? `, ${stubNote}` : ""}
             </p>
           </div>
           <Badge>{filtered.length} shown</Badge>
@@ -726,7 +755,7 @@ function FrameworksPageContent() {
                 <option value="all">All readiness</option>
                 <option value="ready">Ready</option>
                 <option value="needs_work">Needs mapping</option>
-                <option value="planned">Planned</option>
+                <option value="planned">Planned or superseded</option>
               </select>
               <select
                 aria-label="Filter by source health"
@@ -761,6 +790,7 @@ function FrameworksPageContent() {
                 framework={framework}
                 coverage={coverageById.get(framework.framework_id)}
                 readiness={readinessById.get(framework.framework_id)}
+                frameworkNames={frameworkNames}
                 onSelect={() => openFramework(framework)}
               />
             ))}
@@ -773,8 +803,8 @@ function FrameworksPageContent() {
           <div className="min-w-0">
             <CardTitle>Readiness gates</CardTitle>
             <CardDescription>
-              {portfolio.ready} of {readinessRows.length} packs pass every gate.
-              Open the audit detail only when you need it.
+              {portfolio.ready} of {portfolio.total} packs pass every gate. Open
+              the audit detail only when you need it.
             </CardDescription>
           </div>
           <button
@@ -804,7 +834,7 @@ function FrameworksPageContent() {
                 Loading readiness…
               </div>
             ) : (
-              readinessRows.map((row) => (
+              packReadiness.map((row) => (
                 <ReadinessRow key={row.framework_id} row={row} />
               ))
             )}

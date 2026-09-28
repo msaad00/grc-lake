@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { BRAND } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
+import { PreviewBadge } from "@/components/ui/preview-badge";
 import {
   useConfigureMutation,
   useConnectorRuns,
@@ -45,6 +46,7 @@ import {
   type ConnectorFieldDef,
 } from "@/lib/connector-forms";
 import { getIntegrationPreset } from "@/lib/integration-presets";
+import { displayLabel } from "@/lib/display";
 
 interface Props {
   connector: ConnectorView | null;
@@ -300,7 +302,9 @@ function LatestSyncProof({
             <span className="text-xs font-semibold uppercase tracking-wide text-muted">
               Latest sync
             </span>
-            <Badge tone={tone}>{sync?.result ?? connector.state}</Badge>
+            <Badge tone={tone}>
+              {displayLabel(sync?.result ?? connector.state)}
+            </Badge>
           </div>
           <div
             className={
@@ -973,9 +977,9 @@ export function ConnectorDrawer({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span>
                         <Badge tone={toneForResult(run.result)}>
-                          {run.result}
+                          {displayLabel(run.result)}
                         </Badge>{" "}
-                        <Badge>{run.kind}</Badge>
+                        <Badge>{displayLabel(run.kind)}</Badge>
                       </span>
                       <span className="text-muted">
                         {formatWhen(run.occurred_at)}
@@ -1019,7 +1023,8 @@ export function ConnectorDrawer({
                     className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-2 text-xs"
                   >
                     <span>
-                      <Badge>{event.kind}</Badge> <b>{event.actor}</b>
+                      <Badge>{displayLabel(event.kind)}</Badge>{" "}
+                      <b>{event.actor}</b>
                     </span>
                     <span className="text-muted">
                       {formatWhen(event.occurred_at)}
@@ -1085,12 +1090,7 @@ export function ConnectorDrawer({
                   </div>
                   <span className="flex flex-wrap items-center gap-1">
                     {connector.release_stage === "preview" ? (
-                      <Badge
-                        tone="outline"
-                        title="Implemented and fixture-tested; not yet verified against a live tenant."
-                      >
-                        Preview
-                      </Badge>
+                      <PreviewBadge />
                     ) : null}
                     {connector.provenance?.source === "entry_point" ? (
                       <Badge title={connector.provenance.entry_point}>
@@ -1098,7 +1098,7 @@ export function ConnectorDrawer({
                       </Badge>
                     ) : null}
                     <Badge tone={isEnabled ? "ready" : "default"}>
-                      {connector.state}
+                      {displayLabel(connector.state)}
                     </Badge>
                   </span>
                 </div>
@@ -1353,9 +1353,9 @@ export function ConnectorDrawer({
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span>
                             <Badge tone={toneForResult(r.result)}>
-                              {r.result}
+                              {displayLabel(r.result)}
                             </Badge>{" "}
-                            <Badge>{r.kind}</Badge>
+                            <Badge>{displayLabel(r.kind)}</Badge>
                           </span>
                           <span className="text-muted">
                             {formatWhen(r.occurred_at)}

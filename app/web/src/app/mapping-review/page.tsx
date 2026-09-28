@@ -535,7 +535,7 @@ function MappingReviewContent() {
   const [framework, setFramework] = useState(
     () => searchParams.get("framework") ?? "",
   );
-  const [family, setFamily] = useState("");
+  const [family, setFamily] = useState(() => searchParams.get("family") ?? "");
   const [status, setStatus] = useState("pending");
   const [query, setQuery] = useState("");
   const [offset, setOffset] = useState(0);
@@ -558,6 +558,15 @@ function MappingReviewContent() {
   });
   const items = queue.data?.items ?? [];
   const count = queue.data?.count ?? 0;
+  const summaryFamilies = summary.data?.families;
+  const familyGroups = useMemo(() => {
+    const groups = new Map<string, NonNullable<typeof summaryFamilies>>();
+    for (const row of summaryFamilies ?? []) {
+      const key = row.category_label || "Other";
+      groups.set(key, [...(groups.get(key) ?? []), row]);
+    }
+    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [summaryFamilies]);
   const selectedItems = items.filter((item) => selected.has(mappingKey(item)));
   const allOnPageSelected =
     items.length > 0 && items.every((item) => selected.has(mappingKey(item)));
@@ -661,10 +670,14 @@ function MappingReviewContent() {
               }}
             >
               <option value="">All families</option>
-              {(summary.data?.families ?? []).map((row) => (
-                <option key={row.family_id} value={row.family_id}>
-                  {row.label}
-                </option>
+              {familyGroups.map(([category, rows]) => (
+                <optgroup key={category} label={category}>
+                  {rows.map((row) => (
+                    <option key={row.family_id} value={row.family_id}>
+                      {row.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
             <select

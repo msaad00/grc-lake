@@ -2020,13 +2020,23 @@ def _frameworks_safeguards(args: argparse.Namespace) -> int:
     for name, row in coverage["frameworks"].items():
         print(f"{name:26s} {row['controls']:12d} {row['covered']:8d} {row['coverage_pct']:6.1f}%")
     print()
-    print("CCF safeguard families (reviewed vs proposed mappings)")
-    print(f"{'family':28s} {'safeguards':>10s} {'frameworks':>10s} {'reviewed':>10s} {'proposed':>10s}")
-    for row in coverage["families"]:
+    print("CCF safeguard families by category (reviewed vs proposed mappings)")
+    print(f"{'category / family':34s} {'safeguards':>10s} {'frameworks':>10s} {'reviewed':>10s} {'proposed':>10s}")
+    families = {row["family_id"]: row for row in coverage["families"]}
+    for category in coverage["categories"]:
+        heading = f"{category['label']} ({category['family_count']})"
         print(
-            f"{row['label']:28s} {row['safeguard_count']:10d} {row['framework_count']:10d} "
-            f"{row['reviewed_mapping_count']:10d} {row['proposed_mapping_count']:10d}"
+            f"{heading:34s} {category['safeguard_count']:10d} {category['framework_count']:10d} "
+            f"{category['reviewed_mapping_count']:10d} {category['proposed_mapping_count']:10d}"
         )
+        for family_id in category["family_ids"]:
+            row = families.get(family_id)
+            if row is None:
+                continue
+            print(
+                f"  {row['label']:32s} {row['safeguard_count']:10d} {row['framework_count']:10d} "
+                f"{row['reviewed_mapping_count']:10d} {row['proposed_mapping_count']:10d}"
+            )
     return 0
 
 

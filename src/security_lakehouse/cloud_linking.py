@@ -2,8 +2,16 @@
 
 AWS linking issues a tenant-scoped external ID and a CloudFormation quick-create
 URL against the read-only posture role template in ``deploy/aws/``. AWS and GCP
-also serve Terraform templates for teams that prefer IaC. Azure linking builds
-an admin-consent URL when ``TRUSTOPS_AZURE_LINK_CLIENT_ID`` is set.
+also serve Terraform templates for teams that prefer IaC. Locally, Azure linking
+builds an admin-consent URL when ``TRUSTOPS_AZURE_LINK_CLIENT_ID`` is set.
+
+In hosted server mode the server never collects with its own cloud identity
+(see :mod:`security_lakehouse.delegation`), so a link session reports the
+delegation it needs and completion stages the tenant's own Azure app
+registration or GCP impersonation target, validated with the readers' rules.
+No server-owned Azure consent app is offered there. The Entra tenant an
+unauthenticated consent callback reports is kept on the session for display
+only and is never written into a connector config.
 """
 
 from __future__ import annotations
@@ -18,10 +26,19 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlencode, urlsplit
 
+from security_lakehouse.connector_errors import ConnectorConfigError
 from security_lakehouse.connector_state import append_config_event
+from security_lakehouse.delegation import (
+    AZURE_SECRET_FIELDS,
+    GCP_IMPERSONATION_FIELD,
+    azure_app_registration,
+    gcp_impersonation_target,
+)
+from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
 from security_lakehouse.io import read_json, write_json
 from security_lakehouse.models import utc_iso
 from security_lakehouse.public_url import normalize_public_url
+from security_lakehouse.secret_refs import ENV_NAME_RE, secret_ref_denial, tenant_secret_prefix
 
 CLOUD_LINK_CONNECTORS = frozenset({"aws-posture", "azure-posture", "gcp-posture"})
 AWS_ROLE_NAME_DEFAULT = "TrustOpsPostureReadOnlyRole"
@@ -33,6 +50,11 @@ _AWS_ROLE_ARN_RE = re.compile(
     r"^arn:(?P<partition>aws(?:-us-gov|-cn)?):iam::(?P<account_id>[0-9]{12}):role/(?P<role_name>[A-Za-z0-9+=,.@_/-]{1,512})$"
 )
 SESSIONS_FILE = Path("gold") / "connectors" / "cloud_link_sessions.json"
+AZURE_DELEGATION_FIELDS = ("tenant_id", "client_id", *AZURE_SECRET_FIELDS)
+DELEGATION_FIELDS: dict[str, tuple[str, ...]] = {
+    "azure-posture": AZURE_DELEGATION_FIELDS,
+    "gcp-posture": (GCP_IMPERSONATION_FIELD,),
+}
 _LINK_SESSION_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
@@ -314,6 +336,14 @@ def resolve_cloud_link_session_id(lake_dir: str | Path, session_id: str) -> str 
     return None
 
 
+def link_delegation() -> dict[str, Any]:
+    """Whether this caller must supply delegated access, and its secret-ref prefix."""
+    if not in_server_mode():
+        return {"required": False, "secret_ref_prefix": None}
+    tenant = server_tenant_id()
+    return {"required": True, "secret_ref_prefix": tenant_secret_prefix(tenant) if tenant else None}
+
+
 def start_cloud_link(
     lake_dir: str | Path,
     connector_id: str,
@@ -324,6 +354,9 @@ def start_cloud_link(
     """Create a pending cloud-link session for ``connector_id``."""
     if connector_id not in CLOUD_LINK_CONNECTORS:
         raise ValueError(f"cloud linking is not supported for {connector_id}")
+    hosted = in_server_mode()
+    if hosted:
+        tenant_id = server_tenant_id() or tenant_id
     session_id = secrets.token_urlsafe(18)
     external_id = secrets.token_urlsafe(24)
     trusted_principal = _aws_trusted_principal()
@@ -338,6 +371,7 @@ def start_cloud_link(
         "role_name": role_name if connector_id == "aws-posture" else None,
         "trusted_principal": trusted_principal or None,
         "azure_tenant_id": None,
+        "delegation": link_delegation(),
     }
     if connector_id == "aws-posture":
         session["runtime_identity_ready"] = bool(trusted_principal)
@@ -364,10 +398,12 @@ def start_cloud_link(
         session["deployment_methods"] = aws_deployment_methods()
         session["scale_strategy"] = aws_scale_strategy()
     if connector_id == "azure-posture":
-        azure_app_id = _azure_link_client_id()
+        # Hosted collection authenticates as the tenant's own app registration,
+        # so a server-owned multi-tenant consent app would never be used.
+        azure_app_id = "" if hosted else _azure_link_client_id()
         session["azure_app_id"] = azure_app_id or None
         session["runtime_identity_ready"] = bool(azure_app_id)
-        session["consent_url"] = azure_consent_url(session_id=session_id, public_url=public_url)
+        session["consent_url"] = None if hosted else azure_consent_url(session_id=session_id, public_url=public_url)
     if connector_id == "gcp-posture":
         wif_member = _gcp_wif_member()
         session["template_url"] = gcp_template_url(public_url)
@@ -395,7 +431,12 @@ def record_azure_consent(
     azure_tenant_id: str,
     admin_consent: bool,
 ) -> dict[str, Any]:
-    """Persist Azure admin-consent callback metadata on a link session."""
+    """Persist Azure admin-consent callback metadata on a link session.
+
+    The callback is unauthenticated, so ``azure_tenant_id`` is whatever the
+    caller put in the query string. It is recorded for display only and is
+    never copied into connector configuration.
+    """
     token = normalize_link_session_id(session_id)
     if token is None:
         raise KeyError("cloud link session not found")
@@ -423,8 +464,14 @@ def complete_cloud_link(
     role_arn: str | None = None,
     subscription_id: str | None = None,
     project_id: str | None = None,
+    delegation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Finalize a cloud-link session by staging connector credentials."""
+    """Finalize a cloud-link session by staging connector credentials.
+
+    ``delegation`` carries the tenant's Azure app registration or GCP
+    impersonation target. Hosted mode requires it; locally it is optional and
+    validated when present. Secret fields are env-var names, never values.
+    """
     token = resolve_cloud_link_session_id(lake_dir, session_id)
     if token is None:
         raise KeyError("cloud link session not found")
@@ -434,7 +481,7 @@ def complete_cloud_link(
     if session.get("connector_id") != connector_id:
         raise ValueError("session connector mismatch")
     credentials: dict[str, Any]
-    options: dict[str, Any] = {}
+    delegated = _validated_delegation(connector_id, delegation)
     if connector_id == "aws-posture":
         acct, normalized_role_arn = parse_aws_role_arn(role_arn or "")
         credentials = {
@@ -445,14 +492,11 @@ def complete_cloud_link(
     elif connector_id == "azure-posture":
         if not subscription_id or not str(subscription_id).strip():
             raise ValueError("subscription_id is required")
-        credentials = {"subscription_id": str(subscription_id).strip()}
-        azure_tenant = str(session.get("azure_tenant_id") or "").strip()
-        if azure_tenant:
-            options["azure_tenant_id"] = azure_tenant
+        credentials = {"subscription_id": str(subscription_id).strip(), **delegated}
     elif connector_id == "gcp-posture":
         if not project_id or not valid_gcp_project_id(str(project_id)):
             raise ValueError("project_id must be a valid GCP project id")
-        credentials = {"project_id": str(project_id).strip()}
+        credentials = {"project_id": str(project_id).strip(), **delegated}
     else:
         raise ValueError(f"cloud linking is not supported for {connector_id}")
     record = append_config_event(
@@ -461,7 +505,7 @@ def complete_cloud_link(
         state="disabled",
         actor=actor,
         credentials=credentials,
-        options=options,
+        options={},
     )
     store = _load_sessions(lake_dir)
     linked = store["sessions"].get(token)
@@ -472,3 +516,39 @@ def complete_cloud_link(
         store["sessions"][token] = linked
         _save_sessions(lake_dir, store)
     return {"session": linked or session, "configure": record}
+
+
+def _validated_delegation(connector_id: str, delegation: dict[str, Any] | None) -> dict[str, str]:
+    """Normalize and validate delegated-access fields with the readers' own rules."""
+    allowed = DELEGATION_FIELDS.get(connector_id, ())
+    raw = delegation or {}
+    unexpected = sorted(set(raw) - set(allowed))
+    if unexpected:
+        raise ValueError(f"unexpected delegation fields for {connector_id}: {', '.join(unexpected)}")
+    fields = {key: str(raw.get(key) or "").strip() for key in allowed}
+    fields = {key: value for key, value in fields.items() if value}
+    try:
+        if connector_id == "azure-posture":
+            registration = azure_app_registration(fields, label="Azure posture")
+            if registration is None:
+                return {}
+            tenant_id, client_id, ref_field, ref = registration
+            _check_secret_ref(ref, ref_field)
+            return {"tenant_id": tenant_id, "client_id": client_id, ref_field: ref}
+        if connector_id == "gcp-posture":
+            target = gcp_impersonation_target(fields)
+            return {GCP_IMPERSONATION_FIELD: target} if target else {}
+    except ConnectorConfigError as exc:
+        raise ValueError(str(exc)) from exc
+    return {}
+
+
+def _check_secret_ref(ref: str, field: str) -> None:
+    if not ENV_NAME_RE.fullmatch(ref):
+        raise ValueError(f"{field} must name an environment variable; do not paste the secret itself")
+    denial = secret_ref_denial(ref, field=field)
+    if denial:
+        prefix = link_delegation()["secret_ref_prefix"]
+        if prefix and prefix not in denial:
+            denial = f"{denial}; use the tenant prefix {prefix}"
+        raise ValueError(denial)

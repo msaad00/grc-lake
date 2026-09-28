@@ -232,7 +232,7 @@ def test_azure_consent_callback_and_complete(tmp_path: Path, monkeypatch: pytest
     )
     configure = result["configure"]
     assert configure["credentials"]["subscription_id"] == "sub-guid"
-    assert configure["options"]["azure_tenant_id"] == "tenant-guid"
+    assert "azure_tenant_id" not in configure["options"]
 
 
 def test_azure_consent_can_complete_with_server_redirect_token(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -261,7 +261,7 @@ def test_azure_consent_can_complete_with_server_redirect_token(tmp_path: Path, m
     )
     configure = result["configure"]
     assert configure["credentials"]["subscription_id"] == "sub-guid"
-    assert configure["options"]["azure_tenant_id"] == "tenant-guid"
+    assert "azure_tenant_id" not in configure["options"]
 
 
 def test_start_and_complete_gcp_cloud_link_stages_connector(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

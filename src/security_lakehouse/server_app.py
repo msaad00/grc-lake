@@ -1596,6 +1596,10 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.get("/api/v1/auth/whoami")
     def whoami(identity: Identity = Depends(_require_read)) -> JSONResponse:
+        from security_lakehouse.cloud_linking import link_delegation
+
+        with server_execution(identity.tenant_id):
+            delegation = link_delegation()
         return JSONResponse(
             api_v1.envelope(
                 "auth.whoami",
@@ -1605,6 +1609,10 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                     "email": identity.email,
                     "role": identity.role,
                     "scopes": sorted(identity.scopes),
+                    # Connector forms need these to ask for delegated access and
+                    # suggest env-var names the hosted secret-ref policy accepts.
+                    "hosted": delegation["required"],
+                    "secret_ref_prefix": delegation["secret_ref_prefix"],
                 },
             )
         )

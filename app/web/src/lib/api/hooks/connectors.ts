@@ -70,18 +70,21 @@ export function useCloudLinkCompleteMutation() {
       roleArn,
       subscriptionId,
       projectId,
+      delegation,
     }: {
       id: string;
       sessionId: string;
       roleArn?: string;
       subscriptionId?: string;
       projectId?: string;
+      delegation?: Record<string, string>;
     }) =>
       api.completeCloudLink(id, {
         session_id: sessionId,
         role_arn: roleArn,
         subscription_id: subscriptionId,
         project_id: projectId,
+        delegation,
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["connectors"] }),
   });

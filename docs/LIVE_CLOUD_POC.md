@@ -124,7 +124,8 @@ build/lakehouse/raw/connector_events.jsonl
 The Azure runner uses `DefaultAzureCredential`, so the production path is a
 provider-owned identity, not a pasted password:
 
-- hosted app + admin consent where configured
+- admin consent to an operator-owned app (`TRUSTOPS_AZURE_LINK_CLIENT_ID`), local
+  and CLI runs only
 - managed identity when TrustOps runs in Azure
 - federated workload identity for Kubernetes/CI
 - service-principal credentials only by secret-manager reference

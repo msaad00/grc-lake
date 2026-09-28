@@ -95,3 +95,33 @@ export const PREVIEW_COPY = {
   definition:
     "Implemented and fixture-tested; not yet verified against a live tenant.",
 } as const;
+
+/**
+ * Hosted cloud linking: the server never collects with its own cloud identity,
+ * so each tenant names its own Azure app registration or GCP service account.
+ */
+export const HOSTED_CLOUD_LINK_COPY = {
+  azureSummary:
+    "Grant Reader to an app registration in your Entra tenant, then enter its IDs and the environment variable that holds its credential. Hosted TrustOps never reads Azure as its own identity.",
+  gcpSummary:
+    "Create a read-only service account in your project and let the TrustOps identity impersonate it (Service Account Token Creator), then enter the project and service account.",
+  refRule:
+    "Enter the variable name only, never the secret. The operator sets its value on the server.",
+  azureSecretKinds: {
+    client_secret_ref: {
+      label: "Client secret",
+      suffix: "AZURE_CLIENT_SECRET",
+    },
+    client_certificate_ref: {
+      label: "Certificate (PEM)",
+      suffix: "AZURE_CLIENT_CERT",
+    },
+    federated_token_file_ref: {
+      label: "Federated token file",
+      suffix: "AZURE_TOKEN_FILE",
+    },
+  },
+} as const;
+
+export type AzureSecretKind =
+  keyof typeof HOSTED_CLOUD_LINK_COPY.azureSecretKinds;

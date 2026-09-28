@@ -15,7 +15,12 @@ from pathlib import Path
 import pytest
 
 from security_lakehouse import connector_runner, connector_state
-from security_lakehouse.connectors import load_connector_catalog, validate_connector_catalog, validate_connector_row
+from security_lakehouse.connectors import (
+    DEFAULT_CONNECTOR_CATALOG,
+    load_connector_catalog,
+    validate_connector_catalog,
+    validate_connector_row,
+)
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.validation import validate_raw_events
 
@@ -66,12 +71,18 @@ def test_registry_contains_exactly_the_real_adapters() -> None:
 def test_implemented_adapters_catalog_flags_agree_with_registry() -> None:
     # connector_state deliberately avoids importing connector_runner to prevent
     # an import cycle; this pins the catalog metadata to the runner registry.
-    catalog = load_connector_catalog()
+    # Both sides are in-repo only: an installed package's connector extends
+    # effective_registry() and the merged catalog, never REGISTRY.
+    catalog = load_connector_catalog(DEFAULT_CONNECTOR_CATALOG)
     implemented_from_catalog = {
         connector_id for connector_id, definition in catalog.items() if definition.get("is_implemented")
     }
     assert connector_runner.registered_connector_ids() == frozenset(implemented_from_catalog)
-    assert frozenset(REAL_ADAPTERS) == connector_state.IMPLEMENTED_ADAPTERS
+    # IMPLEMENTED_ADAPTERS also covers installed package connectors, which
+    # dispatch through effective_registry().
+    installed = frozenset(load_connector_catalog()) - frozenset(catalog)
+    assert installed <= frozenset(connector_runner.effective_registry()) - connector_runner.registered_connector_ids()
+    assert frozenset(REAL_ADAPTERS) | installed == connector_state.IMPLEMENTED_ADAPTERS
 
 
 def test_preview_connectors_are_labelled_preview_until_live_verified() -> None:

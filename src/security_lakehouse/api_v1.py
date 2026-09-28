@@ -1984,6 +1984,11 @@ def handle_post(
             return HTTPStatus.BAD_REQUEST, error_envelope(
                 "bad_request", "session_id is required", resource="connector.link.complete"
             )
+        delegation = payload.get("delegation")
+        if delegation is not None and not isinstance(delegation, dict):
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", "delegation must be an object", resource="connector.link.complete"
+            )
         try:
             result = complete_cloud_link(
                 lake,
@@ -1993,6 +1998,7 @@ def handle_post(
                 role_arn=str(payload.get("role_arn") or "").strip() or None,
                 subscription_id=str(payload.get("subscription_id") or "").strip() or None,
                 project_id=str(payload.get("project_id") or "").strip() or None,
+                delegation=delegation,
             )
         except KeyError:
             return HTTPStatus.NOT_FOUND, error_envelope(

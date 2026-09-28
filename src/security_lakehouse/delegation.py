@@ -58,6 +58,32 @@ def azure_credential(credentials: dict[str, Any], env: dict[str, str], *, label:
     Locally, with none of these set, returns ``None`` so callers keep
     ``DefaultAzureCredential``. In server mode that is refused.
     """
+    delegated = azure_app_registration(credentials, label=label)
+    if delegated is None:
+        return None
+    tenant_id, client_id, field, ref = delegated
+    value = resolve_secret_ref(ref, env, field=field, file_first=field != "federated_token_file_ref")
+    if not value:
+        raise ConnectorConfigError(f"{label}: the variable named by {field} is not set")
+    try:
+        import azure.identity as azure_identity  # type: ignore[import-not-found]  # noqa: PLC0415
+    except ImportError as exc:  # pragma: no cover - optional extra
+        raise ConnectorConfigError(f"{label} requires azure-identity; install the cloud extra") from exc
+    if field == "client_secret_ref":
+        return azure_identity.ClientSecretCredential(tenant_id, client_id, value)
+    if field == "client_certificate_ref":
+        return azure_identity.CertificateCredential(tenant_id, client_id, certificate_data=value.encode("utf-8"))
+    return azure_identity.WorkloadIdentityCredential(tenant_id=tenant_id, client_id=client_id, token_file_path=value)
+
+
+def azure_app_registration(credentials: dict[str, Any], *, label: str) -> tuple[str, str, str, str] | None:
+    """Validate the Entra app registration fields without resolving any secret.
+
+    Returns ``(tenant_id, client_id, ref_field, ref_name)``, or ``None`` locally
+    when no app registration is configured. Raises
+    :class:`ConnectorConfigError` for an incomplete or ambiguous registration,
+    and in server mode when none is configured.
+    """
     tenant_id = str(credentials.get("tenant_id") or "").strip()
     client_id = str(credentials.get("client_id") or "").strip()
     refs = {field: str(credentials.get(field) or "").strip() for field in AZURE_SECRET_FIELDS}
@@ -77,18 +103,24 @@ def azure_credential(credentials: dict[str, Any], env: dict[str, str], *, label:
     if len(configured) != 1:
         raise ConnectorConfigError(f"{label} requires exactly one of {', '.join(AZURE_SECRET_FIELDS)}")
     field = configured[0]
-    value = resolve_secret_ref(refs[field], env, field=field, file_first=field != "federated_token_file_ref")
-    if not value:
-        raise ConnectorConfigError(f"{label}: the variable named by {field} is not set")
-    try:
-        import azure.identity as azure_identity  # type: ignore[import-not-found]  # noqa: PLC0415
-    except ImportError as exc:  # pragma: no cover - optional extra
-        raise ConnectorConfigError(f"{label} requires azure-identity; install the cloud extra") from exc
-    if field == "client_secret_ref":
-        return azure_identity.ClientSecretCredential(tenant_id, client_id, value)
-    if field == "client_certificate_ref":
-        return azure_identity.CertificateCredential(tenant_id, client_id, certificate_data=value.encode("utf-8"))
-    return azure_identity.WorkloadIdentityCredential(tenant_id=tenant_id, client_id=client_id, token_file_path=value)
+    return tenant_id, client_id, field, refs[field]
+
+
+def gcp_impersonation_target(credentials: dict[str, Any]) -> str | None:
+    """The validated service account to impersonate, or ``None`` locally when unset."""
+    target = str(credentials.get(GCP_IMPERSONATION_FIELD) or "").strip()
+    if not target:
+        if in_server_mode():
+            raise ConnectorConfigError(
+                f"GCP readers in hosted mode require {GCP_IMPERSONATION_FIELD}: a service account in the "
+                "customer project that grants the TrustOps identity the Service Account Token Creator role"
+            )
+        return None
+    if not _SERVICE_ACCOUNT_EMAIL.fullmatch(target):
+        raise ConnectorConfigError(
+            f"{GCP_IMPERSONATION_FIELD} must be a service account email (…iam.gserviceaccount.com)"
+        )
+    return target
 
 
 def require_aws_delegation(role_arn: str | None, external_id: str | None, *, label: str) -> None:
@@ -113,18 +145,9 @@ def gcp_credentials(credentials: dict[str, Any]) -> Any:
     Returns ``None`` locally when no impersonation target is set, meaning the
     client libraries use Application Default Credentials as before.
     """
-    target = str(credentials.get(GCP_IMPERSONATION_FIELD) or "").strip()
-    if not target:
-        if in_server_mode():
-            raise ConnectorConfigError(
-                f"GCP readers in hosted mode require {GCP_IMPERSONATION_FIELD}: a service account in the "
-                "customer project that grants the TrustOps identity the Service Account Token Creator role"
-            )
+    target = gcp_impersonation_target(credentials)
+    if target is None:
         return None
-    if not _SERVICE_ACCOUNT_EMAIL.fullmatch(target):
-        raise ConnectorConfigError(
-            f"{GCP_IMPERSONATION_FIELD} must be a service account email (…iam.gserviceaccount.com)"
-        )
     try:
         import google.auth  # noqa: PLC0415
         from google.auth import impersonated_credentials  # noqa: PLC0415
@@ -142,8 +165,10 @@ def gcp_credentials(credentials: dict[str, Any]) -> Any:
 __all__ = [
     "AZURE_SECRET_FIELDS",
     "GCP_IMPERSONATION_FIELD",
+    "azure_app_registration",
     "azure_credential",
     "gcp_credentials",
+    "gcp_impersonation_target",
     "require_aws_delegation",
     "server_env_override",
 ]

@@ -13,6 +13,7 @@ import type {
   TenantInvite,
   UpdateAuthUserPayload,
 } from "../types";
+import type { CredentialPolicy } from "../../cloud-link-validation";
 
 export function useAuthMethods(opts?: Opts<AuthMethods>) {
   return useQuery({
@@ -32,6 +33,19 @@ export function useAuthWhoami(opts?: Opts<AuthWhoami>) {
     retry: false,
     ...opts,
   });
+}
+
+/**
+ * Whether connector forms must collect tenant-delegated access, and the env-var
+ * prefix hosted secret refs must use. Local mode has no whoami route, so a
+ * failed or pending lookup reads as local.
+ */
+export function useCredentialPolicy(): CredentialPolicy {
+  const whoami = useAuthWhoami();
+  return {
+    hosted: whoami.data?.hosted === true,
+    secretRefPrefix: whoami.data?.secret_ref_prefix ?? null,
+  };
 }
 
 export function useAuthKeys(opts?: Opts<AuthApiKey[]>) {

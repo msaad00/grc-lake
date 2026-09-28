@@ -2157,7 +2157,11 @@ def _frameworks_review_resign(args: argparse.Namespace) -> int:
     previous = os.environ.get(args.previous_key_env, "").strip()
     if not previous:
         raise ValueError(f"{args.previous_key_env} is not set; export the pre-rotation signing key there")
-    actor = args.actor or f"cli-local:{getpass.getuser()}"
+    try:
+        os_user = getpass.getuser()
+    except (KeyError, OSError):
+        os_user = "unknown"
+    actor = args.actor or f"cli-local:{os_user}"
     result = resign_review_tip(args.lake, previous_key=previous, actor=actor)
     print(json.dumps({**result, "decision_log": verify_review_log(args.lake)}, indent=2, sort_keys=True))
     return 0

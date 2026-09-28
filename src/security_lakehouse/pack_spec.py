@@ -25,3 +25,6 @@ class PackControlSpec:
     baselines: tuple[str, ...] = ()
     # Evidence types a control test expects; empty when a program config owns them.
     required_evidence_types: tuple[str, ...] = ()
+    # Date a row was reconciled with its pinned official source; such rows stay
+    # proposed until a human reviews them.
+    reconciled_at: str | None = None

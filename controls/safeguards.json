@@ -1197,6 +1197,294 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.1 carried forward as Rev 3 03.01.01 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.2 carried forward as Rev 3 03.01.02 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.5 carried forward as Rev 3 03.01.05 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.06",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.6 carried forward as Rev 3 03.01.06 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Access Control (03.01), requirement 03.01.07"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.10",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.10 carried forward as Rev 3 03.01.10 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.11",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.11 carried forward as Rev 3 03.01.11 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.12",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.15 withdrawn and incorporated into Rev 3 03.01.12"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.18",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.18 carried forward as Rev 3 03.01.18 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.20",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.20 carried forward as Rev 3 03.01.20 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.5.1 carried forward as Rev 3 03.05.01 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.5.2 carried forward as Rev 3 03.05.02 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.5.3 carried forward as Rev 3 03.05.03 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.5.4 carried forward as Rev 3 03.05.04 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.5.5 carried forward as Rev 3 03.05.05 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Identification and Authentication (03.05), requirement 03.05.07"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.11",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.5.11 carried forward as Rev 3 03.05.11 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.12",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Identification and Authentication (03.05), requirement 03.05.12"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.07.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.7.5 carried forward as Rev 3 03.07.05 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.8.2 carried forward as Rev 3 03.08.02 (none change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(i)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(i)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(j)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(j)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(c)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(c)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(d)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(d)"
+          }
         }
       ],
       "asset_types": [
@@ -1409,6 +1697,30 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Access Control (03.01), requirement 03.01.01"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(i)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(i)"
+          }
         }
       ],
       "asset_types": [
@@ -1819,6 +2131,162 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.12",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.13 withdrawn and incorporated into Rev 3 03.01.12"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.16",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.17 withdrawn and incorporated into Rev 3 03.01.16"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.18",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.19 withdrawn and incorporated into Rev 3 03.01.18"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.05.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.5.10 withdrawn and incorporated into Rev 3 03.05.07"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.09",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Media Protection (03.08), requirement 03.08.09"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.13.08",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.13.8 carried forward as Rev 3 03.13.08 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.13.10",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.13.10 carried forward as Rev 3 03.13.10 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.13.11",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.13.11 carried forward as Rev 3 03.13.11 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.13.15",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, System and Communications Protection (03.13), requirement 03.13.15"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(h)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(h)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(j)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(j)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(d)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(d)"
+          }
         }
       ],
       "asset_types": [
@@ -2300,6 +2768,102 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.12",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.12 carried forward as Rev 3 03.01.12 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.12.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.12.3 carried forward as Rev 3 03.12.03 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.14.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.14.3 carried forward as Rev 3 03.14.03 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.14.06",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.14.6 carried forward as Rev 3 03.14.06 (minor change)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art10.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 10(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art10.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 10(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art10.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 10(3)"
+          }
         }
       ],
       "asset_types": [
@@ -2762,6 +3326,150 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.7 carried forward as Rev 3 03.01.07 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.3.1 carried forward as Rev 3 03.03.01 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Audit and Accountability (03.03), requirement 03.03.02"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Audit and Accountability (03.03), requirement 03.03.03"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.3.4 carried forward as Rev 3 03.03.04 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.3.5 carried forward as Rev 3 03.03.05 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.06",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.3.6 carried forward as Rev 3 03.03.06 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.3.7 carried forward as Rev 3 03.03.07 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.03.08",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.3.8 carried forward as Rev 3 03.03.08 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.10.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.10.4 withdrawn and incorporated into Rev 3 03.10.07"
+          }
+        },
+        {
+          "control_id": "DORA-Art10.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 10(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.8",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(8)"
+          }
         }
       ],
       "asset_types": [
@@ -2771,6 +3479,7 @@
         "cloud_policy",
         "cloud_resource",
         "container_image",
+        "data_store",
         "host",
         "iam_role",
         "identity_account",
@@ -3081,6 +3790,90 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.1 carried forward as Rev 3 03.04.01 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.2 carried forward as Rev 3 03.04.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.3 carried forward as Rev 3 03.04.03 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.4 carried forward as Rev 3 03.04.04 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.5 carried forward as Rev 3 03.04.05 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.06",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.6 carried forward as Rev 3 03.04.06 (significant change)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(e)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(e)"
+          }
         }
       ],
       "asset_types": [
@@ -3303,6 +4096,54 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.07.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.7.4 carried forward as Rev 3 03.07.04 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.11.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.11.2 carried forward as Rev 3 03.11.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.12.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.12.2 carried forward as Rev 3 03.12.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.14.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, System and Information Integrity (03.14), requirement 03.14.01"
+          }
         }
       ],
       "asset_types": [
@@ -3661,6 +4502,126 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.16.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, System and Services Acquisition (03.16), requirement 03.16.03"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(d)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(d)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(4)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.5",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(5)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(6)"
+          }
+        },
+        {
+          "control_id": "DORA-Art29.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 29(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art30.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 30(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art30.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 30(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art30.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 30(3)"
+          }
         }
       ],
       "asset_types": [
@@ -3711,12 +4672,6 @@
           "framework_id": "hipaa-security-rule",
           "role": "equivalent",
           "review_status": "reviewed"
-        },
-        {
-          "control_id": "EU-AI-ACT-Art.49",
-          "framework_id": "eu-ai-act-2024-1689",
-          "role": "equivalent",
-          "review_status": "proposed"
         },
         {
           "control_id": "EU-AI-ACT-Art.9",
@@ -3860,6 +4815,102 @@
             "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.1 (Prepare), Task P-14"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.11.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Risk Assessment (03.11), requirement 03.11.01"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(a)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(a)"
+          }
+        },
+        {
+          "control_id": "DORA-Art6.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.7",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(7)"
+          }
+        },
+        {
+          "control_id": "DORA-Art13.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 13(3)"
+          }
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.27",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2024/1689 (Artificial Intelligence Act)",
+            "url": "https://publications.europa.eu/resource/cellar/dc8116a1-3fe6-11ef-865a-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "bba630444b3278e881066774002a1d7824308934f49ccfa203e65be43692f55e",
+            "locator": "Article 27"
           }
         }
       ],
@@ -4276,6 +5327,162 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.09",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.8.9 carried forward as Rev 3 03.08.09 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(c)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(c)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(4)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(6)"
+          }
+        },
+        {
+          "control_id": "DORA-Art12.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 12(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art12.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 12(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art12.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 12(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art12.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 12(4)"
+          }
+        },
+        {
+          "control_id": "DORA-Art12.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 12(6)"
+          }
+        },
+        {
+          "control_id": "DORA-Art12.7",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 12(7)"
+          }
         }
       ],
       "asset_types": [
@@ -4567,6 +5774,18 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "EU-AI-ACT-Art.49",
+          "framework_id": "eu-ai-act-2024-1689",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2024/1689 (Artificial Intelligence Act)",
+            "url": "https://publications.europa.eu/resource/cellar/dc8116a1-3fe6-11ef-865a-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "bba630444b3278e881066774002a1d7824308934f49ccfa203e65be43692f55e",
+            "locator": "Article 49"
+          }
         }
       ],
       "asset_types": [
@@ -4769,6 +5988,30 @@
             "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, RS.CO-02"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.06.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.6.2 carried forward as Rev 3 03.06.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.06.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.6.3 carried forward as Rev 3 03.06.03 (minor change)"
           }
         }
       ],
@@ -5387,6 +6630,30 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "DORA-Art5.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 5(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art5.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 5(2)"
+          }
         }
       ],
       "asset_types": [
@@ -5631,6 +6898,66 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.02.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.2.1 carried forward as Rev 3 03.02.01 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.02.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.2.2 carried forward as Rev 3 03.02.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(g)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(g)"
+          }
+        },
+        {
+          "control_id": "DORA-Art5.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 5(4)"
+          }
+        },
+        {
+          "control_id": "DORA-Art13.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 13(6)"
+          }
         }
       ],
       "asset_types": [
@@ -5639,6 +6966,7 @@
         "audit_log",
         "container_image",
         "data_store",
+        "identity_user",
         "repo",
         "service",
         "user"
@@ -6112,6 +7440,138 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.8.1 carried forward as Rev 3 03.08.01 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Media Protection (03.08), requirement 03.08.02"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.8.3 carried forward as Rev 3 03.08.03 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.8.4 carried forward as Rev 3 03.08.04 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.8.5 carried forward as Rev 3 03.08.05 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.8.7 carried forward as Rev 3 03.08.07 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.10.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.10.1 carried forward as Rev 3 03.10.01 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.10.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Physical Protection (03.10), requirement 03.10.02"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.10.07",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.10.5 withdrawn and incorporated into Rev 3 03.10.07"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.10.08",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Physical Protection (03.10), requirement 03.10.08"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(c)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(c)"
+          }
         }
       ],
       "asset_types": [
@@ -6612,6 +8072,78 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Access Control (03.01), requirement 03.01.03"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.01.16",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.1.16 carried forward as Rev 3 03.01.16 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.13.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, System and Communications Protection (03.13), requirement 03.13.01"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.13.06",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.13.6 carried forward as Rev 3 03.13.06 (none change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.13.09",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.13.9 carried forward as Rev 3 03.13.09 (minor change)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(b)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(b)"
+          }
         }
       ],
       "asset_types": [
@@ -7007,6 +8539,18 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.11",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Configuration Management (03.04), requirement 03.04.11"
+          }
         }
       ],
       "asset_types": [
@@ -7182,6 +8726,30 @@
           "role": "equivalent",
           "review_status": "proposed",
           "mapping_basis": "title_theme"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.08.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.7.3 withdrawn and incorporated into Rev 3 03.08.03"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.14.08",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, System and Information Integrity (03.14), requirement 03.14.08"
+          }
         }
       ],
       "asset_types": [
@@ -8555,6 +10123,90 @@
           "framework_id": "nist-800-53-rev5",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.15.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Planning (03.15), requirement 03.15.01"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.15.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Planning (03.15), requirement 03.15.03"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(a)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(a)"
+          }
+        },
+        {
+          "control_id": "DORA-Art6.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art6.5",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(5)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(a)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(a)"
+          }
         }
       ],
       "asset_types": [
@@ -8697,6 +10349,54 @@
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.1 (Prepare), Task P-1"
           }
+        },
+        {
+          "control_id": "DORA-Art5.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 5(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art5.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 5(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art6.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(4)"
+          }
+        },
+        {
+          "control_id": "DORA-Art14.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 14(3)"
+          }
         }
       ],
       "asset_types": ["audit_log", "service"]
@@ -8789,6 +10489,30 @@
             "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.7 (Monitor), Task M-5"
+          }
+        },
+        {
+          "control_id": "DORA-Art5.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 5(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art13.5",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 13(5)"
           }
         }
       ],
@@ -8994,6 +10718,30 @@
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.1 (Prepare), Task P-2"
           }
+        },
+        {
+          "control_id": "DORA-Art6.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art6.8",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(8)"
+          }
         }
       ],
       "asset_types": ["audit_log", "service"]
@@ -9194,6 +10942,18 @@
             "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.4 (Implement), Task I-2"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.15.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.12.4 carried forward as Rev 3 03.15.02 (minor change)"
           }
         }
       ],
@@ -9459,6 +11219,102 @@
           "framework_id": "hipaa-security-rule",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.06.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.6.3 carried forward as Rev 3 03.06.03 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.06.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Incident Response (03.06), requirement 03.06.04"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.06.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Incident Response (03.06), requirement 03.06.05"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(b)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(b)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(6)"
+          }
+        },
+        {
+          "control_id": "DORA-Art17.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 17(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art17.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 17(3)"
+          }
         }
       ],
       "asset_types": ["audit_log", "data_store", "host", "service"]
@@ -9726,9 +11582,129 @@
           "framework_id": "cmmc-2-level2",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.06.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.6.1 carried forward as Rev 3 03.06.01 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(b)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(b)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.4(d)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(4)(d)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art13.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 13(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art17.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 17(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art17.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 17(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art17.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 17(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art18.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 18(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art19.4(c)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 19(4)(c)"
+          }
         }
       ],
-      "asset_types": ["audit_log", "host", "service"]
+      "asset_types": ["audit_log", "data_store", "host", "service"]
     },
     {
       "safeguard_id": "SG-INCIDENTNOTIFICATION-001",
@@ -9885,6 +11861,174 @@
           "framework_id": "iso-42001-2023",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.06.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.6.2 carried forward as Rev 3 03.06.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.1",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(1)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.2",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(2)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.4(a)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(4)(a)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.4(b)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(4)(b)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.4(c)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(4)(c)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.4(d)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(4)(d)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art23.4(e)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 23(4)(e)"
+          }
+        },
+        {
+          "control_id": "DORA-Art14.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 14(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art19.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 19(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art19.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 19(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art19.4(a)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 19(4)(a)"
+          }
+        },
+        {
+          "control_id": "DORA-Art19.4(b)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 19(4)(b)"
+          }
+        },
+        {
+          "control_id": "DORA-Art19.4(c)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 19(4)(c)"
+          }
         }
       ],
       "asset_types": [
@@ -10314,6 +12458,78 @@
           "framework_id": "pci-dss-v4",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.11.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.11.2 carried forward as Rev 3 03.11.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(e)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(e)"
+          }
+        },
+        {
+          "control_id": "DORA-Art13.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 13(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(6)"
+          }
+        },
+        {
+          "control_id": "DORA-Art25.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 25(1)"
+          }
         }
       ],
       "asset_types": [
@@ -10409,13 +12625,75 @@
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, PR.PS-02"
           }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.11.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.11.3 withdrawn and incorporated into Rev 3 03.11.02"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.14.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.14.1 carried forward as Rev 3 03.14.01 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(e)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(e)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(f)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(f)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.5",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(5)"
+          }
         }
       ],
       "asset_types": [
         "audit_log",
         "cloud_policy",
         "cloud_resource",
+        "container_image",
         "host",
+        "repo",
         "service"
       ]
     },
@@ -10550,6 +12828,54 @@
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, ID.RA-07"
           }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.3 carried forward as Rev 3 03.04.03 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.4 carried forward as Rev 3 03.04.04 (significant change)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(e)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(e)"
+          }
         }
       ],
       "asset_types": [
@@ -10621,6 +12947,18 @@
           "framework_id": "iso-27001-2022",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.5 carried forward as Rev 3 03.04.05 (none change)"
+          }
         }
       ],
       "asset_types": ["cloud_policy", "cloud_resource", "service"]
@@ -10707,6 +13045,18 @@
             "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, PR.PS-06"
+          }
+        },
+        {
+          "control_id": "DORA-Art25.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 25(1)"
           }
         }
       ],
@@ -10795,6 +13145,30 @@
           "framework_id": "gdpr-2016-679",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.16.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, System and Services Acquisition (03.16), requirement 03.16.01"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(e)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(e)"
+          }
         }
       ],
       "asset_types": [
@@ -10802,6 +13176,7 @@
         "cloud_resource",
         "container_image",
         "data_store",
+        "repo",
         "s3_bucket",
         "service"
       ]
@@ -10907,6 +13282,54 @@
           "framework_id": "iso-27017-2015",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.1 carried forward as Rev 3 03.04.01 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.4.2 carried forward as Rev 3 03.04.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.06",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Configuration Management (03.04), requirement 03.04.06"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.12",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Configuration Management (03.04), requirement 03.04.12"
+          }
         }
       ],
       "asset_types": ["cloud_policy", "cloud_resource", "host", "service"]
@@ -10964,11 +13387,25 @@
           "framework_id": "cis_aws",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "DORA-Art8.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(4)"
+          }
         }
       ],
       "asset_types": [
         "cloud_policy",
         "cloud_resource",
+        "data_store",
+        "host",
         "iam_role",
         "identity_account",
         "s3_bucket",
@@ -11184,9 +13621,40 @@
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, ID.RA-09"
           }
+        },
+        {
+          "control_id": "DORA-Art9.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(3)"
+          }
+        },
+        {
+          "control_id": "DORA-Art12.7",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 12(7)"
+          }
         }
       ],
-      "asset_types": ["audit_log", "data_store", "host", "service"]
+      "asset_types": [
+        "audit_log",
+        "cloud_resource",
+        "data_store",
+        "host",
+        "s3_bucket",
+        "service"
+      ]
     },
     {
       "safeguard_id": "SG-SECURITYCATEGORIZATION-001",
@@ -11289,9 +13757,39 @@
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.1 (Prepare), Task P-6"
           }
+        },
+        {
+          "control_id": "DORA-Art8.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art11.5",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 11(5)"
+          }
         }
       ],
-      "asset_types": ["audit_log", "cloud_policy", "cloud_resource", "service"]
+      "asset_types": [
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "data_store",
+        "service"
+      ]
     },
     {
       "safeguard_id": "SG-SYSTEMCHARACTERIZATION-001",
@@ -11454,9 +13952,78 @@
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, GV.OC-02"
           }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.04.10",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Configuration Management (03.04), requirement 03.04.10"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(i)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(i)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(4)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(6)"
+          }
         }
       ],
-      "asset_types": ["audit_log", "service"]
+      "asset_types": [
+        "audit_log",
+        "cloud_policy",
+        "cloud_resource",
+        "data_store",
+        "host",
+        "iam_role",
+        "identity_user",
+        "service"
+      ]
     },
     {
       "safeguard_id": "SG-CONTINUOUSMONITORING-001",
@@ -11558,6 +14125,54 @@
             "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.7 (Monitor), Task M-2"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.12.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.12.3 carried forward as Rev 3 03.12.03 (minor change)"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(f)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(f)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art13.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 13(4)"
           }
         }
       ],
@@ -11682,6 +14297,90 @@
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.5 (Assess), Task A-4"
           }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.12.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Security Assessment and Monitoring (03.12), requirement 03.12.01"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(f)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(f)"
+          }
+        },
+        {
+          "control_id": "DORA-Art6.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(6)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.4",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(4)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(6)"
+          }
         }
       ],
       "asset_types": ["audit_log", "service"]
@@ -11792,6 +14491,54 @@
             "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-37r2.pdf",
             "sha256": "4f75e1136bb905a654f1bcd9eefefb4108f47597276ee5eec0688f6d96f6a01d",
             "locator": "Chapter 3, Section 3.7 (Monitor), Task M-4"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.11.04",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Risk Assessment (03.11), requirement 03.11.04"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.12.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.12.2 carried forward as Rev 3 03.12.02 (significant change)"
+          }
+        },
+        {
+          "control_id": "DORA-Art6.7",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 6(7)"
+          }
+        },
+        {
+          "control_id": "DORA-Art24.5",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 24(5)"
           }
         }
       ],
@@ -11928,6 +14675,102 @@
           "framework_id": "nist-800-53-rev5",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.17.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Supply Chain Risk Management (03.17), requirement 03.17.01"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.17.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Supply Chain Risk Management (03.17), requirement 03.17.02"
+          }
+        },
+        {
+          "control_id": "NIST-800-171R3-03.17.03",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, Supply Chain Risk Management (03.17), requirement 03.17.03"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(d)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(d)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.1",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(1)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.2",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(2)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.7",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(7)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.8",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(8)"
+          }
         }
       ],
       "asset_types": ["audit_log", "data_store", "service"]
@@ -11985,6 +14828,42 @@
             "sha256": "3c31f46fee98cac0c4323453e5109291a213b4de7fef8c058af9bf67f717433c",
             "locator": "NIST CSF 2.0 Core, Appendix A, ID.AM-04"
           }
+        },
+        {
+          "control_id": "DORA-Art8.5",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(5)"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.6",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(6)"
+          }
+        },
+        {
+          "control_id": "DORA-Art28.3",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 28(3)"
+          }
         }
       ],
       "asset_types": ["cloud_policy", "cloud_resource", "data_store", "service"]
@@ -12036,6 +14915,18 @@
           "framework_id": "cmmc-2-level2",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.07.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 2 to Rev. 3 change analysis",
+            "url": "https://csrc.nist.gov/files/pubs/sp/800/171/r3/final/docs/sp800-171r2-to-r3-analysis.xlsx",
+            "sha256": "ad0908f52945e316dec05a4032cbcaa75958eab2534d2627b3a89f696fb30b84",
+            "locator": "Change Analysis 800-171 R2-R3 sheet: Rev 2 3.7.5 carried forward as Rev 3 03.07.05 (minor change)"
+          }
         }
       ],
       "asset_types": [
@@ -12123,12 +15014,73 @@
           "framework_id": "cis_aws",
           "role": "equivalent",
           "review_status": "proposed"
+        },
+        {
+          "control_id": "NIST-800-171R3-03.16.02",
+          "framework_id": "nist-800-171-rev3",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Chapter 3, System and Services Acquisition (03.16), requirement 03.16.02"
+          }
+        },
+        {
+          "control_id": "NIS2-Art21.2(e)",
+          "framework_id": "nis2-2022-2555",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+            "url": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+            "locator": "Article 21(2)(e)"
+          }
+        },
+        {
+          "control_id": "DORA-Art7",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 7"
+          }
+        },
+        {
+          "control_id": "DORA-Art8.7",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 8(7)"
+          }
+        },
+        {
+          "control_id": "DORA-Art9.4(f)",
+          "framework_id": "dora-2022-2554",
+          "role": "equivalent",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "Regulation (EU) 2022/2554 (Digital Operational Resilience Act, DORA)",
+            "url": "https://publications.europa.eu/resource/cellar/0caf473a-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+            "sha256": "85307f9e2a0409826dd0f54489645935816d16e929f0db4db3ef15badd11d38c",
+            "locator": "Article 9(4)(f)"
+          }
         }
       ],
       "asset_types": [
         "cloud_policy",
         "cloud_resource",
         "container_image",
+        "host",
         "iam_role",
         "identity_account",
         "repo",

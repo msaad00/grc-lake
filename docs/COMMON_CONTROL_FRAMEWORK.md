@@ -14,9 +14,9 @@ between them is the mapping-review backlog.
 
 ## Why the catalog alone is not a CCF
 
-`controls/catalog.json` is framework-first: 2031 requirements, each carrying its
-own `framework_id` **and its own `evidence_requirement`** — 2031 distinct evidence
-statements for 2031 controls, none shared.
+`controls/catalog.json` is framework-first: 2245 requirements, each carrying its
+own `framework_id` **and its own `evidence_requirement`** — 2245 distinct evidence
+statements for 2245 controls, none shared.
 
 That last number is the whole problem. Because no two requirements share an
 evidence statement, answering SOC 2, ISO 27001, and FedRAMP means answering the
@@ -117,7 +117,7 @@ rest of that control.
 
 ```
 $ security-lakehouse frameworks safeguards --format table
-94 safeguards map 1235 of 2031 requirements (60.8%) — 350 reviewed (17.2%), 885 proposed
+94 safeguards map 1415 of 2245 requirements (63.0%) — 350 reviewed (15.6%), 1065 proposed
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -140,9 +140,10 @@ cannot become a false certification claim.
 | Framework           | Requirements | Mapped |    Pct |
 | ------------------- | -----------: | -----: | -----: |
 | cmmc-2-level2       |          110 |    110 | 100.0% |
-| eu-ai-act-2024-1689 |           15 |     15 | 100.0% |
+| eu-ai-act-2024-1689 |           16 |     16 | 100.0% |
 | gdpr-2016-679       |           20 |     20 | 100.0% |
 | hipaa-security-rule |           18 |     18 | 100.0% |
+| nis2-2022-2555      |           17 |     17 | 100.0% |
 | pci-dss-v4          |           12 |     12 | 100.0% |
 | soc2                |           61 |     61 | 100.0% |
 | nist-rmf-800-37r2   |           47 |     46 |  97.9% |
@@ -152,18 +153,20 @@ cannot become a false certification claim.
 | iso-27017-2015      |           47 |     44 |  93.6% |
 | fedramp-moderate    |          287 |    262 |  91.3% |
 | iso-27001-2022      |           93 |     81 |  87.1% |
+| nist-800-171-rev3   |           97 |     83 |  85.6% |
 | cis-controls-v8.1   |           18 |     15 |  83.3% |
 | cis_aws             |           62 |     51 |  82.3% |
 | iso-27701-2025      |           10 |      8 |  80.0% |
+| dora-2022-2554      |           99 |     79 |  79.8% |
 | nist-800-53-rev5    |         1014 |    285 |  28.1% |
 
 ### What a safeguard applies to
 
 Evaluation targets resources, not frameworks. The catalog already records
-`asset_types` on all 2031 requirements — `iam_role`, `data_store`, `ai_model`,
+`asset_types` on all 2245 requirements — `iam_role`, `data_store`, `ai_model`,
 `audit_log`, `cloud_resource` and 15 more — and a safeguard carries the union of
 what its members apply to. `safeguards_for_asset_type("iam_role")` returns the
-11 safeguards that bear on IAM roles.
+19 safeguards that bear on IAM roles.
 
 Without that a safeguard cannot be pointed at anything, which would make the
 operated object undeployable. The validator rejects a safeguard with no asset
@@ -172,7 +175,7 @@ drifting as curation moves.
 
 ## The real ceiling is the catalog, not the curation
 
-90 of 2031 titles still contain identifier-only or boilerplate descriptions,
+90 of 2245 titles still contain identifier-only or boilerplate descriptions,
 all ISO 27001 Annex A entries. ISO text is licensed: those need short internal
 summaries or licensed access, and must not be copied into this public
 repository. The NIST AI RMF titles now use the official subcategory statements

@@ -60,6 +60,19 @@ REVIEWED_DATE = "2026-06-30"
 # and have not been human-reviewed; rows stay ``proposed`` until promoted.
 PROPOSED_SOURCE_FRAMEWORKS = frozenset({"nist-csf-2.0", "nist-800-53-rev5", "nist-rmf-800-37r2"})
 NIST_800_53_SOURCE = "https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final"
+NIST_800_171_R3_SOURCE = "https://csrc.nist.gov/pubs/sp/800/171/r3/final"
+SOURCE_RECONCILED_BY = "automated-source-reconciliation"
+# Packs whose catalog rows are generated from a pinned official source and
+# carry that provenance honestly: proposed, attributed to source
+# reconciliation, dated by the source pull. Value is the manifest pulled_at.
+SOURCE_RECONCILED_PACKS = {
+    framework_id: str(json.loads((PACK_DATA_DIR / manifest).read_text(encoding="utf-8"))["source"]["pulled_at"])
+    for framework_id, manifest in {
+        "nist-800-171-rev3": "nist_800_171_rev3.json",
+        "nis2-2022-2555": "nis2_2022_2555.json",
+        "dora-2022-2554": "dora_2022_2554.json",
+    }.items()
+}
 NIST_RMF_SOURCE = "https://csrc.nist.gov/pubs/sp/800/37/r2/final"
 RMF_STEP_RISK_DOMAIN = {
     "P": "governance",
@@ -553,6 +566,39 @@ def nist_rmf_800_37r2_specs() -> list[PackControlSpec]:
     return pack_from_manifest(PACK_DATA_DIR / "nist_rmf_800_37r2.json", transform=_nist_rmf_row_transform)
 
 
+def _nist_800_171_r3_row_transform(row: PackManifestRow) -> PackControlSpec:
+    requirement_id = row.id
+    risk = str(row.extra["risk_domain"])
+    return PackControlSpec(
+        control_id=f"NIST-800-171R3-{requirement_id}",
+        framework_id="nist-800-171-rev3",
+        framework="NIST SP 800-171 Rev 3",
+        framework_ref=f"NIST SP 800-171 Rev 3 {requirement_id}",
+        article_id=requirement_id,
+        title=f"{requirement_id} — {row.title}",
+        risk_domain=risk,
+        owner=_soc2_owner(risk),
+        evaluation_rule=_soc2_evaluation_rule(risk),
+        evidence_requirement=(
+            f"CUI protection evidence supports NIST SP 800-171 Rev 3 requirement {requirement_id} ({row.title})."
+        ),
+        asset_types=_soc2_assets(risk),
+        source_url=NIST_800_171_R3_SOURCE,
+        official_source_ref="nist-800-171-rev3",
+        required_evidence_types=tuple(row.extra["required_evidence_types"]),
+    )
+
+
+def nist_800_171_rev3_specs() -> list[PackControlSpec]:
+    """All 97 NIST SP 800-171 Rev 3 security requirements across 17 families.
+
+    Generated from the pinned official OSCAL catalog by
+    ``tools/sync_nist_800_171r3.py``; each row records its Rev 2 predecessors
+    from NIST's published change analysis.
+    """
+    return pack_from_manifest(PACK_DATA_DIR / "nist_800_171_rev3.json", transform=_nist_800_171_r3_row_transform)
+
+
 PACK_BUILDERS = {
     "soc2": soc2_full_pack_specs,
     "nist-ai-rmf": nist_ai_rmf_specs,
@@ -565,6 +611,7 @@ PACK_BUILDERS = {
     "iso-42001-2023": iso_42001_2023_specs,
     "nist-800-53-rev5": nist_800_53_rev5_specs,
     "nist-rmf-800-37r2": nist_rmf_800_37r2_specs,
+    "nist-800-171-rev3": nist_800_171_rev3_specs,
 }
 
 from security_lakehouse.limited_packs import LIMITED_PACK_BUILDERS  # noqa: E402
@@ -572,7 +619,19 @@ from security_lakehouse.limited_packs import LIMITED_PACK_BUILDERS  # noqa: E402
 PACK_BUILDERS = {**PACK_BUILDERS, **LIMITED_PACK_BUILDERS}
 
 
+def _review_fields(spec: PackControlSpec) -> tuple[str | None, str, str | None]:
+    """(reviewed_by, review_status, reviewed date) for a generated pack row."""
+    reconciled = spec.reconciled_at or SOURCE_RECONCILED_PACKS.get(spec.framework_id)
+    if reconciled:
+        return SOURCE_RECONCILED_BY, "proposed", reconciled
+    if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS:
+        return None, "proposed", None
+    return REVIEWED_BY, "reviewed", REVIEWED_DATE
+
+
 def pack_control_row(spec: PackControlSpec) -> JsonObject:
+    reconciled = spec.reconciled_at or SOURCE_RECONCILED_PACKS.get(spec.framework_id)
+    reviewed_by, review_status, reviewed_date = _review_fields(spec)
     return {
         "control_id": spec.control_id,
         "framework_id": spec.framework_id,
@@ -587,19 +646,23 @@ def pack_control_row(spec: PackControlSpec) -> JsonObject:
         if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS
         else "implemented",
         "version": "1.0.0",
-        "valid_from": REVIEWED_DATE,
+        "valid_from": reconciled or REVIEWED_DATE,
         "valid_to": None,
         "supersedes": None,
         "superseded_by": None,
-        "change_reason": "Framework pack sync",
+        "change_reason": "Reconciled identifier and title with the pinned official source"
+        if reconciled
+        else "Framework pack sync",
         "lifecycle_status": "active",
         "official_source_ref": spec.official_source_ref,
         "framework_ref": spec.framework_ref,
         "source_url": spec.source_url,
-        "mapping_rationale": f"Pack mapping: control identifier matches {spec.framework_ref} verbatim.",
-        "reviewed_by": None if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS else REVIEWED_BY,
-        "review_status": "proposed" if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS else "reviewed",
-        "reviewed_date": None if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS else REVIEWED_DATE,
+        "mapping_rationale": "Direct source identity; not a cross-framework equivalence or certification assertion."
+        if reconciled
+        else f"Pack mapping: control identifier matches {spec.framework_ref} verbatim.",
+        "reviewed_by": reviewed_by,
+        "review_status": review_status,
+        "reviewed_date": reviewed_date,
         "signal_source": "silver/normalized_events.jsonl",
         "asset_types": list(spec.asset_types),
         **({"nist_baselines": list(spec.baselines)} if spec.framework_id == "nist-800-53-rev5" else {}),
@@ -608,6 +671,7 @@ def pack_control_row(spec: PackControlSpec) -> JsonObject:
 
 
 def pack_mapping_row(spec: PackControlSpec) -> JsonObject:
+    reviewed_by, review_status, reviewed_date = _review_fields(spec)
     return {
         "control_id": spec.control_id,
         "framework_id": spec.framework_id,
@@ -616,11 +680,9 @@ def pack_mapping_row(spec: PackControlSpec) -> JsonObject:
                 "article_id": spec.article_id,
                 "title": spec.title[:120],
                 "official_source_url": spec.source_url,
-                "reviewed_by": None if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS else REVIEWED_BY,
-                "review_status": "proposed" if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS else "reviewed",
-                "reviewed_at": None
-                if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS
-                else f"{REVIEWED_DATE}T00:00:00Z",
+                "reviewed_by": reviewed_by,
+                "review_status": review_status,
+                "reviewed_at": f"{reviewed_date}T00:00:00Z" if reviewed_date else None,
                 "rationale": f"Pack mapping to {spec.framework_ref}.",
             }
         ],

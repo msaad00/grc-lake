@@ -44,6 +44,9 @@ _FORMAT_PATTERNS: dict[str, str] = {
     "nist-rmf-800-37r2": r"^[PCSIARM]-\d+$",
     "cis-controls-v8.1": r"^Control-\d+$",
     "iso-27701-2025": r"^A\.[123]\.\d+(\.\d+)?$",
+    "nist-800-171-rev3": r"^03\.\d{2}\.\d{2}$",
+    "nis2-2022-2555": r"^Art2[13]\.\d+(\([a-j]\))?$",
+    "dora-2022-2554": r"^Art\d+(\.\d+(\([a-i]\))?)?$",
 }
 
 _FRAMEWORK_FAMILIES = {"assurance", "security", "privacy", "ai-governance", "cloud", "sector"}

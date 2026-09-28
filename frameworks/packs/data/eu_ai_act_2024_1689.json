@@ -2,7 +2,12 @@
   "schema": "trustops.framework_pack_manifest.v1",
   "source": {
     "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202401689",
-    "name": "EU AI Act (Regulation (EU) 2024/1689)"
+    "name": "EU AI Act (Regulation (EU) 2024/1689)",
+    "celex": "32024R1689",
+    "eli": "http://data.europa.eu/eli/reg/2024/1689/oj",
+    "pdf": "https://publications.europa.eu/resource/cellar/dc8116a1-3fe6-11ef-865a-01aa75ed71a1.0006.01/DOC_1",
+    "pdf_sha256": "bba630444b3278e881066774002a1d7824308934f49ccfa203e65be43692f55e",
+    "pulled_at": "2026-09-28"
   },
   "rows": [
     {
@@ -41,11 +46,20 @@
       "asset_types": ["ai_model", "service"]
     },
     {
-      "id": "Art.49",
-      "title": "Fundamental-rights impact assessment where required",
+      "id": "Art.27",
+      "title": "Fundamental rights impact assessment by deployers",
       "risk_domain": "ai-governance",
       "owner": "privacy-office",
-      "asset_types": ["ai_model"]
+      "asset_types": ["ai_model"],
+      "source_reconciled_at": "2026-09-28"
+    },
+    {
+      "id": "Art.49",
+      "title": "High-risk AI system registration in the EU database",
+      "risk_domain": "ai-governance",
+      "owner": "privacy-office",
+      "asset_types": ["ai_model"],
+      "source_reconciled_at": "2026-09-28"
     },
     {
       "id": "Art.51",

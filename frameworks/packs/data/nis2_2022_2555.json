@@ -1,0 +1,181 @@
+{
+  "schema": "trustops.framework_pack_manifest.v1",
+  "source": {
+    "name": "Directive (EU) 2022/2555 (NIS 2 Directive)",
+    "celex": "32022L2555",
+    "eli": "http://data.europa.eu/eli/dir/2022/2555/oj",
+    "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+    "official_journal": "OJ L 333, 27.12.2022, p. 80-152",
+    "pdf": "https://publications.europa.eu/resource/cellar/9b84d482-85bd-11ed-9887-01aa75ed71a1.0006.01/DOC_1",
+    "pdf_sha256": "20d29e9c5300ae1095530996f04731311bf82bb7d4d6a7a0102cd0f075755cf3",
+    "pulled_at": "2026-09-28",
+    "note": "English Official Journal PDF served by the EU Publications Office for the CELEX number. Rows store article, paragraph and point identifiers with short paraphrased titles; the legal text is not reproduced.",
+    "scope": "Article 21(2), points (a) to (j), and the entity reporting obligations of Article 23(1), (2) and (4)."
+  },
+  "rows": [
+    {
+      "id": "Art21.2(a)",
+      "title": "Risk analysis and information system security policies",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art21.2(b)",
+      "title": "Incident handling",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering",
+      "asset_types": ["service", "audit_log"],
+      "required_evidence_types": ["detection.alert", "remediation.ticket"]
+    },
+    {
+      "id": "Art21.2(c)",
+      "title": "Business continuity, backup, disaster recovery and crisis management",
+      "risk_domain": "availability",
+      "owner": "platform-engineering",
+      "asset_types": ["service", "data_store"],
+      "required_evidence_types": ["resilience.test_report"]
+    },
+    {
+      "id": "Art21.2(d)",
+      "title": "Supply chain security with direct suppliers and service providers",
+      "risk_domain": "vendor-risk",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": [
+        "third_party.register",
+        "compliance.evidence_bundle"
+      ]
+    },
+    {
+      "id": "Art21.2(e)",
+      "title": "Secure acquisition, development and maintenance; vulnerability handling and disclosure",
+      "risk_domain": "change-management",
+      "owner": "platform-engineering",
+      "asset_types": ["repo", "container_image", "service"],
+      "required_evidence_types": ["vulnerability.finding", "remediation.ticket"]
+    },
+    {
+      "id": "Art21.2(f)",
+      "title": "Assessing the effectiveness of risk-management measures",
+      "risk_domain": "risk-management",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art21.2(g)",
+      "title": "Basic cyber hygiene practices and cybersecurity training",
+      "risk_domain": "governance",
+      "owner": "grc",
+      "asset_types": ["identity_user"],
+      "required_evidence_types": ["compliance.evidence_bundle"]
+    },
+    {
+      "id": "Art21.2(h)",
+      "title": "Cryptography and encryption policies",
+      "risk_domain": "confidentiality",
+      "owner": "security-platform",
+      "asset_types": ["data_store", "s3_bucket", "cloud_resource"],
+      "required_evidence_types": ["cloud.config"]
+    },
+    {
+      "id": "Art21.2(i)",
+      "title": "Human resources security, access control and asset management",
+      "risk_domain": "identity",
+      "owner": "security-platform",
+      "asset_types": ["identity_user", "iam_role", "cloud_resource"],
+      "required_evidence_types": ["identity.access_review", "cloud.config"]
+    },
+    {
+      "id": "Art21.2(j)",
+      "title": "Multi-factor or continuous authentication and secured communications",
+      "risk_domain": "identity",
+      "owner": "security-platform",
+      "asset_types": ["identity_user", "iam_role"],
+      "required_evidence_types": ["identity.access_review"]
+    },
+    {
+      "id": "Art23.1",
+      "title": "Notify significant incidents to the CSIRT or competent authority",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art23.2",
+      "title": "Inform affected service recipients of significant cyber threats",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art23.4(a)",
+      "title": "Early warning within 24 hours",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art23.4(b)",
+      "title": "Incident notification within 72 hours",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art23.4(c)",
+      "title": "Intermediate report on request",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art23.4(d)",
+      "title": "Final report within one month of the incident notification",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    },
+    {
+      "id": "Art23.4(e)",
+      "title": "Progress report while an incident is ongoing",
+      "risk_domain": "monitoring",
+      "owner": "grc",
+      "asset_types": ["service"],
+      "required_evidence_types": ["incident.regulatory_report"]
+    }
+  ],
+  "not_seeded": [
+    {
+      "article": 20,
+      "reason": "Governance: management body approval, oversight and training. Entity obligations outside the Article 21(2) and 23 scope of this pack; candidates for a later extension."
+    },
+    {
+      "article": 21,
+      "paragraphs": [1, 3, 4, 5],
+      "reason": "Paragraph 1 is the general duty that paragraph 2 itemizes; paragraph 3 qualifies point (d); paragraph 4 (corrective measures) is outside this pack's scope; paragraph 5 empowers Commission implementing acts."
+    },
+    {
+      "article": 23,
+      "paragraphs": [3, 5, 6, 7, 8, 9, 10, 11],
+      "reason": "Paragraph 3 defines a significant incident; paragraphs 5 to 11 are obligations of CSIRTs, competent authorities, single points of contact, ENISA and the Commission."
+    }
+  ],
+  "related_acts": [
+    {
+      "name": "Commission Implementing Regulation (EU) 2024/2690",
+      "celex": "32024R2690",
+      "status": "not_seeded",
+      "note": "Technical and methodological requirements of Article 21(2) for DNS, TLD, cloud, data centre, CDN, managed and managed security service providers, online platforms and trust service providers. Candidate for a sector overlay; not pinned here."
+    }
+  ],
+  "unmapped": []
+}

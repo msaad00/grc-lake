@@ -218,6 +218,10 @@ def test_review_report_groups_frameworks_categories_and_source_gaps() -> None:
         "nist-csf-2.0",
         "nist-ai-rmf",
         "nist-rmf-800-37r2",
+        "nist-800-171-rev3",
+        "nis2-2022-2555",
+        "dora-2022-2554",
+        "eu-ai-act-2024-1689",
     }
 
 

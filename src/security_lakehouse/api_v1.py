@@ -169,7 +169,7 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
     "/api/v1/mappings/equivalence": ("mappings.equivalence", lambda _lake: build_framework_equivalence()),
     # CCF coverage and the OSCAL component definition read the shipped safeguards
     # with this lake's org review decisions layered on (mapping_review).
-    "/api/v1/ccf/coverage": ("ccf.coverage", lambda lake: _ccf_coverage(lake)),
+    "/api/v1/ccf/coverage": ("ccf.coverage", _ccf_coverage),
     "/api/v1/oscal/component-definition": (
         "oscal.component-definition",
         lambda lake: build_component_definition(lake_dir=lake),

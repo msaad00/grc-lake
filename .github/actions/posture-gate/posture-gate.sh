@@ -69,11 +69,17 @@ if [[ "${MAX_FAILING_CONTROL_TESTS}" != "-1" || -n "${ALLOWED_FAILING_CONTROLS}"
     control_args+=(--data-urlencode "framework=${FRAMEWORK}")
   fi
   control_response=""
-  if control_response="$(curl "${control_args[@]}")"; then
-    while IFS= read -r control_id; do
-      [[ -n "${control_id}" ]] && failing_controls+=("${control_id}")
-    done < <(echo "${control_response}" | jq -r '.data[]?.control_id // empty')
+  if ! control_response="$(curl "${control_args[@]}")"; then
+    echo "::error title=TrustOps posture gate::Could not read failing control tests from ${base}/api/v1/control-tests"
+    exit 1
   fi
+  if ! echo "${control_response}" | jq -e '.data | type == "array"' >/dev/null 2>&1; then
+    echo "::error title=TrustOps posture gate::Unexpected response from ${base}/api/v1/control-tests"
+    exit 1
+  fi
+  while IFS= read -r control_id; do
+    [[ -n "${control_id}" ]] && failing_controls+=("${control_id}")
+  done < <(echo "${control_response}" | jq -r '.data[]?.control_id // empty')
 fi
 
 gate_failing_count="${failed_tests}"
@@ -81,7 +87,7 @@ if [[ -n "${ALLOWED_FAILING_CONTROLS}" ]]; then
   IFS=',' read -ra allowed <<<"${ALLOWED_FAILING_CONTROLS}"
   unexpected_failures=()
   gate_failing_count=0
-  for control_id in "${failing_controls[@]}"; do
+  for control_id in "${failing_controls[@]+"${failing_controls[@]}"}"; do
     allowed_match=false
     for item in "${allowed[@]}"; do
       trimmed="$(echo "${item}" | xargs)"
@@ -95,7 +101,16 @@ if [[ -n "${ALLOWED_FAILING_CONTROLS}" ]]; then
       gate_failing_count=$((gate_failing_count + 1))
     fi
   done
-  failing_controls=("${unexpected_failures[@]-}")
+  # The control-tests page is capped; failures that were not fetched cannot be
+  # matched against the allowlist, so they count as unexpected.
+  fetched_count=0
+  for _ in "${failing_controls[@]+"${failing_controls[@]}"}"; do
+    fetched_count=$((fetched_count + 1))
+  done
+  if (( failed_tests > fetched_count )); then
+    gate_failing_count=$((gate_failing_count + failed_tests - fetched_count))
+  fi
+  failing_controls=("${unexpected_failures[@]+"${unexpected_failures[@]}"}")
 fi
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then

@@ -182,7 +182,9 @@ def _eu_act_specs(
             control_id_prefix=prefix,
             framework_ref=lambda ref: f"{act} {eu_article_ref(ref)}",
             source_url=source,
-            evidence_requirement=lambda ref, title: f"Current evidence supports {ref} ({title}) within the freshness SLA.",
+            evidence_requirement=lambda ref, title: (
+                f"Current evidence supports {ref} ({title}) within the freshness SLA."
+            ),
         ),
     )
 

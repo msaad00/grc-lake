@@ -269,9 +269,9 @@ def test_unmapped_rows_are_documented(framework_id: str) -> None:
 def test_fixture_covers_every_new_evidence_type_through_pipeline(tmp_path: Path) -> None:
     controls = {**_controls("nis2-2022-2555"), **_controls("dora-2022-2554")}
     required = {t for c in controls.values() for t in c["required_evidence_types"]}
-    assert NEW_EVIDENCE_TYPES <= required
+    assert required >= NEW_EVIDENCE_TYPES
     events = read_jsonl(FIXTURE)
-    assert NEW_EVIDENCE_TYPES <= {e["event_type"] for e in events}
+    assert {e["event_type"] for e in events} >= NEW_EVIDENCE_TYPES
 
     run_pipeline(FIXTURE, tmp_path)
     tests = {row["control_id"]: row for row in read_jsonl(tmp_path / "gold" / "control_tests.jsonl")}

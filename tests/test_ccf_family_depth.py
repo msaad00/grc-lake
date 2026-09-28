@@ -21,6 +21,9 @@ from security_lakehouse.safeguards import (
 
 ROOT = Path(__file__).resolve().parents[1]
 RMF_MANIFEST = json.loads((ROOT / "frameworks/packs/data/nist_rmf_800_37r2.json").read_text())
+R3_MANIFEST = json.loads((ROOT / "frameworks/packs/data/nist_800_171_rev3.json").read_text())
+NIS2_MANIFEST = json.loads((ROOT / "frameworks/packs/data/nis2_2022_2555.json").read_text())
+DORA_MANIFEST = json.loads((ROOT / "frameworks/packs/data/dora_2022_2554.json").read_text())
 
 # The 44 safeguards that existed before this deepening pass. New safeguards are
 # appended after them so edits to these objects stay isolated from this change.
@@ -217,7 +220,15 @@ def test_new_mappings_are_proposed_and_add_no_attestable_coverage() -> None:
 
 
 def test_citations_are_limited_to_the_requirement_source() -> None:
-    """Only CSF and RMF members carry provenance, and it cites their own publication."""
+    """Only CSF, RMF, SP 800-171 Rev 3, NIS2 and DORA members carry provenance, citing their own publication."""
+    own_sources = {
+        "nist-800-171-rev3": {
+            R3_MANIFEST["source"]["pdf"],
+            R3_MANIFEST["source"]["r2_r3_analysis"]["url"],
+        },
+        "nis2-2022-2555": {NIS2_MANIFEST["source"]["pdf"]},
+        "dora-2022-2554": {DORA_MANIFEST["source"]["pdf"]},
+    }
     for sid in NEW_SAFEGUARDS:
         for member in _entries()[sid]["satisfies"]:
             source = member.get("mapping_source")
@@ -229,6 +240,8 @@ def test_citations_are_limited_to_the_requirement_source() -> None:
                 assert source["url"] == RMF_MANIFEST["source"]["pdf"]
                 assert source["sha256"] == RMF_MANIFEST["source"]["pdf_sha256"]
                 assert source["locator"] == f"Chapter 3, Section {RMF_STEP_SECTIONS[task[0]]}, Task {task}"
+            elif member["framework_id"] in own_sources:
+                assert source["url"] in own_sources[member["framework_id"]], (sid, member["control_id"])
             else:
                 assert source is None, (sid, member["control_id"])
 

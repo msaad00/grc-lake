@@ -93,6 +93,15 @@ export const FRAMEWORK_VISUALS: Record<string, FrameworkVisual> = {
     gradient: "linear-gradient(135deg, #3730a3 0%, #1e3a8a 100%)",
     icon: "landmark",
   },
+  "nist-800-171-rev3": {
+    label: "NIST SP 800-171 Rev 3",
+    mark: "800-171",
+    accent: "#1e3a8a",
+    bg: "#e0e7ff",
+    ring: "#a5b4fc",
+    gradient: "linear-gradient(135deg, #3730a3 0%, #1e3a8a 100%)",
+    icon: "lock",
+  },
   "nist-rmf-800-37r2": {
     label: "NIST RMF (SP 800-37 Rev 2)",
     mark: "RMF",
@@ -149,6 +158,26 @@ export const FRAMEWORK_VISUALS: Record<string, FrameworkVisual> = {
     ring: "#c7d2fe",
     gradient: "linear-gradient(135deg, #6366f1 0%, #3730a3 100%)",
     icon: "scale",
+  },
+  "nis2-2022-2555": {
+    badge: "/console/frameworks/badges/eu-ai-act.svg",
+    label: "NIS2 Directive",
+    mark: "NIS2",
+    accent: "#4338ca",
+    bg: "#eef2ff",
+    ring: "#c7d2fe",
+    gradient: "linear-gradient(135deg, #6366f1 0%, #3730a3 100%)",
+    icon: "shield",
+  },
+  "dora-2022-2554": {
+    badge: "/console/frameworks/badges/eu-ai-act.svg",
+    label: "DORA",
+    mark: "DORA",
+    accent: "#4338ca",
+    bg: "#eef2ff",
+    ring: "#c7d2fe",
+    gradient: "linear-gradient(135deg, #6366f1 0%, #3730a3 100%)",
+    icon: "landmark",
   },
   "eu-ai-act-2024-1689": {
     badge: "/console/frameworks/badges/eu-ai-act.svg",
@@ -236,6 +265,10 @@ const NAME_TO_ID: Record<string, string> = {
   "NIST SP 800-53 Rev 5": "nist-800-53-rev5",
   "NIST SP 800-53": "nist-800-53-rev5",
   "NIST RMF": "nist-rmf-800-37r2",
+  "NIST SP 800-171 Rev 3": "nist-800-171-rev3",
+  "NIS2 Directive": "nis2-2022-2555",
+  NIS2: "nis2-2022-2555",
+  DORA: "dora-2022-2554",
   "FedRAMP Moderate": "fedramp-moderate",
   "CIS AWS Foundations Benchmark": "cis_aws",
   "CIS AWS": "cis_aws",
@@ -276,6 +309,9 @@ export function frameworkIdFromControlId(controlId: string): string {
   if (id.startsWith("PCI-")) return "pci-dss-v4";
   if (id.startsWith("GDPR-")) return "gdpr-2016-679";
   if (id.startsWith("EU-AI-ACT-")) return "eu-ai-act-2024-1689";
+  if (id.startsWith("NIST-800-171R3-")) return "nist-800-171-rev3";
+  if (id.startsWith("NIS2-")) return "nis2-2022-2555";
+  if (id.startsWith("DORA-")) return "dora-2022-2554";
   return resolveFrameworkId(controlId.split("-")[0]);
 }
 

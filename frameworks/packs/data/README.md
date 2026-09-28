@@ -21,6 +21,9 @@ for the manifest schema and the "add a new framework" workflow.
 | `iso_27017_2015.json`            | `iso-27017-2015`    |                                          **47** |
 | `iso_42001_2023.json`            | `iso-42001-2023`    |                                          **38** |
 | `iso_27701_2025.json`            | `iso-27701`         |                 **10** (68 Annex A gaps listed) |
+| `nist_800_171_rev3.json` | `nist-800-171-rev3` | **97** (with Rev 2 predecessors) |
+| `nis2_2022_2555.json` | `nis2` | **17** |
+| `dora_2022_2554.json` | `dora` | **99** |
 | `gdpr_2016_679.json`             | `gdpr`              |                                          **14** |
 | `hipaa_security_rule.json`       | `hipaa`             |                                          **12** |
 | `pci_dss_v4.json`                | `pci-dss`           |                                          **12** |

@@ -1,7 +1,7 @@
 {
   "name": "trustops-console",
   "private": true,
-  "version": "0.2.18",
+  "version": "0.2.19",
   "description": "TrustOps Console — open-source, headless-first trust operations served by the security-lakehouse Python package.",
   "engines": {
     "node": ">=22"

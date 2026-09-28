@@ -404,3 +404,50 @@ def test_framework_coverage_route_reports_org_review_separately(server) -> None:
     )
     fedramp = next(row for row in after["frameworks"] if row["framework_id"] == "fedramp-moderate")
     assert fedramp["org_reviewed_mapping_count"] == 40
+
+
+# --- integrity + server-mode guard ----------------------------------------------
+
+
+def test_coverage_payloads_report_review_log_verified(tmp_path: Path, monkeypatch) -> None:
+    from security_lakehouse.framework_coverage import build_framework_coverage, framework_coverage_summary
+    from security_lakehouse.mapping_review import review_log_path
+
+    monkeypatch.delenv("TRUSTOPS_COOKIE_SIGNING_KEY", raising=False)
+    items = _proposed_items(1)
+    api_v1.handle_post(
+        "/api/v1/mapping-reviews/decisions",
+        {"decision": "approve", "rationale": "Confirmed.", "reviewer": "grc@acme.test", "items": items},
+        tmp_path,
+    )
+    _status, coverage = _get("/api/v1/ccf/coverage", tmp_path)
+    assert coverage["data"]["review_log_verified"] is True
+    assert coverage["data"]["frameworks"]["org_reviewed_mappings"] == 1
+
+    path = review_log_path(tmp_path)
+    path.write_text(path.read_text(encoding="utf-8").replace("Confirmed.", "Forged."), encoding="utf-8")
+
+    _status, coverage = _get("/api/v1/ccf/coverage", tmp_path)
+    assert coverage["data"]["review_log_verified"] is False
+    assert coverage["data"]["frameworks"]["org_reviewed_mappings"] == 0
+    _status, summary = _get("/api/v1/mapping-reviews/summary", tmp_path)
+    assert summary["data"]["review_log_verified"] is False
+    assert summary["data"]["totals"]["org_reviewed"] == 0
+    rows = build_framework_coverage(lake_dir=tmp_path)
+    assert rows and all(row["review_log_verified"] is False for row in rows)
+    assert framework_coverage_summary(rows)["review_log_verified"] is False
+
+
+def test_handle_post_refuses_unauthenticated_decisions_in_server_mode(tmp_path: Path) -> None:
+    from security_lakehouse.execution_mode import server_execution
+
+    items = _proposed_items(1)
+    with server_execution("t1"):
+        status, body = api_v1.handle_post(
+            "/api/v1/mapping-reviews/decisions",
+            {"decision": "approve", "rationale": "Confirmed.", "reviewer": "forged@acme.test", "items": items},
+            tmp_path,
+        )
+    assert status == HTTPStatus.FORBIDDEN, body
+    assert body["errors"][0]["code"] == "forbidden"
+    assert list_decisions(tmp_path) == []

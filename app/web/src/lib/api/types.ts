@@ -1240,6 +1240,7 @@ export interface AuditLogEntry {
     | "snapshot"
     | "workflow"
     | "trust_share"
+    | "mapping_review"
     | "request";
   actor: string;
   occurred_at: string;

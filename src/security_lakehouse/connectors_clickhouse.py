@@ -27,6 +27,7 @@ from security_lakehouse.lake_mapping import (
     resolve_mappings,
 )
 from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.secret_refs import resolve_ref_or_default
 
 CONNECTOR_ID = "clickhouse-telemetry-lake"
 SOURCE = "clickhouse"
@@ -327,9 +328,17 @@ def _connection_params(
     environment = env or {}
     host = str(credentials.get("host") or environment.get("CLICKHOUSE_HOST") or "").strip()
     user = str(credentials.get("user") or environment.get("CLICKHOUSE_USER") or "default").strip() or "default"
-    credential_ref = str(credentials.get("credential_ref") or "CLICKHOUSE_PASSWORD").strip()
     password = str(
-        credentials.get("token") or credentials.get("password") or environment.get(credential_ref) or ""
+        credentials.get("token")
+        or credentials.get("password")
+        or resolve_ref_or_default(
+            credentials.get("credential_ref"),
+            "CLICKHOUSE_PASSWORD",
+            environment,
+            field="credential_ref",
+            file_first=False,
+        )
+        or ""
     ).strip()
     database = str(options.get("database") or DEFAULT_DATABASE).strip() or DEFAULT_DATABASE
     table = str(options.get("table") or DEFAULT_TABLE).strip() or DEFAULT_TABLE

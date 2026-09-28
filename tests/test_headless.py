@@ -105,15 +105,17 @@ def test_v1_connector_actions_require_connector_manage_scope(tmp_path: Path) -> 
     assert sync_denied.json()["errors"][0]["detail"] == "requires scope: connector_manage"
 
 
-def test_v1_headless_github_security_probe_enable_lifecycle(tmp_path: Path) -> None:
+def test_v1_headless_github_security_probe_enable_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Headless path: probe before enable, same contract as console (#475)."""
+    # Hosted server mode resolves only allowlisted or tenant-prefixed refs.
+    monkeypatch.setenv("TRUSTOPS_CONNECTOR_SECRET_REFS", "ACME_GITHUB_APP_TOKEN")
     app = create_app(tmp_path)
     client = TestClient(app)
     admin_token = _token_for_role(app, tmp_path, "security_admin")
     headers = _bearer(admin_token)
     payload = {
         "actor": "headless-test",
-        "credentials": {"credential_ref": "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"},
+        "credentials": {"credential_ref": "ACME_GITHUB_APP_TOKEN"},
         "options": {"repo": "acme/platform"},
     }
 

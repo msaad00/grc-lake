@@ -28,6 +28,7 @@ const CATEGORIES: Array<Category | "all"> = [
   "snapshot",
   "workflow",
   "trust_share",
+  "mapping_review",
   "request",
 ];
 
@@ -38,6 +39,7 @@ const CATEGORY_LABEL: Record<Category | "all", string> = {
   snapshot: "Snapshots",
   workflow: "Workflows",
   trust_share: "Trust shares",
+  mapping_review: "Mapping review",
   request: "API requests",
 };
 
@@ -47,6 +49,7 @@ const CATEGORY_BADGE: Record<Category, string> = {
   snapshot: "Snapshot",
   workflow: "Workflow",
   trust_share: "Trust share",
+  mapping_review: "Mapping review",
   request: "API request",
 };
 
@@ -59,6 +62,7 @@ const CATEGORY_TONE: Record<
   snapshot: "ready",
   workflow: "ready",
   trust_share: "critical",
+  mapping_review: "attention",
   request: "default",
 };
 

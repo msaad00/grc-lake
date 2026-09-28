@@ -87,6 +87,7 @@ def build_framework_coverage(
         safeguards = effective_safeguards(lake_dir)
     else:
         safeguards = load_safeguards()
+    review_log_verified = bool(safeguards.get("review_log_verified", True))
     evaluatable_by_framework: Counter[str] = Counter()
     attestable_by_framework: Counter[str] = Counter()
     for control_id in safeguards_by_requirement(safeguards):
@@ -159,6 +160,9 @@ def build_framework_coverage(
                 "org_reviewed_mapping_count": mapping_states[framework_id]["org_reviewed"],
                 "needs_changes_mapping_count": mapping_states[framework_id]["needs_changes"],
                 "rejected_mapping_count": mapping_states[framework_id]["rejected"],
+                # False when the org decision log failed verification; the org
+                # counts above then fall back to the shipped review states.
+                "review_log_verified": review_log_verified,
                 "evaluatable_coverage_pct": (
                     round(evaluatable_by_framework.get(framework_id, 0) / seeded_count * 100, 1)
                     if seeded_count
@@ -212,6 +216,7 @@ def framework_coverage_summary(
         "org_reviewed_mapping_count": sum(int(row.get("org_reviewed_mapping_count", 0)) for row in rows),
         "needs_changes_mapping_count": sum(int(row.get("needs_changes_mapping_count", 0)) for row in rows),
         "rejected_mapping_count": sum(int(row.get("rejected_mapping_count", 0)) for row in rows),
+        "review_log_verified": all(bool(row.get("review_log_verified", True)) for row in rows),
         "evaluatable_coverage_pct": round(evaluatable / seeded * 100, 1) if seeded else 0.0,
         "attestable_coverage_pct": round(attestable / seeded * 100, 1) if seeded else 0.0,
         "asset_type_count": len(applicability),

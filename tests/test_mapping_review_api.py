@@ -157,7 +157,8 @@ def test_local_post_records_decision_and_updates_queue_summary_coverage_and_osca
     assert summary["data"]["totals"]["org_reviewed"] == 2
     assert summary["data"]["decision_log"]["ok"] is True
     families = summary["data"]["families"]
-    assert families and all(set(row) == {"family_id", "label"} for row in families)
+    assert families and all(set(row) == {"family_id", "label", "category_id", "category_label"} for row in families)
+    assert all(row["category_id"] and row["category_label"] for row in families)
     assert {row["family_id"] for row in families} == {
         str(entry["risk_domain"]) for entry in load_safeguards()["safeguards"]
     }

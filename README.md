@@ -111,11 +111,22 @@ keys). Start with the [deployment guide](deploy/README.md).
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**17 framework packs · 78 reusable safeguards · 21 control families · 2,031 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
+**17 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,031 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
 
-1,182 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
+1,235 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 
-Control families: Identity and access · Data protection · Detection · Audit logging · Change management · Configuration management · Secure development · Secure architecture · Vulnerability management · Third-party risk · Risk management · Availability and recovery · Incident response · Governance · People security · Physical security · Network security · System maintenance · Processing integrity · Privacy · AI governance.
+Control families by category:
+
+- **Governance and risk:** Risk management · Governance
+- **Identity and access:** Identity and access
+- **Data protection and privacy:** Data protection · Privacy
+- **Secure engineering:** Change management · Secure development · Secure architecture
+- **Infrastructure security:** Configuration management · Vulnerability management · Network security
+- **Detection and response:** Detection · Audit logging · Incident response
+- **Resilience and integrity:** Availability and recovery · System maintenance · Processing integrity
+- **Third-party and supply chain:** Third-party risk
+- **People and physical:** People security · Physical security
+- **AI governance:** AI governance
 
 <!-- END README CCF SUMMARY -->
 

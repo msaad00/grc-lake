@@ -11,7 +11,7 @@ them.
 | `example.registry.json` | Framework metadata (source URL, version, guardrails)     |
 | `example.controls.json` | Control definitions with provenance and evaluation rules |
 
-See [Framework Packs](../docs/FRAMEWORK_PACKS.md) for the full workflow and
+See [Framework Packs](../../docs/FRAMEWORK_PACKS.md) for the full workflow and
 `security-lakehouse frameworks sync-packs` for built-in SOC 2, NIST AI RMF,
 FedRAMP, CIS AWS, and ISO full packs.
 

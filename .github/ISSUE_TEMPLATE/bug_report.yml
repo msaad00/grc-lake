@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in TrustOps does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security vulnerabilities go through a private report, not this form. See SECURITY.md.
+        Do not paste credentials, tokens, or real customer evidence.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Commands, API calls, or console clicks. The golden sample company (`security-lakehouse fixtures load --company golden`) is a good baseline.
+      placeholder: |
+        1. docker compose up
+        2. Open /console/controls/
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `pip show trustops-security-data-lake`, or the image tag.
+      placeholder: "0.2.19"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you run TrustOps
+      options:
+        - pip / uv (local lake)
+        - Docker Compose
+        - Docker image
+        - Helm
+        - Source checkout
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Console
+        - API
+        - CLI
+        - Connector
+        - Framework pack or mapping
+        - MCP server
+        - Posture-gate action
+        - Deployment (image, Helm, Compose)
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or output
+      description: Redact secrets and hostnames you do not want public.
+      render: shell

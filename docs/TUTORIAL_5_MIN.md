@@ -1,0 +1,156 @@
+# TrustOps in five minutes
+
+From nothing to evaluated controls on sample data, then your own cloud, a
+mapping review, and an auditor export. Steps 1 to 3 need no account and no
+credentials.
+
+## 1. Start TrustOps with sample data
+
+Pick one.
+
+**Docker Compose** (Docker with Compose v2):
+
+```bash
+git clone https://github.com/msaad00/trustops-security-data-lake.git
+cd trustops-security-data-lake
+docker compose up
+```
+
+**pip** (Python 3.11 or later):
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install "trustops-security-data-lake[server]"
+security-lakehouse fixtures load --company golden --out ./lake --rebase-times
+security-lakehouse serve --server --allow-insecure-no-auth --lake ./lake --port 8787
+```
+
+Either way you get the bundled **golden** sample company (38 controls and 41
+evidence records across AWS, GitHub, identity, and AI-governance sources),
+served at <http://127.0.0.1:8787/console/dashboard/>.
+
+> **Authentication is off.** Both commands are for your own machine and sample
+> data only. Compose publishes the port on `127.0.0.1` only. For a shared or
+> real deployment, use the Compose `trustops-server` service (below) or the
+> [deployment guide](../deploy/README.md).
+
+Check it is up:
+
+```bash
+curl -s http://127.0.0.1:8787/api/healthz
+# {"ok":true,"service":"trustops-assessment"}
+```
+
+## 2. Read the first findings
+
+In the console, **Overview** shows the posture score and the open violations;
+**Controls** lists each control with its result and the evidence behind it.
+
+The same numbers from the API and the CLI:
+
+```bash
+curl -s http://127.0.0.1:8787/api/v1/posture/current | jq '.data.posture'
+security-lakehouse assessment status --lake ./lake | jq '.posture'
+security-lakehouse assessment violations --lake ./lake
+```
+
+The sample company is deliberately unhealthy: a score of about 6.6 out of 100,
+state `critical`, 19 open violations (4 critical), and 19 failing control tests.
+Every failure links to the evidence record that caused it.
+
+With Compose, run CLI commands inside the container and use `/lake`:
+
+```bash
+docker compose exec trustops security-lakehouse assessment status --lake /lake
+```
+
+## 3. Gate a pipeline on it
+
+The [CI posture gate](CI_GATE.md) turns those numbers into a pass or fail for a
+pull request. From a checkout of this repository, with the server still running:
+
+```bash
+TRUSTOPS_URL=http://127.0.0.1:8787 MIN_SCORE=70 ./tools/ci/posture-gate.sh
+# exits 1: score 6.58 is below 70, 4 critical violations, 19 failing controls
+```
+
+## 4. Connect one real cloud account, read-only
+
+Use a **new lake** for real evidence so it never mixes with the sample data.
+Install the cloud SDKs, then follow [Live cloud POC](LIVE_CLOUD_POC.md) for your
+provider. For AWS with an SSO profile, the local flow is:
+
+```bash
+pip install "trustops-security-data-lake[server,cloud]"
+aws sso login --profile trustops-poc
+export AWS_PROFILE=trustops-poc
+creds='{"account_id":"<account-id>"}'
+
+security-lakehouse connectors probe --lake ./my-lake --connector-id aws-posture --credentials-json "$creds"
+security-lakehouse connectors configure --lake ./my-lake --connector-id aws-posture --credentials-json "$creds" --state enabled
+security-lakehouse connectors sync --lake ./my-lake --connector-id aws-posture
+```
+
+The connector calls only read-only IAM APIs, listed in
+[Live cloud POC](LIVE_CLOUD_POC.md#aws-trial-account). For a server, use the
+assume-role variant and the templates in [`deploy/aws`](../deploy/aws/),
+[`deploy/azure`](../deploy/azure/), or [`deploy/gcp`](../deploy/gcp/); the
+console path is **Connections → choose a source → Test → Enable → Sync**.
+
+## 5. Review a mapping
+
+A mapping says "this safeguard's evidence satisfies that framework
+requirement". Proposed mappings have not been confirmed by a person. List the
+SOC 2 queue, then approve one with a rationale:
+
+```bash
+security-lakehouse frameworks review-queue --lake ./lake --framework soc2 \
+  | jq -r '.items[:5][] | "\(.safeguard_id) \(.control_id) \(.review_state)"'
+
+security-lakehouse frameworks review approve --lake ./lake \
+  --safeguard SG-IDENTITY-001 --framework soc2 --control SOC2-CC6.3 \
+  --rationale "Access-review evidence covers removal of logical access" \
+  --reviewer you@example.com
+
+security-lakehouse frameworks safeguards --lake ./lake --format table | head -3
+# ... 350 maintainer-reviewed, 1 org-reviewed ...
+```
+
+The decision is appended to a hash-chained log in the lake. In server mode
+only a signed-in `admin` or `compliance_reviewer` can decide, in the console
+under **Evaluate → Mapping review**. [Mapping review](MAPPING_REVIEW.md) has
+the full model. This step needs TrustOps 0.2.19 or later.
+
+## 6. Export for an auditor
+
+```bash
+# Freeze the current posture as a hash-chained snapshot.
+security-lakehouse assessment snapshot --lake ./lake --reason "Q3 readiness review"
+
+# OSCAL component definition, including your org-reviewed mappings.
+security-lakehouse oscal export --component-definition --lake ./lake --out component-definition.json
+
+# OSCAL assessment results: one finding per evaluated control.
+security-lakehouse oscal export --assessment-results ./lake --out assessment-results.json
+```
+
+[OSCAL export](OSCAL_EXPORT.md) explains both documents and the matching API
+routes. In the console, **Audit room** collects frozen assessments for review.
+
+## Next steps
+
+- Run it for real with the Compose `trustops-server` service. It requires
+  authentication, has no sample data, and listens on `127.0.0.1:8788`; put a
+  TLS proxy in front. Create the first tenant and admin, whose email must
+  match their SSO login ([server auth](SERVER_AUTH.md) covers OIDC and SAML):
+
+  ```bash
+  cp deploy/compose/trustops.env.example trustops.env   # then fill in the secrets
+  docker compose run --rm trustops-server security-lakehouse auth create-tenant --lake /lake --slug acme --name "Acme"
+  docker compose run --rm trustops-server security-lakehouse auth create-user --lake /lake --tenant-slug acme --email admin@acme.example --role admin
+  docker compose up -d trustops-server
+  ```
+
+- Reset the Compose demo with `docker compose down -v`.
+- [Product walkthrough](PRODUCT_WALKTHROUGH.md) · [connectors](CONNECTORS.md) ·
+  [framework coverage](FRAMEWORK_COVERAGE.md) · [contributing](../CONTRIBUTING.md)

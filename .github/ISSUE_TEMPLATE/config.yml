@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/msaad00/trustops-security-data-lake/security/advisories/new
+    about: Report vulnerabilities privately. Do not open a public issue. See SECURITY.md.
+  - name: Documentation
+    url: https://github.com/msaad00/trustops-security-data-lake/tree/main/docs
+    about: Setup, connectors, frameworks, deployment, and API guides.

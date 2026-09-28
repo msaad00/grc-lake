@@ -19,6 +19,9 @@ dist/
 *.bak
 *.orig
 
+# Docker Compose server secrets (template: deploy/compose/trustops.env.example)
+/trustops.env
+
 # Root-level safety net; per-package node_modules entries below stay too.
 node_modules/
 

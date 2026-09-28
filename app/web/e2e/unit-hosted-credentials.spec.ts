@@ -123,8 +123,8 @@ test.describe("hosted secret reference validation", () => {
 
   test("mirrors the GCP impersonation rules", () => {
     expect(gcpImpersonationError("", HOSTED)).toMatch(/service account/);
-    expect(gcpImpersonationError("someone@gmail.com", HOSTED)).toMatch(
-      /iam.gserviceaccount.com/,
+    expect(gcpImpersonationError("someone@gmail.com", HOSTED)).toContain(
+      "iam.gserviceaccount.com",
     );
     expect(
       gcpImpersonationError(

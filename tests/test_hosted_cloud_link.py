@@ -308,3 +308,14 @@ def test_delegation_payload_must_be_an_object(hosted_client) -> None:
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "delegation" in response.json()["errors"][0]["detail"]
+
+
+def test_authenticated_server_has_no_azure_consent_callback(tmp_path: Path) -> None:
+    # Server mode never issues a consent URL (collection uses the tenant's own
+    # app registration), so an unauthenticated callback there would only be a
+    # way to write to a lake without an identity.
+    pytest.importorskip("fastapi")
+    from security_lakehouse.server_app import create_app
+
+    paths = {getattr(route, "path", "") for route in create_app(tmp_path).routes}
+    assert "/api/v1/connectors/azure-posture/link/callback" not in paths

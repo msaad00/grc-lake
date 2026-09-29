@@ -2654,7 +2654,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = policy_document_services.list_documents(
             session,
             identity.tenant_id,
-            status=params.get("status"),
+            status=(params.get("status") or [None])[0],
             limit=limit,
             offset=offset,
         )
@@ -2952,7 +2952,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = vendor_risk_services.list_assessments(
             session,
             identity.tenant_id,
-            status=params.get("status"),
+            status=(params.get("status") or [None])[0],
             limit=limit,
             offset=offset,
         )

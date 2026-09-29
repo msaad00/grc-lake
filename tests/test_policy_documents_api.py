@@ -78,3 +78,21 @@ def test_publish_and_coverage(env) -> None:
     coverage = client.get("/api/v1/policies/coverage", headers=admin).json()["data"]
     row = next(item for item in coverage if item["control_id"] == "SOC2-CC6.1")
     assert row["published"] is True
+
+
+def test_list_filters_by_status(env) -> None:
+    client, tokens = env
+    admin = _bearer(tokens["security_admin"])
+    variables = {"company_name": "Acme", "policy_owner": "CISO", "effective_date": "2026-01-01"}
+    draft = client.post(
+        "/api/v1/policies", json={"template_id": "information-security-policy", "variables": variables}, headers=admin
+    ).json()["data"]
+    published = client.post(
+        "/api/v1/policies", json={"template_id": "access-control-policy", "variables": variables}, headers=admin
+    ).json()["data"]
+    client.post(f"/api/v1/policies/{published['id']}/publish", headers=admin)
+
+    resp = client.get("/api/v1/policies?status=draft", headers=admin)
+    assert resp.status_code == HTTPStatus.OK
+    assert [row["id"] for row in resp.json()["data"]] == [draft["id"]]
+    assert client.get("/api/v1/policies?status=published", headers=admin).json()["data"][0]["id"] == published["id"]

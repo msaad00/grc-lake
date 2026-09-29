@@ -1022,7 +1022,7 @@ def _write_duckdb_mart_if_available(
     if importlib.util.find_spec("duckdb") is None:
         return False
 
-    import duckdb  # type: ignore[import-not-found]
+    import duckdb
 
     if mart_path.exists():
         mart_path.unlink()

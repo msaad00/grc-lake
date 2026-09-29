@@ -151,21 +151,21 @@ class AzureClient:
 
     def __init__(self, subscription_id: str, *, credential: Any = None) -> None:
         try:
-            from azure.identity import DefaultAzureCredential  # type: ignore[import-not-found]  # noqa: PLC0415
+            from azure.identity import DefaultAzureCredential  # noqa: PLC0415
             from azure.mgmt.authorization import (
-                AuthorizationManagementClient,  # type: ignore[import-not-found]  # noqa: PLC0415
+                AuthorizationManagementClient,  # noqa: PLC0415
             )
 
             try:
                 from azure.mgmt.resource.resources import ResourceManagementClient  # noqa: PLC0415
             except ImportError:
                 from azure.mgmt.resource import (
-                    ResourceManagementClient,  # type: ignore[import-not-found]  # noqa: PLC0415
+                    ResourceManagementClient,  # noqa: PLC0415
                 )
             try:
                 from azure.mgmt.resource.policy import PolicyClient  # noqa: PLC0415
             except ImportError:
-                from azure.mgmt.resource import PolicyClient  # type: ignore[attr-defined]  # noqa: PLC0415
+                from azure.mgmt.resource import PolicyClient  # noqa: PLC0415
         except ImportError as exc:  # pragma: no cover - exercised only with live Azure
             raise ConnectorConfigError(
                 "azure-posture live collection requires azure-identity and azure-mgmt-* "
@@ -186,7 +186,7 @@ class AzureClient:
 
     def subscription(self) -> dict[str, Any]:
         from azure.mgmt.resource.subscriptions import (
-            SubscriptionClient,  # type: ignore[import-not-found]  # noqa: PLC0415
+            SubscriptionClient,  # noqa: PLC0415
         )
 
         return self._as_dict(SubscriptionClient(self._credential).subscriptions.get(self.subscription_id))

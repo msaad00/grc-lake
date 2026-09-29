@@ -77,7 +77,7 @@ class SAMLConfig:
 
     def settings(self) -> dict[str, Any]:
         """Return OneLogin python3-saml settings."""
-        settings = {
+        settings: dict[str, Any] = {
             "strict": True,
             "debug": False,
             "sp": {

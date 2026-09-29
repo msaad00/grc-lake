@@ -5,6 +5,13 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- CI type-checks the package with mypy (`make typecheck`).
+- Workflow `action.connector_sync` no longer fails with an AttributeError
+  after a successful sync.
+- Snowflake and Databricks asset-risk rows with no status and a missing or
+  non-numeric risk score are recorded as observed instead of failing the sync.
+- An OpenAI-compatible model response whose first choice has no message is
+  reported as a model error instead of an AttributeError.
 - Posture gate fails closed: when an allowlist of failing controls is set and
   the control-tests request fails, the gate now fails instead of reporting zero
   failing tests, and failing tests beyond the fetched page count as unexpected

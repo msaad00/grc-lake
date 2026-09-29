@@ -31,7 +31,9 @@ def _licenses(value: Any) -> list[str]:
         if isinstance(item, str):
             license_id = item
         elif isinstance(item, dict):
-            node = item.get("license") if isinstance(item.get("license"), dict) else item
+            node = item.get("license")
+            if not isinstance(node, dict):
+                node = item
             license_id = node.get("id") or node.get("name") or ""
         else:
             continue
@@ -139,7 +141,7 @@ def import_aibom(*, input_path: Path, lake: Path) -> dict[str, Any]:
     source_sha256 = hashlib.sha256(input_path.read_bytes()).hexdigest()
     for item in items:
         by_id[item["id"]] = {**item, "source_format": source_format, "source_sha256": source_sha256}
-    payload = {
+    payload: dict[str, Any] = {
         "schema_version": 1,
         "updated_at": imported_at,
         "items": sorted(by_id.values(), key=lambda item: str(item["id"])),

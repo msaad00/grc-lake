@@ -176,6 +176,32 @@ def test_run_action_connector_sync_dry_run(tmp_path: Path) -> None:
     assert "sync connector" in out["would"]
 
 
+def test_run_action_connector_sync_reports_successful_sync(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from security_lakehouse import connector_runner
+
+    def fake_sync(lake_dir: object, *, connector_id: str, actor: str) -> connector_runner.ConnectorSyncResult:
+        return connector_runner.ConnectorSyncResult(
+            connector_id=connector_id,
+            result="ok",
+            raw_path=str(tmp_path / "raw.jsonl"),
+            evidence_count=3,
+            materialized=True,
+            run={"result": "ok"},
+            watermark_cursor="2026-09-28T00:00:00Z",
+        )
+
+    monkeypatch.setattr(connector_runner, "run_connector_sync", fake_sync)
+    out = run_action(tmp_path, node_type="action.connector_sync", params={"connector_id": "aws-posture"})
+
+    assert out == {
+        "connector_id": "aws-posture",
+        "result": "ok",
+        "evidence_count": 3,
+        "error": None,
+        "watermark_cursor": "2026-09-28T00:00:00Z",
+    }
+
+
 # --- workflow persistence + run -------------------------------------------------
 
 

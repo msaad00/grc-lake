@@ -42,6 +42,29 @@ def test_collect_snowflake_fixture_evidence_validates() -> None:
     assert any(row["entity"]["asset_id"] == "snowflake:warehouse:trustops_wh" for row in rows)
 
 
+def test_asset_risk_row_without_score_or_status_is_observed() -> None:
+    class _Client:
+        account = "acme_snowflake"
+
+        def audit_events(self) -> list[dict[str, Any]]:
+            return []
+
+        def control_posture(self) -> list[dict[str, Any]]:
+            return []
+
+        def asset_risk(self) -> list[dict[str, Any]]:
+            return [{"asset_id": "snowflake:warehouse:unscored", "risk_score": None}]
+
+        def evidence_bundles(self) -> list[dict[str, Any]]:
+            return []
+
+    rows = collect_snowflake_evidence(_Client(), collected_at=datetime(2026, 5, 20, 12, 0, tzinfo=UTC))
+
+    assert len(rows) == 1
+    assert rows[0]["status"] == "observed"
+    assert validate_raw_events(rows) == []
+
+
 def test_snowflake_sync_writes_raw_evidence_and_materializes(tmp_path: Path) -> None:
     connector_state.append_config_event(
         tmp_path,

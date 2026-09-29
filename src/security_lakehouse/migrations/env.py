@@ -38,6 +38,8 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     url = config.get_main_option("sqlalchemy.url")
+    if not url:
+        raise RuntimeError("alembic sqlalchemy.url is not configured")
     _ensure_sqlite_parent(url)
     connectable = create_engine(url, poolclass=pool.NullPool, future=True)
     with connectable.connect() as connection:

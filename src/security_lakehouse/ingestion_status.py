@@ -253,7 +253,9 @@ def _latest_live_cloud_proof(lake: Path) -> JsonObject:
     report_path = lake / "gold" / "scenario_reports" / "live-cloud-posture.json"
     proof_path = lake / "gold" / "scenario_reports" / "live-cloud-posture.md"
     report = _read_optional_json(report_path, lake)
-    summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
+    summary = report.get("summary")
+    if not isinstance(summary, dict):
+        summary = {}
     return {
         "report_path": str(report_path),
         "report_exists": report_path.is_file(),

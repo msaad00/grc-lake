@@ -72,6 +72,8 @@ jobs:
         run: uv run ruff check src tests tools
       - name: Check Python formatting
         run: uv run ruff format --check src tests tools
+      - name: Type-check Python
+        run: uv run mypy
       - name: Validate schemas and JSON artifacts
         run: uv run python tools/validate_ci_artifacts.py
 

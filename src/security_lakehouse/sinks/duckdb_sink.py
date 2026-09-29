@@ -23,6 +23,7 @@ unit-tested without the optional ``analytics`` extra installed at import time.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -46,7 +47,7 @@ class DuckDBSinkConfig:
     database: str
 
     @classmethod
-    def from_env(cls, env: dict[str, str]) -> DuckDBSinkConfig | None:
+    def from_env(cls, env: Mapping[str, str]) -> DuckDBSinkConfig | None:
         """Build a config from env, or ``None`` when the embedded sink is unset."""
         path = env.get(ENV_PATH)
         if not path:

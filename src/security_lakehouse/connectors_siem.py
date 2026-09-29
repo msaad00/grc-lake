@@ -302,7 +302,9 @@ def _raw_from_alert(
     event_time = _event_time_iso(alert.get("event_time") or alert.get("timestamp"))
     if not alert_id or not event_time:
         return None
-    entity = alert.get("entity") if isinstance(alert.get("entity"), dict) else {}
+    entity = alert.get("entity")
+    if not isinstance(entity, dict):
+        entity = {}
     asset_id = str(entity.get("asset_id") or alert.get("asset_id") or f"siem:alert:{alert_id}")
     controls = [str(item) for item in alert.get("controls") or DEFAULT_CONTROLS]
     alert_state = str(alert.get("alert_state") or alert.get("state") or "").lower()

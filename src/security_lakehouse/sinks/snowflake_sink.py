@@ -26,6 +26,7 @@ Design properties:
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -52,7 +53,7 @@ class SnowflakeSinkConfig:
     database: str = DEFAULT_DATABASE
 
     @classmethod
-    def from_env(cls, env: dict[str, str]) -> SnowflakeSinkConfig | None:
+    def from_env(cls, env: Mapping[str, str]) -> SnowflakeSinkConfig | None:
         """Build a config from env, or None when the sink is not configured."""
         account = env.get("SNOWFLAKE_ACCOUNT")
         user = env.get("SNOWFLAKE_USER")
@@ -237,7 +238,9 @@ class SnowflakeSink:
     def _connect(self) -> Any:
         connector = self._connector
         if connector is None:
-            import snowflake.connector as connector  # noqa: PLC0415
+            import snowflake.connector as snowflake_connector  # noqa: PLC0415
+
+            connector = snowflake_connector
 
         params: dict[str, Any] = {
             "account": self.config.account,

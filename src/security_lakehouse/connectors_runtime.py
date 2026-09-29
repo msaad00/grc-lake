@@ -302,7 +302,9 @@ def _raw_from_event(
     event_time = _event_time_iso(event.get("event_time") or event.get("timestamp"))
     if not event_id or not event_time:
         return None
-    entity = event.get("entity") if isinstance(event.get("entity"), dict) else {}
+    entity = event.get("entity")
+    if not isinstance(entity, dict):
+        entity = {}
     asset_id = str(entity.get("asset_id") or event.get("asset_id") or f"runtime:event:{event_id}")
     controls = [str(item) for item in event.get("controls") or DEFAULT_CONTROLS]
     status = str(event.get("status") or "observed").lower()

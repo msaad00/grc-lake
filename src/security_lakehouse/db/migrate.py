@@ -40,6 +40,6 @@ def current(lake_dir: str | Path, *, url: str | None = None) -> str:
     target_url = url or database_url(lake_dir)
     cfg = _config(target_url)
     buffer = StringIO()
-    cfg.print_stdout = buffer.write  # type: ignore[method-assign]
+    cfg.print_stdout = buffer.write
     command.current(cfg)
     return buffer.getvalue().strip()

@@ -852,3 +852,11 @@ def test_unmapped_post_route_fails_closed() -> None:
     assert all(scope not in scopes for scopes in ROLE_SCOPES.values())
     # v1 and legacy defaults stay in lockstep.
     assert api_legacy.required_post_scope("/api/does-not-exist") == scope
+
+
+def test_first_param_returns_first_value_or_none() -> None:
+    params = {"status": ["open", "closed"], "empty": []}
+
+    assert api_v1.first_param(params, "status") == "open"
+    assert api_v1.first_param(params, "empty") is None
+    assert api_v1.first_param(params, "missing") is None

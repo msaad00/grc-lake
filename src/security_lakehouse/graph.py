@@ -625,12 +625,12 @@ def build_framework_crosswalk(controls_path: str | Path | None = None) -> dict[s
         row: dict[str, Any] = {"framework_id": left, "cells": []}
         for right in framework_ids:
             shared_domains = sorted(
-                {c.get("risk_domain") for c in by_framework[left] if c.get("risk_domain")}
-                & {c.get("risk_domain") for c in by_framework[right] if c.get("risk_domain")}
+                {v for c in by_framework[left] if (v := c.get("risk_domain"))}
+                & {v for c in by_framework[right] if (v := c.get("risk_domain"))}
             )
             shared_owners = sorted(
-                {c.get("owner") for c in by_framework[left] if c.get("owner")}
-                & {c.get("owner") for c in by_framework[right] if c.get("owner")}
+                {v for c in by_framework[left] if (v := c.get("owner"))}
+                & {v for c in by_framework[right] if (v := c.get("owner"))}
             )
             row["cells"].append(
                 {

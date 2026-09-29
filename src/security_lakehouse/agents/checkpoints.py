@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 
@@ -29,7 +30,7 @@ def checkpoint_state(compiled: Any, thread_id: str) -> dict[str, Any] | None:
 
 def invoke_with_checkpoint(
     compiled: Any,
-    state: dict[str, Any],
+    state: Mapping[str, Any],
     *,
     thread_id: str | None = None,
     resume: bool = False,

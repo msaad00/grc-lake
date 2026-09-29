@@ -332,6 +332,7 @@ def _mobile_events(ctx: _Context, mobile: dict[str, Any], updates: dict[str, lis
     if "passcodePresent" in security:
         present = security.get("passcodePresent") is True
         compliant = security.get("passcodeCompliant") is True
+        verdict: tuple[str, str, str | None]
         if not present:
             verdict = ("open", "high", "no_passcode")
         elif not compliant:
@@ -352,6 +353,7 @@ def _mobile_events(ctx: _Context, mobile: dict[str, Any], updates: dict[str, lis
 def _computer_encryption(device: _Device, os_info: dict[str, Any], disk: dict[str, Any]) -> dict[str, Any]:
     status = str(os_info.get("fileVault2Status") or "")
     partition = str(_obj(disk.get("bootPartitionEncryptionDetails")).get("partitionFileVault2State") or "")
+    verdict: tuple[str, str, str | None]
     if status in ENCRYPTED_FILEVAULT_STATUSES or partition == "ENCRYPTED":
         verdict = ("pass", "info", None)
     elif partition in IN_PROGRESS_PARTITION_STATES:
@@ -369,6 +371,7 @@ def _computer_encryption(device: _Device, os_info: dict[str, Any], disk: dict[st
 
 def _management(device: _Device, *, jailbroken: bool) -> dict[str, Any]:
     last_contact = _parse_time(device.base.get("last_contact"))
+    verdict: tuple[str, str, str | None]
     if jailbroken:
         verdict = ("open", "high", "jailbroken")
     elif not device.base["managed"]:

@@ -76,7 +76,7 @@ def _remote_api_configured() -> bool:
 def _get_lake_or_remote(path: str, lake: Path, **params: str) -> Any:
     """Read lake-backed v1 data locally or via the remote server when configured."""
     if _remote_api_configured():
-        body = _server_api_request("GET", path, **params)
+        body = _server_api_request("GET", path, None, **params)
         return body["data"]
     return _get(path, lake, **params)
 

@@ -481,7 +481,7 @@ def _missing_required_config(
         return ["project_id"] if not _has_value(credentials, "project_id") else []
 
     if connector_id in {"github-security", "gitlab-security"}:
-        missing: list[str] = []
+        missing = []
         if not (_has_value(credentials, "credential_ref") or _has_value(credentials, "token")):
             missing.append("credential_ref")
         if not _has_value(options, "repo"):
@@ -736,7 +736,7 @@ def _scope_candidates(
         live = discover_snowflake_scope(credentials=credentials, options=options)
         if live.get("ok"):
             return live
-        curated = {
+        curated: dict[str, Any] = {
             "selection_mode": "curated_views",
             "selectors": [
                 {

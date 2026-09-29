@@ -39,7 +39,9 @@ def call_model_json(context: dict[str, Any], provider: ModelProviderConfig) -> d
 
 
 def _max_output_tokens(context: dict[str, Any], default: int = 600) -> int:
-    budget = context.get("budget") if isinstance(context.get("budget"), dict) else {}
+    budget = context.get("budget")
+    if not isinstance(budget, dict):
+        budget = {}
     value = budget.get("max_output_tokens") if isinstance(budget, dict) else None
     try:
         return max(64, min(int(value or default), 8_000))
@@ -79,7 +81,9 @@ def _call_ollama(context: dict[str, Any], provider: ModelProviderConfig) -> dict
         "stream": False,
     }
     response = _post_json(url, payload, headers={"Content-Type": "application/json"}, timeout=provider.timeout_seconds)
-    message = response.get("message") if isinstance(response.get("message"), dict) else {}
+    message = response.get("message")
+    if not isinstance(message, dict):
+        message = {}
     return _parse_json_content(str(message.get("content") or ""))
 
 
@@ -106,8 +110,13 @@ def _call_openai_compatible(context: dict[str, Any], provider: ModelProviderConf
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
         timeout=provider.timeout_seconds,
     )
-    choices = response.get("choices") if isinstance(response.get("choices"), list) else []
-    message = choices[0].get("message") if choices and isinstance(choices[0], dict) else {}
+    choices = response.get("choices")
+    if not isinstance(choices, list):
+        choices = []
+    first = choices[0] if choices else None
+    message = first.get("message") if isinstance(first, dict) else None
+    if not isinstance(message, dict):
+        message = {}
     return _parse_json_content(str(message.get("content") or ""))
 
 
@@ -139,7 +148,9 @@ def _call_anthropic(context: dict[str, Any], provider: ModelProviderConfig) -> d
         },
         timeout=provider.timeout_seconds,
     )
-    blocks = response.get("content") if isinstance(response.get("content"), list) else []
+    blocks = response.get("content")
+    if not isinstance(blocks, list):
+        blocks = []
     first = blocks[0] if blocks and isinstance(blocks[0], dict) else {}
     return _parse_json_content(str(first.get("text") or ""))
 
@@ -223,7 +234,9 @@ def _call_vertex(context: dict[str, Any], provider: ModelProviderConfig) -> dict
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
         timeout=provider.timeout_seconds,
     )
-    candidates = response.get("candidates") if isinstance(response.get("candidates"), list) else []
+    candidates = response.get("candidates")
+    if not isinstance(candidates, list):
+        candidates = []
     content = candidates[0].get("content") if candidates and isinstance(candidates[0], dict) else {}
     parts = content.get("parts") if isinstance(content, dict) and isinstance(content.get("parts"), list) else []
     text = parts[0].get("text") if parts and isinstance(parts[0], dict) else ""

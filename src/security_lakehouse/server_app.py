@@ -504,8 +504,8 @@ def _pagination(params: dict[str, list[str]]) -> tuple[int, int]:
     A missing/invalid ``limit`` defaults to ``DEFAULT_PAGE_LIMIT`` so list
     endpoints are always bounded; an oversized one is capped server-side.
     """
-    limit_raw = (params.get("limit") or [None])[0]
-    offset_raw = (params.get("offset") or [None])[0]
+    limit_raw = api_v1.first_param(params, "limit")
+    offset_raw = api_v1.first_param(params, "offset")
     limit = clamp_limit(int(limit_raw)) if limit_raw and limit_raw.lstrip("-").isdigit() else DEFAULT_PAGE_LIMIT
     offset = int(offset_raw) if offset_raw and offset_raw.isdigit() else 0
     return limit, max(0, offset)
@@ -623,15 +623,15 @@ def _execute_agent_decision(
         }
 
     if action == "create_remediation_task":
-        control_id: str | None = _payload_text(payload, "control_id") or None
-        title = _payload_text(payload, "title") or f"Remediate {control_id or 'agent finding'}"
+        task_control_id = _payload_text(payload, "control_id") or None
+        title = _payload_text(payload, "title") or f"Remediate {task_control_id or 'agent finding'}"
         try:
             task = remediation.create_task(
                 session,
                 tenant_id=identity.tenant_id,
                 title=title,
                 description=reason,
-                control_id=control_id,
+                control_id=task_control_id,
                 violation_id=_payload_text(payload, "violation_id") or None,
                 owner=_payload_text(payload, "owner"),
                 priority=_decision_priority(payload),
@@ -1935,8 +1935,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
         params = _params(request)
         limit_raw = (params.get("limit") or ["50"])[0]
-        kind = (params.get("kind") or [None])[0]
-        status = (params.get("status") or [None])[0]
+        kind = api_v1.first_param(params, "kind")
+        status = api_v1.first_param(params, "status")
         try:
             limit = max(1, min(int(limit_raw or 50), 500))
         except ValueError:
@@ -2206,13 +2206,13 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         params = _params(request)
         limit, offset = _pagination(params)
-        overdue_raw = (params.get("overdue") or [None])[0]
+        overdue_raw = api_v1.first_param(params, "overdue")
         overdue = None if overdue_raw is None else overdue_raw.lower() in {"1", "true", "yes"}
         rows = grc_services.list_tasks(
             session,
             identity.tenant_id,
-            status=(params.get("status") or [None])[0],
-            owner=(params.get("owner") or [None])[0],
+            status=api_v1.first_param(params, "status"),
+            owner=api_v1.first_param(params, "owner"),
             control_id=next(iter(params.get("control_id") or []), None),
             overdue=overdue,
             limit=limit,
@@ -2283,7 +2283,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         rows = remediation.list_evidence_requests(
             session,
             tenant_id=identity.tenant_id,
-            status=(params.get("status") or [None])[0],
+            status=api_v1.first_param(params, "status"),
             limit=limit,
             offset=offset,
         )
@@ -2344,7 +2344,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         params = _params(request)
         limit, offset = _pagination(params)
-        active_raw = (params.get("active") or [None])[0]
+        active_raw = api_v1.first_param(params, "active")
         rows = remediation.list_exceptions(
             session,
             tenant_id=identity.tenant_id,
@@ -2405,9 +2405,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = grc_services.list_risks(
             session,
             identity.tenant_id,
-            status=(params.get("status") or [None])[0],
-            severity=(params.get("severity") or [None])[0],
-            owner=(params.get("owner") or [None])[0],
+            status=api_v1.first_param(params, "status"),
+            severity=api_v1.first_param(params, "severity"),
+            owner=api_v1.first_param(params, "owner"),
             limit=limit,
             offset=offset,
         )
@@ -2479,13 +2479,13 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         params = _params(request)
         limit, offset = _pagination(params)
-        enabled_raw = (params.get("enabled") or [None])[0]
+        enabled_raw = api_v1.first_param(params, "enabled")
         enabled = {"true": True, "false": False}.get((enabled_raw or "").lower())
         data = webhook_services.list_subscriptions(
             session,
             identity.tenant_id,
             enabled=enabled,
-            event_type=(params.get("event_type") or [None])[0],
+            event_type=api_v1.first_param(params, "event_type"),
             limit=limit,
             offset=offset,
         )
@@ -2613,7 +2613,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = policy_document_services.list_documents(
             session,
             identity.tenant_id,
-            status=(params.get("status") or [None])[0],
+            status=api_v1.first_param(params, "status"),
             limit=limit,
             offset=offset,
         )
@@ -2735,7 +2735,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = access_review_services.list_campaigns(
             session,
             identity.tenant_id,
-            status=(params.get("status") or [None])[0],
+            status=api_v1.first_param(params, "status"),
             limit=limit,
             offset=offset,
         )
@@ -2817,7 +2817,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 session,
                 identity.tenant_id,
                 campaign_id,
-                decision=(params.get("decision") or [None])[0],
+                decision=api_v1.first_param(params, "decision"),
                 limit=limit,
                 offset=offset,
             )
@@ -2911,7 +2911,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = vendor_risk_services.list_assessments(
             session,
             identity.tenant_id,
-            status=(params.get("status") or [None])[0],
+            status=api_v1.first_param(params, "status"),
             limit=limit,
             offset=offset,
         )
@@ -3083,8 +3083,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         session: Session = Depends(get_session),
     ) -> JSONResponse:
         params = _params(request)
-        entity_type = (params.get("entity_type") or [None])[0]
-        entity_id = (params.get("entity_id") or [None])[0]
+        entity_type = api_v1.first_param(params, "entity_type")
+        entity_id = api_v1.first_param(params, "entity_id")
         if not entity_type or not entity_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="entity_type and entity_id are required"
@@ -3102,8 +3102,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         session: Session = Depends(get_session),
     ) -> JSONResponse:
         params = _params(request)
-        tag_id = (params.get("tag_id") or [None])[0]
-        entity_type = (params.get("entity_type") or [None])[0]
+        tag_id = api_v1.first_param(params, "tag_id")
+        entity_type = api_v1.first_param(params, "entity_type")
         if not tag_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="tag_id is required")
         entity_ids = tags_db.entity_ids_for_tag(
@@ -3129,7 +3129,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         params = _params(request)
         limit, offset = _pagination(params)
-        surface = (params.get("surface") or [None])[0]
+        surface = api_v1.first_param(params, "surface")
         rows = tags_db.list_saved_views(
             session, tenant_id=identity.tenant_id, surface=surface, limit=limit, offset=offset
         )
@@ -3179,7 +3179,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        raw_limit = (_params(request).get("limit") or [None])[0]
+        raw_limit = api_v1.first_param(_params(request), "limit")
         limit = int(raw_limit) if raw_limit and raw_limit.isdigit() else 90
         limit = min(max(limit, 1), 1000)
         points = metrics_db.list_metric_points(session, tenant_id=identity.tenant_id, limit=limit)
@@ -3201,7 +3201,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         request: Request,
         identity: Identity = Depends(_require_read),
     ) -> JSONResponse:
-        raw_limit = (_params(request).get("limit") or [None])[0]
+        raw_limit = api_v1.first_param(_params(request), "limit")
         limit = int(raw_limit) if raw_limit and raw_limit.isdigit() else 90
         limit = min(max(limit, 1), 1000)
         data = metrics_db.framework_readiness_trends(lake_for(identity), limit=limit)

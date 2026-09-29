@@ -309,3 +309,13 @@ def test_validation_rejects_duplicate_event_ids() -> None:
     errors = validate_raw_events(rows)
 
     assert any("duplicate event_id" in error for error in errors)
+
+
+def test_offline_fallback_uses_the_console_page_name() -> None:
+    # Rendered when the React bundle is not packaged (a fresh checkout); it
+    # must name the page the way the console does.
+    from security_lakehouse.dashboard import _fallback_html
+
+    html = _fallback_html({})
+    assert ">Overview<" in html
+    assert "TrustOps" in html

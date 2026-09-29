@@ -11,15 +11,15 @@ export interface AuthVisual {
 }
 
 export const AUTH_VISUALS: Record<string, AuthVisual> = {
-  okta: { mark: "OKTA", accent: "#007DC1", bg: "#eff6ff", protocol: "OIDC" },
+  okta: { mark: "OKTA", accent: "#006BA6", bg: "#eff6ff", protocol: "OIDC" },
   azure_ad: {
     mark: "Entra",
-    accent: "#0078D4",
+    accent: "#0066B5",
     bg: "#eff6ff",
     protocol: "OIDC",
   },
-  google: { mark: "G", accent: "#4285F4", bg: "#eff6ff", protocol: "OIDC" },
-  auth0: { mark: "A0", accent: "#EB5424", bg: "#fff7ed", protocol: "OIDC" },
+  google: { mark: "G", accent: "#1D5FCC", bg: "#eff6ff", protocol: "OIDC" },
+  auth0: { mark: "A0", accent: "#C2410C", bg: "#fff7ed", protocol: "OIDC" },
   onelogin: { mark: "1L", accent: "#1F1F1F", bg: "#f1f5f9", protocol: "OIDC" },
   generic_oidc: {
     mark: "OIDC",
@@ -29,19 +29,19 @@ export const AUTH_VISUALS: Record<string, AuthVisual> = {
   },
   okta_saml: {
     mark: "OKTA",
-    accent: "#007DC1",
+    accent: "#006BA6",
     bg: "#eff6ff",
     protocol: "SAML",
   },
   azure_ad_saml: {
     mark: "Entra",
-    accent: "#0078D4",
+    accent: "#0066B5",
     bg: "#eff6ff",
     protocol: "SAML",
   },
   google_saml: {
     mark: "G",
-    accent: "#4285F4",
+    accent: "#1D5FCC",
     bg: "#eff6ff",
     protocol: "SAML",
   },
@@ -59,7 +59,7 @@ export const AUTH_VISUALS: Record<string, AuthVisual> = {
   },
   api_key: {
     mark: "KEY",
-    accent: "#059669",
+    accent: "#047857",
     bg: "#ecfdf5",
     protocol: "API key",
   },

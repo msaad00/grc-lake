@@ -114,7 +114,7 @@ function FrameworkRow({
           ? `${coverage.assessed} of ${coverage.total} controls assessed`
           : `${framework.control_count} ${framework.control_count === 1 ? "control" : "controls"} assessed`
       }${framework.failing_control_count ? ` · ${framework.failing_control_count} failing` : ""}`
-    : `${unmonitored!.implemented_control_count} mapped controls`;
+    : `${unmonitored!.control_count} ${unmonitored!.control_count === 1 ? "control" : "controls"} catalogued`;
   return (
     <Link
       href={frameworkDetailHref(id)}

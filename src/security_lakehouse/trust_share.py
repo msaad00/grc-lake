@@ -210,7 +210,8 @@ def lake_search_paths(
         seen.add(resolved)
         paths.append(candidate)
 
-    if bound_tenant is not None and tenancy.is_flat_lake(root_path):
+    if bound_tenant is not None:
+        # tenant_lake picks the flat root or tenants/<bound>, whichever holds it.
         _add(tenancy.tenant_lake(root_path, bound_tenant, bound_tenant=bound_tenant))
     for tenant_id in sorted(tenant_ids or [], reverse=True):
         _add(tenancy.tenant_lake(root_path, tenant_id, bound_tenant=bound_tenant))

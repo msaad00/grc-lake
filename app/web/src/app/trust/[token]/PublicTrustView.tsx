@@ -50,9 +50,9 @@ function readiness(state: string | null): {
   label: string;
   tone: "ready" | "info";
 } {
-  return state === "ready"
-    ? { label: "Ready", tone: "ready" }
-    : { label: "In progress", tone: "info" };
+  if (state === "ready") return { label: "Ready", tone: "ready" };
+  if (state === "not_evaluated") return { label: "Not assessed", tone: "info" };
+  return { label: "In progress", tone: "info" };
 }
 
 function roundScore(score: number | null | undefined): string {
@@ -177,7 +177,9 @@ export default function PublicTrustView() {
                     Overall posture
                   </p>
                   <p className="mt-1 text-5xl font-semibold">
-                    {roundScore(data.posture.score)}
+                    {data.posture.state === "not_evaluated"
+                      ? "—"
+                      : roundScore(data.posture.score)}
                     <span className="ml-1 text-xl text-muted">/ 100</span>
                   </p>
                 </div>

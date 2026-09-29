@@ -57,6 +57,28 @@ Python package, Helm chart, and bundled web console.
   and issue forms.
 - Security: mapping-review endpoints return fixed error messages instead of
   exception text; the server logs only the exception class.
+- Fixed: a lake with no evaluated controls reported Assessment score 100 and
+  "Ready for review" (and fed that 100 into audit readiness). It now scores 0
+  with posture state `not_evaluated`, shown as "Not assessed".
+- Fixed: the AI governance page used stale framework ids and counted only
+  evaluated controls as "mapped", so ISO/IEC 42001 and the EU AI Act read
+  "0/0 mapped". Each pack now shows the requirements and safeguard-mapped
+  counts the Frameworks page shows, a pass rate only when this lake has
+  evidence, and packs with nothing evaluated no longer pull the governance
+  score down as 0%. An inventory inferred from lineage no longer triggers the
+  "no model inventory" gap.
+- Console: "mapped" means mapped to a safeguard everywhere. The framework
+  drawer's mapped count now matches the roster; official-source links read
+  "source-cited" and the readiness gate reads "reviewed article mappings".
+  A `/controls?id=` link to a control this lake has not evaluated (or an
+  unknown id) says so and links to the requirement in Frameworks, and the
+  crosswalk chips carry the framework for that link. "AI controls" becomes
+  "AI safeguard mappings" and opens the AI governance review queue.
+- Console: trust-center share links resolve in no-auth mode before the lake
+  holds any data; the Azure link badge reads "No secrets stored" (a client
+  secret is supported, only its env-var name is kept); date helpers show "—"
+  for unparseable dates; identity marks meet 4.5:1 contrast, and the
+  accessibility suite now checks color contrast, including /auth.
 - Fixed: `GET /api/v1/policies?status=…` and
   `GET /api/v1/vendor-assessments?status=…` returned 500 for any status, which
   also broke the MCP `list_policies` status filter.

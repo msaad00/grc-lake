@@ -66,7 +66,7 @@ test.describe("framework coverage workflow", () => {
     await expect(
       results.getByText("official source", { exact: true }).first(),
     ).toBeVisible();
-    await expect(results).toContainText("source mapped");
+    await expect(results).toContainText("source-cited");
   });
 
   test("keeps the portfolio usable on mobile", async ({ page }) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { FrameworkBadge } from "@/components/framework/FrameworkBadge";
@@ -108,6 +109,14 @@ function ControlsPageContent() {
   const [pendingControlId, setPendingControlId] = useState<string | null>(null);
 
   const deepLinkId = searchParams.get("id");
+  const deepLinkFramework = searchParams.get("framework");
+  // Only evaluated controls have a result here; a catalogued control that
+  // this lake has not evaluated (or a mistyped id) gets a notice instead.
+  const deepLinkMissing = Boolean(
+    deepLinkId &&
+    controls.data &&
+    !controls.data.some((c) => c.control_id === deepLinkId),
+  );
   useEffect(() => {
     if (!deepLinkId || !controls.data) return;
     const match = controls.data.find((c) => c.control_id === deepLinkId);
@@ -227,6 +236,26 @@ function ControlsPageContent() {
         description="Results, evidence, and owners."
       />
       <TrustPipelineStrip activeStage="controls" />
+      {deepLinkMissing ? (
+        <p
+          role="status"
+          className="rounded-lg border border-line bg-surfaceMuted px-4 py-3 text-sm text-muted"
+        >
+          <code className="font-semibold text-ink">{deepLinkId}</code> has no
+          evaluated result in this lake.
+          {deepLinkFramework ? (
+            <>
+              {" "}
+              <Link
+                href={`/frameworks/?framework=${encodeURIComponent(deepLinkFramework)}&control=${encodeURIComponent(deepLinkId!)}`}
+                className="font-semibold text-brand hover:underline"
+              >
+                View its requirement in Frameworks
+              </Link>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       <TagFilterBar
         tags={tags}
         activeTagId={activeTagId}

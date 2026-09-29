@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate, formatDateTime } from "@/lib/format";
 import { useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -121,8 +122,7 @@ function PolicyDetail({ documentId }: { documentId: string }) {
         </CardTitle>
       </CardHeader>
       <p className="text-xs text-muted">
-        Template {doc.template_id} · updated{" "}
-        {new Date(doc.updated_at).toLocaleDateString()}
+        Template {doc.template_id} · updated {formatDate(doc.updated_at)}
       </p>
       <textarea
         className="min-h-64 w-full rounded-lg border border-line bg-surface p-3 font-mono text-xs"
@@ -177,7 +177,7 @@ function PolicyDetail({ documentId }: { documentId: string }) {
                 >
                   <span className="font-medium text-ink">{row.user_email}</span>
                   <span className="text-xs text-muted">
-                    {new Date(row.acknowledged_at).toLocaleString()}
+                    {formatDateTime(row.acknowledged_at)}
                   </span>
                 </li>
               ))}

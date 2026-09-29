@@ -251,7 +251,7 @@ export default function CrosswalkPage() {
                   {group.controls.map((ref) => (
                     <Link
                       key={ref.control_id}
-                      href={`/controls/?id=${encodeURIComponent(ref.control_id)}`}
+                      href={`/controls/?id=${encodeURIComponent(ref.control_id)}&framework=${encodeURIComponent(ref.framework_id)}`}
                       aria-label={ref.control_id}
                       className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
                     >

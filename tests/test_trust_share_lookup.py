@@ -135,3 +135,17 @@ def test_scheduler_state_skips_non_object_rows(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert list(scheduler._read_state(tmp_path)) == ["workflow:wf-1"]
+
+
+def test_bound_tenant_share_resolves_before_the_lake_has_any_data(tmp_path: Path) -> None:
+    # No-auth mode on an empty lake writes shares under tenants/<bound>, and
+    # the root is not yet a flat lake; the public link must still resolve.
+    from security_lakehouse import tenancy
+
+    tenant_dir = tenancy.tenant_lake(tmp_path, "insecure", bound_tenant="insecure")
+    share = trust_share.create_share(tenant_dir, role="auditor")
+
+    resolved = trust_share.resolve_share_from_root(tmp_path, share["token"], bound_tenant="insecure")
+
+    assert resolved is not None
+    assert resolved[1] == tenant_dir

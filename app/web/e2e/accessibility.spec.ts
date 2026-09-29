@@ -1,12 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-// Rules this console currently satisfies and must keep satisfying. Scoped
-// deliberately: `color-contrast` still fails (the brand accent #4f7cff reads
-// 3.71 on white against a required 4.5) and `svg-img-alt` fails inside
-// recharts-rendered sectors. Both need a design decision rather than a code
-// fix, so enabling them here would land a permanently red test.
+// Rules this console satisfies and must keep satisfying. `svg-img-alt` stays
+// off: it fails inside recharts-rendered sectors and needs a design decision.
 const RULES = [
+  "color-contrast",
   "select-name",
   "label",
   "button-name",
@@ -31,6 +29,8 @@ const ROUTES = [
   "automation",
   "trust-center",
   "agents",
+  "frameworks",
+  "auth",
 ];
 
 for (const route of ROUTES) {

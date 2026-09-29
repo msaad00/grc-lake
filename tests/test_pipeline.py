@@ -319,3 +319,14 @@ def test_offline_fallback_uses_the_console_page_name() -> None:
     html = _fallback_html({})
     assert ">Overview<" in html
     assert "TrustOps" in html
+
+
+def test_empty_lake_is_not_evaluated_rather_than_ready(tmp_path: Path) -> None:
+    lake = tmp_path / "empty"
+    lake.mkdir()
+
+    posture = build_current_posture(lake)["posture"]
+
+    assert posture["control_count"] == 0
+    assert posture["state"] == "not_evaluated"
+    assert posture["score"] == 0

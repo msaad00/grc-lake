@@ -44,7 +44,7 @@ import type {
 } from "@/lib/api/types";
 import { MAPPING_REVIEW_GLOSSARY, ROUTE_LABELS } from "@/lib/console-copy";
 import { displayLabel } from "@/lib/display";
-import { formatCount } from "@/lib/format";
+import { formatCount, formatDate } from "@/lib/format";
 import {
   packState,
   splitFrameworkPacks,
@@ -194,7 +194,7 @@ function Row({
             official source <ExternalLink className="h-3 w-3" />
           </a>
           <div className="mt-1 truncate">
-            {sourceMappingPct}% source mapped ·{" "}
+            {sourceMappingPct}% source-cited ·{" "}
             {framework.pulled_age_days === null
               ? "Not yet synced"
               : `${displayLabel(framework.freshness_state)} · pulled ${
@@ -227,11 +227,14 @@ function Row({
 
 function Detail({
   framework,
+  coverage,
   expandedControlId,
   onExpandedControlChange,
   onClose,
 }: {
   framework: FrameworkView | null;
+  /** Same safeguard coverage row the roster reads, so both agree. */
+  coverage?: FrameworkCoverageRow;
   expandedControlId: string | null;
   onExpandedControlChange: (controlId: string | null) => void;
   onClose: () => void;
@@ -356,7 +359,9 @@ function Detail({
               </code>
             </dd>
             <dt className="text-muted">Next pull due</dt>
-            <dd className="font-semibold">{framework.next_pull_due ?? "—"}</dd>
+            <dd className="font-semibold">
+              {formatDate(framework.next_pull_due)}
+            </dd>
             <dt className="text-muted">Superseded by</dt>
             <dd className="font-semibold">{framework.superseded_by ?? "—"}</dd>
           </dl>
@@ -398,11 +403,14 @@ function Detail({
             )}
             <div className="mt-3 border-t border-line pt-2 text-xs text-muted">
               <span className="font-semibold text-ink">
-                {framework.implemented_control_count} of{" "}
-                {framework.control_count} controls mapped
+                {coverage?.evaluatable_requirement_count ?? 0} of{" "}
+                {coverage?.seeded_control_count ?? framework.control_count}{" "}
+                controls mapped
               </span>{" "}
-              to source requirements ({framework.mapping_coverage_pct}%). Mapped
-              means linked to a requirement, not implemented or passing.
+              to safeguards; {framework.implemented_control_count} cite their
+              official source ({framework.mapping_coverage_pct}%). Mapped means
+              a safeguard can evaluate it, not that it is implemented or
+              passing.
             </div>
           </section>
 
@@ -429,7 +437,7 @@ const STAGE_ORDER: ReadinessStage[] = [
 
 const STAGE_LABEL: Record<ReadinessStage, string> = {
   source_pulled: "Source pulled",
-  mapped: "Mapped to articles",
+  mapped: "Reviewed article mappings",
   evidence_defined: "Evidence defined",
   rule_versioned: "Rule versioned",
   coverage_verified: "Coverage gate passed",
@@ -459,8 +467,8 @@ function ReadinessRow({ row }: { row: FrameworkReadiness }) {
         </Badge>
       </div>
       <div className="mt-1 text-xs text-muted">
-        {row.mapped_control_count}/{row.control_count} controls mapped ·{" "}
-        {row.coverage_pct}% coverage
+        {row.mapped_control_count}/{row.control_count} controls with a reviewed
+        article mapping · {row.coverage_pct}%
       </div>
       <div className="mt-3 flex items-center gap-3">
         <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-surfaceMuted">
@@ -844,6 +852,9 @@ function FrameworksPageContent() {
 
       <Detail
         framework={selected}
+        coverage={
+          selected ? coverageById.get(selected.framework_id) : undefined
+        }
         expandedControlId={controlParam}
         onExpandedControlChange={setExpandedControl}
         onClose={closeFramework}

@@ -150,13 +150,22 @@ export function AiGovernanceStrip() {
                     <span className="text-xs font-semibold text-ink">
                       {framework.label}
                     </span>
-                    <Badge tone={framework.score >= 85 ? "ready" : "attention"}>
-                      {framework.score}%
-                    </Badge>
+                    {framework.score === null ? (
+                      <Badge tone="default">Not evaluated</Badge>
+                    ) : (
+                      <Badge
+                        tone={framework.score >= 85 ? "ready" : "attention"}
+                      >
+                        {framework.score}% passing
+                      </Badge>
+                    )}
                   </div>
                   <p className="mt-1 text-xs text-muted">
-                    {framework.controls_covered}/{framework.controls_mapped}{" "}
-                    controls covered · {framework.coverage_pct}% mapped
+                    {framework.mapped_requirements}/{framework.requirements}{" "}
+                    requirements mapped ·{" "}
+                    {framework.controls_with_evidence
+                      ? `${framework.passing_controls} passing, ${framework.failing_controls} failing`
+                      : "no evidence yet"}
                   </p>
                 </div>
               ))}

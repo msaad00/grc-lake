@@ -35,7 +35,7 @@ export interface Violation {
 
 export interface PostureBlock {
   score: number;
-  state: "ready" | "attention_required" | "critical";
+  state: "ready" | "attention_required" | "critical" | "not_evaluated";
   framework_count: number;
   control_count: number;
   asset_count: number;
@@ -514,11 +514,18 @@ export interface AuditReadinessFramework {
 export interface AiGovernanceFramework {
   framework_id: string;
   label: string;
-  controls_mapped: number;
-  controls_covered: number;
-  coverage_pct: number;
+  /** Catalogued requirements in the pack. */
+  requirements: number;
+  /** Requirements mapped to a safeguard; the Frameworks page's figure. */
+  mapped_requirements: number;
+  mapped_pct: number;
+  controls_with_evidence: number;
+  evidence_pct: number;
+  passing_controls: number;
   failing_controls: number;
-  score: number;
+  unevaluated_controls: number;
+  /** Pass rate over controls with evidence here; null when none. */
+  score: number | null;
 }
 
 export interface AiGovernanceGap {

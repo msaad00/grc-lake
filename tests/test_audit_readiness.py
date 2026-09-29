@@ -256,3 +256,14 @@ def test_framework_outside_catalog_has_unknown_coverage_and_is_not_ready() -> No
     assert row["coverage_pct"] is None
     assert row["total_controls"] is None
     assert row["ready"] is False
+
+
+def test_empty_lake_scores_zero_audit_readiness(tmp_path: Path) -> None:
+    app = create_app(tmp_path)
+    with app.state.sessionmaker() as session:
+        tenant = create_tenant(session, slug="emptyco", name="Empty Co")
+        session.commit()
+        data = build_audit_readiness(lake=tmp_path, session=session, tenant_id=tenant.id)
+    assert data["posture"]["score"] == 0
+    assert data["audit_score"] == 0
+    assert data["state"] == "needs_work"

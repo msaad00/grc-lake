@@ -18,12 +18,14 @@ const STATE_BADGE = {
   ready: "ready",
   attention_required: "attention",
   critical: "critical",
+  not_evaluated: "default",
 } as const;
 
 const STATE_BAR = {
   ready: "bg-success",
   attention_required: "bg-warning",
   critical: "bg-danger",
+  not_evaluated: "bg-line-strong",
 } as const;
 
 function Meter({
@@ -156,8 +158,12 @@ export function AssessmentOverview({
   /** Framework packs with catalogued requirements; registry stubs excluded. */
   frameworkCount: number;
 }) {
-  const posture = assessment?.posture;
-  const state = posture?.state;
+  // A lake with no evaluated controls has a posture block but no score.
+  const posture =
+    assessment?.posture.state === "not_evaluated"
+      ? undefined
+      : assessment?.posture;
+  const state = assessment?.posture.state;
   const accuracy = ingestion?.eval_accuracy;
   const evaluated = Boolean(accuracy?.has_tests);
   const rate = accuracy?.pass_rate;

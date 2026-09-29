@@ -41,10 +41,10 @@ export default function AiGovernancePage() {
                   </span>
                 </div>
                 <Link
-                  href="/controls?domain=ai-governance"
+                  href="/mapping-review/?family=ai-governance"
                   className="text-xs font-semibold text-brand hover:underline"
                 >
-                  AI controls
+                  AI safeguard mappings
                 </Link>
               </div>
               {inventory.data.length === 0 ? (

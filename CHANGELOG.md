@@ -58,7 +58,12 @@ Python package, Helm chart, and bundled web console.
 - Security: mapping-review endpoints return fixed error messages instead of
   exception text; the server logs only the exception class.
 - CI builds with the same uv version as the container image, and a test fails
-  when the pins drift apart.
+  when the pins drift apart. The container's uv moves from 0.10.9 to 0.12.19
+  and the `setup-uv` action from 7.6.0 to 10.2.0.
+- The published image is multi-arch (`linux/amd64` and `linux/arm64`), so
+  `docker compose up` runs natively on Apple silicon and Arm hosts.
+- Console dependencies: Next.js 16.3.6, React Flow 12.12.0, framer-motion
+  13.4.3, lucide-react 1.48, and TanStack Query 5.103.2.
 - Console: GDPR, NIS2, and DORA use their own neutral marks instead of the EU
   AI Act badge; the crosswalk overlap matrices name each framework once, and
   the Control families tab states its category, family, and safeguard counts.

@@ -228,10 +228,10 @@ def test_azure_consent_callback_and_complete(tmp_path: Path, monkeypatch: pytest
         "azure-posture",
         session_id=session["session_id"],
         actor="test",
-        subscription_id="sub-guid",
+        subscription_id="11111111-2222-3333-4444-555555555555",
     )
     configure = result["configure"]
-    assert configure["credentials"]["subscription_id"] == "sub-guid"
+    assert configure["credentials"]["subscription_id"] == "11111111-2222-3333-4444-555555555555"
     assert "azure_tenant_id" not in configure["options"]
 
 
@@ -257,10 +257,10 @@ def test_azure_consent_can_complete_with_server_redirect_token(tmp_path: Path, m
         "azure-posture",
         session_id=redirect_token,
         actor="test",
-        subscription_id="sub-guid",
+        subscription_id="11111111-2222-3333-4444-555555555555",
     )
     configure = result["configure"]
-    assert configure["credentials"]["subscription_id"] == "sub-guid"
+    assert configure["credentials"]["subscription_id"] == "11111111-2222-3333-4444-555555555555"
     assert "azure_tenant_id" not in configure["options"]
 
 
@@ -377,3 +377,31 @@ def test_gcp_template_endpoint_serves_tf(tmp_path: Path) -> None:
         assert b"trustops-posture-reader" in raw
     finally:
         server.shutdown()
+
+
+def test_azure_link_rejects_a_subscription_id_that_is_not_a_guid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    session = start_cloud_link(tmp_path, "azure-posture", tenant_id="tenant-a")
+    with pytest.raises(ValueError, match="subscription_id"):
+        complete_cloud_link(
+            tmp_path,
+            "azure-posture",
+            session_id=session["session_id"],
+            actor="test",
+            subscription_id="Zq8~sUpErSeCrEt.value_123",
+        )
+    assert not (tmp_path / "gold" / "connector_config.jsonl").exists()
+
+
+def test_a_completed_link_session_cannot_be_completed_again(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TRUSTOPS_GCP_WIF_MEMBER", "serviceAccount:demo.svc.id.goog[ns/sa]")
+    session = start_cloud_link(tmp_path, "gcp-posture", tenant_id="tenant-a")
+    complete_cloud_link(tmp_path, "gcp-posture", session_id=session["session_id"], actor="a", project_id="first-proj")
+    with pytest.raises(ValueError, match="already completed"):
+        complete_cloud_link(
+            tmp_path, "gcp-posture", session_id=session["session_id"], actor="b", project_id="second-proj"
+        )
+    events = (tmp_path / "gold" / "connector_config.jsonl").read_text().splitlines()
+    assert len(events) == 1

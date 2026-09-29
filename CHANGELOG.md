@@ -57,6 +57,15 @@ Python package, Helm chart, and bundled web console.
   and issue forms.
 - Security: mapping-review endpoints return fixed error messages instead of
   exception text; the server logs only the exception class.
+- Fixed: `GET /api/v1/policies?status=…` and
+  `GET /api/v1/vendor-assessments?status=…` returned 500 for any status, which
+  also broke the MCP `list_policies` status filter.
+- Security: webhook delivery records store a fixed reason (for example "SSRF
+  blocked" or the error class) instead of resolver and socket text, which
+  could reveal the private address an internal hostname resolved to. Hosted
+  Azure cloud links require the subscription ID to be a GUID, and a completed
+  cloud-link session can no longer be completed again to overwrite its staged
+  credentials.
 - CI builds with the same uv version as the container image, and a test fails
   when the pins drift apart. The container's uv moves from 0.10.9 to 0.12.19
   and the `setup-uv` action from 7.6.0 to 10.2.0.

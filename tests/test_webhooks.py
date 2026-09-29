@@ -1039,3 +1039,38 @@ def test_dispatch_event_failed_subscription_lookup_does_not_poison_the_session(
 
     with session_scope(app.state.sessionmaker) as verify_session:
         assert len(risks_db.list_risks(verify_session, tenant_id=tenant.id)) == 1
+
+
+def test_ssrf_refusal_does_not_reveal_the_resolved_address(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(netguard.socket, "getaddrinfo", lambda *a, **k: [(2, 1, 6, "", ("10.20.30.40", 0))])
+    envelope = webhook_delivery.build_envelope(event_type="x", tenant_id="t", occurred_at="now", data={})
+    result = webhook_delivery.deliver_webhook(
+        "http://internal.example.com/x", secret="s", event_type="x", envelope=envelope
+    )
+    assert "SSRF" in (result["error"] or "")
+    assert "10.20.30.40" not in (result["error"] or "")
+
+
+def test_redirect_to_a_private_address_does_not_reveal_it(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _redirected(request, *, timeout=None, validate=None):  # noqa: ANN001, ARG001
+        raise ValueError("webhook resolves to non-public address 192.168.7.9 (SSRF blocked)")
+
+    monkeypatch.setattr(webhook_delivery.netguard, "open_guarded", _redirected)
+    envelope = webhook_delivery.build_envelope(event_type="x", tenant_id="t", occurred_at="now", data={})
+    result = webhook_delivery.deliver_webhook(
+        "https://hooks.example.com/x", secret="s", event_type="x", envelope=envelope, max_retries=0
+    )
+    assert "SSRF" in (result["error"] or "")
+    assert "192.168.7.9" not in (result["error"] or "")
+
+
+def test_network_errors_report_the_error_class_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _refused(request, *, timeout=None, validate=None):  # noqa: ANN001, ARG001
+        raise urllib.error.URLError("[Errno 111] Connection refused to 172.16.0.5:8443")
+
+    monkeypatch.setattr(webhook_delivery.netguard, "open_guarded", _refused)
+    envelope = webhook_delivery.build_envelope(event_type="x", tenant_id="t", occurred_at="now", data={})
+    result = webhook_delivery.deliver_webhook(
+        "https://hooks.example.com/x", secret="s", event_type="x", envelope=envelope, max_retries=0
+    )
+    assert result["error"] == "URLError"

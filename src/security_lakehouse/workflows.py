@@ -195,7 +195,8 @@ def _action_connector_sync(lake: Path, params: dict[str, Any], *, dry_run: bool 
         "connector_id": connector_id,
         "result": sync.result,
         "evidence_count": sync.evidence_count,
-        "error": sync.error,
+        # A failed sync raises ConnectorSyncError; a returned result succeeded.
+        "error": None,
         "watermark_cursor": sync.watermark_cursor,
     }
 

@@ -186,8 +186,8 @@ def collect_s3_evidence(
 ) -> list[dict[str, Any]]:
     """Collect canonical raw evidence rows from S3 object metadata."""
     now = collected_at or datetime.now(UTC)
-    bucket_name = bucket or getattr(client, "bucket", "s3")
-    scope_prefix = prefix or getattr(client, "prefix", "")
+    bucket_name = bucket or client.bucket
+    scope_prefix = prefix or str(getattr(client, "prefix", ""))
     rows: list[dict[str, Any]] = []
     for item in client.list_objects():
         event = _object_event(item, bucket=bucket_name, prefix=scope_prefix, collected_at=now, tenant_id=tenant_id)

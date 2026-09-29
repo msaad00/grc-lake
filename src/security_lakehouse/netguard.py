@@ -152,7 +152,7 @@ class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
         super().__init__()
         self._validate = validate
 
-    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]  # noqa: ANN001, ANN201
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
         self._validate(newurl)  # raises ValueError on a disallowed target
         new = super().redirect_request(req, fp, code, msg, headers, newurl)
         if new is not None and _origin(newurl) != _origin(req.full_url):
@@ -218,7 +218,7 @@ class _PinnedHTTPHandler(urllib.request.HTTPHandler):
         super().__init__()
         self._label = label
 
-    def http_open(self, req):  # type: ignore[no-untyped-def]  # noqa: ANN001, ANN201
+    def http_open(self, req):  # noqa: ANN001, ANN201
         return self.do_open(
             functools.partial(PinnedHTTPConnection, label=self._label, proxied=_is_proxied(req)),
             req,
@@ -230,7 +230,7 @@ class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
         super().__init__(context=ssl.create_default_context())
         self._label = label
 
-    def https_open(self, req):  # type: ignore[no-untyped-def]  # noqa: ANN001, ANN201
+    def https_open(self, req):  # noqa: ANN001, ANN201
         return self.do_open(
             functools.partial(PinnedHTTPSConnection, label=self._label, proxied=_is_proxied(req)),
             req,
@@ -257,7 +257,7 @@ def open_guarded(
     timeout: float | None = None,
     validate: Callable[[str], Any],
     label: str = "target",
-):  # type: ignore[no-untyped-def]
+):
     """Validate ``request``'s URL, then open it with redirect revalidation.
 
     ``validate`` runs on the initial URL and again on every redirect target; it
@@ -275,7 +275,7 @@ def open_public(
     *,
     timeout: float | None = None,
     label: str = "target",
-):  # type: ignore[no-untyped-def]
+):
     """``open_guarded`` with the public-IP validator — the connector default.
 
     Every request URL and every redirect hop must be http(s) and resolve to a

@@ -56,6 +56,7 @@ dev = [
     "jsonschema>=4.23",
     "pytest>=8.0",
     "ruff>=0.8.0",
+    "mypy>=2.3",
     # supply-chain scan + pre-commit driver
     "pip-audit>=2.7",
     "pre-commit>=3.7",
@@ -186,6 +187,37 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.mypy]
+files = ["src/security_lakehouse"]
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+strict_equality = true
+
+# Optional third-party SDKs that ship neither inline types nor a stub package
+# in uv.lock. Listed by name so a new untyped import still fails the gate.
+[[tool.mypy.overrides]]
+module = [
+    "authlib.*",
+    "boto3",
+    "clickhouse_connect",
+    "kubernetes",
+    "onelogin.*",
+    "pandas",
+    "reportlab.*",
+    "yaml",
+]
+ignore_missing_imports = true
+
+# numpy >= 2.5 (installed on 3.12+) writes its stubs with the 3.12 `type`
+# statement, which a 3.11 target cannot parse. It is reached only through
+# duckdb's bundled stubs; nothing here imports numpy directly.
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
 
 [tool.ruff]
 target-version = "py311"

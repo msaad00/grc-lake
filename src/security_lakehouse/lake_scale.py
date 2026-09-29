@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,7 @@ DEFAULT_EVAL_SCHEDULE = "every 6h"
 LAKE_SCALE_FILE = ("gold", "lake_scale.json")
 
 
-def warehouse_sink_configured(env: dict[str, str] | None = None) -> bool:
+def warehouse_sink_configured(env: Mapping[str, str] | None = None) -> bool:
     """Return True when any evidence sink env is configured."""
     runtime = env or os.environ
     from security_lakehouse.sinks import ClickHouseSinkConfig, DuckDBSinkConfig, SnowflakeSinkConfig
@@ -92,7 +93,7 @@ def resolve_materialize_strategy(
     lake: str | Path,
     raw_path: str | Path,
     *,
-    env: dict[str, str] | None = None,
+    env: Mapping[str, str] | None = None,
     force_local: bool = False,
 ) -> dict[str, Any]:
     """Choose local full, incremental, or warehouse evaluation for this lake."""

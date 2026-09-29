@@ -1196,7 +1196,7 @@ def _read_sample_rows(path: str) -> list[dict[str, Any]]:
     suffix = target.suffix.lower()
     if suffix == ".parquet":
         try:
-            import pyarrow.parquet as pq  # type: ignore[import-untyped]
+            import pyarrow.parquet as pq
         except ImportError as exc:
             raise ValueError("reading .parquet samples requires the 'parquet' extra (pyarrow)") from exc
         return [row for row in pq.read_table(target).to_pylist() if isinstance(row, dict)]
@@ -1323,7 +1323,7 @@ def _controls_as_of(args: argparse.Namespace) -> int:
             {"control_id": cid, "version": c.get("version"), "framework_id": c.get("framework_id")}
             for cid, c in controls.items()
         ),
-        key=lambda r: r["control_id"],
+        key=lambda r: str(r["control_id"]),
     )
     print(json.dumps({"as_of": args.date, "control_count": len(rows), "controls": rows}, indent=2))
     return 0
@@ -1415,7 +1415,7 @@ def _query_duckdb(mart: Path, sql: str) -> list[dict]:
     if not mart.exists():
         raise ValueError("DuckDB mart not found. Install with `pip install -e '.[analytics]'` and rerun the pipeline.")
     try:
-        import duckdb  # type: ignore[import-not-found]
+        import duckdb
     except ImportError as exc:
         raise ValueError("DuckDB is not installed. Install with `pip install -e '.[analytics]'`.") from exc
 
@@ -1438,11 +1438,11 @@ def _serve(args: argparse.Namespace) -> int:
         print(f"serving TrustOps console ({mode}): http://{args.host}:{args.port}/")
         serve(args.lake, host=args.host, port=args.port, require_auth=require_auth)
     else:
-        from security_lakehouse.server import serve
+        from security_lakehouse.server import serve as serve_local
 
         _refuse_exposed_local_mode(args.host)
         print(f"serving TrustOps console (local mode, no authentication): http://{args.host}:{args.port}/")
-        serve(args.lake, host=args.host, port=args.port)
+        serve_local(args.lake, host=args.host, port=args.port)
     return 0
 
 
@@ -2222,7 +2222,7 @@ def _agents_posture_review(args: argparse.Namespace) -> int:
 
     from security_lakehouse.agents import run_posture_review
 
-    state = dict(
+    state: dict[str, Any] = dict(
         run_posture_review(
             args.lake,
             role=args.role,
@@ -2235,7 +2235,9 @@ def _agents_posture_review(args: argparse.Namespace) -> int:
         )
     )
     decisions = state.get("decisions") or []
-    state["decisions"] = [asdict(item) if is_dataclass(item) else item for item in decisions]
+    state["decisions"] = [
+        asdict(item) if is_dataclass(item) and not isinstance(item, type) else item for item in decisions
+    ]
     print(json.dumps(state, indent=2, sort_keys=True))
     return 0
 
@@ -2275,7 +2277,7 @@ def _agents_soc_triage(args: argparse.Namespace) -> int:
 
     from security_lakehouse.agents import run_soc_triage
 
-    state = dict(
+    state: dict[str, Any] = dict(
         run_soc_triage(
             args.lake,
             role=args.role,
@@ -2288,7 +2290,9 @@ def _agents_soc_triage(args: argparse.Namespace) -> int:
         )
     )
     decisions = state.get("decisions") or []
-    state["decisions"] = [asdict(item) if is_dataclass(item) else item for item in decisions]
+    state["decisions"] = [
+        asdict(item) if is_dataclass(item) and not isinstance(item, type) else item for item in decisions
+    ]
     print(json.dumps(state, indent=2, sort_keys=True))
     return 0 if state.get("evaluation", {}).get("ok", False) else 1
 

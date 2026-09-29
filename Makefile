@@ -1,4 +1,4 @@
-.PHONY: release-build compile lint format-check diff-check test validate validate-json validate-generated validate-brand validate-doc-images pipeline dashboard api-smoke smoke ci web-install web-dev web-typecheck web-build web-clean web-ci docker-build helm-lint helm-template terraform-fmt terraform-validate deploy-check uv-sync uv-lock pre-commit-install pre-commit-run pip-audit npm-audit security openapi-export readme-header
+.PHONY: release-build compile lint format-check typecheck diff-check test validate validate-json validate-generated validate-brand validate-doc-images pipeline dashboard api-smoke smoke ci web-install web-dev web-typecheck web-build web-clean web-ci docker-build helm-lint helm-template terraform-fmt terraform-validate deploy-check uv-sync uv-lock pre-commit-install pre-commit-run pip-audit npm-audit security openapi-export readme-header
 
 test:
 	PYTHONPATH=src python -m pytest -q
@@ -11,6 +11,9 @@ lint:
 
 format-check:
 	PYTHONPATH=src python -m ruff format --check src tests tools
+
+typecheck:
+	python -m mypy
 
 diff-check:
 	git diff --check
@@ -55,7 +58,7 @@ openapi-export:
 
 smoke: validate validate-json validate-doc-images validate-brand pipeline validate-generated dashboard api-smoke test
 
-ci: diff-check compile lint format-check web-ci smoke
+ci: diff-check compile lint format-check typecheck web-ci smoke
 
 # --- React (Next.js) workbench targets -------------------------------------
 # Lives in app/web/, builds to src/security_lakehouse/web/dist/ so the Python

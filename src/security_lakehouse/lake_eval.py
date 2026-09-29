@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -49,7 +50,7 @@ def run_lake_eval(
     *,
     mapping_path: str | Path | None = None,
     tenant_id: str = "default",
-    env: dict[str, str] | None = None,
+    env: Mapping[str, str] | None = None,
     actor: str = "system",
 ) -> LakeEvalResult:
     """Materialize and evaluate the lake using the scale-appropriate path."""
@@ -128,7 +129,7 @@ def _run_warehouse_eval(
     *,
     mapping_path: str | Path | None,
     tenant_id: str,
-    env: dict[str, str],
+    env: Mapping[str, str],
 ) -> PipelineResult:
     """Project to warehouse and keep a capped local posture slice when possible."""
     if _incremental_ready(lake):

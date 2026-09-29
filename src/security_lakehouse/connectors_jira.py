@@ -201,7 +201,9 @@ def collect_jira_evidence(
         key = str(issue.get("key") or "").strip()
         if not key:
             continue
-        fields = issue.get("fields") if isinstance(issue.get("fields"), dict) else {}
+        fields = issue.get("fields")
+        if not isinstance(fields, dict):
+            fields = {}
         rows.append(_ticket_event(client.base_url, site, key, fields, now, tenant_id))
         rows.append(_transition_event(client.base_url, site, key, fields, now, tenant_id))
 
@@ -385,9 +387,13 @@ def _event(
 
 
 def _status(fields: dict[str, Any]) -> tuple[str, str]:
-    status = fields.get("status") if isinstance(fields.get("status"), dict) else {}
+    status = fields.get("status")
+    if not isinstance(status, dict):
+        status = {}
     name = str(status.get("name") or "UNKNOWN")
-    category_obj = status.get("statusCategory") if isinstance(status.get("statusCategory"), dict) else {}
+    category_obj = status.get("statusCategory")
+    if not isinstance(category_obj, dict):
+        category_obj = {}
     category = str(category_obj.get("key") or category_obj.get("name") or "unknown").strip().lower()
     return name, category
 

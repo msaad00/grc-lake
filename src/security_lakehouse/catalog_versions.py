@@ -309,6 +309,7 @@ def compute_bundle(
     bundle for the original assessment manifest.
     """
     registry = load_framework_registry(registry_path)
+    as_of_date = _parse_date(as_of)
     if as_of is not None:
         controls = controls_as_of(as_of, catalog_path=catalog_path, history_path=history_path)
     else:
@@ -330,7 +331,7 @@ def compute_bundle(
     }
     body = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
-        "as_of": _parse_date(as_of).isoformat() if as_of is not None else None,
+        "as_of": as_of_date.isoformat() if as_of_date is not None else None,
         "framework_count": len(framework_versions),
         "control_count": len(control_versions),
         "crosswalk_count": len(crosswalk),

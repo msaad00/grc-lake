@@ -187,7 +187,9 @@ def validate_model_output(
     if not isinstance(payload, dict):
         return {"summary": "", "priorities": [], "proposed_tool_calls": [], "rejected_tool_calls": ["non_object"]}
 
-    priorities = payload.get("priorities") if isinstance(payload.get("priorities"), list) else []
+    priorities = payload.get("priorities")
+    if not isinstance(priorities, list):
+        priorities = []
     normalized_priorities: list[dict[str, Any]] = []
     for index, item in enumerate(priorities[:10], start=1):
         if not isinstance(item, dict):
@@ -203,7 +205,9 @@ def validate_model_output(
             }
         )
 
-    proposed = payload.get("proposed_tool_calls") if isinstance(payload.get("proposed_tool_calls"), list) else []
+    proposed = payload.get("proposed_tool_calls")
+    if not isinstance(proposed, list):
+        proposed = []
     accepted: list[dict[str, Any]] = []
     rejected: list[str] = []
     allowed = allowed_tool_calls or ALLOWED_MODEL_TOOL_CALLS
@@ -215,7 +219,9 @@ def validate_model_output(
         if name not in allowed:
             rejected.append(name or "missing_name")
             continue
-        arguments = item.get("arguments") if isinstance(item.get("arguments"), dict) else {}
+        arguments = item.get("arguments")
+        if not isinstance(arguments, dict):
+            arguments = {}
         accepted.append({"name": name, "arguments": arguments, "requires_approval": True, "status": "proposed"})
 
     return {

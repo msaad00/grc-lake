@@ -66,7 +66,7 @@ def azure_credential(credentials: dict[str, Any], env: dict[str, str], *, label:
     if not value:
         raise ConnectorConfigError(f"{label}: the variable named by {field} is not set")
     try:
-        import azure.identity as azure_identity  # type: ignore[import-not-found]  # noqa: PLC0415
+        import azure.identity as azure_identity  # noqa: PLC0415
     except ImportError as exc:  # pragma: no cover - optional extra
         raise ConnectorConfigError(f"{label} requires azure-identity; install the cloud extra") from exc
     if field == "client_secret_ref":

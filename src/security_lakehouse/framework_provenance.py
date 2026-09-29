@@ -110,16 +110,18 @@ def build_framework_view(
         cadence = int(framework.get("sync_cadence_days") or 90)
         pulled_at = _parse_iso(framework.get("pulled_at"))
         freshness = _freshness_state(pulled_at, cadence, now_utc)
-        controls = controls_by_framework.get(framework_id, [])
-        mapped = sum(1 for c in controls if c.get("implementation_status", "").startswith("implemented"))
+        framework_controls = controls_by_framework.get(framework_id, [])
+        mapped = sum(1 for c in framework_controls if c.get("implementation_status", "").startswith("implemented"))
         out.append(
             {
                 **framework,
                 "superseded_by": framework.get("superseded_by"),
-                "pack_state": framework_pack_state(framework, len(controls)),
-                "control_count": len(controls),
+                "pack_state": framework_pack_state(framework, len(framework_controls)),
+                "control_count": len(framework_controls),
                 "implemented_control_count": mapped,
-                "mapping_coverage_pct": (round(mapped / len(controls) * 100, 1) if controls else 0.0),
+                "mapping_coverage_pct": (
+                    round(mapped / len(framework_controls) * 100, 1) if framework_controls else 0.0
+                ),
                 "freshness_state": freshness,
                 "pulled_age_days": ((now_utc - pulled_at).days if pulled_at is not None else None),
                 "next_pull_due": (

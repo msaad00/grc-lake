@@ -23,6 +23,7 @@ path is unit-tested without a live ClickHouse.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -55,7 +56,7 @@ class ClickHouseSinkConfig:
         safe_identifier(self.database)
 
     @classmethod
-    def from_env(cls, env: dict[str, str]) -> ClickHouseSinkConfig | None:
+    def from_env(cls, env: Mapping[str, str]) -> ClickHouseSinkConfig | None:
         host = env.get("CLICKHOUSE_HOST")
         if not host:
             return None

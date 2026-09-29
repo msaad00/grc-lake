@@ -336,6 +336,24 @@ def test_model_client_receives_output_token_budget(monkeypatch: pytest.MonkeyPat
     assert payload["options"] == {"num_predict": 128}
 
 
+def test_openai_compatible_choice_without_message_is_a_model_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_post_json(url: str, payload: dict, *, headers: dict[str, str], timeout: float) -> dict:
+        return {"choices": [{"finish_reason": "length"}]}
+
+    monkeypatch.setattr(agent_model_client, "_post_json", fake_post_json)
+    monkeypatch.setattr(agent_model_client.netguard, "assert_url_is_public", lambda *_a, **_k: None)
+    monkeypatch.setenv("TRUSTOPS_TEST_MODEL_KEY", "test-key")
+    provider = ModelProviderConfig(
+        provider="openai_compatible",
+        model="gpt-test",
+        base_url="https://models.example.com/v1",
+        api_key_env="TRUSTOPS_TEST_MODEL_KEY",
+    )
+
+    with pytest.raises(ModelClientError, match="non-JSON"):
+        agent_model_client.call_model_json({}, provider)
+
+
 def test_model_call_is_skipped_when_context_exceeds_budget(tmp_path: Path) -> None:
     _seed_gap(tmp_path)
     provider = ModelProviderConfig(

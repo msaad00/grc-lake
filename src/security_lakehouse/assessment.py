@@ -437,7 +437,7 @@ def _iter_snapshots(lake_dir: str | Path) -> list[tuple[datetime, dict[str, Any]
 
 def list_snapshot_times(lake_dir: str | Path) -> list[str]:
     """Return the ``evaluated_at`` timestamps of all snapshots, oldest-first."""
-    return [payload.get("evaluated_at") for _ts, payload, _path in _iter_snapshots(lake_dir)]
+    return [payload["evaluated_at"] for _ts, payload, _path in _iter_snapshots(lake_dir)]
 
 
 _SNAPSHOT_ID_RE = re.compile(r"^[A-Za-z0-9._+=,@:-]+$")

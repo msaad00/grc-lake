@@ -212,7 +212,9 @@ def _user_event(
 ) -> dict[str, Any]:
     user_id = str(user["id"])
     status = str(user.get("status") or "UNKNOWN").upper()
-    profile = user.get("profile") if isinstance(user.get("profile"), dict) else {}
+    profile = user.get("profile")
+    if not isinstance(profile, dict):
+        profile = {}
     login = profile.get("login") or profile.get("email")
     is_active = status in ACTIVE_USER_STATUSES
     evidence_ref = f"{org_url}/api/v1/users/{user_id}"
@@ -422,9 +424,13 @@ def _system_log_event(
     if not published:
         return None
     event_type = str(entry.get("eventType") or "okta.system.log")
-    outcome = entry.get("outcome") if isinstance(entry.get("outcome"), dict) else {}
+    outcome = entry.get("outcome")
+    if not isinstance(outcome, dict):
+        outcome = {}
     outcome_result = str(outcome.get("result") or "").upper()
-    actor = entry.get("actor") if isinstance(entry.get("actor"), dict) else {}
+    actor = entry.get("actor")
+    if not isinstance(actor, dict):
+        actor = {}
     actor_id = str(actor.get("id") or actor.get("alternateId") or "unknown")
     failed = outcome_result in FAILED_OUTCOMES
     status = "open" if failed else "observed"

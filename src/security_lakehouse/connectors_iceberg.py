@@ -119,6 +119,7 @@ class IcebergCatalogReader(_WindowMixin):
             NotEqualTo,
             NotIn,
             NotNull,
+            Reference,
         )
 
         table = self.catalog.load_table(_table_identifier(spec.source_table))
@@ -131,21 +132,21 @@ class IcebergCatalogReader(_WindowMixin):
             column = _require_column(names, spec, item.column)
             clause: BooleanExpression
             if item.op == "eq":
-                clause = EqualTo(column, item.value)
+                clause = EqualTo(term=Reference(column), value=item.value)
             elif item.op == "ne":
-                clause = NotEqualTo(column, item.value)
+                clause = NotEqualTo(term=Reference(column), value=item.value)
             elif item.op == "in":
-                clause = In(column, set(item.value))
+                clause = In(term=Reference(column), values=set(item.value))
             elif item.op == "not_in":
-                clause = NotIn(column, set(item.value))
+                clause = NotIn(term=Reference(column), values=set(item.value))
             elif item.op == "is_null":
-                clause = IsNull(column)
+                clause = IsNull(term=Reference(column))
             else:
-                clause = NotNull(column)
+                clause = NotNull(term=Reference(column))
             expression = And(expression, clause)
         bound = lower_bound(spec, self._effective_since(spec, since))
         if bound is not None:
-            expression = And(expression, GreaterThanOrEqual(observed, _typed_bound(spec, bound)))
+            expression = And(expression, GreaterThanOrEqual(term=Reference(observed), value=_typed_bound(spec, bound)))
         arrow = table.scan(row_filter=expression, selected_fields=selected).to_arrow()
         return _ordered_rows(arrow, observed, limit)
 

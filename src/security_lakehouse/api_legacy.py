@@ -68,7 +68,7 @@ Body = dict[str, Any]
 
 
 def _first(query: Query, key: str) -> str | None:
-    return (query.get(key) or [None])[0]
+    return api_v1.first_param(query, key)
 
 
 def _suffix_match(path: str, prefix: str, suffix: str) -> str | None:

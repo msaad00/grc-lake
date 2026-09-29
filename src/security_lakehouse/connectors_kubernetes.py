@@ -165,8 +165,8 @@ def _default_apis(
     *, context: str | None, kubeconfig_path: str | None, in_cluster: bool
 ) -> tuple[dict[str, Any], Callable[[Any], Any]]:
     try:
-        from kubernetes import client as k8s_client  # type: ignore[import-not-found]  # noqa: PLC0415
-        from kubernetes import config as k8s_config  # type: ignore[import-not-found]  # noqa: PLC0415
+        from kubernetes import client as k8s_client  # noqa: PLC0415
+        from kubernetes import config as k8s_config  # noqa: PLC0415
     except ImportError as exc:
         raise RuntimeError(
             "kubernetes-cluster live collection requires the official kubernetes client; install the "
@@ -269,8 +269,8 @@ def collect_kubernetes_evidence(
     for policy in client.network_policies():
         namespace = str((policy.get("metadata") or {}).get("namespace") or "")
         policy_counts[namespace] = policy_counts.get(namespace, 0) + 1
-    for namespace in client.namespaces():
-        name = str((namespace.get("metadata") or {}).get("name") or "")
+    for ns in client.namespaces():
+        name = str((ns.get("metadata") or {}).get("name") or "")
         if name:
             rows.append(_network_policy_event(cluster, name, policy_counts.get(name, 0), now, tenant_id))
 

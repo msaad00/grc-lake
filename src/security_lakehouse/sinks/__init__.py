@@ -8,6 +8,7 @@ truth; a sink is an optional, idempotent projection of it into the customer's la
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from security_lakehouse.sinks.clickhouse_sink import ClickHouseSink, ClickHouseSinkConfig
@@ -25,7 +26,7 @@ __all__ = [
 ]
 
 
-def land_if_configured(lake_dir: str | Path, env: dict[str, str]) -> dict[str, dict[str, int]] | None:
+def land_if_configured(lake_dir: str | Path, env: Mapping[str, str]) -> dict[str, dict[str, int]] | None:
     """Project the local medallion to every configured evidence lake.
 
     The lake is pluggable — Snowflake, ClickHouse, and/or an embedded DuckDB

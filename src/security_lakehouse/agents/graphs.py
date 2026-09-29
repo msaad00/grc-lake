@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from security_lakehouse.agents.budgets import AgentBudgetPolicy
 from security_lakehouse.agents.checkpoints import invoke_with_checkpoint, memory_checkpointer
@@ -107,13 +107,14 @@ def run_posture_review(
         orchestrator=orchestrator,
     )
     if orchestrator == "langgraph":
-        state = dict(
+        state = cast(
+            AgentRunState,
             invoke_with_checkpoint(
                 build_posture_review_graph(checkpointer=memory_checkpointer() if checkpoint_thread_id else None),
                 state,
                 thread_id=checkpoint_thread_id,
                 resume=resume,
-            )
+            ),
         )
         state["mode"] = "langgraph"
         state["orchestrator"] = "langgraph"

@@ -344,31 +344,33 @@ def _tick_locked(
                 }
             )
     sync_runner = connector_runner or run_connector_sync
-    for entry in _scheduled_from_connectors(lake_dir):
-        last_fired = state.get(_state_key("connector", entry.connector_id))
-        due_at = (last_fired + entry.period) if last_fired else moment
+    for connector_entry in _scheduled_from_connectors(lake_dir):
+        last_fired = state.get(_state_key("connector", connector_entry.connector_id))
+        due_at = (last_fired + connector_entry.period) if last_fired else moment
         if last_fired is not None and moment < due_at:
             continue
         try:
-            run = sync_runner(
+            sync_run = sync_runner(
                 lake_dir,
-                connector_id=entry.connector_id,
+                connector_id=connector_entry.connector_id,
                 actor="scheduler",
-                repo=entry.repo,
-                fixture_dir=entry.fixture_dir,
-                token_env=entry.token_env,
-                materialize=entry.materialize,
+                repo=connector_entry.repo,
+                fixture_dir=connector_entry.fixture_dir,
+                token_env=connector_entry.token_env,
+                materialize=connector_entry.materialize,
             )
-            outcome = getattr(run, "result", None) or (run.get("result") if isinstance(run, dict) else "ok")
-            evidence_count = getattr(run, "evidence_count", None)
-            if evidence_count is None and isinstance(run, dict):
-                evidence_count = run.get("evidence_count")
-            _write_state(lake_dir, target_kind="connector", target_id=entry.connector_id, fired_at=moment)
+            outcome = getattr(sync_run, "result", None) or (
+                sync_run.get("result") if isinstance(sync_run, dict) else "ok"
+            )
+            evidence_count = getattr(sync_run, "evidence_count", None)
+            if evidence_count is None and isinstance(sync_run, dict):
+                evidence_count = sync_run.get("evidence_count")
+            _write_state(lake_dir, target_kind="connector", target_id=connector_entry.connector_id, fired_at=moment)
             results.append(
                 {
                     "target_kind": "connector",
-                    "connector_id": entry.connector_id,
-                    "schedule": entry.schedule,
+                    "connector_id": connector_entry.connector_id,
+                    "schedule": connector_entry.schedule,
                     "fired_at": _utc_iso(moment),
                     "result": outcome,
                     "evidence_count": evidence_count,
@@ -379,8 +381,8 @@ def _tick_locked(
             results.append(
                 {
                     "target_kind": "connector",
-                    "connector_id": entry.connector_id,
-                    "schedule": entry.schedule,
+                    "connector_id": connector_entry.connector_id,
+                    "schedule": connector_entry.schedule,
                     "fired_at": _utc_iso(moment),
                     "result": "error",
                     "evidence_count": None,

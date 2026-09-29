@@ -68,7 +68,7 @@ class SnowflakeClient:
 
     def __init__(self, *, query_params: dict[str, Any], views: dict[str, str] | None = None) -> None:
         try:
-            import snowflake.connector  # type: ignore[import-untyped]  # noqa: PLC0415
+            import snowflake.connector  # noqa: PLC0415
         except ImportError as exc:  # pragma: no cover - live Snowflake only
             raise RuntimeError(
                 "snowflake-evidence-lake live collection requires snowflake-connector-python; "
@@ -254,7 +254,7 @@ def probe_snowflake_access(
     names, row counts, and sanitized diagnostics only; raw credential material is
     never returned.
     """
-    environment = env or os.environ
+    environment = env or dict(os.environ)
     query_params = _probe_query_params(credentials=credentials, options=options, env=environment)
     specs = resolve_mappings(options)
     if specs:
@@ -307,7 +307,7 @@ def discover_snowflake_scope(
     UI should collect only account + service identity + a secret reference, then
     let the active Snowflake grants drive which scope objects can be selected.
     """
-    environment = env or os.environ
+    environment = env or dict(os.environ)
     try:
         query_params = _probe_query_params(credentials=credentials, options=options, env=environment)
         views = {key: str(options.get(key) or default) for key, default in DEFAULT_VIEWS.items()}
@@ -481,7 +481,7 @@ def _asset_risk_event(
     if not asset_id:
         return None
     risk = _int(row.get("risk_score"))
-    status = _status(row.get("status") or ("open" if risk >= 70 else "observed"))
+    status = _status(row.get("status") or ("open" if risk is not None and risk >= 70 else "observed"))
     severity = _severity(row.get("severity") or _severity_from_risk(risk, status))
     evidence_ref = _first(row, "evidence_ref", "asset_id") or str(asset_id)
     return _event(

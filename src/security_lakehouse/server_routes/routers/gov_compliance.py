@@ -43,8 +43,8 @@ def build_gov_compliance_router(*, lake_for: Callable[[Identity], Path]) -> APIR
         rows = poam_services.list_poam_items(
             session,
             identity.tenant_id,
-            framework_id=(params.get("framework_id") or [None])[0],
-            status=(params.get("status") or [None])[0],
+            framework_id=api_v1.first_param(params, "framework_id"),
+            status=api_v1.first_param(params, "status"),
             limit=limit,
             offset=offset,
         )

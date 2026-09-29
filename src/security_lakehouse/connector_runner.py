@@ -1221,7 +1221,14 @@ def _collect_databricks(
             "schema, and service-principal client_id plus its OAuth secret (client_secret_ref or "
             "DATABRICKS_CLIENT_SECRET)"
         )
-    client = DatabricksClient(host, client_secret=secret, **fields)
+    client = DatabricksClient(
+        host,
+        client_id=fields["client_id"],
+        client_secret=secret,
+        warehouse_id=fields["warehouse_id"],
+        catalog=fields["catalog"],
+        schema=fields["schema"],
+    )
     mapped = _collect_mapped(client, options or {}, since=since, source="databricks")
     return mapped if mapped is not None else collect_databricks_evidence(client)
 

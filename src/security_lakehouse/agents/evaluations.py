@@ -32,13 +32,19 @@ def _check(check: str, passed: bool, detail: dict[str, Any] | None = None, *, we
 
 
 def _budget_status(state: dict[str, Any]) -> str:
-    context = state.get("model_context") if isinstance(state.get("model_context"), dict) else {}
-    budget = context.get("budget") if isinstance(context.get("budget"), dict) else {}
+    context = state.get("model_context")
+    if not isinstance(context, dict):
+        context = {}
+    budget = context.get("budget")
+    if not isinstance(budget, dict):
+        budget = {}
     return str(budget.get("status") or "not_applicable")
 
 
 def _rejected_tool_calls(state: dict[str, Any]) -> list[Any]:
-    model_output = state.get("model_output") if isinstance(state.get("model_output"), dict) else {}
+    model_output = state.get("model_output")
+    if not isinstance(model_output, dict):
+        model_output = {}
     rejected = model_output.get("rejected_tool_calls", []) if isinstance(model_output, dict) else []
     return rejected if isinstance(rejected, list) else []
 
@@ -101,7 +107,9 @@ def evaluate_agent_run(state: dict[str, Any], *, use_case: str) -> dict[str, Any
         and (not _decision_requires_approval(item) or _decision_status(item) == "executed")
     ]
     checks.append(_check("writes_are_approval_gated", not unsafe_writes, {"unsafe_actions": unsafe_writes}, weight=4))
-    model_output = state.get("model_output") if isinstance(state.get("model_output"), dict) else {}
+    model_output = state.get("model_output")
+    if not isinstance(model_output, dict):
+        model_output = {}
     rejected = model_output.get("rejected_tool_calls", []) if isinstance(model_output, dict) else []
     checks.append(
         _check(

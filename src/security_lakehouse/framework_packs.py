@@ -18,6 +18,7 @@ framework" workflow.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -599,7 +600,7 @@ def nist_800_171_rev3_specs() -> list[PackControlSpec]:
     return pack_from_manifest(PACK_DATA_DIR / "nist_800_171_rev3.json", transform=_nist_800_171_r3_row_transform)
 
 
-PACK_BUILDERS = {
+PACK_BUILDERS: dict[str, Callable[[], Iterable[PackControlSpec]]] = {
     "soc2": soc2_full_pack_specs,
     "nist-ai-rmf": nist_ai_rmf_specs,
     "nist-csf-2.0": nist_csf_2_specs,

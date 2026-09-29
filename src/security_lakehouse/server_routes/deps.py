@@ -6,6 +6,7 @@ from datetime import datetime
 
 from fastapi import HTTPException, Request, status
 
+from security_lakehouse import api_v1
 from security_lakehouse.auth.rbac import Identity
 from security_lakehouse.data_policy import redact_payload
 from security_lakehouse.db.base import DEFAULT_PAGE_LIMIT, clamp_limit
@@ -30,8 +31,8 @@ def query_params(request: Request) -> dict[str, list[str]]:
 
 def pagination(params: dict[str, list[str]]) -> tuple[int, int]:
     """Read ``limit``/``offset`` query params, clamped to a safe page window."""
-    limit_raw = (params.get("limit") or [None])[0]
-    offset_raw = (params.get("offset") or [None])[0]
+    limit_raw = api_v1.first_param(params, "limit")
+    offset_raw = api_v1.first_param(params, "offset")
     limit = clamp_limit(int(limit_raw)) if limit_raw and limit_raw.lstrip("-").isdigit() else DEFAULT_PAGE_LIMIT
     offset = int(offset_raw) if offset_raw and offset_raw.isdigit() else 0
     return limit, max(0, offset)

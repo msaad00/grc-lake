@@ -105,6 +105,12 @@ Params = Mapping[str, list[str]]
 JsonObject = dict[str, Any]
 
 
+def first_param(params: Params, key: str) -> str | None:
+    """Return the first value of query parameter ``key``, or ``None`` when absent."""
+    values = params.get(key)
+    return values[0] if values else None
+
+
 def envelope(resource: str, data: Any, *, meta: JsonObject | None = None) -> JsonObject:
     """Wrap a payload in the stable v1 envelope."""
     return {
@@ -1286,7 +1292,7 @@ def filter_collection(rows: list[JsonObject], params: Params) -> tuple[list[Json
 
 def sort_collection(rows: list[JsonObject], params: Params) -> tuple[list[JsonObject], str | None]:
     """Apply ``sort=field`` / ``sort=-field`` ordering; ``None`` values sort last."""
-    sort = (params.get("sort") or [None])[0]
+    sort = first_param(params, "sort")
     if not sort:
         return rows, None
     reverse = sort.startswith("-")
@@ -1990,7 +1996,7 @@ def handle_post(
                 "bad_request", "delegation must be an object", resource="connector.link.complete"
             )
         try:
-            result = complete_cloud_link(
+            link_result = complete_cloud_link(
                 lake,
                 link_complete,
                 session_id=session_id,
@@ -2006,5 +2012,5 @@ def handle_post(
             )
         except ValueError as exc:
             return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", str(exc), resource="connector.link.complete")
-        return HTTPStatus.CREATED, envelope("connector.link.complete", result)
+        return HTTPStatus.CREATED, envelope("connector.link.complete", link_result)
     return HTTPStatus.NOT_FOUND, error_envelope("not_found", "unknown route")

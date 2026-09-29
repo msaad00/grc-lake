@@ -18,7 +18,9 @@
 FROM ghcr.io/astral-sh/uv:0.12.19@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424 AS uv
 
 # --- 1. React workbench ----------------------------------------------------
-FROM node:22-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS web-build
+# The static export is the same on every architecture, so it builds on the
+# build host's platform instead of under emulation.
+FROM --platform=$BUILDPLATFORM node:22-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS web-build
 WORKDIR /workbench
 COPY app/web/package*.json ./
 RUN npm ci --no-audit --no-fund

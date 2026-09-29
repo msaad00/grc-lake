@@ -117,7 +117,7 @@ rest of that control.
 
 ```
 $ security-lakehouse frameworks safeguards --format table
-94 safeguards map 1415 of 2245 requirements (63.0%) — 350 reviewed (15.6%), 1065 proposed
+94 safeguards map 1415 of 2245 requirements (63.0%) — 350 maintainer-reviewed, 0 org-reviewed (15.6% attestable), 1065 proposed; 0 mapping(s) rejected by the org
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the

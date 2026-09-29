@@ -99,13 +99,14 @@ export function ControlFamilies({ embedded = false }: { embedded?: boolean }) {
     (sum, row) => sum + row.safeguard_count,
     0,
   );
+  const scope = `${categories.length} categories · ${families.length} families · ${safeguards} safeguards`;
   return (
     <CollapsibleCard
       embedded={embedded}
       title="Control families"
       storageKey="dashboard-control-families"
       defaultOpen={false}
-      description={`${categories.length} categories · ${families.length} families · ${safeguards} safeguards`}
+      description={scope}
       contentClassName="max-h-[440px] overflow-y-auto px-5 py-2"
     >
       {query.isError ? (
@@ -117,6 +118,9 @@ export function ControlFamilies({ embedded = false }: { embedded?: boolean }) {
       ) : (
         <>
           <p className="pb-1 text-xs text-muted">
+            {embedded && (
+              <span className="font-semibold text-ink">{scope}. </span>
+            )}
             Mapping counts read reviewed / proposed.{" "}
             {MAPPING_REVIEW_GLOSSARY.proposed.label}:{" "}
             {MAPPING_REVIEW_GLOSSARY.proposed.definition}

@@ -1347,47 +1347,6 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             headers={"Cache-Control": "public, max-age=300"},
         )
 
-    @app.get("/api/v1/connectors/azure-posture/link/callback", tags=["connectors"])
-    def azure_link_callback(
-        request: Request,
-        state: str = "",
-        tenant: str = "",
-        admin_consent: str | None = None,
-    ) -> RedirectResponse:
-        from security_lakehouse.cloud_linking import (
-            azure_callback_redirect,
-            get_cloud_link_session,
-            issue_cloud_link_redirect_token,
-            normalize_link_session_id,
-            record_azure_consent,
-        )
-
-        session_id = normalize_link_session_id(state or "")
-        if session_id is None or get_cloud_link_session(lake, session_id) is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid cloud link session")
-        consented = str(admin_consent or "").lower() in {"true", "1", "yes"}
-        azure_tenant = (tenant or "").strip()
-        if consented and azure_tenant:
-            record_azure_consent(
-                lake,
-                session_id=session_id,
-                azure_tenant_id=azure_tenant,
-                admin_consent=True,
-            )
-        elif session_id:
-            record_azure_consent(
-                lake,
-                session_id=session_id,
-                azure_tenant_id=azure_tenant or "unknown",
-                admin_consent=False,
-            )
-        redirect_token = issue_cloud_link_redirect_token(lake, session_id=session_id)
-        redirect_path = azure_callback_redirect(session_id=redirect_token, public_url=None)
-        return RedirectResponse(
-            url=redirect_path,
-            status_code=status.HTTP_302_FOUND,
-        )
-
     @app.get("/api/v1", tags=["discovery"])
     def v1_index(_identity: Identity = Depends(_require_read)) -> JSONResponse:
         # Self-describing contract so headless agents can enumerate the surface.
@@ -2654,7 +2613,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = policy_document_services.list_documents(
             session,
             identity.tenant_id,
-            status=params.get("status"),
+            status=(params.get("status") or [None])[0],
             limit=limit,
             offset=offset,
         )
@@ -2952,7 +2911,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = vendor_risk_services.list_assessments(
             session,
             identity.tenant_id,
-            status=params.get("status"),
+            status=(params.get("status") or [None])[0],
             limit=limit,
             offset=offset,
         )

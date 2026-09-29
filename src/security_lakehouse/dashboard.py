@@ -160,7 +160,7 @@ _FALLBACK_TEMPLATE = """<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TrustOps Home (offline export)</title>
+  <title>TrustOps Overview (offline export)</title>
   <style>
     body{{font-family:Inter,system-ui,sans-serif;margin:0;background:#0b1218;color:#f8fafc}}
     main{{max-width:760px;margin:64px auto;padding:32px;background:#fff;color:#101623;border-radius:16px;box-shadow:0 24px 65px rgba(2,6,23,.22)}}
@@ -174,7 +174,7 @@ _FALLBACK_TEMPLATE = """<!doctype html>
 <script id="app-data" type="application/json">{payload}</script>
 <main>
   <div class="pill">offline evidence packet</div>
-  <h1>TrustOps Home</h1>
+  <h1>Overview</h1>
   <p>This file ships a frozen assessment payload for offline review. The full interactive workbench is available by running:</p>
   <code>security-lakehouse serve --lake build/lakehouse</code>
   <p>The packet below holds the posture, controls, evidence, and snapshots for the lake this export was built from.</p>

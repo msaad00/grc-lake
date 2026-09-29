@@ -54,6 +54,23 @@ const shots = [
         .locator("a")
         .nth(2),
   },
+  {
+    file: "trustops-demo-control-families.png",
+    route: "/dashboard/",
+    setup: "control-families-tab",
+  },
+  {
+    file: "trustops-demo-crosswalk.png",
+    route: "/crosswalk/",
+    viewport: { width: 1440, height: 2400 },
+    setup: "crosswalk-matrix",
+    // End on a row boundary inside the scrollable matrix.
+    endAt: (page) =>
+      page
+        .getByRole("region", { name: "Reviewed framework overlap matrix" })
+        .locator("tbody tr")
+        .nth(3),
+  },
   { file: "trustops-demo-findings.png", route: "/violations/" },
   { file: "trustops-demo-remediation.png", route: "/remediation/" },
   {
@@ -420,6 +437,29 @@ async function capture(shot, theme, frame) {
     await page
       .getByRole("region", { name: "Record a decision" })
       .getByText("3 selected")
+      .waitFor();
+    await page.waitForTimeout(400);
+  }
+  if (shot.setup === "control-families-tab") {
+    await page
+      .getByRole("tab", { name: "Control families", exact: true })
+      .click();
+    await page
+      .getByRole("tabpanel", { name: "Control families" })
+      .locator("section[data-category]")
+      .first()
+      .waitFor({ timeout: 15_000 });
+    await page.waitForTimeout(400);
+  }
+  if (shot.setup === "crosswalk-matrix") {
+    // Narrow the mapping table to one control so the capture reaches the
+    // bounded overlap matrix below it.
+    await page.getByText(/^Showing 1–25 of [\d,]+ mappings$/).waitFor();
+    await page.getByPlaceholder(/search/i).first().fill("CC6.1");
+    await page.getByText(/^Showing 1–\d+ of [\d,]+ mappings?$/).waitFor();
+    await page.getByText("Reviewed framework overlap matrix").first().click();
+    await page
+      .getByRole("region", { name: "Reviewed framework overlap matrix" })
       .waitFor();
     await page.waitForTimeout(400);
   }

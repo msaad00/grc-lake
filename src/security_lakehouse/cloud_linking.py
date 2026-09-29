@@ -46,6 +46,7 @@ AWS_TEMPLATE_REL = Path("deploy/aws/trustops-posture-readonly-role.yaml")
 AWS_TERRAFORM_REL = Path("deploy/aws/trustops-posture-readonly-role.tf")
 GCP_TEMPLATE_REL = Path("deploy/gcp/trustops-posture-reader.tf")
 _GCP_PROJECT_ID_RE = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
+_AZURE_SUBSCRIPTION_ID_RE = re.compile(r"^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
 _AWS_ROLE_ARN_RE = re.compile(
     r"^arn:(?P<partition>aws(?:-us-gov|-cn)?):iam::(?P<account_id>[0-9]{12}):role/(?P<role_name>[A-Za-z0-9+=,.@_/-]{1,512})$"
 )
@@ -480,6 +481,8 @@ def complete_cloud_link(
         raise KeyError("cloud link session not found")
     if session.get("connector_id") != connector_id:
         raise ValueError("session connector mismatch")
+    if session.get("status") == "completed":
+        raise ValueError("cloud link session is already completed; start a new one to change it")
     credentials: dict[str, Any]
     delegated = _validated_delegation(connector_id, delegation)
     if connector_id == "aws-posture":
@@ -490,8 +493,8 @@ def complete_cloud_link(
             "role_arn": normalized_role_arn,
         }
     elif connector_id == "azure-posture":
-        if not subscription_id or not str(subscription_id).strip():
-            raise ValueError("subscription_id is required")
+        if not subscription_id or not _AZURE_SUBSCRIPTION_ID_RE.fullmatch(str(subscription_id).strip()):
+            raise ValueError("subscription_id must be an Azure subscription id (a GUID)")
         credentials = {"subscription_id": str(subscription_id).strip(), **delegated}
     elif connector_id == "gcp-posture":
         if not project_id or not valid_gcp_project_id(str(project_id)):

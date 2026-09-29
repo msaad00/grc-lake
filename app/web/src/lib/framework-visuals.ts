@@ -150,7 +150,6 @@ export const FRAMEWORK_VISUALS: Record<string, FrameworkVisual> = {
     icon: "credit-card",
   },
   "gdpr-2016-679": {
-    badge: "/console/frameworks/badges/eu-ai-act.svg",
     label: "GDPR",
     mark: "EU",
     accent: "#4338ca",
@@ -160,7 +159,6 @@ export const FRAMEWORK_VISUALS: Record<string, FrameworkVisual> = {
     icon: "scale",
   },
   "nis2-2022-2555": {
-    badge: "/console/frameworks/badges/eu-ai-act.svg",
     label: "NIS2 Directive",
     mark: "NIS2",
     accent: "#4338ca",
@@ -170,7 +168,6 @@ export const FRAMEWORK_VISUALS: Record<string, FrameworkVisual> = {
     icon: "shield",
   },
   "dora-2022-2554": {
-    badge: "/console/frameworks/badges/eu-ai-act.svg",
     label: "DORA",
     mark: "DORA",
     accent: "#4338ca",

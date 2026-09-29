@@ -22,6 +22,13 @@ test("control families render under their categories and link to review", async 
   const sections = panel.locator("section[data-category]");
   await expect(sections).toHaveCount(data.categories.length);
 
+  // The list scrolls inside the tab, so its scope is stated up front.
+  await expect(
+    panel.getByText(
+      `${data.categories.length} categories · ${data.families.length} families`,
+    ),
+  ).toBeVisible();
+
   // Headings render in taxonomy order, each holding exactly its families.
   await expect(panel.getByRole("heading", { level: 3 })).toHaveText(
     data.categories.map((row) => row.label),

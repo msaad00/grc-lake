@@ -105,3 +105,18 @@ def test_unknown_assessment_returns_404(env) -> None:
     client, tokens = env
     admin = _bearer(tokens["security_admin"])
     assert client.get("/api/v1/vendor-assessments/nope", headers=admin).status_code == HTTPStatus.NOT_FOUND
+
+
+def test_list_filters_by_status(env) -> None:
+    client, tokens = env
+    admin = _bearer(tokens["security_admin"])
+    body = {"vendor_name": "Acme SaaS", "template_id": "soc2-vendor-standard"}
+    draft = client.post("/api/v1/vendor-assessments", json=body, headers=admin).json()["data"]
+    reviewing = client.post("/api/v1/vendor-assessments", json=body, headers=admin).json()["data"]
+    client.patch(f"/api/v1/vendor-assessments/{reviewing['id']}", json={"status": "in_review"}, headers=admin)
+
+    resp = client.get("/api/v1/vendor-assessments?status=draft", headers=admin)
+    assert resp.status_code == HTTPStatus.OK
+    assert [row["id"] for row in resp.json()["data"]] == [draft["id"]]
+    in_review = client.get("/api/v1/vendor-assessments?status=in_review", headers=admin).json()["data"]
+    assert [row["id"] for row in in_review] == [reviewing["id"]]

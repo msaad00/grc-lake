@@ -87,7 +87,7 @@ test("crosswalk counts only reviewed mappings and badges proposed rows", async (
   await expect(page.getByText(/^Showing 1–2 of 2 mappings$/)).toBeVisible();
   await expect(table.getByText("reviewed", { exact: true })).toHaveCount(0);
   await statusFilter.selectOption("reviewed");
-  await expect(page.getByText(/^Showing 1–1 of 1 mappings$/)).toBeVisible();
+  await expect(page.getByText(/^Showing 1–1 of 1 mapping$/)).toBeVisible();
 
   await expect(page.getByText(/heuristic$/)).toHaveCount(0);
 });

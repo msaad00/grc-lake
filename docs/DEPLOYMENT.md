@@ -7,11 +7,11 @@ sharing, and agent APIs — without locking evidence in a vendor silo.
 
 ## Deployment models
 
-| Model              | Who runs it                   | Best for                                                         |
-| ------------------ | ----------------------------- | ---------------------------------------------------------------- |
-| **OSS local**      | You, on a laptop or CI runner | Contributors, evaluators, pipeline proofs                        |
-| **Self-hosted**    | You, in your VPC / cluster    | Teams that need data residency, custom connectors, full control  |
-| **Managed hosted** | TrustOps operator (future)    | Teams that want a live URL without running Kubernetes themselves |
+| Model           | Who runs it                   | Best for                                                         |
+| --------------- | ----------------------------- | ---------------------------------------------------------------- |
+| **OSS local**   | You, on a laptop or CI runner | Contributors, evaluators, pipeline proofs                        |
+| **Self-hosted** | You, in your VPC / cluster    | Teams that need data residency, custom connectors, full control  |
+| **Hosted mode** | An operator you choose        | Teams that want a live URL without running Kubernetes themselves |
 
 Evidence stays in **your boundary** in every model: local files, customer-owned
 Snowflake/ClickHouse/DuckDB, or a tenant-scoped `/lake` volume on your cluster.
@@ -34,19 +34,18 @@ Sources (AWS, Azure, GCP, GitHub, Okta, Snowflake, …)
 
 ### OSS local
 
-Fastest path to evaluate the product:
+Fastest path to evaluate the product, with Docker Compose v2:
 
 ```bash
-pip install -e ".[dev,server]"
-make web-install web-build   # requires Node 22+; the console is not committed to the repo
-security-lakehouse fixtures load --company fintech --out build/lakehouse
-security-lakehouse serve --lake build/lakehouse --server --allow-insecure-no-auth --port 8787
+docker compose up
 ```
 
-Open `http://127.0.0.1:8787/console/dashboard/`. No account required.
+Open `http://127.0.0.1:8787/console/dashboard/`. It serves the bundled sample
+company with authentication off, on `127.0.0.1` only. The
+[5-minute tutorial](TUTORIAL_5_MIN.md) covers the pip and source paths.
 
-Without the console build that URL is a 404 — `/console/` is mounted only when a
-built console is present.
+From a source checkout the console must be built first (`make web-install
+web-build`, Node 22+); without that build `/console/` is a 404.
 
 ### Self-hosted
 
@@ -65,19 +64,20 @@ Runbook: [Shareable POC Hosting](SHAREABLE_POC_HOSTING.md),
 [deploy/README.md](../deploy/README.md),
 [Server Auth](SERVER_AUTH.md).
 
-### Managed hosted
+### Hosted mode
 
-Managed hosted is the same TrustOps binary and chart — operated for you on
-dedicated or isolated tenant infrastructure. This model is **not publicly
-available** in the OSS release; operators enable commercial hosted features via
-environment flags. See [COMMERCIAL_HOSTED.md](COMMERCIAL_HOSTED.md) for the
+Hosted mode is the same TrustOps binary and chart, run by an operator for
+several tenants. There is no public managed service; operators enable the
+hosted features with environment flags. Each tenant's connector secrets resolve
+only under its own prefix, and cloud readers need delegated access: see
+[hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials). See [COMMERCIAL_HOSTED.md](COMMERCIAL_HOSTED.md) for the
 gated commercial features (invites, usage limits, SCIM 2.0, Stripe billing).
 
 Evaluator flow: [Shareable Demo](SHAREABLE_DEMO.md).
 
 ## Feature parity lens (honest)
 
-| Capability                                      | TrustOps v0.2.16                          |
+| Capability                                      | TrustOps 0.2.x                            |
 | ----------------------------------------------- | ----------------------------------------- |
 | Continuous control tests from live integrations | Yes (connectors + scheduler)              |
 | Executive dashboard + framework readiness       | Yes                                       |

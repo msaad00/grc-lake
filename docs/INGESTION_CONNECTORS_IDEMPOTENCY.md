@@ -4,8 +4,10 @@ TrustOps is built for **continuous compliance automation**: connectors ingest
 evidence into **your** lake, the pipeline materializes gold posture, and the
 **same `/api/v1` contract** serves humans (console), agents (MCP/CLI), and CI.
 
-There is no runtime plugin marketplace — extensions are **code registries**
-(connectors, workflow actions, framework packs) shipped in the OSS tree.
+There is no runtime plugin marketplace. Extensions are **code**: registries in
+the OSS tree (connectors, workflow actions, framework packs), plus connectors
+that a separate Python package registers under the `trustops.connectors`
+entry-point group ([Adding connectors](ADDING_CONNECTORS.md)).
 
 ## Architecture
 
@@ -18,15 +20,15 @@ Sources (AWS, Azure, GCP, Snowflake, GitHub, Okta, Jira, …)
   → /api/v1 (console, agents, MCP, scheduler)
 ```
 
-| Layer           | Path / module                                               | Role                                                      |
-| --------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
-| **Contracts**   | `connectors/catalog.json`                                   | 17 connector access contracts (9 implemented runners)     |
-| **Registry**    | `connector_runner.REGISTRY`                                 | Static dispatch — add `connectors_<vendor>.py` + one line |
-| **State**       | `connector_state.py`                                        | Probe-gated enablement, run history JSONL                 |
-| **Incremental** | `ingestion/watermark.py`                                    | Cursors in `gold/watermarks.jsonl`                        |
-| **Dedupe**      | `ingestion/merge.py`, `connector_runner._upsert_raw_events` | Last-writer-wins on `event_id`                            |
-| **Validation**  | `validation.py`                                             | Strict raw schema; reject duplicate `event_id`            |
-| **Scale**       | `docs/AUDIT_SCALE.md`, `io.iter_jsonl`                      | Streaming IO, capped violations, synthetic fixtures       |
+| Layer           | Path / module                                               | Role                                                |
+| --------------- | ----------------------------------------------------------- | --------------------------------------------------- |
+| **Contracts**   | `connectors/catalog.json`                                   | 28 connector access contracts (25 executable)       |
+| **Registry**    | `connector_runner.REGISTRY`                                 | Built-ins plus `trustops.connectors` entry points   |
+| **State**       | `connector_state.py`                                        | Probe-gated enablement, run history JSONL           |
+| **Incremental** | `ingestion/watermark.py`                                    | Cursors in `gold/watermarks.jsonl`                  |
+| **Dedupe**      | `ingestion/merge.py`, `connector_runner._upsert_raw_events` | Last-writer-wins on `event_id`                      |
+| **Validation**  | `validation.py`                                             | Strict raw schema; reject duplicate `event_id`      |
+| **Scale**       | `docs/AUDIT_SCALE.md`, `io.iter_jsonl`                      | Streaming IO, capped violations, synthetic fixtures |
 
 ## Unique IDs and timestamps
 
@@ -104,7 +106,10 @@ Returns v1 envelope with `event_id`, `occurred_at`, `category`, `actor`,
 
 Legacy unversioned `GET /api/audit-log` remains for backward compatibility.
 
-## Adding a connector (registry, not plugin)
+## Adding a connector
+
+These steps add a built-in connector. To ship one as its own package, see
+[Adding connectors](ADDING_CONNECTORS.md).
 
 1. Implement collector in `src/security_lakehouse/connectors_<vendor>.py`
 2. Register builder in `connector_runner.REGISTRY`

@@ -5,17 +5,25 @@ test("crosswalk mappings are paginated and the page stays scannable", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/console/crosswalk/");
-  const status = page.getByText(/^Showing 1–25 of \d+ mappings$/);
+  const status = page.getByText(/^Showing 1–25 of [\d,]+ mappings$/);
   await expect(status).toBeVisible();
 
   await page.getByRole("button", { name: "Next page" }).click();
-  await expect(page.getByText(/^Showing 26–50 of \d+ mappings$/)).toBeVisible();
+  await expect(
+    page.getByText(/^Showing 26–50 of [\d,]+ mappings$/),
+  ).toBeVisible();
 
   await page
     .getByPlaceholder(/search/i)
     .first()
     .fill("CC6.1");
-  await expect(page.getByText(/^Showing 1–\d+ of \d+ mappings$/)).toBeVisible();
+  await expect(
+    page.getByText(/^Showing 1–\d+ of [\d,]+ mappings?$/),
+  ).toBeVisible();
+  // The pager already counts the filtered rows; the toolbar keeps catalog
+  // totals, with thousands separators.
+  await expect(page.getByText(/^[\d,]+ rows?$/)).toHaveCount(0);
+  await expect(page.getByText(/^\d{1,3},\d{3} controls$/)).toBeVisible();
 
   await page
     .getByPlaceholder(/search/i)
@@ -37,7 +45,9 @@ test("equivalence groups and overlap matrices stay bounded as frameworks grow", 
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/console/crosswalk/");
-  await expect(page.getByText(/^Showing 1–25 of \d+ mappings$/)).toBeVisible();
+  await expect(
+    page.getByText(/^Showing 1–25 of [\d,]+ mappings$/),
+  ).toBeVisible();
 
   const groups = page.locator("#equivalence-groups > div.rounded-lg");
   const toggle = page.getByRole("button", { name: /^Show all \d+ groups$/ });
@@ -80,5 +90,19 @@ test("equivalence groups and overlap matrices stay bounded as frameworks grow", 
     });
     const after = await firstColumn.boundingBox();
     expect(after?.x).toBe(before?.x);
+
+    // The badge names the framework once: no raw catalog id beside it, and
+    // column headers keep the label's own casing.
+    const headers = await region
+      .locator("th")
+      .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
+    for (const text of headers) {
+      expect(text).not.toMatch(/\b[a-z][a-z0-9]*[-_][a-z0-9.]+/);
+    }
+    await expect(region.locator("thead th").nth(1)).toHaveCSS(
+      "text-transform",
+      "none",
+    );
+    await expect(region.getByText("— self —")).toHaveCount(0);
   }
 });

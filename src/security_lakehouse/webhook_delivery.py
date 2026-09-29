@@ -26,6 +26,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import logging
 import os
 import time
 import urllib.error
@@ -35,6 +36,8 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from security_lakehouse import netguard
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT_SECONDS = 10
 DEFAULT_MAX_RETRIES = 1
@@ -106,6 +109,26 @@ def _assert_egress_allowed(url: str) -> None:
         raise ValueError(f"webhook target host {host!r} is not in {EGRESS_ALLOWLIST_ENV}")
 
 
+def _delivery_error(exc: BaseException) -> str:
+    """Error text safe to store on a delivery record.
+
+    Delivery records are readable by the tenant, and resolver and socket
+    errors can carry the private address an internal hostname resolved to,
+    so only a fixed reason reaches the record; the detail goes to the log.
+    """
+    logger.info("webhook delivery failed: %s: %s", type(exc).__name__, exc)
+    if isinstance(exc, ValueError):
+        message = str(exc)
+        if "SSRF" in message:
+            return "webhook target resolves to a non-public address (SSRF blocked)"
+        if "did not resolve" in message:
+            return "webhook target host did not resolve"
+        if EGRESS_ALLOWLIST_ENV in message:
+            return f"webhook target host is not in {EGRESS_ALLOWLIST_ENV}"
+        return "webhook target URL was refused"
+    return type(exc).__name__
+
+
 def sign_payload(secret: str, body: bytes) -> str:
     """Return the ``sha256=<hex>`` signature a receiver can independently recompute."""
     digest = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
@@ -158,7 +181,7 @@ def deliver_webhook(
     try:
         _assert_egress_allowed(url)
     except ValueError as exc:
-        return {"ok": False, "status_code": None, "attempts": 0, "error": str(exc)}
+        return {"ok": False, "status_code": None, "attempts": 0, "error": _delivery_error(exc)}
 
     attempts = 0
     last_error: str | None = None
@@ -184,7 +207,7 @@ def deliver_webhook(
             last_error = f"HTTP {status_code}"
         except (urllib.error.URLError, ValueError, TimeoutError, OSError) as exc:
             status_code = None
-            last_error = f"{type(exc).__name__}: {exc}"
+            last_error = _delivery_error(exc)
         if attempt < max_retries:
             _backoff_sleep(backoff_seconds * (2**attempt))
 

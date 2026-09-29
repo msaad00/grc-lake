@@ -343,9 +343,10 @@ export default function CrosswalkPage() {
                 <option value="proposed">Proposed</option>
               </select>
               <div className="flex flex-wrap gap-2 lg:justify-end">
-                <Badge>{mappedControlCount} controls</Badge>
-                <Badge tone="info">{reviewedArticleCount} articles</Badge>
-                <Badge>{filteredRows.length} rows</Badge>
+                <Badge>{mappedControlCount.toLocaleString()} controls</Badge>
+                <Badge tone="info">
+                  {reviewedArticleCount.toLocaleString()} articles
+                </Badge>
               </div>
             </div>
 
@@ -441,7 +442,8 @@ export default function CrosswalkPage() {
                   <span>
                     Showing {currentPage * PAGE_SIZE + 1}–
                     {currentPage * PAGE_SIZE + pageRows.length} of{" "}
-                    {filteredRows.length} mappings
+                    {filteredRows.length.toLocaleString()}{" "}
+                    {filteredRows.length === 1 ? "mapping" : "mappings"}
                   </span>
                   <div className="flex items-center gap-2">
                     <Button
@@ -494,16 +496,13 @@ export default function CrosswalkPage() {
                   {reviewedFrameworks.map((f) => (
                     <th
                       key={f}
-                      className={`${MATRIX_HEAD} border-l px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted`}
+                      className={`${MATRIX_HEAD} border-l px-3 py-2 text-left`}
                     >
-                      <span className="inline-flex items-center gap-1.5">
-                        <FrameworkBadge
-                          frameworkId={f}
-                          fallbackLabel={f}
-                          size={20}
-                        />
-                        {f}
-                      </span>
+                      <FrameworkBadge
+                        frameworkId={f}
+                        fallbackLabel={f}
+                        size={20}
+                      />
                     </th>
                   ))}
                 </tr>
@@ -514,15 +513,12 @@ export default function CrosswalkPage() {
                     <th
                       className={`${MATRIX_ROW_HEAD} px-3 py-3 text-left text-xs font-semibold text-ink`}
                     >
-                      <span className="inline-flex items-center gap-1.5">
-                        <FrameworkBadge
-                          frameworkId={row.framework_id}
-                          fallbackLabel={row.framework_id}
-                          size={20}
-                        />
-                        {row.framework_id}
-                      </span>
-                      <div className="text-[10px] font-normal text-muted">
+                      <FrameworkBadge
+                        frameworkId={row.framework_id}
+                        fallbackLabel={row.framework_id}
+                        size={20}
+                      />
+                      <div className="mt-1 text-[10px] font-normal text-muted">
                         {row.mapping_count} mappings · {row.article_count}{" "}
                         articles · {row.domain_count} domains
                       </div>
@@ -588,16 +584,13 @@ export default function CrosswalkPage() {
                   {heuristicFrameworks.map((f) => (
                     <th
                       key={f}
-                      className={`${MATRIX_HEAD} border-l px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted`}
+                      className={`${MATRIX_HEAD} border-l px-3 py-2 text-left`}
                     >
-                      <span className="inline-flex items-center gap-1.5">
-                        <FrameworkBadge
-                          frameworkId={f}
-                          fallbackLabel={f}
-                          size={20}
-                        />
-                        {f}
-                      </span>
+                      <FrameworkBadge
+                        frameworkId={f}
+                        fallbackLabel={f}
+                        size={20}
+                      />
                     </th>
                   ))}
                 </tr>
@@ -608,14 +601,11 @@ export default function CrosswalkPage() {
                     <th
                       className={`${MATRIX_ROW_HEAD} px-3 py-3 text-left text-xs font-semibold text-ink`}
                     >
-                      <span className="inline-flex items-center gap-1.5">
-                        <FrameworkBadge
-                          frameworkId={row.framework_id}
-                          fallbackLabel={row.framework_id}
-                          size={20}
-                        />
-                        {row.framework_id}
-                      </span>
+                      <FrameworkBadge
+                        frameworkId={row.framework_id}
+                        fallbackLabel={row.framework_id}
+                        size={20}
+                      />
                     </th>
                     {row.cells.map((cell) => (
                       <td
@@ -626,7 +616,7 @@ export default function CrosswalkPage() {
                         ].join(" ")}
                       >
                         {cell.is_self ? (
-                          <span className="text-muted">— self —</span>
+                          <span className="text-muted">self</span>
                         ) : cell.shared_risk_domains.length === 0 ? (
                           <span className="text-muted">
                             no shared risk domains

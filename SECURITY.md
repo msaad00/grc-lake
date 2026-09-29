@@ -52,7 +52,7 @@ Out of scope:
   default `trustops` service in `compose.yaml`). That mode is unauthenticated
   by design, for local demos only;
 - vulnerabilities in third-party dependencies with no TrustOps-specific impact;
-  report those upstream. Dependency updates arrive through Dependabot;
+  report those upstream. Dependabot opens weekly version-update PRs;
 - findings in the bundled sample data under `mockup_companies/`;
 - results that need an already compromised host, or physical access.
 

@@ -206,7 +206,7 @@ def test_evidence_presence_does_not_make_ai_posture_pass(status):
         events=[{"control_ids": [control_id], "status": "open"}],
     )
     row = next(r for r in rows if r["framework_id"] == "nist-ai-rmf")
-    assert row["coverage_pct"] == 100.0  # Evidence exists; it does not prove a pass.
+    assert row["evidence_pct"] == 100.0  # Evidence exists; it does not prove a pass.
     assert row["score"] == 0
     assert row["passing_controls"] == 0
 
@@ -226,3 +226,56 @@ def test_ai_posture_separates_pass_fail_and_unevaluated_controls():
     assert row["passing_controls"] == 1
     assert row["failing_controls"] == 1
     assert row["unevaluated_controls"] == 1
+
+
+def test_ai_frameworks_use_catalog_ids_and_the_safeguard_mapped_count():
+    from security_lakehouse.ai_governance import _framework_rows
+    from security_lakehouse.safeguards import coverage_by_framework
+
+    rows = {row["framework_id"]: row for row in _framework_rows(controls=[], events=[])}
+    coverage = coverage_by_framework()["frameworks"]
+
+    assert set(rows) == {"nist-ai-rmf", "iso-42001-2023", "eu-ai-act-2024-1689"}
+    for framework_id, row in rows.items():
+        # The same numbers the Frameworks page shows for the pack.
+        assert row["requirements"] == coverage[framework_id]["controls"] > 0
+        assert row["mapped_requirements"] == coverage[framework_id]["covered"]
+        assert row["mapped_pct"] == coverage[framework_id]["coverage_pct"]
+        # Nothing evaluated is "not evaluated", not a 0% score.
+        assert row["score"] is None
+
+
+def test_unevaluated_ai_frameworks_do_not_drag_the_governance_score(tmp_path: Path) -> None:
+    from security_lakehouse.ai_governance import _framework_score
+
+    rows = [{"score": 90}, {"score": None}, {"score": None}]
+    assert _framework_score(rows) == 90
+    assert _framework_score([{"score": None}]) == 0
+
+
+def test_inferred_model_inventory_is_not_reported_as_missing(tmp_path: Path) -> None:
+    _seed_lake(tmp_path)
+    _write_jsonl(
+        tmp_path / "silver" / "normalized_events.jsonl",
+        [
+            {
+                "event_id": "evt-lineage",
+                "event_time": "2026-05-20T13:00:00Z",
+                "event_type": "model.lineage",
+                "control_ids": [],
+                "asset_id": "model:fraud-scorer",
+                "asset_owner": "ml-platform",
+                "asset_type": "ai_model",
+                "environment": "prod",
+                "source": "mlflow",
+                "status": "observed",
+                "severity": "low",
+                "severity_score": 10,
+                "evidence_ref": "s3://evidence/evt-lineage.json",
+                "raw_sha256": "abc",
+            }
+        ],
+    )
+    data = build_ai_governance_status(lake=tmp_path)
+    assert data["inventory"]["models"] == 1
+    assert "model_inventory" not in {gap["id"] for gap in data["gaps"]}

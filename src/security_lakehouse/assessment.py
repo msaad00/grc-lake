@@ -101,7 +101,9 @@ def build_current_posture(
         "freshness_days": freshness_days,
         "posture": {
             "score": posture_score,
-            "state": _posture_state(posture_score, critical_for_state, stale_controls),
+            "state": (
+                _posture_state(posture_score, critical_for_state, stale_controls) if controls else "not_evaluated"
+            ),
             "framework_count": len(framework_scores),
             "control_count": len(controls),
             "asset_count": len(assets),
@@ -741,11 +743,10 @@ def _framework_scores(
 
 
 def _weighted_posture_score(frameworks: list[dict[str, Any]]) -> float:
-    if not frameworks:
-        return 100.0
+    # Nothing evaluated scores 0, never a perfect score; the state says why.
     controls = sum(int(row["control_count"]) for row in frameworks)
     if controls <= 0:
-        return 100.0
+        return 0.0
     total = sum(float(row["score"]) * int(row["control_count"]) for row in frameworks)
     return round(total / controls, 2)
 

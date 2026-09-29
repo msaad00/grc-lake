@@ -15,6 +15,7 @@ from typing import Any
 from security_lakehouse.aibom import aibom_status, list_aibom_items
 from security_lakehouse.asset_names import load_asset_names, with_asset_names
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.safeguards import coverage_by_framework
 
 INVENTORY_EVENT_TYPES = frozenset(
     {
@@ -30,8 +31,8 @@ AI_ASSET_TYPES = frozenset({"ai_model", "ai_agent", "model"})
 
 AI_FRAMEWORKS: tuple[tuple[str, str, str], ...] = (
     ("nist-ai-rmf", "NIST AI RMF", "NIST-AI-RMF"),
-    ("iso-42001", "ISO 42001", "ISO42001"),
-    ("eu-ai-act", "EU AI Act", "EU-AI-ACT"),
+    ("iso-42001-2023", "ISO/IEC 42001", "ISO42001"),
+    ("eu-ai-act-2024-1689", "EU AI Act", "EU-AI-ACT"),
 )
 
 
@@ -91,41 +92,56 @@ def _framework_rows(
     controls: list[dict[str, Any]],
     events: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """Per-pack AI posture.
+
+    Requirement and mapping counts come from the safeguard coverage the
+    Frameworks page reads. The score is the pass rate over controls with a
+    verdict or evidence in this lake, and ``None`` when there are none.
+    """
+    coverage = coverage_by_framework()["frameworks"]
     rows: list[dict[str, Any]] = []
     for framework_id, label, prefix in AI_FRAMEWORKS:
-        catalog_ids = _framework_control_ids(controls, prefix)
+        pack = coverage.get(framework_id, {})
+        verdict_ids = _framework_control_ids(controls, prefix)
         event_ids = _event_control_ids(events, prefix)
-        mapped = catalog_ids | event_ids
+        with_evidence = verdict_ids | event_ids
         passing = {
             str(row["control_id"])
             for row in controls
             if str(row.get("control_id", "")).startswith(prefix)
             and str(row.get("status", "")).lower() in {"pass", "passed", "ready"}
         }
-        covered = passing | event_ids
-        coverage_pct = round(100 * len(covered) / max(len(mapped), 1), 1)
         failing = sum(
             1
             for row in controls
             if str(row.get("control_id", "")).startswith(prefix)
             and str(row.get("status", "")).lower() in {"fail", "failed", "open"}
         )
-        # Evidence coverage measures availability, not a successful control verdict.
-        score = round(100 * len(passing) / max(len(mapped), 1))
+        # Evidence availability, not a successful control verdict.
+        evidence_pct = round(100 * len(passing | event_ids) / max(len(with_evidence), 1), 1)
+        score = round(100 * len(passing) / len(with_evidence)) if with_evidence else None
         rows.append(
             {
                 "framework_id": framework_id,
                 "label": label,
-                "controls_mapped": len(mapped),
-                "controls_covered": len(covered),
-                "coverage_pct": coverage_pct,
+                "requirements": int(pack.get("controls") or 0),
+                "mapped_requirements": int(pack.get("covered") or 0),
+                "mapped_pct": float(pack.get("coverage_pct") or 0.0),
+                "controls_with_evidence": len(with_evidence),
+                "evidence_pct": evidence_pct,
                 "failing_controls": failing,
                 "passing_controls": len(passing),
-                "unevaluated_controls": max(0, len(mapped) - len(passing) - failing),
+                "unevaluated_controls": max(0, len(with_evidence) - len(passing) - failing),
                 "score": score,
             }
         )
     return rows
+
+
+def _framework_score(frameworks: list[dict[str, Any]]) -> int:
+    """Average over the packs this lake evaluates; unevaluated packs are not 0%."""
+    scores = [int(row["score"]) for row in frameworks if row["score"] is not None]
+    return round(sum(scores) / len(scores)) if scores else 0
 
 
 def _inventory_items(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -221,7 +237,7 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
     frameworks = _framework_rows(controls=controls, events=ai_events)
 
     gaps: list[dict[str, str]] = []
-    if not inventory_events:
+    if not inventory_events and not inventory:
         gaps.append(
             {
                 "id": "model_inventory",
@@ -254,7 +270,7 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
             }
         )
 
-    framework_ready = sum(1 for row in frameworks if int(row["score"]) >= 85)
+    framework_ready = sum(1 for row in frameworks if row["score"] is not None and int(row["score"]) >= 85)
     inventory_score = round(
         100
         * (
@@ -265,7 +281,7 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
         )
         / 4
     )
-    framework_score = round(sum(int(row["score"]) for row in frameworks) / max(len(frameworks), 1))
+    framework_score = _framework_score(frameworks)
     governance_score = round(inventory_score * 0.55 + framework_score * 0.45)
     state = (
         "governed" if governance_score >= 85 and not gaps else ("on_track" if governance_score >= 60 else "needs_work")

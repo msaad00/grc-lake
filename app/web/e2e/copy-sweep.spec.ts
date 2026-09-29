@@ -148,7 +148,8 @@ test("AI governance strip uses plain gap labels and lists only AI assets", async
   await expect(strip).toBeVisible();
   await expect(strip.getByText(/ai\.model_inventory/)).toHaveCount(0);
   await expect(strip.getByText(/model\.lineage events/)).toHaveCount(0);
-  await expect(strip.getByText("No model inventory connected")).toBeVisible();
+  // Models inferred from lineage are an inventory; no "missing" gap beside them.
+  await expect(strip.getByText("No model inventory connected")).toHaveCount(0);
   await expect(strip.getByText(/golden:asset:soc2-/)).toHaveCount(0);
   // The golden fixture types assets by event, so nothing needs hiding.
   await expect(strip.getByText(/no AI inventory signals/)).toHaveCount(0);

@@ -361,7 +361,7 @@ export function FrameworkDrilldownPanel({
         </div>
         <div className="rounded-lg bg-surfaceMuted p-3">
           <div className="text-[11px] font-semibold uppercase text-muted">
-            Mapped
+            Source-cited
           </div>
           <div className="mt-1 text-2xl font-semibold text-ink">
             {data.summary.mapped_control_count}

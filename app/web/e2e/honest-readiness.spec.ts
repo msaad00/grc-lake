@@ -98,7 +98,35 @@ test("crosswalk equivalence chips link to the control drawer", async ({
   await page.goto("/console/crosswalk/");
   const chip = page.getByRole("link", { name: "SOC2-CC6.1" }).first();
   await expect(chip).toBeVisible({ timeout: 20_000 });
-  await expect(chip).toHaveAttribute("href", /\/controls\/?\?id=SOC2-CC6\.1$/);
+  await expect(chip).toHaveAttribute(
+    "href",
+    /\/controls\/?\?id=SOC2-CC6\.1&framework=soc2$/,
+  );
+});
+
+test("a control with no result in this lake says so and links to its framework", async ({
+  page,
+}) => {
+  await page.goto(
+    "/console/controls/?id=DORA-Art10.1&framework=dora-2022-2554",
+  );
+  const notice = page.getByRole("status").filter({ hasText: "DORA-Art10.1" });
+  await expect(notice).toContainText("no evaluated result", {
+    timeout: 20_000,
+  });
+  await expect(
+    notice.getByRole("link", { name: /Frameworks/ }),
+  ).toHaveAttribute(
+    "href",
+    /\/frameworks\/?\?framework=dora-2022-2554&control=DORA-Art10\.1$/,
+  );
+});
+
+test("an unknown control id is reported, not ignored", async ({ page }) => {
+  await page.goto("/console/controls/?id=BOGUS-1");
+  await expect(
+    page.getByRole("status").filter({ hasText: "BOGUS-1" }),
+  ).toContainText("no evaluated result", { timeout: 20_000 });
 });
 
 test.describe("dashboard honesty", () => {
@@ -212,4 +240,31 @@ test("framework drawer reports mapped controls and pass/fail, not readiness", as
   await expect(drawer.getByText(/sync_framework\.py/)).toHaveCount(0);
   await expect(drawer.getByText(/\b1 facts\b/)).toHaveCount(0);
   await expect(page.getByText(/pulled never/)).toHaveCount(0);
+});
+
+test("framework drawer's mapped count matches the roster's safeguard coverage", async ({
+  page,
+}) => {
+  const { data } = (await (
+    await page.request.get("/api/v1/frameworks/coverage")
+  ).json()) as {
+    data: {
+      frameworks: {
+        framework_id: string;
+        evaluatable_requirement_count: number;
+        seeded_control_count: number;
+      }[];
+    };
+  };
+  const dora = data.frameworks.find(
+    (row) => row.framework_id === "dora-2022-2554",
+  )!;
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/console/frameworks/?framework=dora-2022-2554");
+  const drawer = page.getByRole("dialog");
+  await expect(
+    drawer.getByText(
+      `${dora.evaluatable_requirement_count} of ${dora.seeded_control_count} controls mapped`,
+    ),
+  ).toBeVisible({ timeout: 20_000 });
 });

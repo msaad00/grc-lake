@@ -1412,7 +1412,7 @@ export interface CcfLedgerCounts {
   proposed_mapping_count: number;
   needs_changes_mapping_count: number;
   rejected_mapping_count: number;
-  state: "reviewed" | "proposed_only";
+  state: "reviewed" | "partially_reviewed" | "proposed_only";
 }
 
 export interface CcfFamilyRow extends CcfLedgerCounts {

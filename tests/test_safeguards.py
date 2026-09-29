@@ -83,9 +83,25 @@ def test_ccf_family_ledger_separates_reviewed_and_proposed_mappings() -> None:
     assert all(
         row["reviewed_mapping_count"] + row["proposed_mapping_count"] == row["mapping_count"] for row in families
     )
-    assert any(row["state"] == "reviewed" for row in families)
-    assert any(row["state"] == "proposed_only" for row in families)
     assert {"identity", "data-protection", "ai-governance"} <= {row["family_id"] for row in families}
+
+
+def _expected_ledger_state(row: dict) -> str:
+    if row["reviewed_mapping_count"] == 0:
+        return "proposed_only"
+    if row["proposed_mapping_count"] == 0:
+        return "reviewed"
+    return "partially_reviewed"
+
+
+def test_ccf_family_state_never_calls_a_mostly_proposed_family_reviewed() -> None:
+    families = coverage_by_family()
+
+    for row in families:
+        assert row["state"] == _expected_ledger_state(row), row["family_id"]
+    ai = next(row for row in families if row["family_id"] == "ai-governance")
+    assert ai["reviewed_mapping_count"] > 0 and ai["proposed_mapping_count"] > 0
+    assert ai["state"] == "partially_reviewed"
 
 
 def test_validation_rejects_a_safeguard_claiming_an_unknown_control(tmp_path: Path) -> None:

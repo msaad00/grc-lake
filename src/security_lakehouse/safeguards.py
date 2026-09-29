@@ -429,6 +429,13 @@ def _add_safeguard(ledger: dict[str, Any], entry: JsonObject) -> None:
 def _ledger_counts(ledger: dict[str, Any]) -> JsonObject:
     states = ledger["states"]
     reviewed = int(states["maintainer_reviewed"] + states["org_reviewed"])
+    proposed = int(states["proposed"] + states["needs_changes"])
+    if not reviewed:
+        state = "proposed_only"
+    elif proposed:
+        state = "partially_reviewed"
+    else:
+        state = "reviewed"
     return {
         "safeguard_count": ledger["safeguard_count"],
         "framework_count": len(ledger["frameworks"]),
@@ -440,10 +447,10 @@ def _ledger_counts(ledger: dict[str, Any]) -> JsonObject:
         "reviewed_mapping_count": reviewed,
         "maintainer_reviewed_mapping_count": states["maintainer_reviewed"],
         "org_reviewed_mapping_count": states["org_reviewed"],
-        "proposed_mapping_count": states["proposed"] + states["needs_changes"],
+        "proposed_mapping_count": proposed,
         "needs_changes_mapping_count": states["needs_changes"],
         "rejected_mapping_count": states["rejected"],
-        "state": "reviewed" if reviewed else "proposed_only",
+        "state": state,
     }
 
 

@@ -103,7 +103,7 @@ def test_category_rollup_reconciles_with_the_family_ledger() -> None:
         assert row["mapped_requirement_count"] <= sum(
             by_family[f]["mapped_requirement_count"] for f in row["family_ids"]
         )
-        assert row["state"] in {"reviewed", "proposed_only"}
+        assert row["state"] in {"reviewed", "partially_reviewed", "proposed_only"}
 
 
 def test_coverage_payload_includes_categories() -> None:

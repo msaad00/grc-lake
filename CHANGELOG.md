@@ -40,11 +40,16 @@ Python package, Helm chart, and bundled web console.
   ISO/IEC 42001 from 26 to 37 of 39; the requirements left unmapped on
   purpose are listed in docs/CCF_AI_CONTEXT.md.
 - Control categories: the 21 control families are grouped into 10 categories.
-  `GET /api/v1/ccf/coverage` returns a `categories` ledger, `frameworks
-safeguards --format table` prints families under their category, OSCAL
-  components carry a `trustops-category` property, and the console Control
-  families tab groups families by category and links to each family's review
-  queue.
+  `GET /api/v1/ccf/coverage` returns a `categories` ledger,
+  `frameworks safeguards --format table` prints families under their category,
+  OSCAL components carry a `trustops-category` property, and the console
+  Control families tab groups families by category and links to each family's
+  review queue.
+- Fixed: a control family or category reported `state: reviewed` as soon as
+  one of its mappings was reviewed, so 15 families and all 10 categories read
+  as reviewed while most of their mappings were proposed. The state is now
+  `reviewed` only when no mapping is proposed, `partially_reviewed` when some
+  are, and `proposed_only` when none is reviewed.
 - Adoption kit: a root `compose.yaml` (a loopback-only sample-data demo, and
   a `trustops-server` profile with authentication on), a
   [5-minute tutorial](docs/TUTORIAL_5_MIN.md), [CI gate](docs/CI_GATE.md)

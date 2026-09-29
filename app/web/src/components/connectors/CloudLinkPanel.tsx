@@ -518,7 +518,10 @@ export function CloudLinkPanel({
           {headerLabel}
         </div>
         <Badge tone="ready">{isAwsPosture ? "STS" : "Read-only access"}</Badge>
-        <Badge>No long-lived keys</Badge>
+        {/* Azure can use a client secret; TrustOps stores only its env-var name. */}
+        <Badge>
+          {isAzurePosture ? "No secrets stored" : "No long-lived keys"}
+        </Badge>
         {isAzurePosture && <Badge>Reader role</Badge>}
       </div>
       <p className="mt-1 max-w-3xl break-words text-xs leading-5 text-muted">

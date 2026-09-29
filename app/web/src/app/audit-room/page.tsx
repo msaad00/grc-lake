@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDateTime } from "@/lib/format";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -77,7 +78,7 @@ export default function AuditRoomPage() {
                   </Badge>
                   {connected ? <Badge tone="ready">Live</Badge> : null}
                   <span className="text-xs font-semibold text-muted">
-                    {new Date(audit.data.evaluated_at).toLocaleString()}
+                    {formatDateTime(audit.data.evaluated_at)}
                   </span>
                 </div>
               </CardHeader>

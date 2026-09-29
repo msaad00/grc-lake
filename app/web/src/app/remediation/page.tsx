@@ -65,7 +65,8 @@ const PRIORITY_TONE: Record<
 
 function fmtDate(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString();
 }
 
 const TASK_PRIORITIES: RemediationTask["priority"][] = [

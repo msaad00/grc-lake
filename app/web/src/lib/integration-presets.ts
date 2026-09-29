@@ -47,7 +47,7 @@ const PRESETS: Record<string, IntegrationPreset> = {
     connectorId: "azure-posture",
     title: "Azure subscription",
     authLabel: "Reader role",
-    badges: ["Reader role", "No long-lived keys"],
+    badges: ["Reader role", "No secrets stored"],
     summary:
       "Grant Reader to the TrustOps Entra app or workload identity, then confirm the subscription. Scheduled sync uses fresh Azure tokens; no passwords are stored.",
     providerSetup:

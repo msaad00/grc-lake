@@ -19,7 +19,7 @@ def test_ingestion_normalize_materializes_prelanded_raw_events_with_provenance(t
     assert manifest["normalization"] == {
         "input_contract": "trustops.raw_event.v1",
         "schema_version": "trustops.normalized_event.v1",
-        "transform_version": "trustops.normalization.v1",
+        "transform_version": "trustops.normalization.v2",
     }
     assert manifest["row_counts"]["silver"] == 10
     assert (lake / "gold" / "current_posture.json").is_file()

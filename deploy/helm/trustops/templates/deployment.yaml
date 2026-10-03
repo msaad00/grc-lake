@@ -7,8 +7,11 @@
 {{- if and .Values.ingress.enabled (not (eq (include "trustops.authConfigured" .) "true")) }}
 {{- fail "ingress.enabled requires authentication env (OIDC/SAML/session) or documented allowInsecureNoAuth override" }}
 {{- end }}
-{{- if and (gt (int .Values.replicaCount) 1) (not .Values.lake.readOnly) .Values.lake.persistence.enabled (eq .Values.lake.persistence.accessMode "ReadWriteOnce") }}
-{{- fail "replicaCount > 1 with ReadWriteOnce lake requires lake.readOnly=true — see docs/runbooks/HA_READ_REPLICAS.md" }}
+{{- if .Values.lake.readOnly }}
+{{- fail "read-only lake is unsupported: startup, migrations, and request auditing need writable state — see docs/runbooks/HA_READ_REPLICAS.md" }}
+{{- end }}
+{{- if ne (int .Values.replicaCount) 1 }}
+{{- fail "replicaCount must be 1 for every lake access mode; distributed writers are unsupported" }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment
@@ -18,6 +21,9 @@ metadata:
     {{- include "trustops.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  # RollingUpdate can overlap writers even with replicaCount=1.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "trustops.selectorLabels" . | nindent 6 }}

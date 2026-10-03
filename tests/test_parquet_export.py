@@ -235,3 +235,32 @@ def test_migrated_legacy_generation_is_rejected(lake, tmp_path):
     with pytest.raises(ValueError, match="legacy"):
         export(lake, tmp_path / "export")
     assert not (tmp_path / "export").exists()
+
+
+def test_explicit_safeguard_bindings_survive_portable_export(tmp_path):
+    raw = tmp_path / "raw.jsonl"
+    rows = read_jsonl(RAW)[:1]
+    rows[0]["safeguard_ids"] = ["SG-IDENTITY-001"]
+    write_jsonl(raw, rows)
+    lake = tmp_path / "lake"
+    pipeline.run_pipeline(raw, lake, tenant_id=TENANT)
+    out = tmp_path / "export"
+    export(lake, out)
+    assert pq.read_table(out / "evidence.parquet").to_pylist()[0]["safeguard_ids"] == ["SG-IDENTITY-001"]
+
+
+def test_legacy_normalized_rows_remain_exportable(tmp_path, monkeypatch):
+    normalize = pipeline._silver_row
+
+    def legacy(row, digest):
+        result = normalize(row, digest)
+        result.pop("safeguard_ids")
+        return result
+
+    monkeypatch.setattr(pipeline, "_silver_row", legacy)
+    monkeypatch.setattr(pipeline, "NORMALIZATION_TRANSFORM_VERSION", "trustops.normalization.v1")
+    lake = tmp_path / "lake"
+    pipeline.run_pipeline(RAW, lake, tenant_id=TENANT)
+    out = tmp_path / "export"
+    export(lake, out)
+    assert "safeguard_ids" not in pq.read_schema(out / "evidence.parquet").names

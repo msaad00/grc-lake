@@ -1,12 +1,12 @@
 # Audit-scale ingestion, evaluation, and synthetic data
 
-TrustOps ships a **POC-scale Python lake path** (~10–70 events in fixtures) and a **production-scale warehouse path** (Snowflake / ClickHouse). This document summarizes the audit of the local path, synthetic data for load testing, and throughput enhancements added for million-finding evaluation.
+TrustOps evaluates evidence in the local Python process and can export the resulting generation to Snowflake, ClickHouse, or DuckDB. Configuring a sink does not provide warehouse-native evaluation or remove local memory limits. This document describes implementation limits and tools for bounded measurement; it does not establish million-event capacity.
 
 ## Audit findings (synthesis)
 
 | Layer                   | POC behavior today                       | Million-finding risk              | Mitigation in this repo                                                                    |
 | ----------------------- | ---------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
-| **Raw JSONL**           | Full-file read on upsert/sync            | Single file grows without bound   | Streaming `iter_jsonl` / `count_jsonl`; warehouse sinks for prod                           |
+| **Raw JSONL**           | Full-file read on upsert/sync            | Single file grows without bound   | Streaming input helpers; full evaluation still materializes local rows                     |
 | **Pipeline**            | Full rebuild per `materialize=True` sync | Replays entire raw lake each tick | `manifest.json` `row_counts`; benchmark CLI to measure throughput                          |
 | **Silver → violations** | O(events × controls_per_event) in memory | Multi-million finding rows        | `build_violations(..., max_violations=N)` + `violation_summary` totals                     |
 | **Posture API**         | Embeds all open violations               | Payload size / latency            | Auto-cap at 10k violations when silver > 100k; framework rollups from gold control posture |
@@ -35,7 +35,7 @@ security-lakehouse fixtures synthesize-scale \
 security-lakehouse benchmark pipeline --raw /tmp/audit-scale/raw.jsonl --out /tmp/audit-scale/lake
 ```
 
-Controls are sampled from the active catalog (2003 controls after full framework packs). Each open event fans out to `controls_per_event` findings during evaluation.
+Controls are sampled from the active catalog. Each open event fans out to `controls_per_event` findings during evaluation.
 
 ## Latency and throughput enhancements
 
@@ -47,6 +47,8 @@ When a prior `manifest.json` exists, incremental materialize:
 - upserts only changed/new rows into bronze/silver
 - rebuilds gold/marts from the merged silver set (not a full raw replay of unchanged rows)
 - records `materialize_mode`, `delta_count`, and `removed_count` on the manifest
+- re-evaluates unchanged evidence when a freshness boundary is due
+- rebuilds when rules, program settings, connector freshness policies, or the effective safeguard review overlay change
 
 Use split schedules so connector sync stays ingest-only and lake eval runs less often:
 
@@ -74,10 +76,10 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 MCP tools: `get_ingestion_status`, `list_eval_runs`, `run_lake_eval`, `run_scheduler_tick`, `sync_connector`, `list_connector_runs`.
 
-### Warehouse tier above 100k events
+### Export routing above 100k events
 
 When silver/raw cardinality exceeds `100_000`, local full rebuild is blocked unless a
-Snowflake, ClickHouse, or DuckDB sink is configured. The active tier is recorded in
+Snowflake, ClickHouse, or DuckDB sink is configured. This threshold is a routing guard, not a capacity guarantee: evaluation still materializes local data before export. `local_result` and `export_result` distinguish a committed assessment from a failed export. Export always reads that committed generation. The active tier is recorded in
 `gold/lake_scale.json` and surfaced on `/api/v1/ingestion/status`.
 
 ### Streaming IO (`security_lakehouse.io`)
@@ -102,5 +104,5 @@ After each pipeline run, `row_counts` records bronze/silver/gold cardinalities s
 ## Related docs
 
 - [CONTINUOUS_INGESTION.md](CONTINUOUS_INGESTION.md) — connector loop and watermarks
-- [HERO_DATA_LAKES.md](HERO_DATA_LAKES.md) — warehouse-native rollups at production scale
+- [HERO_DATA_LAKES.md](HERO_DATA_LAKES.md) — warehouse adapters and evidence readers
 - [FRAMEWORK_COVERAGE.md](FRAMEWORK_COVERAGE.md) — active control catalog size

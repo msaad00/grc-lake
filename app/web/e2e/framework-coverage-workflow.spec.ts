@@ -83,3 +83,29 @@ test.describe("framework coverage workflow", () => {
     ).toBe(true);
   });
 });
+
+test("shows observed-asset safeguard results without implying complete coverage", async ({
+  page,
+}) => {
+  await page.goto("/console/frameworks/");
+  const summary = page.getByText("Safeguard assessment · observed assets", {
+    exact: true,
+  });
+  await summary.click();
+  const assessment = page.locator("details").filter({ has: summary });
+  await expect(assessment).toContainText(
+    "Complete asset inventory is not established.",
+  );
+  await expect(assessment.getByRole("table")).toBeVisible();
+  // Golden evidence has framework tags but no explicit safeguard assertions.
+  await expect(assessment).toContainText("0 passing");
+  await expect(
+    assessment.getByRole("row").filter({ hasText: "SG-IDENTITY-001" }),
+  ).toContainText("not evaluated");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});

@@ -28,7 +28,7 @@ COPY app/web/ ./
 RUN npm run build
 
 # --- 2. Python package + analytics venv -----------------------------------
-FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS py-build
+FROM python:3.12-slim@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016 AS py-build
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_CACHE_DIR=1
 WORKDIR /src
 COPY pyproject.toml uv.lock README.md ./
@@ -63,7 +63,7 @@ RUN python -m venv /opt/trustops-venv \
        ".[server,analytics,cloud,mcp,iceberg]"
 
 # --- 3. Slim runtime ------------------------------------------------------
-FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS runtime
+FROM python:3.12-slim@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016 AS runtime
 LABEL org.opencontainers.image.title="TrustOps Security Data Lake"
 LABEL org.opencontainers.image.source="https://github.com/msaad00/trustops-security-data-lake"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
@@ -74,8 +74,9 @@ ENV PATH="/opt/trustops-venv/bin:${PATH}" \
     TRUSTOPS_LAKE=/lake \
     TRUSTOPS_DATA_DIR=/opt/trustops-data
 
+# Refresh PCRE2 from Debian security until the pinned base includes DSA-6530-1.
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y tini \
+  && apt-get install --no-install-recommends -y tini libpcre2-8-0 \
   && rm -rf /var/lib/apt/lists/* \
   && groupadd --gid 1100 trustops \
   && useradd --uid 1100 --gid 1100 --home /home/trustops --create-home --shell /bin/bash trustops \

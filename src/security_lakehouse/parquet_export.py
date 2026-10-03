@@ -44,7 +44,7 @@ _LIST_FIELDS = ("control_ids", "evidence_types")
 _FIELDS = frozenset((*_STRING_FIELDS, *_LIST_FIELDS, "severity_score"))
 
 
-def _arrow_schema(pa, identity, tenant_id):
+def _arrow_schema(pa, identity, tenant_id, *, safeguard_bindings=False):
     # Keep timestamp strings lossless: the normalized contract contains ISO text,
     # and evidence_collected_at is not guaranteed to have timestamp semantics.
     return pa.schema(
@@ -52,7 +52,7 @@ def _arrow_schema(pa, identity, tenant_id):
         + [pa.field("severity_score", pa.int64(), nullable=False)]
         + [
             pa.field(name, pa.list_(pa.field("element", pa.string(), nullable=False)), nullable=False)
-            for name in _LIST_FIELDS
+            for name in (*_LIST_FIELDS, *(("safeguard_ids",) if safeguard_bindings else ()))
         ],
         metadata={
             b"trustops.schema_version": SCHEMA_VERSION.encode(),
@@ -64,8 +64,10 @@ def _arrow_schema(pa, identity, tenant_id):
     )
 
 
-def _validate_row(row, tenant_id):
-    if not isinstance(row, dict) or set(row) != _FIELDS:
+def _validate_row(row, tenant_id, *, safeguard_bindings=False):
+    list_fields = (*_LIST_FIELDS, *(("safeguard_ids",) if safeguard_bindings else ()))
+    fields = _FIELDS | ({"safeguard_ids"} if safeguard_bindings else set())
+    if not isinstance(row, dict) or set(row) != fields:
         raise ValueError("normalized evidence fields do not match the export schema")
     if row["tenant_id"] != tenant_id:
         raise ValueError("normalized evidence tenant does not match the requested export scope")
@@ -73,7 +75,7 @@ def _validate_row(row, tenant_id):
         raise ValueError("normalized evidence contains an invalid string field")
     if any(
         not isinstance(row[name], list) or any(not isinstance(value, str) for value in row[name])
-        for name in _LIST_FIELDS
+        for name in list_fields
     ):
         raise ValueError("normalized evidence contains an invalid list field")
     score = row["severity_score"]
@@ -137,7 +139,8 @@ def export_parquet(lake_dir: str | Path, output_dir: str | Path, *, tenant_id: s
         if type(expected_count) is not int or expected_count < 0:
             raise ValueError("assessment has no valid normalized evidence count")
         identity = generation_identity(lake)
-        schema = _arrow_schema(pa, identity, tenant_id)
+        safeguard_bindings = normalization.get("transform_version") == "trustops.normalization.v2"
+        schema = _arrow_schema(pa, identity, tenant_id, safeguard_bindings=safeguard_bindings)
         source = generation / "silver/normalized_events.jsonl"
         source_digest = _sha256(source)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -148,7 +151,7 @@ def export_parquet(lake_dir: str | Path, output_dir: str | Path, *, tenant_id: s
             batch = []
             with pq.ParquetWriter(parquet, schema, version="2.6", compression="zstd") as writer:
                 for row in iter_jsonl(source):
-                    _validate_row(row, tenant_id)
+                    _validate_row(row, tenant_id, safeguard_bindings=safeguard_bindings)
                     batch.append(row)
                     count += 1
                     if len(batch) >= batch_size:

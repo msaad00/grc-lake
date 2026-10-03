@@ -2776,6 +2776,70 @@
         "tags": ["catalog"]
       }
     },
+    "/api/v1/ccf/assessment": {
+      "get": {
+        "operationId": "get_ccf_assessment",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "v1 envelope"
+          }
+        },
+        "summary": "Get ccf.assessment",
+        "tags": ["ccf"]
+      }
+    },
+    "/api/v1/ccf/asset-results": {
+      "get": {
+        "operationId": "get_ccf_asset_results",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "v1 envelope"
+          }
+        },
+        "summary": "List ccf.asset-results",
+        "tags": ["ccf"]
+      }
+    },
     "/api/v1/ccf/coverage": {
       "get": {
         "operationId": "get_ccf_coverage",

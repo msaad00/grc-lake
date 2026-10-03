@@ -1,19 +1,19 @@
 # Framework Coverage Matrix
 
 Generated from the control catalog + CCF safeguards — never hand-edited.
-Regenerate with `make coverage-doc`. `Attestable` is the auditor-defensible
-coverage (reviewed safeguard mappings); the gap to `Evaluatable` is the
-review backlog.
+Regenerate with `make coverage-doc`. Mapping coverage measures catalog curation,
+not operating effectiveness, assessment completion, or certification. API fields
+retain `evaluatable` and `attestable` names for compatibility.
 
 Framework packs: 20 with catalogued requirements (2 more registry entries planned or superseded)
 Requirements catalogued: 2245 (all source-cited)
-Evaluatable (touched by a safeguard): 1415 (63.0%)
-**Attestable (reviewed safeguard mapping — what an auditor accepts): 350 (15.6%)**
+Mapped (touched by a safeguard): 1415 (63.0%)
+**Reviewed safeguard mappings: 350 (15.6%)**
 Asset types modeled: 20
 
-> `Source-cited` = the requirement has an official source link (always 100%). `Evaluatable` = a safeguard claims it (reviewed or proposed). `Attestable` = a human has confirmed the safeguard→requirement mapping — the only coverage an audit accepts. The gap between Evaluatable and Attestable is the review backlog.
+> `Source-cited` = the requirement has an official source link. `Mapped` = a safeguard claims it (reviewed or proposed). `Reviewed` = a human has confirmed the safeguard-to-requirement mapping. An assessment still needs scoped evidence and tests of operating effectiveness.
 
-| Framework | Official source | Status | Requirements | Source-cited | Evaluatable | Attestable | Attestable % | Source state |
+| Framework | Official source | Status | Requirements | Source-cited | Mapped | Reviewed mappings | Reviewed % | Source state |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | CIS Critical Security Controls v8.1 | [Center for Internet Security - CIS Controls v8.1](https://www.cisecurity.org/controls/v8-1) | implemented_limited_mapping | 18 | 18 | 15 | 0 | 0.0% | never pulled |
 | CIS Amazon Web Services Foundations Benchmark | [CIS Amazon Web Services Foundations Benchmark v3.0.0](https://www.cisecurity.org/benchmark/amazon_web_services) | implemented_full_pack | 62 | 62 | 51 | 39 | 62.9% | never pulled |

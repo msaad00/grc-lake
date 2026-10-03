@@ -1,118 +1,50 @@
-# High Availability: Read Replicas And Single Writer
+# Deployment topology and high-availability boundary
 
-TrustOps separates **compliance truth** (the evidence lake) from **application state**
-(Postgres/SQLite under `server/app.db`). HA patterns differ for each layer.
+The supported Helm topology is **one application replica with a writable lake**.
+Startup writes the console and runs operational database migrations; requests
+can append audit records. Setting `lake.readOnly: true` does not produce a
+working read-only service. The chart rejects it, and rejects every replica count
+other than one regardless of PVC access mode. A ReadWriteMany volume does not
+provide distributed writer fencing.
 
-## Single-writer rule (lake)
-
-The Python pipeline and connector sync assume **one writer** for `/lake`:
-
-```text
-connector sync  →  raw/bronze/silver/gold JSONL  →  single-writer materialize
-scheduler tick  →  workflow runs, connector state
-```
-
-| Deployment          | `replicaCount` | Lake mount                    | Safe?                   |
-| ------------------- | -------------: | ----------------------------- | ----------------------- |
-| Default self-hosted |              1 | RWO PVC read-write            | Yes                     |
-| Auditor portal      |             2+ | RWO **read-only** on replicas | Yes (read APIs only)    |
-| Multi-writer API    |             2+ | RWO read-write                | **No** — corrupts JSONL |
-
-Helm blocks `replicaCount > 1` with a ReadWriteOnce lake unless `lake.readOnly: true`.
-
-## Recommended HA topology
-
-```mermaid
-flowchart TB
-  subgraph ingress [Ingress]
-    LB[Load balancer]
-  end
-  subgraph api [API tier]
-    W[Writer pod x1]
-    R1[Read replica xN]
-  end
-  subgraph data [Data tier]
-    Lake[(Lake PVC or object store)]
-    PG[(Postgres primary)]
-    PGR[(Postgres read replicas)]
-  end
-  LB --> W
-  LB --> R1
-  W -->|read-write| Lake
-  R1 -->|read-only| Lake
-  W --> PG
-  R1 --> PGR
-  PG --> PGR
-```
-
-### Writer pod (required)
-
-- `replicaCount: 1` for the **writer** release, or a dedicated Helm release named `trustops-writer`
-- Runs connector sync, scheduler CronJob target lake, workflow mutations, agent approvals
-- Mounts lake **read-write** (RWO PVC, NFS RWX, or S3-backed sync sidecar — future)
-
-### Read replicas (optional)
-
-- Separate release with `lake.readOnly: true`, `replicaCount: 2+`
-- Serves `/api/v1/posture/*`, evidence lists, trust-center reads
-- **No** connector sync, **no** scheduler, **no** workflow writes on read pods
-- Set `scheduler.enabled: false` on read-only releases
-
-## Application database (Postgres)
-
-SQLite (`server/app.db` on the lake PVC) is single-file and not HA. For production:
-
-| Mode                 | Guidance                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| **SQLite**           | Single pod only; backup via [BACKUP_RESTORE.md](BACKUP_RESTORE.md)                         |
-| **Postgres primary** | Set `TRUSTOPS_DATABASE_URL`; one writer pod runs migrations                                |
-| **Read replicas**    | Point read-only API pods at `TRUSTOPS_DATABASE_READ_URL` (future); writer uses primary URL |
-
-Today the server uses one SQLAlchemy URL. Split read/write URLs are on the roadmap; until then run **one writer API** against Postgres primary.
-
-## Shared state caveats
-
-| Mechanism        | Single-node today                                                          | Multi-replica note                                               |
-| ---------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Rate limiting    | In-process default; optional Redis via `TRUSTOPS_API_RATE_LIMIT_REDIS_URL` | Shared budget when Redis URL is set (Helm: `rateLimit.redisUrl`) |
-| Session cookies  | Postgres/SQLite                                                            | Sticky sessions or shared session store                          |
-| Scheduler        | CronJob → lake                                                             | Must not run on read-only replicas                               |
-| Idempotency keys | DB                                                                         | Safe across replicas when all use same Postgres                  |
-
-## Example: auditor read pool
+The chart uses `Recreate` so a Deployment update terminates old pods before
+starting replacements. Updates therefore have downtime. This prevents the default
+rolling-update surge from overlapping application writers; it does not fence a
+partitioned node or guarantee exclusive execution after manual pod deletion.
+See the [Kubernetes deployment strategy documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment).
 
 ```yaml
-# trustops-read.yaml
-replicaCount: 3
+replicaCount: 1
 lake:
-  readOnly: true
-  persistence:
-    enabled: true
-    accessMode: ReadOnlyMany # requires CSI/driver support
-scheduler:
-  enabled: false
-security:
-  requireAuthentication: true
-env:
-  - name: TRUSTOPS_OIDC_CLIENT_ID
-    valueFrom: { secretKeyRef: { name: trustops-oidc, key: client_id } }
-  - name: TRUSTOPS_SESSION_SECRET
-    valueFrom: { secretKeyRef: { name: trustops-session, key: secret } }
-  - name: TRUSTOPS_PUBLIC_URL
-    value: https://trustops.example.com
+  readOnly: false
 ```
 
-Writer release keeps `replicaCount: 1`, `lake.readOnly: false`, `scheduler.enabled: true`.
+Run one scheduler owner per lake. Local file locks serialize writers on the same
+host; they are not a cross-host coordination protocol. PostgreSQL can hold
+operational state, but it does not move the JSONL assessment pipeline into the
+database or make multiple application replicas safe.
 
-## Health and failover
+## Publication and recovery
 
-- **Liveness**: `/api/healthz` (no auth)
-- **Readiness**: same; read replicas may serve traffic while writer resyncs connectors
-- **Failover**: promote read replica only for **read** traffic; never split lake writers without external orchestration
+Evaluation builds a private generation, hashes its artifacts, then atomically
+switches the `current` pointer. Readers pin one generation per request. Retained
+generations support historical exports; deleting one makes dependent exports
+unavailable rather than silently substituting current results. Tests kill a
+publisher process before the pointer switch, verify the previous generation
+remains readable, and verify a replacement writer can acquire the lock and
+publish. This is local crash recovery evidence, not cross-host failover.
 
-## Related docs
+Back up the lake,
+review ledger, and operational database together and test restore before use.
 
-- [BACKUP_RESTORE.md](BACKUP_RESTORE.md)
-- [OBSERVABILITY_CONNECTOR_SYNC.md](OBSERVABILITY_CONNECTOR_SYNC.md)
-- [deploy/README.md](../../deploy/README.md)
-- [SERVER_AUTH.md](../SERVER_AUTH.md)
+## Work required before read replicas
+
+- Separate immutable assessment reads from startup, migration, and audit writes.
+- Route audit and workflow writes through a supported shared store.
+- Add durable writer leases with fencing and single-owner scheduling.
+- Qualify cross-host publication, failover, retries, and recovery under load.
+- Measure availability and latency with concurrent tenants and realistic evidence.
+
+Read replicas, automated failover, and horizontal evaluation are design work,
+not supported deployment modes. See [architecture](../ARCHITECTURE.md) and
+[benchmark boundaries](../BENCHMARKS.md).

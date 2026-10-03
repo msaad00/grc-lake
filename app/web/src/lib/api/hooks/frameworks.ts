@@ -35,3 +35,11 @@ export function useFrameworkCoverage() {
     staleTime: STALE,
   });
 }
+
+export function useCcfAssessment() {
+  return useQuery({
+    queryKey: ["ccf", "assessment"],
+    queryFn: api.ccfAssessment,
+    staleTime: STALE,
+  });
+}

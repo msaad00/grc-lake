@@ -68,13 +68,19 @@ def test_ingress_passes_with_session_secret() -> None:
 def test_multi_replica_rwo_lake_blocked_without_read_only() -> None:
     result = _helm_template(["replicaCount=2"])
     assert result.returncode != 0
-    assert "replicaCount > 1 with ReadWriteOnce lake" in result.stderr
+    assert "replicaCount must be 1" in result.stderr
 
 
-def test_multi_replica_allowed_with_read_only_lake() -> None:
+def test_read_only_lake_rejected_until_runtime_state_is_separate() -> None:
     result = _helm_template(["replicaCount=2", "lake.readOnly=true"])
-    assert result.returncode == 0
-    assert "readOnly: true" in result.stdout
+    assert result.returncode != 0
+    assert "read-only lake" in result.stderr
+
+
+@pytest.mark.parametrize("access_mode", ["ReadWriteOnce", "ReadWriteMany", "ReadOnlyMany"])
+def test_multiple_writers_rejected_independent_of_volume_mode(access_mode):
+    result = _helm_template(["replicaCount=2", f"lake.persistence.accessMode={access_mode}"])
+    assert result.returncode != 0
 
 
 def test_rate_limit_redis_url_rendered_when_configured() -> None:
@@ -83,3 +89,12 @@ def test_rate_limit_redis_url_rendered_when_configured() -> None:
     assert "TRUSTOPS_API_RATE_LIMIT_REDIS_URL" in result.stdout
     assert "redis://redis:6379/0" in result.stdout
     assert "TRUSTOPS_API_RATE_LIMIT_RPS" in result.stdout
+
+
+def test_rollout_stops_previous_writer_before_starting_replacement() -> None:
+    import yaml
+
+    result = _helm_template()
+    assert result.returncode == 0
+    deployment = next(doc for doc in yaml.safe_load_all(result.stdout) if doc and doc["kind"] == "Deployment")
+    assert deployment["spec"]["strategy"] == {"type": "Recreate"}

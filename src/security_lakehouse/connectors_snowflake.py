@@ -621,7 +621,7 @@ def _status(value: Any) -> str:
         return "pass"
     if text in {"fail", "failed", "failing", "blocked", "open", "noncompliant", "non-compliant"}:
         return "open"
-    return "observed"
+    return "observed" if text == "observed" else "not_evaluated"
 
 
 def _severity(value: Any) -> str:

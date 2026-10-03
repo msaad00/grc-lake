@@ -188,6 +188,20 @@ security-lakehouse frameworks safeguards --format table
 
 Details: [product status](docs/PRODUCT_SHAPE.md) · [roadmap](ROADMAP.md).
 
+## Assessment and scale boundaries
+
+CCF mapping coverage describes the catalog. Operational safeguard results require
+explicit evidence bindings, reviewed mappings, and evidence for applicable observed
+assets. The Frameworks page shows those results separately from framework-control
+readiness; complete inventory and organizational compliance remain separate claims.
+See [CCF evaluation](docs/COMMON_CONTROL_FRAMEWORK.md).
+
+Evaluation runs in local Python and publishes immutable, hashed generations.
+Warehouse sinks export completed results; they do not remove local memory limits.
+The supported Helm deployment has one writable application replica. See the
+[architecture](docs/ARCHITECTURE.md), [benchmark evidence](docs/BENCHMARKS.md), and
+[HA boundary](docs/runbooks/HA_READ_REPLICAS.md) for measured and unverified scope.
+
 ## Explore
 
 <details open>

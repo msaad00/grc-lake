@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import time
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -43,6 +43,12 @@ class LakeEvalResult:
     pipeline: PipelineResult | None
     strategy: dict[str, Any]
     error: str | None = None
+    local_result: str = "not_run"
+    export_result: str = "not_configured"
+
+    def to_dict(self) -> dict[str, Any]:
+        """One result contract for CLI, API, and other callers."""
+        return asdict(self)
 
 
 def run_lake_eval(
@@ -53,38 +59,37 @@ def run_lake_eval(
     env: Mapping[str, str] | None = None,
     actor: str = "system",
 ) -> LakeEvalResult:
-    """Materialize and evaluate the lake using the scale-appropriate path."""
+    """Evaluate locally, then optionally export the committed generation."""
     lake = Path(lake_dir)
     raw_path = lake / CONNECTOR_RAW_FILE
-    runtime = env or os.environ
+    runtime = os.environ if env is None else env
     start = time.perf_counter()
     strategy = resolve_materialize_strategy(lake, raw_path, env=runtime)
     mode = str(strategy["mode"])
     pipeline: PipelineResult | None = None
     error: str | None = None
     result = "ok"
+    local_result = "not_run"
+    export_result = "not_run" if mode == "warehouse" else "not_configured"
 
     try:
         if mode == "warehouse_required":
             raise LakeEvalError(str(strategy["recommendation"]))
+        local_result = "error"
+        pipeline = normalize_raw_events(
+            raw_path,
+            lake,
+            mapping_path=mapping_path,
+            tenant_id=tenant_id,
+            incremental=mode == "local_incremental" or (mode == "warehouse" and _incremental_ready(lake)),
+        )
+        local_result = "ok"
         if mode == "warehouse":
-            pipeline = _run_warehouse_eval(
-                lake,
-                raw_path,
-                mapping_path=mapping_path,
-                tenant_id=tenant_id,
-                env=runtime,
-            )
-        elif mode == "local_incremental":
-            pipeline = normalize_raw_events(
-                raw_path,
-                lake,
-                mapping_path=mapping_path,
-                tenant_id=tenant_id,
-                incremental=True,
-            )
-        else:
-            pipeline = normalize_raw_events(raw_path, lake, mapping_path=mapping_path, tenant_id=tenant_id)
+            export_result = "error"
+            # Export the committed generation, never mutable compatibility links.
+            if land_if_configured(Path(pipeline.output_dir), runtime) is None:
+                raise LakeEvalError("warehouse sink is not configured")
+            export_result = "ok"
         write_lake_scale_state(lake, strategy)
     except LakeEvalError as exc:
         result = "error"
@@ -92,7 +97,13 @@ def run_lake_eval(
         write_lake_scale_state(lake, {**strategy, "last_error": error})
     except Exception:  # noqa: BLE001 - eval runs record sanitized errors
         result = "error"
-        error = "evaluation failed"
+        error = (
+            "local assessment published; warehouse export failed"
+            if export_result == "error"
+            else "local assessment published; run bookkeeping failed"
+            if local_result == "ok"
+            else "evaluation failed"
+        )
         write_lake_scale_state(lake, {**strategy, "last_error": error})
 
     duration_ms = max(0, int((time.perf_counter() - start) * 1000))
@@ -101,6 +112,9 @@ def run_lake_eval(
         "kind": "eval",
         "actor": actor,
         "result": result,
+        "local_result": local_result,
+        "export_result": export_result,
+        "generation_id": Path(pipeline.output_dir).name if pipeline else None,
         "mode": mode,
         "duration_ms": duration_ms,
         "event_count": strategy.get("event_count"),
@@ -120,34 +134,9 @@ def run_lake_eval(
         pipeline=pipeline,
         strategy=strategy,
         error=error,
+        local_result=local_result,
+        export_result=export_result,
     )
-
-
-def _run_warehouse_eval(
-    lake: Path,
-    raw_path: Path,
-    *,
-    mapping_path: str | Path | None,
-    tenant_id: str,
-    env: Mapping[str, str],
-) -> PipelineResult:
-    """Project to warehouse and keep a capped local posture slice when possible."""
-    if _incremental_ready(lake):
-        result = normalize_raw_events(
-            raw_path,
-            lake,
-            mapping_path=mapping_path,
-            tenant_id=tenant_id,
-            incremental=True,
-        )
-    elif raw_path.is_file():
-        result = normalize_raw_events(raw_path, lake, mapping_path=mapping_path, tenant_id=tenant_id)
-    else:
-        raise LakeEvalError("no raw evidence to evaluate")
-    landed = land_if_configured(lake, env)
-    if landed is None:
-        raise LakeEvalError("warehouse sink is not configured")
-    return result
 
 
 def _incremental_ready(lake: Path) -> bool:

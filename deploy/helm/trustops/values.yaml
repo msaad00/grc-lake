@@ -8,8 +8,8 @@ image:
   pullSecrets: []
 
 # Replica count — TrustOps is currently single-writer for the lake. Run
-# multiple replicas behind an Ingress only when the lake is mounted
-# read-only (e.g. auditor portal); otherwise stick to 1.
+# one application replica with a writable lake. Read replicas require
+# separate startup and audit-write paths and are not supported.
 replicaCount: 1
 
 serviceAccount:
@@ -55,7 +55,7 @@ ingress:
   tls: []
 
 # Lake mount. Evidence stays in customer storage; the container mounts a
-# read-only view (or read-write for managed-evidence mode).
+# writable lake for startup, operational state, and assessment publication.
 lake:
   # When `persistence.enabled` is true a PVC is created; otherwise an
   # emptyDir is used (intended only for `helm test` runs).
@@ -66,7 +66,7 @@ lake:
     storageClassName: "" # cluster default
   # Container path mirrored from the Dockerfile.
   mountPath: /lake
-  # Mount the lake read-only for auditor-only deployments.
+  # Reserved for a future read-only service; true is currently rejected.
   readOnly: false
 
 # X-Trust-Role default applied to in-cluster requests (set to auditor on the

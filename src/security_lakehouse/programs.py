@@ -9,12 +9,13 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.catalog import _data_root, load_control_catalog, load_framework_registry
+from security_lakehouse.connectors import load_connector_catalog
+from security_lakehouse.event_status import FAIL_STATUSES
 from security_lakehouse.evidence_freshness import summarize_control_freshness
 from security_lakehouse.models import utc_iso
 
 ROOT = _data_root()
 DEFAULT_PROGRAM_CATALOG = ROOT / "programs" / "catalog.json"
-FAIL_STATUSES = {"open", "failed", "blocked", "noncompliant"}
 LIFECYCLE = {
     "not_started",
     "collecting",
@@ -98,6 +99,7 @@ def build_control_tests(
 ) -> list[dict[str, Any]]:
     catalog = load_program_catalog(program_path)
     control_catalog = load_control_catalog()
+    connectors = load_connector_catalog()
     evaluated_at = now or datetime.now(UTC)
     test_configs = {
         str(test["control_id"]): (program, test) for program in catalog["programs"] for test in program["control_tests"]
@@ -128,6 +130,7 @@ def build_control_tests(
             required_evidence_types=required_types,
             now=evaluated_at,
             default_slo_minutes=int(program.get("default_freshness_days") or 7) * 24 * 60,
+            connectors=connectors,
         )
         confidence_inputs = _confidence_inputs(control, evidence_events, missing_types, freshness, bool(config))
         confidence_score = _confidence_score(confidence_inputs)
@@ -219,6 +222,8 @@ def _test_result(
         return "needs_evidence"
     if failing_events or control.get("status") == "fail":
         return "fail"
+    if control.get("status") == "not_evaluated":
+        return "needs_evidence"
     if freshness["status"] in {"stale", "expired", "missing"}:
         return "needs_evidence"
     return "pass"

@@ -360,9 +360,8 @@ def test_build_assessment_results_pins_to_a_snapshot(tmp_path: Path) -> None:
         }
 
     # Metadata (evaluated_at, uuids seeded from the assessment hash) differs
-    # between current and pinned; the findings are still sourced from the live
-    # control_posture.jsonl (documented limitation), so the same controls with
-    # the same statuses appear either way.
+    # between current and pinned. Both refer to the same generation here;
+    # the pinned findings remain unchanged after a later publication.
     assert _status_by_control(current) == _status_by_control(pinned)
 
 

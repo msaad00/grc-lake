@@ -404,6 +404,8 @@ def _tick_locked(
                         "fired_at": _utc_iso(moment),
                         "result": eval_result.result,
                         "mode": eval_result.mode,
+                        "local_result": eval_result.local_result,
+                        "export_result": eval_result.export_result,
                         "error": eval_result.error,
                     }
                 )

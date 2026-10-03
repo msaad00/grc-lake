@@ -14,8 +14,9 @@ import sys
 import tempfile
 import time
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SIZES = (1000, 10000, 100000)
@@ -43,7 +44,7 @@ def worker(count: int, *, workload: str, root: Path, base_time: datetime) -> dic
                 row["tenant_id"] = f"source-{index % 2}"
                 row["entity"] = {"asset_id": f"asset-{index // 2}", "asset_type": "iam_role"}
                 row["status"] = ("pass", "failed", "unknown", "pass", "pass")[case]
-                timestamp = "2000-01-01T00:00:00+00:00" if case == 3 else base_time.isoformat()
+                timestamp = (base_time - timedelta(days=3650) if case == 3 else base_time).isoformat()
                 row["event_time"] = timestamp
                 row["evidence"]["collected_at"] = timestamp
                 row["safeguard_ids"] = [] if case == 4 else ["SG-IDENTITY-001"]
@@ -57,8 +58,17 @@ def worker(count: int, *, workload: str, root: Path, base_time: datetime) -> dic
     raw = root / "raw.jsonl"
     write_jsonl_from_iterable(raw, events())
     raw_hash = file_sha256(raw)
+
+    class EvaluationClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return base_time.astimezone(tz) if tz is not None else base_time.replace(tzinfo=None)
+
+    # Keep predefined freshness labels stable across slow/repeated runs. Only
+    # the synthetic pipeline clock is pinned; wall-time/resource guards are real.
     start = time.perf_counter()
-    result = run_pipeline(raw, root / "lake", tenant_id="benchmark")
+    with patch("security_lakehouse.pipeline.datetime", EvaluationClock):
+        result = run_pipeline(raw, root / "lake", tenant_id="benchmark")
     seconds = time.perf_counter() - start
     valid = verify_lake_integrity(root / "lake")["ok"]
     ccf = read_json(root / "lake/gold/ccf_assessment.json")
@@ -75,7 +85,7 @@ def worker(count: int, *, workload: str, root: Path, base_time: datetime) -> dic
         "peak_rss_mib": round(rss / 2**20, 1),
         "silver_count": result.silver_count,
         "integrity_ok": valid,
-        "ccf_labels_ok": actual == expected_details and len(details) == len(expected),
+        "ccf_labels_ok": actual == expected_details and len(details) == len(expected) and ccf["asset_count"] == count,
         "ccf_asset_count": ccf["asset_count"],
         "ccf_asset_result_count": len(details),
         "ccf_status_counts": dict(Counter(r["status"] for r in details)),

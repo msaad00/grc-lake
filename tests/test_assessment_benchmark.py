@@ -6,7 +6,7 @@ from tools.benchmark_assessment_pipeline import worker
 
 
 def test_ccf_workload_checks_outcomes_and_source_tenant_boundaries(tmp_path):
-    result = worker(10, workload="ccf", root=tmp_path, base_time=datetime.now(UTC))
+    result = worker(10, workload="ccf", root=tmp_path, base_time=datetime(2020, 1, 1, tzinfo=UTC))
     assert result["silver_count"] == 10
     assert result["integrity_ok"]
     assert result["ccf_labels_ok"]

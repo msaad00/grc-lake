@@ -26,7 +26,10 @@ Run without concurrent tests or other workload and report the actual environment
 The default fixture tests framework-control fan-out without explicit safeguard
 bindings. The `ccf` fixture uses one explicit identity safeguard and five cases:
 pass, fail, unknown, stale, and missing binding. It checks independently assigned
-asset verdicts and event IDs, with the same asset IDs deliberately reused across
+asset verdicts and event IDs at an explicit pipeline evaluation time pinned to
+`--base-time`; real elapsed time cannot change the freshness labels between
+repeats. Resource watchdogs and wall-time measurements use the real clock.
+The same asset IDs are deliberately reused across
 two source tenants within one platform tenant. Twenty percent of assets have no
 binding; that missing population must not become a pass. These fixtures do not
 establish multi-tenant API capacity or exhaustive safeguard/rule accuracy.

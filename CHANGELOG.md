@@ -7,6 +7,8 @@ Python package, Helm chart, and bundled web console.
 
 ## 0.2.20 - 2026-10-03
 
+- Package every framework source manifest and reject wheels with missing pack data, fixing installed demo and evaluation failures.
+
 - Add dependency-aware deployment readiness, refresh the README product tour and demo screenshots, and align release artifacts.
 
 - Read CCF summaries and asset pages from indexed, generation-pinned SQLite projections; preserve query semantics and fail closed on broken indexes.

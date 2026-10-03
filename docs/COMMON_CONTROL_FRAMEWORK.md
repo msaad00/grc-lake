@@ -266,3 +266,5 @@ safeguard is drafted against. Every `control_id` must exist in the catalog; the
 validator rejects claimed coverage that does not resolve. When a safeguard has
 multiple source locators, provenance belongs on each mapping. The review queue
 uses that member-level source first and falls back to the safeguard-level source.
+
+For query behavior, compatibility, and memory boundaries, see [CCF assessment reads](CCF_READS.md).

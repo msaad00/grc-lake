@@ -361,6 +361,7 @@ def _write_generation(
         asset_rows,
         metrics,
         tenant_id=tenant_id,
+        ccf_assessment=ccf_assessment,
     )
     from security_lakehouse.assessment import write_current_posture
 
@@ -386,6 +387,7 @@ def _evaluation_dependencies_sha256(*, lake: Path | None = None, ccf_payload: di
     return _canonical_sha256(
         {
             "normalization": NORMALIZATION_TRANSFORM_VERSION,
+            "ccf_projection_version": 1,
             "freshness": {key: row.get("freshness_slo_minutes") for key, row in load_connector_catalog().items()},
             "programs": load_program_catalog(),
             "safeguards": ccf_payload if ccf_payload is not None else effective_safeguards(lake),
@@ -811,6 +813,7 @@ def _write_sqlite_mart(
     metrics: dict[str, Any],
     *,
     tenant_id: str = "default",
+    ccf_assessment: dict[str, Any] | None = None,
 ) -> None:
     if mart_path.exists():
         mart_path.unlink()
@@ -978,6 +981,10 @@ def _write_sqlite_mart(
         )
         conn.executemany("INSERT INTO metrics VALUES (?, ?)", [(key, str(value)) for key, value in metrics.items()])
         _create_daily_compliance_views(conn)
+        if ccf_assessment is not None:
+            from security_lakehouse.ccf_queries import write_projection
+
+            write_projection(conn, ccf_assessment)
         conn.commit()
 
 

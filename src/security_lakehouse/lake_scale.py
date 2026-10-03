@@ -18,7 +18,7 @@ LAKE_SCALE_FILE = ("gold", "lake_scale.json")
 
 def warehouse_sink_configured(env: Mapping[str, str] | None = None) -> bool:
     """Return True when any evidence sink env is configured."""
-    runtime = env or os.environ
+    runtime = os.environ if env is None else env
     from security_lakehouse.sinks import ClickHouseSinkConfig, DuckDBSinkConfig, SnowflakeSinkConfig
 
     return any(
@@ -99,7 +99,7 @@ def resolve_materialize_strategy(
     """Choose local full, incremental, or warehouse evaluation for this lake."""
     lake_path = Path(lake)
     raw = Path(raw_path)
-    runtime = env or os.environ
+    runtime = os.environ if env is None else env
     silver = silver_row_count(lake_path)
     raw_count = raw_row_count(raw) if raw.is_file() else silver
     event_count = max(silver, raw_count)
@@ -116,6 +116,7 @@ def resolve_materialize_strategy(
 
     return {
         "mode": mode,
+        "execution_backend": "local_python",
         "event_count": event_count,
         "silver_count": silver,
         "warehouse_row_threshold": WAREHOUSE_ROW_THRESHOLD,
@@ -148,7 +149,7 @@ def _recommendation(mode: str, sink: bool) -> str:
             "local full rebuild is disabled above 100k events."
         )
     if mode == "warehouse":
-        return "Evaluation projects to the configured warehouse sink; local posture uses capped rollups."
+        return "Local evaluation followed by warehouse export; the sink does not remove local memory limits."
     if mode == "local_incremental":
         return "Incremental materialize processes only changed raw evidence since the last manifest."
     return "Full local pipeline rebuild."

@@ -255,9 +255,9 @@ def render_framework_coverage_doc() -> str:
     return (
         "# Framework Coverage Matrix\n\n"
         "Generated from the control catalog + CCF safeguards — never hand-edited.\n"
-        "Regenerate with `make coverage-doc`. `Attestable` is the auditor-defensible\n"
-        "coverage (reviewed safeguard mappings); the gap to `Evaluatable` is the\n"
-        "review backlog.\n\n" + body + "\n"
+        "Regenerate with `make coverage-doc`. Mapping coverage measures catalog curation,\n"
+        "not operating effectiveness, assessment completion, or certification. API fields\n"
+        "retain `evaluatable` and `attestable` names for compatibility.\n\n" + body + "\n"
     )
 
 
@@ -268,7 +268,7 @@ def render_framework_coverage_markdown(
     applicability = applicability_rows if applicability_rows is not None else build_control_asset_applicability()
     summary = framework_coverage_summary(rows, applicability)
     lines = [
-        "| Framework | Official source | Status | Requirements | Source-cited | Evaluatable | Attestable | Attestable % | Source state |",
+        "| Framework | Official source | Status | Requirements | Source-cited | Mapped | Reviewed mappings | Reviewed % | Source state |",
         "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for row in rows:
@@ -297,16 +297,16 @@ def render_framework_coverage_markdown(
             f"Framework packs: {summary['seeded_framework_count']} with catalogued requirements"
             f" ({summary['stub_framework_count']} more registry entries planned or superseded)",
             f"Requirements catalogued: {summary['seeded_control_count']} (all source-cited)",
-            f"Evaluatable (touched by a safeguard): {summary['evaluatable_requirement_count']} "
+            f"Mapped (touched by a safeguard): {summary['evaluatable_requirement_count']} "
             f"({summary['evaluatable_coverage_pct']}%)",
-            f"**Attestable (reviewed safeguard mapping — what an auditor accepts): "
+            f"**Reviewed safeguard mappings: "
             f"{summary['attestable_requirement_count']} ({summary['attestable_coverage_pct']}%)**",
             f"Asset types modeled: {summary['asset_type_count']}",
             "",
-            "> `Source-cited` = the requirement has an official source link (always 100%). "
-            + "`Evaluatable` = a safeguard claims it (reviewed or proposed). "
-            + "`Attestable` = a human has confirmed the safeguard→requirement mapping — the only "
-            + "coverage an audit accepts. The gap between Evaluatable and Attestable is the review backlog.",
+            "> `Source-cited` = the requirement has an official source link. "
+            + "`Mapped` = a safeguard claims it (reviewed or proposed). "
+            + "`Reviewed` = a human has confirmed the safeguard-to-requirement mapping. "
+            + "An assessment still needs scoped evidence and tests of operating effectiveness.",
             "",
             *lines,
             "",

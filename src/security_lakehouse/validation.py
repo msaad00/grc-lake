@@ -33,6 +33,9 @@ def validate_raw_event(row: dict[str, Any], *, index: int | None = None) -> list
     controls = row.get("controls", [])
     if controls is not None and not isinstance(controls, list):
         errors.append(f"{prefix}controls must be a list")
+    safeguard_ids = row.get("safeguard_ids", [])
+    if not isinstance(safeguard_ids, list) or any(not isinstance(item, str) or not item for item in safeguard_ids):
+        errors.append(f"{prefix}safeguard_ids must be a list of nonempty identifiers")
     evidence = row.get("evidence", {})
     if evidence is not None and not isinstance(evidence, dict):
         errors.append(f"{prefix}evidence must be an object")

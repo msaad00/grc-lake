@@ -57,9 +57,9 @@ def test_framework_coverage_markdown_is_source_linked_not_logo_based() -> None:
 
     # Honest coverage lines, not a single conflated "100%" claim.
     assert f"Requirements catalogued: {summary['seeded_control_count']} (all source-cited)" in markdown
-    assert "Evaluatable (touched by a safeguard):" in markdown
-    assert "Attestable (reviewed safeguard mapping" in markdown
-    assert "Attestable |" in markdown  # the matrix column header
+    assert "Mapped (touched by a safeguard):" in markdown
+    assert "Reviewed safeguard mappings:" in markdown
+    assert "Reviewed mappings |" in markdown  # the matrix column header
     assert "Asset types modeled: 20" in markdown
     assert "## Control-To-Asset Applicability" in markdown
     assert f"| `service` | {applicability[0]['applicable_control_count']} |" in markdown
@@ -70,7 +70,7 @@ def test_framework_coverage_markdown_is_source_linked_not_logo_based() -> None:
 
 
 def test_attestable_coverage_is_honest_and_bounded() -> None:
-    """Attestable (reviewed) coverage is the auditor-defensible number.
+    """Reviewed mapping coverage measures curation, not operating effectiveness.
 
     It must never exceed evaluatable (touched by any safeguard), which must
     never exceed the seeded requirement count. Source-citation coverage

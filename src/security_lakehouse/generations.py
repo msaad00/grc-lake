@@ -24,11 +24,13 @@ from security_lakehouse.io import file_sha256
 ARTIFACTS = (
     "catalog/control_map.json",
     "catalog/bundle.json",
+    "catalog/safeguards.json",
     "manifest.json",
     "bronze/raw_events.jsonl",
     "silver/normalized_events.jsonl",
     "gold/control_posture.jsonl",
     "gold/control_tests.jsonl",
+    "gold/ccf_assessment.json",
     "gold/evidence_freshness.jsonl",
     "gold/asset_risk.jsonl",
     "gold/metrics.json",
@@ -188,7 +190,7 @@ def seal_generation(generation: Path, *, legacy: bool = False) -> None:
     write_json(
         generation / "generation.json",
         {
-            "schema_version": "trustops.generation.v1",
+            "schema_version": "trustops.generation.v2",
             "legacy": legacy,
             "generation_id": generation.name,
             "artifacts": hashes,
@@ -206,6 +208,8 @@ def verify_generation(generation: Path) -> None:
     if manifest.get("generation_id") != generation.name or not manifest.get("artifacts"):
         raise ValueError("invalid generation manifest")
     required = set(ARTIFACTS) - {"mart/security_data_lake.duckdb"}
+    if manifest.get("schema_version") == "trustops.generation.v1":
+        required -= {"catalog/safeguards.json", "gold/ccf_assessment.json"}
     if not manifest.get("legacy", False) and not required <= set(manifest["artifacts"]):
         raise ValueError("generation is missing required assessment artifacts")
     for relative, expected in manifest["artifacts"].items():

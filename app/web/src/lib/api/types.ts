@@ -2051,3 +2051,22 @@ export interface MappingReviewDecisionRequest {
     framework_id: string;
   }>;
 }
+
+/** Published CCF results cover observed assets; inventory completeness is separate. */
+export interface CcfAssessment {
+  schema_version: string;
+  status?: "not_evaluated";
+  scope: "observed_assets";
+  population_completeness: "not_established";
+  asset_count?: number;
+  review_log_verified?: boolean;
+  safeguards: {
+    safeguard_id: string;
+    title: string;
+    status: "pass" | "fail" | "stale" | "not_evaluated";
+    assessed_asset_count: number;
+    applicable_asset_count: number;
+    unassessed_asset_count: number;
+  }[];
+  requirements: { control_id: string; status: string }[];
+}

@@ -9,6 +9,19 @@ The [artifact hashing microbenchmark](benchmarks/ARTIFACT_HASHING.md) measures o
 specific memory improvement using synthetic files. It does not establish
 end-to-end capacity, detection accuracy, or cost savings.
 
+The bounded full-pipeline harness records row counts, integrity checks, wall time,
+process peak RSS, retained-generation bytes, input hashes, commit and working-tree
+fingerprints. It uses one synthetic tenant and caps each attempt at 120 seconds:
+
+```bash
+uv run python tools/benchmark_assessment_pipeline.py --sizes 1000 10000 --repeats 3
+```
+
+Run it without concurrent tests or other workload, retain every attempt, and
+report its actual environment. The fixture tests framework-control fan-out;
+it contains no explicit safeguard bindings and does not stress the CCF asset
+matrix. A 10k-event run is not evidence of million-event or multi-tenant capacity.
+
 ## 1. Record the experiment
 
 Every run must identify the exact commit, dirty-tree diff hash if applicable,

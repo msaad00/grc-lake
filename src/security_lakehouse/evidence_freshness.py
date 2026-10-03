@@ -46,10 +46,11 @@ def build_evidence_freshness(
     *,
     now: datetime | None = None,
     default_slo_minutes: int = 60 * 24 * 7,
+    connectors: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Return one freshness record per normalized evidence row."""
     evaluated_at = (now or datetime.now(UTC)).astimezone(UTC)
-    connectors = load_connector_catalog()
+    connectors = load_connector_catalog() if connectors is None else connectors
     records = [
         _freshness_record(
             row,
@@ -99,6 +100,7 @@ def summarize_control_freshness(
     required_evidence_types: list[str],
     now: datetime | None = None,
     default_slo_minutes: int = 60 * 24 * 7,
+    connectors: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Evaluate required evidence types for a control test."""
     evaluated_at = (now or datetime.now(UTC)).astimezone(UTC)
@@ -106,6 +108,7 @@ def summarize_control_freshness(
         events,
         now=evaluated_at,
         default_slo_minutes=default_slo_minutes,
+        connectors=connectors,
     )
     latest_by_type: dict[str, dict[str, Any]] = {}
     for row in freshness_rows:

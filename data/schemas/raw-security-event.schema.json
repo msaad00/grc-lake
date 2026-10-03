@@ -11,20 +11,55 @@
     "entity"
   ],
   "properties": {
-    "event_id": { "type": "string", "minLength": 1 },
-    "tenant_id": { "type": "string", "minLength": 1 },
-    "event_time": { "type": "string", "format": "date-time" },
-    "source": { "type": "string", "minLength": 1 },
-    "event_type": { "type": "string", "minLength": 1 },
-    "entity": { "type": "object" },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entity": {
+      "type": "object"
+    },
     "severity": {
       "type": "string",
       "enum": ["critical", "high", "medium", "low", "info", "none"]
     },
-    "status": { "type": "string" },
-    "controls": { "type": "array", "items": { "type": "string" } },
-    "evidence": { "type": "object" },
-    "attributes": { "type": "object" }
+    "status": {
+      "type": "string"
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence": {
+      "type": "object"
+    },
+    "attributes": {
+      "type": "object"
+    },
+    "safeguard_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
   },
   "additionalProperties": true
 }

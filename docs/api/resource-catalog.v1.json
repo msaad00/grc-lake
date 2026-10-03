@@ -95,6 +95,19 @@
     {
       "kind": "singleton",
       "methods": ["GET"],
+      "path": "/api/v1/ccf/assessment",
+      "resource": "ccf.assessment"
+    },
+    {
+      "kind": "collection",
+      "methods": ["GET"],
+      "path": "/api/v1/ccf/asset-results",
+      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "resource": "ccf.asset-results"
+    },
+    {
+      "kind": "singleton",
+      "methods": ["GET"],
       "path": "/api/v1/ccf/coverage",
       "resource": "ccf.coverage"
     },

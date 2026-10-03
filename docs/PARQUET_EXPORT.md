@@ -101,3 +101,15 @@ unknown schemas/fields, incomplete writes, safe retries, and CLI errors.
 
 Format references: [Apache Arrow Parquet writing](https://arrow.apache.org/docs/python/parquet.html)
 and [DuckDB Parquet queries](https://duckdb.org/docs/current/guides/file_formats/query_parquet).
+
+## Safeguard bindings and older generations
+
+Normalization transform v2 adds the `safeguard_ids` list. New Parquet exports
+preserve it with explicit string-list types, including empty lists. Retained v1
+normalization generations keep their original export columns; they are not
+rewritten. The normalized JSON contract remains v1 with this additive field.
+
+Existing Iceberg tables without the new column fail schema validation before
+publication. Provision a compatible table or explicitly evolve its schema before
+publishing v2-normalized generations. TrustOps does not silently mutate that table
+schema. Historical snapshots and exports remain pinned to their source generation.

@@ -187,3 +187,34 @@ def test_run_lake_eval_writes_scale_state(tmp_path: Path) -> None:
     result = run_lake_eval(lake, actor="test")
     assert result.result == "ok"
     assert (lake / "gold" / "lake_scale.json").is_file()
+
+
+def test_failed_export_reports_committed_local_generation(tmp_path, monkeypatch):
+    from security_lakehouse.generations import active_generation
+
+    lake = tmp_path / "lake"
+    raw = lake / "raw/connector_events.jsonl"
+    write_audit_scale_fixture(raw, 2, controls_per_event=1)
+    monkeypatch.setattr("security_lakehouse.lake_scale.WAREHOUSE_ROW_THRESHOLD", 1)
+    monkeypatch.setattr("security_lakehouse.lake_scale.warehouse_sink_configured", lambda env: True)
+    exported_paths = []
+
+    def unavailable(path, env):
+        exported_paths.append(Path(path))
+        raise RuntimeError("private destination failure")
+
+    monkeypatch.setattr("security_lakehouse.lake_eval.land_if_configured", unavailable)
+    result = run_lake_eval(lake, env={})
+    assert result.result == "error"
+    assert result.local_result == "ok"
+    assert result.export_result == "error"
+    assert result.pipeline is not None
+    assert exported_paths == [active_generation(lake)]
+    assert "private destination" not in result.error
+
+
+def test_explicit_empty_sink_environment_does_not_use_process_credentials(tmp_path, monkeypatch):
+    monkeypatch.setenv("TRUSTOPS_DUCKDB_PATH", str(tmp_path / "ambient.duckdb"))
+    from security_lakehouse.lake_scale import warehouse_sink_configured
+
+    assert warehouse_sink_configured({}) is False

@@ -5,6 +5,13 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Update urllib3, PyJWT, oauthlib, virtualenv, and brace-expansion to address dependency advisories.
+
+- Preserve unknown evidence outcomes, refresh incremental assessments at freshness boundaries, and pin historical OSCAL findings to verified snapshot inputs.
+- Publish explicit safeguard-to-asset evaluation and reviewed requirement rollups through the API, CLI, MCP, and Frameworks page, with observed-population limits.
+- Reuse connector discovery across control tests, consolidate framework scoring and evaluation result serialization, and distinguish local publication from warehouse export failures.
+- Reject unsupported Helm read replicas and multiple writers regardless of volume access mode; document current deployment and evaluation limits.
+
 - CI type-checks the package with mypy (`make typecheck`).
 - Workflow `action.connector_sync` no longer fails with an AttributeError
   after a successful sync.

@@ -31,6 +31,7 @@ import { FrameworkRoster } from "@/components/framework/FrameworkRoster";
 import { frameworkDetailHref } from "@/lib/framework-links";
 import {
   useFrameworkCoverage,
+  useCcfAssessment,
   useFrameworkDetail,
   useFrameworks,
   useReadiness,
@@ -490,6 +491,88 @@ function ReadinessRow({ row }: { row: FrameworkReadiness }) {
   );
 }
 
+function SafeguardAssessment() {
+  const assessment = useCcfAssessment();
+  const data = assessment.data;
+  const rows = data?.safeguards ?? [];
+  const passed = rows.filter((row) => row.status === "pass").length;
+  const failed = rows.filter((row) => row.status === "fail").length;
+  return (
+    <details className="rounded-lg border border-line bg-surface p-4 sm:p-5">
+      <summary className="cursor-pointer font-semibold text-ink">
+        Safeguard assessment · observed assets
+      </summary>
+      <p className="mt-3 text-sm text-muted">
+        Explicit safeguard evidence is evaluated against applicable observed
+        assets. Mapping coverage alone does not establish a pass. Complete asset
+        inventory is not established.
+      </p>
+      {assessment.isLoading ? (
+        <p className="mt-3 text-sm">Loading assessment…</p>
+      ) : assessment.isError ? (
+        <p role="alert" className="mt-3 text-sm">
+          Assessment unavailable. Reload to try again.
+        </p>
+      ) : rows.length === 0 ? (
+        <p className="mt-3 text-sm">
+          No safeguard assessment has been published. Run a lake evaluation to
+          begin.
+        </p>
+      ) : (
+        <>
+          <p className="mt-3 text-sm">
+            {passed} passing · {failed} failing ·{" "}
+            {rows.length - passed - failed} stale or not evaluated ·{" "}
+            {data?.asset_count ?? 0} observed assets
+          </p>
+          {data?.review_log_verified === false && (
+            <p role="alert" className="mt-2 text-sm">
+              Mapping review integrity could not be verified. Requirement passes
+              are blocked.
+            </p>
+          )}
+          <div className="mt-4 max-h-80 overflow-auto">
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">
+                Safeguard results in the published assessment
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="p-2">
+                    Safeguard
+                  </th>
+                  <th scope="col" className="p-2">
+                    Result
+                  </th>
+                  <th scope="col" className="p-2">
+                    Assets assessed / applicable
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.safeguard_id} className="border-t border-line">
+                    <th scope="row" className="p-2 font-normal">
+                      <span className="block text-xs text-muted">
+                        {row.safeguard_id}
+                      </span>
+                      {row.title}
+                    </th>
+                    <td className="p-2">{row.status.replaceAll("_", " ")}</td>
+                    <td className="p-2 tabular-nums">
+                      {row.assessed_asset_count} / {row.applicable_asset_count}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </details>
+  );
+}
+
 function FrameworksPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -704,6 +787,8 @@ function FrameworksPageContent() {
           </div>
         </dl>
       </section>
+
+      <SafeguardAssessment />
 
       <FrameworkRoster
         frameworks={data}

@@ -598,6 +598,11 @@ def _parser() -> argparse.ArgumentParser:
     controls_ccf.add_argument("--format", choices=["json", "table"], default="json", help="output format")
     controls_ccf.add_argument("--lake", default=None, help=_REVIEW_LAKE_HELP)
     controls_ccf.set_defaults(func=_frameworks_safeguards)
+    ccf_assessment = frameworks_sub.add_parser(
+        "assessment", help="read published CCF results within observed asset scope"
+    )
+    ccf_assessment.add_argument("--lake", required=True)
+    ccf_assessment.set_defaults(func=_frameworks_assessment)
     frameworks_enrich = frameworks_sub.add_parser(
         "enrich",
         help="fill placeholder control titles from public-domain NIST catalogs (network opt-in)",
@@ -885,20 +890,7 @@ def _pipeline_eval(args: argparse.Namespace) -> int:
     from security_lakehouse.lake_eval import run_lake_eval
 
     result = run_lake_eval(args.lake, actor=args.actor)
-    print(
-        json.dumps(
-            {
-                "result": result.result,
-                "mode": result.mode,
-                "duration_ms": result.duration_ms,
-                "error": result.error,
-                "strategy": result.strategy,
-                "pipeline": result.pipeline.__dict__ if result.pipeline else None,
-            },
-            indent=2,
-            sort_keys=True,
-        )
-    )
+    print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
     return 0 if result.result == "ok" else 1
 
 
@@ -1986,6 +1978,14 @@ def _frameworks_enrich(args: argparse.Namespace) -> int:
     report = enrich_catalog(titles_by_framework=titles_by_framework, apply=args.apply)
     print(json.dumps(report, indent=2))
     return 1 if report["unresolved"] else 0
+
+
+def _frameworks_assessment(args: argparse.Namespace) -> int:
+    from security_lakehouse.api_v1 import handle_get
+
+    status, body = handle_get("/api/v1/ccf/assessment", {}, Path(args.lake))
+    print(json.dumps(body["data"], indent=2))
+    return 0 if status == 200 else 1
 
 
 def _frameworks_safeguards(args: argparse.Namespace) -> int:

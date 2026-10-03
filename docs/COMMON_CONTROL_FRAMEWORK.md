@@ -8,9 +8,10 @@ TrustOps is adopting this model. This document describes the target, what exists
 today, and how the rest gets there.
 
 The live, generated **[Framework Coverage Matrix](FRAMEWORK_COVERAGE.md)** shows
-per-framework coverage split into _evaluatable_ (any safeguard mapping) vs
-_attestable_ (human-reviewed — the only coverage an auditor accepts); the gap
-between them is the mapping-review backlog.
+per-framework mapping coverage split into mapped and reviewed requirements.
+The gap is the mapping-review backlog. A reviewed crosswalk is not a test of
+operating effectiveness or an auditor acceptance decision. The API retains
+`evaluatable` and `attestable` field names for compatibility.
 
 ## Why the catalog alone is not a CCF
 
@@ -204,12 +205,44 @@ must confirm semantic equivalence; source provenance alone does not do so.
 Your organization records that confirmation, or a rejection, per tenant; see
 [Mapping review](MAPPING_REVIEW.md).
 
-Safeguard rules are executable, but the current assessment pipeline still
-operates framework controls. Mapped coverage is not the number of safeguards
-evaluated on a live environment. Integrating safeguard evaluation into the
-pipeline and deriving requirement results from reviewed mappings remains work
-to complete. The framework-equivalence overlay also remains a separate source
-until that transition is validated.
+The pipeline publishes `gold/ccf_assessment.json` alongside framework-control
+posture. Evidence must explicitly name `safeguard_ids`; framework tags never
+implicitly assert a safeguard. The engine indexes evidence by safeguard and
+asset, runs the declared rule once per binding, and derives requirement results
+from every reviewed safeguard. Missing evidence for an applicable observed
+asset, ambiguous asset types, unknown outcomes, stale evidence, pending mappings,
+or an unverifiable review log block a requirement pass. A known failure remains
+a failure even when other evidence is incomplete. Rejected links are excluded;
+requirements without remaining links are `unmapped`.
+
+Read results through the Frameworks page, `GET /api/v1/ccf/assessment`, the
+`get_ccf_assessment` MCP tool, or:
+
+```bash
+security-lakehouse frameworks assessment --lake ./lake
+```
+
+The retained assessment includes event IDs and evidence hashes for each assessed
+asset. The summary endpoint omits asset detail; page through
+`GET /api/v1/ccf/asset-results?limit=100&offset=0` or `list_ccf_asset_results`
+for those rows. Pagination bounds the wire response; local artifact reads still
+materialize the JSON document in memory.
+Retain the JSON generation for CCF results: the existing SQL sink tables do not
+carry the CCF assessment. Parquet preserves normalized safeguard bindings.
+The assessment is sealed with the exact safeguard definitions and review overlay used in
+that generation. Review changes invalidate an incremental evaluation even when
+raw evidence is unchanged; readers see the last published assessment until the
+next evaluation.
+
+**Scope is observed assets.** This does not establish a complete asset inventory,
+prove an imported assertion, or certify an organization. Connector observations
+without explicit safeguard outcomes remain unevaluated. Existing framework
+posture, readiness scores, and OSCAL findings continue to describe the separate
+framework-control lane; they are not silently replaced with CCF results.
+
+[NIST SP 800-53A](https://csrc.nist.gov/pubs/sp/800/53/a/r5/final)
+describes assessment procedures using examination, interview, and testing.
+Crosswalk review is only one input to that assessment work.
 
 ## Schema
 

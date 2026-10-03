@@ -26,7 +26,7 @@ Snowflake is the governed enterprise evidence lake:
 
 - lands low-latency evidence through row streaming or staged files
 - supports governed read roles, row policies, masking policies, and query history
-- derives posture with warehouse-native rollups instead of pulling every record
+- reads configured evidence views for local deterministic evaluation; it may pull every selected record
   into the app
 - can expose the same tables through an Iceberg/Open Catalog path when the
   customer wants open-format interoperability

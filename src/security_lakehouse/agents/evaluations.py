@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from security_lakehouse.agents.model_contract import POSTURE_REVIEW_TOOL_CALLS, SOC_TRIAGE_TOOL_CALLS
+from security_lakehouse.event_status import FAIL_STATUSES
 
 
 def _decision_items(state: dict[str, Any]) -> list[Any]:
@@ -176,7 +177,7 @@ def evaluate_soc_triage(state: dict[str, Any]) -> dict[str, Any]:
     high_priority = {
         str(row.get("event_id") or "")
         for row in alerts
-        if str(row.get("status") or "").lower() in {"open", "failed", "blocked", "noncompliant"}
+        if str(row.get("status") or "").lower() in FAIL_STATUSES
         and str(row.get("severity") or "").lower() in {"critical", "high"}
     }
     covered = set()

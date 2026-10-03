@@ -325,6 +325,20 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         rows = build_framework_coverage(lake_dir=lake)
         return {"summary": framework_coverage_summary(rows), "frameworks": rows}
 
+    @trustops_tool(title="CCF Assessment")
+    def get_ccf_assessment() -> JsonObject:
+        """Read frozen safeguard and requirement results within observed asset scope.
+
+        Only explicit safeguard evidence is evaluated. Mapping coverage does not
+        imply a pass or establish inventory completeness.
+        """
+        return _get("/api/v1/ccf/assessment", lake)
+
+    @trustops_tool(title="CCF Asset Results")
+    def list_ccf_asset_results(limit: int = 100, offset: int = 0) -> list[JsonObject]:
+        """Read a bounded page of asset/safeguard outcomes with evidence IDs and hashes."""
+        return _get("/api/v1/ccf/asset-results", lake, limit=str(limit), offset=str(offset))
+
     @trustops_tool(title="Mapping Review Queue")
     def get_mapping_review_queue(framework_id: str | None = None, risk_domain: str | None = None) -> JsonObject:
         """Proposed safeguard→requirement mappings awaiting domain-expert sign-off.

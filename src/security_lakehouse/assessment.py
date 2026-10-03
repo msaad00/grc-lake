@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.event_status import FAIL_STATUSES
 from security_lakehouse.evidence_freshness import (
     build_evidence_freshness,
     stale_control_ids,
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 # ``write_assessment_snapshot`` for how the diff arguments are derived.
 SnapshotWrittenHook = Callable[[Path, dict[str, Any], list[dict[str, Any]], list[str]], None]
 
-VIOLATION_STATUSES = {"open", "failed", "blocked", "noncompliant"}
+VIOLATION_STATUSES = FAIL_STATUSES
 
 # Append-only ledger that chains every snapshot to its predecessor. Each line
 # records (prev_hash -> assessment_hash); because assessment_hash covers
@@ -94,6 +95,7 @@ def build_current_posture(
     warning_control_tests = [item for item in control_tests if str(item.get("result", "")).lower() == "warn"]
     posture_score = _weighted_posture_score(framework_scores)
     critical_for_state = critical_violation_count > 0
+    unevaluated = {str(row["control_id"]) for row in controls if row.get("status") == "not_evaluated"}
     assessment = {
         "schema_version": "trustops.assessment.v1",
         "assessment_type": "current_posture",
@@ -102,7 +104,9 @@ def build_current_posture(
         "posture": {
             "score": posture_score,
             "state": (
-                _posture_state(posture_score, critical_for_state, stale_controls) if controls else "not_evaluated"
+                _posture_state(posture_score, critical_for_state, stale_controls | unevaluated)
+                if controls
+                else "not_evaluated"
             ),
             "framework_count": len(framework_scores),
             "control_count": len(controls),
@@ -113,6 +117,7 @@ def build_current_posture(
             "failed_control_test_count": len(failed_control_tests),
             "warning_control_test_count": len(warning_control_tests),
             "stale_control_count": len(stale_controls),
+            "not_evaluated_control_count": len(unevaluated),
             "stale_evidence_count": len(stale_evidence),
         },
         "frameworks": framework_scores,
@@ -301,6 +306,9 @@ def write_assessment_snapshot(
         assessment = build_current_posture(lake, freshness_days=freshness_days)
         assessment["assessment_type"] = "point_in_time_snapshot"
         assessment["snapshot_reason"] = reason
+        # Legacy lakes have no retained generation to resolve later. Freeze
+        # their detail too; the content hash below covers these rows.
+        assessment["control_posture"] = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True)
         # Pin the catalog bundle (framework + control versions in force) so this
         # audit reproduces against the exact controls it was evaluated with. The
         # bundle is covered by assessment_hash below, so it is tamper-evident too.
@@ -666,77 +674,53 @@ def _framework_scores_from_controls(
     controls: list[dict[str, Any]],
     stale_controls: set[str],
 ) -> list[dict[str, Any]]:
-    """Framework rollups from gold control posture rows (audit-scale safe)."""
-    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for control in controls:
-        grouped[control["framework"]].append(control)
-
-    rows: list[dict[str, Any]] = []
-    for framework, framework_controls in grouped.items():
-        total = len(framework_controls)
-        failing = [control for control in framework_controls if control["status"] == "fail"]
-        stale = [control for control in framework_controls if control["control_id"] in stale_controls]
-        open_events = sum(int(control.get("open_event_count") or 0) for control in framework_controls)
-        risk_penalty = sum(min(int(control.get("risk_score") or 0), 100) for control in failing)
-        max_penalty = max(1, total * 100)
-        score = max(0, round(100 - ((risk_penalty / max_penalty) * 100) - (len(stale) * 5), 2))
-        rows.append(
-            {
-                "framework": framework,
-                "score": score,
-                "state": "ready" if not failing and not stale else "attention_required",
-                "control_count": total,
-                "failing_control_count": len(failing),
-                "violation_count": open_events,
-                "stale_control_count": len(stale),
-                "critical_violation_count": sum(
-                    1 for control in failing if int(control.get("risk_score") or 0) >= SEVERITY_SCORE["critical"]
-                ),
-                "high_violation_count": sum(
-                    1
-                    for control in failing
-                    if SEVERITY_SCORE["high"] <= int(control.get("risk_score") or 0) < SEVERITY_SCORE["critical"]
-                ),
-            }
-        )
-    return sorted(rows, key=lambda item: (float(item["score"]), item["framework"]))
+    """Use the materialized control aggregates when violation detail is capped."""
+    return _framework_scores(controls, None, stale_controls)
 
 
 def _framework_scores(
     controls: list[dict[str, Any]],
-    violations: list[dict[str, Any]],
+    violations: list[dict[str, Any]] | None,
     stale_controls: set[str],
 ) -> list[dict[str, Any]]:
     violations_by_control: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for violation in violations:
+    for violation in violations or []:
         violations_by_control[violation["control_id"]].append(violation)
-
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for control in controls:
         grouped[control["framework"]].append(control)
 
     rows: list[dict[str, Any]] = []
-    for framework, framework_controls in grouped.items():
-        total = len(framework_controls)
-        failing = [control for control in framework_controls if control["status"] == "fail"]
-        stale = [control for control in framework_controls if control["control_id"] in stale_controls]
-        framework_violations = [
-            v for control in framework_controls for v in violations_by_control.get(control["control_id"], [])
-        ]
-        risk_penalty = sum(min(int(v["severity_score"]), 100) for v in framework_violations)
-        max_penalty = max(1, total * 100)
-        score = max(0, round(100 - ((risk_penalty / max_penalty) * 100) - (len(stale) * 5), 2))
+    for framework, members in grouped.items():
+        total = len(members)
+        failing = [row for row in members if row["status"] == "fail"]
+        stale = sum(row["control_id"] in stale_controls for row in members)
+        unknown = sum(row.get("status") == "not_evaluated" for row in members)
+        if violations is None:
+            scores = [min(int(row.get("risk_score") or 0), 100) for row in failing]
+            count = sum(int(row.get("open_event_count") or 0) for row in members)
+            critical = sum(score >= SEVERITY_SCORE["critical"] for score in scores)
+            high = sum(SEVERITY_SCORE["high"] <= score < SEVERITY_SCORE["critical"] for score in scores)
+        else:
+            detail = [v for row in members for v in violations_by_control.get(row["control_id"], [])]
+            scores = [min(int(row["severity_score"]), 100) for row in detail]
+            count = len(detail)
+            critical = sum(row["severity"] == "critical" for row in detail)
+            high = sum(row["severity"] == "high" for row in detail)
+        penalty = sum(scores) + unknown * 100
+        score = max(0, round(100 - penalty / max(1, total * 100) * 100 - stale * 5, 2))
         rows.append(
             {
                 "framework": framework,
                 "score": score,
-                "state": "ready" if not failing and not stale else "attention_required",
+                "state": "ready" if not failing and not stale and not unknown else "attention_required",
+                "not_evaluated_control_count": unknown,
                 "control_count": total,
                 "failing_control_count": len(failing),
-                "violation_count": len(framework_violations),
-                "stale_control_count": len(stale),
-                "critical_violation_count": sum(1 for v in framework_violations if v["severity"] == "critical"),
-                "high_violation_count": sum(1 for v in framework_violations if v["severity"] == "high"),
+                "violation_count": count,
+                "stale_control_count": stale,
+                "critical_violation_count": critical,
+                "high_violation_count": high,
             }
         )
     return sorted(rows, key=lambda item: (float(item["score"]), item["framework"]))

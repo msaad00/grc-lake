@@ -23,6 +23,7 @@ from security_lakehouse.ai_governance import build_ai_governance_status, list_ai
 from security_lakehouse.assessment import (
     SnapshotWrittenHook,
     build_current_posture,
+    load_snapshot,
     posture_as_of,
     verify_snapshot_chain,
     write_assessment_snapshot,
@@ -46,7 +47,7 @@ from security_lakehouse.connector_state import (
 from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.framework_detail import build_framework_detail
 from security_lakehouse.framework_provenance import build_framework_view
-from security_lakehouse.generations import generation_identity, generation_reader
+from security_lakehouse.generations import generation_identity, generation_reader, pinned_path
 from security_lakehouse.graph import (
     analyze_coverage,
     build_compliance_graph,
@@ -54,7 +55,7 @@ from security_lakehouse.graph import (
     build_repository_graph,
 )
 from security_lakehouse.ingestion_status import build_ingestion_status
-from security_lakehouse.io import read_jsonl, resolve_path
+from security_lakehouse.io import read_json, read_jsonl, resolve_path
 from security_lakehouse.lake_eval import list_eval_runs, run_lake_eval
 from security_lakehouse.lake_scale import connector_materialize_on_sync
 from security_lakehouse.mapping_review import (
@@ -166,6 +167,29 @@ def _ccf_coverage(lake: Path) -> JsonObject:
     }
 
 
+def _ccf_assessment(lake: Path) -> JsonObject:
+    path = lake / "gold" / "ccf_assessment.json"
+    if pinned_path(path).is_file():
+        return read_json(path, base_dir=lake)
+    return {
+        "schema_version": "trustops.ccf_assessment.v1",
+        "status": "not_evaluated",
+        "scope": "observed_assets",
+        "population_completeness": "not_established",
+        "safeguards": [],
+        "asset_results": [],
+        "requirements": [],
+    }
+
+
+def _ccf_assessment_summary(lake: Path) -> JsonObject:
+    result = _ccf_assessment(lake)
+    # Bound the default wire response by catalog size. Detail uses the shared
+    # collection pagination contract; the local artifact still loads in memory.
+    result["asset_result_count"] = len(result.pop("asset_results"))
+    return result
+
+
 # Route -> (resource name, loader) for endpoints returning a single object.
 SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
     "/api/v1/healthz": ("healthz", lambda _lake: {"ok": True, "service": "trustops-assessment"}),
@@ -183,6 +207,7 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
     # CCF coverage and the OSCAL component definition read the shipped safeguards
     # with this lake's org review decisions layered on (mapping_review).
     "/api/v1/ccf/coverage": ("ccf.coverage", _ccf_coverage),
+    "/api/v1/ccf/assessment": ("ccf.assessment", _ccf_assessment_summary),
     "/api/v1/oscal/component-definition": (
         "oscal.component-definition",
         lambda lake: build_component_definition(lake_dir=lake),
@@ -191,6 +216,7 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
 
 # Route -> (resource name, loader) for endpoints returning a row collection.
 COLLECTION_LOADERS: dict[str, tuple[str, Callable[[Path], list[JsonObject]]]] = {
+    "/api/v1/ccf/asset-results": ("ccf.asset-results", lambda lake: _ccf_assessment(lake)["asset_results"]),
     "/api/v1/controls": (
         "controls",
         lambda lake: read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True, base_dir=lake),
@@ -1407,7 +1433,15 @@ def collection_response(resource: str, rows: list[JsonObject], params: Params) -
 def handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPStatus, JsonObject]:
     """Resolve a v1 GET against one pinned assessment generation."""
     status, body = _handle_get(path, params, lake_dir)
-    generation = generation_identity(lake_dir)
+    historical = path == "/api/v1/oscal/assessment-results" and bool(params.get("snapshot_id"))
+    if historical:
+        # The successful export already verified this immutable snapshot. Errors
+        # must not advertise the unrelated current generation either.
+        generation = (
+            load_snapshot(lake_dir, params["snapshot_id"][0]).get("generation") if status == HTTPStatus.OK else None
+        )
+    else:
+        generation = generation_identity(lake_dir)
     if generation is not None:
         body["meta"]["generation"] = generation
     return status, body
@@ -1548,6 +1582,12 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
         except FileNotFoundError:
             return HTTPStatus.NOT_FOUND, error_envelope(
                 "not_found", f"unknown snapshot {snapshot_id!r}", resource="oscal.assessment-results"
+            )
+        except ValueError:
+            return HTTPStatus.CONFLICT, error_envelope(
+                "assessment_unavailable",
+                "Assessment integrity or historical detail is unavailable.",
+                resource="oscal.assessment-results",
             )
         return HTTPStatus.OK, envelope("oscal.assessment-results", data)
     singleton = SINGLETON_LOADERS.get(path)
@@ -1950,14 +1990,7 @@ def handle_post(
             HTTPStatus.CREATED if eval_result.result == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR,
             envelope(
                 "ingestion.eval",
-                {
-                    "result": eval_result.result,
-                    "mode": eval_result.mode,
-                    "duration_ms": eval_result.duration_ms,
-                    "error": eval_result.error,
-                    "strategy": eval_result.strategy,
-                    "pipeline": eval_result.pipeline.__dict__ if eval_result.pipeline else None,
-                },
+                eval_result.to_dict(),
             ),
         )
     if path == "/api/v1/scheduler/tick":

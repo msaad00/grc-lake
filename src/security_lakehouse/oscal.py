@@ -45,10 +45,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.assessment import load_snapshot
+from security_lakehouse.assessment import _assessment_hash, load_snapshot
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
-from security_lakehouse.generations import generation_identity
-from security_lakehouse.io import read_jsonl, resolve_path
+from security_lakehouse.generations import generation_identity, generation_reader, verify_generation
+from security_lakehouse.io import file_sha256, read_json, read_jsonl, resolve_path
 from security_lakehouse.models import utc_iso
 from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
@@ -267,6 +267,7 @@ def _import_ap_href(posture_payload: JsonObject) -> str:
     return "urn:trustops:catalog-bundle:unknown"
 
 
+@generation_reader
 def build_assessment_results(
     lake_dir: str | Path,
     *,
@@ -284,15 +285,10 @@ def build_assessment_results(
     version, the catalog bundle referenced by ``import-ap``) to a recorded
     point-in-time snapshot written by
     :func:`security_lakehouse.assessment.write_assessment_snapshot`. The
-    findings themselves always come from the lake's current
-    ``gold/control_posture.jsonl`` -- snapshots persist aggregate framework
-    scores and open violations, not a full per-control row set, so there is no
-    frozen per-control detail to reconstruct for an older snapshot. Pass
-    ``snapshot_id=None`` (the default) for the current posture, where this
-    distinction does not apply.
+    findings come from the verified retained generation or the control rows
+    frozen inside a legacy snapshot. Missing historical detail fails closed.
     """
     lake = resolve_path(lake_dir)
-    controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True, base_dir=lake)
     moment = now or datetime.now(UTC)
     started = utc_iso(moment)
 
@@ -300,11 +296,16 @@ def build_assessment_results(
         # A pinned snapshot already carries its own evaluated_at/assessment_hash/
         # generation as recorded metadata -- read it, no recomputation needed.
         posture_payload = load_snapshot(lake, snapshot_id)
+        if posture_payload.get("assessment_hash") != _assessment_hash(posture_payload):
+            raise ValueError("snapshot content hash does not verify")
         evaluated_at = str(posture_payload.get("evaluated_at") or started)
         assessment_hash = posture_payload.get("assessment_hash")
         version = str(assessment_hash)[:12] if assessment_hash else moment.strftime("%Y%m%dT%H%M%SZ")
         generation = posture_payload.get("generation")
+        controls = _snapshot_controls(lake, posture_payload)
+        started = evaluated_at
     else:
+        controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True, base_dir=lake)
         # The live case only needs evaluated_at/a version/generation -- not a
         # full posture recomputation (violations, evidence freshness, framework
         # scores). Hash the control rows actually being exported instead of
@@ -320,11 +321,10 @@ def build_assessment_results(
         assessment_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         version = assessment_hash[:12]
         generation = generation_identity(lake)
-        # build_current_posture() never sets catalog_bundle (that's a
-        # snapshot-only field written by write_assessment_snapshot), so an
-        # empty payload here reproduces the prior fallback behavior in
-        # _import_ap_href exactly.
-        posture_payload = {}
+        # Export the bundle belonging to the pinned generation. Legacy lakes
+        # without one retain the explicit unknown-catalog fallback.
+        bundle_path = lake / "catalog" / "bundle.json"
+        posture_payload = {"catalog_bundle": read_json(bundle_path, base_dir=lake)} if bundle_path.is_file() else {}
 
     generation_id = str(generation.get("generation_id")) if isinstance(generation, dict) else "current"
     subject_uuid = _uuid5("assessment-subject", generation_id)
@@ -412,3 +412,22 @@ def build_assessment_results(
             "results": [result],
         }
     }
+
+
+def _snapshot_controls(lake: Path, snapshot: JsonObject) -> list[JsonObject]:
+    generation = snapshot.get("generation")
+    if isinstance(generation, dict):
+        generation_id = str(generation.get("generation_id") or "")
+        if not re.fullmatch(r"[0-9a-f]{32}", generation_id):
+            raise ValueError("snapshot has an invalid generation identity")
+        target = lake / "generations" / generation_id
+        if target.resolve() != target or not (target / "generation.json").is_file():
+            raise ValueError("snapshot generation is unavailable")
+        if file_sha256(target / "generation.json") != generation.get("manifest_sha256"):
+            raise ValueError("snapshot generation identity does not verify")
+        verify_generation(target)
+        return read_jsonl(target / "gold" / "control_posture.jsonl", base_dir=target)
+    rows = snapshot.get("control_posture")
+    if not isinstance(rows, list):
+        raise ValueError("snapshot has no frozen control detail; current results cannot substitute")
+    return rows

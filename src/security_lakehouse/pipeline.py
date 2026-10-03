@@ -7,12 +7,13 @@ import importlib.util
 import json
 import sqlite3
 from collections import Counter, defaultdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from security_lakehouse.asset_names import asset_names_from_raw, entity_asset_id
 from security_lakehouse.controls import expand_controls, load_control_map
+from security_lakehouse.event_status import FAIL_STATUSES, normalize_event_status
 from security_lakehouse.evidence_freshness import (
     build_evidence_freshness,
     stale_control_ids,
@@ -35,7 +36,7 @@ from security_lakehouse.validation import validate_raw_events
 
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
-NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v1"
+NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v2"
 
 
 @serialized_publication
@@ -103,6 +104,7 @@ def run_pipeline_incremental(
     if (
         manifest.get("control_map_sha256") != _canonical_sha256(current_controls)
         or manifest.get("tenant_id") != tenant_id
+        or manifest.get("evaluation_dependencies_sha256") != _evaluation_dependencies_sha256(lake=Path(out_dir))
     ):
         return run_pipeline(raw_path, out_dir, mapping_path=mapping_path, tenant_id=tenant_id)
     prior_index = manifest.get("raw_index") or {}
@@ -110,7 +112,9 @@ def run_pipeline_incremental(
         prior_index = {}
 
     delta_rows, removed_ids, new_index = _compute_raw_delta(raw_path, prior_index)
-    if not delta_rows and not removed_ids:
+    due = manifest.get("next_freshness_transition")
+    freshness_due = bool(due and datetime.now(UTC) >= parse_event_time(str(due)))
+    if not delta_rows and not removed_ids and not freshness_due:
         return _pipeline_result_from_manifest(out, manifest)
 
     if removed_ids and len(removed_ids) > max(1000, len(prior_index) // 5):
@@ -202,11 +206,19 @@ def _write_generation(
         directory.mkdir(parents=True, exist_ok=True)
 
     control_map = load_control_map(mapping_path)
+    from security_lakehouse.ccf_evaluation import evaluate_safeguards
+    from security_lakehouse.mapping_review import effective_safeguards
+
+    evaluated_at = datetime.now(UTC)
+    effective = effective_safeguards(out.parent.parent)
+    ccf_assessment = evaluate_safeguards(silver_rows, effective, control_map, now=evaluated_at)
+    write_json(out / "catalog" / "safeguards.json", effective)
+    write_json(gold_dir / "ccf_assessment.json", ccf_assessment)
     from security_lakehouse.catalog_versions import bundle_summary
 
     write_json(out / "catalog" / "control_map.json", {"controls": list(control_map.values())})
     write_json(out / "catalog" / "bundle.json", bundle_summary(catalog_path=out / "catalog" / "control_map.json"))
-    evidence_freshness_rows = build_evidence_freshness(silver_rows)
+    evidence_freshness_rows = build_evidence_freshness(silver_rows, now=evaluated_at)
     stale_controls = stale_control_ids(evidence_freshness_rows)
     control_rows = _build_control_rows(silver_rows, control_map, stale_controls)
     # Applicability join: each asset_type -> the controls that declare it, so the
@@ -220,7 +232,7 @@ def _write_generation(
         {k: sorted(v) for k, v in applicability.items()},
         asset_names_from_raw(raw_rows),
     )
-    control_test_rows = build_control_tests(silver_rows, control_rows)
+    control_test_rows = build_control_tests(silver_rows, control_rows, now=evaluated_at)
     metrics = _build_metrics(silver_rows, control_rows, asset_rows)
     metrics.update(_build_freshness_metrics(evidence_freshness_rows))
     metrics.update(_build_control_test_metrics(control_test_rows))
@@ -296,6 +308,8 @@ def _write_generation(
             "raw_path": str(raw_path),
             "tenant_id": tenant_id,
             "control_map_sha256": _canonical_sha256(control_map),
+            "evaluation_dependencies_sha256": _evaluation_dependencies_sha256(ccf_payload=effective),
+            "next_freshness_transition": _next_freshness_transition(evidence_freshness_rows),
             "generation_id": out.name,
             "materialize_mode": materialize_mode,
             "normalization": {
@@ -362,6 +376,33 @@ def _write_generation(
         dashboard_data_path=str(gold_dir / "dashboard_data.json"),
         duckdb_mart_path=str(duckdb_mart_path) if wrote_duckdb else None,
     )
+
+
+def _evaluation_dependencies_sha256(*, lake: Path | None = None, ccf_payload: dict[str, Any] | None = None) -> str:
+    from security_lakehouse.connectors import load_connector_catalog
+    from security_lakehouse.mapping_review import effective_safeguards
+    from security_lakehouse.programs import load_program_catalog
+
+    return _canonical_sha256(
+        {
+            "normalization": NORMALIZATION_TRANSFORM_VERSION,
+            "freshness": {key: row.get("freshness_slo_minutes") for key, row in load_connector_catalog().items()},
+            "programs": load_program_catalog(),
+            "safeguards": ccf_payload if ccf_payload is not None else effective_safeguards(lake),
+        }
+    )
+
+
+def _next_freshness_transition(rows: list[dict[str, Any]]) -> str | None:
+    # Freshness uses floor(age_minutes) and inclusive thresholds. The state
+    # changes one minute after the published SLO boundary.
+    moments = []
+    for row in rows:
+        if row["status"] not in {"fresh", "stale"} or not row.get("expires_at"):
+            continue
+        extra = 1 + (int(row["freshness_slo_minutes"]) if row["status"] == "stale" else 0)
+        moments.append(parse_event_time(row["expires_at"]) + timedelta(minutes=extra))
+    return utc_iso(min(moments)) if moments else None
 
 
 def _raw_row_fingerprint(row: dict[str, Any]) -> str:
@@ -500,8 +541,9 @@ def _silver_row(row: dict[str, Any], raw_sha256: str) -> dict[str, Any]:
         "environment": str(entity.get("environment") or attributes.get("environment") or "unknown"),
         "severity": severity,
         "severity_score": SEVERITY_SCORE[severity],
-        "status": str(row.get("status", "observed")).lower(),
+        "status": normalize_event_status(row.get("status", "observed")),
         "control_ids": [str(item) for item in row.get("controls", [])],
+        "safeguard_ids": sorted(set(row.get("safeguard_ids", []))),
         "evidence_id": str(evidence.get("evidence_id") or row["event_id"]),
         "evidence_ref": _evidence_ref(row, evidence, raw_sha256),
         "evidence_collected_at": str(
@@ -543,7 +585,8 @@ def _build_control_rows(
     control_rows: list[dict[str, Any]] = []
     for control_id, rows in grouped.items():
         control = rows[0]["_control"]
-        failing_rows = [row for row in rows if row["status"] in {"open", "failed", "blocked", "noncompliant"}]
+        failing_rows = [row for row in rows if row["status"] in FAIL_STATUSES]
+        unknown_rows = [row for row in rows if normalize_event_status(row["status"]) == "not_evaluated"]
         evidence_rows = [row for row in rows if row["evidence_ref"]]
         max_score = max((row["severity_score"] for row in rows), default=0)
         top_open = max(failing_rows, key=lambda r: r["severity_score"], default=None)
@@ -568,6 +611,9 @@ def _build_control_rows(
             status = "not_evaluated"
         elif len(failing_rows) > 0:
             status = "fail"
+        elif unknown_rows:
+            status = "not_evaluated"
+            result.reasons.append("Source evidence has an unknown or unevaluated outcome.")
         elif is_stale:
             status = "stale"
         else:
@@ -606,7 +652,7 @@ def _build_asset_rows(
         grouped[row["asset_id"]].append(row)
     assets: list[dict[str, Any]] = []
     for asset_id, rows in grouped.items():
-        sev = Counter(row["severity"] for row in rows if row["status"] in {"open", "failed", "blocked", "noncompliant"})
+        sev = Counter(row["severity"] for row in rows if row["status"] in FAIL_STATUSES)
         risk_score = max((row["severity_score"] for row in rows), default=0) + min(20, len(rows) * 2)
         asset_type = rows[0]["asset_type"]
         asset = {
@@ -632,7 +678,7 @@ def _build_metrics(
     control_rows: list[dict[str, Any]],
     asset_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    open_rows = [row for row in silver_rows if row["status"] in {"open", "failed", "blocked", "noncompliant"}]
+    open_rows = [row for row in silver_rows if row["status"] in FAIL_STATUSES]
     runtime_rows = [row for row in silver_rows if row["event_type"].startswith("runtime.")]
     blocked_runtime = [row for row in runtime_rows if row["status"] in {"blocked", "failed"}]
     evidence_rows = [row for row in silver_rows if row["evidence_ref"]]
@@ -708,7 +754,7 @@ def _build_source_mix(silver_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
         grouped[row["source"]].append(row)
     rows: list[dict[str, Any]] = []
     for source, items in grouped.items():
-        open_count = sum(1 for item in items if item["status"] in {"open", "failed", "blocked", "noncompliant"})
+        open_count = sum(1 for item in items if item["status"] in FAIL_STATUSES)
         rows.append(
             {
                 "source": source,

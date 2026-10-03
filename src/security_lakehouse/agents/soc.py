@@ -15,6 +15,7 @@ from security_lakehouse.agents.providers import ModelProviderConfig, provider_fr
 from security_lakehouse.agents.state import AgentDecision, AgentOrchestrator, AgentRunState
 from security_lakehouse.agents.tools import assess_data_readiness
 from security_lakehouse.data_policy import redact_payload
+from security_lakehouse.event_status import FAIL_STATUSES
 from security_lakehouse.io import read_jsonl
 
 SOC_EVENT_PREFIXES = (
@@ -28,7 +29,7 @@ SOC_EVENT_PREFIXES = (
     "okta.",
     "google_workspace.",
 )
-OPEN_STATUSES = {"open", "failed", "blocked", "noncompliant"}
+OPEN_STATUSES = FAIL_STATUSES
 HIGH_SEVERITIES = {"critical", "high"}
 
 

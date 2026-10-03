@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.sinks.clickhouse_sink import ClickHouseSink, ClickHouseSinkConfig
 from security_lakehouse.sinks.duckdb_sink import DuckDBSink, DuckDBSinkConfig
 from security_lakehouse.sinks.snowflake_sink import SnowflakeSink, SnowflakeSinkConfig
@@ -36,6 +37,8 @@ def land_if_configured(lake_dir: str | Path, env: Mapping[str, str]) -> dict[str
     Lazy config means callers pay nothing unless ``SNOWFLAKE_*`` / ``CLICKHOUSE_*``
     / ``TRUSTOPS_DUCKDB_PATH`` is set.
     """
+    if in_server_mode():
+        raise ValueError("warehouse export requires tenant-scoped destination support; use an operator-owned local run")
     landed: dict[str, dict[str, int]] = {}
     snowflake = SnowflakeSinkConfig.from_env(env)
     if snowflake is not None:

@@ -442,7 +442,7 @@ def _materialize_after_sync(lake: Path, raw_path: Path, *, connector_id: str) ->
     """Run scale-aware materialize after a connector sync."""
     from security_lakehouse.lake_scale import LakeEvalError
 
-    env = os.environ
+    env = {} if in_server_mode() else os.environ
     strategy = resolve_materialize_strategy(lake, raw_path, env=env)
     mode = str(strategy["mode"])
     write_lake_scale_state(lake, strategy)
@@ -467,6 +467,8 @@ def _land_to_sink(lake: Path, *, connector_id: str | None = None) -> None:
     is reported to stderr and swallowed rather than failing the sync. No-op
     unless a Snowflake, ClickHouse, or DuckDB sink is configured.
     """
+    if in_server_mode():
+        return
     env = dict(os.environ)
     if connector_id == "snowflake-evidence-lake":
         # Snowflake can be either an existing read-only evidence lake or an

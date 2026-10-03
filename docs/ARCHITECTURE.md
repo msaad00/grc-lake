@@ -80,3 +80,18 @@ establish horizontal scalability. The Helm chart enforces one writable replica.
 - Controls may be added without changing connectors.
 - Snowflake and ClickHouse are adapters, not hard dependencies.
 - Point-in-time snapshots must be reproducible from their retained generation or embedded historical inputs.
+
+### Assessment ownership and export boundary
+
+Server evaluations bind the platform tenant from the authenticated request context
+(or the hosted scheduler's tenant lake). A caller cannot override it with another
+tenant ID. Source account IDs on normalized observations remain unchanged; they
+are not the platform identity that owns the assessment. Local CLI evaluations
+retain their explicit tenant ID and the default single-operator behavior.
+
+Warehouse sinks currently use operator-owned process configuration. They are
+therefore available only to local operator runs. Hosted connector materialization
+and lake evaluation do not inherit those destinations or credentials. Hosted runs
+at the warehouse threshold stop with the existing scale-policy error until a
+tenant-scoped export destination contract is implemented. This boundary does not
+qualify shared Snowflake or ClickHouse schemas for multi-tenant writes.

@@ -1,0 +1,209 @@
+{
+  "revision": "17e23aeb69534cadb99e9318c87513781357fe0e",
+  "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "untracked_files": [],
+  "measured_at": "2026-10-03T17:17:28.993157+00:00",
+  "python": "3.13.5",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "scope": "Fresh-process reads of a synthetic SQL projection; Python allocations with tracemalloc, not total RSS. No HTTP, full pipeline, or concurrent writers.",
+  "attempts": [
+    {
+      "assets": 1000,
+      "mode": "legacy",
+      "repeat": 1,
+      "fixture_sha256": "34500e59106e8446ce8ca3f156490e10712e9f2e64746a86d93d85dc9e70029b",
+      "seconds_with_tracemalloc": 0.011042,
+      "peak_python_mib": 1.267,
+      "count": 500,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 1000,
+      "mode": "legacy",
+      "repeat": 2,
+      "fixture_sha256": "34500e59106e8446ce8ca3f156490e10712e9f2e64746a86d93d85dc9e70029b",
+      "seconds_with_tracemalloc": 0.01191,
+      "peak_python_mib": 1.267,
+      "count": 500,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 1000,
+      "mode": "legacy",
+      "repeat": 3,
+      "fixture_sha256": "34500e59106e8446ce8ca3f156490e10712e9f2e64746a86d93d85dc9e70029b",
+      "seconds_with_tracemalloc": 0.012048,
+      "peak_python_mib": 1.267,
+      "count": 500,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 1000,
+      "mode": "indexed",
+      "repeat": 1,
+      "fixture_sha256": "34500e59106e8446ce8ca3f156490e10712e9f2e64746a86d93d85dc9e70029b",
+      "seconds_with_tracemalloc": 0.007826,
+      "peak_python_mib": 0.044,
+      "count": 500,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 1000,
+      "mode": "indexed",
+      "repeat": 2,
+      "fixture_sha256": "34500e59106e8446ce8ca3f156490e10712e9f2e64746a86d93d85dc9e70029b",
+      "seconds_with_tracemalloc": 0.007985,
+      "peak_python_mib": 0.044,
+      "count": 500,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 1000,
+      "mode": "indexed",
+      "repeat": 3,
+      "fixture_sha256": "34500e59106e8446ce8ca3f156490e10712e9f2e64746a86d93d85dc9e70029b",
+      "seconds_with_tracemalloc": 0.007447,
+      "peak_python_mib": 0.044,
+      "count": 500,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 10000,
+      "mode": "legacy",
+      "repeat": 1,
+      "fixture_sha256": "a35967c1e94cc760c182df464e5fb744048b7eee7ab61ea4e85a6b436fdec69e",
+      "seconds_with_tracemalloc": 0.114116,
+      "peak_python_mib": 12.652,
+      "count": 5000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 10000,
+      "mode": "legacy",
+      "repeat": 2,
+      "fixture_sha256": "a35967c1e94cc760c182df464e5fb744048b7eee7ab61ea4e85a6b436fdec69e",
+      "seconds_with_tracemalloc": 0.127899,
+      "peak_python_mib": 12.652,
+      "count": 5000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 10000,
+      "mode": "legacy",
+      "repeat": 3,
+      "fixture_sha256": "a35967c1e94cc760c182df464e5fb744048b7eee7ab61ea4e85a6b436fdec69e",
+      "seconds_with_tracemalloc": 0.126422,
+      "peak_python_mib": 12.652,
+      "count": 5000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 10000,
+      "mode": "indexed",
+      "repeat": 1,
+      "fixture_sha256": "a35967c1e94cc760c182df464e5fb744048b7eee7ab61ea4e85a6b436fdec69e",
+      "seconds_with_tracemalloc": 0.009243,
+      "peak_python_mib": 0.044,
+      "count": 5000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 10000,
+      "mode": "indexed",
+      "repeat": 2,
+      "fixture_sha256": "a35967c1e94cc760c182df464e5fb744048b7eee7ab61ea4e85a6b436fdec69e",
+      "seconds_with_tracemalloc": 0.010329,
+      "peak_python_mib": 0.044,
+      "count": 5000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 10000,
+      "mode": "indexed",
+      "repeat": 3,
+      "fixture_sha256": "a35967c1e94cc760c182df464e5fb744048b7eee7ab61ea4e85a6b436fdec69e",
+      "seconds_with_tracemalloc": 0.009162,
+      "peak_python_mib": 0.044,
+      "count": 5000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 100000,
+      "mode": "legacy",
+      "repeat": 1,
+      "fixture_sha256": "eca20b8c78380cbfb7d5682ef0e8387893326b7a1ba168877f6f38128afe29f2",
+      "seconds_with_tracemalloc": 1.289187,
+      "peak_python_mib": 126.631,
+      "count": 50000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 100000,
+      "mode": "legacy",
+      "repeat": 2,
+      "fixture_sha256": "eca20b8c78380cbfb7d5682ef0e8387893326b7a1ba168877f6f38128afe29f2",
+      "seconds_with_tracemalloc": 1.341204,
+      "peak_python_mib": 126.631,
+      "count": 50000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 100000,
+      "mode": "legacy",
+      "repeat": 3,
+      "fixture_sha256": "eca20b8c78380cbfb7d5682ef0e8387893326b7a1ba168877f6f38128afe29f2",
+      "seconds_with_tracemalloc": 1.491475,
+      "peak_python_mib": 126.631,
+      "count": 50000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 100000,
+      "mode": "indexed",
+      "repeat": 1,
+      "fixture_sha256": "eca20b8c78380cbfb7d5682ef0e8387893326b7a1ba168877f6f38128afe29f2",
+      "seconds_with_tracemalloc": 0.047843,
+      "peak_python_mib": 0.044,
+      "count": 50000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 100000,
+      "mode": "indexed",
+      "repeat": 2,
+      "fixture_sha256": "eca20b8c78380cbfb7d5682ef0e8387893326b7a1ba168877f6f38128afe29f2",
+      "seconds_with_tracemalloc": 0.045444,
+      "peak_python_mib": 0.044,
+      "count": 50000,
+      "returned": 25,
+      "ok": true
+    },
+    {
+      "assets": 100000,
+      "mode": "indexed",
+      "repeat": 3,
+      "fixture_sha256": "eca20b8c78380cbfb7d5682ef0e8387893326b7a1ba168877f6f38128afe29f2",
+      "seconds_with_tracemalloc": 0.045515,
+      "peak_python_mib": 0.044,
+      "count": 50000,
+      "returned": 25,
+      "ok": true
+    }
+  ]
+}

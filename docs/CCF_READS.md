@@ -43,3 +43,19 @@ are limited to 100k rows and workers to 60 seconds. This does not measure the fu
 pipeline, HTTP latency, concurrent tenancy, or production capacity. Retain failures
 and raw results with the source revision; compare these separately from the
 [full-pipeline benchmark](benchmarks/CCF_PIPELINE.md).
+
+## Recorded result
+
+[All 18 attempts](benchmarks/ccf-reads-2026-10-03.json) passed on clean revision
+`17e23aeb69534cadb99e9318c87513781357fe0e` (Python 3.13.5, ARM64 macOS).
+Each cell below is the median of three fresh-process attempts; allocation peaks
+were identical across repeats. Timings include `tracemalloc` instrumentation.
+
+| Assets  | Legacy seconds | Indexed seconds | Legacy Python MiB | Indexed Python MiB |
+| ------- | -------------: | --------------: | ----------------: | -----------------: |
+| 1,000   |        0.01191 |         0.00783 |             1.267 |              0.044 |
+| 10,000  |        0.12642 |         0.00924 |            12.652 |              0.044 |
+| 100,000 |        1.34120 |         0.04552 |           126.631 |              0.044 |
+
+These measurements cover one scalar filter, one sort, and a 25-row page. They do
+not measure native SQLite allocations, operating-system cache, or total RSS.

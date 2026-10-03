@@ -5,7 +5,7 @@ Three install surfaces — pick the one that fits your blast radius.
 | Surface                      | When to use                                                                                  | Command                                                                                                                                                                                                                                          |
 | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Python wheel**             | Local demos, single laptop, contributor onboarding                                           | `pip install trustops-security-data-lake && security-lakehouse serve --lake build/lakehouse`                                                                                                                                                     |
-| **Container image**          | CI, Docker Compose, single-host servers                                                      | `docker run -p 8787:8787 -v $PWD/build/lakehouse:/lake ghcr.io/msaad00/trustops:0.2.19`                                                                                                                                                          |
+| **Container image**          | CI, Docker Compose, single-host servers                                                      | `docker run -p 8787:8787 -v $PWD/build/lakehouse:/lake ghcr.io/msaad00/trustops:0.2.20`                                                                                                                                                          |
 | **Helm + EKS**               | Production self-hosted, customer-data-residency requirement                                  | See [Helm chart](helm/trustops/) + [EKS reference IaC](eks-terraform/) below                                                                                                                                                                     |
 | **Snowflake POC**            | Governed evidence lake using customer-owned Snowflake views                                  | Run [`snowflake/bootstrap_poc.sql`](snowflake/bootstrap_poc.sql), then connect the reader role                                                                                                                                                   |
 | **Databricks POC (preview)** | Unity Catalog evidence views read by a service principal through a SQL warehouse             | Run [`databricks/bootstrap_poc.sql`](databricks/bootstrap_poc.sql), then connect the service principal                                                                                                                                           |
@@ -48,7 +48,7 @@ Notes:
 - The image bundles the Next.js workbench (built in stage 1) inside the Python wheel (stage 2) so the runtime image has no Node dependency.
 - Includes the public demo fixtures, cloud connector SDKs, and MCP entry point.
 - Runs as UID 1100 (non-root) with `readOnlyRootFilesystem` compatible defaults.
-- Listens on `:8787`; `/api/healthz` is the liveness probe.
+- Listens on `:8787`; `/api/healthz` checks liveness and `/api/readyz` checks the application database and writable lake storage.
 
 ## Helm chart
 

@@ -1,10 +1,11 @@
 # Release readiness
 
-TrustOps **0.2.19** adds an org mapping review workflow with attributable,
-tamper-evident approvals, verifies the AWS, Azure, and GCP connectors against
-live tenants, and isolates hosted tenants: tenant-scoped connector and workflow
-secrets, delegated cloud identities, and guarded Iceberg storage. See [the
-changelog](../CHANGELOG.md) for release scope.
+TrustOps **0.2.20** hardens assessment truth, scoped CCF evaluation, indexed
+assessment reads, hosted tenant attribution, and DuckDB export recovery. The
+README tour is captured from the bundled synthetic company. See [the
+changelog](../CHANGELOG.md) for release scope. The current qualification does
+not establish live-provider accuracy, distributed availability, or capacity for
+an unspecified customer workload.
 
 ## Release gates
 
@@ -93,6 +94,23 @@ A Docker build or Helm render is not an authenticated cloud deployment. Private
 cloud-account experiments must be documented separately with sanitized results;
 never commit credentials, account identifiers, raw customer evidence, or private
 commercial information to this public repository.
+
+## Deployment probes
+
+`GET /api/healthz` reports process liveness. `GET /api/readyz` returns 200 only
+when the application-state database has the tenant table and the lake root
+accepts a temporary write and fsync; otherwise it returns a sanitized 503. Both
+are unauthenticated. Readiness is excluded from request audit and rate limiting,
+returns `Cache-Control: no-store`, and never enumerates tenants or hashes all
+assessment artifacts. An empty, initialized deployment can be ready.
+
+SQLite is checked with a fresh existing-file connection, so removal or corruption
+is detected even if the application pool still holds an earlier connection.
+Restoring the database makes the next probe succeed. Remote database connection
+timeouts follow the configured SQLAlchemy driver. The Helm chart uses readiness
+to route traffic and keeps liveness separate to avoid restarting on dependency
+outages. These probes do not certify assessment freshness, per-tenant artifact
+integrity, backup recovery, or remote provider health.
 
 ## Deployment acceptance
 

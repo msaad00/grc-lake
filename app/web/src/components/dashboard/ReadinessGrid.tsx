@@ -140,9 +140,7 @@ function FrameworkRow({
               />
             </span>
           ) : null}
-          <span className="line-clamp-2 text-xs text-muted sm:truncate">
-            {progress}
-          </span>
+          <span className="text-xs text-muted sm:truncate">{progress}</span>
         </div>
       </div>
       {framework && showScore ? (

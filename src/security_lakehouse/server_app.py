@@ -1286,7 +1286,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     def healthz() -> dict[str, object]:
         return {"ok": True, "service": "trustops-assessment"}
 
-    @app.get("/api/readyz", tags=["discovery"])
+    @app.get(
+        "/api/readyz",
+        tags=["discovery"],
+        summary="Deployment readiness",
+        responses={503: {"description": "Application database or lake storage unavailable"}},
+    )
     def readyz() -> JSONResponse:
         from security_lakehouse.deployment_readiness import ready
 

@@ -204,3 +204,61 @@ def test_missing_staged_posture_cannot_be_published(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="missing required"):
         pipeline.run_pipeline(RAW, lake)
     assert active_generation(lake) == previous
+
+
+def _paused_publisher(raw, lake, ready):
+    from security_lakehouse import generations
+
+    def pause_before_switch(*args):
+        ready.set()
+        # The parent kills this process at a real OS crash boundary.
+        import time
+
+        time.sleep(30)
+
+    generations._switch_pointer = pause_before_switch
+    pipeline.run_pipeline(raw, lake)
+
+
+def test_killed_publisher_preserves_readers_and_releases_writer_lock(tmp_path):
+    import multiprocessing
+
+    from security_lakehouse.generations import active_generation, pin_generation, verify_generation
+
+    lake = tmp_path / "lake"
+    pipeline.run_pipeline(RAW, lake)
+    original = active_generation(lake)
+    changed = tmp_path / "changed.jsonl"
+    write_jsonl(changed, read_jsonl(RAW)[:1])
+    context = multiprocessing.get_context("spawn")
+    ready = context.Event()
+    process = context.Process(target=_paused_publisher, args=(changed, lake, ready))
+    process.start()
+    try:
+        assert ready.wait(20), "publisher did not reach the pre-switch crash boundary"
+        with pin_generation(lake):
+            assert len(read_jsonl(lake / "silver/normalized_events.jsonl")) == len(read_jsonl(RAW))
+            assert active_generation(lake) == original
+            verify_generation(original)
+        process.kill()
+        process.join(10)
+        assert not process.is_alive()
+        assert active_generation(lake) == original
+        # A dead writer must not leave a lock that blocks the next publication.
+        replacement = context.Process(target=pipeline.run_pipeline, args=(changed, lake))
+        replacement.start()
+        try:
+            replacement.join(20)
+            assert replacement.exitcode == 0
+        finally:
+            if replacement.is_alive():
+                replacement.kill()
+                replacement.join(10)
+        assert active_generation(lake) != original
+        assert len(read_jsonl(lake / "silver/normalized_events.jsonl")) == 1
+        verify_generation(active_generation(lake))
+        verify_generation(original)
+    finally:
+        if process.is_alive():
+            process.kill()
+        process.join(10)

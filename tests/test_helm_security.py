@@ -89,3 +89,12 @@ def test_rate_limit_redis_url_rendered_when_configured() -> None:
     assert "TRUSTOPS_API_RATE_LIMIT_REDIS_URL" in result.stdout
     assert "redis://redis:6379/0" in result.stdout
     assert "TRUSTOPS_API_RATE_LIMIT_RPS" in result.stdout
+
+
+def test_rollout_stops_previous_writer_before_starting_replacement() -> None:
+    import yaml
+
+    result = _helm_template()
+    assert result.returncode == 0
+    deployment = next(doc for doc in yaml.safe_load_all(result.stdout) if doc and doc["kind"] == "Deployment")
+    assert deployment["spec"]["strategy"] == {"type": "Recreate"}

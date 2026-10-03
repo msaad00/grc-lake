@@ -21,6 +21,9 @@ metadata:
     {{- include "trustops.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  # RollingUpdate can overlap writers even with replicaCount=1.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "trustops.selectorLabels" . | nindent 6 }}

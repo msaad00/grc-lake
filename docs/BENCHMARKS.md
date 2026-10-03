@@ -11,16 +11,29 @@ end-to-end capacity, detection accuracy, or cost savings.
 
 The bounded full-pipeline harness records row counts, integrity checks, wall time,
 process peak RSS, retained-generation bytes, input hashes, commit and working-tree
-fingerprints. It uses one synthetic tenant and caps each attempt at 120 seconds:
+fingerprints. It uses one platform tenant. Each attempt stops after 600 seconds,
+when sampled worker RSS exceeds 4 GiB, or when free disk drops below 5 GiB.
+RSS and disk are sampled every 250 ms; these are watchdog thresholds, not hard
+allocation limits. The parent removes temporary lakes even after killing a worker.
+A failed attempt stops progression to larger sizes and remains in the report.
 
 ```bash
 uv run python tools/benchmark_assessment_pipeline.py --sizes 1000 10000 --repeats 3
+uv run python tools/benchmark_assessment_pipeline.py --workload ccf --sizes 1000 10000 100000 --repeats 3
 ```
 
-Run it without concurrent tests or other workload, retain every attempt, and
-report its actual environment. The fixture tests framework-control fan-out;
-it contains no explicit safeguard bindings and does not stress the CCF asset
-matrix. A 10k-event run is not evidence of million-event or multi-tenant capacity.
+Run without concurrent tests or other workload and report the actual environment.
+The default fixture tests framework-control fan-out without explicit safeguard
+bindings. The `ccf` fixture uses one explicit identity safeguard and five cases:
+pass, fail, unknown, stale, and missing binding. It checks independently assigned
+asset verdicts and event IDs, with the same asset IDs deliberately reused across
+two source tenants within one platform tenant. Twenty percent of assets have no
+binding; that missing population must not become a pass. These fixtures do not
+establish multi-tenant API capacity or exhaustive safeguard/rule accuracy.
+
+Choose larger sizes only after smaller ones pass with resource headroom. The
+harness intentionally stops at 100k events; no result establishes million-event
+capacity. Preserve failed and bounded-out measurements alongside successes.
 
 ## 1. Record the experiment
 

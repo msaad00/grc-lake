@@ -7,6 +7,12 @@ working read-only service. The chart rejects it, and rejects every replica count
 other than one regardless of PVC access mode. A ReadWriteMany volume does not
 provide distributed writer fencing.
 
+The chart uses `Recreate` so a Deployment update terminates old pods before
+starting replacements. Updates therefore have downtime. This prevents the default
+rolling-update surge from overlapping application writers; it does not fence a
+partitioned node or guarantee exclusive execution after manual pod deletion.
+See the [Kubernetes deployment strategy documentation](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment).
+
 ```yaml
 replicaCount: 1
 lake:
@@ -23,7 +29,12 @@ database or make multiple application replicas safe.
 Evaluation builds a private generation, hashes its artifacts, then atomically
 switches the `current` pointer. Readers pin one generation per request. Retained
 generations support historical exports; deleting one makes dependent exports
-unavailable rather than silently substituting current results. Back up the lake,
+unavailable rather than silently substituting current results. Tests kill a
+publisher process before the pointer switch, verify the previous generation
+remains readable, and verify a replacement writer can acquire the lock and
+publish. This is local crash recovery evidence, not cross-host failover.
+
+Back up the lake,
 review ledger, and operational database together and test restore before use.
 
 ## Work required before read replicas

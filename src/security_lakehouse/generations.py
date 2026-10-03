@@ -191,6 +191,7 @@ def seal_generation(generation: Path, *, legacy: bool = False) -> None:
         generation / "generation.json",
         {
             "schema_version": "trustops.generation.v2",
+            "ccf_projection_version": None if legacy else 1,
             "legacy": legacy,
             "generation_id": generation.name,
             "artifacts": hashes,

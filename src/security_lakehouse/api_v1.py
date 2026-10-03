@@ -183,9 +183,13 @@ def _ccf_assessment(lake: Path) -> JsonObject:
 
 
 def _ccf_assessment_summary(lake: Path) -> JsonObject:
+    from security_lakehouse.ccf_queries import read_summary
+
+    indexed = read_summary(lake)
+    if indexed is not None:
+        return indexed
     result = _ccf_assessment(lake)
-    # Bound the default wire response by catalog size. Detail uses the shared
-    # collection pagination contract; the local artifact still loads in memory.
+    # Compatibility for generations created before the bounded SQL projection.
     result["asset_result_count"] = len(result.pop("asset_results"))
     return result
 
@@ -1412,6 +1416,22 @@ def collection_response(resource: str, rows: list[JsonObject], params: Params) -
     sorted_rows, sort = sort_collection(filtered_rows, params)
     page_rows, limit, offset = paginate_collection(sorted_rows, params)
     count = len(filtered_rows)
+    return collection_page_response(
+        resource, page_rows, count=count, limit=limit, offset=offset, sort=sort, filters=applied_filters
+    )
+
+
+def collection_page_response(
+    resource: str,
+    page_rows: list[JsonObject],
+    *,
+    count: int,
+    limit: int,
+    offset: int,
+    sort: str | None,
+    filters: dict[str, list[str]],
+) -> JsonObject:
+    """Shared envelope for materialized and indexed collection pages."""
     next_offset = offset + limit
     next_cursor = encode_cursor(next_offset) if next_offset < count else None
     return envelope(
@@ -1423,7 +1443,7 @@ def collection_response(resource: str, rows: list[JsonObject], params: Params) -
             "limit": limit,
             "offset": offset,
             "sort": sort,
-            "filters": applied_filters,
+            "filters": filters,
             "next_cursor": next_cursor,
         },
     )
@@ -1590,6 +1610,37 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
                 resource="oscal.assessment-results",
             )
         return HTTPStatus.OK, envelope("oscal.assessment-results", data)
+    if path in {"/api/v1/ccf/assessment", "/api/v1/ccf/asset-results"}:
+        from security_lakehouse.ccf_queries import CcfReadError, read_page
+
+        try:
+            if path.endswith("/assessment"):
+                return HTTPStatus.OK, envelope("ccf.assessment", _ccf_assessment_summary(lake))
+            _, filters = filter_collection([], params)
+            _, sort = sort_collection([], params)
+            _, limit, offset = paginate_collection([], params)
+            indexed = read_page(lake, filters=filters, sort=sort, limit=limit, offset=offset)
+            if indexed is not None:
+                rows, count = indexed
+                return HTTPStatus.OK, collection_page_response(
+                    "ccf.asset-results",
+                    rows,
+                    count=count,
+                    limit=limit,
+                    offset=offset,
+                    sort=sort,
+                    filters=filters,
+                )
+        except CcfReadError:
+            return HTTPStatus.CONFLICT, error_envelope(
+                "assessment_unavailable",
+                "CCF assessment projection is unavailable.",
+                resource="ccf.assessment" if path.endswith("/assessment") else "ccf.asset-results",
+            )
+        except ValueError:
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", "invalid request parameters", resource="ccf.asset-results"
+            )
     singleton = SINGLETON_LOADERS.get(path)
     if singleton is not None:
         resource, loader = singleton

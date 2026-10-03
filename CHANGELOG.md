@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Read CCF summaries and asset pages from indexed, generation-pinned SQLite projections; preserve query semantics and fail closed on broken indexes.
+
 - Update urllib3, PyJWT, oauthlib, virtualenv, and brace-expansion to address dependency advisories.
 
 - Preserve unknown evidence outcomes, refresh incremental assessments at freshness boundaries, and pin historical OSCAL findings to verified snapshot inputs.

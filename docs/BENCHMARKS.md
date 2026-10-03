@@ -5,6 +5,9 @@ methods for evaluating TrustOps. Existing unit tests,
 synthetic fixtures, connector availability, and configured warehouse sinks do
 not establish live accuracy, production capacity, or certification readiness.
 
+The [bounded CCF pipeline measurements](benchmarks/CCF_PIPELINE.md) record repeated
+1k, 10k, and 100k synthetic runs, including a retained failed experiment.
+
 The [artifact hashing microbenchmark](benchmarks/ARTIFACT_HASHING.md) measures one
 specific memory improvement using synthetic files. It does not establish
 end-to-end capacity, detection accuracy, or cost savings.

@@ -12,8 +12,10 @@ Properties:
 * **Self-bootstrapping.** Unlike the warehouse sinks (which target a deployed
   ``schema.sql``), this sink creates its tables on first load, so there is no
   separate provisioning step for the embedded case.
-* **Idempotent.** Each gold/silver table has a primary key and is loaded with
-  ``INSERT OR REPLACE``, so a re-run upserts in place and never double-counts.
+* **Atomic refresh.** All silver/gold tables and views are replaced in one
+  transaction. A failure keeps the prior projection; removed rows disappear.
+* **Single source lake.** A destination is bound to the canonical lake path.
+  A different lake or a legacy unowned database requires a new destination.
 * **Native arrays + timestamps.** ``control_ids`` lands as a real ``VARCHAR[]``;
   ISO strings are coerced to ``TIMESTAMP``.
 
@@ -23,13 +25,15 @@ unit-tested without the optional ``analytics`` extra installed at import time.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.io import read_jsonl
+from security_lakehouse.generations import generation_reader
+from security_lakehouse.io import read_json, read_jsonl
 
 DEFAULT_TENANT = "customer-managed"
 ENV_PATH = "TRUSTOPS_DUCKDB_PATH"
@@ -192,14 +196,16 @@ def _coerce_datetime(value: Any) -> datetime:
 
 def rows_for_spec(spec: DuckTableSpec, lake_dir: str | Path) -> list[list[Any]]:
     """Project a local artifact onto a DuckDB table's ordered columns."""
-    raw = read_jsonl(Path(lake_dir).joinpath(*spec.artifact), missing_ok=True)
+    lake = Path(lake_dir)
+    raw = read_jsonl(lake.joinpath(*spec.artifact), base_dir=lake)
+    manifest = read_json(lake / "manifest.json", base_dir=lake) if (lake / "manifest.json").is_file() else {}
     rows: list[list[Any]] = []
     for record in raw:
         row: list[Any] = []
         for col in spec.columns:
             value = record.get(col)
             if value is None and col in spec.defaults:
-                value = spec.defaults[col]
+                value = manifest.get("tenant_id", spec.defaults[col]) if col == "tenant_id" else spec.defaults[col]
             if col in spec.array_columns:
                 value = [str(item) for item in (value or [])]
             elif col in spec.datetime_columns:
@@ -227,21 +233,27 @@ class DuckDBSink:
             Path(self.config.database).parent.mkdir(parents=True, exist_ok=True)
         return duckdb.connect(self.config.database)
 
+    @generation_reader
     def load(self, lake_dir: str | Path) -> dict[str, int]:
-        """Idempotently land every configured table; return rows landed per table."""
+        """Atomically replace one lake projection; retries preserve the previous run on failure."""
         conn = self._connect()
         landed: dict[str, int] = {}
+        transaction_started = False
         try:
+            conn.execute("BEGIN TRANSACTION")
+            transaction_started = True
+            self._claim_owner(conn, Path(lake_dir))
             for spec in TABLE_SPECS:
                 conn.execute(spec.ddl)
                 rows = rows_for_spec(spec, lake_dir)
+                conn.execute(f"DELETE FROM {spec.table}")
                 if not rows:
                     landed[spec.table] = 0
                     continue
                 placeholders = ", ".join("?" for _ in spec.columns)
                 columns = ", ".join(spec.columns)
                 conn.executemany(
-                    f"INSERT OR REPLACE INTO {spec.table} ({columns}) VALUES ({placeholders})",
+                    f"INSERT INTO {spec.table} ({columns}) VALUES ({placeholders})",
                     rows,
                 )
                 landed[spec.table] = len(rows)
@@ -249,7 +261,30 @@ class DuckDBSink:
             # queried in the embedded lake without re-running the Python engine.
             for view_sql in GOLD_VIEWS:
                 conn.execute(view_sql)
+            conn.execute("COMMIT")
+        except Exception:
+            if transaction_started:
+                conn.execute("ROLLBACK")
+            raise
         finally:
             if self._connection is None:
                 conn.close()
         return landed
+
+    @staticmethod
+    def _claim_owner(conn: Any, lake: Path) -> None:
+        root = lake.resolve()
+        if root.parent.name == "generations" and (root / "generation.json").is_file():
+            root = root.parent.parent
+        owner = hashlib.sha256(str(root).encode()).hexdigest()
+        tables = {row[0] for row in conn.execute("SHOW TABLES").fetchall()}
+        if "trustops_projection_owner" not in tables:
+            if tables.intersection(spec.table for spec in TABLE_SPECS):
+                raise ValueError("unowned DuckDB projection: use a new destination and retain the old database")
+            conn.execute(
+                "CREATE TABLE trustops_projection_owner (id INTEGER PRIMARY KEY CHECK (id = 1), owner VARCHAR NOT NULL)"
+            )
+            conn.execute("INSERT INTO trustops_projection_owner VALUES (1, ?)", [owner])
+        rows = conn.execute("SELECT owner FROM trustops_projection_owner").fetchall()
+        if rows != [(owner,)]:
+            raise ValueError("DuckDB projection owner differs from this lake; use a separate destination")

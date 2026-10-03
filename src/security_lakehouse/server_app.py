@@ -107,7 +107,7 @@ _ERROR_CODES = {
 
 # Health probes are exempt from rate limiting so a limiter trip can never hide
 # liveness from an orchestrator.
-_RATE_LIMIT_EXEMPT = {"/api/healthz", "/api/v1/healthz"}
+_RATE_LIMIT_EXEMPT = {"/api/healthz", "/api/v1/healthz", "/api/readyz"}
 
 
 class _KnownCredentials:
@@ -1198,7 +1198,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity = getattr(request.state, "identity", None)
         if (
             path.startswith("/api/")
-            and path not in {"/api/healthz", "/api/v1/healthz"}
+            and path not in {"/api/healthz", "/api/v1/healthz", "/api/readyz"}
             and should_audit_request(
                 app.state.anonymous_audit_sampler,
                 identity=identity,
@@ -1285,6 +1285,17 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     @app.get("/api/healthz")
     def healthz() -> dict[str, object]:
         return {"ok": True, "service": "trustops-assessment"}
+
+    @app.get("/api/readyz", tags=["discovery"])
+    def readyz() -> JSONResponse:
+        from security_lakehouse.deployment_readiness import ready
+
+        available = ready(lake, engine)
+        return JSONResponse(
+            {"ok": available, "service": "trustops-assessment"},
+            status_code=200 if available else 503,
+            headers={"Cache-Control": "no-store"},
+        )
 
     @app.get("/api/v1/healthz", tags=["discovery"])
     def v1_healthz() -> JSONResponse:

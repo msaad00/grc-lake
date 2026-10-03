@@ -31,6 +31,17 @@ REQUIRED: dict[str, str] = {
     "controls/families.json": "the CCF family taxonomy (safeguard validation and family ledger)",
 }
 
+# Manifest-driven packs are runtime inputs, including files loaded indirectly
+# through PACK_DATA_DIR. Discover them from the checkout so future packs cannot
+# silently pass a stale, hand-maintained wheel gate.
+PACK_DATA = Path(__file__).resolve().parents[1] / "frameworks" / "packs" / "data"
+REQUIRED.update(
+    {
+        f"frameworks/packs/data/{path.name}": "framework pack evaluation and source provenance"
+        for path in PACK_DATA.glob("*.json")
+    }
+)
+
 
 def verify(wheel: Path) -> list[str]:
     """Return a list of problems; empty means the wheel is publishable."""

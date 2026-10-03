@@ -1627,6 +1627,26 @@
         "tags": ["discovery"]
       }
     },
+    "/api/readyz": {
+      "get": {
+        "operationId": "readyz_api_readyz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "description": "Application database or lake storage unavailable"
+          }
+        },
+        "summary": "Deployment readiness",
+        "tags": ["discovery"]
+      }
+    },
     "/api/v1": {
       "get": {
         "operationId": "v1_index_api_v1_get",

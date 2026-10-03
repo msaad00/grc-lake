@@ -164,8 +164,10 @@ your tenant, with an attributable audit trail: [mapping review](docs/MAPPING_REV
 | **Framework mappings** | Links from safeguards to framework requirements, reviewed or proposed.               |
 | **Assessment results** | Pass, fail, stale, or not evaluated, from the collected evidence.                    |
 
-One safeguard can serve several frameworks. A requirement passes only when every
-mapped safeguard passes; an unmapped requirement stays unmapped. Details:
+One safeguard can serve several frameworks. A requirement passes only when its
+reviewed safeguards pass for the applicable observed assets. Missing bindings,
+stale or unknown evidence, and pending reviews prevent a passing result; an
+unmapped requirement stays unmapped. Details:
 [Common Control Framework](docs/COMMON_CONTROL_FRAMEWORK.md) ·
 [executable catalog](controls/catalog.json). From the CLI:
 
@@ -196,6 +198,15 @@ assets. The Frameworks page shows those results separately from framework-contro
 readiness; complete inventory and organizational compliance remain separate claims.
 See [CCF evaluation](docs/COMMON_CONTROL_FRAMEWORK.md).
 
+For a technical review, start with these reproducible contracts:
+
+| Question                                  | Implementation and evidence                                                                                    |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Which evidence produced this result?      | [Sealed generations and historical exports](docs/ASSESSMENT_GENERATIONS.md)                                    |
+| How does a large assessment behave?       | [100k-event pipeline measurements](docs/benchmarks/CCF_PIPELINE.md) and [indexed CCF reads](docs/CCF_READS.md) |
+| What happens when an export fails?        | [Atomic DuckDB refresh and recovery](docs/DUCKDB_EXPORTS.md)                                                   |
+| When should a deployment receive traffic? | [Readiness probes and release gates](docs/RELEASE_READINESS.md#deployment-probes)                              |
+
 Evaluation runs in local Python and publishes immutable, hashed generations.
 Warehouse sinks export completed results; they do not remove local memory limits.
 The supported Helm deployment has one writable application replica. See the
@@ -207,7 +218,8 @@ The supported Helm deployment has one writable application replica. See the
 <details open>
 <summary><strong>01 · Product tour</strong></summary>
 
-Images show the bundled demo fixture, not live customer evidence.
+Images show the bundled demo fixture, not live customer evidence. The tour follows
+an assessment from overview to evidence, mapping review, and owned findings.
 
 <p align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-dashboard-dark.png"><img src="docs/images/trustops-demo-dashboard.png" alt="TrustOps overview page" width="100%"></picture>

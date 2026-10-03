@@ -5,6 +5,12 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+## 0.2.20 - 2026-10-03
+
+- Package every framework source manifest and reject wheels with missing pack data, fixing installed demo and evaluation failures.
+
+- Add dependency-aware deployment readiness, refresh the README product tour and demo screenshots, and align release artifacts.
+
 - Read CCF summaries and asset pages from indexed, generation-pinned SQLite projections; preserve query semantics and fail closed on broken indexes.
 - Refresh DuckDB sink tables atomically, remove obsolete rows, and reject cross-lake destination reuse; existing unowned destinations require a new database.
 - Bind hosted assessments to the authenticated platform tenant and block ambient warehouse exports from tenant requests.

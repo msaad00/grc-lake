@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trustops-security-data-lake"
-version = "0.2.19"
+version = "0.2.20"
 description = "Open-source, self-hosted trust operations — SOC 2, NIST AI RMF, FedRAMP, ISO, HIPAA, PCI DSS. Read-only evidence collection, deterministic control tests, and audit-ready proof with an API-first, MCP-native design."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -133,7 +133,7 @@ agents = [
 # validate every commit message format.
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.2.19"
+version = "0.2.20"
 version_files = ["pyproject.toml:version"]
 tag_format = "v$version"
 
@@ -182,7 +182,29 @@ where = ["src"]
 "agent-skills/soc2-control-analyst/references" = ["agent-skills/soc2-control-analyst/references/sources.md"]
 "agent-skills/trustops-operator" = ["agent-skills/trustops-operator/SKILL.md"]
 
-"frameworks/packs/data" = ["frameworks/packs/data/cis_aws_v3.json", "frameworks/packs/data/cmmc_2_level2.json", "frameworks/packs/data/evidence_connector_hints.json", "frameworks/packs/data/iso_27017_2015.json", "frameworks/packs/data/nist_800_53_rev5_moderate.json", "frameworks/packs/data/nist_csf_2_core.json"]
+"frameworks/packs/data" = [
+    "frameworks/packs/data/cis_aws_v3.json",
+    "frameworks/packs/data/cis_controls_v8_1.json",
+    "frameworks/packs/data/cmmc_2_level2.json",
+    "frameworks/packs/data/dora_2022_2554.json",
+    "frameworks/packs/data/eu_ai_act_2024_1689.json",
+    "frameworks/packs/data/evidence_connector_hints.json",
+    "frameworks/packs/data/gdpr_2016_679.json",
+    "frameworks/packs/data/hipaa_security_rule.json",
+    "frameworks/packs/data/iso_27001_2022.json",
+    "frameworks/packs/data/iso_27017_2015.json",
+    "frameworks/packs/data/iso_27701_2025.json",
+    "frameworks/packs/data/iso_42001_2023.json",
+    "frameworks/packs/data/nis2_2022_2555.json",
+    "frameworks/packs/data/nist_800_171_rev3.json",
+    "frameworks/packs/data/nist_800_53_rev5_catalog.json",
+    "frameworks/packs/data/nist_800_53_rev5_moderate.json",
+    "frameworks/packs/data/nist_ai_rmf.json",
+    "frameworks/packs/data/nist_csf_2_core.json",
+    "frameworks/packs/data/nist_rmf_800_37r2.json",
+    "frameworks/packs/data/pci_dss_v4.json",
+    "frameworks/packs/data/soc2.json",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -30,6 +30,9 @@ COMPLETE = {
     "trustops-0.2.0.data/data/controls/families.json": "{}",
 }
 
+for manifest in (Path(__file__).resolve().parents[1] / "frameworks/packs/data").glob("*.json"):
+    COMPLETE[f"trustops-0.2.0.data/data/frameworks/packs/data/{manifest.name}"] = "{}"
+
 
 def _wheel(tmp_path: Path, members: dict[str, str]) -> Path:
     path = tmp_path / "pkg-0.2.0-py3-none-any.whl"
@@ -59,3 +62,12 @@ def test_a_truncated_console_is_rejected(tmp_path: Path) -> None:
     """index.html alone is not a console -- a partial export is worse than none."""
     members = {k: v for k, v in COMPLETE.items() if "/_next/" not in k}
     assert any("truncated" in p for p in verify(_wheel(tmp_path, members)))
+
+
+def test_missing_framework_manifest_is_rejected(tmp_path: Path) -> None:
+    members = dict(COMPLETE)
+    root = Path(__file__).resolve().parents[1]
+    for manifest in (root / "frameworks/packs/data").glob("*.json"):
+        members[f"trustops-0.2.0.data/data/frameworks/packs/data/{manifest.name}"] = "{}"
+    del members["trustops-0.2.0.data/data/frameworks/packs/data/nist_800_171_rev3.json"]
+    assert any("nist_800_171_rev3.json" in problem for problem in verify(_wheel(tmp_path, members)))

@@ -74,3 +74,11 @@ def test_every_runtime_data_path_is_packaged() -> None:
     assert referenced, "pattern found no runtime data paths"
     missing = sorted(path for path in referenced if (REPO_ROOT / path).is_file() and path not in shipped)
     assert missing == [], f"runtime data files missing from [tool.setuptools.data-files]: {missing}"
+
+
+def test_all_framework_pack_manifests_are_declared_for_distribution() -> None:
+    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
+    declared = pyproject["tool"]["setuptools"]["data-files"]["frameworks/packs/data"]
+    shipped = {path.relative_to(REPO_ROOT).as_posix() for pattern in declared for path in REPO_ROOT.glob(pattern)}
+    required = {path.relative_to(REPO_ROOT).as_posix() for path in (REPO_ROOT / "frameworks/packs/data").glob("*.json")}
+    assert required <= shipped, sorted(required - shipped)

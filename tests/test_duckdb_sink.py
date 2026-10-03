@@ -101,11 +101,15 @@ def test_land_if_configured_targets_duckdb(tmp_path: Path) -> None:
     assert landed["duckdb"]["normalized_events"] == 2
 
 
-def test_in_memory_database_is_supported() -> None:
+def test_in_memory_database_is_supported(tmp_path: Path) -> None:
     conn = duckdb.connect(":memory:")
     sink = DuckDBSink(DuckDBSinkConfig(database=":memory:"), connection=conn)
-    # No lake artifacts -> tables created, zero rows landed, no error.
-    landed = sink.load("/nonexistent-lake")
+    # Explicit empty artifacts represent an empty current projection.
+    for relative in ("silver/normalized_events.jsonl", "gold/control_posture.jsonl", "gold/asset_risk.jsonl"):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("")
+    landed = sink.load(tmp_path)
     assert landed == {"normalized_events": 0, "control_posture": 0, "asset_risk": 0}
     conn.close()
 

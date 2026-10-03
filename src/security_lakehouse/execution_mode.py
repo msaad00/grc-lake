@@ -97,3 +97,15 @@ __all__ = [
     "server_execution",
     "server_tenant_id",
 ]
+
+
+def evaluation_tenant_id(lake_dir: str | Path, requested: str | None = None) -> str:
+    """Bind assessment ownership to the platform principal, not source accounts."""
+    if not in_server_mode():
+        return requested or "default"
+    bound = server_tenant_id(lake_dir)
+    if not bound:
+        raise ValueError("evaluation requires a bound platform tenant")
+    if requested is not None and requested != bound:
+        raise ValueError("evaluation tenant conflicts with authenticated tenant")
+    return bound

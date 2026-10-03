@@ -20,6 +20,7 @@ from security_lakehouse.evidence_freshness import (
     summarize_source_freshness,
 )
 from security_lakehouse.evidence_types import expand_evidence_types
+from security_lakehouse.execution_mode import evaluation_tenant_id
 from security_lakehouse.generations import (
     active_generation,
     new_generation,
@@ -45,8 +46,9 @@ def run_pipeline(
     out_dir: str | Path,
     *,
     mapping_path: str | Path | None = None,
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
 ) -> PipelineResult:
+    tenant_id = evaluation_tenant_id(out_dir, tenant_id)
     raw_rows = read_jsonl(raw_path)
     errors = validate_raw_events(raw_rows)
     if errors:
@@ -70,7 +72,7 @@ def normalize_raw_events(
     out_dir: str | Path,
     *,
     mapping_path: str | Path | None = None,
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
     incremental: bool = False,
 ) -> PipelineResult:
     """Normalize canonical raw evidence into the managed lake zones.
@@ -80,6 +82,7 @@ def normalize_raw_events(
     evidence contract; source-specific parsing belongs in the adapter before
     this boundary.
     """
+    tenant_id = evaluation_tenant_id(out_dir, tenant_id)
     runner = run_pipeline_incremental if incremental else run_pipeline
     return runner(raw_path, out_dir, mapping_path=mapping_path, tenant_id=tenant_id)
 
@@ -90,9 +93,10 @@ def run_pipeline_incremental(
     out_dir: str | Path,
     *,
     mapping_path: str | Path | None = None,
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
 ) -> PipelineResult:
     """Materialize only raw evidence that changed since the last manifest."""
+    tenant_id = evaluation_tenant_id(out_dir, tenant_id)
     # Validate the catalog even when no raw rows changed.
     current_controls = load_control_map(mapping_path)
     out = active_generation(out_dir) or Path(out_dir)

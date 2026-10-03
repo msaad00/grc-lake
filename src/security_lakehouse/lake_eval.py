@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.connector_runner import CONNECTOR_RAW_FILE
+from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.ingestion_metrics import build_eval_accuracy
 from security_lakehouse.lake_scale import (
     LakeEvalError,
@@ -55,14 +56,14 @@ def run_lake_eval(
     lake_dir: str | Path,
     *,
     mapping_path: str | Path | None = None,
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
     env: Mapping[str, str] | None = None,
     actor: str = "system",
 ) -> LakeEvalResult:
     """Evaluate locally, then optionally export the committed generation."""
     lake = Path(lake_dir)
     raw_path = lake / CONNECTOR_RAW_FILE
-    runtime = os.environ if env is None else env
+    runtime = {} if in_server_mode() else (os.environ if env is None else env)
     start = time.perf_counter()
     strategy = resolve_materialize_strategy(lake, raw_path, env=runtime)
     mode = str(strategy["mode"])

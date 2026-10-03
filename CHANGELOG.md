@@ -7,6 +7,7 @@ Python package, Helm chart, and bundled web console.
 
 - Read CCF summaries and asset pages from indexed, generation-pinned SQLite projections; preserve query semantics and fail closed on broken indexes.
 - Refresh DuckDB sink tables atomically, remove obsolete rows, and reject cross-lake destination reuse; existing unowned destinations require a new database.
+- Bind hosted assessments to the authenticated platform tenant and block ambient warehouse exports from tenant requests.
 
 - Update urllib3, PyJWT, oauthlib, virtualenv, and brace-expansion to address dependency advisories.
 

@@ -1702,6 +1702,14 @@ def _workflow_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _assessment_test_plan(args: argparse.Namespace) -> int:
+    from security_lakehouse.control_assurance import assess_control_plan
+    from security_lakehouse.io import read_json
+
+    print(json.dumps(assess_control_plan(Path(args.lake), read_json(Path(args.plan))), indent=2, sort_keys=True))
+    return 0
+
+
 def _assessment_status(args: argparse.Namespace) -> int:
     from security_lakehouse.assessment import build_current_posture
 
@@ -2396,11 +2404,3 @@ def _publish_iceberg(args: argparse.Namespace) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-def _assessment_test_plan(args: argparse.Namespace) -> int:
-    from security_lakehouse.control_assurance import assess_control_plan
-    from security_lakehouse.io import read_json
-
-    print(json.dumps(assess_control_plan(Path(args.lake), read_json(Path(args.plan))), indent=2, sort_keys=True))
-    return 0

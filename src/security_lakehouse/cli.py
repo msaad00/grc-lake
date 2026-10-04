@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse import __version__
 from security_lakehouse.dashboard import render_dashboard
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.pipeline import normalize_raw_events, run_pipeline
@@ -40,6 +41,7 @@ _REVIEW_LAKE_HELP = "apply this lake's org mapping review decisions (default: sh
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="security-lakehouse")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     validate = sub.add_parser("validate", help="validate raw JSONL evidence")
@@ -392,6 +394,7 @@ def _parser() -> argparse.ArgumentParser:
     status = assessment_sub.add_parser("status", help="print current posture")
     status.add_argument("--lake", required=True, help="security data lake output directory")
     status.add_argument("--freshness-days", type=int, default=7, help="evidence freshness window")
+    status.add_argument("--format", choices=["json", "summary"], default="json", help="output format (default: json)")
     status.set_defaults(func=_assessment_status)
     snapshot = assessment_sub.add_parser("snapshot", help="write point-in-time assessment snapshot")
     snapshot.add_argument("--lake", required=True, help="security data lake output directory")
@@ -1698,8 +1701,22 @@ def _workflow_run(args: argparse.Namespace) -> int:
 def _assessment_status(args: argparse.Namespace) -> int:
     from security_lakehouse.assessment import build_current_posture
 
-    posture = build_current_posture(args.lake, freshness_days=args.freshness_days)
-    print(json.dumps(posture, indent=2, sort_keys=True))
+    assessment = build_current_posture(args.lake, freshness_days=args.freshness_days)
+    if args.format == "summary":
+        posture = assessment["posture"]
+        print(
+            f"Posture    {posture['score']} / 100  {posture['state']}\n"
+            f"Controls   {posture['control_count']} total, "
+            f"{posture['not_evaluated_control_count']} not evaluated, {posture['stale_control_count']} stale\n"
+            f"Tests      {posture['failed_control_test_count']} failing, "
+            f"{posture['warning_control_test_count']} warning\n"
+            f"Violations {posture['open_violation_count']} open "
+            f"({posture['critical_violation_count']} critical, {posture['high_violation_count']} high)\n"
+            f"Evidence   {assessment['evidence_freshness']['count']} records, "
+            f"{posture['stale_evidence_count']} stale/expired/missing"
+        )
+    else:
+        print(json.dumps(assessment, indent=2, sort_keys=True))
     return 0
 
 

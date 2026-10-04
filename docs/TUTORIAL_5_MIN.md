@@ -54,6 +54,19 @@ security-lakehouse assessment status --lake ./lake | jq '.posture'
 security-lakehouse assessment violations --lake ./lake
 ```
 
+Source checkouts after 0.2.20 also support a concise terminal summary and the
+installed package version (these flags are not in the published 0.2.20 release):
+
+```bash
+security-lakehouse --version
+security-lakehouse assessment status --lake ./lake --format summary
+```
+
+The summary shows the posture, total and unevaluated controls, failing and warning
+tests, open violations, and stale/expired/missing evidence. JSON remains the
+default; `--format json` selects it explicitly. Summary counts use the same
+assessment totals as JSON, including when detailed violation lists are capped.
+
 The sample company is deliberately unhealthy: a score of about 6.6 out of 100,
 state `critical`, 19 open violations (4 critical), and 19 failing control tests.
 Every failure links to the evidence record that caused it.

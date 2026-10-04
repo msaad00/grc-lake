@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Add `security-lakehouse --version` and `assessment status --format summary`, retaining JSON by default and showing unevaluated controls and full assessment totals.
+
 - Exercise the built image through the Compose quickstart in CI, including readiness, golden posture, and volume persistence without reseeding after container recreation.
 
 ## 0.2.20 - 2026-10-03

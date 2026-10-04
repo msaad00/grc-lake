@@ -274,11 +274,6 @@
       "CreateExceptionRequest": {
         "additionalProperties": false,
         "properties": {
-          "approved_by": {
-            "default": "",
-            "title": "Approved By",
-            "type": "string"
-          },
           "control_id": {
             "title": "Control Id",
             "type": "string"
@@ -1534,6 +1529,18 @@
         },
         "required": ["loc", "msg", "type"],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VerifyTaskRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "resolution_note": {
+            "default": "",
+            "title": "Resolution Note",
+            "type": "string"
+          }
+        },
+        "title": "VerifyTaskRequest",
         "type": "object"
       }
     },
@@ -5378,6 +5385,48 @@
         "summary": "Revoke Exception"
       }
     },
+    "/api/v1/remediation/exceptions/{exception_id}/approve": {
+      "post": {
+        "operationId": "approve_exception_api_v1_remediation_exceptions__exception_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exception_id",
+            "required": true,
+            "schema": {
+              "title": "Exception Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve Exception"
+      }
+    },
     "/api/v1/remediation/tasks": {
       "get": {
         "operationId": "list_tasks_api_v1_remediation_tasks_get",
@@ -5528,6 +5577,58 @@
           }
         ],
         "summary": "Update Task"
+      }
+    },
+    "/api/v1/remediation/tasks/{task_id}/verify": {
+      "post": {
+        "operationId": "verify_remediation_task_api_v1_remediation_tasks__task_id__verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify Remediation Task"
       }
     },
     "/api/v1/repo-graph": {

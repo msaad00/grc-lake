@@ -91,7 +91,17 @@ def test_exception_active_and_revoke(tmp_path: Path) -> None:
     with session_scope(app.state.sessionmaker) as session:
         tenant = create_tenant(session, slug="acme", name="Acme")
         exc = remediation.create_exception(
-            session, tenant_id=tenant.id, control_id="SOC2-CC6.1", reason="risk-accepted"
+            session,
+            tenant_id=tenant.id,
+            control_id="SOC2-CC6.1",
+            reason="risk-accepted",
+            requested_by_id="requester",
+            created_by="requester@test",
+            expires_at=datetime.now(UTC) + timedelta(days=1),
+        )
+        assert exc.is_active() is False
+        remediation.approve_exception(
+            session, tenant_id=tenant.id, exception_id=exc.id, reviewer_id="reviewer", reviewer="reviewer@test"
         )
         assert exc.is_active() is True
         remediation.revoke_exception(session, tenant_id=tenant.id, exception_id=exc.id)
@@ -129,9 +139,7 @@ def test_task_crud_and_rbac(env) -> None:
         json={"status": "resolved"},
         headers=_bearer(tokens["contributor"]),
     )
-    assert patched.status_code == HTTPStatus.OK
-    assert patched.json()["data"]["status"] == "resolved"
-    assert patched.json()["data"]["resolved_at"] is not None
+    assert patched.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_task_bad_status_is_400(env) -> None:
@@ -164,7 +172,11 @@ def test_evidence_request_lifecycle(env) -> None:
 
 def test_exceptions_require_control_manage(env) -> None:
     _app, client, tokens = env
-    body = {"control_id": "SOC2-CC6.1", "reason": "accepted"}
+    body = {
+        "control_id": "SOC2-CC6.1",
+        "reason": "accepted",
+        "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
+    }
     # contributor lacks control_manage
     assert (
         client.post("/api/v1/remediation/exceptions", json=body, headers=_bearer(tokens["contributor"])).status_code
@@ -173,7 +185,7 @@ def test_exceptions_require_control_manage(env) -> None:
     created = client.post("/api/v1/remediation/exceptions", json=body, headers=_bearer(tokens["security_admin"]))
     assert created.status_code == HTTPStatus.CREATED
     exc_id = created.json()["data"]["id"]
-    assert created.json()["data"]["active"] is True
+    assert created.json()["data"]["active"] is False
     revoked = client.delete(f"/api/v1/remediation/exceptions/{exc_id}", headers=_bearer(tokens["security_admin"]))
     assert revoked.status_code == HTTPStatus.OK
     assert revoked.json()["data"]["status"] == "revoked"
@@ -260,9 +272,7 @@ def test_resolution_note_is_tenant_scoped_and_bounded(tmp_path: Path) -> None:
             remediation.update_task(
                 session, tenant_id=acme.id, task_id=task.id, changes={"resolution_note": "x" * 4001}
             )
-        remediation.update_task(
-            session, tenant_id=acme.id, task_id=task.id, changes={"status": "resolved", "resolution_note": " proof "}
-        )
+        remediation.update_task(session, tenant_id=acme.id, task_id=task.id, changes={"resolution_note": " proof "})
         assert task.resolution_note == "proof"
         assert remediation.list_tasks(session, tenant_id=other.id, control_id="C-1") == []
         assert len(remediation.list_tasks(session, tenant_id=acme.id, control_id="C-1")) == 1

@@ -15,6 +15,8 @@ import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/PageHeader";
 import { QueryState } from "@/components/QueryState";
 import {
+  useApproveControlExceptionMutation,
+  useVerifyTaskMutation,
   useControlExceptions,
   useCreateControlExceptionMutation,
   useCreateEvidenceRequestMutation,
@@ -41,6 +43,7 @@ const STATUS_TONE: Record<
   string,
   "default" | "info" | "attention" | "ready" | "critical"
 > = {
+  pending: "attention",
   open: "info",
   in_progress: "info",
   blocked: "attention",
@@ -80,7 +83,7 @@ function ResolutionNote({ note }: { note: string }) {
   const href = safeHttpUrl(note);
   return (
     <div className="mt-1 text-xs leading-5 text-muted [overflow-wrap:anywhere]">
-      <span className="font-semibold text-ink">Proof:</span>{" "}
+      <span className="font-semibold text-ink">Resolution note:</span>{" "}
       {href ? (
         <a
           href={href}
@@ -129,7 +132,9 @@ function ResolveTaskModal({
             disabled={pending}
             onClick={() => onConfirm(note.trim())}
           >
-            Mark resolved
+            {task?.control_id || task?.violation_id
+              ? "Verify and resolve"
+              : "Mark resolved"}
           </Button>
         </div>
       }
@@ -153,7 +158,8 @@ function ResolveTaskModal({
           role="alert"
           className="mt-3 rounded-lg bg-danger-bg p-3 text-sm text-danger-fg"
         >
-          Unable to resolve task. Your note is still here. Try again.
+          Unable to resolve task. A control manager must verify fresh passing
+          evidence collected after task creation. Your note is still here.
         </p>
       )}
     </Modal>
@@ -173,6 +179,7 @@ function TasksSection() {
   const create = useCreateTaskMutation();
   const update = useUpdateTaskMutation();
   const resolveMutation = useUpdateTaskMutation();
+  const verifyMutation = useVerifyTaskMutation();
   const requestedPriority = searchParams.get("priority");
   const [title, setTitle] = useState(searchParams.get("title") ?? "");
   const [controlId, setControlId] = useState(controlFilter);
@@ -228,6 +235,13 @@ function TasksSection() {
 
   const confirmResolve = (note: string) => {
     if (!resolving) return;
+    if (resolving.control_id || resolving.violation_id) {
+      verifyMutation.mutate(
+        { id: resolving.id, note },
+        { onSuccess: () => setResolving(null) },
+      );
+      return;
+    }
     resolveMutation.mutate(
       {
         id: resolving.id,
@@ -388,6 +402,17 @@ function TasksSection() {
                     From finding {task.violation_id} →
                   </Link>
                 )}
+                {task.status === "resolved" &&
+                task.verification_history?.length ? (
+                  <p className="text-xs text-muted">
+                    Verified against generation{" "}
+                    {
+                      task.verification_history[
+                        task.verification_history.length - 1
+                      ].generation.generation_id
+                    }
+                  </p>
+                ) : null}
                 {task.status === "resolved" && task.resolution_note && (
                   <ResolutionNote note={task.resolution_note} />
                 )}
@@ -407,6 +432,7 @@ function TasksSection() {
                     size="sm"
                     onClick={() => {
                       resolveMutation.reset();
+                      verifyMutation.reset();
                       setResolving(task);
                     }}
                   >
@@ -433,8 +459,8 @@ function TasksSection() {
       </QueryState>
       <ResolveTaskModal
         task={resolving}
-        pending={resolveMutation.isPending}
-        failed={resolveMutation.isError}
+        pending={resolveMutation.isPending || verifyMutation.isPending}
+        failed={resolveMutation.isError || verifyMutation.isError}
         onCancel={() => setResolving(null)}
         onConfirm={confirmResolve}
       />
@@ -566,12 +592,13 @@ function ExceptionsSection() {
   const exceptions = useControlExceptions();
   const create = useCreateControlExceptionMutation();
   const revoke = useRevokeControlExceptionMutation();
+  const approve = useApproveControlExceptionMutation();
   const [controlId, setControlId] = useState("");
   const [reason, setReason] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
 
   const submit = () => {
-    if (!controlId.trim()) return;
+    if (!controlId.trim() || !reason.trim() || !expiresAt) return;
     create.mutate(
       {
         control_id: controlId,
@@ -593,7 +620,10 @@ function ExceptionsSection() {
     <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>Control exceptions</CardTitle>
-        <CardDescription>Approvals and expiry dates.</CardDescription>
+        <CardDescription>
+          Time-limited risk acceptance requires a different authorized reviewer.
+          Accepted risk does not make a control pass.
+        </CardDescription>
       </CardHeader>
       <div className="flex flex-wrap items-center gap-2 px-5 pb-4">
         <input
@@ -621,17 +651,23 @@ function ExceptionsSection() {
           variant="primary"
           size="sm"
           onClick={submit}
-          disabled={create.isPending || !controlId.trim()}
+          disabled={
+            create.isPending ||
+            !controlId.trim() ||
+            !reason.trim() ||
+            !expiresAt
+          }
         >
-          Add exception
+          Request exception
         </Button>
       </div>
-      {(create.isError || revoke.isError) && (
+      {(create.isError || revoke.isError || approve.isError) && (
         <p
           role="alert"
           className="mx-5 mb-4 rounded-lg bg-danger-bg p-3 text-sm text-danger-fg"
         >
-          Unable to save exception. Try again.
+          Unable to save exception. Provide a reason and future expiry; approval
+          requires a different authorized user.
         </p>
       )}
       <QueryState queries={exceptions} label="control exceptions">
@@ -656,7 +692,16 @@ function ExceptionsSection() {
               <Badge tone={exc.active ? "ready" : STATUS_TONE[exc.status]}>
                 {exc.active ? "active" : exc.status}
               </Badge>
-              {exc.active && (
+              {exc.status === "pending" && (
+                <Button
+                  size="sm"
+                  disabled={approve.isPending}
+                  onClick={() => approve.mutate(exc.id)}
+                >
+                  Approve
+                </Button>
+              )}
+              {(exc.active || exc.status === "pending") && (
                 <Button
                   size="sm"
                   variant="ghost"

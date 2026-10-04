@@ -65,7 +65,7 @@ test("finding drawer says what is wrong and how to fix it", async ({
   ).toBeVisible();
 });
 
-test("create task from a finding, then resolve it with proof", async ({
+test("finding task stays open when a note has no fresh passing retest", async ({
   page,
   request,
 }) => {
@@ -132,18 +132,22 @@ test("create task from a finding, then resolve it with proof", async ({
   await modal
     .getByRole("textbox", { name: /Evidence link or note/ })
     .fill(proof);
-  const patched = page.waitForRequest(
+  const verified = page.waitForResponse(
     (r) =>
-      r.url().endsWith(`/api/v1/remediation/tasks/${body.id}`) &&
-      r.method() === "PATCH",
+      r.url().endsWith(`/api/v1/remediation/tasks/${body.id}/verify`) &&
+      r.request().method() === "POST",
   );
-  await modal.getByRole("button", { name: "Mark resolved" }).click();
-  expect((await patched).postDataJSON()).toEqual({
-    status: "resolved",
-    resolution_note: proof,
-  });
-  await expect(taskRow).toContainText("Resolved");
-  await expect(taskRow).toContainText(proof);
+  await modal.getByRole("button", { name: "Verify and resolve" }).click();
+  expect((await verified).status()).toBe(400);
+  await expect(modal).toContainText("Unable to resolve task");
+  await expect(
+    modal.getByRole("textbox", { name: /Evidence link or note/ }),
+  ).toHaveValue(proof);
+  const current = (
+    await (await request.get(`/api/v1/remediation/tasks/${body.id}`)).json()
+  ).data;
+  expect(current.status).toBe("open");
+  expect(current.verification_history).toEqual([]);
 });
 
 test("owner filters sync to the URL on findings and tasks", async ({

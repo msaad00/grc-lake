@@ -1500,6 +1500,11 @@ export interface RemediationTask {
   updated_at: string | null;
   resolved_at: string | null;
   resolution_note: string;
+  verification_history?: Array<{
+    verified_at: string;
+    verified_by: string;
+    generation: { generation_id: string };
+  }>;
 }
 
 export interface SprsReport {
@@ -1613,7 +1618,7 @@ export interface ControlExceptionItem {
   control_id: string;
   reason: string;
   approved_by: string;
-  status: "active" | "revoked" | "expired";
+  status: "pending" | "active" | "revoked" | "expired";
   active: boolean;
   expires_at: string | null;
   created_by: string;

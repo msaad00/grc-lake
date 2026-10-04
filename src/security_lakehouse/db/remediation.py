@@ -7,10 +7,11 @@ read time from ``due_at`` rather than stored, so it is always correct.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
@@ -133,6 +134,8 @@ def update_task(
         status = str(changes["status"])
         if status not in REMEDIATION_STATUSES:
             raise ValueError(f"status must be one of {list(REMEDIATION_STATUSES)}, got {status!r}")
+        if status == "resolved" and (task.control_id or task.violation_id):
+            raise ValueError("linked remediation requires an evidence retest via the verify endpoint")
         task.status = status
         task.resolved_at = moment if status == "resolved" else None
     if "priority" in changes:
@@ -172,6 +175,7 @@ def task_to_dict(task: RemediationTask, *, now: datetime | None = None) -> dict[
         "updated_at": _iso(task.updated_at),
         "resolved_at": _iso(task.resolved_at),
         "resolution_note": task.resolution_note or "",
+        "verification_history": json.loads(task.verification_history or "[]"),
     }
 
 
@@ -255,17 +259,23 @@ def create_exception(
     tenant_id: str,
     control_id: str,
     reason: str = "",
-    approved_by: str = "",
+    requested_by_id: str,
     expires_at: datetime | None = None,
     created_by: str = "",
 ) -> ControlException:
     if not control_id.strip():
         raise ValueError("control exception requires a control_id")
+    if not reason.strip() or not created_by.strip() or not requested_by_id.strip():
+        raise ValueError("exception requires a reason and an authenticated requester")
+    if expires_at is None or expires_at.tzinfo is None or expires_at <= _now(None):
+        raise ValueError("exception requires a future timezone-aware expiry")
     exception = ControlException(
         tenant_id=tenant_id,
         control_id=control_id,
         reason=reason,
-        approved_by=approved_by,
+        requested_by_id=requested_by_id,
+        approved_by="",
+        status="pending",
         expires_at=expires_at,
         created_by=created_by,
     )
@@ -284,21 +294,56 @@ def list_exceptions(
     offset: int | None = None,
 ) -> list[ControlException]:
     stmt = select(ControlException).where(ControlException.tenant_id == tenant_id)
-    # ``active`` is a derived predicate (a model method), so it is filtered in
-    # Python after the paginated fetch bounds how many rows we materialise.
-    stmt = apply_pagination(stmt.order_by(ControlException.created_at.desc()), limit=limit, offset=offset)
-    rows = list(session.scalars(stmt))
     if active_only:
-        moment = _now(now)
-        rows = [e for e in rows if e.is_active(now=moment)]
-    return rows
+        stmt = stmt.where(
+            ControlException.status == "active",
+            ControlException.revoked_at.is_(None),
+            ControlException.expires_at > _now(now),
+            ControlException.approved_at.is_not(None),
+            ControlException.requested_by_id.is_not(None),
+            ControlException.approved_by_id.is_not(None),
+            ControlException.requested_by_id != ControlException.approved_by_id,
+        )
+    stmt = apply_pagination(
+        stmt.order_by(ControlException.created_at.desc(), ControlException.id), limit=limit, offset=offset
+    )
+    return list(session.scalars(stmt))
+
+
+def approve_exception(
+    session: Session, *, tenant_id: str, exception_id: str, reviewer_id: str, reviewer: str, now: datetime | None = None
+) -> ControlException:
+    moment = _now(now)
+    if not reviewer_id or not reviewer:
+        raise ValueError("approval requires an authenticated reviewer")
+    result = session.execute(
+        update(ControlException)
+        .where(
+            ControlException.id == exception_id,
+            ControlException.tenant_id == tenant_id,
+            ControlException.status == "pending",
+            ControlException.revoked_at.is_(None),
+            ControlException.requested_by_id.is_not(None),
+            ControlException.requested_by_id != reviewer_id,
+            ControlException.expires_at > moment,
+        )
+        .values(status="active", approved_by=reviewer, approved_by_id=reviewer_id, approved_at=moment)
+        .returning(ControlException.id)
+    )
+    if result.scalar_one_or_none() is None:
+        raise ValueError("exception must be pending, unexpired, and requested by a different user")
+    session.flush()
+    row = session.get(ControlException, exception_id)
+    assert row is not None
+    session.refresh(row)
+    return row
 
 
 def revoke_exception(
     session: Session, *, tenant_id: str, exception_id: str, now: datetime | None = None
 ) -> ControlException | None:
     exception = session.get(ControlException, exception_id)
-    if exception is None or exception.tenant_id != tenant_id or exception.status != "active":
+    if exception is None or exception.tenant_id != tenant_id or exception.status not in {"pending", "active"}:
         return None
     exception.status = "revoked"
     exception.revoked_at = _now(now)
@@ -312,6 +357,10 @@ def exception_to_dict(exception: ControlException, *, now: datetime | None = Non
         "control_id": exception.control_id,
         "reason": exception.reason,
         "approved_by": exception.approved_by,
+        "approved_at": _iso(exception.approved_at),
+        "requested_by_id": exception.requested_by_id,
+        "approved_by_id": exception.approved_by_id,
+        "acceptance_effect": "risk_accepted_not_control_pass",
         "status": exception.status,
         "active": exception.is_active(now=now),
         "expires_at": _iso(exception.expires_at),

@@ -267,6 +267,10 @@ class UpdateTaskRequest(_StrictModel):
     resolution_note: str | None = None
 
 
+class VerifyTaskRequest(_StrictModel):
+    resolution_note: str = ""
+
+
 class CreateEvidenceRequestRequest(_StrictModel):
     control_id: str
     requested_from: str = ""
@@ -281,7 +285,6 @@ class EvidenceRequestStatusRequest(_StrictModel):
 class CreateExceptionRequest(_StrictModel):
     control_id: str
     reason: str = ""
-    approved_by: str = ""
     expires_at: str | None = None
 
 
@@ -2290,6 +2293,35 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
         return JSONResponse(api_v1.envelope("remediation.tasks", task))
 
+    @app.post("/api/v1/remediation/tasks/{task_id}/verify")
+    def verify_remediation_task(
+        task_id: str,
+        body: VerifyTaskRequest,
+        identity: Identity = Depends(_require_control_manage),
+        session: Session = Depends(get_session),
+    ) -> JSONResponse:
+        from security_lakehouse.remediation_verification import verify_task
+
+        try:
+            remediation.update_task(
+                session,
+                tenant_id=identity.tenant_id,
+                task_id=task_id,
+                changes={"resolution_note": body.resolution_note},
+            )
+            task = verify_task(
+                session,
+                lake_for(identity),
+                tenant_id=identity.tenant_id,
+                task_id=task_id,
+                reviewer_id=identity.user_id,
+                reviewer=identity.email,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        session.commit()
+        return JSONResponse(api_v1.envelope("remediation.tasks", remediation.task_to_dict(task)))
+
     @app.get("/api/v1/remediation/evidence-requests")
     def list_evidence_requests(
         request: Request, identity: Identity = Depends(_require_read), session: Session = Depends(get_session)
@@ -2387,7 +2419,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 tenant_id=identity.tenant_id,
                 control_id=body.control_id,
                 reason=body.reason,
-                approved_by=body.approved_by or identity.email,
+                requested_by_id=identity.user_id,
                 expires_at=_parse_dt(body.expires_at),
                 created_by=identity.email,
             )
@@ -2398,6 +2430,25 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             api_v1.envelope("remediation.exceptions", remediation.exception_to_dict(exc_row)),
             status_code=status.HTTP_201_CREATED,
         )
+
+    @app.post("/api/v1/remediation/exceptions/{exception_id}/approve")
+    def approve_exception(
+        exception_id: str,
+        identity: Identity = Depends(_require_control_manage),
+        session: Session = Depends(get_session),
+    ) -> JSONResponse:
+        try:
+            row = remediation.approve_exception(
+                session,
+                tenant_id=identity.tenant_id,
+                exception_id=exception_id,
+                reviewer_id=identity.user_id,
+                reviewer=identity.email,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        session.commit()
+        return JSONResponse(api_v1.envelope("remediation.exceptions", remediation.exception_to_dict(row)))
 
     @app.delete("/api/v1/remediation/exceptions/{exception_id}")
     def revoke_exception(

@@ -35,7 +35,7 @@ def _now(now: datetime | None) -> datetime:
 
 
 def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+    return _as_aware(value).isoformat() if value else None
 
 
 # --- remediation tasks -------------------------------------------------------
@@ -277,7 +277,7 @@ def create_exception(
         requested_by_id=requested_by_id,
         approved_by="",
         status="pending",
-        expires_at=expires_at,
+        expires_at=expires_at.astimezone(UTC),
         created_by=created_by,
     )
     session.add(exception)
@@ -329,6 +329,7 @@ def approve_exception(
             ControlException.expires_at > moment,
         )
         .values(status="active", approved_by=reviewer, approved_by_id=reviewer_id, approved_at=moment)
+        .execution_options(synchronize_session="fetch")
         .returning(ControlException.id)
     )
     if result.scalar_one_or_none() is None:

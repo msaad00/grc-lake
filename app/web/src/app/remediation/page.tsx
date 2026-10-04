@@ -603,7 +603,7 @@ function ExceptionsSection() {
       {
         control_id: controlId,
         reason,
-        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+        expires_at: new Date(expiresAt).toISOString(),
       },
       {
         onSuccess: () => {

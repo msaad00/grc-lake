@@ -391,6 +391,11 @@ def _parser() -> argparse.ArgumentParser:
 
     assessment = sub.add_parser("assessment", help="continuous compliance assessment commands")
     assessment_sub = assessment.add_subparsers(dest="assessment_command", required=True)
+    population = assessment_sub.add_parser("population", help="reconcile declared inventory against collected evidence")
+    population.add_argument("--lake", required=True)
+    population.add_argument("--baseline", required=True)
+    population.add_argument("--details-limit", type=int, default=100)
+    population.set_defaults(func=_assessment_population)
     control_plan = assessment_sub.add_parser("test-plan", help="produce draft design and period-test workpapers")
     control_plan.add_argument("--lake", required=True)
     control_plan.add_argument("--plan", required=True, help="versioned control test plan JSON")
@@ -1707,6 +1712,20 @@ def _assessment_test_plan(args: argparse.Namespace) -> int:
     from security_lakehouse.io import read_json
 
     print(json.dumps(assess_control_plan(Path(args.lake), read_json(Path(args.plan))), indent=2, sort_keys=True))
+    return 0
+
+
+def _assessment_population(args: argparse.Namespace) -> int:
+    from security_lakehouse.io import read_json
+    from security_lakehouse.population_reconciliation import assess_population
+
+    print(
+        json.dumps(
+            assess_population(Path(args.lake), read_json(Path(args.baseline)), details_limit=args.details_limit),
+            indent=2,
+            sort_keys=True,
+        )
+    )
     return 0
 
 

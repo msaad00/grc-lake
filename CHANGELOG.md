@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Reconcile declared asset populations with sealed evidence, bounded gap details, freshness and collection-receipt checks, and explicit limits on inventory-completeness claims.
+
 - Add reproducible CCF control test plans with separate design documentation, period samples, deviations, and explicit pending human review. Include five synthetic walkthrough controls.
 
 - Require independent, authenticated, expiring exception approvals and fresh sealed-evidence verification before resolving control-linked remediation. Retain verification receipts and migrate legacy approvals to pending.

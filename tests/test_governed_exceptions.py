@@ -3,8 +3,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from test_remediation import _bearer
+from test_remediation import env as remediation_env
 
-pytest_plugins = ["test_remediation"]
+env = remediation_env
 
 
 def request_body():

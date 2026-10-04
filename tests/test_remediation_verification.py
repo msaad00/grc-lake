@@ -15,7 +15,7 @@ from security_lakehouse.remediation_verification import verify_task
 from security_lakehouse.server_app import create_app
 
 
-@pytest.mark.parametrize("failure", [None, "old", "future", "failed", "foreign", "tampered"])
+@pytest.mark.parametrize("failure", [None, "old", "future", "failed", "foreign", "tampered", "concurrent"])
 def test_only_fresh_passing_owned_evidence_can_resolve(tmp_path, failure):
     app = create_app(tmp_path)
     now = datetime.now(UTC)
@@ -57,7 +57,25 @@ def test_only_fresh_passing_owned_evidence_can_resolve(tmp_path, failure):
                 now=now,
             )
 
-        if failure:
+        if failure == "concurrent":
+            # Keep this ORM instance stale while another transaction records a retest.
+            session.commit()
+            with session_scope(app.state.sessionmaker) as other:
+                verify_task(
+                    other,
+                    tmp_path,
+                    tenant_id=tenant.id,
+                    task_id=task.id,
+                    reviewer_id="first-reviewer",
+                    reviewer="first@example.test",
+                    now=now,
+                )
+            with pytest.raises(ValueError, match="changed"):
+                verify()
+            session.rollback()
+            session.refresh(task)
+            assert json.loads(task.verification_history)[0]["reviewer_id"] == "first-reviewer"
+        elif failure:
             with pytest.raises((ValueError, KeyError)):
                 verify()
             assert task.status == "open"

@@ -10,7 +10,8 @@ expiry. The server binds the requester to the authenticated user. The request is
 `pending` until a different control manager approves it. Approval binds the
 reviewer identity and time on the server; caller-supplied approver names are
 rejected. Expired or revoked requests cannot be approved. The active list applies
-these checks before pagination.
+these checks before pagination. Expired requests display an expired status even
+when no background job has updated their stored lifecycle state.
 
 After upgrading, legacy active exceptions become pending. Their historical
 claimed approver remains visible, but is not an authenticated approval. Revoke and
@@ -29,7 +30,8 @@ optional `resolution_note`. The task needs a control ID. Verification requires:
 
 Successful verification appends a receipt containing the authenticated reviewer,
 control, generation digest, assessment hash, and raw evidence hashes. Reopening a
-task retains its verification history. A failed verification leaves it open and
+task retains its verification history. A conditional database update rejects a
+concurrent stale retest instead of overwriting another reviewer's receipt. A failed verification leaves it open and
 rolls back the submitted note. Unlinked administrative tasks still support manual
 closure; this is not an assurance conclusion.
 

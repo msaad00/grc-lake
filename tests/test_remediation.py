@@ -104,6 +104,9 @@ def test_exception_active_and_revoke(tmp_path: Path) -> None:
             session, tenant_id=tenant.id, exception_id=exc.id, reviewer_id="reviewer", reviewer="reviewer@test"
         )
         assert exc.is_active() is True
+        expired = remediation.exception_to_dict(exc, now=(exc.expires_at + timedelta(seconds=1)).replace(tzinfo=UTC))
+        assert expired["active"] is False
+        assert expired["status"] == "expired"
         remediation.revoke_exception(session, tenant_id=tenant.id, exception_id=exc.id)
         assert exc.is_active() is False
         assert exc.status == "revoked"

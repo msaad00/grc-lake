@@ -11,6 +11,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from security_lakehouse.assessment import build_current_posture
@@ -77,11 +78,26 @@ def verify_task(
         "assessment_hash": posture["assessment_hash"],
         "evidence": [{"event_id": row["event_id"], "raw_sha256": row["raw_sha256"]} for row in evidence],
     }
-    history = json.loads(task.verification_history or "[]")
+    previous_history = task.verification_history
+    history = json.loads(previous_history or "[]")
     history.append(receipt)
-    task.verification_history = json.dumps(history, sort_keys=True)
-    task.status = "resolved"
-    task.resolved_at = moment
-    task.updated_at = moment
-    session.flush()
+    result = session.execute(
+        update(RemediationTask)
+        .where(
+            RemediationTask.id == task.id,
+            RemediationTask.tenant_id == tenant_id,
+            RemediationTask.verification_history == previous_history,
+            RemediationTask.updated_at == task.updated_at,
+        )
+        .values(
+            verification_history=json.dumps(history, sort_keys=True),
+            status="resolved",
+            resolved_at=moment,
+            updated_at=moment,
+        )
+        .returning(RemediationTask.id)
+    )
+    if result.scalar_one_or_none() is None:
+        raise ValueError("task changed during verification; reload it before retrying")
+    session.refresh(task)
     return task

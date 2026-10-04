@@ -170,3 +170,17 @@ def test_relative_markdown_links_resolve() -> None:
             if not (md.parent / target).exists():
                 broken.append(f"{md.relative_to(ROOT)} -> {target}")
     assert not broken, broken
+
+
+def test_built_image_is_exercised_by_compose_before_ci_passes() -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+    job = workflow["jobs"]["docker-build"]
+    steps = job["steps"]
+    runtime = next((step for step in steps if "tools/compose_smoke.py" in step.get("run", "")), None)
+    assert runtime is not None, "the built PR image must pass the documented Compose startup and restart checks"
+    assert "--image trustops:ci" in runtime["run"]
+    assert not runtime.get("continue-on-error", False)
+    assert job["timeout-minutes"] <= 30
+    cleanup = next(step for step in steps if "down --volumes" in step.get("run", ""))
+    assert cleanup["if"] == "always()"
+    assert any(step.get("if") == "always()" and step.get("with", {}).get("name") == "compose-smoke" for step in steps)

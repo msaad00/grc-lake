@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Exercise the built image through the Compose quickstart in CI, including readiness, golden posture, and volume persistence without reseeding after container recreation.
+
 ## 0.2.20 - 2026-10-03
 
 - Package every framework source manifest and reject wheels with missing pack data, fixing installed demo and evaluation failures.

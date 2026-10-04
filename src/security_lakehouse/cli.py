@@ -391,6 +391,10 @@ def _parser() -> argparse.ArgumentParser:
 
     assessment = sub.add_parser("assessment", help="continuous compliance assessment commands")
     assessment_sub = assessment.add_subparsers(dest="assessment_command", required=True)
+    control_plan = assessment_sub.add_parser("test-plan", help="produce draft design and period-test workpapers")
+    control_plan.add_argument("--lake", required=True)
+    control_plan.add_argument("--plan", required=True, help="versioned control test plan JSON")
+    control_plan.set_defaults(func=_assessment_test_plan)
     status = assessment_sub.add_parser("status", help="print current posture")
     status.add_argument("--lake", required=True, help="security data lake output directory")
     status.add_argument("--freshness-days", type=int, default=7, help="evidence freshness window")
@@ -2392,3 +2396,11 @@ def _publish_iceberg(args: argparse.Namespace) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def _assessment_test_plan(args: argparse.Namespace) -> int:
+    from security_lakehouse.control_assurance import assess_control_plan
+    from security_lakehouse.io import read_json
+
+    print(json.dumps(assess_control_plan(Path(args.lake), read_json(Path(args.plan))), indent=2, sort_keys=True))
+    return 0

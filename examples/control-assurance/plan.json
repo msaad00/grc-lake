@@ -1,0 +1,69 @@
+{
+  "schema_version": "trustops.control_test_plan.v1",
+  "tenant_id": "default",
+  "period_start": "2026-01-01T00:00:00Z",
+  "period_end": "2026-01-03T00:00:00Z",
+  "as_of": "2026-01-04T00:00:00Z",
+  "controls": [
+    {
+      "safeguard_id": "SG-IDENTITY-001",
+      "owner": "Identity administrator",
+      "system": "Identity provider",
+      "activity": "Enforce MFA for privileged access",
+      "procedure": "Inspect approved access policy and daily privileged-access configuration",
+      "frequency": "daily",
+      "cadence_days": 1,
+      "sample_per_window": 1,
+      "sampling_rationale": "Illustrative non-statistical selection: one observation per asset per daily window; investigate all observed deviations.",
+      "design_event_ids": ["design-0"]
+    },
+    {
+      "safeguard_id": "SG-CHANGEMANAGEMENT-001",
+      "owner": "Release manager",
+      "system": "Source control",
+      "activity": "Require independent approval before production deployment",
+      "procedure": "Inspect change policy and sampled deployment approvals",
+      "frequency": "daily",
+      "cadence_days": 1,
+      "sample_per_window": 1,
+      "sampling_rationale": "Illustrative non-statistical selection: one observation per asset per daily window; investigate all observed deviations.",
+      "design_event_ids": ["design-1"]
+    },
+    {
+      "safeguard_id": "SG-LOGGING-001",
+      "owner": "Detection engineer",
+      "system": "Central audit log",
+      "activity": "Retain audit logs and monitor ingestion",
+      "procedure": "Inspect logging standard and daily ingestion-health evidence",
+      "frequency": "daily",
+      "cadence_days": 1,
+      "sample_per_window": 1,
+      "sampling_rationale": "Illustrative non-statistical selection: one observation per asset per daily window; investigate all observed deviations.",
+      "design_event_ids": ["design-2"]
+    },
+    {
+      "safeguard_id": "SG-DATAPROTECTION-001",
+      "owner": "Cloud security",
+      "system": "Key management",
+      "activity": "Encrypt scoped data at rest",
+      "procedure": "Inspect encryption policy and daily resource configuration",
+      "frequency": "daily",
+      "cadence_days": 1,
+      "sample_per_window": 1,
+      "sampling_rationale": "Illustrative non-statistical selection: one observation per asset per daily window; investigate all observed deviations.",
+      "design_event_ids": ["design-3"]
+    },
+    {
+      "safeguard_id": "SG-AIGOVERNANCE-001",
+      "owner": "AI governance owner",
+      "system": "Model registry",
+      "activity": "Review model inventory and owner assignments",
+      "procedure": "Inspect inventory policy and daily model-ownership evidence",
+      "frequency": "daily",
+      "cadence_days": 1,
+      "sample_per_window": 1,
+      "sampling_rationale": "Illustrative non-statistical selection: one observation per asset per daily window; investigate all observed deviations.",
+      "design_event_ids": ["design-4"]
+    }
+  ]
+}

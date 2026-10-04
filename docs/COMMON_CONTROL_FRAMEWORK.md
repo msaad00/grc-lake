@@ -225,8 +225,10 @@ security-lakehouse frameworks assessment --lake ./lake
 The retained assessment includes event IDs and evidence hashes for each assessed
 asset. The summary endpoint omits asset detail; page through
 `GET /api/v1/ccf/asset-results?limit=100&offset=0` or `list_ccf_asset_results`
-for those rows. Pagination bounds the wire response; local artifact reads still
-materialize the JSON document in memory.
+for those rows. Current generations serve summaries and asset pages from a
+pinned, indexed SQLite projection, bounding both page materialization and response
+size. Legacy generations without a declared projection fall back to the JSON
+artifact. A declared projection that is missing or unreadable fails closed.
 Retain the JSON generation for CCF results: the existing SQL sink tables do not
 carry the CCF assessment. Parquet preserves normalized safeguard bindings.
 The assessment is sealed with the exact safeguard definitions and review overlay used in
@@ -268,3 +270,13 @@ multiple source locators, provenance belongs on each mapping. The review queue
 uses that member-level source first and falls back to the safeguard-level source.
 
 For query behavior, compatibility, and memory boundaries, see [CCF assessment reads](CCF_READS.md).
+
+## Auditor workpapers
+
+[Control test plans](CONTROL_TEST_WORKPAPERS.md) distinguish design documentation
+from period samples and preserve every observed deviation. [Population
+reconciliation](POPULATION_RECONCILIATION.md) compares the generation with a
+declared inventory and collection receipts. Neither silently changes the CCF
+assessment's observed-population scope. The [auditor walkthrough](AUDITOR_WALKTHROUGH.md)
+combines these results, evidence hashes, and remediation receipts in a reproducible
+workpaper with an independent authenticated review decision.

@@ -33,7 +33,8 @@ def test_exception_requires_independent_authenticated_approval(env):
     assert approved.json()["data"]["approved_by"] == "admin@acme.test"
     assert approved.json()["data"]["active"] is True
     assert client.post(url, headers=reviewer).status_code == 400
-    assert client.delete(url.removesuffix("/approve"), headers=owner).status_code == 200
+    revoked = client.delete(url.removesuffix("/approve"), headers=owner)
+    assert revoked.status_code == 200
     assert client.post(url, headers=reviewer).status_code == 400
 
 

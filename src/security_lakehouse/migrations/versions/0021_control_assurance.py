@@ -11,7 +11,12 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+def _alembic_revision_markers() -> tuple[str, str | None, str | Sequence[str] | None, str | Sequence[str] | None]:
+    return revision, down_revision, branch_labels, depends_on
+
+
 def upgrade() -> None:
+    _alembic_revision_markers()
     op.add_column(
         "remediation_tasks", sa.Column("verification_history", sa.Text(), nullable=False, server_default="[]")
     )
@@ -24,6 +29,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    _alembic_revision_markers()
     with op.batch_alter_table("control_exceptions") as batch:
         batch.drop_column("approved_at")
         batch.drop_column("approved_by_id")

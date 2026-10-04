@@ -53,6 +53,17 @@ Run the checks that match what you touched before you push. CI runs all of them.
 Write the test first when you fix a bug or add behavior, and check that it
 fails without your change. Tests assert on real output, not on "it ran".
 
+For Compose or image changes, build locally with `docker build -t trustops:ci .`,
+then run `python3 tools/compose_smoke.py --image trustops:ci`. Docker Compose
+2.24.4 or newer is required. The check uses a fresh project and a dynamic loopback
+port, recreates the demo container on the same volume, and removes its containers
+and volumes afterward. It also validates the authenticated server profile with
+synthetic configuration; it does not start that profile or contact cloud providers.
+Diagnostics are saved in `build/compose-smoke/`; use `--output` with a new path
+for each repeat so earlier failure evidence remains available. CI runs this check
+inside the required `docker-build` job and retains its JSON result and container
+log for 14 days, including when the check fails.
+
 ## Commits and pull requests
 
 - Branch from `main`. One logical change per pull request.

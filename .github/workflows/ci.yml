@@ -255,6 +255,27 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
+      - name: Exercise Compose quickstart against the built image
+        run: python3 tools/compose_smoke.py --image trustops:ci
+      - name: Clean up Compose smoke resources
+        if: always()
+        run: |
+          if [ -f build/compose-smoke/project-name.txt ]; then
+            touch build/compose-smoke/trustops.env
+            docker compose -p "$(cat build/compose-smoke/project-name.txt)" \
+              -f build/compose-smoke/compose.yaml -f build/compose-smoke/override.yaml down --volumes
+            rm -f build/compose-smoke/trustops.env
+          fi
+      - name: Retain Compose smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: compose-smoke
+          path: |
+            build/compose-smoke/result.json
+            build/compose-smoke/container.log
+          if-no-files-found: warn
+          retention-days: 14
 
   e2e:
     runs-on: ubuntu-latest

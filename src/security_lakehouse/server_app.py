@@ -1275,6 +1275,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     from security_lakehouse.server_routes.routers.gov_compliance import build_gov_compliance_router
 
     app.include_router(build_gov_compliance_router(lake_for=lake_for))
+    from security_lakehouse.server_routes.routers.audit_workpapers import build_audit_workpapers_router
+
+    app.include_router(build_audit_workpapers_router(lake_for=lake_for))
 
     from security_lakehouse.server_routes.routers.scim import build_scim_router
 

@@ -57,7 +57,9 @@ def test_mapping_review_scope_is_granted_to_admin_and_compliance_reviewer_only()
     assert "compliance_reviewer" in USER_ROLES
     holders = {role for role, scopes in ROLE_SCOPES.items() if "mapping_review" in scopes}
     assert holders == {"admin", "compliance_reviewer"}
-    assert ROLE_SCOPES["compliance_reviewer"] == frozenset({"read", "mapping_review"})
+    assert ROLE_SCOPES["compliance_reviewer"] == frozenset({"read", "mapping_review", "workpaper_review"})
+    workpaper_holders = {role for role, scopes in ROLE_SCOPES.items() if "workpaper_review" in scopes}
+    assert workpaper_holders == {"admin", "compliance_reviewer"}
 
 
 def test_every_role_list_offers_the_compliance_reviewer_role() -> None:

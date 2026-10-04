@@ -65,7 +65,7 @@ def test_documented_design_and_period_samples_are_separate_and_reproducible(tmp_
     control = result["controls"][0]
     assert control["design"]["status"] == "documented"
     assert control["operating"]["status"] == "sample_pass"
-    assert control["operating"]["tested_windows"] == 2
+    assert control["operating"]["planned_windows"] == 2
     assert result["review_status"] == "pending_human_review"
     assert result["population_completeness"] == "not_established"
     assert all(row["raw_sha256"] for row in control["operating"]["samples"])
@@ -74,7 +74,9 @@ def test_documented_design_and_period_samples_are_separate_and_reproducible(tmp_
     assert assess_control_plan(tmp_path / "lake", plan) == result
 
 
-@pytest.mark.parametrize("failure", ["gap", "fail", "unknown", "future_collection", "missing_design", "wrong_binding"])
+@pytest.mark.parametrize(
+    "failure", ["gap", "fail", "unknown", "future_collection", "missing_design", "wrong_binding", "wrong_type"]
+)
 def test_missing_and_adverse_evidence_cannot_become_effective(tmp_path, failure):
     plan, events = case(tmp_path)
     if failure == "gap":
@@ -89,6 +91,8 @@ def test_missing_and_adverse_evidence_cannot_become_effective(tmp_path, failure)
         events.pop(0)
     if failure == "wrong_binding":
         events[-1]["safeguard_ids"] = []
+    if failure == "wrong_type":
+        events[-1]["entity"]["asset_type"] = "unsupported-type"
     result = evaluate(tmp_path, plan, events)["controls"][0]
     if failure == "missing_design":
         assert result["design"]["status"] == "insufficient_evidence"

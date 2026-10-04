@@ -3,8 +3,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from test_remediation import _bearer
+from test_remediation import env as remediation_env
 
-pytest_plugins = ["test_remediation"]
+env = remediation_env
 
 
 def request_body():
@@ -122,3 +123,36 @@ def test_upgrade_preserves_legacy_claim_without_trusting_it(tmp_path):
             text("SELECT status, approved_by, approved_by_id, requested_by_id FROM control_exceptions WHERE id='e'")
         ).one()
         assert tuple(row) == ("pending", "claimed@example.test", None, None)
+
+
+@pytest.mark.parametrize("offset_hours", [5.5, -4])
+def test_exception_expiry_preserves_the_instant_across_database_roundtrip(env, offset_hours):
+    from datetime import timezone
+
+    from security_lakehouse.db import remediation
+    from security_lakehouse.db.base import session_scope
+
+    app, client, tokens = env
+    deadline = datetime.now(UTC) + timedelta(minutes=1)
+    request = request_body()
+    request["expires_at"] = deadline.astimezone(timezone(timedelta(hours=offset_hours))).isoformat()
+    headers = _bearer(tokens["security_admin"])
+    created = client.post("/api/v1/remediation/exceptions", json=request, headers=headers).json()["data"]
+    listed = client.get("/api/v1/remediation/exceptions", headers=headers).json()["data"]
+    row = next(item for item in listed if item["id"] == created["id"])
+    stored = datetime.fromisoformat(row["expires_at"])
+    assert stored.tzinfo is not None
+    assert stored == deadline
+    with session_scope(app.state.sessionmaker) as session:
+        from security_lakehouse.db.models import ControlException
+
+        exception = session.get(ControlException, created["id"])
+        with pytest.raises(ValueError):
+            remediation.approve_exception(
+                session,
+                tenant_id=exception.tenant_id,
+                exception_id=exception.id,
+                reviewer_id="independent-reviewer",
+                reviewer="reviewer@example.test",
+                now=deadline + timedelta(seconds=1),
+            )

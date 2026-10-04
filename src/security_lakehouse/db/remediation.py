@@ -24,6 +24,7 @@ from security_lakehouse.db.models import (
     ControlException,
     EvidenceRequest,
     RemediationTask,
+    _as_aware,
 )
 
 RESOLUTION_NOTE_MAX = 4000
@@ -34,7 +35,7 @@ def _now(now: datetime | None) -> datetime:
 
 
 def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+    return _as_aware(value).isoformat() if value else None
 
 
 # --- remediation tasks -------------------------------------------------------
@@ -276,7 +277,7 @@ def create_exception(
         requested_by_id=requested_by_id,
         approved_by="",
         status="pending",
-        expires_at=expires_at,
+        expires_at=expires_at.astimezone(UTC),
         created_by=created_by,
     )
     session.add(exception)
@@ -328,6 +329,7 @@ def approve_exception(
             ControlException.expires_at > moment,
         )
         .values(status="active", approved_by=reviewer, approved_by_id=reviewer_id, approved_at=moment)
+        .execution_options(synchronize_session="fetch")
         .returning(ControlException.id)
     )
     if result.scalar_one_or_none() is None:
@@ -352,6 +354,10 @@ def revoke_exception(
 
 
 def exception_to_dict(exception: ControlException, *, now: datetime | None = None) -> dict[str, Any]:
+    moment = _now(now)
+    effective_status = exception.status
+    if effective_status in {"pending", "active"} and exception.expires_at and _as_aware(exception.expires_at) <= moment:
+        effective_status = "expired"
     return {
         "id": exception.id,
         "control_id": exception.control_id,
@@ -361,8 +367,8 @@ def exception_to_dict(exception: ControlException, *, now: datetime | None = Non
         "requested_by_id": exception.requested_by_id,
         "approved_by_id": exception.approved_by_id,
         "acceptance_effect": "risk_accepted_not_control_pass",
-        "status": exception.status,
-        "active": exception.is_active(now=now),
+        "status": effective_status,
+        "active": exception.is_active(now=moment),
         "expires_at": _iso(exception.expires_at),
         "created_by": exception.created_by,
         "created_at": _iso(exception.created_at),

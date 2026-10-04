@@ -694,6 +694,38 @@
         "title": "CreateWebhookRequest",
         "type": "object"
       },
+      "CreateWorkpaper": {
+        "additionalProperties": false,
+        "properties": {
+          "baseline": {
+            "additionalProperties": true,
+            "title": "Baseline",
+            "type": "object"
+          },
+          "citations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Citations",
+            "type": "array"
+          },
+          "narrative": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Narrative",
+            "type": "string"
+          },
+          "plan": {
+            "additionalProperties": true,
+            "title": "Plan",
+            "type": "object"
+          }
+        },
+        "required": ["plan", "baseline"],
+        "title": "CreateWorkpaper",
+        "type": "object"
+      },
       "EscalateFreshnessRequest": {
         "additionalProperties": false,
         "properties": {
@@ -857,6 +889,30 @@
         },
         "required": ["decision"],
         "title": "ReviewDecisionRequest",
+        "type": "object"
+      },
+      "ReviewWorkpaper": {
+        "additionalProperties": false,
+        "properties": {
+          "content_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Content Sha256",
+            "type": "string"
+          },
+          "decision": {
+            "enum": ["approve", "reject"],
+            "title": "Decision",
+            "type": "string"
+          },
+          "rationale": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": ["decision", "rationale", "content_sha256"],
+        "title": "ReviewWorkpaper",
         "type": "object"
       },
       "SessionFromKeyRequest": {
@@ -2336,6 +2392,260 @@
         ],
         "summary": "Audit Log V1",
         "tags": ["platform"]
+      }
+    },
+    "/api/v1/audit-workpapers": {
+      "get": {
+        "operationId": "list_workpapers_api_v1_audit_workpapers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Workpapers Api V1 Audit Workpapers Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Workpapers",
+        "tags": ["audit-workpapers"]
+      },
+      "post": {
+        "operationId": "create_api_v1_audit_workpapers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkpaper"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Api V1 Audit Workpapers Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create",
+        "tags": ["audit-workpapers"]
+      }
+    },
+    "/api/v1/audit-workpapers/{workpaper_id}": {
+      "get": {
+        "operationId": "get_api_v1_audit_workpapers__workpaper_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workpaper_id",
+            "required": true,
+            "schema": {
+              "title": "Workpaper Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Api V1 Audit Workpapers  Workpaper Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get",
+        "tags": ["audit-workpapers"]
+      }
+    },
+    "/api/v1/audit-workpapers/{workpaper_id}/html": {
+      "get": {
+        "operationId": "export_html_api_v1_audit_workpapers__workpaper_id__html_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workpaper_id",
+            "required": true,
+            "schema": {
+              "title": "Workpaper Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Html",
+        "tags": ["audit-workpapers"]
+      }
+    },
+    "/api/v1/audit-workpapers/{workpaper_id}/review": {
+      "post": {
+        "operationId": "review_api_v1_audit_workpapers__workpaper_id__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workpaper_id",
+            "required": true,
+            "schema": {
+              "title": "Workpaper Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewWorkpaper"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Review Api V1 Audit Workpapers  Workpaper Id  Review Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Review",
+        "tags": ["audit-workpapers"]
       }
     },
     "/api/v1/auth/callback": {

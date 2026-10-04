@@ -148,7 +148,9 @@ def assess_control_plan(lake: Path, plan: dict[str, Any]) -> dict[str, Any]:
         invalid = sorted(
             row["event_id"]
             for row in operating
-            if not _valid_at(row, as_of) or normalize_event_status(row["status"]) not in {"pass", *FAIL_STATUSES}
+            if not _valid_at(row, as_of)
+            or row["asset_type"] not in catalog[sid].get("asset_types", [])
+            or normalize_event_status(row["status"]) not in {"pass", *FAIL_STATUSES}
         )
         samples: list[dict[str, Any]] = []
         gaps = []
@@ -186,7 +188,9 @@ def assess_control_plan(lake: Path, plan: dict[str, Any]) -> dict[str, Any]:
                 },
                 "operating": {
                     "status": status,
-                    "tested_windows": len(windows),
+                    "planned_windows": len(windows),
+                    "expected_asset_windows": len(assets) * len(windows),
+                    "tested_asset_windows": len(assets) * len(windows) - len(gaps),
                     "observed_asset_count": len(assets),
                     "population_event_count": len(operating),
                     "samples": samples,

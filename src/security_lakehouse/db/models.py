@@ -830,3 +830,21 @@ class SamlAssertionReplay(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow, server_default=func.now()
     )
+
+
+class AuditWorkpaper(Base):
+    """Immutable evidence snapshot with one attributable independent review."""
+
+    __tablename__ = "audit_workpapers"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), index=True)
+    content_json: Mapped[str] = mapped_column(Text, nullable=False)
+    content_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_by_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    created_by: Mapped[str] = mapped_column(String(320), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, server_default=func.now())
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="draft", server_default="draft")
+    reviewed_by_id: Mapped[str | None] = mapped_column(String(36))
+    reviewed_by: Mapped[str | None] = mapped_column(String(320))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    review_rationale: Mapped[str | None] = mapped_column(Text)

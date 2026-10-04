@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Export reproducible auditor workpapers with scoped citations, separate control and population conclusions, retained remediation receipts, and independent authenticated review. Add a synthetic walkthrough and artifact capture.
+
 - Reconcile declared asset populations with sealed evidence, bounded gap details, freshness and collection-receipt checks, and explicit limits on inventory-completeness claims.
 
 - Add reproducible CCF control test plans with separate design documentation, period samples, deviations, and explicit pending human review. Include five synthetic walkthrough controls.

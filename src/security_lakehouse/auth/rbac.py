@@ -16,14 +16,15 @@ ROLE_SCOPES: dict[str, frozenset[str]] = {
             "control_manage",
             "evidence_request",
             "mapping_review",
+            "workpaper_review",
         }
     ),
     "security_admin": frozenset(
         {"read", "write", "snapshot", "connector_manage", "workflow_manage", "control_manage", "evidence_request"}
     ),
     # Confirms or rejects safeguard->requirement mappings for the organization
-    # (see security_lakehouse.mapping_review); otherwise read-only.
-    "compliance_reviewer": frozenset({"read", "mapping_review"}),
+    # (see security_lakehouse.mapping_review) and reviews immutable audit workpapers.
+    "compliance_reviewer": frozenset({"read", "mapping_review", "workpaper_review"}),
     "contributor": frozenset({"read", "write", "workflow_run", "evidence_request"}),
     "auditor": frozenset({"read"}),
     "read_only": frozenset({"read"}),

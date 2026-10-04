@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   schedule:
     # Weekly SAST sweep against main, independent of PR activity.
     - cron: "37 4 * * 1"

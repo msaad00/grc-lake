@@ -23,6 +23,9 @@ make pre-commit-install    # pre-commit and commit-message hooks
 make web-install           # console dependencies (npm ci)
 ```
 
+Run `make help` (or just `make`) to list commands and their descriptions. This
+does not require Python or Node dependencies and does not start builds or tests.
+
 Run the console against the sample company:
 
 ```bash
@@ -32,6 +35,11 @@ make demo-local            # builds the console, loads the golden fixture, serve
 Then open <http://127.0.0.1:8787/console/dashboard/>. Authentication is off in
 this mode; it is for your machine only. After a console change, run
 `make web-build` and restart the server to see it.
+
+`make web-dev` starts the Next.js UI development server at
+<http://localhost:5173/console/dashboard/>. It has no API proxy: relative `/api`
+requests go to port 5173. Use `make demo-local` above when you need the working
+console and Python API together.
 
 If you only need the pre-built console, `docker compose up` runs the published
 image with the same sample data; see the [5-minute tutorial](docs/TUTORIAL_5_MIN.md).

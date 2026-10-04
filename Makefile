@@ -1,98 +1,104 @@
-.PHONY: release-build compile lint format-check typecheck diff-check test validate validate-json validate-generated validate-brand validate-doc-images pipeline dashboard api-smoke smoke ci web-install web-dev web-typecheck web-build web-clean web-ci docker-build helm-lint helm-template terraform-fmt terraform-validate deploy-check uv-sync uv-lock pre-commit-install pre-commit-run pip-audit npm-audit security openapi-export readme-header
+.DEFAULT_GOAL := help
 
-test:
+.PHONY: help demo-screenshots demo-screenshots-full demo-local framework-packs coverage-doc release-build compile lint format-check typecheck diff-check test validate validate-json validate-generated validate-brand validate-doc-images pipeline dashboard api-smoke smoke ci web-install web-dev web-typecheck web-build web-clean web-ci docker-build helm-lint helm-template terraform-fmt terraform-validate deploy-check uv-sync uv-lock pre-commit-install pre-commit-run pip-audit npm-audit security openapi-export readme-header
+
+help: ## List available commands without running builds or tests.
+	@awk -F ':.*## ' 'BEGIN { printf "Usage: make <target>\n\n" } /^[a-zA-Z][a-zA-Z0-9_-]*:.*## / { printf "  %-24s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
+test: ## Run the Python test suite.
 	PYTHONPATH=src python -m pytest -q
 
-compile:
+compile: ## Compile Python source, tests and tools to check syntax.
 	PYTHONPATH=src python -m compileall -q src tests tools
 
-lint:
+lint: ## Run Ruff checks on Python source, tests and tools.
 	PYTHONPATH=src python -m ruff check src tests tools
 
-format-check:
+format-check: ## Check Python formatting without changing files.
 	PYTHONPATH=src python -m ruff format --check src tests tools
 
-typecheck:
+typecheck: ## Type-check the Python package with mypy.
 	python -m mypy
 
-diff-check:
+diff-check: ## Check the current diff for whitespace errors.
 	git diff --check
 
-validate:
+validate: ## Validate sample evidence, connector contracts and catalogs.
 	PYTHONPATH=src python -m security_lakehouse.cli validate --raw data/raw/security_events.jsonl
 	PYTHONPATH=src python -m security_lakehouse.cli connectors validate
 	PYTHONPATH=src python -c "from security_lakehouse.catalog import validate_catalog; from security_lakehouse.programs import validate_program_catalog; from security_lakehouse.policy_templates import validate_policy_template_catalog; errors = validate_catalog() + validate_program_catalog() + validate_policy_template_catalog(); assert not errors, errors"
 	PYTHONPATH=src python -m security_lakehouse.cli catalog verify
 
-validate-json:
+validate-json: ## Validate checked-in schemas and JSON artifacts.
 	PYTHONPATH=src python tools/validate_ci_artifacts.py
 
-validate-generated:
+validate-generated: ## Validate generated lake artifacts.
 	PYTHONPATH=src python tools/validate_ci_artifacts.py --generated
 
-validate-doc-images:
+validate-doc-images: ## Check documentation image references and assets.
 	PYTHONPATH=src python tools/validate_doc_images.py
 
-validate-brand:
+validate-brand: ## Check public documentation and images for brand consistency.
 	PYTHONPATH=src python tools/check_brand_compliance.py
 
-pipeline:
+pipeline: ## Evaluate sample evidence into build/lakehouse.
 	PYTHONPATH=src python -m security_lakehouse.cli pipeline run --raw data/raw/security_events.jsonl --out build/lakehouse
 
-dashboard:
+dashboard: ## Render the sample lake dashboard into build/dashboard.
 	PYTHONPATH=src python -m security_lakehouse.cli dashboard --lake build/lakehouse --out build/dashboard/index.html
 
-api-smoke:
+api-smoke: ## Start a temporary API server and check sample lake responses.
 	PYTHONPATH=src python tools/api_smoke.py
 
 # Clean first: a stale wheel left in dist/ would otherwise be verified (and
 # could be uploaded) alongside the fresh one.
-release-build: web-install web-build
+release-build: web-install web-build ## Build the console, wheel and source archive; verify wheel contents.
 	rm -rf dist
 	uv build --out-dir dist
 	python tools/verify_wheel.py dist/*.whl
 
-openapi-export:
+openapi-export: ## Regenerate OpenAPI and API resource catalog documents.
 	uv run security-lakehouse openapi --out docs/api/openapi.v1.json
 	uv run python -c "import json; from security_lakehouse import api_v1; json.dump({'resources': api_v1.resource_catalog()}, open('docs/api/resource-catalog.v1.json','w'), indent=2, sort_keys=True); print('wrote docs/api/resource-catalog.v1.json')"
 
-smoke: validate validate-json validate-doc-images validate-brand pipeline validate-generated dashboard api-smoke test
+smoke: validate validate-json validate-doc-images validate-brand pipeline validate-generated dashboard api-smoke test ## Validate catalogs and artifacts, run the sample pipeline and test suite.
 
-ci: diff-check compile lint format-check typecheck web-ci smoke
+ci: diff-check compile lint format-check typecheck web-ci smoke ## Run local code, web and pipeline checks.
 
 # --- React (Next.js) workbench targets -------------------------------------
 # Lives in app/web/, builds to src/security_lakehouse/web/dist/ so the Python
-# wheel ships the bundle. Dev mode proxies /api to a running `security-lakehouse serve`.
+# wheel ships the bundle. web-dev starts Next.js on :5173 with no API proxy;
+# /api requests stay on that origin. Use demo-local for UI and API together.
 
-web-install:
+web-install: ## Install locked console dependencies with npm ci.
 	npm --prefix app/web ci
 
-web-dev:
+web-dev: ## Start Next.js UI development on port 5173; no API proxy.
 	npm --prefix app/web run dev
 
-web-typecheck:
+web-typecheck: ## Type-check the console TypeScript.
 	npm --prefix app/web run typecheck
 
-web-build:
+web-build: ## Build the static console into the Python package.
 	npm --prefix app/web run build
 
-demo-screenshots:
+demo-screenshots: ## Capture demo screenshots from an already-running server.
 	npm --prefix app/web run demo-screenshots
 
 # Full pipeline: fixture + web build + ephemeral server + PNG capture (for CI/agents).
-demo-screenshots-full:
+demo-screenshots-full: ## Build and serve the golden fixture, then capture demo screenshots.
 	bash tools/capture_readme_screenshots.sh
 
 # Local console with golden fixture (run on your machine — localhost is not remote-hosted).
-demo-local: web-install web-build
+demo-local: web-install web-build ## Build and serve the golden demo on loopback port 8787 with auth off.
 	uv run security-lakehouse fixtures load --company golden --out build/lakehouse --rebase-times
 	uv run security-lakehouse db upgrade --lake build/lakehouse
 	@echo "Starting console at http://127.0.0.1:8787/console/dashboard/"
 	uv run security-lakehouse serve --lake build/lakehouse --server --allow-insecure-no-auth --port 8787
 
-web-ci: web-install web-typecheck web-build
+web-ci: web-install web-typecheck web-build ## Install, type-check and build the console.
 
-web-clean:
+web-clean: ## Remove the generated console bundle and restore its placeholder.
 	rm -rf src/security_lakehouse/web/dist/* src/security_lakehouse/web/dist/.* 2>/dev/null || true
 	mkdir -p src/security_lakehouse/web/dist
 	touch src/security_lakehouse/web/dist/.gitkeep
@@ -100,57 +106,57 @@ web-clean:
 # --- Deploy targets -------------------------------------------------------
 # Container image, Helm chart, EKS Terraform reference IaC.
 
-docker-build:
+docker-build: ## Build the local trustops:dev container image.
 	docker build -t trustops:dev .
 
-helm-lint:
+helm-lint: ## Lint the TrustOps Helm chart.
 	helm lint deploy/helm/trustops
 
-helm-template:
+helm-template: ## Render the Helm chart to /tmp/trustops-helm-render.yaml.
 	helm template trustops deploy/helm/trustops > /tmp/trustops-helm-render.yaml
 	@echo "wrote /tmp/trustops-helm-render.yaml ($$(wc -l < /tmp/trustops-helm-render.yaml) lines)"
 
-terraform-fmt:
+terraform-fmt: ## Check formatting of the EKS Terraform reference.
 	terraform -chdir=deploy/eks-terraform fmt -check
 
-terraform-validate:
+terraform-validate: ## Initialize without a backend and validate EKS Terraform.
 	terraform -chdir=deploy/eks-terraform init -backend=false -input=false
 	terraform -chdir=deploy/eks-terraform validate
 
-deploy-check: helm-lint helm-template terraform-fmt terraform-validate
+deploy-check: helm-lint helm-template terraform-fmt terraform-validate ## Validate the Helm chart and EKS Terraform reference.
 
 # --- Supply-chain + commit hooks -------------------------------------------
 # uv is the recommended package manager (deterministic + locked install).
 # pip still works as a fallback when uv isn't installed.
 
-uv-sync:
+uv-sync: ## Install all Python extras from the frozen lockfile.
 	uv sync --frozen --all-extras
 
-uv-lock:
+uv-lock: ## Refresh the Python dependency lockfile.
 	uv lock
 
-framework-packs:
+framework-packs: ## Synchronize framework packs from their source manifests.
 	PYTHONPATH=src python -m security_lakehouse.cli frameworks sync-packs
 
-pre-commit-install:
+pre-commit-install: ## Install pre-commit and commit-message hooks.
 	uv run pre-commit install
 	uv run pre-commit install --hook-type commit-msg
 
-pre-commit-run:
+pre-commit-run: ## Run all pre-commit checks across tracked files.
 	uv run pre-commit run --all-files
 
-pip-audit:
+pip-audit: ## Audit locked Python runtime dependencies for known vulnerabilities.
 	uv export --no-emit-project --format requirements-txt --no-hashes > /tmp/trustops-reqs.txt
 	uv run pip-audit --strict -r /tmp/trustops-reqs.txt
 
-npm-audit:
+npm-audit: ## Audit production npm dependencies at high severity or above.
 	cd app/web && npm audit --omit=dev --audit-level=high
 
-security: pip-audit npm-audit pre-commit-run
+security: pip-audit npm-audit pre-commit-run ## Run dependency audits and pre-commit checks.
 
-coverage-doc:
+coverage-doc: ## Regenerate the framework coverage document.
 	uv run python -c "from security_lakehouse.framework_coverage import render_framework_coverage_doc; open('docs/FRAMEWORK_COVERAGE.md','w').write(render_framework_coverage_doc())"
 	@echo wrote docs/FRAMEWORK_COVERAGE.md
 
-readme-header:
+readme-header: ## Regenerate the README header graphic.
 	uv run python tools/render_readme_header.py

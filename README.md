@@ -91,6 +91,25 @@ Evidence arrives in one of two modes; both feed the same rules and assessments.
 tenant. Lake mappings are experimental. The [connector catalog](docs/CONNECTORS.md)
 lists all 28 contracts: 25 executable (18 generally available, 7 in preview).
 
+## Auditor walkthrough
+
+Trace five operated controls from design documentation through period samples,
+source evidence, and population reconciliation. The [reproducible synthetic
+walkthrough](docs/AUDITOR_WALKTHROUGH.md) includes passing samples, an observed
+change-management failure, and a missing AI-inventory test window. It also names
+an asset that collection missed.
+
+Workpapers preserve evidence hashes and mapping review states. Server records add
+independent authenticated review and snapshot linked remediation retest receipts.
+Approval retains every reported deviation and gap.
+
+<details>
+<summary>Preview the generated auditor workpaper</summary>
+
+![Synthetic control audit workpaper with separate design, operating, and population conclusions](docs/images/trustops-auditor-workpaper.png)
+
+</details>
+
 ## Self-host
 
 | Path                                                                                                 | Use it for                                                                |

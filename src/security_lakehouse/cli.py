@@ -391,6 +391,15 @@ def _parser() -> argparse.ArgumentParser:
 
     assessment = sub.add_parser("assessment", help="continuous compliance assessment commands")
     assessment_sub = assessment.add_subparsers(dest="assessment_command", required=True)
+    workpaper = assessment_sub.add_parser("workpaper", help="export a reproducible auditor workpaper (JSON and HTML)")
+    workpaper.add_argument("--lake", required=True)
+    workpaper.add_argument("--plan", required=True)
+    workpaper.add_argument("--baseline", required=True)
+    workpaper.add_argument("--out", required=True, help="new directory outside the lake")
+    workpaper.set_defaults(func=_assessment_workpaper)
+    verify_workpaper = assessment_sub.add_parser("verify-workpaper", help="verify exported workpaper file hashes")
+    verify_workpaper.add_argument("--dir", required=True)
+    verify_workpaper.set_defaults(func=_assessment_verify_workpaper)
     population = assessment_sub.add_parser("population", help="reconcile declared inventory against collected evidence")
     population.add_argument("--lake", required=True)
     population.add_argument("--baseline", required=True)
@@ -1705,6 +1714,27 @@ def _workflow_run(args: argparse.Namespace) -> int:
     run = run_workflow(args.lake, workflow_id=args.workflow_id, actor=args.actor)
     print(json.dumps(run, indent=2, sort_keys=True))
     return 0
+
+
+def _assessment_workpaper(args: argparse.Namespace) -> int:
+    from security_lakehouse.audit_workpapers import build_workpaper, export_workpaper
+    from security_lakehouse.io import read_json
+
+    lake, out = Path(args.lake).resolve(), Path(args.out).resolve()
+    if out.is_relative_to(lake):
+        raise ValueError("workpaper export must be outside the evidence lake")
+    content = build_workpaper(lake, plan=read_json(Path(args.plan)), baseline=read_json(Path(args.baseline)))
+    export_workpaper(content, out)
+    print(f"wrote draft auditor workpaper: {out / 'index.html'}")
+    return 0
+
+
+def _assessment_verify_workpaper(args: argparse.Namespace) -> int:
+    from security_lakehouse.audit_workpapers import verify_workpaper_export
+
+    result = verify_workpaper_export(Path(args.dir))
+    print(json.dumps(result, indent=2))
+    return 0 if result["ok"] else 1
 
 
 def _assessment_test_plan(args: argparse.Namespace) -> int:

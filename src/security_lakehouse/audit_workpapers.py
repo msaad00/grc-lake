@@ -145,10 +145,12 @@ def export_workpaper(content: dict[str, Any], out: Path) -> None:
 def verify_workpaper_export(out: Path) -> dict[str, Any]:
     try:
         manifest = read_json(out / "manifest.json")
-        valid = manifest["schema_version"] == "trustops.workpaper_export.v1" and set(manifest["files"]) == {
-            "index.html",
-            "workpaper.json",
-        }
+        valid = (
+            isinstance(manifest, dict)
+            and manifest.get("schema_version") == "trustops.workpaper_export.v1"
+            and isinstance(manifest.get("files"), dict)
+            and set(manifest["files"]) == {"index.html", "workpaper.json"}
+        )
         valid = valid and all(file_sha256(out / name) == digest for name, digest in manifest["files"].items())
         valid = valid and canonical_sha256(read_json(out / "workpaper.json")) == manifest["content_sha256"]
     except (OSError, ValueError, KeyError, TypeError):

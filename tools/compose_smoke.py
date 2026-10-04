@@ -44,13 +44,16 @@ def get(base: str, path: str) -> bytes:
 
 def wait_ready(base: str, timeout: float = 90) -> None:
     deadline = time.monotonic() + timeout
+    last_error: Exception | None = None
     while time.monotonic() < deadline:
         try:
             if json.loads(get(base, "/api/readyz")).get("ok") is True:
                 return
-        except (OSError, json.JSONDecodeError):
-            pass
+        except (OSError, json.JSONDecodeError) as exc:
+            last_error = exc
         time.sleep(0.5)
+    if last_error is not None:
+        raise RuntimeError(f"Compose demo did not become ready before the deadline (last error: {last_error})")
     raise RuntimeError("Compose demo did not become ready before the deadline")
 
 

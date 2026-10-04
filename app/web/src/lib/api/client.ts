@@ -374,6 +374,16 @@ export const api = {
       "/v1/remediation/exceptions",
       payload,
     ).then((b) => b.data),
+  approveControlException: (id: string) =>
+    post<{ data: ControlExceptionItem }>(
+      `/v1/remediation/exceptions/${encodeURIComponent(id)}/approve`,
+      {},
+    ).then((b) => b.data),
+  verifyRemediationTask: (id: string, resolution_note: string) =>
+    post<{ data: RemediationTask }>(
+      `/v1/remediation/tasks/${encodeURIComponent(id)}/verify`,
+      { resolution_note },
+    ).then((b) => b.data),
   revokeControlException: (id: string) =>
     mutate<{ data: ControlExceptionItem }>(
       `/v1/remediation/exceptions/${encodeURIComponent(id)}`,

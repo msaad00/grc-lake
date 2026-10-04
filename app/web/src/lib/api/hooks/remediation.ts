@@ -112,3 +112,22 @@ export function useRevokeControlExceptionMutation() {
       qc.invalidateQueries({ queryKey: ["remediation", "exceptions"] }),
   });
 }
+
+export function useApproveControlExceptionMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.approveControlException,
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["remediation", "exceptions"] }),
+  });
+}
+
+export function useVerifyTaskMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note: string }) =>
+      api.verifyRemediationTask(id, note),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["remediation", "tasks"] }),
+  });
+}

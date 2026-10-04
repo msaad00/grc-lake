@@ -25,7 +25,7 @@ REMEDIATION_STATUSES = ("open", "in_progress", "blocked", "resolved", "dismissed
 REMEDIATION_CLOSED = {"resolved", "dismissed"}
 REMEDIATION_PRIORITIES = ("low", "medium", "high", "critical")
 EVIDENCE_REQUEST_STATUSES = ("open", "fulfilled", "cancelled")
-EXCEPTION_STATUSES = ("active", "revoked", "expired")
+EXCEPTION_STATUSES = ("pending", "active", "revoked", "expired")
 
 # GRC risk-register vocabularies.
 RISK_STATUSES = ("open", "mitigating", "accepted", "closed")
@@ -310,6 +310,7 @@ class RemediationTask(Base):
     )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolution_note: Mapped[str] = mapped_column(Text, nullable=False, default="", server_default="")
+    verification_history: Mapped[str] = mapped_column(Text, nullable=False, default="[]", server_default="[]")
 
     @property
     def is_open(self) -> bool:
@@ -412,7 +413,7 @@ class EvidenceRequest(Base):
 
 
 class ControlException(Base):
-    """A time-boxed, approved exception that suppresses a control's failure."""
+    """A time-boxed risk acceptance; it never changes an evidence result."""
 
     __tablename__ = "control_exceptions"
 
@@ -423,7 +424,10 @@ class ControlException(Base):
     control_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     reason: Mapped[str] = mapped_column(Text, nullable=False, default="")
     approved_by: Mapped[str] = mapped_column(String(255), nullable=False, default="")
-    status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
+    requested_by_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    approved_by_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(
@@ -435,7 +439,14 @@ class ControlException(Base):
         """Active and not past its expiry."""
         if self.status != "active" or self.revoked_at is not None:
             return False
-        return self.expires_at is None or _as_aware(self.expires_at) > (now or _utcnow())
+        return bool(
+            self.requested_by_id
+            and self.approved_by_id
+            and self.approved_at
+            and self.requested_by_id != self.approved_by_id
+            and self.expires_at
+            and _as_aware(self.expires_at) > (now or _utcnow())
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -10,7 +10,9 @@ from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cook
 from security_lakehouse.db.base import session_scope
 from security_lakehouse.db.repository import create_user_session, resolve_api_key
 from test_agent_runs_api import _bearer, _posture_run
-from test_agent_runs_api import env as env
+from test_agent_runs_api import env as _agent_env
+
+env = _agent_env
 
 
 def human(app, token):
@@ -137,7 +139,9 @@ def _database_run(url):
     return engine, run_id
 
 
-from test_migration_portability import migration_url as migration_url  # noqa: E402
+from test_migration_portability import migration_url as _migration_url  # noqa: E402
+
+migration_url = _migration_url
 
 
 def test_agent_claim_is_atomic_across_processes_and_rejection(migration_url):

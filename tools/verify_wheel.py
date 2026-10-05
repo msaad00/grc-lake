@@ -42,6 +42,16 @@ REQUIRED.update(
     }
 )
 
+RESOURCE_ROOT = Path(__file__).resolve().parents[1] / "src/security_lakehouse/resources"
+REQUIRED.update(
+    {
+        "security_lakehouse/resources/"
+        + path.relative_to(RESOURCE_ROOT).as_posix(): "cloud linking and evidence schemas"
+        for path in RESOURCE_ROOT.rglob("*")
+        if path.is_file()
+    }
+)
+
 
 def verify(wheel: Path) -> list[str]:
     """Return a list of problems; empty means the wheel is publishable."""

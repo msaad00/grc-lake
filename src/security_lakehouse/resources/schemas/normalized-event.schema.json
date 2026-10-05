@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NormalizedSecurityEvent",
+  "type": "object",
+  "required": [
+    "event_id",
+    "tenant_id",
+    "event_time",
+    "source",
+    "event_type",
+    "asset_id",
+    "asset_type",
+    "asset_owner",
+    "environment",
+    "severity",
+    "severity_score",
+    "status",
+    "control_ids",
+    "evidence_id",
+    "evidence_ref",
+    "evidence_collected_at",
+    "raw_sha256"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "asset_type": {
+      "type": "string"
+    },
+    "asset_owner": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string"
+    },
+    "severity_score": {
+      "type": "integer"
+    },
+    "status": {
+      "type": "string"
+    },
+    "control_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_id": {
+      "type": "string"
+    },
+    "evidence_ref": {
+      "type": "string"
+    },
+    "evidence_collected_at": {
+      "type": "string"
+    },
+    "raw_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "safeguard_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

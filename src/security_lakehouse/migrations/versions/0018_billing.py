@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("subscription_status", sa.String(length=32), nullable=True),
         sa.Column("price_id", sa.String(length=255), nullable=True),
         sa.Column("current_period_end", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("cancel_at_period_end", sa.Boolean(), server_default=sa.text("0"), nullable=False),
+        sa.Column("cancel_at_period_end", sa.Boolean(), server_default=sa.false(), nullable=False),
         sa.Column("past_due_since", sa.DateTime(timezone=True), nullable=True),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),

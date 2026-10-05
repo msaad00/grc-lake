@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CurrentPosture",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "assessment_type",
+    "evaluated_at",
+    "posture",
+    "frameworks",
+    "violations",
+    "assessment_hash"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "assessment_type": {
+      "type": "string",
+      "enum": ["current_posture", "point_in_time_snapshot"]
+    },
+    "evaluated_at": { "type": "string", "format": "date-time" },
+    "freshness_days": { "type": "integer" },
+    "posture": {
+      "type": "object",
+      "required": ["score", "state", "control_count", "open_violation_count"],
+      "properties": {
+        "score": { "type": "number" },
+        "state": { "type": "string" },
+        "control_count": { "type": "integer" },
+        "open_violation_count": { "type": "integer" },
+        "critical_violation_count": { "type": "integer" },
+        "high_violation_count": { "type": "integer" },
+        "stale_control_count": { "type": "integer" },
+        "stale_evidence_count": { "type": "integer" }
+      }
+    },
+    "frameworks": { "type": "array", "items": { "type": "object" } },
+    "violations": {
+      "type": "array",
+      "items": { "$ref": "violation.schema.json" }
+    },
+    "stale_controls": { "type": "array", "items": { "type": "string" } },
+    "evidence_freshness": { "type": "object" },
+    "assessment_hash": { "type": "string", "minLength": 64, "maxLength": 64 }
+  }
+}

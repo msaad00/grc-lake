@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("secret", sa.String(length=255), nullable=False),
         sa.Column("description", sa.String(length=255), server_default="", nullable=False),
         sa.Column("event_types_json", sa.Text(), server_default="[]", nullable=False),
-        sa.Column("enabled", sa.Boolean(), server_default=sa.text("1"), nullable=False),
+        sa.Column("enabled", sa.Boolean(), server_default=sa.true(), nullable=False),
         sa.Column("created_by", sa.String(length=255), server_default="", nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),

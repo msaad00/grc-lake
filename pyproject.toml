@@ -154,6 +154,8 @@ where = ["src"]
     "migrations/script.py.mako",
     "migrations/versions/*.py",
     "lake_presets/*/*.json",
+    "resources/cloud/*",
+    "resources/schemas/*.json",
 ]
 
 [tool.setuptools.data-files]

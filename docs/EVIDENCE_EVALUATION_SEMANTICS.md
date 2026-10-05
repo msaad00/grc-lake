@@ -1,10 +1,13 @@
 # Evidence evaluation semantics
 
 An `observed` record describes collected inventory or an activity. It supplies
-provenance and evidence types but does not establish a passing control. Unknown
-and unevaluated outcomes also remain unevaluated. An empty dataset has a zero
+provenance and evidence types but does not establish a passing control. Alongside
+evaluated evidence, it does not override the verdict or count toward rule evidence
+presence/coverage predicates. Aggregate event and evidence counts still include
+observations. Observation-only controls remain unevaluated; explicit unknown
+and unevaluated outcomes still prevent a pass. An empty dataset has a zero
 control pass rate. These changes affect newly evaluated generations; historical
-evidence is retained. Manifests record `trustops.control_evaluation.v2`; the
+evidence is retained. Manifests record `trustops.control_evaluation.v3`; the
 incremental dependency fingerprint forces re-evaluation of older generations even
 when raw inputs have not changed, while retaining the earlier generation.
 

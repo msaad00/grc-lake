@@ -22,6 +22,7 @@ import os
 import re
 import secrets
 from datetime import UTC, datetime
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlencode, urlsplit
@@ -85,36 +86,19 @@ def _save_sessions(lake_dir: str | Path, payload: dict[str, Any]) -> None:
     write_json(path, payload)
 
 
-def _repo_path(relative: Path) -> Path:
-    return Path(__file__).resolve().parents[2] / relative
-
-
-def _repo_template_path() -> Path:
-    return _repo_path(AWS_TEMPLATE_REL)
-
-
 def aws_template_bytes() -> bytes:
     """Return the packaged AWS CloudFormation template."""
-    path = _repo_template_path()
-    if not path.is_file():
-        raise FileNotFoundError(f"AWS link template is missing: {path}")
-    return path.read_bytes()
+    return files("security_lakehouse").joinpath("resources/cloud/aws-role.yaml").read_bytes()
 
 
 def aws_terraform_bytes() -> bytes:
     """Return the packaged AWS Terraform template."""
-    path = _repo_path(AWS_TERRAFORM_REL)
-    if not path.is_file():
-        raise FileNotFoundError(f"AWS Terraform template is missing: {path}")
-    return path.read_bytes()
+    return files("security_lakehouse").joinpath("resources/cloud/aws-role.tf").read_bytes()
 
 
 def gcp_template_bytes() -> bytes:
     """Return the packaged GCP Terraform template."""
-    path = Path(__file__).resolve().parents[2] / GCP_TEMPLATE_REL
-    if not path.is_file():
-        raise FileNotFoundError(f"GCP link template is missing: {path}")
-    return path.read_bytes()
+    return files("security_lakehouse").joinpath("resources/cloud/gcp-reader.tf").read_bytes()
 
 
 def _aws_trusted_principal() -> str:

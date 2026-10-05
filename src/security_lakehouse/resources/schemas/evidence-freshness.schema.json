@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvidenceFreshness",
+  "type": "object",
+  "required": [
+    "event_id",
+    "evidence_id",
+    "evidence_ref",
+    "source",
+    "connector_id",
+    "event_type",
+    "asset_id",
+    "control_ids",
+    "evidence_collected_at",
+    "evaluated_at",
+    "freshness_slo_minutes",
+    "status",
+    "score",
+    "reason"
+  ],
+  "properties": {
+    "event_id": { "type": "string" },
+    "evidence_id": { "type": "string" },
+    "evidence_ref": { "type": "string" },
+    "source": { "type": "string" },
+    "connector_id": { "type": "string" },
+    "event_type": { "type": "string" },
+    "asset_id": { "type": "string" },
+    "control_ids": { "type": "array", "items": { "type": "string" } },
+    "evidence_collected_at": { "type": "string" },
+    "evaluated_at": { "type": "string", "format": "date-time" },
+    "freshness_slo_minutes": { "type": "integer", "minimum": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["fresh", "stale", "expired", "missing"]
+    },
+    "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "age_minutes": { "type": ["integer", "null"], "minimum": 0 },
+    "expires_at": { "type": ["string", "null"] },
+    "reason": { "type": "string" }
+  }
+}

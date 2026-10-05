@@ -37,7 +37,7 @@ def upgrade() -> None:
         sa.Column("owner", sa.String(length=255), server_default="", nullable=False),
         sa.Column("milestone", sa.Text(), server_default="", nullable=False),
         sa.Column("sprs_points", sa.Integer(), server_default="1", nullable=False),
-        sa.Column("poam_eligible", sa.Boolean(), server_default=sa.text("1"), nullable=False),
+        sa.Column("poam_eligible", sa.Boolean(), server_default=sa.true(), nullable=False),
         sa.Column("due_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("remediation_task_id", sa.String(length=36), nullable=True),
         sa.Column("created_by", sa.String(length=255), server_default="", nullable=False),

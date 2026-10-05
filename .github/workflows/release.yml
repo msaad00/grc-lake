@@ -137,7 +137,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19" # keep in step with the Dockerfile uv image
+          version: "0.12.23" # keep in step with the Dockerfile uv image
 
       # The console is gitignored and declared as package data. Building it
       # before packaging is what keeps the published wheel from being silently

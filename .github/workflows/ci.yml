@@ -52,7 +52,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19" # keep in step with the Dockerfile uv image
+          version: "0.12.23" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen lockfile)
         run: uv sync --frozen --all-extras
@@ -92,7 +92,7 @@ jobs:
           node-version: "22"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19" # keep in step with the Dockerfile uv image
+          version: "0.12.23" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -112,7 +112,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19" # keep in step with the Dockerfile uv image
+          version: "0.12.23" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -163,7 +163,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19" # keep in step with the Dockerfile uv image
+          version: "0.12.23" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -215,7 +215,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19"
+          version: "0.12.23" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install
         run: uv sync --frozen --extra server --extra dev
@@ -234,7 +234,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19" # keep in step with the Dockerfile uv image
+          version: "0.12.23" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -327,7 +327,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.19" # keep in step with the Dockerfile uv image
+          version: "0.12.23" # keep in step with the Dockerfile uv image
           enable-cache: true
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:

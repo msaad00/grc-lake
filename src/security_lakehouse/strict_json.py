@@ -7,9 +7,14 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from typing import Any
 
 MAX_DEPTH = 64
+# Scan whole string tokens in C so brackets inside escaped JSON strings never
+# count as structure. The lone-quote alternative stops at an unterminated
+# string instead of repeatedly scanning its suffix from each escaped quote.
+_STRUCTURE = re.compile(r'"[^"\\]*(?:\\.[^"\\]*)*"|["\[\]{}]')
 
 
 class InvalidJSON(json.JSONDecodeError):
@@ -66,18 +71,11 @@ def loads(raw: str | bytes) -> Any:
     try:
         text = raw.decode("utf-8-sig") if isinstance(raw, bytes) else raw.removeprefix("\ufeff")
         depth = 0
-        in_string = escaped = False
-        for char in text:
-            if in_string:
-                if escaped:
-                    escaped = False
-                elif char == "\\":
-                    escaped = True
-                elif char == '"':
-                    in_string = False
-            elif char == '"':
-                in_string = True
-            elif char in "[{":
+        for match in _STRUCTURE.finditer(text):
+            char = text[match.start()]
+            if char == '"' and match.end() == match.start() + 1:
+                raise InvalidJSON("unterminated JSON string")
+            if char in "[{":
                 depth += 1
                 if depth > MAX_DEPTH:
                     raise InvalidJSON("JSON nesting exceeds 64 levels")

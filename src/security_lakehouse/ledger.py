@@ -27,8 +27,8 @@ def canonical_record_hash(record: dict[str, Any], *, hash_field: str = "record_h
 
 
 @contextlib.contextmanager
-def chain_lock(path: str | Path):
-    """Exclusive lock serializing read-then-append chain writers on ``path``.
+def chain_lock(path: str | Path, *, shared: bool = False):
+    """Serialize chain writers; allow concurrent readers with ``shared=True``.
 
     Uses an OS-level ``flock`` on a sibling lock file, so it serializes across
     threads, processes, and server workers -- not just within one process.
@@ -40,7 +40,7 @@ def chain_lock(path: str | Path):
     lock_path = target.with_name(target.name + ".lock")
     fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
     try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        fcntl.flock(fd, fcntl.LOCK_SH if shared else fcntl.LOCK_EX)
         try:
             yield
         finally:

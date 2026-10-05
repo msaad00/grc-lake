@@ -7,6 +7,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Avoid repeated snapshot decoding and canonical hashing on unchanged history, allow concurrent verified readers, and decode only requested trend payloads after verification while retaining whole-chain tamper detection.
+
 - Record failed agent decisions without blocking other proposals, and let independent SSO reviewers close abandoned execution claims without replaying side effects or racing a live worker.
 
 - Route remote MCP reads and writes through authenticated APIs, reject incomplete remote configuration and credential-bearing redirects, and support explicitly configured private API destinations.

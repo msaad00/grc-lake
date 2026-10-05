@@ -187,9 +187,7 @@ def framework_readiness_trends(
     """Per-framework readiness scores over time from gold snapshots + current posture."""
     from security_lakehouse.assessment import _iter_snapshots, build_current_posture
 
-    snapshots = _iter_snapshots(lake_dir)
-    if limit > 0 and len(snapshots) > limit:
-        snapshots = snapshots[-limit:]
+    snapshots = _iter_snapshots(lake_dir, limit=limit)
 
     points: list[dict[str, Any]] = []
     framework_names: set[str] = set()

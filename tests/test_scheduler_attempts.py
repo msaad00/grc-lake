@@ -15,30 +15,24 @@ from security_lakehouse.io import read_jsonl
 def test_failed_attempt_is_durable_and_bounded(tmp_path, monkeypatch, kind, failure):
     period = timedelta(hours=23)
     monkeypatch.setattr(scheduler, "list_workflows", lambda lake: [])
-    monkeypatch.setattr(
-        scheduler,
-        "_scheduled_from_workflows",
-        lambda rows: [SimpleNamespace(workflow_id="target", period=period, schedule="every 23h")]
-        if kind == "workflow"
-        else [],
-    )
-    monkeypatch.setattr(
-        scheduler,
-        "_scheduled_from_connectors",
-        lambda lake: [
-            SimpleNamespace(
-                connector_id="target",
-                period=period,
-                schedule="every 23h",
-                repo=None,
-                fixture_dir=None,
-                token_env="TEST",
-                materialize=False,
-            )
-        ]
-        if kind == "connector"
-        else [],
-    )
+    workflows = [SimpleNamespace(workflow_id="target", period=period, schedule="every 23h")]
+    connectors = [
+        SimpleNamespace(
+            connector_id="target",
+            period=period,
+            schedule="every 23h",
+            repo=None,
+            fixture_dir=None,
+            token_env="TEST",
+            materialize=False,
+        )
+    ]
+    if kind != "workflow":
+        workflows = []
+    if kind != "connector":
+        connectors = []
+    monkeypatch.setattr(scheduler, "_scheduled_from_workflows", lambda rows: workflows)
+    monkeypatch.setattr(scheduler, "_scheduled_from_connectors", lambda lake: connectors)
     monkeypatch.setattr(
         scheduler,
         "_scheduled_lake_eval",

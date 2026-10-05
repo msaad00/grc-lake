@@ -655,10 +655,16 @@ def _parser() -> argparse.ArgumentParser:
         "tick", help="fire every due connector sync, lake eval, and cron workflow once"
     )
     scheduler_tick_cmd.add_argument("--lake", required=True, help="security data lake output directory")
+    scheduler_tick_cmd.add_argument(
+        "--all-tenants", action="store_true", help="schedule registered tenants from the server lake root"
+    )
     scheduler_tick_cmd.set_defaults(func=_scheduler_tick)
     scheduler_run_cmd = scheduler_sub.add_parser("run", help="run the scheduler daemon")
     scheduler_run_cmd.add_argument("--lake", required=True, help="security data lake output directory")
     scheduler_run_cmd.add_argument("--tick-seconds", type=int, default=60, help="seconds between ticks (default 60)")
+    scheduler_run_cmd.add_argument(
+        "--all-tenants", action="store_true", help="schedule registered tenants from the server lake root"
+    )
     scheduler_run_cmd.set_defaults(func=_scheduler_run)
 
     db = sub.add_parser("db", help="server-mode application-state database (requires the 'server' extra)")
@@ -2260,16 +2266,16 @@ def _frameworks_review_resign(args: argparse.Namespace) -> int:
 def _scheduler_tick(args: argparse.Namespace) -> int:
     from security_lakehouse.scheduler import tick
 
-    results = tick(args.lake)
+    results = tick(args.lake, all_tenants=args.all_tenants)
     print(json.dumps({"fired": len(results), "results": results}, indent=2, sort_keys=True))
-    return 0
+    return int(any(row.get("result") == "error" for row in results))
 
 
 def _scheduler_run(args: argparse.Namespace) -> int:
     from security_lakehouse.scheduler import run_forever
 
     print(f"scheduler running every {args.tick_seconds}s against {args.lake}; Ctrl-C to stop")
-    run_forever(args.lake, tick_seconds=args.tick_seconds)
+    run_forever(args.lake, tick_seconds=args.tick_seconds, all_tenants=args.all_tenants)
     return 0
 
 

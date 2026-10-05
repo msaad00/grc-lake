@@ -98,3 +98,21 @@ def test_rollout_stops_previous_writer_before_starting_replacement() -> None:
     assert result.returncode == 0
     deployment = next(doc for doc in yaml.safe_load_all(result.stdout) if doc and doc["kind"] == "Deployment")
     assert deployment["spec"]["strategy"] == {"type": "Recreate"}
+
+
+@pytest.mark.parametrize(
+    "settings,expected",
+    [
+        ([], True),
+        (["scheduler.allTenants=false"], False),
+        (["security.allowInsecureNoAuth=true", "security.allowInsecureOverride=acknowledged"], False),
+    ],
+)
+def test_scheduler_tenant_scope_matches_deployment(settings, expected):
+    import yaml
+
+    result = _helm_template(settings)
+    assert result.returncode == 0
+    cron = next(doc for doc in yaml.safe_load_all(result.stdout) if doc and doc["kind"] == "CronJob")
+    args = cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["args"]
+    assert ("--all-tenants" in args) is expected

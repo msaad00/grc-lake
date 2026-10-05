@@ -47,6 +47,9 @@ spec:
               args:
                 - scheduler
                 - tick
+                {{- if and .Values.scheduler.allTenants (not .Values.security.allowInsecureNoAuth) }}
+                - --all-tenants
+                {{- end }}
                 - --lake
                 - {{ .Values.lake.mountPath | quote }}
               env:

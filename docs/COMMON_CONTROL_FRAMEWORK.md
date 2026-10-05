@@ -15,9 +15,9 @@ operating effectiveness or an auditor acceptance decision. The API retains
 
 ## Why the catalog alone is not a CCF
 
-`controls/catalog.json` is framework-first: 2245 requirements, each carrying its
-own `framework_id` **and its own `evidence_requirement`** — 2245 distinct evidence
-statements for 2245 controls, none shared.
+`controls/catalog.json` is framework-first: 2251 requirements, each carrying its
+own `framework_id` **and its own `evidence_requirement`** — 2251 distinct evidence
+statements for 2251 controls, none shared.
 
 That last number is the whole problem. Because no two requirements share an
 evidence statement, answering SOC 2, ISO 27001, and FedRAMP means answering the
@@ -118,7 +118,7 @@ rest of that control.
 
 ```
 $ security-lakehouse frameworks safeguards --format table
-94 safeguards map 1415 of 2245 requirements (63.0%) — 350 maintainer-reviewed, 0 org-reviewed (15.6% attestable), 1065 proposed; 0 mapping(s) rejected by the org
+94 safeguards map 1415 of 2251 requirements (62.9%) — 350 maintainer-reviewed, 0 org-reviewed (15.5% attestable), 1065 proposed; 0 mapping(s) rejected by the org
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -143,7 +143,7 @@ cannot become a false certification claim.
 | cmmc-2-level2       |          110 |    110 | 100.0% |
 | eu-ai-act-2024-1689 |           16 |     16 | 100.0% |
 | gdpr-2016-679       |           20 |     20 | 100.0% |
-| hipaa-security-rule |           18 |     18 | 100.0% |
+| hipaa-security-rule |           24 |     18 |  75.0% |
 | nis2-2022-2555      |           17 |     17 | 100.0% |
 | pci-dss-v4          |           12 |     12 | 100.0% |
 | soc2                |           61 |     61 | 100.0% |
@@ -164,7 +164,7 @@ cannot become a false certification claim.
 ### What a safeguard applies to
 
 Evaluation targets resources, not frameworks. The catalog already records
-`asset_types` on all 2245 requirements — `iam_role`, `data_store`, `ai_model`,
+`asset_types` on all 2251 requirements — `iam_role`, `data_store`, `ai_model`,
 `audit_log`, `cloud_resource` and 15 more — and a safeguard carries the union of
 what its members apply to. `safeguards_for_asset_type("iam_role")` returns the
 19 safeguards that bear on IAM roles.
@@ -176,7 +176,7 @@ drifting as curation moves.
 
 ## The real ceiling is the catalog, not the curation
 
-90 of 2245 titles still contain identifier-only or boilerplate descriptions,
+90 of 2251 titles still contain identifier-only or boilerplate descriptions,
 all ISO 27001 Annex A entries. ISO text is licensed: those need short internal
 summaries or licensed access, and must not be copied into this public
 repository. The NIST AI RMF titles now use the official subcategory statements

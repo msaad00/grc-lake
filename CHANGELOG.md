@@ -7,6 +7,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Atomically claim agent decisions across SQLite/PostgreSQL before execution, require independent SSO review, and retain interrupted claims for reconciliation. The console now reflects review eligibility and in-progress decisions.
+
 - Retain API-key provenance in exchanged sessions, revoke derived access with the key, and reserve independent workpaper and mapping review for eligible SSO identities. Key issuance cannot impersonate another user.
 - Claim workflow decisions durably before execution, bind them to reviewed content, and reject replay or retry of interrupted approvals.
 

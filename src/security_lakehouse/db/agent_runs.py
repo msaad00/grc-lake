@@ -8,9 +8,9 @@ import json
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from sqlalchemy import select
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.orm import Session
 
 from security_lakehouse.agents import AgentBudgetPolicy, AgentDecision, run_posture_review, run_soc_triage
@@ -91,6 +91,62 @@ def agent_run_decisions(row: AgentRun) -> list[dict[str, Any]]:
     return [item for item in raw if isinstance(item, dict)] if isinstance(raw, list) else []
 
 
+class DecisionConflict(ValueError):
+    """A decision has changed, was consumed, or needs execution reconciliation."""
+
+
+def claim_decision(
+    session: Session,
+    row: AgentRun,
+    *,
+    decision_index: int,
+    actor: str,
+    rejection_reason: str | None = None,
+) -> None:
+    """Compare-and-swap the reviewed payload and commit before any side effect.
+
+    Serialize decisions within one run as their state is stored together. This
+    also prevents a later completion from overwriting another decision's claim.
+    """
+    before = row.decisions_json
+    previous_state = row.state_json
+    decisions = agent_run_decisions(row)
+    if (
+        not 0 <= decision_index < len(decisions)
+        or decisions[decision_index].get("status") != "proposed"
+        or any(item.get("status") == "executing" for item in decisions)
+    ):
+        raise DecisionConflict("decision is unavailable or needs reconciliation")
+    decision = dict(decisions[decision_index])
+    moment = _now(None).isoformat()
+    if rejection_reason is None:
+        decision.update(status="executing", approved_by=actor, approved_at=moment)
+    else:
+        decision.update(status="rejected", rejected_by=actor, rejected_at=moment, rejection_reason=rejection_reason)
+    decisions[decision_index] = decision
+    state = _json_loads(previous_state, None)
+    if not isinstance(state, dict):
+        raise DecisionConflict("agent run state is invalid")
+    state["decisions"] = decisions
+    result = session.execute(
+        update(AgentRun)
+        .where(
+            AgentRun.id == row.id,
+            AgentRun.tenant_id == row.tenant_id,
+            AgentRun.decisions_json == before,
+            AgentRun.state_json == previous_state,
+            AgentRun.status == "completed",
+        )
+        .values(decisions_json=_json_dumps(decisions), state_json=_json_dumps(state))
+        .execution_options(synchronize_session=False)
+    )
+    if cast(CursorResult[Any], result).rowcount != 1:
+        session.rollback()
+        raise DecisionConflict("agent decision changed before it could be claimed")
+    session.commit()
+    session.refresh(row)
+
+
 def mark_decision_executed(
     row: AgentRun,
     *,
@@ -160,6 +216,7 @@ def run_and_persist_agent(
     objective: str,
     role: str,
     created_by: str,
+    created_by_id: str | None = None,
     idempotency_key: str | None = None,
     provider: ModelProviderConfig | None = None,
     budget: AgentBudgetPolicy | None = None,
@@ -265,6 +322,7 @@ def run_and_persist_agent(
         state_json=_json_dumps(clean),
         errors_json=_json_dumps(clean.get("errors") or []),
         created_by=created_by,
+        created_by_id=created_by_id,
         created_at=moment,
         completed_at=moment,
     )
@@ -289,6 +347,7 @@ def agent_run_to_dict(row: AgentRun, *, include_state: bool = False) -> dict[str
         "decisions": _json_loads(row.decisions_json, []),
         "errors": _json_loads(row.errors_json, []),
         "created_by": row.created_by,
+        "created_by_id": row.created_by_id,
         "created_at": _iso(row.created_at),
         "completed_at": _iso(row.completed_at),
     }

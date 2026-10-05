@@ -223,6 +223,7 @@ export interface AgentRun {
   decisions: AgentDecision[];
   errors: string[];
   created_by: string;
+  created_by_id?: string | null;
   created_at: string;
   completed_at: string | null;
   state?: Record<string, unknown>;
@@ -261,6 +262,7 @@ export interface AuthWhoami {
   email: string;
   role: string;
   scopes: string[];
+  auth_method?: string;
   /** True when connectors must use tenant-delegated access (hosted server mode). */
   hosted?: boolean;
   /** Env-var prefix the hosted secret-ref policy accepts for this tenant. */

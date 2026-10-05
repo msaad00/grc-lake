@@ -80,7 +80,7 @@ from security_lakehouse.db import metrics as metrics_db
 from security_lakehouse.db import migrate, remediation, repository
 from security_lakehouse.db import tags as tags_db
 from security_lakehouse.db.base import DEFAULT_PAGE_LIMIT, clamp_limit, create_engine_for, session_factory
-from security_lakehouse.db.models import REMEDIATION_PRIORITIES, USER_ROLES, User
+from security_lakehouse.db.models import REMEDIATION_PRIORITIES, USER_ROLES, AgentRun, User
 from security_lakehouse.demo_links import build_demo_kit
 from security_lakehouse.execution_mode import run_in_server_mode, server_execution
 from security_lakehouse.ingestion_status import build_ingestion_status
@@ -1600,6 +1600,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                     "email": identity.email,
                     "role": identity.role,
                     "scopes": sorted(identity.scopes),
+                    "auth_method": identity.auth_method,
                     # Connector forms need these to ask for delegated access and
                     # suggest env-var names the hosted secret-ref policy accepts.
                     "hosted": delegation["required"],
@@ -2118,6 +2119,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 objective=body.objective or f"Run {body.harness} harness.",
                 role=role,
                 created_by=identity.email,
+                created_by_id=identity.user_id,
                 idempotency_key=body.idempotency_key,
                 provider=provider,
                 budget=budget,
@@ -2149,6 +2151,14 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             )
         )
 
+    def require_independent_agent_reviewer(row: AgentRun, identity: Identity) -> None:
+        if identity.auth_method not in {"session:oidc", "session:saml"}:
+            raise HTTPException(status_code=403, detail="agent review requires an independent SSO identity")
+        if not row.created_by_id:
+            raise HTTPException(status_code=409, detail="legacy agent run requires a new review run")
+        if row.created_by_id == identity.user_id:
+            raise HTTPException(status_code=403, detail="agent reviewer must differ from the run creator")
+
     @app.post("/api/v1/agent-runs/{run_id}/decisions/{decision_index}/approve", tags=["agents"])
     def approve_agent_decision(
         run_id: str,
@@ -2162,6 +2172,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="agent run not found")
         if row.status != "completed":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="agent run is not executable")
+        require_independent_agent_reviewer(row, identity)
         decisions = agent_runs_db.agent_run_decisions(row)
         if decision_index < 0 or decision_index >= len(decisions):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="agent decision not found")
@@ -2178,6 +2189,21 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 )
             )
 
+        action = str(decision.get("action") or "")
+        if action not in {
+            "create_evidence_request",
+            "create_remediation_task",
+            "create_soc_case",
+            "assign_owner",
+            "freeze_snapshot",
+        }:
+            raise HTTPException(status_code=400, detail="agent decision action is not executable")
+        if action == "freeze_snapshot" and not identity.has_scope("snapshot"):
+            raise HTTPException(status_code=403, detail="snapshot scope required")
+        try:
+            agent_runs_db.claim_decision(session, row, decision_index=decision_index, actor=identity.email)
+        except agent_runs_db.DecisionConflict as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         result = _execute_agent_decision(
             session,
             lake=_safe_agent_lake_path(lake, lake_for(identity)),
@@ -2191,14 +2217,15 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             approved_by=identity.email,
             execution_result=result,
         )
-        session.commit()
-        return JSONResponse(
+        response = JSONResponse(
             api_v1.envelope(
                 "agent-runs.decisions",
                 _redact_payload(agent_runs_db.agent_run_to_dict(row, include_state=True), identity),
                 meta={"executed": True, "decision_index": decision_index, "execution_result": result},
             )
         )
+        session.commit()
+        return response
 
     @app.post("/api/v1/agent-runs/{run_id}/decisions/{decision_index}/reject", tags=["agents"])
     def reject_agent_decision(
@@ -2214,6 +2241,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         row = agent_runs_db.get_agent_run(session, tenant_id=identity.tenant_id, run_id=run_id)
         if row is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="agent run not found")
+        require_independent_agent_reviewer(row, identity)
         decisions = agent_runs_db.agent_run_decisions(row)
         if decision_index < 0 or decision_index >= len(decisions):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="agent decision not found")
@@ -2221,10 +2249,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if current == "executed":
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="agent decision was already executed")
         if current != "rejected":
-            agent_runs_db.mark_decision_rejected(
-                row, decision_index=decision_index, rejected_by=identity.email, reason=reason
-            )
-            session.commit()
+            try:
+                agent_runs_db.claim_decision(
+                    session, row, decision_index=decision_index, actor=identity.email, rejection_reason=reason
+                )
+            except agent_runs_db.DecisionConflict as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
         return JSONResponse(
             api_v1.envelope(
                 "agent-runs.decisions",

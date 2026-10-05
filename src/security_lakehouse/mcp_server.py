@@ -577,8 +577,9 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     def approve_agent_decision(run_id: str, decision_index: int, note: str = "") -> JsonObject:
         """Approve one stored harness decision and execute its allowlisted TrustOps write.
 
-        Execution is idempotent server-side: retrying an already executed
-        decision returns the stored execution result instead of duplicating work.
+        Human-reserved: the API refuses API-key MCP credentials. An independent
+        reviewer must use an OIDC/SAML console session. Completed decisions return
+        their stored result; interrupted claims require operator reconciliation.
         """
         encoded_run = urllib.parse.quote(run_id, safe="")
         return _server_api_request(
@@ -591,8 +592,9 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     def reject_agent_decision(run_id: str, decision_index: int, reason: str) -> JsonObject:
         """Reject one stored harness decision so it is never executed.
 
-        A reason is required and recorded with the rejecting identity. Rejecting
-        an already executed decision fails; repeating a rejection is a no-op.
+        Human-reserved: API-key MCP credentials are refused. Use an independent
+        OIDC/SAML console reviewer. A reason is required; an executing or executed
+        decision cannot be rejected.
         """
         encoded_run = urllib.parse.quote(run_id, safe="")
         return _server_api_request(

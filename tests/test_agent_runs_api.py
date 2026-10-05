@@ -17,16 +17,30 @@ pytest.importorskip("alembic")
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import inspect  # noqa: E402
 
+from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie  # noqa: E402
 from security_lakehouse.db import agent_runs, migrate  # noqa: E402
 from security_lakehouse.db.base import create_engine_for, session_scope  # noqa: E402
 from security_lakehouse.db.models import AgentRun  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
+from security_lakehouse.db.repository import (  # noqa: E402
+    create_api_key,
+    create_tenant,
+    create_user,
+    create_user_session,
+    resolve_api_key,
+)
 from security_lakehouse.server_app import create_app  # noqa: E402
 from test_api_v1 import _seed_lake  # noqa: E402
 
 
 def _bearer(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+def _human(app, token):
+    with session_scope(app.state.sessionmaker) as session:
+        key = resolve_api_key(session, token)
+        _, value = create_user_session(session, tenant_id=key.tenant_id, user_id=key.user_id, idp="oidc")
+    return {"Cookie": f"{SESSION_COOKIE}={encode_session_cookie(value)}"}
 
 
 def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
@@ -197,7 +211,7 @@ def test_agent_run_api_accepts_langgraph_for_soc_triage_when_installed(env) -> N
 
 
 def test_agent_run_approval_executes_evidence_request_once(env) -> None:
-    _app, client, tokens = env
+    app, client, tokens = env
     created = client.post(
         "/api/v1/agent-runs",
         json={"harness": "posture_review", "objective": "review gaps"},
@@ -212,7 +226,7 @@ def test_agent_run_approval_executes_evidence_request_once(env) -> None:
     approved = client.post(
         f"/api/v1/agent-runs/{run_id}/decisions/0/approve",
         json={"note": "Need this before customer review."},
-        headers=_bearer(tokens["contributor"]),
+        headers=_human(app, tokens["security_admin"]),
     )
     assert approved.status_code == HTTPStatus.OK
     body = approved.json()
@@ -220,20 +234,22 @@ def test_agent_run_approval_executes_evidence_request_once(env) -> None:
     assert body["meta"]["executed"] is True
     decision = body["data"]["decisions"][0]
     assert decision["status"] == "executed"
-    assert decision["approved_by"] == "contributor@acme.test"
+    assert decision["approved_by"] == "security_admin@acme.test"
     assert decision["execution_result"]["type"] == "evidence_request"
 
-    requests = client.get("/api/v1/remediation/evidence-requests", headers=_bearer(tokens["contributor"]))
+    requests = client.get("/api/v1/remediation/evidence-requests", headers=_human(app, tokens["security_admin"]))
     assert requests.status_code == HTTPStatus.OK
     rows = requests.json()["data"]
     assert len(rows) == 1
     assert rows[0]["control_id"] == "SOC2-CC6.1"
     assert "Approval note" in rows[0]["note"]
 
-    retry = client.post(f"/api/v1/agent-runs/{run_id}/decisions/0/approve", headers=_bearer(tokens["contributor"]))
+    retry = client.post(
+        f"/api/v1/agent-runs/{run_id}/decisions/0/approve", headers=_human(app, tokens["security_admin"])
+    )
     assert retry.status_code == HTTPStatus.OK
     assert retry.json()["meta"]["executed"] is False
-    again = client.get("/api/v1/remediation/evidence-requests", headers=_bearer(tokens["contributor"]))
+    again = client.get("/api/v1/remediation/evidence-requests", headers=_human(app, tokens["security_admin"]))
     assert len(again.json()["data"]) == 1
 
 
@@ -290,7 +306,7 @@ def test_agent_run_snapshot_approval_requires_snapshot_scope(env) -> None:
 
     approved = client.post(
         f"/api/v1/agent-runs/{run_id}/decisions/0/approve",
-        headers=_bearer(tokens["security_admin"]),
+        headers=_human(app, tokens["security_admin"]),
     )
     assert approved.status_code == HTTPStatus.OK
     result = approved.json()["meta"]["execution_result"]
@@ -396,39 +412,41 @@ def _posture_run(client: TestClient, token: str) -> str:
 
 
 def test_agent_decision_can_be_rejected_with_a_reason_and_is_never_executed(env) -> None:
-    _app, client, tokens = env
+    app, client, tokens = env
     run_id = _posture_run(client, tokens["contributor"])
     url = f"/api/v1/agent-runs/{run_id}/decisions/0/reject"
 
     assert client.post(url, json={"reason": "no"}, headers=_bearer(tokens["read_only"])).status_code == 403
-    assert client.post(url, json={"reason": "  "}, headers=_bearer(tokens["contributor"])).status_code == 400
+    assert client.post(url, json={"reason": "  "}, headers=_human(app, tokens["security_admin"])).status_code == 400
 
     rejected = client.post(
-        url, json={"reason": "Already covered by vendor SOC report."}, headers=_bearer(tokens["contributor"])
+        url, json={"reason": "Already covered by vendor SOC report."}, headers=_human(app, tokens["security_admin"])
     )
     assert rejected.status_code == HTTPStatus.OK
     decision = rejected.json()["data"]["decisions"][0]
     assert decision["status"] == "rejected"
-    assert decision["rejected_by"] == "contributor@acme.test"
+    assert decision["rejected_by"] == "security_admin@acme.test"
     assert decision["rejection_reason"] == "Already covered by vendor SOC report."
     assert "execution_result" not in decision
 
-    again = client.post(url, json={"reason": "second"}, headers=_bearer(tokens["contributor"]))
+    again = client.post(url, json={"reason": "second"}, headers=_human(app, tokens["security_admin"]))
     assert again.status_code == HTTPStatus.OK
     assert again.json()["data"]["decisions"][0]["rejection_reason"] == "Already covered by vendor SOC report."
 
-    approve = client.post(f"/api/v1/agent-runs/{run_id}/decisions/0/approve", headers=_bearer(tokens["contributor"]))
+    approve = client.post(
+        f"/api/v1/agent-runs/{run_id}/decisions/0/approve", headers=_human(app, tokens["security_admin"])
+    )
     assert approve.status_code == HTTPStatus.CONFLICT
-    requests = client.get("/api/v1/remediation/evidence-requests", headers=_bearer(tokens["contributor"]))
+    requests = client.get("/api/v1/remediation/evidence-requests", headers=_human(app, tokens["security_admin"]))
     assert requests.json()["data"] == []
 
 
 def test_executed_agent_decision_cannot_be_rejected(env) -> None:
-    _app, client, tokens = env
+    app, client, tokens = env
     run_id = _posture_run(client, tokens["contributor"])
     base = f"/api/v1/agent-runs/{run_id}/decisions/0"
-    assert client.post(f"{base}/approve", headers=_bearer(tokens["contributor"])).status_code == HTTPStatus.OK
+    assert client.post(f"{base}/approve", headers=_human(app, tokens["security_admin"])).status_code == HTTPStatus.OK
 
-    rejected = client.post(f"{base}/reject", json={"reason": "too late"}, headers=_bearer(tokens["contributor"]))
+    rejected = client.post(f"{base}/reject", json={"reason": "too late"}, headers=_human(app, tokens["security_admin"]))
 
     assert rejected.status_code == HTTPStatus.CONFLICT

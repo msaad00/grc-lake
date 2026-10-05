@@ -222,7 +222,7 @@ jobs:
       - name: Upgrade, downgrade, preserve data, and check model drift
         env:
           TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable-password@localhost:5432/postgres
-        run: uv run pytest -q tests/test_migration_portability.py
+        run: uv run pytest -q tests/test_migration_portability.py tests/test_agent_decision_authority.py
 
   iceberg-interop:
     runs-on: ubuntu-latest

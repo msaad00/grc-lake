@@ -574,6 +574,7 @@ class AgentRun(Base):
     decisions_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     state_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     errors_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    created_by_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     created_by: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow, server_default=func.now()

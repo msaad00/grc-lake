@@ -27,18 +27,23 @@ test.describe("agents harness", () => {
       timeout: 15_000,
     });
     await expect(
-      page.getByRole("button", { name: "Approve" }).first(),
+      page
+        .getByText(
+          "Sign in with an independent SSO reviewer to approve or reject.",
+        )
+        .first(),
     ).toBeVisible();
 
     const approve = await request.post(
       `/api/v1/agent-runs/${run.id}/decisions/0/approve`,
       { data: { note: "e2e approve" } },
     );
-    expect(approve.ok()).toBeTruthy();
-    expect((await approve.json()).data.decisions[0].status).toBe("executed");
+    expect(approve.status()).toBe(403);
+    const stored = await request.get(`/api/v1/agent-runs/${run.id}`);
+    expect((await stored.json()).data.decisions[0].status).toBe("proposed");
   });
 
-  test("a proposed decision can be rejected with a reason", async ({
+  test("local demo cannot claim an authenticated reviewer", async ({
     page,
     request,
   }) => {
@@ -55,30 +60,63 @@ test.describe("agents harness", () => {
 
     await page.goto("/console/agents/");
     await page.waitForLoadState("networkidle");
-    const reject = page.getByRole("button", { name: "Reject" }).first();
-    await expect(reject).toBeVisible({ timeout: 15_000 });
-
-    await reject.click();
-    await expect(
-      page.getByText("Add a reason to reject this decision.").first(),
-    ).toBeVisible();
-
-    await page
-      .getByPlaceholder("Optional for approval; required to reject")
-      .first()
-      .fill("Covered by the vendor SOC report.");
-    const posted = page.waitForRequest(
-      (req) => req.method() === "POST" && req.url().includes("/reject"),
+    await expect(page.getByRole("button", { name: "Reject" })).toHaveCount(0);
+    const rejected = await request.post(
+      `/api/v1/agent-runs/${run.id}/decisions/0/reject`,
+      {
+        data: { reason: "Local demo is not an independent reviewer." },
+      },
     );
-    await reject.click();
-    const body = (await posted).postDataJSON();
-    expect(body).toEqual({ reason: "Covered by the vendor SOC report." });
-    await expect(page.getByText(/^Rejected by /).first()).toBeVisible();
+    expect(rejected.status()).toBe(403);
 
     const stored = await request.get(`/api/v1/agent-runs/${run.id}`);
     const statuses = (await stored.json()).data.decisions.map(
       (d: { status?: string }) => d.status,
     );
-    expect(statuses).toContain("rejected");
+    expect(statuses).not.toContain("rejected");
   });
 });
+
+for (const theme of ["light", "dark"] as const) {
+  for (const width of [390, 1440]) {
+    test(`review authority notice at ${width}px in ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      const created = await request.post("/api/v1/agent-runs", {
+        data: {
+          harness: "posture_review",
+          objective: "Review authority layout",
+          use_model: false,
+        },
+      });
+      expect(created.ok()).toBeTruthy();
+      await page.addInitScript((mode) => {
+        window.localStorage.setItem("trustops:theme", JSON.stringify(mode));
+      }, theme);
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/console/agents/");
+      await expect(
+        page
+          .getByText(
+            "Sign in with an independent SSO reviewer to approve or reject.",
+          )
+          .first(),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Approve", exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Reject", exact: true }),
+      ).toHaveCount(0);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBeTruthy();
+      await page.screenshot({
+        path: test.info().outputPath(`approval-${theme}-${width}.png`),
+      });
+    });
+  }
+}

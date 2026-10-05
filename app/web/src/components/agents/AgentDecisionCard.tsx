@@ -6,6 +6,7 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  useAuthWhoami,
   useApproveAgentDecisionMutation,
   useRejectAgentDecisionMutation,
 } from "@/lib/api/hooks";
@@ -61,7 +62,19 @@ export function AgentDecisionCard({
   const rejectDecision = useRejectAgentDecisionMutation();
   const [note, setNote] = useState("");
   const [needsReason, setNeedsReason] = useState(false);
-  const busy = approveDecision.isPending || rejectDecision.isPending;
+  const identity = useAuthWhoami().data;
+  const independentReviewer = Boolean(
+    identity &&
+    ["session:oidc", "session:saml"].includes(identity.auth_method ?? "") &&
+    identity.scopes.includes("write") &&
+    run.created_by_id &&
+    run.created_by_id !== identity.user_id,
+  );
+  const executionPending = run.decisions.some(
+    (item) => item.status === "executing",
+  );
+  const busy =
+    approveDecision.isPending || rejectDecision.isPending || executionPending;
 
   const reject = async () => {
     const reason = note.trim();
@@ -148,7 +161,7 @@ export function AgentDecisionCard({
         ) : null}
       </div>
       <div className="flex min-w-0 flex-col items-stretch gap-2 lg:items-end">
-        {decision.status === "proposed" ? (
+        {decision.status === "proposed" && independentReviewer ? (
           <>
             <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted">
               Note or reason
@@ -198,6 +211,15 @@ export function AgentDecisionCard({
               </Button>
             </div>
           </>
+        ) : decision.status === "proposed" ? (
+          <p className="max-w-xs text-sm text-muted">
+            Sign in with an independent SSO reviewer to approve or reject.
+          </p>
+        ) : decision.status === "executing" ? (
+          <p className="max-w-xs text-sm text-muted" role="status">
+            Execution is in progress or was interrupted. Reconcile its outcome
+            before retrying.
+          </p>
         ) : (
           <Badge tone={toneForStatus(decision.status)}>
             {displayLabel(decision.status ?? "done")}

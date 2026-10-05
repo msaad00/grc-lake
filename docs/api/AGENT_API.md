@@ -180,9 +180,12 @@ Agents should:
    CI, and MCP clients.
 8. Inspect `data_readiness.status` before acting on proposals; `needs_ingestion`
    means the account should sync/read existing lake data before trust conclusions.
-9. Approve a specific stored proposal only after policy or human review. Retry
-   approval calls safely; executed decisions return their previous execution
-   result rather than duplicating work.
+9. An independent OIDC/SAML reviewer with write authority must approve or reject
+   stored proposals. Creator identities, API keys, exchanged key sessions, and
+   the unauthenticated demo cannot decide. Completed approvals return the stored
+   result without executing again. Concurrent, rejected, changed, or interrupted
+   decisions return 409; interrupted execution requires operator reconciliation.
+   Historical runs without a stable creator identity require a new review run.
 
 Agents should not infer compliance status from visual text. The API is the
 contract.

@@ -220,7 +220,7 @@ def _test_result(
 ) -> str:
     if not events or int(control.get("evidence_count") or 0) == 0:
         return "needs_evidence"
-    if failing_events or control.get("status") == "fail":
+    if control.get("status") == "fail" or (not control.get("status") and failing_events):
         return "fail"
     if control.get("status") == "not_evaluated":
         return "needs_evidence"

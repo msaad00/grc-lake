@@ -388,8 +388,13 @@ def _role_assignment_event(
     principal_type = str(props.get("principal_type") or props.get("principalType") or "Unknown").strip()
     scope = str(props.get("scope") or f"/subscriptions/{subscription}").strip()
     privileged = role_name.lower() in PRIVILEGED_ROLE_NAMES
-    subscription_scope = scope.lower().rstrip("/").endswith(f"/subscriptions/{subscription}".lower())
-    noteworthy = privileged and subscription_scope
+    subscription_scope = scope.lower().rstrip("/") == f"/subscriptions/{subscription}".lower()
+    broad_scope = (
+        subscription_scope
+        or scope == "/"
+        or bool(re.fullmatch(r"/providers/microsoft\.management/managementgroups/[^/]+/?", scope.lower()))
+    )
+    noteworthy = privileged and broad_scope
     return _event(
         subscription=subscription,
         collected_at=collected_at,
@@ -413,6 +418,7 @@ def _role_assignment_event(
             "scope": scope,
             "privileged_role": privileged,
             "subscription_scope": subscription_scope,
+            "broad_scope": broad_scope,
         },
     )
 

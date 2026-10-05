@@ -298,3 +298,22 @@ Tune per control after sync by editing `evaluation_rule` in the catalog.
 - Pack-specific evidence requirement templates linked to connector catalogs
 
 See [ROADMAP.md](../ROADMAP.md).
+
+### HIPAA source identity and scope
+
+The HIPAA pack retains supported standard-group and implementation-specification
+identifiers. Its catalog row count is not a count of statutory standards or a
+completeness claim. Source reconciliation adds distinct entries for workstation
+use, workstation security and device/media controls from
+[45 CFR 164.310](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.310),
+authentication from
+[45 CFR 164.312](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312),
+and policies/procedures and documentation from
+[45 CFR 164.316](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.316).
+
+These entries take effect in the catalog on 2026-10-05; earlier snapshots and
+supported granular identifiers remain unchanged. Their mapping review remains
+proposed. They declare required evidence types for explicitly classified inputs;
+this does not claim that existing connectors automatically collect those types,
+that every implementation specification is represented, or that source identity
+alone proves control effectiveness.

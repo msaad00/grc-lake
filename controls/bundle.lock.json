@@ -2,12 +2,12 @@
   "schema_version": "trustops.catalog_bundle.v1",
   "as_of": null,
   "framework_count": 22,
-  "control_count": 2245,
-  "crosswalk_count": 2245,
+  "control_count": 2251,
+  "crosswalk_count": 2251,
   "components": {
     "frameworks": "2b46444467ecf7d5c645826f234291c934329934f0e74c15711e7732fef8ebf5",
-    "controls": "f070be718a366e65432330abe7df935bcc24d6440bfd9beef26aa42e753f9a3d",
-    "crosswalk": "6e5da4bca255a50d8de62711666404a764293ca65d46eec7bb8abed659ddc471",
+    "controls": "2e30b62292dce3e09c72093dde81449903e5e7104c598b7b225163d3275b02b6",
+    "crosswalk": "63cf6605c7f1a2547695f2dc1ec327bd1199c18730818bf11507f1c306d5d54c",
     "safeguards": "1b2ae04abd4a7b64473a6a9fbfaa889ac33dda4338632be59c0fb64bd75558a5"
   },
   "framework_versions": [
@@ -4529,6 +4529,27 @@
       "lifecycle_status": "active"
     },
     {
+      "control_id": "HIPAA-164.310(b)",
+      "framework_id": "hipaa-security-rule",
+      "version": "1.0.0",
+      "valid_from": "2026-10-05",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "HIPAA-164.310(c)",
+      "framework_id": "hipaa-security-rule",
+      "version": "1.0.0",
+      "valid_from": "2026-10-05",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "HIPAA-164.310(d)",
+      "framework_id": "hipaa-security-rule",
+      "version": "1.0.0",
+      "valid_from": "2026-10-05",
+      "lifecycle_status": "active"
+    },
+    {
       "control_id": "HIPAA-164.312(a)",
       "framework_id": "hipaa-security-rule",
       "version": "1.0.0",
@@ -4557,6 +4578,13 @@
       "lifecycle_status": "active"
     },
     {
+      "control_id": "HIPAA-164.312(d)",
+      "framework_id": "hipaa-security-rule",
+      "version": "1.0.0",
+      "valid_from": "2026-10-05",
+      "lifecycle_status": "active"
+    },
+    {
       "control_id": "HIPAA-164.312(e)",
       "framework_id": "hipaa-security-rule",
       "version": "1.0.0",
@@ -4575,6 +4603,20 @@
       "framework_id": "hipaa-security-rule",
       "version": "1.0.0",
       "valid_from": "2026-06-30",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "HIPAA-164.316(a)",
+      "framework_id": "hipaa-security-rule",
+      "version": "1.0.0",
+      "valid_from": "2026-10-05",
+      "lifecycle_status": "active"
+    },
+    {
+      "control_id": "HIPAA-164.316(b)",
+      "framework_id": "hipaa-security-rule",
+      "version": "1.0.0",
+      "valid_from": "2026-10-05",
       "lifecycle_status": "active"
     },
     {
@@ -15883,5 +15925,5 @@
       "lifecycle_status": "active"
     }
   ],
-  "bundle_sha256": "6f50e84a85098171ecda2c32463506fca33b14e27daa79da6fe41144ddf6a3e6"
+  "bundle_sha256": "2efbfa1eddfcd4e85ceb57946874ffbbbc2e6b79c0cc8617bb04d8536c9a070b"
 }

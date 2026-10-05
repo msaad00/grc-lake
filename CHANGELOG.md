@@ -7,6 +7,10 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Keep inventory observations unevaluated, respect configured failure thresholds, and include declared eligible assets without period evidence in workpaper sampling gaps.
+- Retain failed login attempts as observations, preserve GCP IAM conditions, and identify broad/public access grants and open repository alert severity.
+- Reconcile missing HIPAA workstation, media, authentication, policy and documentation identities against eCFR, preserving historical catalog scope and proposed mapping review.
+
 - Atomically claim agent decisions across SQLite/PostgreSQL before execution, require independent SSO review, and retain interrupted claims for reconciliation. The console now reflects review eligibility and in-progress decisions.
 - Preserve connector-local event identities through upsert, normalization, incremental evaluation, and lineage; reject conflicting equal-time observations and retain newer evidence on stale redelivery.
 - Preserve UTC instants in DuckDB marts and sinks independently of connection timezone.

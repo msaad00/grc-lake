@@ -129,7 +129,7 @@ Start with the [deployment guide](deploy/README.md).
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**20 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,245 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
+**20 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,251 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
 
 1,415 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 

@@ -301,7 +301,18 @@ def _cluster_admin_event(
         if isinstance(s, dict)
     ]
     non_system = [s for s in subjects if not str(s.get("name") or "").startswith("system:")]
-    if non_system:
+    broad_system = [
+        s
+        for s in subjects
+        if (s.get("kind"), s.get("name"))
+        in {
+            ("Group", "system:authenticated"),
+            ("Group", "system:unauthenticated"),
+            ("Group", "system:serviceaccounts"),
+            ("User", "system:anonymous"),
+        }
+    ]
+    if non_system or broad_system:
         status, severity, reason = "open", "high", "cluster_admin_granted"
     else:
         # The built-in binding to system:masters (or a subject-less binding) is
@@ -331,6 +342,7 @@ def _cluster_admin_event(
             "role": CLUSTER_ADMIN_ROLE,
             "subjects": subjects,
             "non_system_subject_count": len(non_system),
+            "broad_system_subject_count": len(broad_system),
             "benchmark_ref": "CIS Kubernetes 5.1.1",
             "finding_reason": reason,
         },

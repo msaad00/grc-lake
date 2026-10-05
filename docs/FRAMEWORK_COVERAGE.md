@@ -6,9 +6,9 @@ not operating effectiveness, assessment completion, or certification. API fields
 retain `evaluatable` and `attestable` names for compatibility.
 
 Framework packs: 20 with catalogued requirements (2 more registry entries planned or superseded)
-Requirements catalogued: 2245 (all source-cited)
-Mapped (touched by a safeguard): 1415 (63.0%)
-**Reviewed safeguard mappings: 350 (15.6%)**
+Requirements catalogued: 2251 (all source-cited)
+Mapped (touched by a safeguard): 1415 (62.9%)
+**Reviewed safeguard mappings: 350 (15.5%)**
 Asset types modeled: 20
 
 > `Source-cited` = the requirement has an official source link. `Mapped` = a safeguard claims it (reviewed or proposed). `Reviewed` = a human has confirmed the safeguard-to-requirement mapping. An assessment still needs scoped evidence and tests of operating effectiveness.
@@ -22,7 +22,7 @@ Asset types modeled: 20
 | EU AI Act - Regulation (EU) 2024/1689 | [EUR-Lex - Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) | implemented_limited_mapping | 16 | 16 | 16 | 1 | 6.2% | never pulled |
 | FedRAMP Moderate (NIST SP 800-53 Rev 5 Moderate baseline) | [NIST SP 800-53 Rev 5 Moderate baseline (FedRAMP Moderate foundation)](https://csrc.nist.gov/publications/detail/sp/800-53b/final) | implemented_full_pack | 287 | 287 | 262 | 96 | 33.4% | never pulled |
 | GDPR - EU General Data Protection Regulation (2016/679) | [EUR-Lex - Regulation (EU) 2016/679](https://eur-lex.europa.eu/eli/reg/2016/679/oj) | implemented_limited_mapping | 20 | 20 | 20 | 3 | 15.0% | never pulled |
-| HIPAA Security Rule (45 CFR Parts 160, 162, 164) | [U.S. HHS HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) | implemented_limited_mapping | 18 | 18 | 18 | 4 | 22.2% | never pulled |
+| HIPAA Security Rule (45 CFR Parts 160, 162, 164) | [U.S. HHS HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) | implemented_limited_mapping | 24 | 24 | 18 | 4 | 16.7% | never pulled |
 | ISO/IEC 27001:2022 Information security management systems | [ISO/IEC 27001:2022](https://www.iso.org/standard/27001) | implemented_full_pack | 93 | 93 | 81 | 10 | 10.8% | never pulled |
 | ISO/IEC 27017:2015 Cloud security controls | [ISO/IEC 27017:2015](https://www.iso.org/standard/43757.html) | implemented_full_pack | 47 | 47 | 44 | 18 | 38.3% | never pulled |
 | ISO/IEC 27701:2019 Privacy information management | [ISO/IEC 27701:2019](https://www.iso.org/standard/71670.html) | planned | 0 | 0 | 0 | 0 | 0.0% | never pulled |
@@ -44,23 +44,23 @@ Every seeded control declares the asset types it applies to. The pipeline joins 
 
 | Asset type | Applicable controls |
 | --- | ---: |
-| `service` | 1785 |
+| `service` | 1788 |
 | `audit_log` | 762 |
 | `cloud_resource` | 650 |
 | `cloud_policy` | 636 |
 | `iam_role` | 405 |
 | `identity_user` | 368 |
-| `host` | 344 |
+| `host` | 347 |
 | `identity_group` | 342 |
 | `okta_user` | 341 |
-| `data_store` | 231 |
+| `data_store` | 232 |
 | `container_image` | 195 |
 | `repo` | 193 |
 | `ai_model` | 127 |
 | `ai_agent` | 119 |
 | `s3_bucket` | 69 |
 | `identity_account` | 62 |
+| `user` | 5 |
 | `network` | 4 |
-| `user` | 4 |
 | `identity_role_assignment` | 3 |
 | `account_config` | 1 |

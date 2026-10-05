@@ -100,7 +100,7 @@ def hipaa_limited_pack_specs() -> Iterable[PackControlSpec]:
             framework="HIPAA",
             control_id_prefix="HIPAA",
             framework_ref=lambda ref: f"45 CFR §{ref}",
-            source_url=HIPAA_SOURCE,
+            source_url=str(row.extra.get("source_url", HIPAA_SOURCE)),
         ),
     )
 

@@ -25,7 +25,7 @@ for the manifest schema and the "add a new framework" workflow.
 | `nis2_2022_2555.json`            | `nis2`              |                                          **17** |
 | `dora_2022_2554.json`            | `dora`              |                                          **99** |
 | `gdpr_2016_679.json`             | `gdpr`              |                                          **14** |
-| `hipaa_security_rule.json`       | `hipaa`             |                                          **12** |
+| `hipaa_security_rule.json`       | `hipaa`             |                                    see manifest |
 | `pci_dss_v4.json`                | `pci-dss`           |                                          **12** |
 | `eu_ai_act_2024_1689.json`       | `eu-ai-act`         |                                          **10** |
 | `evidence_connector_hints.json`  | all packs           |                                               — |
@@ -44,3 +44,10 @@ their own top-level row key (`requirements`/`controls`/`control_ids` instead
 of `rows`) — `pack_from_manifest(..., rows_key=...)` reads them as-is so other
 direct consumers (e.g. `sprs.py` reads `cmmc_2_level2.json` for SPRS scoring
 metadata) are unaffected.
+
+HIPAA catalog rows include standards and selected implementation specifications;
+their count is not the statutory count of Security Rule standards. Supported
+granular identifiers are retained. Newly reconciled entries cite their eCFR
+section and start on their source reconciliation date, without changing earlier
+catalog versions. Adding a source identity does not approve a cross-framework
+mapping or establish operating effectiveness.

@@ -184,3 +184,13 @@ Legacy state timestamps without an offset retain their UTC interpretation.
 Malformed state fails closed and is left unchanged for operator reconciliation;
 reads do not skip corrupt rows or reset retry history. Preserve the original file
 when investigating an interrupted attempt or repairing state.
+
+### Connector status reads
+
+Catalog, health, and ingestion status share a per-request index of connector
+configuration and run history. Each file is read once within the request;
+separate lakes have separate indexes, writes invalidate the current index, and
+later requests reread current state. This cache does not persist across requests.
+The latest successful sync is selected from all retained runs, even when more
+than 50 newer failures exist. Recent-run response limits do not limit health
+history. Reads reject malformed JSON records without rewriting or skipping them.

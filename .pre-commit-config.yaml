@@ -70,4 +70,4 @@ repos:
         # Alembic migration of this kind produces two heads and breaks `db upgrade`.
         entry: "copy artifact detected — rename or delete the duplicated file"
         language: fail
-        files: '( [0-9]| copy)\.(py|ts|tsx)$|\.(bak|orig)$'
+        files: '( [0-9]+| copy)\.(py|ts|tsx|json)$|\.(bak|orig)$'

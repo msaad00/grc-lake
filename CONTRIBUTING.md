@@ -58,6 +58,21 @@ Run the checks that match what you touched before you push. CI runs all of them.
 | Helm, Terraform         | `make deploy-check` (needs `helm` and `terraform`)                                    |
 | Everything, as CI does  | `make ci`, then `make pre-commit-run`                                                 |
 
+CI partitions the complete collected Python suite into four groups, balancing
+by test count while keeping each module's fixtures on one runner. To reproduce
+a group locally, run `uv run python -m pytest -q -p tools.pytest_shard --ci-shard=1/4`
+(replace `1` with the failing group). Ordinary `make test` still runs everything.
+The required `smoke` check passes only when every group and the pipeline smoke
+pass; failures, cancellations, and skipped dependencies block it. Each group
+retains a JUnit report and prints its slowest tests for diagnosing imbalance.
+
+Ruff runs in `quality` and the history secret scan runs in `security`; CI skips
+those duplicate pre-commit hooks and caches the remaining hook environments.
+Local pre-commit still runs every hook. The security and Docker jobs start
+without waiting for the web job; Python, pipeline, and browser tests consume
+its bundle. Docker separately verifies the standalone image build and Compose
+quickstart. CodeQL cancels superseded runs for the same branch or pull request.
+
 Write the test first when you fix a bug or add behavior, and check that it
 fails without your change. Tests assert on real output, not on "it ran".
 

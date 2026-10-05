@@ -38,7 +38,10 @@ def publish(setup, **kwargs):
 def test_publish_and_retry_preserve_one_snapshot(setup):
     receipt = publish(setup)
     table = setup[1].load_table(("tenant_a", "evidence"))
-    assert table.scan().to_arrow().to_pylist() == read_jsonl(setup[0] / "silver/normalized_events.jsonl")
+    assert table.scan().to_arrow().to_pylist() == [
+        {"connector_id": None, "source_event_id": None, **row}
+        for row in read_jsonl(setup[0] / "silver/normalized_events.jsonl")
+    ]
     assert receipt["snapshot_id"] == table.current_snapshot().snapshot_id
     assert receipt["row_count"] == 10
     assert receipt["tenant_id"] == TENANT

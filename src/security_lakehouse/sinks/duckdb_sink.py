@@ -185,13 +185,15 @@ GOLD_VIEWS: tuple[str, ...] = (
 
 
 def _coerce_datetime(value: Any) -> datetime:
-    """Parse an ISO-8601 string (``Z`` accepted) to a UTC-aware datetime."""
+    """Store naive UTC in TIMESTAMP columns, independent of DuckDB session timezone."""
     if isinstance(value, datetime):
-        return value
-    text = str(value or "").strip()
-    if not text:
-        return datetime(1970, 1, 1, tzinfo=UTC)
-    return datetime.fromisoformat(text.replace("Z", "+00:00"))
+        moment = value
+    else:
+        text = str(value or "").strip()
+        moment = datetime.fromisoformat(text.replace("Z", "+00:00")) if text else datetime(1970, 1, 1, tzinfo=UTC)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=UTC)
+    return moment.astimezone(UTC).replace(tzinfo=None)
 
 
 def rows_for_spec(spec: DuckTableSpec, lake_dir: str | Path) -> list[list[Any]]:

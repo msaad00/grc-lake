@@ -150,8 +150,8 @@ from security_lakehouse.connectors_workday import (
     collect_workday_evidence,
 )
 from security_lakehouse.delegation import azure_credential, gcp_credentials, server_env_override
+from security_lakehouse.event_identity import source_event_key
 from security_lakehouse.execution_mode import in_server_mode, server_execution, server_tenant_id
-from security_lakehouse.ingestion.merge import dedupe_by_key
 from security_lakehouse.ingestion.watermark import read_watermark, write_watermark
 from security_lakehouse.io import read_jsonl, write_jsonl
 from security_lakehouse.lake_mapping import (
@@ -1662,19 +1662,52 @@ def _advance_watermark(lake: Path, connector_id: str, rows: list[dict[str, Any]]
     cursors = [str(row.get("event_time")) for row in rows if row.get("event_time")]
     if not cursors:
         return read_watermark(lake, connector_id)
-    cursor = max(cursors)
+    from security_lakehouse.models import parse_event_time, utc_iso
+
+    cursor = utc_iso(max(parse_event_time(value) for value in cursors))
     prior = read_watermark(lake, connector_id)
-    if prior is not None and cursor <= prior:
+    if prior is not None and parse_event_time(cursor) <= parse_event_time(prior):
         return prior
     write_watermark(lake, connector_id, cursor)
     return cursor
 
 
 def _dedupe_latest(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Collapse a single pull to one row per event_id, last occurrence winning."""
-    indexed = list(enumerate(rows))
-    deduped = dedupe_by_key(indexed, key=lambda pair: str(pair[1]["event_id"]), recency=lambda pair: pair[0])
-    return [row for _position, row in deduped]
+    """Retain the newest instant per connector/source ID; reject ambiguous ties."""
+    from security_lakehouse.io import canonical_sha256
+    from security_lakehouse.models import parse_event_time
+
+    latest: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        key = source_event_key(row)
+        prior = latest.get(key)
+        moment = parse_event_time(str(row["event_time"]))
+        if prior is None or moment > parse_event_time(str(prior["event_time"])):
+            latest[key] = row
+        elif moment == parse_event_time(str(prior["event_time"])):
+            # Recollection metadata may advance while immutable source content
+            # stays identical. A changed outcome at the same source time is ambiguous.
+            def content(value):
+                evidence = dict(value.get("evidence") or {})
+                evidence.pop("collected_at", None)
+                evidence.pop("evidence_collected_at", None)
+                return {
+                    **value,
+                    "event_time": parse_event_time(str(value["event_time"])).isoformat(),
+                    "evidence": evidence,
+                }
+
+            def collected(value):
+                evidence = value.get("evidence") or {}
+                return parse_event_time(
+                    str(evidence.get("collected_at") or evidence.get("evidence_collected_at") or value["event_time"])
+                )
+
+            if canonical_sha256(content(row)) != canonical_sha256(content(prior)):
+                raise ValueError("conflicting observations at the same event timestamp")
+            if collected(row) > collected(prior):
+                latest[key] = row
+    return list(latest.values())
 
 
 def _upsert_raw_events(
@@ -1697,23 +1730,17 @@ def _upsert_raw_events(
         fresh = _dedupe_latest(rows)
 
         if write_mode == "snapshot":
-            # Snapshot replace: drop this connector's prior rows (so entities deleted
-            # at the source vanish) and any row this pull re-delivers; keep everyone
-            # else's evidence untouched. This is what gives current-state connectors
-            # deletion detection instead of an ever-growing union.
-            incoming_ids = {str(row["event_id"]) for row in fresh}
+            # Only this connector owns its snapshot deletions. Preserve newer
+            # observations for redelivered IDs, independently of arrival order.
+            incoming_keys = {source_event_key(row) for row in fresh}
             retained = [
                 row
                 for row in existing
-                if row.get("connector_id") != connector_id and str(row.get("event_id")) not in incoming_ids
+                if row.get("connector_id") != connector_id or source_event_key(row) in incoming_keys
             ]
-            merged = retained + fresh
+            merged = _dedupe_latest(retained + fresh)
         else:
-            # Append (idempotent): dedup existing + incoming on event_id, last write
-            # wins, so an overlapping re-pull never double-counts and history stays.
-            indexed = list(enumerate(existing + fresh))
-            deduped = dedupe_by_key(indexed, key=lambda pair: str(pair[1]["event_id"]), recency=lambda pair: pair[0])
-            merged = [row for _position, row in deduped]
+            merged = _dedupe_latest(existing + fresh)
 
         errors = validate_raw_events(merged)
         if errors:

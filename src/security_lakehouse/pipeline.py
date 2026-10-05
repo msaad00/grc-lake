@@ -13,6 +13,7 @@ from typing import Any
 
 from security_lakehouse.asset_names import asset_names_from_raw, entity_asset_id
 from security_lakehouse.controls import expand_controls, load_control_map
+from security_lakehouse.event_identity import event_identity
 from security_lakehouse.event_status import FAIL_STATUSES, normalize_event_status
 from security_lakehouse.evidence_freshness import (
     build_evidence_freshness,
@@ -33,11 +34,11 @@ from security_lakehouse.io import file_sha256, iter_jsonl, read_json, read_jsonl
 from security_lakehouse.models import SEVERITY_SCORE, PipelineResult, parse_event_time, utc_iso
 from security_lakehouse.policy import ControlContext, RuleResult, evaluate_control
 from security_lakehouse.programs import build_control_tests
-from security_lakehouse.validation import validate_raw_events
+from security_lakehouse.validation import validate_raw_event, validate_raw_events
 
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
-NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v2"
+NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v3"
 
 
 @serialized_publication
@@ -129,7 +130,7 @@ def run_pipeline_incremental(
     bronze_path = out / "bronze" / "raw_events.jsonl"
     silver_path = out / "silver" / "normalized_events.jsonl"
     for bronze in read_jsonl(bronze_path, missing_ok=True, base_dir=out):
-        event_id = str((bronze.get("raw") or {}).get("event_id") or "")
+        event_id = event_identity(bronze.get("raw") or {})
         if event_id:
             bronze_by_event[event_id] = bronze
     for silver in read_jsonl(silver_path, missing_ok=True, base_dir=out):
@@ -148,7 +149,7 @@ def run_pipeline_incremental(
         for row in delta_rows:
             bronze = _bronze_row(row)
             silver = _silver_row(row, bronze["raw_sha256"])
-            event_id = str(row["event_id"])
+            event_id = event_identity(row)
             bronze_by_event[event_id] = bronze
             silver_by_event[event_id] = silver
 
@@ -417,7 +418,7 @@ def _raw_row_fingerprint(row: dict[str, Any]) -> str:
 
 
 def _build_raw_index(raw_rows: list[dict[str, Any]]) -> dict[str, str]:
-    return {str(row["event_id"]): _raw_row_fingerprint(row) for row in raw_rows}
+    return {event_identity(row): _raw_row_fingerprint(row) for row in raw_rows}
 
 
 def _compute_raw_delta(
@@ -426,8 +427,13 @@ def _compute_raw_delta(
 ) -> tuple[list[dict[str, Any]], set[str], dict[str, str]]:
     delta_rows: list[dict[str, Any]] = []
     new_index: dict[str, str] = {}
-    for row in iter_jsonl(raw_path):
-        event_id = str(row["event_id"])
+    for index, row in enumerate(iter_jsonl(raw_path), start=1):
+        errors = validate_raw_event(row, index=index)
+        if errors:
+            raise ValueError("raw evidence validation failed: " + "; ".join(errors))
+        event_id = event_identity(row)
+        if event_id in new_index:
+            raise ValueError("duplicate scoped event identity in incremental input")
         fingerprint = _raw_row_fingerprint(row)
         new_index[event_id] = fingerprint
         if prior_index.get(event_id) != fingerprint:
@@ -535,7 +541,12 @@ def _silver_row(row: dict[str, Any], raw_sha256: str) -> dict[str, Any]:
     severity = str(row.get("severity", "info")).lower()
     event_type = str(row["event_type"])
     return {
-        "event_id": str(row["event_id"]),
+        "event_id": event_identity(row),
+        **(
+            {"connector_id": row["connector_id"], "source_event_id": str(row["event_id"])}
+            if row.get("connector_id")
+            else {}
+        ),
         "tenant_id": str(row["tenant_id"]),
         "event_time": utc_iso(parse_event_time(str(row["event_time"]))),
         "source": str(row["source"]),
@@ -550,7 +561,7 @@ def _silver_row(row: dict[str, Any], raw_sha256: str) -> dict[str, Any]:
         "status": normalize_event_status(row.get("status", "observed")),
         "control_ids": [str(item) for item in row.get("controls", [])],
         "safeguard_ids": sorted(set(row.get("safeguard_ids", []))),
-        "evidence_id": str(evidence.get("evidence_id") or row["event_id"]),
+        "evidence_id": str(evidence.get("evidence_id") or event_identity(row)),
         "evidence_ref": _evidence_ref(row, evidence, raw_sha256),
         "evidence_collected_at": utc_iso(
             parse_event_time(evidence.get("collected_at") or evidence.get("evidence_collected_at") or row["event_time"])
@@ -571,7 +582,7 @@ def _evidence_ref(row: dict[str, Any], evidence: dict[str, Any], raw_sha256: str
     if explicit:
         return explicit
     source = str(row.get("source") or "unknown").strip() or "unknown"
-    event_id = str(row.get("event_id") or "").strip()
+    event_id = event_identity(row).strip()
     if event_id:
         return f"trustops://bronze/{source}/{event_id}"
     return f"trustops://bronze/{source}/{raw_sha256}"
@@ -1081,6 +1092,11 @@ def _write_duckdb_mart_if_available(
 
     import duckdb
 
+    from security_lakehouse.sinks.duckdb_sink import _coerce_datetime
+
+    def utc_timestamp(value):
+        return _coerce_datetime(value) if value else None
+
     if mart_path.exists():
         mart_path.unlink()
     with duckdb.connect(str(mart_path)) as conn:
@@ -1211,7 +1227,7 @@ def _write_duckdb_mart_if_available(
                 (
                     row["event_id"],
                     row["tenant_id"],
-                    row["event_time"],
+                    utc_timestamp(row["event_time"]),
                     row["source"],
                     row["event_type"],
                     row["asset_id"],
@@ -1224,7 +1240,7 @@ def _write_duckdb_mart_if_available(
                     json.dumps(row["control_ids"]),
                     row["evidence_id"],
                     row["evidence_ref"],
-                    row["evidence_collected_at"],
+                    utc_timestamp(row["evidence_collected_at"]),
                     row["raw_sha256"],
                 )
                 for row in silver_rows
@@ -1247,7 +1263,7 @@ def _write_duckdb_mart_if_available(
                     row["open_event_count"],
                     row["evidence_count"],
                     row["evidence_coverage"],
-                    row["latest_event_time"],
+                    utc_timestamp(row["latest_event_time"]),
                 )
                 for row in control_rows
             ],
@@ -1266,7 +1282,7 @@ def _write_duckdb_mart_if_available(
                     row["critical_open"],
                     row["high_open"],
                     row["event_count"],
-                    row["latest_event_time"],
+                    utc_timestamp(row["latest_event_time"]),
                 )
                 for row in asset_rows
             ],
@@ -1296,7 +1312,7 @@ def _write_duckdb_mart_if_available(
                     row["evidence_count"],
                     row["failing_evidence_count"],
                     row["open_violation_count"],
-                    row["latest_evidence_at"],
+                    utc_timestamp(row["latest_evidence_at"]),
                     row["freshness_status"],
                     json.dumps(row["stale_evidence_types"], sort_keys=True),
                     json.dumps(row["expired_evidence_types"], sort_keys=True),
@@ -1304,7 +1320,7 @@ def _write_duckdb_mart_if_available(
                     row["remediation_sla_hours"],
                     row["next_action"],
                     json.dumps(row["api_refs"], sort_keys=True),
-                    row["evaluated_at"],
+                    utc_timestamp(row["evaluated_at"]),
                 )
                 for row in control_test_rows
             ],
@@ -1322,13 +1338,13 @@ def _write_duckdb_mart_if_available(
                     row["event_type"],
                     row["asset_id"],
                     json.dumps(row["control_ids"], sort_keys=True),
-                    row["evidence_collected_at"],
-                    row["evaluated_at"],
+                    utc_timestamp(row["evidence_collected_at"]),
+                    utc_timestamp(row["evaluated_at"]),
                     row["freshness_slo_minutes"],
                     row["status"],
                     row["score"],
                     row["age_minutes"],
-                    row["expires_at"],
+                    utc_timestamp(row["expires_at"]),
                     row["reason"],
                 )
                 for row in evidence_freshness_rows

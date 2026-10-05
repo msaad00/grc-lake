@@ -6,6 +6,7 @@ import re
 from datetime import datetime
 from typing import Any
 
+from security_lakehouse.event_identity import event_identity
 from security_lakehouse.strict_json import InvalidJSON, validate
 
 REQUIRED_FIELDS = {"event_id", "tenant_id", "event_time", "source", "event_type", "entity"}
@@ -44,6 +45,8 @@ def validate_raw_event(row: dict[str, Any], *, index: int | None = None) -> list
             errors.append(f"{prefix}event_time must be a timezone-qualified ISO-8601 timestamp")
     if not isinstance(row.get("entity"), dict):
         errors.append(f"{prefix}entity must be an object")
+    if "connector_id" in row and (not isinstance(row["connector_id"], str) or not row["connector_id"].strip()):
+        errors.append(f"{prefix}connector_id must be a nonempty string")
     severity = row.get("severity", "info")
     if not isinstance(severity, str) or severity not in VALID_SEVERITIES:
         errors.append(f"{prefix}severity must be one of {sorted(VALID_SEVERITIES)}")
@@ -78,7 +81,7 @@ def validate_raw_events(rows: list[dict[str, Any]]) -> list[str]:
         errors.extend(validate_raw_event(row, index=index))
         if not isinstance(row, dict):
             continue
-        event_id = str(row.get("event_id", ""))
+        event_id = event_identity(row)
         if event_id in seen:
             errors.append(f"record {index}: duplicate event_id {event_id}")
         seen.add(event_id)

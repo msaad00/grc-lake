@@ -22,6 +22,7 @@ def test_dashboard_smoke_asserts_embedded_assessment_data() -> None:
 
 
 def test_smoke_gate_rejects_failed_cancelled_or_skipped_dependencies() -> None:
+    import itertools
     import os
     import subprocess
 
@@ -30,20 +31,21 @@ def test_smoke_gate_rejects_failed_cancelled_or_skipped_dependencies() -> None:
     jobs = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())["jobs"]
     gate = jobs["smoke"]
     assert gate["if"] == "always()"
-    assert set(gate["needs"]) == {"pipeline-smoke", "python-tests"}
+    assert set(gate["needs"]) == {"pipeline-smoke", "python-tests", "pre-commit", "security"}
     step = gate["steps"][0]
     assert step["env"] == {
         "PIPELINE_RESULT": "${{ needs.pipeline-smoke.result }}",
         "TEST_RESULT": "${{ needs.python-tests.result }}",
+        "HOOK_RESULT": "${{ needs.pre-commit.result }}",
+        "SECURITY_RESULT": "${{ needs.security.result }}",
     }
-    for pipeline in ("success", "failure", "cancelled", "skipped"):
-        for tests in ("success", "failure", "cancelled", "skipped"):
-            result = subprocess.run(
-                ["bash", "-c", step["run"]],
-                env={**os.environ, "PIPELINE_RESULT": pipeline, "TEST_RESULT": tests},
-                check=False,
-            )
-            assert (result.returncode == 0) == (pipeline == tests == "success")
+    for results in itertools.product(("success", "failure", "cancelled", "skipped"), repeat=4):
+        result = subprocess.run(
+            ["bash", "-c", step["run"]],
+            env={**os.environ, **dict(zip(step["env"], results, strict=True))},
+            check=False,
+        )
+        assert (result.returncode == 0) == all(value == "success" for value in results)
 
 
 def test_python_matrix_runs_complete_suite_once_and_preserves_artifact_dependencies() -> None:

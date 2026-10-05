@@ -62,8 +62,8 @@ CI partitions the complete collected Python suite into four groups, balancing
 by test count while keeping each module's fixtures on one runner. To reproduce
 a group locally, run `uv run python -m pytest -q -p tools.pytest_shard --ci-shard=1/4`
 (replace `1` with the failing group). Ordinary `make test` still runs everything.
-The required `smoke` check passes only when every group and the pipeline smoke
-pass; failures, cancellations, and skipped dependencies block it. Each group
+The required `smoke` check passes only when every group, the pipeline smoke, hooks,
+and security scans pass; failures, cancellations, and skipped dependencies block it. Each group
 retains a JUnit report and prints its slowest tests for diagnosing imbalance.
 
 Ruff runs in `quality` and the history secret scan runs in `security`; CI skips

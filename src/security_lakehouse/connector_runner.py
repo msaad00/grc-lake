@@ -1628,8 +1628,8 @@ def _max_rows_per_sync(options: dict[str, Any]) -> int:
 
 # A connector whose evidence describes current state (IAM, config, inventory)
 # is written as a per-run snapshot: the latest pull is the whole truth, so an
-# entity removed at the source must disappear from the lake. Event-log evidence
-# (audit/alert streams) is append-only: history is never overwritten.
+# entity removed at the source must disappear from the lake. Event-log sources
+# retain other source IDs while newer observations update an existing owned ID.
 SNAPSHOT_DATA_SHAPE = "current_state"
 
 
@@ -1673,7 +1673,7 @@ def _advance_watermark(lake: Path, connector_id: str, rows: list[dict[str, Any]]
 
 
 def _dedupe_latest(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Retain the newest instant per connector/source ID; reject ambiguous ties."""
+    """Order each owned source ID by event time, then collection time."""
     from security_lakehouse.io import canonical_sha256
     from security_lakehouse.models import parse_event_time
 
@@ -1685,8 +1685,9 @@ def _dedupe_latest(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if prior is None or moment > parse_event_time(str(prior["event_time"])):
             latest[key] = row
         elif moment == parse_event_time(str(prior["event_time"])):
-            # Recollection metadata may advance while immutable source content
-            # stays identical. A changed outcome at the same source time is ambiguous.
+            # Mutable records (for example, an alert that closes) can keep the
+            # original event time. The newer collection determines current state;
+            # only ties on both timestamps leave conflicting content ambiguous.
             def content(value):
                 evidence = dict(value.get("evidence") or {})
                 evidence.pop("collected_at", None)
@@ -1703,10 +1704,13 @@ def _dedupe_latest(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     str(evidence.get("collected_at") or evidence.get("evidence_collected_at") or value["event_time"])
                 )
 
-            if canonical_sha256(content(row)) != canonical_sha256(content(prior)):
-                raise ValueError("conflicting observations at the same event timestamp")
-            if collected(row) > collected(prior):
+            row_collected, prior_collected = collected(row), collected(prior)
+            if row_collected > prior_collected:
                 latest[key] = row
+            elif row_collected == prior_collected and canonical_sha256(content(row)) != canonical_sha256(
+                content(prior)
+            ):
+                raise ValueError("conflicting observations at the same event timestamp and collection timestamp")
     return list(latest.values())
 
 

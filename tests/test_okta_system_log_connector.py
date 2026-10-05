@@ -35,7 +35,7 @@ def test_okta_system_log_sync_advances_watermark(tmp_path: Path) -> None:
     result = run_connector_sync(tmp_path, connector_id="okta-system-log", fixture_dir=FIXTURE, actor="test")
     assert result.result == "ok"
     assert result.evidence_count == 2
-    assert result.watermark_cursor == "2026-05-20T13:05:00.000Z"
-    assert read_watermark(tmp_path, "okta-system-log") == "2026-05-20T13:05:00.000Z"
+    assert result.watermark_cursor == "2026-05-20T13:05:00Z"
+    assert read_watermark(tmp_path, "okta-system-log") == "2026-05-20T13:05:00Z"
     raw = read_jsonl(tmp_path / CONNECTOR_RAW_FILE)
     assert len(raw) == 2

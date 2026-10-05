@@ -38,7 +38,10 @@ def publish(setup, **kwargs):
 def test_publish_and_retry_preserve_one_snapshot(setup):
     receipt = publish(setup)
     table = setup[1].load_table(("tenant_a", "evidence"))
-    assert table.scan().to_arrow().to_pylist() == read_jsonl(setup[0] / "silver/normalized_events.jsonl")
+    assert table.scan().to_arrow().to_pylist() == [
+        {"connector_id": None, "source_event_id": None, **row}
+        for row in read_jsonl(setup[0] / "silver/normalized_events.jsonl")
+    ]
     assert receipt["snapshot_id"] == table.current_snapshot().snapshot_id
     assert receipt["row_count"] == 10
     assert receipt["tenant_id"] == TENANT
@@ -305,3 +308,27 @@ def test_cli_receipt_and_connection_cleanup(setup, monkeypatch, capsys):
     )
     assert json.loads(capsys.readouterr().out)["row_count"] == 10
     assert closed == [True]
+
+
+def test_v2_table_requires_explicit_identity_column_evolution(setup, tmp_path, monkeypatch):
+    with monkeypatch.context() as legacy:
+        legacy.setattr(pipeline, "NORMALIZATION_TRANSFORM_VERSION", "trustops.normalization.v2")
+        pipeline.run_pipeline(RAW, setup[0], tenant_id=TENANT)
+    first = publish(setup)
+    table = setup[1].load_table(("tenant_a", "evidence"))
+    original = table.scan(snapshot_id=first["snapshot_id"]).to_arrow().to_pylist()
+    raw = tmp_path / "scoped.jsonl"
+    rows = read_jsonl(RAW)[:1]
+    rows[0]["connector_id"] = "source-one"
+    write_jsonl(raw, rows)
+    pipeline.run_pipeline(raw, setup[0], tenant_id=TENANT)
+    with pytest.raises(iceberg_export.IcebergPublicationError, match="schema"):
+        publish(setup)
+    assert setup[1].load_table(("tenant_a", "evidence")).current_snapshot().snapshot_id == first["snapshot_id"]
+    with table.update_schema() as update:
+        update.add_column("connector_id", StringType(), required=False)
+        update.add_column("source_event_id", StringType(), required=False)
+    publish(setup)
+    table = setup[1].load_table(("tenant_a", "evidence"))
+    assert table.scan().to_arrow().to_pylist()[0]["source_event_id"] == rows[0]["event_id"]
+    assert table.scan(snapshot_id=first["snapshot_id"]).to_arrow().to_pylist() == original

@@ -14,6 +14,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.event_identity import event_identity
 from security_lakehouse.generations import ARTIFACTS, generation_reader, pin_generation, verify_generation
 from security_lakehouse.io import canonical_sha256 as _canonical_sha256
 from security_lakehouse.io import file_sha256, read_json, read_jsonl
@@ -40,7 +41,7 @@ def _bronze_record(lake_dir: str | Path, event_id: str) -> dict[str, Any] | None
     for path in _bronze_paths(lake_dir):
         for row in read_jsonl(path):
             raw = row.get("raw") or {}
-            if row.get("event_id") == event_id or raw.get("event_id") == event_id:
+            if row.get("event_id") == event_id or event_identity(raw) == event_id or raw.get("event_id") == event_id:
                 return row
     return None
 

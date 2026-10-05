@@ -37,7 +37,9 @@ def test_duckdb_reads_exact_typed_rows_and_provenance(lake, tmp_path):
         cursor = db.execute("SELECT * FROM read_parquet(?) ORDER BY event_id", [str(out / "evidence.parquet")])
         names = [column[0] for column in cursor.description]
         rows = [dict(zip(names, row, strict=True)) for row in cursor.fetchall()]
-    assert rows == sorted(source, key=lambda row: row["event_id"])
+    assert rows == sorted(
+        [{"connector_id": None, "source_event_id": None, **row} for row in source], key=lambda row: row["event_id"]
+    )
     assert result == read_json(out / "manifest.json")
     assert result["row_count"] == len(source)
     assert result["tenant_id"] == TENANT
@@ -129,7 +131,9 @@ def test_publication_during_export_keeps_original_generation(lake, tmp_path, mon
     assert active_generation(lake).name != first
     assert result["generation"]["generation_id"] == first
     assert result["row_count"] == len(before)
-    assert pq.read_table(tmp_path / "export/evidence.parquet").to_pylist() == before
+    assert pq.read_table(tmp_path / "export/evidence.parquet").to_pylist() == [
+        {"connector_id": None, "source_event_id": None, **row} for row in before
+    ]
 
 
 def test_interrupted_export_has_no_visible_partial_bundle(lake, tmp_path, monkeypatch):
@@ -249,18 +253,39 @@ def test_explicit_safeguard_bindings_survive_portable_export(tmp_path):
     assert pq.read_table(out / "evidence.parquet").to_pylist()[0]["safeguard_ids"] == ["SG-IDENTITY-001"]
 
 
-def test_legacy_normalized_rows_remain_exportable(tmp_path, monkeypatch):
+@pytest.mark.parametrize("version", ["v1", "v2"])
+def test_legacy_normalized_rows_remain_exportable(tmp_path, monkeypatch, version):
     normalize = pipeline._silver_row
 
     def legacy(row, digest):
         result = normalize(row, digest)
-        result.pop("safeguard_ids")
+        if version == "v1":
+            result.pop("safeguard_ids")
         return result
 
     monkeypatch.setattr(pipeline, "_silver_row", legacy)
-    monkeypatch.setattr(pipeline, "NORMALIZATION_TRANSFORM_VERSION", "trustops.normalization.v1")
+    monkeypatch.setattr(pipeline, "NORMALIZATION_TRANSFORM_VERSION", f"trustops.normalization.{version}")
     lake = tmp_path / "lake"
     pipeline.run_pipeline(RAW, lake, tenant_id=TENANT)
     out = tmp_path / "export"
     export(lake, out)
-    assert "safeguard_ids" not in pq.read_schema(out / "evidence.parquet").names
+    names = pq.read_schema(out / "evidence.parquet").names
+    assert ("safeguard_ids" in names) == (version == "v2")
+    assert "connector_id" not in names
+    assert "source_event_id" not in names
+
+
+def test_connector_scoped_identity_survives_portable_export(tmp_path):
+    rows = read_jsonl(RAW)[:2]
+    rows[0]["connector_id"] = "source-one"
+    raw = tmp_path / "raw.jsonl"
+    write_jsonl(raw, rows)
+    lake = tmp_path / "lake"
+    pipeline.run_pipeline(raw, lake, tenant_id=TENANT)
+    out = tmp_path / "export"
+    export(lake, out)
+    exported = pq.read_table(out / "evidence.parquet").to_pylist()
+    scoped = next(row for row in exported if row["connector_id"])
+    assert scoped["source_event_id"] == rows[0]["event_id"]
+    assert scoped["event_id"] != scoped["source_event_id"]
+    assert next(row for row in exported if not row["connector_id"])["source_event_id"] is None

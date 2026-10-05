@@ -44,11 +44,16 @@ _LIST_FIELDS = ("control_ids", "evidence_types")
 _FIELDS = frozenset((*_STRING_FIELDS, *_LIST_FIELDS, "severity_score"))
 
 
-def _arrow_schema(pa, identity, tenant_id, *, safeguard_bindings=False):
+def _arrow_schema(pa, identity, tenant_id, *, safeguard_bindings=False, connector_identity=False):
     # Keep timestamp strings lossless: the normalized contract contains ISO text,
     # and evidence_collected_at is not guaranteed to have timestamp semantics.
     return pa.schema(
         [pa.field(name, pa.string(), nullable=False) for name in _STRING_FIELDS]
+        + (
+            [pa.field(name, pa.string(), nullable=True) for name in ("connector_id", "source_event_id")]
+            if connector_identity
+            else []
+        )
         + [pa.field("severity_score", pa.int64(), nullable=False)]
         + [
             pa.field(name, pa.list_(pa.field("element", pa.string(), nullable=False)), nullable=False)
@@ -64,9 +69,17 @@ def _arrow_schema(pa, identity, tenant_id, *, safeguard_bindings=False):
     )
 
 
-def _validate_row(row, tenant_id, *, safeguard_bindings=False):
+def _validate_row(row, tenant_id, *, safeguard_bindings=False, connector_identity=False):
     list_fields = (*_LIST_FIELDS, *(("safeguard_ids",) if safeguard_bindings else ()))
     fields = _FIELDS | ({"safeguard_ids"} if safeguard_bindings else set())
+    if connector_identity and isinstance(row, dict):
+        present = {"connector_id", "source_event_id"} & set(row)
+        if present and (
+            present != {"connector_id", "source_event_id"}
+            or any(not isinstance(row[name], str) or not row[name].strip() for name in present)
+        ):
+            raise ValueError("normalized evidence contains invalid connector identity")
+        fields |= present
     if not isinstance(row, dict) or set(row) != fields:
         raise ValueError("normalized evidence fields do not match the export schema")
     if row["tenant_id"] != tenant_id:
@@ -139,8 +152,14 @@ def export_parquet(lake_dir: str | Path, output_dir: str | Path, *, tenant_id: s
         if type(expected_count) is not int or expected_count < 0:
             raise ValueError("assessment has no valid normalized evidence count")
         identity = generation_identity(lake)
-        safeguard_bindings = normalization.get("transform_version") == "trustops.normalization.v2"
-        schema = _arrow_schema(pa, identity, tenant_id, safeguard_bindings=safeguard_bindings)
+        transform = normalization.get("transform_version")
+        if transform not in {"trustops.normalization.v1", "trustops.normalization.v2", "trustops.normalization.v3"}:
+            raise ValueError("unsupported normalization transform version")
+        safeguard_bindings = transform in {"trustops.normalization.v2", "trustops.normalization.v3"}
+        connector_identity = transform == "trustops.normalization.v3"
+        schema = _arrow_schema(
+            pa, identity, tenant_id, safeguard_bindings=safeguard_bindings, connector_identity=connector_identity
+        )
         source = generation / "silver/normalized_events.jsonl"
         source_digest = _sha256(source)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -151,7 +170,9 @@ def export_parquet(lake_dir: str | Path, output_dir: str | Path, *, tenant_id: s
             batch = []
             with pq.ParquetWriter(parquet, schema, version="2.6", compression="zstd") as writer:
                 for row in iter_jsonl(source):
-                    _validate_row(row, tenant_id, safeguard_bindings=safeguard_bindings)
+                    _validate_row(
+                        row, tenant_id, safeguard_bindings=safeguard_bindings, connector_identity=connector_identity
+                    )
                     batch.append(row)
                     count += 1
                     if len(batch) >= batch_size:

@@ -89,6 +89,14 @@
         "minLength": 1
       },
       "uniqueItems": true
+    },
+    "connector_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_event_id": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

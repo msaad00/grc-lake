@@ -36,7 +36,7 @@ def build_workpaper(
         referenced.update(control["operating"]["invalid_event_ids"])
     events = read_jsonl(lake / "silver/normalized_events.jsonl")
     evidence = {
-        row["event_id"]: {**evidence_reference(row), "status": row["status"]}
+        row["event_id"]: {**evidence_reference(row), "status": row["status"], "source": row["source"]}
         for row in events
         if row["event_id"] in referenced
     }
@@ -48,7 +48,7 @@ def build_workpaper(
     counts = Counter(row["operating"]["status"] for row in assurance["controls"])
     content = {
         "schema_version": "trustops.audit_workpaper.v1",
-        "synthetic_fixture": bool(events) and all(row["source"] == "synthetic-audit-fixture" for row in events),
+        "synthetic_fixture": any(row["source"] == "synthetic-audit-fixture" for row in events),
         "tenant_id": plan["tenant_id"],
         "plan": plan,
         "baseline": baseline,
@@ -80,6 +80,9 @@ def build_workpaper(
 
 
 def render_workpaper(content: dict[str, Any], *, review: dict[str, Any] | None = None) -> str:
+    # Rendering must be reproducible from the persisted JSON, whose keys are sorted.
+    content = json.loads(json.dumps(content, sort_keys=True))
+
     def escape(value: Any) -> str:
         return html.escape(str(value), quote=True)
 
@@ -135,6 +138,7 @@ def export_workpaper(content: dict[str, Any], out: Path) -> None:
             stream.write(value)
     manifest = {
         "schema_version": "trustops.workpaper_export.v1",
+        "render_version": "trustops.workpaper_html.v1",
         "content_sha256": canonical_sha256(content),
         "files": {name: file_sha256(out / name) for name in ("index.html", "workpaper.json")},
     }
@@ -144,15 +148,25 @@ def export_workpaper(content: dict[str, Any], out: Path) -> None:
 
 def verify_workpaper_export(out: Path) -> dict[str, Any]:
     try:
+        expected = {"manifest.json", "index.html", "workpaper.json"}
+        if (
+            out.is_symlink()
+            or {path.name for path in out.iterdir()} != expected
+            or any((out / name).is_symlink() or not (out / name).is_file() for name in expected)
+        ):
+            raise ValueError("unexpected export files")
         manifest = read_json(out / "manifest.json")
         valid = (
             isinstance(manifest, dict)
             and manifest.get("schema_version") == "trustops.workpaper_export.v1"
+            and manifest.get("render_version", "trustops.workpaper_html.v1") == "trustops.workpaper_html.v1"
             and isinstance(manifest.get("files"), dict)
             and set(manifest["files"]) == {"index.html", "workpaper.json"}
         )
         valid = valid and all(file_sha256(out / name) == digest for name, digest in manifest["files"].items())
-        valid = valid and canonical_sha256(read_json(out / "workpaper.json")) == manifest["content_sha256"]
+        content = read_json(out / "workpaper.json")
+        valid = valid and canonical_sha256(content) == manifest["content_sha256"]
+        valid = valid and (out / "index.html").read_text(encoding="utf-8") == render_workpaper(content)
     except (OSError, ValueError, KeyError, TypeError):
         valid = False
     return {"ok": bool(valid), "authentication": "hash_consistency_only; review identity requires server record"}

@@ -107,3 +107,32 @@ retain the existing interpretation as UTC. Collection timestamps in the future
 cannot establish freshness and are reported as missing usable collection
 metadata. Per-record freshness outputs still retain historical rows for period
 review; their counts are not the number of currently stale controls.
+
+## Export and historical-read integrity
+
+Live OSCAL findings require a verified generation when posture rows exist. Empty
+lakes can still export an empty assessment. Run the pipeline to materialize an
+unsealed legacy lake before exporting live findings. Event verification checks
+published generation integrity as well as the original bronze hash. Unsealed
+legacy event checks retain the narrower `bronze_hash_only` verification scope.
+
+Historical queries resolve only verified snapshot ledger entries. Missing,
+modified, unledgered, ambiguous, or symlinked snapshots fail explicitly; reads do
+not rewrite or discard them. Snapshot exports retain a copy inside the lake for
+ledger resolution. Existing exports whose ledger entry refers to a missing local
+copy require operator reconciliation from the original artifact. New writes do
+not extend a broken chain or overwrite a snapshot file.
+
+Workpapers retain the synthetic label when any source evidence is synthetic,
+including mixed inputs, and record the source beside referenced evidence.
+
+Portable workpapers verify the rendered HTML against the JSON, as well as file
+hashes, and reject additional files or symlinks. Rendering is deterministic from
+the stored JSON and recorded as `trustops.workpaper_html.v1`. Older bundles whose
+HTML cannot be reproduced from their JSON fail this stronger check; retain the
+original and create a new export from verified evidence when needed.
+
+These checks establish local consistency. An operator able to rewrite every
+artifact and its ledger or manifest can create a new self-consistent history.
+External tamper-proof anchoring and independent review identity authentication
+are separate from portable bundle verification.

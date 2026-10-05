@@ -243,6 +243,8 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
 
 
 def _seed_control_posture(lake: Path) -> None:
+    from security_lakehouse.generations import seal_generation
+
     _write_jsonl(
         lake / "gold" / "control_posture.jsonl",
         [
@@ -280,6 +282,8 @@ def _seed_control_posture(lake: Path) -> None:
             },
         ],
     )
+
+    seal_generation(lake, legacy=True)
 
 
 def test_build_assessment_results_maps_every_status(tmp_path: Path) -> None:
@@ -334,11 +338,10 @@ def test_build_assessment_results_empty_lake_still_validates(tmp_path: Path) -> 
 
 def test_build_assessment_results_pins_to_a_snapshot(tmp_path: Path) -> None:
     from security_lakehouse.assessment import write_assessment_snapshot
-    from test_api_v1 import _seed_lake
+    from security_lakehouse.pipeline import run_pipeline
 
     lake = tmp_path / "lake"
-    lake.mkdir(parents=True)
-    _seed_lake(lake)
+    run_pipeline(ROOT / "data/raw/security_events.jsonl", lake)
     snapshot_path = write_assessment_snapshot(lake, reason="oscal-test")
     snapshot_id = snapshot_path.stem
 

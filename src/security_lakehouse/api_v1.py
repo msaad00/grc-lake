@@ -22,6 +22,7 @@ from typing import Any
 from security_lakehouse import strict_json
 from security_lakehouse.ai_governance import build_ai_governance_status, list_ai_inventory
 from security_lakehouse.assessment import (
+    SnapshotIntegrityError,
     SnapshotWrittenHook,
     build_current_posture,
     load_snapshot,
@@ -1593,6 +1594,10 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
             )
         try:
             data = posture_as_of(lake, as_of=as_of)
+        except SnapshotIntegrityError:
+            return HTTPStatus.SERVICE_UNAVAILABLE, error_envelope(
+                "invalid_stored_data", "stored data failed validation", resource="posture.as_of"
+            )
         except ValueError:
             return HTTPStatus.BAD_REQUEST, error_envelope(
                 "bad_request", f"invalid 'as_of' value: {as_of!r}", resource="posture.as_of"

@@ -27,7 +27,22 @@ def _write_snapshot(lake: Path, evaluated_at: str, *, score: float, reason: str 
         "frameworks": [{"framework": "SOC 2", "score": score}],
         "assessment_hash": f"hash-{ts}",
     }
+    from security_lakehouse.assessment import _assessment_hash, _ledger_path
+    from security_lakehouse.io import append_jsonl, read_jsonl
+
+    ledger = read_jsonl(_ledger_path(lake), missing_ok=True)
+    payload["prev_hash"] = ledger[-1]["assessment_hash"] if ledger else None
+    payload["assessment_hash"] = _assessment_hash(payload)
     path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+    append_jsonl(
+        _ledger_path(lake),
+        {
+            "snapshot": path.name,
+            "evaluated_at": evaluated_at,
+            "prev_hash": payload["prev_hash"],
+            "assessment_hash": payload["assessment_hash"],
+        },
+    )
     return path
 
 
@@ -51,7 +66,8 @@ def test_posture_as_of_picks_most_recent_at_or_before(tmp_path: Path) -> None:
     result = posture_as_of(tmp_path, as_of="2026-04-15")
     assert result["found"] is True
     assert result["evaluated_at"] == "2026-03-01T00:00:00Z"
-    assert result["assessment_hash"] == "hash-20260301T000000Z"
+    expected = json.loads((tmp_path / "gold/snapshots/assessment-20260301T000000Z.json").read_text())
+    assert result["assessment_hash"] == expected["assessment_hash"]
     assert result["posture"]["score"] == 85.0
     assert result["requested_as_of"] == "2026-04-15T00:00:00Z"
     assert result["available_from"] == "2026-01-01T00:00:00Z"

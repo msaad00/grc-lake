@@ -195,3 +195,42 @@ def test_workpaper_cli_exports_and_verifies(workpaper_env, tmp_path, capsys):
     exit_code = main(["assessment", "verify-workpaper", "--dir", str(out)])
     assert exit_code == 0
     assert json.loads(capsys.readouterr().out)["ok"] is True
+
+
+@pytest.mark.parametrize("tamper", ["html_and_manifest", "extra_file", "symlink"])
+def test_export_rejects_inconsistent_html_and_unexpected_files(workpaper_env, tmp_path, tamper):
+    from security_lakehouse.audit_workpapers import build_workpaper, export_workpaper, verify_workpaper_export
+    from security_lakehouse.io import file_sha256
+
+    _, _, _, lake, body = workpaper_env
+    out = tmp_path / "bundle"
+    export_workpaper(build_workpaper(lake, **body), out)
+    html = out / "index.html"
+    if tamper == "html_and_manifest":
+        html.write_text("<h1>All controls passed</h1>")
+        manifest = json.loads((out / "manifest.json").read_text())
+        manifest["files"]["index.html"] = file_sha256(html)
+        (out / "manifest.json").write_text(json.dumps(manifest))
+    elif tamper == "extra_file":
+        (out / "unexpected.js").write_text("unreviewed content")
+    else:
+        target = tmp_path / "elsewhere.html"
+        html.rename(target)
+        html.symlink_to(target)
+    assert verify_workpaper_export(out)["ok"] is False
+
+
+def test_mixed_inputs_retain_synthetic_provenance(workpaper_env, tmp_path):
+    from security_lakehouse.audit_workpapers import build_workpaper, render_workpaper
+    from security_lakehouse.io import read_jsonl, write_jsonl
+
+    _, _, _, lake, body = workpaper_env
+    source = Path(__file__).resolve().parents[1] / "examples/control-assurance/events.jsonl"
+    rows = read_jsonl(source)
+    rows[-1]["source"] = "provider-evidence"
+    raw = tmp_path / "mixed.jsonl"
+    write_jsonl(raw, rows)
+    run_pipeline(raw, lake, tenant_id=body["plan"]["tenant_id"])
+    content = build_workpaper(lake, **body)
+    assert content["synthetic_fixture"] is True
+    assert "Synthetic" in render_workpaper(content)

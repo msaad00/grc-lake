@@ -174,6 +174,7 @@ def test_verify_event_matches(tmp_path: Path) -> None:
     expected = _write_bronze_silver(tmp_path)
     result = verify_event(tmp_path, "evt-001")
     assert result["verified"] is True
+    assert result["verification_scope"] == "bronze_hash_only"
     assert result["expected_sha256"] == expected
     assert result["computed_sha256"] == expected
 

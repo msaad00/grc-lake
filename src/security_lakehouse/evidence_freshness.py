@@ -110,30 +110,22 @@ def summarize_control_freshness(
         default_slo_minutes=default_slo_minutes,
         connectors=connectors,
     )
-    latest_by_type: dict[str, dict[str, Any]] = {}
-    for row in freshness_rows:
+    latest_by_type: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in _current_observations(freshness_rows):
         for event_type in _record_evidence_types(row):
-            current = latest_by_type.get(event_type)
-            if current is None or str(row.get("evidence_collected_at") or "") > str(
-                current.get("evidence_collected_at") or ""
-            ):
-                latest_by_type[event_type] = row
+            latest_by_type[event_type].append(row)
 
     required = [str(item) for item in required_evidence_types]
     if not required:
-        return _untyped_control_freshness(freshness_rows, default_slo_minutes)
-    missing = [event_type for event_type in required if event_type not in latest_by_type]
-    stale = [
-        event_type
-        for event_type in required
-        if event_type in latest_by_type and latest_by_type[event_type]["status"] == "stale"
+        return _untyped_control_freshness(_current_observations(freshness_rows), default_slo_minutes)
+    missing = [
+        item
+        for item in required
+        if item not in latest_by_type or any(row["status"] == "missing" for row in latest_by_type[item])
     ]
-    expired = [
-        event_type
-        for event_type in required
-        if event_type in latest_by_type and latest_by_type[event_type]["status"] == "expired"
-    ]
-    if missing and len(missing) == len(required):
+    stale = [item for item in required if any(row["status"] == "stale" for row in latest_by_type[item])]
+    expired = [item for item in required if any(row["status"] == "expired" for row in latest_by_type[item])]
+    if len(missing) == len(required):
         status = "missing"
     elif expired:
         status = "expired"
@@ -141,14 +133,13 @@ def summarize_control_freshness(
         status = "stale"
     else:
         status = "fresh"
-
-    scores = [STATUS_SCORES[str(latest_by_type[item]["status"])] for item in required if item in latest_by_type]
-    scores.extend(0 for _ in missing)
-    latest_values = [str(row.get("evidence_collected_at") or "") for row in latest_by_type.values()]
+    scores = [min((STATUS_SCORES[str(row["status"])] for row in latest_by_type[item]), default=0) for item in required]
+    relevant = [row for item in required for row in latest_by_type[item]]
+    latest = max(relevant, key=_observation_time, default=None)
     return {
         "status": status,
         "score": int(round(sum(scores) / len(scores))) if scores else 0,
-        "latest_evidence_at": max(latest_values) if latest_values else None,
+        "latest_evidence_at": latest.get("evidence_collected_at") if latest else None,
         "freshness_slo_minutes": default_slo_minutes,
         "missing_evidence_types": sorted(missing),
         "stale_evidence_types": sorted(stale),
@@ -157,8 +148,8 @@ def summarize_control_freshness(
 
 
 def _untyped_control_freshness(freshness_rows: list[dict[str, Any]], default_slo_minutes: int) -> dict[str, Any]:
-    # With no configured evidence types, the control is only as fresh as its newest evidence row.
-    dated = [row for row in freshness_rows if row["status"] != "missing"]
+    # With no configured types, retain every current evidence population.
+    dated = freshness_rows
     if not dated:
         return {
             "status": "missing",
@@ -169,9 +160,9 @@ def _untyped_control_freshness(freshness_rows: list[dict[str, Any]], default_slo
             "stale_evidence_types": [],
             "expired_evidence_types": [],
         }
-    latest = max(dated, key=lambda row: str(row.get("evidence_collected_at") or ""))
-    status = str(latest["status"])
-    latest_types = sorted(set(_record_evidence_types(latest)))
+    latest = max(dated, key=_observation_time)
+    status = _source_status(Counter(str(row["status"]) for row in dated))
+    latest_types = sorted({kind for row in dated if row["status"] == status for kind in _record_evidence_types(row)})
     return {
         "status": status,
         "score": STATUS_SCORES[status],
@@ -183,14 +174,54 @@ def _untyped_control_freshness(freshness_rows: list[dict[str, Any]], default_slo
     }
 
 
-def stale_control_ids(records: list[dict[str, Any]]) -> set[str]:
-    """Return controls touched by stale, expired, or missing evidence rows."""
-    controls: set[str] = set()
+def _observation_time(row: dict[str, Any]) -> datetime:
+    value = row.get("evidence_collected_at")
+    return parse_event_time(str(value)).astimezone(UTC) if value else datetime.min.replace(tzinfo=UTC)
+
+
+def _current_observations(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    latest: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+    for row in records:
+        for evidence_type in _record_evidence_types(row) or [""]:
+            key = (
+                str(row.get("connector_id") or ""),
+                str(row.get("source") or ""),
+                str(row.get("asset_id") or ""),
+                evidence_type,
+            )
+            prior = latest.get(key)
+            moment = _observation_time(row)
+            if (
+                prior is None
+                or moment > _observation_time(prior)
+                or (
+                    moment == _observation_time(prior)
+                    and STATUS_SCORES[str(row["status"])] < STATUS_SCORES[str(prior["status"])]
+                )
+            ):
+                latest[key] = {**row, "evidence_types": [evidence_type] if evidence_type else []}
+    return list(latest.values())
+
+
+def stale_control_ids(records: list[dict[str, Any]], *, required_types: dict[str, list[str]] | None = None) -> set[str]:
+    """Judge current observations per control, source, asset and evidence type.
+
+    Historical rows remain available for period sampling and provenance. A new
+    observation supersedes only its own evidence population, never another asset.
+    """
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for record in records:
-        if record["status"] not in STALE_STATUSES:
-            continue
-        controls.update(str(item) for item in record.get("control_ids", []))
-    return controls
+        for control in record.get("control_ids", []):
+            grouped[str(control)].append(record)
+    stale: set[str] = set()
+    for control, rows in grouped.items():
+        required = set((required_types or {}).get(control, []))
+        current = _current_observations(rows)
+        relevant = [row for row in current if not required or required.intersection(_record_evidence_types(row))]
+        observed = {kind for row in relevant for kind in _record_evidence_types(row)}
+        if required - observed or any(row["status"] in STALE_STATUSES for row in relevant):
+            stale.add(control)
+    return stale
 
 
 def _freshness_record(
@@ -219,7 +250,17 @@ def _freshness_record(
         }
 
     collected_at = parse_event_time(collected_at_raw).astimezone(UTC)
-    age_minutes = max(0, int((evaluated_at - collected_at).total_seconds() // 60))
+    if collected_at > evaluated_at:
+        return {
+            **_base_record(row, connector_id, evaluated_at, slo_minutes),
+            "status": "missing",
+            "score": 0,
+            "age_minutes": None,
+            "expires_at": None,
+            "reason": "evidence collection timestamp is in the future",
+            "next_action": _next_action("missing", source),
+        }
+    age_minutes = int((evaluated_at - collected_at).total_seconds() // 60)
     expires_at = collected_at + timedelta(minutes=slo_minutes)
     if age_minutes <= slo_minutes:
         status = "fresh"
@@ -254,7 +295,11 @@ def _base_record(
         "evidence_types": _record_evidence_types(row),
         "asset_id": str(row.get("asset_id") or ""),
         "control_ids": [str(item) for item in row.get("control_ids", [])],
-        "evidence_collected_at": str(row.get("evidence_collected_at") or ""),
+        "evidence_collected_at": utc_iso(
+            parse_event_time(str(row.get("evidence_collected_at") or row.get("event_time")))
+        )
+        if row.get("evidence_collected_at") or row.get("event_time")
+        else "",
         "evaluated_at": utc_iso(evaluated_at),
         "freshness_slo_minutes": freshness_slo_minutes,
     }

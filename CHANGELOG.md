@@ -14,6 +14,7 @@ Python package, Helm chart, and bundled web console.
 
 - Reject ambiguous or non-standard JSON before API, CLI/MCP dispatch, and shared lake writes; validate evidence shapes and timezone-qualified timestamps consistently with packaged schemas.
 - Serve dispatched API routes in live OpenAPI and fail explicitly on corrupt stored share records without rewriting evidence.
+- Evaluate current freshness per source, asset, and evidence type so retained history cannot permanently stale a control. Compare timestamp instants in UTC and prevent future collection times from establishing freshness.
 
 - Portable PostgreSQL Boolean migration defaults and migration/model index parity, with real PostgreSQL upgrade/downgrade and existing-data checks.
 - Installed cloud-link templates and evidence schemas now ship as importable package resources; CI checks them against canonical sources.

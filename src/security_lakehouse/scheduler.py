@@ -40,6 +40,7 @@ from typing import Any
 from security_lakehouse.assessment import SnapshotWrittenHook
 from security_lakehouse.connector_runner import run_connector_sync
 from security_lakehouse.connector_state import build_catalog_view
+from security_lakehouse.execution_mode import in_server_mode, server_execution, server_tenant_id
 from security_lakehouse.io import append_jsonl, read_jsonl
 from security_lakehouse.lake_eval import run_lake_eval
 from security_lakehouse.lake_scale import connector_materialize_on_sync, lake_eval_schedule
@@ -256,6 +257,7 @@ def tick(
     runner: Any | None = None,
     connector_runner: Any | None = None,
     on_snapshot_written: SnapshotWrittenHook | None = None,
+    all_tenants: bool = False,
 ) -> list[dict[str, Any]]:
     """Fire every due workflow and connector once.
 
@@ -276,6 +278,12 @@ def tick(
     double-fire. A tick that cannot acquire the lock is a no-op and returns a
     single ``{"skipped_locked": True}`` record instead of firing.
     """
+    if all_tenants and server_tenant_id(lake_dir) is not None:
+        raise ValueError("all-tenants scheduling requires an unbound lake root")
+    if all_tenants or (in_server_mode() and server_tenant_id(lake_dir) is None):
+        if on_snapshot_written is not None:
+            raise ValueError("hosted root ticks require tenant-local snapshot hooks")
+        return _tick_hosted_root(lake_dir, now=now, runner=runner, connector_runner=connector_runner)
     lock_path = _lock_path(lake_dir)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     lock_fd = lock_path.open("w", encoding="utf-8")
@@ -296,6 +304,77 @@ def tick(
             fcntl.flock(lock_fd.fileno(), fcntl.LOCK_UN)
     finally:
         lock_fd.close()
+
+
+def _hosted_snapshot_hook(factory: Any, tenant_id: str) -> SnapshotWrittenHook:
+    from security_lakehouse.db.base import session_scope
+    from security_lakehouse.services.webhooks import dispatch_snapshot_events
+
+    def hook(
+        snapshot_path: Path,
+        assessment: dict[str, Any],
+        new_violations: list[dict[str, Any]],
+        newly_failing_controls: list[str],
+    ) -> None:
+        with session_scope(factory) as session:
+            dispatch_snapshot_events(
+                session,
+                tenant_id,
+                snapshot_path=snapshot_path,
+                assessment=assessment,
+                new_violations=new_violations,
+                newly_failing_controls=newly_failing_controls,
+            )
+
+    return hook
+
+
+def _tick_hosted_root(
+    lake_dir: str | Path,
+    *,
+    now: datetime | None,
+    runner: Any,
+    connector_runner: Any,
+) -> list[dict[str, Any]]:
+    """Enumerate registered tenant lakes; never treat arbitrary directories as tenants."""
+    from security_lakehouse.db.base import create_engine_for, session_factory
+    from security_lakehouse.db.repository import list_tenant_ids
+    from security_lakehouse.tenancy import resolve_bound_tenant, tenant_lake
+
+    root = Path(lake_dir).resolve()
+    engine = create_engine_for(root)
+    factory = session_factory(engine)
+    results: list[dict[str, Any]] = []
+    try:
+        with factory() as session:
+            tenant_ids = list_tenant_ids(session)
+        bound = resolve_bound_tenant(root, require_auth=True, tenant_ids=tenant_ids)
+        for tenant_id in tenant_ids:
+            try:
+                if re.fullmatch(r"[A-Za-z0-9_-]+", tenant_id) is None:
+                    raise ValueError("invalid tenant path")
+                lake = tenant_lake(root, tenant_id, bound_tenant=bound)
+                # A directory symlink can cross tenants even while staying under root.
+                if lake.resolve() != lake or not lake.is_relative_to(root):
+                    raise ValueError("invalid tenant path")
+                if not lake.exists():
+                    continue
+                with server_execution(tenant_id):
+                    fired = tick(
+                        lake,
+                        now=now,
+                        runner=runner,
+                        connector_runner=connector_runner,
+                        on_snapshot_written=_hosted_snapshot_hook(factory, tenant_id),
+                    )
+                results.extend({**row, "tenant_id": tenant_id} for row in fired)
+            except Exception:  # noqa: BLE001 - isolate tenant failures and sanitize provider details
+                results.append(
+                    {"tenant_id": tenant_id, "target_kind": "tenant", "result": "error", "error": "internal error"}
+                )
+    finally:
+        engine.dispose()
+    return results
 
 
 def _tick_locked(
@@ -453,12 +532,13 @@ def run_forever(
     tick_seconds: int = DEFAULT_TICK_SECONDS,
     iterations: int | None = None,
     sleeper: Any | None = None,
+    all_tenants: bool = False,
 ) -> int:
     """Daemon loop. ``iterations`` caps the loop for tests."""
     count = 0
     sleep = sleeper or time.sleep
     while iterations is None or count < iterations:
-        tick(lake_dir)
+        tick(lake_dir, all_tenants=all_tenants)
         sleep(tick_seconds)
         count += 1
     return count

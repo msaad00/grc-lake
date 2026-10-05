@@ -101,6 +101,8 @@ probes:
 # stay single-replica without owning the scheduler too.
 scheduler:
   enabled: true
+  # Authenticated deployments schedule registered tenant lakes.
+  allTenants: true
   schedule: "*/5 * * * *" # every 5 minutes
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

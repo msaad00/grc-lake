@@ -194,3 +194,26 @@ later requests reread current state. This cache does not persist across requests
 The latest successful sync is selected from all retained runs, even when more
 than 50 newer failures exist. Recent-run response limits do not limit health
 history. Reads reject malformed JSON records without rewriting or skipping them.
+
+### Scheduling a hosted deployment
+
+Use `security-lakehouse scheduler tick --lake /lake --all-tenants` for an
+authenticated server lake root, or add `--all-tenants` to `scheduler run` for
+the daemon. `TRUSTOPS_COMMERCIAL_HOSTED=1` also selects tenant enumeration for
+unbound root ticks. The application database must already be migrated, with
+the same `TRUSTOPS_DATABASE_URL` and storage root used by the API.
+
+Only tenants registered in that database are considered. Within each lake,
+only enabled connector schedules and configured cron workflows run. Each tenant
+has its own lock and retry state; a locked or failing tenant does not stop the
+others. Execution and snapshot webhooks carry that tenant's identity. Symlinked
+tenant paths are rejected. A single tenant retains the API's existing flat-lake
+binding; an ambiguous shared root is never scheduled for multiple tenants.
+
+Authenticated HTTP ticks always remain tenant-local; the request body cannot
+select all tenants. Local CLI ticks remain single-lake unless `--all-tenants`
+is selected or hosted mode is enabled. The Helm scheduler defaults to
+`scheduler.allTenants: true` for authenticated deployments and retains local
+scheduling for explicitly configured insecure demos. Disable this value when
+an external scheduler already invokes each tenant lake separately. A one-shot
+CLI tick returns a nonzero exit status when an attempted target reports an error.

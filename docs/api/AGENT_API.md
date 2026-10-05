@@ -190,10 +190,18 @@ Agents should:
 Agents should not infer compliance status from visual text. The API is the
 contract.
 
-MCP clients use the same contract. Local lake tools read posture, controls,
-evidence, snapshots, and workflows from `TRUSTOPS_LAKE`; persisted agent-run
-tools require `TRUSTOPS_API_URL` and `TRUSTOPS_API_KEY` so RBAC, tenant
-isolation, approvals, and audit events stay behind the server boundary.
+Remote MCP mode routes all tenant-backed tools through `TRUSTOPS_API_URL` with
+`TRUSTOPS_API_KEY`, including lake reads, shares, snapshots, workflows, and
+ingestion writes. Either API setting selects remote mode; missing configuration
+fails closed. Explicit `TRUSTOPS_MCP_MODE=local` preserves operator-controlled
+lake access through `TRUSTOPS_LAKE` and disables server-only tools. See the
+[MCP cookbook](../cookbook/MCP_EVIDENCE_AND_APPROVALS.md) for private-destination
+opt-in, response bounds, and independent human-review requirements.
+
+`GET /api/v1/connector-runs` supports standard collection pagination and
+`connector_id` filtering across retained history. `GET /api/v1/mapping-reviews/report`
+returns the proposed-mapping report used by MCP, with `framework_id` and
+`risk_domain` filters.
 
 ## Skills And Guardrails
 

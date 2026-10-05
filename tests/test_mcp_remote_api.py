@@ -42,7 +42,7 @@ def test_server_api_request_sends_bearer_json_without_secret_in_url(monkeypatch:
         def __exit__(self, *_args):
             return False
 
-        def read(self) -> bytes:
+        def read(self, _size: int = -1) -> bytes:
             return json.dumps({"data": {"ok": True}, "meta": {"resource": "agent-runs"}, "errors": []}).encode()
 
     def fake_urlopen(request: urllib.request.Request, *, timeout: float):
@@ -56,7 +56,7 @@ def test_server_api_request_sends_bearer_json_without_secret_in_url(monkeypatch:
 
     monkeypatch.setenv("TRUSTOPS_API_URL", "https://trustops.example.test/")
     monkeypatch.setenv("TRUSTOPS_API_KEY", "secret-token")
-    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(mcp_server, "_open_api_request", fake_urlopen)
     monkeypatch.setattr(netguard, "assert_url_is_public", _no_ssrf_check)
 
     body = mcp_server._server_api_request("POST", "/api/v1/agent-runs", {"harness": "posture_review"}, limit=10)
@@ -83,7 +83,7 @@ def test_server_api_request_redacts_token_from_error(monkeypatch: pytest.MonkeyP
 
     monkeypatch.setenv("TRUSTOPS_API_URL", "https://trustops.example.test")
     monkeypatch.setenv("TRUSTOPS_API_KEY", "secret-token")
-    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(mcp_server, "_open_api_request", fake_urlopen)
     monkeypatch.setattr(netguard, "assert_url_is_public", _no_ssrf_check)
 
     with pytest.raises(ValueError) as exc:

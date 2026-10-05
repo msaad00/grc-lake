@@ -10,13 +10,13 @@ operations: automation runs continuously; humans inspect, approve, and sign off.
 
 ## Surfaces (one core)
 
-| Surface          | Primary caller               | Role                                       |
-| ---------------- | ---------------------------- | ------------------------------------------ |
-| **REST API**     | CI, scripts, integrations    | Read posture, write gated mutations        |
-| **CLI**          | Operators, runbooks          | Lake rebuild, connector sync, snapshots    |
-| **MCP / agents** | SOC, GRC, remediation agents | Tool calls with same RBAC as API keys      |
-| **Scheduler**    | CronJob / K8s                | Connector sync, workflow ticks             |
-| **Console**      | GRC leads, auditors          | Visual drill-down, approvals, trust shares |
+| Surface          | Primary caller               | Role                                                              |
+| ---------------- | ---------------------------- | ----------------------------------------------------------------- |
+| **REST API**     | CI, scripts, integrations    | Read posture, write gated mutations                               |
+| **CLI**          | Operators, runbooks          | Lake rebuild, connector sync, snapshots                           |
+| **MCP / agents** | SOC, GRC, remediation agents | Remote tools use API-key RBAC; local tools use operator authority |
+| **Scheduler**    | CronJob / K8s                | Connector sync, workflow ticks                                    |
+| **Console**      | GRC leads, auditors          | Visual drill-down, approvals, trust shares                        |
 
 All surfaces read the **same JSON** from the customer lake. Agents must not bypass
 approval gates for remediation, trust shares, or workflow side effects.
@@ -89,16 +89,22 @@ Console actions hit the **same API** as headless callers and appear in request a
 
 `trustops-mcp` can run in two modes:
 
-| Mode              | Env                                     | RBAC                                                               | Typical use                                         |
-| ----------------- | --------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
-| **Local lake**    | `TRUSTOPS_LAKE`                         | Application RBAC **not** enforced for lake-backed read/write tools | Developer laptop, CI job with dedicated lake volume |
-| **Remote server** | `TRUSTOPS_API_URL` + `TRUSTOPS_API_KEY` | Same scopes as API keys (`read`, `write`, `admin`, …)              | Shared hosts, multi-tenant server mode              |
+| Mode              | Env                                        | RBAC                                                               | Typical use                                         |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------- |
+| **Local lake**    | `TRUSTOPS_MCP_MODE=local`, `TRUSTOPS_LAKE` | Application RBAC **not** enforced for lake-backed read/write tools | Developer laptop, CI job with dedicated lake volume |
+| **Remote server** | `TRUSTOPS_API_URL` + `TRUSTOPS_API_KEY`    | Same scopes as API keys (`read`, `write`, `admin`, …)              | Shared hosts, multi-tenant server mode              |
 
-**Lake-local write tools** (`create_snapshot`, `sync_connector`, `configure_connector`, `run_workflow`, `run_scheduler_tick`, `create_trust_share`, …) mutate files under `TRUSTOPS_LAKE` directly. They do not pass through FastAPI identity checks — security relies on **who can run the MCP process** and **filesystem permissions** on the lake directory.
+**In local mode, lake-backed write tools** (`create_snapshot`, `sync_connector`, `configure_connector`, `run_workflow`, `run_scheduler_tick`, `create_trust_share`, …) mutate files under `TRUSTOPS_LAKE` directly. They do not pass through FastAPI identity checks — security relies on **who can run the MCP process** and **filesystem permissions** on the lake directory.
 
-**Lake-local read tools** (`get_posture`, `get_ai_governance`, `list_evidence`, …) read the same JSONL artifacts as `GET /api/v1/*` without a bearer token.
+**In local mode, lake-backed read tools** (`get_posture`, `get_ai_governance`, `list_evidence`, …) read the same JSONL artifacts as `GET /api/v1/*` without a bearer token.
 
-**Remote API tools** (`get_audit_readiness`, `create_remediation_task`, `create_poam_item`, …) require `TRUSTOPS_API_KEY` and inherit tenant scoping from the server.
+**In remote mode, all tenant-backed tools** use the authenticated API, including
+posture, evidence, connectors, shares, snapshots, workflows, and scheduling.
+Either `TRUSTOPS_API_URL` or `TRUSTOPS_API_KEY` selects remote mode by default;
+both are required, and partial configuration fails closed. Explicit
+`TRUSTOPS_MCP_MODE=local` disables remote-only tools. Private API destinations
+require `TRUSTOPS_API_ALLOW_PRIVATE=1`; other outbound SSRF protections are
+unchanged. See the [MCP cookbook](cookbook/MCP_EVIDENCE_AND_APPROVALS.md).
 
 ### Deployment guidance
 

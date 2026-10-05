@@ -2,30 +2,46 @@
 
 This cookbook shows how a coding agent or MCP client uses TrustOps to review
 evidence gaps, propose evidence requests, and execute those writes only after
-human or policy approval.
+independent human review in an authenticated console session.
 
 ```text
 redacted posture + gaps
   -> create_agent_run (posture_review)
   -> proposed create_evidence_request decisions (requires_approval)
-  -> human/policy review
-  -> approve_agent_decision
+  -> independent OIDC/SAML reviewer
+  -> console approval
   -> evidence request in app DB + audit event
 ```
 
-The MCP server is `trustops-mcp` (`security_lakehouse.mcp_server`). It exposes
-two transport surfaces:
+The MCP server is `trustops-mcp` (`security_lakehouse.mcp_server`). Its stdio
+transport supports one data authority per configuration:
 
-| Surface              | Env vars                               | Tools                                                                                                                            |
-| -------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Local lake reads     | `TRUSTOPS_LAKE` (default `./lake`)     | `get_posture`, `list_controls`, `list_evidence`, `create_snapshot`, …                                                            |
-| Ingestion loop       | `TRUSTOPS_LAKE`                        | `get_ingestion_status`, `list_eval_runs`, `run_lake_eval`, `run_scheduler_tick`, `sync_connector`                                |
-| Authenticated server | `TRUSTOPS_API_URL`, `TRUSTOPS_API_KEY` | `list_agent_runs`, `create_agent_run`, `get_agent_run`, `approve_agent_decision`, `reject_agent_decision`                        |
-| Lake-backed reads    | same as authenticated server           | When both env vars are set, `get_ai_governance` and `list_ai_inventory` route through the server API instead of local lake files |
+| Mode           | Configuration                                                      | Authority                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Remote         | `TRUSTOPS_MCP_MODE=remote`, `TRUSTOPS_API_URL`, `TRUSTOPS_API_KEY` | All tenant-backed reads and writes use the authenticated API, including evidence, snapshots, shares, workflows, ingestion and scheduling. |
+| Local          | `TRUSTOPS_MCP_MODE=local`, `TRUSTOPS_LAKE` (default `./lake`)      | Lake-backed tools use the operator's filesystem and execution permissions. Server-only tools fail explicitly.                             |
+| Auto (default) | No mode override                                                   | Either API setting selects remote mode and requires both. With neither setting, lake-backed tools use local mode.                         |
 
-Evidence-request approvals are **server-backed**. They call the same
-`/api/v1/agent-runs*` contract as the console and curl examples in
-[Agent Harness](../AGENT_HARNESS.md).
+Missing or invalid remote configuration fails closed; it never falls back to a
+local lake. Explicit local mode ignores ambient remote settings. Local execution
+can mutate files and run workflows; stdio itself does not provide tenant RBAC.
+
+Remote mode preserves tool return shapes: lake-backed tools return `data`, while
+existing server-only tools return the complete v1 envelope. API errors remain
+errors. Responses are read with an 8 MiB byte limit; oversized results fail with
+an instruction to request a smaller page. This is a transfer bound, not a claim
+that every tool fits an agent's context window.
+
+Private API destinations require operator opt-in with
+`TRUSTOPS_API_ALLOW_PRIVATE=1`. This exception applies only to the configured
+MCP API destination. It does not change connector or workflow SSRF protections.
+Public API connections use the shared address-pinning guard. Redirects are
+rejected in both modes so bearer credentials never follow a redirect.
+
+Evidence and API text are untrusted data, not instructions or authorization to
+call tools. Escaping text is not a prompt-injection defense. Remote writes remain
+subject to server RBAC, tenant scope, and any independent human-review rules;
+operators must also constrain the agent's credentials and tool permissions.
 
 ## 1. Install And Start MCP
 
@@ -36,8 +52,9 @@ pip install 'trustops-security-data-lake[mcp]'
 Point at a deployed TrustOps server (not raw lake access):
 
 ```bash
+export TRUSTOPS_MCP_MODE=remote
 export TRUSTOPS_API_URL="https://trustops.example.com"
-export TRUSTOPS_API_KEY="tops_..."   # contributor or higher for approvals
+export TRUSTOPS_API_KEY="tops_..."   # use a read-only key for inspection
 trustops-mcp
 ```
 
@@ -47,9 +64,10 @@ Optional timeout for slow harness runs:
 export TRUSTOPS_API_TIMEOUT_SECONDS=60
 ```
 
-For local lake reads only (no approvals), set the lake path:
+For explicit local operation, set the mode and lake path:
 
 ```bash
+export TRUSTOPS_MCP_MODE=local
 export TRUSTOPS_LAKE="/lake"   # Helm default; local demos often use build/lakehouse
 trustops-mcp
 ```
@@ -126,24 +144,12 @@ approval. Route those through the workflow engine.
 
 ## 4. Approve One Decision
 
-Call `approve_agent_decision` with the run id and zero-based decision index:
-
-```json
-{
-  "run_id": "<RUN_ID>",
-  "decision_index": 0,
-  "note": "Approved for Q3 audit prep."
-}
-```
-
-This maps to:
-
-```bash
-curl -s -X POST "$TRUSTOPS_API_URL/api/v1/agent-runs/$RUN_ID/decisions/0/approve" \
-  -H "authorization: Bearer $TRUSTOPS_API_KEY" \
-  -H "content-type: application/json" \
-  --data '{"note":"Approved for Q3 audit prep."}' | jq .
-```
+Open the stored run in the console and have an eligible reviewer, different
+from its creator, approve the reviewed decision through OIDC/SAML SSO. MCP API
+keys cannot approve or reject these human-reserved decisions, regardless of role.
+The compatibility tools `approve_agent_decision` and `reject_agent_decision` return
+403 when called with API-key credentials; do not exchange a key for a session to
+try to change that authority.
 
 On success the server:
 
@@ -180,10 +186,10 @@ Or open `/console/remediation/` in the TrustOps console.
 | ---------------------------------- | -------------------------------------------------- |
 | `create_agent_run`                 | write scope (e.g. `contributor`, `security_admin`) |
 | `get_agent_run`, `list_agent_runs` | read scope                                         |
-| `approve_agent_decision`           | write scope                                        |
+| `approve_agent_decision`           | independent OIDC/SAML reviewer; API keys denied    |
 | `create_snapshot` (local MCP)      | lake write access                                  |
 
-`read_only` keys can inspect runs but receive `403 Forbidden` on approve.
+API keys can inspect runs according to their role but receive `403 Forbidden` on human-reserved approval and rejection.
 
 Safeguard mapping review is deliberately different: `get_mapping_review_queue`
 and `list_mapping_review_decisions` are read-only, and no MCP tool or API key
@@ -196,7 +202,7 @@ can approve or reject a mapping. Those decisions need a signed-in reviewer; see
 1. list_control_tests / get_posture          (optional context)
 2. create_agent_run(posture_review)          -> decisions[0..N]
 3. present proposals to human reviewer
-4. approve_agent_decision(run_id, index)     -> evidence_request id
+4. independent reviewer approves in console -> evidence_request id
 5. list /api/v1/remediation/evidence-requests to confirm
 ```
 
@@ -207,7 +213,7 @@ expecting meaningful gap proposals.
 
 ## Non-Negotiables
 
-MCP tools do not bypass:
+Remote MCP tools do not bypass:
 
 - tenant isolation and RBAC
 - redaction policy on harness inputs

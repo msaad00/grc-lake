@@ -83,6 +83,7 @@ from security_lakehouse.safeguards import (
     coverage_by_category,
     coverage_by_family,
     coverage_by_framework,
+    mapping_review_report,
 )
 from security_lakehouse.tracking import ALLOWED_STATES, append_event, latest_state, list_events, verify_tracking_chain
 from security_lakehouse.trust_share import create_share, list_shares, revoke_share
@@ -224,6 +225,10 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
 
 # Route -> (resource name, loader) for endpoints returning a row collection.
 COLLECTION_LOADERS: dict[str, tuple[str, Callable[[Path], list[JsonObject]]]] = {
+    "/api/v1/connector-runs": (
+        "connector-runs",
+        lambda lake: read_jsonl(lake / "gold" / "connector_runs.jsonl", missing_ok=True, base_dir=lake),
+    ),
     "/api/v1/ccf/asset-results": ("ccf.asset-results", lambda lake: _ccf_assessment(lake)["asset_results"]),
     "/api/v1/controls": (
         "controls",
@@ -386,6 +391,14 @@ def required_post_scope(path: str) -> str:
 # Paths, methods, and scopes are kept in lockstep with the ``@app.<verb>``
 # decorators and their ``Depends(_require_*)`` defaults in ``server_app``.
 EXTENDED_RESOURCES: list[JsonObject] = [
+    {
+        "resource": "mapping-reviews.report",
+        "path": "/api/v1/mapping-reviews/report",
+        "kind": "singleton",
+        "methods": ["GET"],
+        "scopes": ["read"],
+        "query": ["framework_id", "risk_domain"],
+    },
     {
         "resource": "mapping-reviews.queue",
         "path": "/api/v1/mapping-reviews/queue",
@@ -1587,8 +1600,9 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
     if path == "/api/v1/trust-shares":
         include_revoked = (params.get("include_revoked") or ["false"])[0].lower() in {"1", "true", "yes"}
         shares = list_shares(lake, include_revoked=include_revoked)
+        collection_params = {key: values for key, values in params.items() if key != "include_revoked"}
         try:
-            return HTTPStatus.OK, collection_response("trust-shares", shares, params)
+            return HTTPStatus.OK, collection_response("trust-shares", shares, collection_params)
         except ValueError:
             return HTTPStatus.BAD_REQUEST, error_envelope(
                 "bad_request", "invalid request parameters", resource="trust-shares"
@@ -1720,6 +1734,13 @@ MAPPING_REVIEW_DECISIONS_UNREADABLE = "the mapping review decision log could not
 
 
 def _mapping_review_get(path: str, params: Params, lake: Path) -> tuple[HTTPStatus, JsonObject]:
+    if path == "/api/v1/mapping-reviews/report":
+        report = mapping_review_report(
+            effective_safeguards(lake),
+            framework_id=first_param(params, "framework_id") or None,
+            risk_domain=first_param(params, "risk_domain") or None,
+        )
+        return HTTPStatus.OK, envelope("mapping-reviews.report", report)
     if path == "/api/v1/mapping-reviews/queue":
         try:
             rows, rest = _mapping_review_queue_rows(lake, params)

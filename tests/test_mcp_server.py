@@ -232,7 +232,11 @@ def test_mapping_review_queue_can_scope_a_cross_framework_category(tmp_path):
 def test_mcp_tools_do_not_call_pre_v1_paths():
     """The MCP engine only serves /api/v1; a pre-v1 string here is a dead tool."""
     source = Path(mcp_server.__file__).read_text(encoding="utf-8")
-    stale = [line.strip() for line in source.splitlines() if '_get("/api/' in line and '_get("/api/v1/' not in line]
+    stale = [
+        line.strip()
+        for line in source.splitlines()
+        if '_get("/api/' in line and '_get("/api/v1/' not in line and '_get("/api/v1",' not in line
+    ]
     assert stale == []
 
 

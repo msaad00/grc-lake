@@ -39,7 +39,7 @@ from security_lakehouse.validation import validate_raw_event, validate_raw_event
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
 NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v3"
-CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v2"
+CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v3"
 
 
 @serialized_publication
@@ -609,15 +609,19 @@ def _build_control_rows(
     for control_id, rows in grouped.items():
         control = rows[0]["_control"]
         failing_rows = [row for row in rows if row["status"] in FAIL_STATUSES]
-        unknown_rows = [row for row in rows if normalize_event_status(row["status"]) in {"not_evaluated", "observed"}]
+        # Presence-only activity retains provenance but neither establishes nor
+        # overrides a verdict, including evidence-presence/coverage predicates.
+        verdict_rows = [row for row in rows if normalize_event_status(row["status"]) != "observed"]
+        unknown_rows = [row for row in verdict_rows if normalize_event_status(row["status"]) == "not_evaluated"]
+        verdict_evidence = [row for row in verdict_rows if row["evidence_ref"]]
         evidence_rows = [row for row in rows if row["evidence_ref"]]
         max_score = max((row["severity_score"] for row in rows), default=0)
         top_open = max(failing_rows, key=lambda r: r["severity_score"], default=None)
         context = ControlContext(
             control_id=control_id,
             open_violation_count=len(failing_rows),
-            event_count=len(rows),
-            evidence_count=len(evidence_rows),
+            event_count=len(verdict_rows),
+            evidence_count=len(verdict_evidence),
             max_severity=str(top_open["severity"]) if top_open else "info",
             evidence_status="stale" if control_id in stale else "fresh",
         )
@@ -628,14 +632,18 @@ def _build_control_rows(
         )
         # An open violation takes precedence only when the declared rule fails.
         # Preserve the distinct unknown/stale states for evidence quality gaps.
-        is_stale = control_id in stale or len(evidence_rows) == 0
+        is_stale = control_id in stale or len(verdict_evidence) == 0
         if control_id not in control_map:
             status = "not_evaluated"
         elif failing_rows and result.status == "fail":
             status = "fail"
-        elif unknown_rows:
+        elif unknown_rows or not verdict_rows:
             status = "not_evaluated"
-            result.reasons.append("Source evidence has an observed, unknown, or unevaluated outcome.")
+            result.reasons.append(
+                "Source evidence has an unknown or unevaluated outcome."
+                if unknown_rows
+                else "Source evidence contains only observations, without an evaluated outcome."
+            )
         elif is_stale:
             status = "stale"
         else:

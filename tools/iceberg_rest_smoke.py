@@ -168,8 +168,15 @@ def run():
             )
             catalog.create_namespace("evidence_scope", properties={"trustops.tenant_id": "acme-prod"})
             lake = root / "lake"
-            run_pipeline(ROOT / "data/raw/security_events.jsonl", lake, tenant_id="acme-prod")
-            expected = read_jsonl(lake / "silver/normalized_events.jsonl")
+            raw_rows = read_jsonl(ROOT / "data/raw/security_events.jsonl")
+            raw_rows[0]["connector_id"] = "interop-fixture"
+            raw = root / "raw.jsonl"
+            write_jsonl(raw, raw_rows)
+            run_pipeline(raw, lake, tenant_id="acme-prod")
+            expected = [
+                {"connector_id": None, "source_event_id": None, **row}
+                for row in read_jsonl(lake / "silver/normalized_events.jsonl")
+            ]
             first = publish_iceberg(lake, catalog, namespace="evidence_scope", tenant_id="acme-prod")
             retry = publish_iceberg(lake, catalog, namespace="evidence_scope", tenant_id="acme-prod")
             assert retry["snapshot_id"] == first["snapshot_id"] and retry["already_published"]

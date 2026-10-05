@@ -163,3 +163,9 @@ Iceberg exports as nullable columns for legacy unscoped rows. Existing v1/v2
 generations retain their export schemas. Recollection may advance only collection
 metadata for an unchanged source event; changed content at the same source event
 time remains a conflict. Watermark timestamps are emitted in UTC.
+
+Existing Iceberg tables created from normalization v1/v2 need two nullable string
+columns, `connector_id` and `source_event_id`, before publishing v3. Evolve those
+columns through the catalog's schema API or use a new table. The exporter rejects
+an incompatible table without advancing its snapshot. Schema evolution retains
+prior snapshots and their original IDs.

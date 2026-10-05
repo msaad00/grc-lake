@@ -93,6 +93,8 @@ def raw_event():
         {"tenant_id": None},
         {"evidence": {"collected_at": "not-a-timestamp"}},
         {"event_time": "2026-01-01T00:00:00"},
+        {"event_time": "2026-01-01T00:00:00+00:60"},
+        {"event_time": "2026-01-01T00:00:00+24:00"},
         {"attributes": {"confidence": float("nan")}},
     ],
 )

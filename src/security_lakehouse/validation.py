@@ -12,9 +12,7 @@ REQUIRED_FIELDS = {"event_id", "tenant_id", "event_time", "source", "event_type"
 VALID_SEVERITIES = {"critical", "high", "medium", "low", "info", "none"}
 
 
-TIMESTAMP_PATTERN = (
-    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})$"
-)
+TIMESTAMP_PATTERN = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"
 
 
 def evidence_timestamp(value: object) -> datetime:

@@ -39,6 +39,7 @@ from security_lakehouse.validation import validate_raw_event, validate_raw_event
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
 NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v3"
+CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v2"
 
 
 @serialized_publication
@@ -316,6 +317,7 @@ def _write_generation(
             "raw_path": str(raw_path),
             "tenant_id": tenant_id,
             "control_map_sha256": _canonical_sha256(control_map),
+            "control_evaluation_version": CONTROL_EVALUATION_VERSION,
             "evaluation_dependencies_sha256": _evaluation_dependencies_sha256(ccf_payload=effective),
             "next_freshness_transition": _next_freshness_transition(evidence_freshness_rows),
             "generation_id": out.name,
@@ -395,6 +397,7 @@ def _evaluation_dependencies_sha256(*, lake: Path | None = None, ccf_payload: di
     return _canonical_sha256(
         {
             "normalization": NORMALIZATION_TRANSFORM_VERSION,
+            "control_evaluation": CONTROL_EVALUATION_VERSION,
             "ccf_projection_version": 1,
             "freshness": {key: row.get("freshness_slo_minutes") for key, row in load_connector_catalog().items()},
             "programs": load_program_catalog(),

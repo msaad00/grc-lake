@@ -49,3 +49,30 @@ def test_control_test_result_respects_evaluated_rule_threshold():
     evaluated = control("open", "fail_when_high_severity_open")
     event = {"status": "open", "severity": "low"}
     assert _test_result(evaluated, [event], [event], {"status": "fresh"}) == "pass"
+
+
+def test_incremental_refreshes_legacy_evaluation_without_rewriting_history(tmp_path, monkeypatch):
+    from security_lakehouse import pipeline
+    from security_lakehouse.generations import active_generation
+    from security_lakehouse.io import write_jsonl
+    from test_assurance_truth import event
+
+    raw, lake = tmp_path / "raw.jsonl", tmp_path / "lake"
+    write_jsonl(raw, [event("observed")])
+    current_builder = pipeline._build_control_rows
+
+    def legacy_builder(*args, **kwargs):
+        rows = current_builder(*args, **kwargs)
+        for row in rows:
+            row["status"] = "pass"
+        return rows
+
+    with monkeypatch.context() as legacy:
+        legacy.setattr(pipeline, "CONTROL_EVALUATION_VERSION", "trustops.control_evaluation.v1", raising=False)
+        legacy.setattr(pipeline, "_build_control_rows", legacy_builder)
+        pipeline.run_pipeline(raw, lake, tenant_id="audit")
+    previous = active_generation(lake)
+    pipeline.run_pipeline_incremental(raw, lake, tenant_id="audit")
+    assert active_generation(lake) != previous
+    assert read_jsonl(lake / "gold/control_posture.jsonl")[0]["status"] == "not_evaluated"
+    assert read_jsonl(previous / "gold/control_posture.jsonl")[0]["status"] == "pass"

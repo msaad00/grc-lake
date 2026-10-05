@@ -4,7 +4,9 @@ An `observed` record describes collected inventory or an activity. It supplies
 provenance and evidence types but does not establish a passing control. Unknown
 and unevaluated outcomes also remain unevaluated. An empty dataset has a zero
 control pass rate. These changes affect newly evaluated generations; historical
-evidence is retained.
+evidence is retained. Manifests record `trustops.control_evaluation.v2`; the
+incremental dependency fingerprint forces re-evaluation of older generations even
+when raw inputs have not changed, while retaining the earlier generation.
 
 Control failure follows the declared evaluation rule. For example, an open
 low-severity finding does not fail a high-severity-only rule, while an open

@@ -6219,7 +6219,7 @@
         "description": "Requires scope: connector_manage.",
         "operationId": "post_scheduler_tick",
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
@@ -6228,6 +6228,16 @@
               }
             },
             "description": "v1 envelope"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "Stored scheduler state failed validation"
           }
         },
         "summary": "Post scheduler.tick",

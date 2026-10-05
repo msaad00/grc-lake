@@ -2,8 +2,8 @@
 
 A workflow whose triggers include ``trigger.cron`` (with a ``schedule`` param)
 becomes eligible for periodic execution. The scheduler ticks once per call,
-fires every due workflow exactly once, and persists the last-fired timestamp
-to ``gold/scheduler_state.jsonl`` so successive ticks don't double-fire.
+attempts each due workflow once per interval, and persists the attempt timestamp
+before execution to ``gold/scheduler_state.jsonl`` so successive ticks don't double-fire.
 
 An enabled connector becomes eligible for periodic sync when its connector
 configuration options include ``sync_schedule``. When ``split_ingest_eval`` is
@@ -18,10 +18,10 @@ Two execution surfaces:
     long-lived daemon ticking every N seconds.
 
 Schedule grammar (intentionally small):
-  * ``@hourly``       — every hour on the hour
-  * ``@daily``        — every day at 00:00 UTC
-  * ``every Nm``      — every N minutes (1..59)
-  * ``every Nh``      — every N hours (1..23)
+  * ``@hourly``       — one hour after the last attempt
+  * ``@daily``        — 24 hours after the last attempt
+  * ``every Nm``      — every N minutes (positive integer)
+  * ``every Nh``      — every N hours (positive integer)
 
 This keeps the in-process scheduler portable; production deployments that
 need full crontab grammar should call ``scheduler tick`` from a real cron.
@@ -30,7 +30,6 @@ need full crontab grammar should call ``scheduler tick`` from a real cron.
 from __future__ import annotations
 
 import fcntl
-import json
 import re
 import time
 from dataclasses import dataclass
@@ -41,8 +40,10 @@ from typing import Any
 from security_lakehouse.assessment import SnapshotWrittenHook
 from security_lakehouse.connector_runner import run_connector_sync
 from security_lakehouse.connector_state import build_catalog_view
+from security_lakehouse.io import append_jsonl, read_jsonl
 from security_lakehouse.lake_eval import run_lake_eval
 from security_lakehouse.lake_scale import connector_materialize_on_sync, lake_eval_schedule
+from security_lakehouse.strict_json import InvalidJSON
 from security_lakehouse.workflows import list_workflows, run_workflow
 
 STATE_FILE = "scheduler_state.jsonl"
@@ -142,7 +143,7 @@ def _scheduled_lake_eval(lake_dir: str | Path) -> ScheduledLakeEval | None:
 
 
 def eval_schedule_status(lake_dir: str | Path, *, now: datetime | None = None) -> dict[str, Any]:
-    """Return lake eval cadence and due/overdue signals for status surfaces."""
+    """Return attempt cadence; last_fired_at does not imply successful evaluation."""
     lake_eval = _scheduled_lake_eval(lake_dir)
     if lake_eval is None:
         return {
@@ -200,24 +201,25 @@ def _read_state(lake_dir: str | Path) -> dict[str, datetime]:
     if not path.is_file():
         return {}
     latest: dict[str, datetime] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if not isinstance(row, dict):
-            continue
-        target_kind = str(row.get("target_kind") or "workflow")
-        target_id = str(row.get("target_id") or row.get("workflow_id") or "")
+    try:
+        rows = read_jsonl(path)
+    except (ValueError, UnicodeError) as exc:
+        raise InvalidJSON("invalid scheduler state; operator reconciliation required") from exc
+    for row in rows:
+        target_kind = row.get("target_kind", "workflow")
+        target_id = row.get("target_id", row.get("workflow_id"))
         last = row.get("last_fired_at")
-        if not target_id or not last:
-            continue
+        if (
+            target_kind not in ("workflow", "connector", "lake_eval")
+            or not isinstance(target_id, str)
+            or not target_id
+            or not isinstance(last, str)
+        ):
+            raise InvalidJSON("invalid scheduler state; operator reconciliation required")
         try:
-            parsed = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
-        except ValueError:
-            continue
+            parsed = datetime.fromisoformat(last.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise InvalidJSON("invalid scheduler state; operator reconciliation required") from exc
         # astimezone() would read a naive value as server-local time.
         parsed = parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed.astimezone(UTC)
         key = _state_key(target_kind, target_id)
@@ -227,20 +229,20 @@ def _read_state(lake_dir: str | Path) -> dict[str, datetime]:
     return latest
 
 
-def _write_state(lake_dir: str | Path, *, target_kind: str, target_id: str, fired_at: datetime) -> None:
+def _write_state(lake_dir: str | Path, *, target_kind: str, target_id: str, fired_at: datetime, result: str) -> None:
     gold = _gold(lake_dir)
     gold.mkdir(parents=True, exist_ok=True)
     record = {
         "target_kind": target_kind,
         "target_id": target_id,
         "last_fired_at": _utc_iso(fired_at),
+        "result": result,
     }
     if target_kind == "workflow":
         record["workflow_id"] = target_id
     if target_kind == "connector":
         record["connector_id"] = target_id
-    with (gold / STATE_FILE).open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(record, separators=(",", ":")) + "\n")
+    append_jsonl(gold / STATE_FILE, record)
 
 
 def _lock_path(lake_dir: str | Path) -> Path:
@@ -267,7 +269,7 @@ def tick(
     to a test-supplied ``runner`` override (whose narrower signature tests
     already rely on).
 
-    The read-state -> fire -> write-state critical section is guarded by a
+    The read-state -> record-attempt -> fire -> record-outcome critical section is guarded by a
     non-blocking advisory file lock (``gold/.scheduler.lock``) so two
     concurrent ticks (cron overlap, ``concurrencyPolicy: Allow``, daemon plus
     a manual API tick) cannot both observe the same ``last_fired`` and
@@ -313,6 +315,7 @@ def _tick_locked(
         due_at = (last_fired + entry.period) if last_fired else moment
         if last_fired is not None and moment < due_at:
             continue
+        _write_state(lake_dir, target_kind="workflow", target_id=entry.workflow_id, fired_at=moment, result="started")
         try:
             if runner is None:
                 run = run_workflow(
@@ -321,7 +324,6 @@ def _tick_locked(
             else:
                 run = runner(lake_dir, workflow_id=entry.workflow_id, actor="scheduler")
             outcome = run.get("result") if isinstance(run, dict) else "ok"
-            _write_state(lake_dir, target_kind="workflow", target_id=entry.workflow_id, fired_at=moment)
             results.append(
                 {
                     "target_kind": "workflow",
@@ -343,12 +345,22 @@ def _tick_locked(
                     "error": "internal error",
                 }
             )
+        _write_state(
+            lake_dir,
+            target_kind="workflow",
+            target_id=entry.workflow_id,
+            fired_at=moment,
+            result=str(results[-1]["result"]),
+        )
     sync_runner = connector_runner or run_connector_sync
     for connector_entry in _scheduled_from_connectors(lake_dir):
         last_fired = state.get(_state_key("connector", connector_entry.connector_id))
         due_at = (last_fired + connector_entry.period) if last_fired else moment
         if last_fired is not None and moment < due_at:
             continue
+        _write_state(
+            lake_dir, target_kind="connector", target_id=connector_entry.connector_id, fired_at=moment, result="started"
+        )
         try:
             sync_run = sync_runner(
                 lake_dir,
@@ -365,7 +377,6 @@ def _tick_locked(
             evidence_count = getattr(sync_run, "evidence_count", None)
             if evidence_count is None and isinstance(sync_run, dict):
                 evidence_count = sync_run.get("evidence_count")
-            _write_state(lake_dir, target_kind="connector", target_id=connector_entry.connector_id, fired_at=moment)
             results.append(
                 {
                     "target_kind": "connector",
@@ -389,14 +400,21 @@ def _tick_locked(
                     "error": "internal error",
                 }
             )
+        _write_state(
+            lake_dir,
+            target_kind="connector",
+            target_id=connector_entry.connector_id,
+            fired_at=moment,
+            result=str(results[-1]["result"]),
+        )
     lake_eval = _scheduled_lake_eval(lake_dir)
     if lake_eval is not None:
         last_fired = state.get(_state_key("lake_eval", "default"))
         due_at = (last_fired + lake_eval.period) if last_fired else moment
         if last_fired is None or moment >= due_at:
+            _write_state(lake_dir, target_kind="lake_eval", target_id="default", fired_at=moment, result="started")
             try:
                 eval_result = run_lake_eval(lake_dir, actor="scheduler")
-                _write_state(lake_dir, target_kind="lake_eval", target_id="default", fired_at=moment)
                 results.append(
                     {
                         "target_kind": "lake_eval",
@@ -419,6 +437,13 @@ def _tick_locked(
                         "error": "internal error",
                     }
                 )
+            _write_state(
+                lake_dir,
+                target_kind="lake_eval",
+                target_id="default",
+                fired_at=moment,
+                result=str(results[-1]["result"]),
+            )
     return results
 
 

@@ -167,3 +167,20 @@ The headless path uses the same operations as the UI:
 This is the path external portals, internal platform automation, MCP tools, and
 agent harnesses should use. CLI examples are wrappers around the same contract,
 not a separate operating mode.
+
+### Failed and interrupted scheduled attempts
+
+The scheduler records and fsyncs an attempt in `gold/scheduler_state.jsonl`
+before invoking a workflow, connector, or lake evaluation. Failures wait until
+that attempt time plus the configured interval; they do not retry on every
+scheduler tick. The existing `last_fired_at` field means an attempted invocation,
+not successful collection or evaluation. The final `result` records the outcome;
+`started` without a later outcome means execution was interrupted or its outcome
+could not be persisted. An interrupted scheduled attempt also waits its interval.
+This cadence guarantee does not establish exactly-once external side effects;
+workflow approval execution retains its separate reconciliation requirements.
+
+Legacy state timestamps without an offset retain their UTC interpretation.
+Malformed state fails closed and is left unchanged for operator reconciliation;
+reads do not skip corrupt rows or reset retry history. Preserve the original file
+when investigating an interrupted attempt or repairing state.

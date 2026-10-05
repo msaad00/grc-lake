@@ -3196,6 +3196,51 @@
         "tags": ["ccf"]
       }
     },
+    "/api/v1/connector-runs": {
+      "get": {
+        "operationId": "get_connector_runs",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "v1 envelope"
+          }
+        },
+        "summary": "List connector-runs",
+        "tags": ["connector-runs"]
+      }
+    },
     "/api/v1/connectors": {
       "get": {
         "description": "Requires scope: read.",
@@ -4607,6 +4652,44 @@
           }
         },
         "summary": "List mapping-reviews.queue",
+        "tags": ["mapping-reviews"]
+      }
+    },
+    "/api/v1/mapping-reviews/report": {
+      "get": {
+        "description": "Requires scope: read.",
+        "operationId": "get_mapping_reviews_report",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "framework_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "risk_domain",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "v1 envelope"
+          }
+        },
+        "summary": "Get mapping-reviews.report",
         "tags": ["mapping-reviews"]
       }
     },

@@ -114,6 +114,13 @@
     {
       "kind": "collection",
       "methods": ["GET"],
+      "path": "/api/v1/connector-runs",
+      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "resource": "connector-runs"
+    },
+    {
+      "kind": "collection",
+      "methods": ["GET"],
       "path": "/api/v1/connectors",
       "resource": "connectors",
       "scopes": ["read"]
@@ -416,6 +423,14 @@
         "sort"
       ],
       "resource": "mapping-reviews.queue",
+      "scopes": ["read"]
+    },
+    {
+      "kind": "singleton",
+      "methods": ["GET"],
+      "path": "/api/v1/mapping-reviews/report",
+      "query": ["framework_id", "risk_domain"],
+      "resource": "mapping-reviews.report",
       "scopes": ["read"]
     },
     {

@@ -25,8 +25,9 @@ def test_collect_okta_system_log_evidence_maps_auth_events() -> None:
     assert validate_raw_events(rows) == []
     assert len(rows) == 2
     assert {row["source"] for row in rows} == {"okta-system-log"}
-    failed = [row for row in rows if row["status"] == "open"]
+    failed = [row for row in rows if row["attributes"]["outcome_result"] == "FAILURE"]
     assert len(failed) == 1
+    assert all(row["status"] == "observed" for row in rows)
     assert "FEDRAMP-AC-7" in failed[0]["controls"]
 
 

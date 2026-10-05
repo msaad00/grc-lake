@@ -97,7 +97,9 @@ def _valid_at(row: dict[str, Any], as_of: datetime) -> bool:
 
 
 @generation_reader
-def assess_control_plan(lake: Path, plan: dict[str, Any]) -> dict[str, Any]:
+def assess_control_plan(
+    lake: Path, plan: dict[str, Any], *, declared_assets: set[tuple[str, str]] | None = None
+) -> dict[str, Any]:
     start, end, as_of = validate_plan(plan)
     generation = verified_generation(lake, plan["tenant_id"])
     catalog = {row["safeguard_id"]: row for row in read_json(lake / "catalog/safeguards.json")["safeguards"]}
@@ -130,7 +132,16 @@ def assess_control_plan(lake: Path, plan: dict[str, Any]) -> dict[str, Any]:
             for row in bound[sid]
             if row["event_id"] not in control["design_event_ids"] and start <= timestamp(row["event_time"]) < end
         ]
-        assets = sorted({(row["tenant_id"], row["asset_id"]) for row in operating})
+        observed_assets = {(row["tenant_id"], row["asset_id"]) for row in operating}
+        eligible_declared = {
+            (row["tenant_id"], row["asset_id"])
+            for row in bound[sid]
+            if declared_assets is not None
+            and (row["tenant_id"], row["asset_id"]) in declared_assets
+            and row["asset_type"] in catalog[sid].get("asset_types", [])
+            and _valid_at(row, as_of)
+        }
+        assets = sorted(observed_assets | eligible_declared)
         windows = []
         cursor = start
         while cursor < end:
@@ -191,7 +202,9 @@ def assess_control_plan(lake: Path, plan: dict[str, Any]) -> dict[str, Any]:
                     "planned_windows": len(windows),
                     "expected_asset_windows": len(assets) * len(windows),
                     "tested_asset_windows": len(assets) * len(windows) - len(gaps),
-                    "observed_asset_count": len(assets),
+                    "observed_asset_count": len(observed_assets),
+                    "expected_asset_count": len(assets),
+                    "population_scope": "declared_and_observed" if declared_assets is not None else "observed_period",
                     "population_event_count": len(operating),
                     "samples": samples,
                     "gaps": gaps,
@@ -209,6 +222,9 @@ def assess_control_plan(lake: Path, plan: dict[str, Any]) -> dict[str, Any]:
         "period_end": plan["period_end"],
         "as_of": plan["as_of"],
         "plan_sha256": plan_hash,
+        "declared_population_sha256": canonical_sha256(sorted(declared_assets))
+        if declared_assets is not None
+        else None,
         "generation": generation,
         "review_status": "pending_human_review",
         "population_completeness": "not_established",

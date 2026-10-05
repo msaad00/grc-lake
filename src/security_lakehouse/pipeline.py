@@ -224,7 +224,10 @@ def _write_generation(
     write_json(out / "catalog" / "control_map.json", {"controls": list(control_map.values())})
     write_json(out / "catalog" / "bundle.json", bundle_summary(catalog_path=out / "catalog" / "control_map.json"))
     evidence_freshness_rows = build_evidence_freshness(silver_rows, now=evaluated_at)
-    stale_controls = stale_control_ids(evidence_freshness_rows)
+    stale_controls = stale_control_ids(
+        evidence_freshness_rows,
+        required_types={key: list(value.get("required_evidence_types") or []) for key, value in control_map.items()},
+    )
     control_rows = _build_control_rows(silver_rows, control_map, stale_controls)
     # Applicability join: each asset_type -> the controls that declare it, so the
     # gold asset rows answer "which controls apply to this asset?".

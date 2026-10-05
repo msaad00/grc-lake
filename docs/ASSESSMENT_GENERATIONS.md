@@ -92,3 +92,18 @@ Parquet export tests verify normalized evidence parity with DuckDB; this does
 not establish interoperability of every assessment artifact. Separate Iceberg
 checks exercise a local Polaris catalog and independent DuckDB snapshot reads;
 see the [tested adapter boundary](ICEBERG_REST.md#compatibility-and-validation).
+
+## Current freshness and retained history
+
+Freshness conclusions use the latest observation for each source, asset, and
+evidence type within a control. New observations supersede that population's
+older freshness state without deleting its evidence or historical generations.
+Fresh evidence from another asset or source does not conceal a stale population.
+Controls with declared evidence requirements consider those types and flag
+missing requirements; unrelated optional history does not make them stale.
+
+Comparisons use parsed UTC instants. Historical timestamps without an offset
+retain the existing interpretation as UTC. Collection timestamps in the future
+cannot establish freshness and are reported as missing usable collection
+metadata. Per-record freshness outputs still retain historical rows for period
+review; their counts are not the number of currently stale controls.

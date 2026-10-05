@@ -75,7 +75,12 @@ def build_current_posture(
         now=evaluated_at,
         default_slo_minutes=freshness_days * 24 * 60,
     )
-    stale_controls = stale_control_ids(evidence_freshness)
+    stale_controls = stale_control_ids(
+        evidence_freshness,
+        required_types={
+            str(row["control_id"]): list(row.get("required_evidence_types") or []) for row in control_tests
+        },
+    )
     stale_evidence = [row for row in evidence_freshness if row["status"] in {"stale", "expired", "missing"}]
     framework_scores = (
         _framework_scores_from_controls(controls, stale_controls)

@@ -480,12 +480,8 @@ def test_snapshot_hook_failure_does_not_break_the_write(tmp_path: Path) -> None:
     assert result["ok"] is True
 
 
-def test_snapshot_write_survives_a_malformed_prior_snapshot_violation_id(tmp_path: Path) -> None:
-    """A prior snapshot with a non-string (unhashable) violation_id must not
-    raise TypeError inside the chain lock and break every caller of
-    write_assessment_snapshot -- CLI, scheduler, and MCP included, not only
-    webhook-aware ones (review finding #6).
-    """
+def test_snapshot_write_rejects_a_tampered_prior_snapshot(tmp_path: Path) -> None:
+    """Tampered history must fail explicitly before any new snapshot or webhook."""
     _seed_lake(tmp_path)
     first = write_assessment_snapshot(tmp_path, reason="baseline")
     payload = json.loads(first.read_text(encoding="utf-8"))
@@ -494,10 +490,12 @@ def test_snapshot_write_survives_a_malformed_prior_snapshot_violation_id(tmp_pat
     first.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
 
     calls: list[tuple] = []
-    second = write_assessment_snapshot(tmp_path, reason="second", on_snapshot_written=lambda *a: calls.append(a))
-
-    assert second.exists()
-    assert len(calls) == 1  # the hook still fires -- the diff failure was swallowed, not fatal
+    ledger = tmp_path / "gold/snapshots/_ledger.jsonl"
+    before = ledger.read_bytes()
+    with pytest.raises(ValueError, match="snapshot integrity"):
+        write_assessment_snapshot(tmp_path, reason="second", on_snapshot_written=lambda *a: calls.append(a))
+    assert ledger.read_bytes() == before
+    assert calls == []
 
 
 def test_write_assessment_snapshot_succeeds_even_when_every_webhook_delivery_fails(tmp_path: Path) -> None:

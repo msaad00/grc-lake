@@ -47,7 +47,7 @@ from typing import Any
 
 from security_lakehouse.assessment import _assessment_hash, load_snapshot
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
-from security_lakehouse.generations import generation_identity, generation_reader, verify_generation
+from security_lakehouse.generations import generation_identity, generation_reader, pin_generation, verify_generation
 from security_lakehouse.io import file_sha256, read_json, read_jsonl, resolve_path
 from security_lakehouse.models import utc_iso
 from security_lakehouse.safeguards import (
@@ -305,6 +305,13 @@ def build_assessment_results(
         controls = _snapshot_controls(lake, posture_payload)
         started = evaluated_at
     else:
+        with pin_generation(lake) as pinned:
+            if pinned is None and (lake / "generation.json").is_file():
+                pinned = lake
+            if pinned is not None:
+                verify_generation(pinned)
+            elif read_jsonl(lake / "gold/control_posture.jsonl", missing_ok=True, base_dir=lake):
+                raise ValueError("live assessment export requires a verified generation; run the pipeline first")
         controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True, base_dir=lake)
         # The live case only needs evaluated_at/a version/generation -- not a
         # full posture recomputation (violations, evidence freshness, framework

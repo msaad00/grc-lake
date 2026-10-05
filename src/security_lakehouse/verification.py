@@ -1,9 +1,8 @@
 """Evidence integrity verification.
 
-Recomputes a SHA-256 hash over the bronze raw record for an evidence event
-and compares it to the stored ``raw_sha256`` value so reviewers (and agents)
-can confirm the silver/gold layers have not drifted from the immutable
-input.
+Checks published generation hashes and compares the bronze raw hash with its
+silver reference. Unsealed legacy lakes retain the narrower bronze-hash check;
+neither mode establishes external authenticity.
 """
 
 from __future__ import annotations
@@ -61,6 +60,21 @@ def verify_event(lake_dir: str | Path, event_id: str) -> dict[str, Any]:
             "reason": str | None,
         }
     """
+    with pin_generation(lake_dir) as generation:
+        if generation is None and (Path(lake_dir) / "generation.json").is_file():
+            generation = Path(lake_dir)
+        if generation is not None:
+            try:
+                verify_generation(generation)
+            except (ValueError, OSError):
+                return {
+                    "event_id": event_id,
+                    "verified": False,
+                    "expected_sha256": None,
+                    "computed_sha256": None,
+                    "source_layer": "missing",
+                    "reason": "assessment generation integrity verification failed",
+                }
     silver = _silver_record(lake_dir, event_id)
     if silver is None:
         return {
@@ -93,6 +107,7 @@ def verify_event(lake_dir: str | Path, event_id: str) -> dict[str, Any]:
         "computed_sha256": computed,
         "source_layer": "bronze",
         "reason": None if verified else "computed hash does not match stored raw_sha256",
+        "verification_scope": "generation_and_bronze_hash" if generation is not None else "bronze_hash_only",
     }
 
 

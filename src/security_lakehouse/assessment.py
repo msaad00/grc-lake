@@ -47,6 +47,10 @@ VIOLATION_STATUSES = FAIL_STATUSES
 SNAPSHOT_LEDGER = ("gold", "snapshots", "_ledger.jsonl")
 
 
+class SnapshotIntegrityError(ValueError):
+    """Persisted snapshot history failed validation and needs reconciliation."""
+
+
 @generation_reader
 def build_current_posture(
     lake_dir: str | Path,
@@ -306,6 +310,8 @@ def write_assessment_snapshot(
     # Concurrent snapshot requests must not read the same chain tip: serialize
     # the tip-read through ledger-append span so the chain can never fork.
     with chain_lock(_ledger_path(lake)):
+        if not _snapshot_chain_rows_unlocked(lake.resolve())[1]["ok"]:
+            raise SnapshotIntegrityError("snapshot integrity verification failed; history requires reconciliation")
         prev_hash = _chain_tip(lake)
         prior_payload = _prior_snapshot_payload(lake)
         assessment = build_current_posture(lake, freshness_days=freshness_days)
@@ -329,22 +335,30 @@ def write_assessment_snapshot(
         assessment["prev_hash"] = prev_hash
         # assessment_hash covers prev_hash, so the chain is tamper-evident.
         assessment["assessment_hash"] = _assessment_hash(assessment)
-        if output is None:
-            ts = assessment["evaluated_at"].replace(":", "").replace("-", "")
-            # Suffix with the content hash so same-timestamp freezes never collide
-            # and an existing immutable snapshot is never silently overwritten.
-            short = assessment["assessment_hash"][:12]
-            output_path = lake / "gold" / "snapshots" / f"assessment-{ts}-{short}.json"
-            if output_path.exists():
-                raise FileExistsError(f"snapshot already exists, refusing to overwrite: {output_path}")
-        else:
-            output_path = Path(output)
-        write_json(output_path, assessment)
+        ts = assessment["evaluated_at"].replace(":", "").replace("-", "")
+        short = assessment["assessment_hash"][:12]
+        snapshots_dir = lake / "gold/snapshots"
+        storage_path = snapshots_dir / f"assessment-{ts}-{short}.json"
+        output_path = Path(output) if output is not None else storage_path
+        if output_path.parent.resolve() == snapshots_dir.resolve():
+            if not _is_safe_snapshot_token(output_path.name) or not output_path.name.endswith(".json"):
+                raise ValueError("snapshot filename must be a safe JSON filename")
+            storage_path = output_path
+        for target in {storage_path, output_path}:
+            if target.exists() or target.is_symlink():
+                raise FileExistsError(f"snapshot already exists, refusing to overwrite: {target}")
+        write_json(storage_path, assessment)
+        if output_path != storage_path:
+            try:
+                write_json(output_path, assessment)
+            except Exception:
+                storage_path.unlink()
+                raise
         append_jsonl(
             _ledger_path(lake),
             {
                 "evaluated_at": assessment["evaluated_at"],
-                "snapshot": output_path.name,
+                "snapshot": storage_path.name,
                 "prev_hash": prev_hash,
                 "assessment_hash": assessment["assessment_hash"],
                 "snapshot_reason": reason,
@@ -366,41 +380,71 @@ def write_assessment_snapshot(
     return output_path
 
 
-def verify_snapshot_chain(lake_dir: str | Path) -> dict[str, Any]:
-    """Verify the snapshot hash-chain against the append-only ledger.
+def _snapshot_chain_rows(lake: Path) -> tuple[list[tuple[datetime, dict[str, Any], Path]], dict[str, Any]]:
+    """Read each payload once and compare it with the local ledger under its lock."""
+    snapshots_dir = lake / "gold/snapshots"
+    if not snapshots_dir.exists():
+        return [], {"ok": True, "length": 0, "issues": []}
+    with chain_lock(_ledger_path(lake)):
+        return _snapshot_chain_rows_unlocked(lake)
 
-    Walks the ledger oldest-first and, for each entry, confirms the referenced
-    snapshot file exists, recomputes its ``assessment_hash`` from content, and
-    checks that the recorded hash, the file's stored hash, and the ``prev_hash``
-    linkage all agree. Returns ``{"ok", "length", "issues"}`` — ``ok`` is True
-    only when the chain is intact and unbroken.
-    """
-    lake = Path(lake_dir)
-    entries = read_jsonl(_ledger_path(lake), missing_ok=True)
-    snapshots_dir = lake / "gold" / "snapshots"
+
+def _snapshot_chain_rows_unlocked(lake: Path) -> tuple[list[tuple[datetime, dict[str, Any], Path]], dict[str, Any]]:
+    snapshots_dir = lake / "gold/snapshots"
     issues: list[str] = []
+    rows: list[tuple[datetime, dict[str, Any], Path]] = []
+    if snapshots_dir.resolve() != snapshots_dir.absolute() or _ledger_path(lake).is_symlink():
+        return [], {"ok": False, "length": 0, "issues": ["invalid snapshot directory or ledger path"]}
+    try:
+        entries = read_jsonl(_ledger_path(lake), missing_ok=True)
+    except (ValueError, OSError):
+        return [], {"ok": False, "length": 0, "issues": ["snapshot ledger is unreadable"]}
     expected_prev: str | None = None
+    names: set[str] = set()
     for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            issues.append(f"entry {index}: invalid ledger record")
+            continue
         name = entry.get("snapshot")
         recorded_hash = entry.get("assessment_hash")
         if entry.get("prev_hash") != expected_prev:
-            issues.append(f"entry {index} ({name}): prev_hash breaks the chain")
-        path = snapshots_dir / name if isinstance(name, str) else None
-        if path is None or not path.exists():
-            issues.append(f"entry {index} ({name}): snapshot file is missing")
+            issues.append(f"entry {index}: prev_hash breaks the chain")
+        if (
+            not isinstance(name, str)
+            or not _is_safe_snapshot_token(name)
+            or not name.endswith(".json")
+            or name in names
+        ):
+            issues.append(f"entry {index}: invalid or duplicate snapshot path")
+            continue
+        names.add(name)
+        path = snapshots_dir / name
+        if path.is_symlink() or not path.is_file():
+            issues.append(f"entry {index}: snapshot file is missing or unsafe")
             expected_prev = recorded_hash
             continue
         try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            issues.append(f"entry {index} ({name}): snapshot file is unreadable")
-            expected_prev = recorded_hash
-            continue
-        recomputed = _assessment_hash(payload)
-        if recomputed != recorded_hash or payload.get("assessment_hash") != recorded_hash:
-            issues.append(f"entry {index} ({name}): content hash does not match the ledger")
+            payload = read_json(path)
+            if not isinstance(payload, dict):
+                raise ValueError("snapshot must be an object")
+            if _assessment_hash(payload) != recorded_hash or payload.get("assessment_hash") != recorded_hash:
+                issues.append(f"entry {index}: content hash does not match the ledger")
+            if payload.get("prev_hash") != entry.get("prev_hash"):
+                issues.append(f"entry {index}: payload prev_hash differs from ledger")
+            if payload.get("evaluated_at") != entry.get("evaluated_at"):
+                issues.append(f"entry {index}: snapshot timestamp differs from ledger")
+            rows.append((_parse_iso(payload["evaluated_at"]), payload, path))
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            issues.append(f"entry {index}: snapshot file is unreadable or invalid")
         expected_prev = recorded_hash
-    return {"ok": not issues, "length": len(entries), "issues": issues}
+    if {path.name for path in snapshots_dir.glob("*.json")} - names:
+        issues.append("unledgered snapshot files are present")
+    return rows, {"ok": not issues, "length": len(entries), "issues": issues}
+
+
+def verify_snapshot_chain(lake_dir: str | Path) -> dict[str, Any]:
+    """Verify local snapshot content and ledger linkage; this is not external anchoring."""
+    return _snapshot_chain_rows(Path(lake_dir).resolve())[1]
 
 
 def _parse_iso(value: str | datetime) -> datetime:
@@ -423,28 +467,10 @@ def _parse_iso(value: str | datetime) -> datetime:
 
 
 def _iter_snapshots(lake_dir: str | Path) -> list[tuple[datetime, dict[str, Any], Path]]:
-    """Load assessment snapshots as ``(evaluated_at, payload, path)`` tuples.
-
-    Snapshots with a missing/unparseable ``evaluated_at`` are skipped. The
-    result is sorted oldest-first by ``evaluated_at``.
-    """
-    snapshots_dir = Path(lake_dir) / "gold" / "snapshots"
-    if not snapshots_dir.is_dir():
-        return []
-    rows: list[tuple[datetime, dict[str, Any], Path]] = []
-    for path in snapshots_dir.glob("assessment-*.json"):
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        raw = payload.get("evaluated_at")
-        if not isinstance(raw, str):
-            continue
-        try:
-            evaluated_at = _parse_iso(raw)
-        except ValueError:
-            continue
-        rows.append((evaluated_at, payload, path))
+    """Return verified ledger-backed payloads, without modifying corrupt history."""
+    rows, result = _snapshot_chain_rows(Path(lake_dir).resolve())
+    if not result["ok"]:
+        raise SnapshotIntegrityError("snapshot integrity verification failed")
     return sorted(rows, key=lambda item: item[0])
 
 
@@ -481,43 +507,33 @@ def safe_snapshot_export_filename(snapshot_id: str) -> str:
     return f"trustops-executive-{stem}.pdf"
 
 
-def resolve_snapshot_path(lake_dir: str | Path, snapshot_id: str) -> Path | None:
-    """Resolve a snapshot file by filename stem or ``assessment_hash`` prefix."""
-    snapshots_dir = Path(lake_dir) / "gold" / "snapshots"
-    if not snapshots_dir.is_dir():
-        return None
+def _resolve_snapshot(lake_dir: str | Path, snapshot_id: str) -> tuple[dict[str, Any], Path] | None:
     token = normalize_snapshot_id(snapshot_id)
     if token is None:
         return None
-    resolved_dir = snapshots_dir.resolve()
-    for path in snapshots_dir.glob("assessment-*.json"):
-        try:
-            path.resolve().relative_to(resolved_dir)
-        except ValueError:
-            continue
-        if path.stem == token:
-            return path
-    for path in snapshots_dir.glob("assessment-*.json"):
-        try:
-            path.resolve().relative_to(resolved_dir)
-        except ValueError:
-            continue
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        digest = payload.get("assessment_hash")
-        if isinstance(digest, str) and (digest == token or digest.startswith(token)):
-            return path
-    return None
+    rows = _iter_snapshots(lake_dir)
+    matches = [(payload, path) for _time, payload, path in rows if path.stem == token]
+    if not matches:
+        matches = [
+            (payload, path) for _time, payload, path in rows if str(payload["assessment_hash"]).startswith(token)
+        ]
+    if len(matches) > 1:
+        raise ValueError("snapshot identifier is ambiguous")
+    return matches[0] if matches else None
+
+
+def resolve_snapshot_path(lake_dir: str | Path, snapshot_id: str) -> Path | None:
+    """Resolve a verified ledger entry by filename stem or unique content hash prefix."""
+    result = _resolve_snapshot(lake_dir, snapshot_id)
+    return result[1] if result else None
 
 
 def load_snapshot(lake_dir: str | Path, snapshot_id: str) -> dict[str, Any]:
-    """Load a point-in-time snapshot payload by id."""
-    path = resolve_snapshot_path(lake_dir, snapshot_id)
-    if path is None:
+    """Return the same payload that was verified, without an unverified second read."""
+    result = _resolve_snapshot(lake_dir, snapshot_id)
+    if result is None:
         raise FileNotFoundError(f"snapshot not found: {snapshot_id}")
-    return json.loads(path.read_text(encoding="utf-8"))
+    return result[0]
 
 
 def posture_as_of(lake_dir: str | Path, *, as_of: str | datetime) -> dict[str, Any]:

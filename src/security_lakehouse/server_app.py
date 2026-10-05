@@ -42,7 +42,12 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from security_lakehouse import api_legacy, api_v1, remediation_guidance, strict_json, tenancy, trust_share
-from security_lakehouse.assessment import SnapshotWrittenHook, build_current_posture, write_assessment_snapshot
+from security_lakehouse.assessment import (
+    SnapshotIntegrityError,
+    SnapshotWrittenHook,
+    build_current_posture,
+    write_assessment_snapshot,
+)
 from security_lakehouse.auth.api_key_session import ApiKeySessionError, exchange_api_key_for_browser_session
 from security_lakehouse.auth.dependencies import get_session, require_scope
 from security_lakehouse.auth.json_body import StrictJSONMiddleware
@@ -1263,8 +1268,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             headers=getattr(exc, "headers", None),
         )
 
+    @app.exception_handler(SnapshotIntegrityError)
     @app.exception_handler(strict_json.InvalidJSON)
-    async def _invalid_stored_json(request: Request, exc: strict_json.InvalidJSON) -> JSONResponse:
+    async def _invalid_stored_json(
+        request: Request, exc: strict_json.InvalidJSON | SnapshotIntegrityError
+    ) -> JSONResponse:
         return JSONResponse(
             api_v1.error_envelope("invalid_stored_data", "stored data failed validation"),
             status_code=503,
@@ -3412,7 +3420,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         )
         return JSONResponse(payload, status_code=int(result_status))
 
-    @app.get("/api/v1/snapshots/{snapshot_id}", tags=["assessment"])
+    @app.get(
+        "/api/v1/snapshots/{snapshot_id}",
+        tags=["assessment"],
+        responses={503: {"description": "Snapshot history failed integrity validation"}},
+    )
     def snapshot_detail(snapshot_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:
         from security_lakehouse.assessment import load_snapshot, snapshot_detail_summary
 
@@ -3424,7 +3436,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = snapshot_detail_summary(snapshot_id, payload)
         return JSONResponse(api_v1.envelope("snapshots.detail", _redact_payload(data, identity)))
 
-    @app.get("/api/v1/snapshots/{snapshot_id}/export.pdf", tags=["assessment"])
+    @app.get(
+        "/api/v1/snapshots/{snapshot_id}/export.pdf",
+        tags=["assessment"],
+        responses={503: {"description": "Snapshot history failed integrity validation"}},
+    )
     def snapshot_export_pdf(snapshot_id: str, identity: Identity = Depends(_require_read)) -> Response:
         from security_lakehouse.assessment import load_snapshot, safe_snapshot_export_filename
         from security_lakehouse.reporting.executive_pdf import render_executive_pdf

@@ -11,6 +11,7 @@ Python package, Helm chart, and bundled web console.
 - Retain failed login attempts as observations, preserve GCP IAM conditions, and identify broad/public access grants and open repository alert severity.
 - Reconcile missing HIPAA workstation, media, authentication, policy and documentation identities against eCFR, preserving historical catalog scope and proposed mapping review.
 - Persist scheduler attempts before execution so failed or interrupted workflows, connector syncs, and lake evaluations respect their configured interval; reject corrupt scheduler state without discarding retry history.
+- Read and index connector history once per status request, retain successful runs beyond the recent-history window, and reject malformed history instead of silently discarding it.
 
 - Atomically claim agent decisions across SQLite/PostgreSQL before execution, require independent SSO review, and retain interrupted claims for reconciliation. The console now reflects review eligibility and in-progress decisions.
 - Preserve connector-local event identities through upsert, normalization, incremental evaluation, and lineage; reject conflicting equal-time observations and retain newer evidence on stale redelivery.

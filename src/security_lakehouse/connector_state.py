@@ -12,15 +12,22 @@ never mutate the immutable evidence pipeline.
 
 from __future__ import annotations
 
+import copy
 import hashlib
+import heapq
 import json
 import os
 import secrets
 import time
+from collections.abc import Callable
+from contextvars import ContextVar
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from functools import wraps
 from pathlib import Path
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
+from security_lakehouse import strict_json
 from security_lakehouse.connector_errors import ConnectorOperatorError
 from security_lakehouse.connectors import (
     SENSITIVE_FIELD_NAMES,
@@ -40,6 +47,7 @@ from security_lakehouse.connectors_siem import CONNECTOR_ID as SIEM_CONNECTOR_ID
 from security_lakehouse.connectors_siem import discover_siem_scope, probe_siem_access
 from security_lakehouse.connectors_snowflake import CONNECTOR_ID as SNOWFLAKE_CONNECTOR_ID
 from security_lakehouse.connectors_snowflake import discover_snowflake_scope, probe_snowflake_access
+from security_lakehouse.io import read_jsonl
 from security_lakehouse.lake_scale import apply_split_schedule_defaults
 from security_lakehouse.models import parse_event_time, utc_iso
 from security_lakehouse.secret_refs import ref_payload_error
@@ -195,6 +203,7 @@ def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
     all of that to any local account, so the file is created 0600 and an
     existing one is tightened on write.
     """
+    line = strict_json.dumps(record, separators=(",", ":")) + "\n"
     existed = path.exists()
     # O_NOFOLLOW: refuse to append through a symlink planted where this file goes.
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_NOFOLLOW, 0o600)
@@ -207,7 +216,10 @@ def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
         raise
     with handle as fh:
         # lgtm[py/clear-text-storage-sensitive-data] record is sanitized before this write
-        fh.write(json.dumps(record, separators=(",", ":")) + "\n")
+        fh.write(line)
+    cache = _HISTORY_READS.get()
+    if cache is not None:
+        cache.pop(path.parent.parent.resolve(), None)
 
 
 def append_config_event(
@@ -926,38 +938,88 @@ def run_discovery(
     )
 
 
+@dataclass
+class _History:
+    configs: dict[str, dict[str, Any]]
+    latest: dict[tuple[str, str | None], dict[str, Any]]
+    successful: dict[tuple[str, str], dict[str, Any]]
+    runs: list[dict[str, Any]]
+
+
+_HISTORY_READS: ContextVar[dict[Path, _History] | None] = ContextVar("connector_history_reads", default=None)
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def connector_state_reader(func: Callable[_P, _R]) -> Callable[_P, _R]:
+    """Share one history snapshot within a synchronous read; never across requests."""
+
+    @wraps(func)
+    def wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        if _HISTORY_READS.get() is not None:
+            return func(*args, **kwargs)
+        token = _HISTORY_READS.set({})
+        try:
+            return func(*args, **kwargs)
+        finally:
+            _HISTORY_READS.reset(token)
+
+    return wrapped
+
+
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    if not path.is_file():
-        return []
-    out: list[dict[str, Any]] = []
-    with path.open("r", encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                out.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-    return out
+    try:
+        return read_jsonl(path, missing_ok=True)
+    except (ValueError, UnicodeError) as exc:
+        raise strict_json.InvalidJSON("invalid stored connector history") from exc
+
+
+def _history(lake_dir: str | Path) -> _History:
+    lake = Path(lake_dir).resolve()
+    cache = _HISTORY_READS.get()
+    if cache is not None and lake in cache:
+        return cache[lake]
+    configs: dict[str, dict[str, Any]] = {}
+    latest: dict[tuple[str, str | None], dict[str, Any]] = {}
+    successful: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in _read_jsonl(_gold(lake) / CONFIG_FILE):
+        connector = str(row.get("connector_id") or "")
+        previous = configs.get(connector)
+        if previous is None or _run_order(row) > _run_order(previous):
+            configs[connector] = row
+    runs = _read_jsonl(_gold(lake) / RUNS_FILE)
+    for row in runs:
+        connector = str(row.get("connector_id") or "")
+        kind = str(row.get("kind") or "")
+        for key in ((connector, kind), (connector, None)):
+            previous = latest.get(key)
+            if previous is None or _run_order(row) > _run_order(previous):
+                latest[key] = row
+        if row.get("result") == "ok":
+            success_key = (connector, kind)
+            previous = successful.get(success_key)
+            if previous is None or _run_order(row) > _run_order(previous):
+                successful[success_key] = row
+    history = _History(configs, latest, successful, runs)
+    if cache is not None:
+        cache[lake] = history
+    return history
+
+
+def _run_order(row: dict[str, Any]) -> str:
+    return str(row.get("occurred_at") or "")
 
 
 def latest_config(lake_dir: str | Path, connector_id: str) -> dict[str, Any] | None:
-    events = [e for e in _read_jsonl(_gold(lake_dir) / CONFIG_FILE) if e.get("connector_id") == connector_id]
-    if not events:
-        return None
-    return max(events, key=lambda e: str(e.get("occurred_at") or ""))
+    if _HISTORY_READS.get() is None:
+        # Configuration-only mutation/collection paths must not load run history.
+        rows = (row for row in _read_jsonl(_gold(lake_dir) / CONFIG_FILE) if row.get("connector_id") == connector_id)
+        return max(rows, key=_run_order, default=None)
+    return copy.deepcopy(_history(lake_dir).configs.get(connector_id))
 
 
 def latest_run(lake_dir: str | Path, connector_id: str, *, kind: str | None = None) -> dict[str, Any] | None:
-    rows = [
-        r
-        for r in _read_jsonl(_gold(lake_dir) / RUNS_FILE)
-        if r.get("connector_id") == connector_id and (kind is None or r.get("kind") == kind)
-    ]
-    if not rows:
-        return None
-    return max(rows, key=lambda r: str(r.get("occurred_at") or ""))
+    return copy.deepcopy(_history(lake_dir).latest.get((connector_id, kind)))
 
 
 def latest_successful_run(
@@ -966,11 +1028,8 @@ def latest_successful_run(
     *,
     kind: str = "sync",
 ) -> dict[str, Any] | None:
-    """Return the newest run of ``kind`` whose ``result`` is ``ok``."""
-    for run in list_runs(lake_dir, connector_id):
-        if run.get("kind") == kind and run.get("result") == "ok":
-            return run
-    return None
+    """Return the newest successful run across the complete retained history."""
+    return copy.deepcopy(_history(lake_dir).successful.get((connector_id, kind)))
 
 
 def list_runs(
@@ -979,11 +1038,9 @@ def list_runs(
     *,
     limit: int = 50,
 ) -> list[dict[str, Any]]:
-    rows = _read_jsonl(_gold(lake_dir) / RUNS_FILE)
-    if connector_id:
-        rows = [r for r in rows if r.get("connector_id") == connector_id]
-    rows.sort(key=lambda r: str(r.get("occurred_at") or ""), reverse=True)
-    return rows[:limit]
+    rows = _history(lake_dir).runs
+    matching = (row for row in rows if not connector_id or row.get("connector_id") == connector_id)
+    return copy.deepcopy(heapq.nlargest(max(0, limit), matching, key=_run_order))
 
 
 def _evaluate_freshness(
@@ -1033,6 +1090,7 @@ def _evaluate_freshness(
     }
 
 
+@connector_state_reader
 def build_catalog_view(lake_dir: str | Path) -> list[dict[str, Any]]:
     """Return the catalog joined with current configuration + latest probe.
 

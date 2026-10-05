@@ -39,6 +39,7 @@ from security_lakehouse.connector_state import (
     append_config_event,
     build_catalog_view,
     configure_payload_error,
+    connector_state_reader,
     enablement_probe_error,
     latest_config,
     list_runs,
@@ -1459,6 +1460,7 @@ def collection_page_response(
 
 
 @generation_reader
+@connector_state_reader
 def handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPStatus, JsonObject]:
     """Resolve a v1 GET against one pinned assessment generation."""
     try:

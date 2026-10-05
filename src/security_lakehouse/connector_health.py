@@ -27,6 +27,7 @@ from typing import Any
 from security_lakehouse.connector_state import (
     DEFAULT_FRESHNESS_SLO_MINUTES,
     build_catalog_view,
+    connector_state_reader,
     latest_successful_run,
 )
 from security_lakehouse.models import parse_event_time, utc_iso
@@ -66,6 +67,7 @@ def evaluate_connector_health(
     return {**base, "health": health, "seconds_since_success": int(age)}
 
 
+@connector_state_reader
 def build_connector_health(lake_dir: str | Path, *, now: datetime | None = None) -> dict[str, Any]:
     """Per-connector health plus a rollup of how many sources have gone silent."""
     evaluated_at = (now or datetime.now(UTC)).astimezone(UTC)

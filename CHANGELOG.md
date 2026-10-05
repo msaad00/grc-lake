@@ -33,6 +33,7 @@ Python package, Helm chart, and bundled web console.
 - Evaluate current freshness per source, asset, and evidence type so retained history cannot permanently stale a control. Compare timestamp instants in UTC and prevent future collection times from establishing freshness.
 
 - Portable PostgreSQL Boolean migration defaults and migration/model index parity, with real PostgreSQL upgrade/downgrade and existing-data checks.
+- Preserve percent-encoded database credentials and query parameters through Alembic configuration so migrations and server startup accept those connection URLs.
 - Installed cloud-link templates and evidence schemas now ship as importable package resources; CI checks them against canonical sources.
 
 - Export reproducible auditor workpapers with scoped citations, separate control and population conclusions, retained remediation receipts, and independent authenticated review. Add a synthetic walkthrough and artifact capture.

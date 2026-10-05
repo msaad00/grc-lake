@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import importlib.util
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
-from sqlalchemy import CursorResult, select, update
+from sqlalchemy import CursorResult, select, text, update
 from sqlalchemy.orm import Session
 
 from security_lakehouse.agents import AgentBudgetPolicy, AgentDecision, run_posture_review, run_soc_triage
@@ -93,6 +96,103 @@ def agent_run_decisions(row: AgentRun) -> list[dict[str, Any]]:
 
 class DecisionConflict(ValueError):
     """A decision has changed, was consumed, or needs execution reconciliation."""
+
+
+@contextmanager
+def decision_execution_lock(session: Session, row: AgentRun) -> Iterator[None]:
+    """Exclude recovery while a worker is alive, including across claim commits.
+
+    PostgreSQL advisory locks coordinate hosts through the database. SQLite uses
+    a sibling lock file on its shared database filesystem. Both locks release on
+    process exit; neither lease expiry nor a manual recovery can race a worker.
+    """
+    engine = session.get_bind().engine
+    digest = hashlib.sha256(f"{row.tenant_id}:{row.id}".encode()).digest()
+    if engine.dialect.name == "postgresql":
+        key = int.from_bytes(digest[:8], "big", signed=True)
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+            acquired = connection.scalar(text("SELECT pg_try_advisory_lock(:key)"), {"key": key})
+            if not acquired:
+                raise DecisionConflict("agent decision execution is active")
+            try:
+                yield
+            finally:
+                try:
+                    connection.execute(text("SELECT pg_advisory_unlock(:key)"), {"key": key})
+                except Exception:
+                    # A session lock must never leak back into the connection pool.
+                    connection.invalidate()
+                    raise
+        return
+    database = engine.url.database
+    if engine.dialect.name != "sqlite" or not database or database == ":memory:":
+        raise DecisionConflict("agent execution requires a persistent SQLite or PostgreSQL database")
+    path = Path(database).resolve()
+    directory = path.with_name(path.name + ".agent-locks")
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / (digest.hex() + ".lock")).open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise DecisionConflict("agent decision execution is active") from exc
+        try:
+            yield
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+
+
+def fail_decision_claim(
+    session: Session,
+    row: AgentRun,
+    *,
+    decision_index: int,
+    claimed_decisions: str,
+    claimed_state: str,
+    reconciled_by: str | None = None,
+    reason: str = "",
+) -> None:
+    """Close one exact claim, never retrying a possibly completed side effect.
+
+    Call under decision_execution_lock, after rolling back any failed writes.
+    Recovery records uncertainty instead of claiming the action did not occur.
+    """
+    decisions = _json_loads(claimed_decisions, None)
+    state = _json_loads(claimed_state, None)
+    if (
+        not isinstance(decisions, list)
+        or not isinstance(state, dict)
+        or not 0 <= decision_index < len(decisions)
+        or not isinstance(decisions[decision_index], dict)
+        or decisions[decision_index].get("status") != "executing"
+    ):
+        raise DecisionConflict("decision has no executing claim to reconcile")
+    decision = dict(decisions[decision_index])
+    decision.update(
+        status="failed",
+        failed_at=_now(None).isoformat(),
+        failure_code="outcome_unknown" if reconciled_by else "execution_failed",
+    )
+    if reconciled_by:
+        decision.update(reconciled_by=reconciled_by, reconciliation_reason=reason)
+    decisions[decision_index] = decision
+    state["decisions"] = decisions
+    result = session.execute(
+        update(AgentRun)
+        .where(
+            AgentRun.id == row.id,
+            AgentRun.tenant_id == row.tenant_id,
+            AgentRun.decisions_json == claimed_decisions,
+            AgentRun.state_json == claimed_state,
+            AgentRun.status == "completed",
+        )
+        .values(decisions_json=_json_dumps(decisions), state_json=_json_dumps(state))
+        .execution_options(synchronize_session=False)
+    )
+    if cast(CursorResult[Any], result).rowcount != 1:
+        session.rollback()
+        raise DecisionConflict("agent decision changed before failure could be recorded")
+    session.commit()
+    session.refresh(row)
 
 
 def claim_decision(

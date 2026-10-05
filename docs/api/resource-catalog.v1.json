@@ -71,6 +71,14 @@
       "scopes": ["write"]
     },
     {
+      "kind": "action",
+      "methods": ["POST"],
+      "path": "/api/v1/agent-runs/{run_id}/decisions/{decision_index}/reconcile",
+      "path_params": ["run_id", "decision_index"],
+      "resource": "agent-runs.decisions",
+      "scopes": ["write"]
+    },
+    {
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/assets",

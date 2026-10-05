@@ -7,6 +7,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Record failed agent decisions without blocking other proposals, and let independent SSO reviewers close abandoned execution claims without replaying side effects or racing a live worker.
+
 - Route remote MCP reads and writes through authenticated APIs, reject incomplete remote configuration and credential-bearing redirects, and support explicitly configured private API destinations.
 
 - Preserve evaluated control verdicts when activity observations are also present, while retaining unknown, observation-only, failure, and stale states. Incremental evaluation refreshes existing verdicts without rewriting historical generations.

@@ -267,19 +267,42 @@ sanitized run state. The raw lake path is not persisted in the state payload.
 Supplying the same tenant-scoped `idempotency_key` returns the previous run
 instead of rerunning the harness, which makes scheduler and agent retries safe.
 
-Approve one stored proposal through the API when a human, scheduler policy, or
-authorized headless client decides it should write:
+Approval and rejection require an independent reviewer authenticated through OIDC
+or SAML, with write scope. The run creator and API-key sessions cannot approve
+their own proposals. Submit the decision through the signed-in console session
+or its authenticated API session:
 
 ```bash
 curl -s -X POST "$TRUSTOPS_URL/api/v1/agent-runs/$RUN_ID/decisions/0/approve" \
-  -H "authorization: Bearer $TRUSTOPS_API_KEY" \
+  --cookie "$TRUSTOPS_SESSION_COOKIE" \
   -H "content-type: application/json" \
   --data '{"note":"approved for audit prep"}' | jq .
 ```
 
 Approval is idempotent. Retrying an already executed decision returns the stored
-execution result instead of creating another task, evidence request, or
-snapshot.
+execution result instead of creating another task, evidence request, or snapshot.
+An execution error rolls back uncommitted database writes and records the decision
+as terminal `failed`, preserving its original approval. Other proposals in the run
+remain usable. Failure metadata uses a fixed code, not raw exception text.
+A failed decision cannot be approved again: inspect any external or file effects
+and create a new reviewed run if another action is needed.
+
+A terminated worker can leave an `executing` claim. After inspecting the action's
+records, an independent SSO reviewer can close that claim with a nonempty reason:
+
+```bash
+curl -s -X POST "$TRUSTOPS_URL/api/v1/agent-runs/$RUN_ID/decisions/0/reconcile" \
+  --cookie "$TRUSTOPS_SESSION_COOKIE" \
+  -H "content-type: application/json" \
+  --data '{"reason":"Worker terminated; reviewed task and snapshot records"}' | jq .
+```
+
+Reconciliation records `failed` with `failure_code: outcome_unknown`, the reviewer,
+and the reason. It never executes, retries, or asserts that a previous side effect
+did not happen. A live worker holds a per-run lock, so recovery returns 409 until
+that worker exits. PostgreSQL coordinates this lock across hosts through the
+database; SQLite coordinates processes using a lock beside its database file.
+Keep all server workers on the same upgraded code before recovering old claims.
 
 MCP clients can call the same persisted-run contract when pointed at a deployed
 TrustOps API:

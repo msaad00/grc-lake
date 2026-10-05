@@ -41,10 +41,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from security_lakehouse import api_legacy, api_v1, remediation_guidance, tenancy, trust_share
+from security_lakehouse import api_legacy, api_v1, remediation_guidance, strict_json, tenancy, trust_share
 from security_lakehouse.assessment import SnapshotWrittenHook, build_current_posture, write_assessment_snapshot
 from security_lakehouse.auth.api_key_session import ApiKeySessionError, exchange_api_key_for_browser_session
 from security_lakehouse.auth.dependencies import get_session, require_scope
+from security_lakehouse.auth.json_body import StrictJSONMiddleware
 from security_lakehouse.auth.oidc import OIDCLoginError, build_oauth, complete_oidc_login, load_oidc_config
 from security_lakehouse.auth.presentation import build_auth_methods_payload
 from security_lakehouse.auth.rate_limit import RateLimitConfig
@@ -163,14 +164,14 @@ def _rate_limit_key(request: Request, known: _KnownCredentials) -> str:
 
 
 async def _json_object_body(request: Request) -> dict[str, Any]:
-    """Parse a mutation body: empty or undecodable is no body; valid non-object JSON is a 400."""
+    """Parse a mutation object; only an actually empty body means no arguments."""
     raw = await request.body()
     if not raw.strip():
         return {}
     try:
-        body = json.loads(raw)
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return {}
+        body = strict_json.loads(raw)
+    except strict_json.InvalidJSON as exc:
+        raise HTTPException(status_code=400, detail="invalid JSON body") from exc
     if not isinstance(body, dict):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="request body must be a JSON object")
     return body
@@ -1173,6 +1174,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         app.add_middleware(SessionMiddleware, secret_key=secret, same_site="lax", https_only=_COOKIE_SECURE)
         app.state.oauth = build_oauth(app.state.oidc_config)
 
+    app.add_middleware(StrictJSONMiddleware)
+
     @app.middleware("http")
     async def _server_execution_mode(request: Request, call_next):
         # Every request here acts for a tenant, never the operator: connector
@@ -1258,6 +1261,13 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             api_v1.error_envelope(code, str(exc.detail)),
             status_code=exc.status_code,
             headers=getattr(exc, "headers", None),
+        )
+
+    @app.exception_handler(strict_json.InvalidJSON)
+    async def _invalid_stored_json(request: Request, exc: strict_json.InvalidJSON) -> JSONResponse:
+        return JSONResponse(
+            api_v1.error_envelope("invalid_stored_data", "stored data failed validation"),
+            status_code=503,
         )
 
     @app.exception_handler(RequestValidationError)
@@ -3538,6 +3548,14 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         # Next.js static export; html=True resolves /console/<route>/ to index.html.
         app.mount("/console", StaticFiles(directory=str(web_dist), html=True), name="console")
 
+    fastapi_openapi = app.openapi
+
+    def openapi_with_dispatch_routes():
+        if app.openapi_schema is None:
+            app.openapi_schema = api_v1.merge_openapi(fastapi_openapi())
+        return app.openapi_schema
+
+    app.openapi = openapi_with_dispatch_routes  # type: ignore[method-assign]
     return app
 
 

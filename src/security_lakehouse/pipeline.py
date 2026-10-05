@@ -552,8 +552,8 @@ def _silver_row(row: dict[str, Any], raw_sha256: str) -> dict[str, Any]:
         "safeguard_ids": sorted(set(row.get("safeguard_ids", []))),
         "evidence_id": str(evidence.get("evidence_id") or row["event_id"]),
         "evidence_ref": _evidence_ref(row, evidence, raw_sha256),
-        "evidence_collected_at": str(
-            evidence.get("collected_at") or evidence.get("evidence_collected_at") or row["event_time"]
+        "evidence_collected_at": utc_iso(
+            parse_event_time(evidence.get("collected_at") or evidence.get("evidence_collected_at") or row["event_time"])
         ),
         "raw_sha256": raw_sha256,
     }

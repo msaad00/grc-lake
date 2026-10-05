@@ -19,6 +19,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse import strict_json
 from security_lakehouse.ai_governance import build_ai_governance_status, list_ai_inventory
 from security_lakehouse.assessment import (
     SnapshotWrittenHook,
@@ -1453,7 +1454,11 @@ def collection_page_response(
 @generation_reader
 def handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPStatus, JsonObject]:
     """Resolve a v1 GET against one pinned assessment generation."""
-    status, body = _handle_get(path, params, lake_dir)
+    try:
+        status, body = _handle_get(path, params, lake_dir)
+        strict_json.validate(body)
+    except strict_json.InvalidJSON:
+        return HTTPStatus.SERVICE_UNAVAILABLE, error_envelope("invalid_stored_data", "stored data failed validation")
     historical = path == "/api/v1/oscal/assessment-results" and bool(params.get("snapshot_id"))
     if historical:
         # The successful export already verified this immutable snapshot. Errors
@@ -1806,7 +1811,13 @@ def handle_post(
     an interactively-triggered one.
     """
     lake = resolve_path(lake_dir)
-    payload = body or {}
+    payload = body if body is not None else {}
+    try:
+        strict_json.validate(payload)
+        if not isinstance(payload, dict):
+            raise ValueError("body must be a JSON object")
+    except (ValueError, TypeError):
+        return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", "invalid JSON body")
     if path == MAPPING_REVIEW_DECISIONS_PATH:
         # Local mode has no authenticated principal, so the reviewer is named in
         # the body and the record says it was unauthenticated. Server mode serves

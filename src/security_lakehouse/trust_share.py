@@ -18,15 +18,15 @@ the raw token returns once at create time.
 from __future__ import annotations
 
 import hashlib
-import json
 import secrets
 import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse import tenancy
+from security_lakehouse import strict_json, tenancy
 from security_lakehouse.data_policy import SENSITIVITY_LEVELS, normalize_sensitivity
+from security_lakehouse.io import append_jsonl
 
 ALLOWED_ROLES = {"auditor"}
 ALLOWED_SCOPES = {"posture_full", "posture_framework"}
@@ -97,8 +97,7 @@ def create_share(
         record["idempotency_key"] = idempotency_key
     gold = _gold(lake_dir)
     gold.mkdir(parents=True, exist_ok=True)
-    with (gold / SHARES_FILE).open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(record, separators=(",", ":")) + "\n")
+    append_jsonl(gold / SHARES_FILE, record)
     return {**record, "token": token}
 
 
@@ -134,12 +133,10 @@ def _read_share_rows(path: Path) -> list[dict[str, Any]]:
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(row, dict):
-            rows.append(row)
+        row = strict_json.loads(line)
+        if not isinstance(row, dict):
+            raise strict_json.InvalidJSON("stored share must be a JSON object")
+        rows.append(row)
     return rows
 
 
@@ -269,6 +266,5 @@ def revoke_share(lake_dir: str | Path, share_id: str, *, actor: str = "console")
         "revoked_at": _iso(_utc_now()),
         "revoked_by": actor,
     }
-    with (_gold(lake_dir) / SHARES_FILE).open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(revoked, separators=(",", ":")) + "\n")
+    append_jsonl(_gold(lake_dir) / SHARES_FILE, revoked)
     return revoked

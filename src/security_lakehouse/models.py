@@ -30,7 +30,7 @@ class PipelineResult:
 
 def parse_event_time(value: str) -> datetime:
     text = value.strip()
-    if text.endswith("Z"):
+    if text.endswith(("Z", "z")):
         text = text[:-1] + "+00:00"
     parsed = datetime.fromisoformat(text)
     if parsed.tzinfo is None:

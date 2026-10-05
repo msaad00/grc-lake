@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse import __version__
+from security_lakehouse import __version__, strict_json
 from security_lakehouse.dashboard import render_dashboard
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.pipeline import normalize_raw_events, run_pipeline
@@ -966,7 +966,7 @@ def _json_object(raw: str | None, *, flag: str) -> dict[str, object]:
     if raw is None:
         return {}
     try:
-        payload = json.loads(raw)
+        payload = strict_json.loads(raw)
     except json.JSONDecodeError as exc:
         raise ValueError(f"{flag} must be a JSON object") from exc
     if not isinstance(payload, dict):
@@ -1216,9 +1216,11 @@ def _read_sample_rows(path: str) -> list[dict[str, Any]]:
     text = target.read_text(encoding="utf-8")
     if suffix in {".jsonl", ".ndjson"}:
         return [
-            row for row in (json.loads(line) for line in text.splitlines() if line.strip()) if isinstance(row, dict)
+            row
+            for row in (strict_json.loads(line) for line in text.splitlines() if line.strip())
+            if isinstance(row, dict)
         ]
-    payload = json.loads(text)
+    payload = strict_json.loads(text)
     if not isinstance(payload, list):
         raise ValueError("--input JSON must be a list of row objects")
     return [row for row in payload if isinstance(row, dict)]
@@ -1877,7 +1879,7 @@ def _fixtures_load(args: argparse.Namespace) -> int:
     if getattr(args, "rebase_times", False):
         from security_lakehouse.fixtures import rebase_fixture_times
 
-        rows = [json.loads(line) for line in raw_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        rows = [strict_json.loads(line) for line in raw_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         raw_path = Path(args.out) / "_fixture_rebased" / raw_path.name
         raw_path.parent.mkdir(parents=True, exist_ok=True)
         raw_path.write_text(

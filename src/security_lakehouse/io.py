@@ -12,6 +12,8 @@ from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import Any, TypeVar
 
+from security_lakehouse import strict_json
+
 
 def canonical_sha256(payload: Any) -> str:
     """Hash the stable JSON representation shared by writers and verifiers."""
@@ -86,7 +88,7 @@ def _iter_jsonl_lines(
 
 def _parse_jsonl_line(path: str | Path, line_no: int, stripped: str) -> dict[str, Any]:
     try:
-        item = json.loads(stripped)
+        item = strict_json.loads(stripped)
     except json.JSONDecodeError as exc:
         raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
     if not isinstance(item, dict):
@@ -179,7 +181,7 @@ def write_jsonl_from_iterable(
             written += 1
             if on_progress is not None:
                 on_progress(written)
-            yield json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
+            yield strict_json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
 
     _atomic_write(output, _chunks())
     return written
@@ -224,7 +226,7 @@ def write_jsonl(
     output = resolve_path(path, base_dir=base_dir)
     _atomic_write(
         output,
-        (json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in rows),
+        (strict_json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in rows),
     )
 
 
@@ -245,7 +247,7 @@ def append_jsonl(
     output = resolve_path(path, base_dir=base_dir)
     assert_mutable(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    line = json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
+    line = strict_json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
     with output.open("a", encoding="utf-8") as handle:
         handle.write(line)
         handle.flush()
@@ -254,10 +256,10 @@ def append_jsonl(
 
 def write_json(path: str | Path, payload: Any, *, base_dir: str | Path | None = None) -> None:
     output = resolve_path(path, base_dir=base_dir)
-    _atomic_write(output, [json.dumps(payload, indent=2, sort_keys=True) + "\n"])
+    _atomic_write(output, [strict_json.dumps(payload, indent=2, sort_keys=True) + "\n"])
 
 
 def read_json(path: str | Path, *, base_dir: str | Path | None = None) -> Any:
     from security_lakehouse.generations import pinned_path
 
-    return json.loads(resolve_path(pinned_path(Path(path)), base_dir=base_dir).read_text(encoding="utf-8"))
+    return strict_json.loads(resolve_path(pinned_path(Path(path)), base_dir=base_dir).read_text(encoding="utf-8"))

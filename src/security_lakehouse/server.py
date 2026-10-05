@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from security_lakehouse import api_legacy, api_v1
+from security_lakehouse import api_legacy, api_v1, strict_json
 from security_lakehouse.dashboard import render_dashboard
 from security_lakehouse.data_policy import redact_payload
 from security_lakehouse.io import resolve_path
@@ -325,10 +325,14 @@ class _Handler(BaseHTTPRequestHandler):
             )
             return None
         try:
-            payload = json.loads(self.rfile.read(length).decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            return {}
-        return payload if isinstance(payload, dict) else {}
+            payload = strict_json.loads(self.rfile.read(length))
+        except strict_json.InvalidJSON:
+            self._send_guard_error(path, HTTPStatus.BAD_REQUEST, "bad_request", "invalid JSON body")
+            return None
+        if not isinstance(payload, dict):
+            self._send_guard_error(path, HTTPStatus.BAD_REQUEST, "bad_request", "body must be a JSON object")
+            return None
+        return payload
 
     def _send_guard_error(self, path: str, status: HTTPStatus, code: str, reason: str) -> None:
         self.close_connection = True

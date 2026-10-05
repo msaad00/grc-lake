@@ -306,3 +306,24 @@ rejected, or changed decisions return 409. An interrupted claim also returns 409
 on approval or retry: an operator must reconcile any external effects before
 starting a replacement run. Historical run records remain append-only; older
 pending runs without a content binding require a new review run.
+
+## JSON and evidence validation
+
+Mutation JSON is UTF-8, has unique object keys, contains finite numbers and valid
+Unicode, and is limited to 64 nesting levels. Server JSON request bodies are
+limited to 5 MiB. Malformed JSON receives a v1 `bad_request` envelope (400);
+route-specific field validation retains its 422 contract. An empty body is
+accepted only where the endpoint supports defaults.
+
+New raw evidence requires string identifiers, object-valued `entity`, `evidence`
+and `attributes` fields, and arrays of string control identifiers. Evidence
+`event_time` and any supplied collection timestamp must include a timezone.
+Collection instants are normalized to UTC; existing historical readers retain
+their documented legacy interpretation. Provider extension fields remain
+supported. Shared JSON/JSONL writers reject invalid values before replacing an
+existing file. Historical canonical hashes retain their existing serialization.
+
+Malformed stored trust-share records fail closed with `invalid_stored_data`
+(503); repair requires an explicit operator action. Reads do not discard or
+rewrite corrupt records. The live `/openapi.json` includes the same dispatched
+routes as the exported specification.

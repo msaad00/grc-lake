@@ -2,11 +2,24 @@ from __future__ import annotations
 
 import argparse
 import copy
-import json
 from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
+
+from security_lakehouse import strict_json
+from security_lakehouse.validation import evidence_timestamp
+
+FORMAT_CHECKER = FormatChecker()
+
+
+@FORMAT_CHECKER.checks("date-time", raises=(ValueError, TypeError))
+def _valid_timestamp(value: object) -> bool:
+    if not isinstance(value, str):
+        return True  # The schema type validator handles non-string values.
+    evidence_timestamp(value)
+    return True
+
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_FILES = [
@@ -53,14 +66,16 @@ def main() -> int:
             "type": "array",
             "items": schemas["violation.schema.json"],
         }
-        Draft202012Validator(current_posture_schema).validate(_read_json(lake / "gold" / "current_posture.json"))
+        Draft202012Validator(current_posture_schema, format_checker=FORMAT_CHECKER).validate(
+            _read_json(lake / "gold" / "current_posture.json")
+        )
 
     return 0
 
 
 def _read_json(path: Path) -> dict[str, Any] | list[Any]:
     with path.open(encoding="utf-8") as handle:
-        return json.load(handle)
+        return strict_json.loads(handle.read())
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -68,7 +83,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     with path.open(encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
             if line.strip():
-                value = json.loads(line)
+                value = strict_json.loads(line)
                 if not isinstance(value, dict):
                     raise ValueError(f"{path}:{line_number}: expected JSON object")
                 rows.append(value)
@@ -76,7 +91,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def _validate_rows(schema: dict[str, Any], rows: list[dict[str, Any]]) -> None:
-    validator = Draft202012Validator(schema)
+    validator = Draft202012Validator(schema, format_checker=FORMAT_CHECKER)
     for row in rows:
         validator.validate(row)
 

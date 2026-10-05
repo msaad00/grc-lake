@@ -1,4 +1,4 @@
-"""Trust-share token lookup: indexed, invalidated on write, tolerant of bad rows."""
+"""Trust-share token lookup: indexed, invalidated on write, fail closed on malformed rows."""
 
 from __future__ import annotations
 
@@ -73,11 +73,18 @@ def test_lookup_sees_a_revocation_appended_by_another_process(tmp_path: Path) ->
     assert trust_share.resolve_share(tmp_path, share["token"]) is None
 
 
-def test_non_object_rows_are_skipped(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "invalid", ["[1, 2]", '"text"', "7", "null", "{broken", '{"share_id":"s1","framework_id":NaN}']
+)
+def test_corrupt_share_rows_fail_closed_without_rewriting(tmp_path: Path, invalid) -> None:
     future = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
-    _append(tmp_path, "[1, 2]", '"text"', "7", "null", _share_row("trust_ok", share_id="s1", expires_at=future))
-    assert [row["share_id"] for row in trust_share.list_shares(tmp_path)] == ["s1"]
-    assert trust_share.resolve_share(tmp_path, "trust_ok") is not None
+    _append(tmp_path, invalid, _share_row("trust_ok", share_id="s1", expires_at=future))
+    before = _shares_file(tmp_path).read_bytes()
+    with pytest.raises(ValueError):
+        trust_share.list_shares(tmp_path)
+    with pytest.raises(ValueError):
+        trust_share.resolve_share(tmp_path, "trust_ok")
+    assert _shares_file(tmp_path).read_bytes() == before
 
 
 def test_expiry_compares_instants_not_strings(tmp_path: Path) -> None:

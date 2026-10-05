@@ -39,7 +39,7 @@ from security_lakehouse.connector_errors import (
 from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.delegation import gcp_credentials
 from security_lakehouse.identity import classify_identity_type
-from security_lakehouse.io import read_json
+from security_lakehouse.io import canonical_sha256, read_json
 from security_lakehouse.models import utc_iso
 
 # Cloud/config controls that exist in controls/catalog.json. Verified before
@@ -192,17 +192,26 @@ class GCPClient:
 
     def iam_bindings(self) -> list[dict[str, Any]]:
         try:
-            policy = self._projects.get_iam_policy(resource=f"projects/{self.project_id}")
+            policy = self._projects.get_iam_policy(
+                request={"resource": f"projects/{self.project_id}", "options": {"requested_policy_version": 3}}
+            )
         except Exception as exc:  # noqa: BLE001 - classified into an operator-safe error
             raise _collection_error(exc, IAM_COLLECTION, self.project_id) from None
         bindings: list[dict[str, Any]] = []
         for binding in getattr(policy, "bindings", []):
-            bindings.append(
-                {
-                    "role": getattr(binding, "role", ""),
-                    "members": list(getattr(binding, "members", [])),
+            item = {
+                "role": getattr(binding, "role", ""),
+                "members": list(getattr(binding, "members", [])),
+            }
+            condition = getattr(binding, "condition", None)
+            expression: str = getattr(condition, "expression", "")
+            if expression:
+                item["condition"] = {
+                    key: str(getattr(condition, key, ""))
+                    for key in ("expression", "title", "description", "location")
+                    if getattr(condition, key, "")
                 }
-            )
+            bindings.append(item)
         return bindings
 
     def org_policies(self) -> list[dict[str, Any]]:
@@ -389,6 +398,10 @@ def _iam_event(
     role = str(binding["role"])
     members = sorted(str(m) for m in binding.get("members", []) if m)
     privileged = role in PRIVILEGED_ROLES
+    public = bool({"allUsers", "allAuthenticatedUsers"}.intersection(members))
+    condition = binding.get("condition") or {}
+    binding_key = f"{role}:condition:{canonical_sha256(condition)}" if condition else role
+    noteworthy = privileged or public
     # A binding can bind several members; classify each and collapse to a single
     # identity_type when they agree, otherwise mark the binding "mixed" (or
     # "unknown" when there are no members to classify).
@@ -404,14 +417,14 @@ def _iam_event(
         collected_at=collected_at,
         tenant_id=tenant_id,
         signal="iam_binding",
-        dedupe_key=role,
+        dedupe_key=binding_key,
         event_type="gcp.cloud.iam_binding",
-        asset_id=f"gcp:project:{project}:role/{role}",
+        asset_id=f"gcp:project:{project}:role/{binding_key}",
         asset_type="iam_binding",
         controls=IAM_CONTROLS,
-        # Privileged role bindings are the noteworthy ones for review.
-        status="open" if privileged else "observed",
-        severity="high" if privileged else "info",
+        # Conditions are retained for review; their expressions are not evaluated.
+        status="open" if noteworthy else "observed",
+        severity="high" if noteworthy else "info",
         evidence_ref=f"//cloudresourcemanager.googleapis.com/projects/{project}:getIamPolicy",
         attributes={
             "role": role,
@@ -419,6 +432,8 @@ def _iam_event(
             "member_count": len(members),
             "identity_type": identity_type,
             "privileged": privileged,
+            "public_members": public,
+            "condition": condition,
         },
     )
 

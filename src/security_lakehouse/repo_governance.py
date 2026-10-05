@@ -465,7 +465,8 @@ def _build_events(
                     else _normalize_signal(signal, payload)
                 ),
             },
-            status=_status_for(payload),
+            status=_status_for(payload, signal=signal),
+            severity=_findings_severity(payload) if signal == "security_findings" else "info",
         )
         for signal, payload in signal_payloads.items()
     ]
@@ -553,9 +554,29 @@ def _redact_item(item: dict[str, Any]) -> dict[str, Any]:
     return redacted
 
 
-def _status_for(payload: dict[str, Any] | list[dict[str, Any]]) -> str:
+def _open_alerts(payload: dict[str, Any] | list[dict[str, Any]]) -> list[tuple[str, dict[str, Any]]]:
+    if not isinstance(payload, dict) or payload.get("available") is False:
+        return []
+    return [
+        (category, alert)
+        for category in ("code_scanning", "secret_scanning", "dependabot")
+        if isinstance(payload.get(category), list)
+        for alert in payload[category]
+        if isinstance(alert, dict) and alert.get("state") == "open"
+    ]
+
+
+def _findings_severity(payload: dict[str, Any] | list[dict[str, Any]]) -> str:
+    ranks = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+    levels = [_alert_severity(category, alert) or "info" for category, alert in _open_alerts(payload)]
+    return max((level for level in levels if level in ranks), key=ranks.__getitem__, default="info")
+
+
+def _status_for(payload: dict[str, Any] | list[dict[str, Any]], *, signal: str = "") -> str:
     if isinstance(payload, dict) and payload.get("available") is False:
         return "requires_authenticated_connector"
+    if signal == "security_findings" and _open_alerts(payload):
+        return "open"
     return "observed"
 
 
@@ -569,6 +590,7 @@ def _event(
     evidence_ref: str,
     attributes: dict[str, Any],
     status: str,
+    severity: str = "info",
 ) -> dict[str, Any]:
     stable = _sha({"repo": spec.slug, "signal": signal, "provider": spec.provider})[:16]
     evidence_body = {"event_type": event_type, "evidence_ref": evidence_ref, "attributes": attributes}
@@ -588,7 +610,7 @@ def _event(
             "repo": spec.slug,
             "provider": spec.provider,
         },
-        "severity": "info",
+        "severity": severity,
         "status": status,
         "controls": controls,
         "evidence": {

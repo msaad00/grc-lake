@@ -390,7 +390,6 @@ def _stable_suffix(*, org: str, signal: str, asset_id: str, dedupe_key: str | No
 
 
 SYSTEM_LOG_CONTROLS = ["SOC2-CC6.1", "FEDRAMP-AC-7"]
-FAILED_OUTCOMES = frozenset({"FAILURE", "FAIL"})
 
 
 def collect_okta_system_log_evidence(
@@ -432,9 +431,10 @@ def _system_log_event(
     if not isinstance(actor, dict):
         actor = {}
     actor_id = str(actor.get("id") or actor.get("alternateId") or "unknown")
-    failed = outcome_result in FAILED_OUTCOMES
-    status = "open" if failed else "observed"
-    severity = "high" if failed else "info"
+    # An authentication outcome records an attempt, not control effectiveness.
+    # Retain the provider outcome for investigation without inventing a violation.
+    status = "observed"
+    severity = "info"
     uuid = str(entry.get("uuid") or published)
     return {
         "event_id": f"okta-log-{uuid}",

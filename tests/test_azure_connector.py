@@ -144,7 +144,8 @@ def test_azure_sync_preserves_evidence_refs_and_generic_evidence_types(tmp_path:
     assert "identity.access_review" not in soc2["missing_evidence_types"]
 
     hipaa = control_tests["HIPAA-164.308(a)(4)"]
-    assert hipaa["result"] == "pass"
+    # Inventory observations supply evidence types but do not establish a passing control.
+    assert hipaa["result"] == "needs_evidence"
     assert hipaa["freshness_status"] == "fresh"
 
     freshness_rows = read_jsonl(tmp_path / "gold" / "evidence_freshness.jsonl")

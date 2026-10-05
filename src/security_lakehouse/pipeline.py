@@ -606,7 +606,7 @@ def _build_control_rows(
     for control_id, rows in grouped.items():
         control = rows[0]["_control"]
         failing_rows = [row for row in rows if row["status"] in FAIL_STATUSES]
-        unknown_rows = [row for row in rows if normalize_event_status(row["status"]) == "not_evaluated"]
+        unknown_rows = [row for row in rows if normalize_event_status(row["status"]) in {"not_evaluated", "observed"}]
         evidence_rows = [row for row in rows if row["evidence_ref"]]
         max_score = max((row["severity_score"] for row in rows), default=0)
         top_open = max(failing_rows, key=lambda r: r["severity_score"], default=None)
@@ -623,17 +623,16 @@ def _build_control_rows(
             if control_id in control_map
             else RuleResult("not_evaluated", "unmapped", ["No active control definition is available."])
         )
-        # `stale` is a first-class status: a control with no fresh evidence inside
-        # its freshness SLO is stale (not silently passing), but an open violation
-        # always dominates. Precedence: fail (violation) > stale > rule result.
+        # An open violation takes precedence only when the declared rule fails.
+        # Preserve the distinct unknown/stale states for evidence quality gaps.
         is_stale = control_id in stale or len(evidence_rows) == 0
         if control_id not in control_map:
             status = "not_evaluated"
-        elif len(failing_rows) > 0:
+        elif failing_rows and result.status == "fail":
             status = "fail"
         elif unknown_rows:
             status = "not_evaluated"
-            result.reasons.append("Source evidence has an unknown or unevaluated outcome.")
+            result.reasons.append("Source evidence has an observed, unknown, or unevaluated outcome.")
         elif is_stale:
             status = "stale"
         else:
@@ -709,7 +708,7 @@ def _build_metrics(
         "critical_open": sum(1 for row in open_rows if row["severity"] == "critical"),
         "high_open": sum(1 for row in open_rows if row["severity"] == "high"),
         "control_count": len(control_rows),
-        "control_pass_rate": round(len(passing_controls) / len(control_rows), 4) if control_rows else 1,
+        "control_pass_rate": round(len(passing_controls) / len(control_rows), 4) if control_rows else 0,
         "evidence_coverage": round(len(evidence_rows) / len(silver_rows), 4) if silver_rows else 1,
         "runtime_block_rate": round(len(blocked_runtime) / len(runtime_rows), 4) if runtime_rows else 0,
         "asset_count": len(asset_rows),

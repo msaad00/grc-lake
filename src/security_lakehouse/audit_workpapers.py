@@ -26,8 +26,13 @@ def build_workpaper(
 ) -> dict[str, Any]:
     if plan.get("tenant_id") != baseline.get("tenant_id") or plan.get("as_of") != baseline.get("as_of"):
         raise ValueError("test plan and population baseline must share tenant and cutoff")
-    assurance = assess_control_plan(lake, plan)
     population = assess_population(lake, baseline)
+    declared_assets = {
+        (account["source_tenant_id"], asset_id)
+        for account in baseline["inventory"]["accounts"]
+        for asset_id in account["asset_ids"]
+    }
+    assurance = assess_control_plan(lake, plan, declared_assets=declared_assets)
     referenced: set[str] = set()
     for control in assurance["controls"]:
         referenced.update(row["event_id"] for row in control["design"]["evidence"])

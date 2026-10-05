@@ -4257,6 +4257,27 @@
       "owner": "security-operations"
     },
     {
+      "control_id": "HIPAA-164.310(b)",
+      "framework": "HIPAA",
+      "title": "Workstation use",
+      "risk_domain": "physical-security",
+      "owner": "security-operations"
+    },
+    {
+      "control_id": "HIPAA-164.310(c)",
+      "framework": "HIPAA",
+      "title": "Workstation security",
+      "risk_domain": "physical-security",
+      "owner": "security-operations"
+    },
+    {
+      "control_id": "HIPAA-164.310(d)",
+      "framework": "HIPAA",
+      "title": "Device and media controls",
+      "risk_domain": "data-protection",
+      "owner": "security-operations"
+    },
+    {
       "control_id": "HIPAA-164.312(a)",
       "framework": "HIPAA",
       "title": "Access control mechanisms enforced",
@@ -4271,6 +4292,13 @@
       "owner": "security-operations"
     },
     {
+      "control_id": "HIPAA-164.312(d)",
+      "framework": "HIPAA",
+      "title": "Person or entity authentication",
+      "risk_domain": "identity",
+      "owner": "security-operations"
+    },
+    {
       "control_id": "HIPAA-164.314(a)",
       "framework": "HIPAA",
       "title": "Business associate requirements enforced",
@@ -4281,6 +4309,20 @@
       "control_id": "HIPAA-164.314(b)",
       "framework": "HIPAA",
       "title": "Group health plan requirements met",
+      "risk_domain": "governance",
+      "owner": "security-operations"
+    },
+    {
+      "control_id": "HIPAA-164.316(a)",
+      "framework": "HIPAA",
+      "title": "Policies and procedures",
+      "risk_domain": "governance",
+      "owner": "security-operations"
+    },
+    {
+      "control_id": "HIPAA-164.316(b)",
+      "framework": "HIPAA",
+      "title": "Documentation",
       "risk_domain": "governance",
       "owner": "security-operations"
     },

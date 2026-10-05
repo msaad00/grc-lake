@@ -8845,6 +8845,51 @@
       ]
     },
     {
+      "control_id": "HIPAA-164.310(b)",
+      "framework_id": "hipaa-security-rule",
+      "articles": [
+        {
+          "article_id": "164.310(b)",
+          "title": "Workstation use",
+          "official_source_url": "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.310",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-10-05T00:00:00Z",
+          "rationale": "Pack mapping to 45 CFR \u00a7164.310(b)."
+        }
+      ]
+    },
+    {
+      "control_id": "HIPAA-164.310(c)",
+      "framework_id": "hipaa-security-rule",
+      "articles": [
+        {
+          "article_id": "164.310(c)",
+          "title": "Workstation security",
+          "official_source_url": "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.310",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-10-05T00:00:00Z",
+          "rationale": "Pack mapping to 45 CFR \u00a7164.310(c)."
+        }
+      ]
+    },
+    {
+      "control_id": "HIPAA-164.310(d)",
+      "framework_id": "hipaa-security-rule",
+      "articles": [
+        {
+          "article_id": "164.310(d)",
+          "title": "Device and media controls",
+          "official_source_url": "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.310",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-10-05T00:00:00Z",
+          "rationale": "Pack mapping to 45 CFR \u00a7164.310(d)."
+        }
+      ]
+    },
+    {
       "control_id": "HIPAA-164.312(a)",
       "framework_id": "hipaa-security-rule",
       "articles": [
@@ -8901,6 +8946,21 @@
       ]
     },
     {
+      "control_id": "HIPAA-164.312(d)",
+      "framework_id": "hipaa-security-rule",
+      "articles": [
+        {
+          "article_id": "164.312(d)",
+          "title": "Person or entity authentication",
+          "official_source_url": "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-10-05T00:00:00Z",
+          "rationale": "Pack mapping to 45 CFR \u00a7164.312(d)."
+        }
+      ]
+    },
+    {
       "control_id": "HIPAA-164.312(e)",
       "framework_id": "hipaa-security-rule",
       "articles": [
@@ -8939,6 +8999,36 @@
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
           "rationale": "Pack mapping to 45 CFR \u00a7164.314(b)."
+        }
+      ]
+    },
+    {
+      "control_id": "HIPAA-164.316(a)",
+      "framework_id": "hipaa-security-rule",
+      "articles": [
+        {
+          "article_id": "164.316(a)",
+          "title": "Policies and procedures",
+          "official_source_url": "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.316",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-10-05T00:00:00Z",
+          "rationale": "Pack mapping to 45 CFR \u00a7164.316(a)."
+        }
+      ]
+    },
+    {
+      "control_id": "HIPAA-164.316(b)",
+      "framework_id": "hipaa-security-rule",
+      "articles": [
+        {
+          "article_id": "164.316(b)",
+          "title": "Documentation",
+          "official_source_url": "https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.316",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-10-05T00:00:00Z",
+          "rationale": "Pack mapping to 45 CFR \u00a7164.316(b)."
         }
       ]
     },

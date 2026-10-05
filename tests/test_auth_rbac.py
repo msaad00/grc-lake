@@ -104,21 +104,21 @@ def test_admin_can_issue_and_revoke_keys(env) -> None:
 
     created = client.post(
         "/api/v1/auth/keys",
-        json={"user_email": "read_only@acme.test", "name": "ci", "expires_in_days": 30},
+        json={"user_email": "admin@acme.test", "name": "ci", "expires_in_days": 30},
         headers=admin,
     )
     assert created.status_code == HTTPStatus.CREATED
     created_data = created.json()["data"]
     new_token = created_data["token"]
     key_id = created_data["id"]
-    assert created_data["role"] == "read_only"
+    assert created_data["role"] == "admin"
     assert created_data["expires_at"]
 
-    # the freshly minted key works as a read_only user
+    # the freshly minted key works as the authenticated administrator
     assert client.get("/api/v1/controls", headers=_bearer(new_token)).status_code == HTTPStatus.OK
     whoami = client.get("/api/v1/auth/whoami", headers=_bearer(new_token))
     assert whoami.status_code == HTTPStatus.OK
-    assert whoami.json()["data"]["email"] == "read_only@acme.test"
+    assert whoami.json()["data"]["email"] == "admin@acme.test"
 
     # revoke it, and it stops working
     revoked = client.delete(f"/api/v1/auth/keys/{key_id}", headers=admin)

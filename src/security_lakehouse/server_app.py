@@ -1629,6 +1629,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         user = repository.get_user_by_email(session, tenant_id=identity.tenant_id, email=body.user_email)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found in tenant")
+        if user.id != identity.user_id:
+            raise HTTPException(status_code=403, detail="API keys can only be issued for the authenticated user")
         from security_lakehouse.commercial.limits import UsageLimitError, assert_within_limit
         from security_lakehouse.db.models import Tenant
 

@@ -259,13 +259,14 @@ def server(tmp_path: Path, monkeypatch):
 
 
 def _session_client(app, token: str) -> TestClient:
-    """A browser-session client: the console signs in and then uses the cookie only."""
+    from security_lakehouse.auth.sessions import encode_session_cookie
+    from security_lakehouse.db.repository import create_user_session, resolve_api_key
+
+    with session_scope(app.state.sessionmaker) as session:
+        key = resolve_api_key(session, token)
+        _, session_token = create_user_session(session, tenant_id=key.tenant_id, user_id=key.user_id, idp="oidc")
     client = TestClient(app)
-    resp = client.post("/api/v1/auth/session-from-key", json={"api_key": token})
-    assert resp.status_code == HTTPStatus.OK
-    cookie = resp.cookies.get(SESSION_COOKIE)
-    client.cookies.clear()
-    client.cookies.set(SESSION_COOKIE, cookie)
+    client.cookies.set(SESSION_COOKIE, encode_session_cookie(session_token))
     return client
 
 
@@ -291,7 +292,7 @@ def test_session_reviewer_identity_comes_from_the_authenticated_user(server) -> 
     assert record["reviewer"] == "compliance_reviewer@acme.test"
     assert record["reviewer_role"] == "compliance_reviewer"
     assert record["reviewer_id"]
-    assert record["auth_method"] == "session:api_key"
+    assert record["auth_method"] == "session:oidc"
     assert list_decisions(lake)[0]["reviewer"] == "compliance_reviewer@acme.test"
 
 

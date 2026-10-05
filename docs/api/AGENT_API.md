@@ -291,3 +291,18 @@ curl -s -X POST -H "Authorization: Bearer $TRUSTOPS_TOKEN" \
   --data '{"reason":"vendor_due_diligence"}' \
   https://your-server/api/v1/snapshots | jq .
 ```
+
+### Review identity and workflow decision conflicts
+
+Browser sessions exchanged from API keys retain their originating key and its
+workspace. Expiration, revocation, deletion, or missing legacy provenance
+invalidates derived access. Such sessions cannot perform human-reserved mapping
+or workpaper reviews; eligible OIDC/SAML identities must sign in directly.
+Administrators may issue keys for their own identity only.
+
+Workflow approval consumes a pending decision before executing downstream
+nodes. The claim binds the reviewed workflow version and content. Replayed,
+rejected, or changed decisions return 409. An interrupted claim also returns 409
+on approval or retry: an operator must reconcile any external effects before
+starting a replacement run. Historical run records remain append-only; older
+pending runs without a content binding require a new review run.

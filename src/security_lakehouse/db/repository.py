@@ -155,6 +155,7 @@ def create_user_session(
     tenant_id: str,
     user_id: str,
     idp: str = "oidc",
+    source_api_key_id: str | None = None,
     ttl_hours: int = DEFAULT_SESSION_TTL_HOURS,
     now: datetime | None = None,
 ) -> tuple[UserSession, str]:
@@ -166,6 +167,7 @@ def create_user_session(
         user_id=user_id,
         token_hash=token_hash,
         idp=idp,
+        source_api_key_id=source_api_key_id,
         expires_at=moment + timedelta(hours=ttl_hours),
     )
     session.add(row)

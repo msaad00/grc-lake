@@ -42,6 +42,7 @@ def exchange_api_key_for_browser_session(
         tenant_id=key.tenant_id,
         user_id=key.user_id,
         idp="api_key",
+        source_api_key_id=key.id,
         now=moment,
     )
     return key.user, sess_token

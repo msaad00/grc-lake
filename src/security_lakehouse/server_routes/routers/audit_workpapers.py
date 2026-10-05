@@ -165,7 +165,11 @@ def build_audit_workpapers_router(*, lake_for: Callable[[Identity], Path]) -> AP
     ) -> dict:
         row = _get(session, identity.tenant_id, workpaper_id)
         _content(row)
-        if row.created_by_id == identity.user_id or identity.auth_method == "insecure":
+        if (
+            row.created_by_id == identity.user_id
+            or not identity.is_interactive_session
+            or identity.auth_method == "insecure"
+        ):
             raise HTTPException(403, "independent authenticated reviewer required")
         if not body.rationale.strip():
             raise HTTPException(400, "review rationale is required")

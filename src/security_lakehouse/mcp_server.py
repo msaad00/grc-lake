@@ -27,7 +27,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from security_lakehouse import api_v1, netguard, workflows
+from security_lakehouse import api_v1, netguard, strict_json, workflows
 from security_lakehouse.assessment import build_current_posture
 from security_lakehouse.brand_assets import (
     MCP_INSTRUCTIONS,
@@ -98,7 +98,7 @@ def _get(path: str, lake: Path, **params: str) -> Any:
 
 def _api_error_detail(payload: bytes) -> str:
     try:
-        body = json.loads(payload.decode("utf-8"))
+        body = strict_json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return "request failed"
     errors = body.get("errors") if isinstance(body, dict) else None
@@ -118,7 +118,7 @@ def _server_api_request(method: str, path: str, body: dict[str, Any] | None = No
     url = f"{resolve_api_base_url()}{path}"
     if query:
         url = f"{url}?{urllib.parse.urlencode(query)}"
-    data = json.dumps(body or {}).encode("utf-8") if method.upper() != "GET" else None
+    data = strict_json.dumps(body or {}).encode("utf-8") if method.upper() != "GET" else None
     request = urllib.request.Request(
         url,
         data=data,
@@ -138,7 +138,7 @@ def _server_api_request(method: str, path: str, body: dict[str, Any] | None = No
     except urllib.error.URLError as exc:
         raise ValueError("TrustOps API request failed: unreachable") from exc
     try:
-        decoded = json.loads(payload.decode("utf-8"))
+        decoded = strict_json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("TrustOps API request failed: invalid JSON response") from exc
     if not isinstance(decoded, dict):
@@ -148,7 +148,7 @@ def _server_api_request(method: str, path: str, body: dict[str, Any] | None = No
 
 def _parse_json_object(raw: str, field_name: str) -> dict[str, Any]:
     try:
-        parsed = json.loads(raw or "{}")
+        parsed = strict_json.loads(raw or "{}")
     except json.JSONDecodeError as exc:
         raise ValueError(f"{field_name} must be valid JSON") from exc
     if not isinstance(parsed, dict):
@@ -892,7 +892,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         import json as _json
 
         try:
-            variables = _json.loads(variables_json or "{}")
+            variables = strict_json.loads(variables_json or "{}")
         except _json.JSONDecodeError as exc:
             raise ValueError("variables_json must be valid JSON") from exc
         if not isinstance(variables, dict):

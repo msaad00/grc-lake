@@ -2265,6 +2265,68 @@
         "tags": ["agents"]
       }
     },
+    "/api/v1/agent-runs/{run_id}/decisions/{decision_index}/reconcile": {
+      "post": {
+        "operationId": "reconcile_agent_decision_api_v1_agent_runs__run_id__decisions__decision_index__reconcile_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "decision_index",
+            "required": true,
+            "schema": {
+              "title": "Decision Index",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectAgentDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reconcile Agent Decision",
+        "tags": ["agents"]
+      }
+    },
     "/api/v1/agent-runs/{run_id}/decisions/{decision_index}/reject": {
       "post": {
         "operationId": "reject_agent_decision_api_v1_agent_runs__run_id__decisions__decision_index__reject_post",

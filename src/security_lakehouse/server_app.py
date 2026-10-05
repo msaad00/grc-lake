@@ -2209,31 +2209,80 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if action == "freeze_snapshot" and not identity.has_scope("snapshot"):
             raise HTTPException(status_code=403, detail="snapshot scope required")
         try:
-            agent_runs_db.claim_decision(session, row, decision_index=decision_index, actor=identity.email)
+            with agent_runs_db.decision_execution_lock(session, row):
+                agent_runs_db.claim_decision(session, row, decision_index=decision_index, actor=identity.email)
+                claimed_decisions, claimed_state = row.decisions_json, row.state_json
+                try:
+                    result = _execute_agent_decision(
+                        session,
+                        lake=_safe_agent_lake_path(lake, lake_for(identity)),
+                        identity=identity,
+                        decision=decision,
+                        note=body.note if body is not None else "",
+                    )
+                    agent_runs_db.mark_decision_executed(
+                        row,
+                        decision_index=decision_index,
+                        approved_by=identity.email,
+                        execution_result=result,
+                    )
+                    response = JSONResponse(
+                        api_v1.envelope(
+                            "agent-runs.decisions",
+                            _redact_payload(agent_runs_db.agent_run_to_dict(row, include_state=True), identity),
+                            meta={"executed": True, "decision_index": decision_index, "execution_result": result},
+                        )
+                    )
+                    session.commit()
+                    return response
+                except Exception:
+                    session.rollback()
+                    agent_runs_db.fail_decision_claim(
+                        session,
+                        row,
+                        decision_index=decision_index,
+                        claimed_decisions=claimed_decisions,
+                        claimed_state=claimed_state,
+                    )
+                    raise
         except agent_runs_db.DecisionConflict as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
-        result = _execute_agent_decision(
-            session,
-            lake=_safe_agent_lake_path(lake, lake_for(identity)),
-            identity=identity,
-            decision=decision,
-            note=body.note if body is not None else "",
-        )
-        agent_runs_db.mark_decision_executed(
-            row,
-            decision_index=decision_index,
-            approved_by=identity.email,
-            execution_result=result,
-        )
-        response = JSONResponse(
+
+    @app.post("/api/v1/agent-runs/{run_id}/decisions/{decision_index}/reconcile", tags=["agents"])
+    def reconcile_agent_decision(
+        run_id: str,
+        decision_index: int,
+        body: RejectAgentDecisionRequest,
+        identity: Identity = Depends(_require_write),
+        session: Session = Depends(get_session),
+    ) -> JSONResponse:
+        reason = body.reason.strip()
+        if not reason:
+            raise HTTPException(status_code=400, detail="a reconciliation reason is required")
+        row = agent_runs_db.get_agent_run(session, tenant_id=identity.tenant_id, run_id=run_id)
+        if row is None:
+            raise HTTPException(status_code=404, detail="agent run not found")
+        require_independent_agent_reviewer(row, identity)
+        try:
+            with agent_runs_db.decision_execution_lock(session, row):
+                agent_runs_db.fail_decision_claim(
+                    session,
+                    row,
+                    decision_index=decision_index,
+                    claimed_decisions=row.decisions_json,
+                    claimed_state=row.state_json,
+                    reconciled_by=identity.email,
+                    reason=reason,
+                )
+        except agent_runs_db.DecisionConflict as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return JSONResponse(
             api_v1.envelope(
                 "agent-runs.decisions",
                 _redact_payload(agent_runs_db.agent_run_to_dict(row, include_state=True), identity),
-                meta={"executed": True, "decision_index": decision_index, "execution_result": result},
+                meta={"reconciled": True, "decision_index": decision_index},
             )
         )
-        session.commit()
-        return response
 
     @app.post("/api/v1/agent-runs/{run_id}/decisions/{decision_index}/reject", tags=["agents"])
     def reject_agent_decision(

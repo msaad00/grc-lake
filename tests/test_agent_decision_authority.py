@@ -180,3 +180,92 @@ def test_agent_claim_rejects_changed_reviewed_content(migration_url):
                 claim_decision(reviewer, reviewed, decision_index=0, actor="reviewer")
     finally:
         engine.dispose()
+
+
+def _hold_execution_lock(url, run_id, pipe):
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    from security_lakehouse.db.agent_runs import decision_execution_lock
+    from security_lakehouse.db.models import AgentRun
+
+    engine = create_engine(url)
+    try:
+        with Session(engine) as session:
+            row = session.get(AgentRun, run_id)
+            with decision_execution_lock(session, row):
+                pipe.send("locked")
+                pipe.recv()
+    finally:
+        engine.dispose()
+
+
+def test_execution_lock_excludes_other_process_and_releases_on_crash(migration_url):
+    import multiprocessing
+
+    import pytest
+    from sqlalchemy.orm import Session
+
+    from security_lakehouse.db.agent_runs import DecisionConflict, decision_execution_lock
+    from security_lakehouse.db.models import AgentRun
+
+    engine, run_id = _database_run(migration_url)
+    context = multiprocessing.get_context("spawn")
+    parent, child = context.Pipe()
+    worker = context.Process(target=_hold_execution_lock, args=(migration_url, run_id, child))
+    worker.start()
+    try:
+        assert parent.poll(15), "child failed to acquire execution lock"
+        message = parent.recv()
+        assert message == "locked"
+        with Session(engine) as session:
+            row = session.get(AgentRun, run_id)
+            with pytest.raises(DecisionConflict, match="active"), decision_execution_lock(session, row):
+                pytest.fail("second process acquired active lock")
+        worker.terminate()
+        worker.join(5)
+        assert not worker.is_alive()
+        # PostgreSQL releases a disconnected backend's advisory lock asynchronously.
+        for attempt in range(30):
+            try:
+                with Session(engine) as session:
+                    row = session.get(AgentRun, run_id)
+                    with decision_execution_lock(session, row):
+                        break
+            except DecisionConflict:
+                if attempt == 29:
+                    raise
+                time.sleep(0.1)
+    finally:
+        if worker.is_alive():
+            worker.kill()
+            worker.join(5)
+        parent.close()
+        child.close()
+        engine.dispose()
+
+
+def test_failure_record_cannot_overwrite_changed_claim(migration_url):
+    import pytest
+    from sqlalchemy.orm import Session
+
+    from security_lakehouse.db.agent_runs import DecisionConflict, claim_decision, fail_decision_claim
+    from security_lakehouse.db.models import AgentRun
+
+    engine, run_id = _database_run(migration_url)
+    try:
+        with Session(engine) as session:
+            row = session.get(AgentRun, run_id)
+            claim_decision(session, row, decision_index=0, actor="reviewer")
+            decisions, state = row.decisions_json, row.state_json
+            with Session(engine) as other:
+                changed = other.get(AgentRun, run_id)
+                changed.state_json = '{"changed":true}'
+                other.commit()
+            with pytest.raises(DecisionConflict, match="changed"):
+                fail_decision_claim(session, row, decision_index=0, claimed_decisions=decisions, claimed_state=state)
+            session.refresh(row)
+            assert row.state_json == '{"changed":true}'
+            assert row.decisions_json == decisions
+    finally:
+        engine.dispose()

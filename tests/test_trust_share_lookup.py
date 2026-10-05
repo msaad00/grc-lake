@@ -131,7 +131,7 @@ def test_scheduler_state_treats_naive_timestamps_as_utc(tmp_path: Path, new_york
     assert state["workflow:wf-1"] == datetime(2026, 6, 1, 10, 0, tzinfo=UTC)
 
 
-def test_scheduler_state_skips_non_object_rows(tmp_path: Path) -> None:
+def test_scheduler_state_rejects_non_object_rows(tmp_path: Path) -> None:
     gold = tmp_path / "gold"
     gold.mkdir()
     (gold / scheduler.STATE_FILE).write_text(
@@ -141,7 +141,8 @@ def test_scheduler_state_skips_non_object_rows(tmp_path: Path) -> None:
         + "\n",
         encoding="utf-8",
     )
-    assert list(scheduler._read_state(tmp_path)) == ["workflow:wf-1"]
+    with pytest.raises(ValueError, match="invalid scheduler state"):
+        scheduler._read_state(tmp_path)
 
 
 def test_bound_tenant_share_resolves_before_the_lake_has_any_data(tmp_path: Path) -> None:

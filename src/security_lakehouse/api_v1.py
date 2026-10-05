@@ -1246,6 +1246,12 @@ def openapi_paths() -> JsonObject:
                     }
                 },
             }
+            if path == "/api/v1/scheduler/tick" and method == "POST":
+                operation["responses"]["201"] = operation["responses"].pop("200")
+                operation["responses"]["503"] = {
+                    "description": "Stored scheduler state failed validation",
+                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/V1Envelope"}}},
+                }
             if parameters and method == "GET":
                 operation["parameters"] = parameters
             if scopes := row.get("scopes"):
@@ -2076,7 +2082,12 @@ def handle_post(
     if path == "/api/v1/scheduler/tick":
         from security_lakehouse.scheduler import tick
 
-        fired = tick(lake, on_snapshot_written=on_snapshot_written)
+        try:
+            fired = tick(lake, on_snapshot_written=on_snapshot_written)
+        except strict_json.InvalidJSON:
+            return HTTPStatus.SERVICE_UNAVAILABLE, error_envelope(
+                "invalid_stored_data", "stored data failed validation"
+            )
         return HTTPStatus.CREATED, envelope("scheduler.tick", {"fired": fired, "count": len(fired)})
     link_start = _connector_link_action(path, "start")
     if link_start is not None:

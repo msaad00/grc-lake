@@ -291,7 +291,7 @@ def test_scheduler_connector_sync_runs_real_github_fixture(tmp_path: Path) -> No
     assert latest_run(tmp_path, "github-security", kind="sync")["result"] == "ok"
 
 
-def test_scheduler_records_connector_error_without_advancing_state(tmp_path: Path) -> None:
+def test_scheduler_records_connector_error_and_defers_retry(tmp_path: Path) -> None:
     append_config_event(
         tmp_path,
         connector_id="github-security",
@@ -310,7 +310,7 @@ def test_scheduler_records_connector_error_without_advancing_state(tmp_path: Pat
     assert first[0]["target_kind"] == "connector"
     assert first[0]["result"] == "error"
     assert first[0]["error"] == "internal error"
-    assert second[0]["result"] == "error"
+    assert second == []
 
 
 # --- readiness -----------------------------------------------------------------

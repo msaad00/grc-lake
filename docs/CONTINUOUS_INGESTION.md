@@ -95,6 +95,14 @@ reviewers/agents   -> read posture, runs, evidence, snapshots, trust shares
 | Snapshots         | Point-in-time snapshots are hash-chained and verifiable through `/api/v1/snapshots/integrity`.                                                                                                                                                                    |
 | Agents            | Agents consume the same API/resources; model output can propose actions, not bypass controls.                                                                                                                                                                     |
 
+Connector upserts scope source IDs to their owning connector. For a redelivered
+record, the newest source event time wins; when event times match, the newest
+collection time wins. This allows a returned alert to close without changing its
+original event time. Conflicting content with equal event and collection instants
+is rejected without rewriting the raw store. Historical materialized generations
+retain their earlier evidence. This ordering applies to records returned by the
+provider; it does not expand the connector's incremental query window.
+
 ## Snowflake Production Pattern
 
 For Snowflake, `deploy/snowflake/bootstrap_poc.sql` and

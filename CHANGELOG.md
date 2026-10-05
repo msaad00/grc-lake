@@ -7,6 +7,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Route remote MCP reads and writes through authenticated APIs, reject incomplete remote configuration and credential-bearing redirects, and support explicitly configured private API destinations.
+
 - Keep inventory observations unevaluated, respect configured failure thresholds, and include declared eligible assets without period evidence in workpaper sampling gaps.
 - Retain failed login attempts as observations, preserve GCP IAM conditions, and identify broad/public access grants and open repository alert severity.
 - Reconcile missing HIPAA workstation, media, authentication, policy and documentation identities against eCFR, preserving historical catalog scope and proposed mapping review.

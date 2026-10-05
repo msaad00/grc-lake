@@ -1,14 +1,14 @@
 """Agent-native MCP server exposing the TrustOps read surface.
 
-This is the headless front door for autonomous agents. Rather than driving the
-HTTP API, an agent speaks the Model Context Protocol (MCP) over stdio and calls
+This is the headless front door for autonomous agents. An agent speaks the
+Model Context Protocol (MCP) over stdio and calls
 typed tools to inspect compliance posture, controls, evidence, assets, and
 violations.
 
 The tools are thin adapters over the existing assessment engine
 (:mod:`security_lakehouse.api_v1`, :mod:`security_lakehouse.assessment`,
-:mod:`security_lakehouse.io`) — no compliance logic is reimplemented here, so the
-agent contract cannot drift from the HTTP API contract.
+:mod:`security_lakehouse.io`). Remote mode uses server authorization and tenant
+selection; tools do not reimplement compliance logic.
 
 The optional ``mcp`` dependency is imported lazily inside :func:`build_server`
 so that importing this module (and the rest of the package) never requires the
@@ -19,6 +19,7 @@ SDK to be installed. Install it with ``pip install 'trustops-security-data-lake[
 from __future__ import annotations
 
 import json
+import math
 import os
 import urllib.error
 import urllib.parse
@@ -41,6 +42,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     from mcp.server.fastmcp import FastMCP
 
 DEFAULT_LAKE = "./lake"
+MAX_API_RESPONSE_BYTES = 8 * 1024 * 1024
 JsonObject = dict[str, Any]
 
 
@@ -54,10 +56,22 @@ def resolve_api_base_url() -> str:
     base_url = os.environ.get("TRUSTOPS_API_URL", "").strip().rstrip("/")
     if not base_url:
         raise ValueError("TRUSTOPS_API_URL is required for authenticated TrustOps MCP tools")
-    scheme = urllib.parse.urlparse(base_url).scheme
-    if scheme not in {"http", "https"}:
+    parsed = urllib.parse.urlsplit(base_url)
+    if parsed.scheme not in {"http", "https"}:
         raise ValueError("TRUSTOPS_API_URL must use http or https")
-    netguard.assert_url_is_public(base_url, label="TRUSTOPS_API_URL")
+    if (
+        not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or "?" in base_url
+        or "#" in base_url
+        or any(ord(char) < 33 for char in base_url)
+    ):
+        raise ValueError("TRUSTOPS_API_URL must have a host and no credentials, query, fragment, or whitespace")
+    if parsed.port is not None and not 1 <= parsed.port <= 65535:
+        raise ValueError("TRUSTOPS_API_URL has an invalid port")
+    if not _allow_private_api():
+        netguard.assert_url_is_public(base_url, label="TRUSTOPS_API_URL")
     return base_url
 
 
@@ -69,15 +83,24 @@ def _api_key() -> str:
 
 
 def _remote_api_configured() -> bool:
-    """True when MCP should route lake-backed reads through the authenticated server API."""
-    return bool(os.environ.get("TRUSTOPS_API_URL", "").strip() and os.environ.get("TRUSTOPS_API_KEY", "").strip())
+    """Select one authority; partial remote configuration never implies local access."""
+    mode = os.environ.get("TRUSTOPS_MCP_MODE", "auto").strip().lower()
+    if mode not in {"auto", "local", "remote"}:
+        raise ValueError("TRUSTOPS_MCP_MODE must be auto, local, or remote")
+    if mode == "local":
+        return False
+    remote = mode == "remote" or bool(
+        os.environ.get("TRUSTOPS_API_URL", "").strip() or os.environ.get("TRUSTOPS_API_KEY", "").strip()
+    )
+    if remote:
+        if not os.environ.get("TRUSTOPS_API_URL", "").strip():
+            raise ValueError("TRUSTOPS_API_URL is required in remote MCP mode")
+        _api_key()
+    return remote
 
 
 def _get_lake_or_remote(path: str, lake: Path, **params: str) -> Any:
     """Read lake-backed v1 data locally or via the remote server when configured."""
-    if _remote_api_configured():
-        body = _server_api_request("GET", path, None, **params)
-        return body["data"]
     return _get(path, lake, **params)
 
 
@@ -88,6 +111,8 @@ def _get(path: str, lake: Path, **params: str) -> Any:
     through to :func:`security_lakehouse.api_v1.handle_get`, so pagination and
     filtering behave exactly as they do over HTTP.
     """
+    if _remote_api_configured():
+        return _server_api_request("GET", path, None, **params)["data"]
     query = {key: [value] for key, value in params.items() if value is not None}
     status, body = api_v1.handle_get(path, query, lake)
     if status != HTTPStatus.OK:
@@ -108,8 +133,38 @@ def _api_error_detail(payload: bytes) -> str:
     return str(detail or "request failed")
 
 
+def _allow_private_api() -> bool:
+    """Operator exception scoped only to this configured MCP API destination."""
+    return os.environ.get("TRUSTOPS_API_ALLOW_PRIVATE", "").strip() == "1"
+
+
+class _NoAPIRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
+        raise ValueError("TrustOps API redirects are not allowed")
+
+
+def _open_api_request(request: urllib.request.Request, *, timeout: float) -> Any:
+    if _allow_private_api():
+        return urllib.request.build_opener(_NoAPIRedirect()).open(request, timeout=timeout)
+
+    # Retain pinned public-address connections, and never forward a bearer token
+    # to a redirect destination (even a public one or another API path).
+    initial = True
+
+    def validate(url: str) -> None:
+        nonlocal initial
+        if not initial or url != request.full_url:
+            raise ValueError("TrustOps API redirects are not allowed")
+        initial = False
+        netguard.assert_url_is_public(url, label="TRUSTOPS_API_URL")
+
+    return netguard.open_guarded(request, timeout=timeout, validate=validate, label="TRUSTOPS_API_URL")
+
+
 def _server_api_request(method: str, path: str, body: dict[str, Any] | None = None, **params: Any) -> JsonObject:
     """Call the authenticated server API for DB-backed/headless MCP tools."""
+    if not _remote_api_configured():
+        raise ValueError("This tool requires remote MCP mode with TRUSTOPS_API_URL and TRUSTOPS_API_KEY")
     query = {
         key: str(value)
         for key, value in params.items()
@@ -119,29 +174,40 @@ def _server_api_request(method: str, path: str, body: dict[str, Any] | None = No
     if query:
         url = f"{url}?{urllib.parse.urlencode(query)}"
     data = strict_json.dumps(body or {}).encode("utf-8") if method.upper() != "GET" else None
+    token = _api_key()
     request = urllib.request.Request(
         url,
         data=data,
         method=method.upper(),
         headers={
             "accept": "application/json",
-            "authorization": f"Bearer {_api_key()}",
+            "authorization": f"Bearer {token}",
             **({"content-type": "application/json"} if data is not None else {}),
         },
     )
     timeout = float(os.environ.get("TRUSTOPS_API_TIMEOUT_SECONDS", "30"))
+    if not math.isfinite(timeout):
+        raise ValueError("TRUSTOPS_API_TIMEOUT_SECONDS must be finite")
     try:
-        with urllib.request.urlopen(request, timeout=max(1.0, min(timeout, 120.0))) as response:  # noqa: S310
-            payload = response.read()
+        with _open_api_request(request, timeout=max(1.0, min(timeout, 120.0))) as response:
+            payload = response.read(MAX_API_RESPONSE_BYTES + 1)
     except urllib.error.HTTPError as exc:
-        raise ValueError(f"TrustOps API request failed ({exc.code}): {_api_error_detail(exc.read())}") from exc
+        detail = _api_error_detail(exc.read(MAX_API_RESPONSE_BYTES + 1)).replace(token, "[redacted]")[:2048]
+        raise ValueError(f"TrustOps API request failed ({exc.code}): {detail}") from exc
     except urllib.error.URLError as exc:
         raise ValueError("TrustOps API request failed: unreachable") from exc
+    if len(payload) > MAX_API_RESPONSE_BYTES:
+        raise ValueError("TrustOps API response exceeds the 8 MiB limit; request a smaller page")
     try:
         decoded = strict_json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("TrustOps API request failed: invalid JSON response") from exc
-    if not isinstance(decoded, dict):
+    if (
+        not isinstance(decoded, dict)
+        or "data" not in decoded
+        or not isinstance(decoded.get("meta"), dict)
+        or decoded.get("errors") != []
+    ):
         raise ValueError("TrustOps API request failed: invalid response shape")
     return decoded
 
@@ -156,11 +222,13 @@ def _parse_json_object(raw: str, field_name: str) -> dict[str, Any]:
     return parsed
 
 
-def _connector_post(path: str, lake: Path, payload: dict[str, Any]) -> JsonObject:
+def _post(path: str, lake: Path, payload: dict[str, Any]) -> JsonObject:
+    if _remote_api_configured():
+        return _server_api_request("POST", path, payload)["data"]
     status, body = api_v1.handle_post(path, payload, lake)
-    if status != HTTPStatus.CREATED:
-        errors = body.get("errors") or [{"detail": "connector request failed"}]
-        raise ValueError(errors[0].get("detail", "connector request failed"))
+    if status not in {HTTPStatus.CREATED, HTTPStatus.OK}:
+        errors = body.get("errors") or [{"detail": "request failed"}]
+        raise ValueError(errors[0].get("detail", "request failed"))
     return body["data"]
 
 
@@ -248,12 +316,14 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
 
     @trustops_tool(title="Snapshot Integrity")
     def get_snapshots_integrity() -> JsonObject:
-        """Verify the assessment snapshot hash chain in the local lake."""
+        """Verify the assessment snapshot hash chain in the selected lake."""
         return _get("/api/v1/snapshots/integrity", lake)
 
     @trustops_tool(title="Snapshot Detail")
     def get_snapshot_detail(snapshot_id: str) -> JsonObject:
         """Return auditor-friendly summary for one point-in-time snapshot."""
+        if _remote_api_configured():
+            return _get(f"/api/v1/snapshots/{urllib.parse.quote(snapshot_id, safe='')}", lake)
         from security_lakehouse.assessment import load_snapshot, snapshot_detail_summary
 
         payload = load_snapshot(lake, snapshot_id)
@@ -261,7 +331,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
 
     @trustops_tool(title="Tracking Integrity")
     def get_tracking_integrity() -> JsonObject:
-        """Verify the append-only triage/tracking hash chain in the local lake."""
+        """Verify the append-only triage/tracking hash chain in the selected lake."""
         return _get("/api/v1/tracking/integrity", lake)
 
     @trustops_tool()
@@ -271,6 +341,14 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         Each row includes stable ``event_id`` and UTC ``occurred_at``. Set
         ``include_requests=true`` only when request audit JSONL is present locally.
         """
+        if _remote_api_configured():
+            return _get(
+                "/api/v1/audit-log",
+                lake,
+                category=category,
+                limit=str(limit),
+                include_requests=str(include_requests).lower(),
+            )
         from security_lakehouse.audit_log import build_audit_log
 
         capped = max(1, min(limit, 1000))
@@ -288,6 +366,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         Falls back to the framework scores observed in the current posture if the
         static registry cannot be loaded.
         """
+        if _remote_api_configured():
+            return _get("/api/v1/frameworks", lake, limit="1000")
         try:
             from security_lakehouse.catalog import load_framework_registry
 
@@ -317,6 +397,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         what's still unreviewed" — the same ledger as ``security-lakehouse
         frameworks coverage``.
         """
+        if _remote_api_configured():
+            return _get("/api/v1/frameworks/coverage", lake)
         from security_lakehouse.framework_coverage import (
             build_framework_coverage,
             framework_coverage_summary,
@@ -352,6 +434,10 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         equivalence judgment made in the console or CLI, never by an agent.
         Mappings this organization already approved or rejected are not listed.
         """
+        if _remote_api_configured():
+            return _get(
+                "/api/v1/mapping-reviews/report", lake, framework_id=framework_id or "", risk_domain=risk_domain or ""
+            )
         from security_lakehouse.mapping_review import effective_safeguards
         from security_lakehouse.safeguards import mapping_review_report
 
@@ -406,11 +492,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         warehouse sink above that threshold. This is the lake-wide eval step that
         split schedules run separately from connector ingest syncs.
         """
-        status, body = api_v1.handle_post("/api/v1/ingestion/eval", {"actor": actor}, lake)
-        if status not in {HTTPStatus.CREATED, HTTPStatus.OK}:
-            errors = body.get("errors") or [{"detail": "lake eval failed"}]
-            raise ValueError(errors[0].get("detail", "lake eval failed"))
-        return body["data"]
+        return _post("/api/v1/ingestion/eval", lake, {"actor": actor})
 
     @trustops_tool(title="Scheduler Tick")
     def run_scheduler_tick() -> JsonObject:
@@ -420,11 +502,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         ingest-only connector syncs on ``sync_schedule``, lake eval on
         ``eval_schedule``, with advisory locking to prevent double-fires.
         """
-        status, body = api_v1.handle_post("/api/v1/scheduler/tick", {}, lake)
-        if status not in {HTTPStatus.CREATED, HTTPStatus.OK}:
-            errors = body.get("errors") or [{"detail": "scheduler tick failed"}]
-            raise ValueError(errors[0].get("detail", "scheduler tick failed"))
-        return body["data"]
+        return _post("/api/v1/scheduler/tick", lake, {})
 
     @trustops_tool(title="Sync Connector")
     def sync_connector(connector_id: str, materialize: bool | None = None, actor: str = "mcp") -> JsonObject:
@@ -437,11 +515,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         if materialize is not None:
             payload["materialize"] = materialize
         path = f"/api/v1/connectors/{urllib.parse.quote(connector_id, safe='')}/sync"
-        status, body = api_v1.handle_post(path, payload, lake)
-        if status != HTTPStatus.CREATED:
-            errors = body.get("errors") or [{"detail": "connector sync failed"}]
-            raise ValueError(errors[0].get("detail", "connector sync failed"))
-        return body["data"]
+        return _post(path, lake, payload)
 
     @trustops_tool(title="List Connectors")
     def list_connectors(limit: int = 100, offset: int = 0) -> list[JsonObject]:
@@ -462,7 +536,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             "options": _parse_json_object(options_json, "options_json"),
         }
         path = f"/api/v1/connectors/{urllib.parse.quote(connector_id, safe='')}/probe"
-        return _connector_post(path, lake, payload)
+        return _post(path, lake, payload)
 
     @trustops_tool(title="Discover Connector")
     def discover_connector(
@@ -478,7 +552,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             "options": _parse_json_object(options_json, "options_json"),
         }
         path = f"/api/v1/connectors/{urllib.parse.quote(connector_id, safe='')}/discover"
-        return _connector_post(path, lake, payload)
+        return _post(path, lake, payload)
 
     @trustops_tool(title="Configure Connector")
     def configure_connector(
@@ -496,11 +570,15 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             "options": _parse_json_object(options_json, "options_json"),
         }
         path = f"/api/v1/connectors/{urllib.parse.quote(connector_id, safe='')}/configure"
-        return _connector_post(path, lake, payload)
+        return _post(path, lake, payload)
 
     @trustops_tool(title="List Connector Runs")
     def list_connector_runs(connector_id: str = "", limit: int = 50) -> list[JsonObject]:
         """List probe, discover, and sync run history from the lake."""
+        if _remote_api_configured():
+            return _get(
+                "/api/v1/connector-runs", lake, connector_id=connector_id, limit=str(limit), sort="-occurred_at"
+            )
         from security_lakehouse.connector_state import list_runs
 
         return list_runs(lake, connector_id or None, limit=limit)
@@ -512,6 +590,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         Returns the self-describing resource catalog (paths, kinds, methods, query
         params) used by the HTTP API — the same contract these MCP tools wrap.
         """
+        if _remote_api_configured():
+            return _get("/api/v1", lake)["resources"]
         return api_v1.resource_catalog()
 
     # ------------------------------------------------------------------
@@ -640,6 +720,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     @trustops_tool(title="Repository Governance Graph")
     def get_repository_graph() -> JsonObject:
         """Return repository topology and governance evidence as nodes and edges for agents."""
+        if _remote_api_configured():
+            return _get("/api/v1/repo-graph", lake)
         from security_lakehouse.graph import build_repository_graph
 
         return build_repository_graph(lake)
@@ -854,6 +936,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     @trustops_tool(title="List Trust Shares")
     def list_trust_shares(include_revoked: bool = False) -> list[JsonObject]:
         """List auditor trust-center shares issued from this lake (tokens never returned)."""
+        if _remote_api_configured():
+            return _get("/api/v1/trust-shares", lake, include_revoked=str(include_revoked).lower(), limit="1000")
         from security_lakehouse.trust_share import list_shares
 
         return list_shares(lake, include_revoked=include_revoked)
@@ -881,6 +965,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             kwargs["framework_id"] = framework_id
         if idempotency_key:
             kwargs["idempotency_key"] = idempotency_key
+        if _remote_api_configured():
+            return _post("/api/v1/trust-shares", lake, kwargs)
         return create_share(lake, **kwargs)
 
     @trustops_tool(title="Policy Attestation Summary")
@@ -1263,6 +1349,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     @trustops_tool(title="Framework Drill-Down")
     def get_framework_detail(framework_id: str) -> JsonObject:
         """Return control → rule → evidence → datasource detail for one framework."""
+        if _remote_api_configured():
+            return _get(f"/api/v1/frameworks/{urllib.parse.quote(framework_id, safe='')}/detail", lake)
         from security_lakehouse.framework_detail import build_framework_detail
 
         detail = build_framework_detail(framework_id, lake)
@@ -1273,6 +1361,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     @trustops_tool(title="Control Remediation Guidance")
     def get_control_remediation(control_id: str) -> JsonObject:
         """Return actionable remediation steps for a control from the guidance catalog."""
+        if _remote_api_configured():
+            return _get(f"/api/v1/controls/{urllib.parse.quote(control_id, safe='')}/remediation", lake)
         from security_lakehouse.catalog import load_control_catalog
         from security_lakehouse.remediation_guidance import guidance_for_control
 
@@ -1284,11 +1374,9 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     # ------------------------------------------------------------------
     # Write tools — lake-backed actions an agent can take, not just read.
     #
-    # Each of these mutates the lake directory (gold zone) only: writing a
-    # snapshot, persisting a workflow, or executing one. None of them touch
-    # the application-state DB or require tenant auth, so they are safe over
-    # the local stdio transport. DB-backed writes (tasks, POA&M, evidence requests)
-    # use authenticated server API tools (TRUSTOPS_API_URL + TRUSTOPS_API_KEY).
+    # Local mode uses the operator's filesystem and execution authority.
+    # Remote mode routes all tenant data and mutations through API authorization.
+    # Evidence text is untrusted data; it cannot grant permission to run a tool.
     # ------------------------------------------------------------------
 
     @trustops_tool()
@@ -1301,11 +1389,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
 
         This is a WRITE: it appends a new snapshot file to the lake.
         """
-        status, body = api_v1.handle_post("/api/v1/snapshots", {"reason": reason}, lake)
-        if status != HTTPStatus.CREATED:
-            errors = body.get("errors") or [{"detail": "snapshot failed"}]
-            raise ValueError(errors[0].get("detail", "snapshot failed"))
-        return body["data"]
+        return _post("/api/v1/snapshots", lake, {"reason": reason})
 
     @trustops_tool()
     def list_workflows() -> list[JsonObject]:
@@ -1314,6 +1398,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         Each row carries the workflow id, name, description, version, and its
         node/edge graph — the automations an agent can run via ``run_workflow``.
         """
+        if _remote_api_configured():
+            return _get("/api/v1/workflows", lake, limit="1000")
         return workflows.list_workflows(lake)
 
     @trustops_tool()
@@ -1323,6 +1409,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         Returns the full record including its node/edge graph, or raises if no
         workflow with that id exists.
         """
+        if _remote_api_configured():
+            return _get(f"/api/v1/workflows/{urllib.parse.quote(workflow_id, safe='')}", lake)
         workflow = workflows.get_workflow(lake, workflow_id)
         if workflow is None:
             raise ValueError(f"unknown workflow_id {workflow_id!r}")
@@ -1336,6 +1424,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         schemas — so an agent can discover what steps a workflow can be built from
         before saving or running one.
         """
+        if _remote_api_configured():
+            return _get("/api/v1/workflows/actions", lake, limit="1000")
         return workflows.action_catalog()
 
     @trustops_tool()
@@ -1351,6 +1441,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         including assigning owners and sending allowlisted outbound webhooks
         (network egress). Only run workflows you intend to fire.
         """
+        if _remote_api_configured():
+            return _post(f"/api/v1/workflows/{urllib.parse.quote(workflow_id, safe='')}/run", lake, {})
         return workflows.run_workflow(lake, workflow_id=workflow_id, actor="api")
 
     return mcp

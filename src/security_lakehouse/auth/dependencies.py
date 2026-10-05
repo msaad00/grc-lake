@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from security_lakehouse.auth.rbac import Identity, scopes_for_role
 from security_lakehouse.auth.sessions import SESSION_COOKIE, decode_session_cookie
 from security_lakehouse.db import repository
+from security_lakehouse.db.models import ApiKey
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -86,14 +87,25 @@ def get_identity(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid or expired session")
         if not sess.user.is_active:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="user is disabled")
+        source_key = None
+        if sess.idp == "api_key":
+            source_key = session.get(ApiKey, sess.source_api_key_id) if sess.source_api_key_id else None
+            if (
+                source_key is None
+                or not source_key.is_active(now=now)
+                or source_key.user_id != sess.user_id
+                or source_key.tenant_id != sess.tenant_id
+            ):
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid or expired session")
         identity = Identity(
             user_id=sess.user_id,
             tenant_id=sess.tenant_id,
             email=sess.user.email,
             role=sess.user.role,
             scopes=scopes_for_role(sess.user.role),
-            workspace_id=sess.tenant_id,
+            workspace_id=source_key.workspace_id if source_key is not None else sess.tenant_id,
             auth_method=f"session:{sess.idp or 'unknown'}",
+            api_key_id=source_key.id if source_key is not None else None,
         )
         identity = _apply_billing_state(session, identity)
         request.state.identity = identity

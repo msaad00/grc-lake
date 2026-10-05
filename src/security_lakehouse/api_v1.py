@@ -85,6 +85,7 @@ from security_lakehouse.tracking import ALLOWED_STATES, append_event, latest_sta
 from security_lakehouse.trust_share import create_share, list_shares, revoke_share
 from security_lakehouse.verification import verify_event
 from security_lakehouse.workflows import (
+    ApprovalConflict,
     action_catalog,
     approve_workflow_run,
     get_workflow,
@@ -1892,6 +1893,10 @@ def handle_post(
     if workflow_retry is not None:
         try:
             run = retry_workflow_run(lake, run_id=workflow_retry, actor=str(payload.get("actor") or "console"))
+        except ApprovalConflict:
+            return HTTPStatus.CONFLICT, error_envelope(
+                "conflict", "interrupted approval requires reconciliation", resource="workflows.run"
+            )
         except (ValueError, TypeError):
             return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", "invalid request", resource="workflows.run")
         return HTTPStatus.CREATED, envelope("workflows.run", run)
@@ -1904,6 +1909,10 @@ def handle_post(
                 actor=str(payload.get("actor") or "console"),
                 note=str(payload.get("note") or ""),
             )
+        except ApprovalConflict:
+            return HTTPStatus.CONFLICT, error_envelope(
+                "conflict", "approval state or workflow version changed", resource="workflows.run"
+            )
         except (ValueError, TypeError):
             return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", "invalid request", resource="workflows.run")
         return HTTPStatus.CREATED, envelope("workflows.run", run)
@@ -1915,6 +1924,10 @@ def handle_post(
                 run_id=workflow_reject,
                 actor=str(payload.get("actor") or "console"),
                 note=str(payload.get("note") or ""),
+            )
+        except ApprovalConflict:
+            return HTTPStatus.CONFLICT, error_envelope(
+                "conflict", "approval state or workflow version changed", resource="workflows.run"
             )
         except (ValueError, TypeError):
             return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", "invalid request", resource="workflows.run")

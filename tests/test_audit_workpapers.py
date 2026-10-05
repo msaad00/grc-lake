@@ -6,8 +6,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie
 from security_lakehouse.db.base import session_scope
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user, create_user_session
 from security_lakehouse.pipeline import run_pipeline
 from security_lakehouse.server_app import create_app
 
@@ -23,6 +24,10 @@ def workpaper_env(tmp_path):
             user = create_user(session, tenant_id=tenant.id, email=f"{name}@example.test", role=role)
             _, token = create_api_key(session, tenant_id=tenant.id, user_id=user.id)
             headers[name] = {"Authorization": f"Bearer {token}"}
+            if name == "reviewer":
+                headers["reviewer_key"] = dict(headers[name])
+                _, session_token = create_user_session(session, tenant_id=tenant.id, user_id=user.id, idp="oidc")
+                headers[name] = {"Cookie": f"{SESSION_COOKIE}={encode_session_cookie(session_token)}"}
         foreign = create_tenant(session, slug="other", name="Other")
         user = create_user(session, tenant_id=foreign.id, email="foreign@example.test", role="admin")
         _, token = create_api_key(session, tenant_id=foreign.id, user_id=user.id)
@@ -61,6 +66,7 @@ def test_review_requires_independent_authority_and_exact_digest(workpaper_env):
         ).status_code
         == 409
     )
+    assert client.post(url + "/review", json=review, headers=headers["reviewer_key"]).status_code == 403
     approved = client.post(url + "/review", json=review, headers=headers["reviewer"])
     assert approved.status_code == 200
     assert approved.json()["data"]["reviewed_by"] == "reviewer@example.test"

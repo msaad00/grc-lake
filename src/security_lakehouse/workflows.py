@@ -71,7 +71,8 @@ from urllib.parse import urlsplit
 from security_lakehouse import netguard
 from security_lakehouse.assessment import SnapshotWrittenHook, write_assessment_snapshot
 from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
-from security_lakehouse.io import read_jsonl
+from security_lakehouse.io import append_jsonl, canonical_sha256, read_jsonl
+from security_lakehouse.ledger import chain_lock
 from security_lakehouse.secret_refs import tenant_secret_prefix
 from security_lakehouse.tracking import append_event as append_triage_event
 
@@ -1254,8 +1255,9 @@ def _node_failure_reason(exc: Exception) -> str:
 
 
 def _append_run_record(lake_dir: str | Path, run: dict[str, Any]) -> None:
-    with (_gold(lake_dir) / RUNS_FILE).open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(run, separators=(",", ":")) + "\n")
+    path = _gold(lake_dir) / RUNS_FILE
+    with chain_lock(path):
+        append_jsonl(path, run)
 
 
 def _workflow_execution_state(
@@ -1426,6 +1428,7 @@ def run_workflow(
         "run_id": str(uuid.uuid4()),
         "workflow_id": workflow_id,
         "workflow_version": workflow["version"],
+        "workflow_hash": canonical_sha256({"nodes": workflow["nodes"], "edges": workflow["edges"]}),
         "actor": actor,
         "dry_run": dry_run,
         "status": result,
@@ -1441,7 +1444,8 @@ def run_workflow(
 
 
 def list_runs(lake_dir: str | Path, workflow_id: str | None = None, *, limit: int = 50) -> list[dict[str, Any]]:
-    rows = _read_log(_gold(lake_dir) / RUNS_FILE)
+    history = _read_log(_gold(lake_dir) / RUNS_FILE)
+    rows = list({str(row["run_id"]): row for row in history}.values())
     if workflow_id:
         rows = [r for r in rows if r.get("workflow_id") == workflow_id]
     rows.sort(key=lambda r: str(r.get("started_at") or ""), reverse=True)
@@ -1464,9 +1468,46 @@ def retry_workflow_run(
     prior = get_workflow_run(lake_dir, run_id)
     if prior is None:
         raise ValueError(f"unknown run_id {run_id!r}")
+    if str(prior.get("status") or "").endswith("_claimed"):
+        raise ApprovalConflict("reconcile the interrupted decision before retrying")
     return run_workflow(
         lake_dir, workflow_id=str(prior["workflow_id"]), actor=actor, dry_run=bool(prior.get("dry_run"))
     )
+
+
+class ApprovalConflict(ValueError):
+    """An approval is stale, already consumed, or requires reconciliation."""
+
+
+def _claim_workflow_decision(lake_dir: str | Path, run_id: str, actor: str, decision: str):
+    # A separate lock spans lookup and durable claim; the run-log writer takes
+    # its own lock. No external action runs until this claim has been fsynced.
+    with chain_lock(_gold(lake_dir) / "workflow_approvals"):
+        prior = get_workflow_run(lake_dir, run_id)
+        if prior is None:
+            raise ValueError(f"unknown run_id {run_id!r}")
+        if (prior.get("status") or prior.get("result")) != "awaiting_approval":
+            raise ApprovalConflict("run is not awaiting approval; reconcile an interrupted claim before retrying")
+        workflow = get_workflow(lake_dir, str(prior["workflow_id"]))
+        if (
+            workflow is None
+            or workflow["version"] != prior.get("workflow_version")
+            or canonical_sha256({"nodes": workflow["nodes"], "edges": workflow["edges"]}) != prior.get("workflow_hash")
+        ):
+            raise ApprovalConflict("workflow version or content changed; start a new run for review")
+        if not prior.get("pending_node_id"):
+            raise ApprovalConflict("run is missing pending_node_id")
+        _append_run_record(
+            lake_dir,
+            {
+                **prior,
+                "status": decision + "_claimed",
+                "result": decision + "_claimed",
+                "decision_actor": actor,
+                "decision_at": _utc_now_iso(),
+            },
+        )
+        return prior, workflow
 
 
 def approve_workflow_run(
@@ -1476,18 +1517,8 @@ def approve_workflow_run(
     actor: str = "console",
     note: str = "",
 ) -> dict[str, Any]:
-    prior = get_workflow_run(lake_dir, run_id)
-    if prior is None:
-        raise ValueError(f"unknown run_id {run_id!r}")
-    status = str(prior.get("status") or prior.get("result") or "")
-    if status != "awaiting_approval":
-        raise ValueError("run is not awaiting approval")
-    pending_node_id = str(prior.get("pending_node_id") or "")
-    if not pending_node_id:
-        raise ValueError("run is missing pending_node_id")
-    workflow = get_workflow(lake_dir, str(prior["workflow_id"]))
-    if workflow is None:
-        raise ValueError("workflow no longer exists")
+    prior, workflow = _claim_workflow_decision(lake_dir, run_id, actor, "approval")
+    pending_node_id = str(prior["pending_node_id"])
     outputs_by_node: dict[str, dict[str, Any]] = {}
     results_by_node: dict[str, dict[str, Any]] = {}
     for entry in prior.get("node_results") or []:
@@ -1533,6 +1564,7 @@ def approve_workflow_run(
         "run_id": str(uuid.uuid4()),
         "workflow_id": prior["workflow_id"],
         "workflow_version": workflow["version"],
+        "workflow_hash": canonical_sha256({"nodes": workflow["nodes"], "edges": workflow["edges"]}),
         "actor": actor,
         "dry_run": False,
         "status": result,
@@ -1546,6 +1578,17 @@ def approve_workflow_run(
     if execution["pending_node_id"]:
         run["pending_node_id"] = execution["pending_node_id"]
     _append_run_record(lake_dir, run)
+    _append_run_record(
+        lake_dir,
+        {
+            **prior,
+            "status": "approved",
+            "result": "approved",
+            "decision_actor": actor,
+            "decision_at": _utc_now_iso(),
+            "decision_run_id": run["run_id"],
+        },
+    )
     return run
 
 
@@ -1556,12 +1599,7 @@ def reject_workflow_run(
     actor: str = "console",
     note: str = "",
 ) -> dict[str, Any]:
-    prior = get_workflow_run(lake_dir, run_id)
-    if prior is None:
-        raise ValueError(f"unknown run_id {run_id!r}")
-    status = str(prior.get("status") or prior.get("result") or "")
-    if status != "awaiting_approval":
-        raise ValueError("run is not awaiting approval")
+    prior, _workflow = _claim_workflow_decision(lake_dir, run_id, actor, "rejection")
     run = {
         "run_id": str(uuid.uuid4()),
         "workflow_id": prior["workflow_id"],
@@ -1577,6 +1615,17 @@ def reject_workflow_run(
         "rejection_note": note,
     }
     _append_run_record(lake_dir, run)
+    _append_run_record(
+        lake_dir,
+        {
+            **prior,
+            "status": "rejected",
+            "result": "rejected",
+            "decision_actor": actor,
+            "decision_at": _utc_now_iso(),
+            "decision_run_id": run["run_id"],
+        },
+    )
     return run
 
 

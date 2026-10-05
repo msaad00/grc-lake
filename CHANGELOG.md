@@ -7,6 +7,9 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Retain API-key provenance in exchanged sessions, revoke derived access with the key, and reserve independent workpaper and mapping review for eligible SSO identities. Key issuance cannot impersonate another user.
+- Claim workflow decisions durably before execution, bind them to reviewed content, and reject replay or retry of interrupted approvals.
+
 - Portable PostgreSQL Boolean migration defaults and migration/model index parity, with real PostgreSQL upgrade/downgrade and existing-data checks.
 - Installed cloud-link templates and evidence schemas now ship as importable package resources; CI checks them against canonical sources.
 

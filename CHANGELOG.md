@@ -10,6 +10,7 @@ Python package, Helm chart, and bundled web console.
 - Route remote MCP reads and writes through authenticated APIs, reject incomplete remote configuration and credential-bearing redirects, and support explicitly configured private API destinations.
 
 - Preserve evaluated control verdicts when activity observations are also present, while retaining unknown, observation-only, failure, and stale states. Incremental evaluation refreshes existing verdicts without rewriting historical generations.
+- Accept changed connector records at the same source timestamp when their collection is newer, preventing alert status updates from blocking later syncs. Older redelivery cannot overwrite the newer collection; conflicting ties on both timestamps still fail without changing the store.
 - Keep inventory observations unevaluated, respect configured failure thresholds, and include declared eligible assets without period evidence in workpaper sampling gaps.
 - Retain failed login attempts as observations, preserve GCP IAM conditions, and identify broad/public access grants and open repository alert severity.
 - Reconcile missing HIPAA workstation, media, authentication, policy and documentation identities against eCFR, preserving historical catalog scope and proposed mapping review.

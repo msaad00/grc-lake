@@ -107,7 +107,6 @@ def test_redelivery_updates_collection_time_without_changing_source_content(tmp_
     assert read_jsonl(path)[0]["evidence"]["collected_at"] == recollected["evidence"]["collected_at"]
     conflicting = copy.deepcopy(recollected)
     conflicting["status"] = "failed"
-    conflicting["evidence"]["collected_at"] = "2026-01-03T01:00:00Z"
     before = path.read_bytes()
     with pytest.raises(ValueError, match="conflict"):
         _upsert_raw_events(path, [conflicting], connector_id="one", write_mode="append")

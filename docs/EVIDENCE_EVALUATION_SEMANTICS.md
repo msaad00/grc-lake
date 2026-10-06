@@ -72,3 +72,30 @@ auditor's opinion.
 New evidence timestamps must normalize to UTC years 0002 through 9998, reserving
 boundary years for freshness expiry and grace arithmetic. Validation rejects
 out-of-range timestamps before normalization or pipeline writes.
+
+## Collection and version boundaries
+
+Inventory is an observation. AWS CloudTrail's explicit `multi_region=false`
+setting is a finding; the presence of a resource is not a pass. Runtime gateway
+blocked/denied/rejected events retain their original status in attributes and
+count as observations of enforcement. Okta factor-read errors remain unknown;
+a security question alone does not establish independent-factor enrollment.
+Pagination exhaustion fails collection rather than silently returning a complete
+result. These contracts are fixture-tested; they do not qualify a live provider.
+
+A bronze pointer always preserves lineage. `evidence_available` separately records
+whether source evidence was supplied, so a missing-evidence rule can fail even
+when the raw record remains inspectable. Framework risk scores use the same
+per-control aggregate regardless of the detail cap.
+
+Connectors can declare `options.safeguard_bindings`, an object mapping an exact
+event type to a list of safeguard IDs. Bindings must match the safeguard's asset
+types. For example, an operator may explicitly bind `iam.access_review` to
+`SG-IDENTITY-001`. Framework tags alone never create safeguard assertions. Review
+this configuration against the source contract; it is not automatic assurance.
+
+Mapping decisions pin the control and mapping definitions. Changes require a new
+organization review. Shipped mappings carry their control version, retaining
+historical versions where the catalog records them; mismatched versions become
+proposed. The `fedramp-moderate` compatibility ID labels the NIST SP 800-53B
+Moderate baseline only, without the FedRAMP overlay or an authorization claim.

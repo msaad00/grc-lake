@@ -310,7 +310,7 @@ def build_assessment_results(
                 pinned = lake
             if pinned is not None:
                 verify_generation(pinned)
-            elif read_jsonl(lake / "gold/control_posture.jsonl", missing_ok=True, base_dir=lake):
+            else:
                 raise ValueError("live assessment export requires a verified generation; run the pipeline first")
         controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True, base_dir=lake)
         # The live case only needs evaluated_at/a version/generation -- not a

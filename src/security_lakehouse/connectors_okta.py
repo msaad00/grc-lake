@@ -124,6 +124,8 @@ class OktaClient:
                 raise ValueError(f"Okta returned non-list JSON for {next_url}")
             items.extend(item for item in payload if isinstance(item, dict))
             next_url = _next_link(link_header)
+        if next_url:
+            raise ValueError("Okta collection incomplete: pagination limit reached")
         return items
 
 
@@ -249,17 +251,23 @@ def _mfa_event(
     org: str,
     user_id: str,
     user: dict[str, Any],
-    factors: list[dict[str, Any]],
+    factors: list[dict[str, Any]] | None,
     collected_at: datetime,
     tenant_id: str,
 ) -> dict[str, Any]:
-    active_factors = [f for f in factors if str(f.get("status") or "").upper() in ENROLLED_FACTOR_STATUSES]
+    active_factors = [
+        f
+        for f in (factors or [])
+        if str(f.get("status") or "").upper() in ENROLLED_FACTOR_STATUSES
+        and f.get("factorType")
+        in {"sms", "call", "push", "token", "token:software:totp", "token:hardware", "webauthn", "u2f", "signed_nonce"}
+    ]
     enrolled = bool(active_factors)
     factor_types = sorted({str(f.get("factorType")) for f in active_factors if f.get("factorType")})
     lifecycle = str(user.get("status") or "UNKNOWN").upper()
     can_authenticate = lifecycle in ACTIVE_USER_STATUSES
     # An active account with no usable MFA factor is the finding worth raising.
-    needs_mfa = can_authenticate and not enrolled
+    needs_mfa = can_authenticate and factors is not None and not enrolled
     evidence_ref = f"{org_url}/api/v1/users/{user_id}/factors"
     return _event(
         org=org,
@@ -271,12 +279,13 @@ def _mfa_event(
         asset_id=f"okta:user:{user_id}",
         asset_type="identity_account",
         controls=MFA_CONTROLS,
-        status="open" if needs_mfa else "pass",
+        status="not_evaluated" if factors is None else ("open" if needs_mfa else "pass"),
         severity="high" if needs_mfa else "info",
         evidence_ref=evidence_ref,
         attributes={
             "user_id": user_id,
-            "mfa_enrolled": enrolled,
+            "mfa_enrolled": enrolled if factors is not None else None,
+            "factor_read_complete": factors is not None,
             "active_factor_count": len(active_factors),
             "factor_types": factor_types,
             "lifecycle_status": lifecycle,
@@ -365,13 +374,12 @@ def _event(
     }
 
 
-def _safe_factors(client: OktaClient | OktaFixtureClient, user_id: str) -> list[dict[str, Any]]:
+def _safe_factors(client: OktaClient | OktaFixtureClient, user_id: str) -> list[dict[str, Any]] | None:
     try:
         return client.factors(user_id)
     except urllib.error.HTTPError:
-        # A factor read that the token cannot authorize must not abort the run;
-        # the MFA event records an unknown-enrollment signal instead.
-        return []
+        # Permission/provider failures establish neither enrollment nor absence.
+        return None
 
 
 def _org_slug(org_url: str) -> str:

@@ -108,8 +108,9 @@ class ClickHouseClient:
             last_time = str(page[-1].get("event_time") or "")
             last_id = str(page[-1].get("event_id") or "")
             if not last_time or not last_id:
-                # Cannot form a safe cursor — stop rather than risk a loop or dupes.
-                break
+                raise ValueError("ClickHouse collection incomplete: missing pagination cursor")
+        else:
+            raise ValueError("ClickHouse collection incomplete: pagination limit reached")
         return rows
 
     def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:

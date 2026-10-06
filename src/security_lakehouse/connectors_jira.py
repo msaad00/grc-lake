@@ -105,8 +105,14 @@ class JiraClient:
             out.extend(item for item in issues if isinstance(item, dict))
             total = payload.get("total")
             start += len(issues)
-            if not issues or not isinstance(total, int) or start >= total:
+            if not isinstance(total, int) or isinstance(total, bool) or total < 0:
+                raise ValueError("Jira collection incomplete: missing pagination total")
+            if start >= total:
                 break
+            if not issues:
+                raise ValueError("Jira collection incomplete: premature empty page")
+        else:
+            raise ValueError("Jira collection incomplete: pagination limit reached")
         return out
 
     def projects(self) -> list[dict[str, Any]]:
@@ -121,11 +127,13 @@ class JiraClient:
                 raise ValueError("Jira returned no project values for the project search")
             out.extend(item for item in values if isinstance(item, dict))
             start += len(values)
-            if not values or payload.get("isLast") is True:
-                break
             total = payload.get("total")
-            if isinstance(total, int) and start >= total:
+            if payload.get("isLast") is True or (isinstance(total, int) and start >= total):
                 break
+            if not values:
+                raise ValueError("Jira collection incomplete: premature empty page")
+        else:
+            raise ValueError("Jira collection incomplete: pagination limit reached")
         return out
 
     def _json(self, url: str) -> dict[str, Any]:

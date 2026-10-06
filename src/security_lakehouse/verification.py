@@ -133,12 +133,52 @@ def verify_lake_integrity(lake_dir: str | Path) -> dict[str, Any]:
             "evidence_set_sha256": None,
         }
     manifest = read_json(manifest_path)
+    expected_fields = {
+        "schema_version",
+        "generated_at",
+        "counts",
+        "hash_linkage",
+        "idempotency",
+        "artifacts",
+        "manifest_sha256",
+    }
+    if (
+        not isinstance(manifest, dict)
+        or set(manifest) != expected_fields
+        or manifest.get("schema_version") != "trustops.evidence_integrity.v1"
+    ):
+        return {
+            "ok": False,
+            "issues": ["invalid evidence integrity manifest fields"],
+            "manifest_sha256": None,
+            "evidence_set_sha256": None,
+        }
+    artifact_names = {
+        "bronze_raw_events",
+        "silver_normalized_events",
+        "gold_control_posture",
+        "gold_control_tests",
+        "gold_evidence_freshness",
+        "gold_asset_risk",
+        "gold_metrics",
+        "gold_dashboard_data",
+    }
+    if not isinstance(manifest.get("artifacts"), dict) or set(manifest["artifacts"]) != artifact_names:
+        return {
+            "ok": False,
+            "issues": ["incomplete evidence integrity artifacts"],
+            "manifest_sha256": None,
+            "evidence_set_sha256": None,
+        }
     manifest_hash = manifest.get("manifest_sha256")
     recomputed_manifest_hash = _canonical_sha256({k: v for k, v in manifest.items() if k != "manifest_sha256"})
     if manifest_hash != recomputed_manifest_hash:
         issues.append("evidence_integrity manifest hash does not match content")
 
     for name, artifact in (manifest.get("artifacts") or {}).items():
+        if not isinstance(artifact, dict) or set(artifact) != {"path", "sha256", "bytes"}:
+            issues.append("invalid integrity artifact fields")
+            continue
         path = Path(str(artifact.get("path") or ""))
         relative = "/".join(path.parts[-2:])
         if relative not in ARTIFACTS:
@@ -172,6 +212,13 @@ def verify_lake_integrity(lake_dir: str | Path) -> dict[str, Any]:
         issues.append(f"silver rows reference missing bronze hashes: {', '.join(missing[:5])}")
 
     event_ids = [str(row.get("event_id") or "") for row in silver_rows]
+    if manifest.get("counts") != {
+        "raw": len(bronze_rows),
+        "bronze": len(bronze_rows),
+        "silver": len(silver_rows),
+        "unique_event_ids": len(set(event_ids)),
+    }:
+        issues.append("integrity manifest counts do not match evidence")
     duplicate_event_ids = sorted(event_id for event_id, count in Counter(event_ids).items() if event_id and count > 1)
     if duplicate_event_ids:
         issues.append(f"duplicate event_ids: {', '.join(duplicate_event_ids[:10])}")

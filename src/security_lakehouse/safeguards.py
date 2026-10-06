@@ -137,6 +137,11 @@ def load_safeguards(path: str | Path | None = None) -> JsonObject:
     payload = json.loads(Path(path or DEFAULT_SAFEGUARDS).read_text(encoding="utf-8"))
     if not isinstance(payload, dict) or not isinstance(payload.get("safeguards"), list):
         raise ValueError("safeguards file must contain a `safeguards` list")
+    catalog = load_control_catalog()
+    for entry in payload["safeguards"]:
+        for member in entry.get("satisfies", []):
+            if "control_version" in member:
+                member["current_control_version"] = catalog.get(member["control_id"], {}).get("version", "1.0.0")
     return payload
 
 
@@ -224,7 +229,10 @@ def effective_review_state(member: JsonObject, decision: str | None = None) -> s
         return "rejected"
     if decision == "needs_changes":
         return "needs_changes"
-    if member.get("review_status", "reviewed") == "reviewed":
+    version_matches = member.get("control_version") == member.get(
+        "current_control_version", member.get("control_version")
+    )
+    if member.get("review_status", "reviewed") == "reviewed" and version_matches:
         return "maintainer_reviewed"
     if decision == "approve":
         return "org_reviewed"

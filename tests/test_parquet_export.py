@@ -67,22 +67,25 @@ def test_empty_generation_has_queryable_schema(tmp_path):
     assert result["row_count"] == 0
 
 
-@pytest.mark.parametrize("wrong_scope", ["request", "row"])
-def test_tenant_mismatch_does_not_publish(lake, tmp_path, wrong_scope):
-    if wrong_scope == "request":
-        tenant = "other-tenant"
-    else:
-        rows = read_jsonl(RAW)
-        rows[-1]["tenant_id"] = "other-tenant"
-        raw = tmp_path / "mixed.jsonl"
-        write_jsonl(raw, rows)
-        pipeline.run_pipeline(raw, lake, tenant_id=TENANT)
-        tenant = TENANT
+def test_tenant_mismatch_does_not_publish(lake, tmp_path):
     out = tmp_path / "export"
     with pytest.raises(ValueError, match="tenant"):
-        parquet_export.export_parquet(lake, out, tenant_id=tenant, batch_size=1)
+        parquet_export.export_parquet(lake, out, tenant_id="other-tenant", batch_size=1)
     assert not out.exists()
     assert not list(tmp_path.glob(".parquet-*"))
+
+
+def test_owned_generation_preserves_distinct_source_account_ids(lake, tmp_path):
+    rows = read_jsonl(RAW)
+    rows[-1]["tenant_id"] = "source-account-two"
+    raw = tmp_path / "mixed.jsonl"
+    write_jsonl(raw, rows)
+    pipeline.run_pipeline(raw, lake, tenant_id=TENANT)
+    out = tmp_path / "export"
+    export(lake, out)
+    landed = pq.read_table(out / "evidence.parquet").to_pylist()
+    assert {row["tenant_id"] for row in landed} == {row["tenant_id"] for row in rows}
+    assert pq.read_schema(out / "evidence.parquet").metadata[b"trustops.tenant_id"] == TENANT.encode()
 
 
 def test_tampered_generation_is_rejected(lake, tmp_path):
@@ -235,6 +238,7 @@ def test_migrated_legacy_generation_is_rejected(lake, tmp_path):
     marker = active_generation(lake) / "generation.json"
     manifest = json.loads(marker.read_text())
     manifest["legacy"] = True
+    manifest["ccf_projection_version"] = None
     marker.write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="legacy"):
         export(lake, tmp_path / "export")
@@ -259,6 +263,7 @@ def test_legacy_normalized_rows_remain_exportable(tmp_path, monkeypatch, version
 
     def legacy(row, digest):
         result = normalize(row, digest)
+        result.pop("evidence_available")
         if version == "v1":
             result.pop("safeguard_ids")
         return result

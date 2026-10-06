@@ -35,7 +35,7 @@ def load_control_map(path: str | Path | None = None) -> dict[str, dict[str, Any]
 
 def expand_controls(control_ids: list[str], control_map: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     expanded: list[dict[str, Any]] = []
-    for control_id in control_ids:
+    for control_id in dict.fromkeys(control_ids):
         control = control_map.get(control_id)
         if control is None:
             expanded.append(

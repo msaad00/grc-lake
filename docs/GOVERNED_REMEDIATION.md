@@ -64,3 +64,10 @@ rerunning the command completes recovery. Every configured target waits a full
 schedule interval after recovery because the interrupted attempt's execution
 cannot be inferred from a torn record. Review the archived tail before retrying
 any external action manually.
+
+Reopening retains previous receipts but requires a new generation with evidence
+observed after the task's latest update. Partial source collection blocks a
+retest. Publishing a failing control assessment reopens resolved tasks owned by
+that generation's platform tenant when the application database is available.
+Fixture generations can be assigned with `fixtures load --tenant-id <platform-tenant-id>`;
+source account IDs remain distinct from platform ownership.

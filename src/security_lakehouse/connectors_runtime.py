@@ -325,7 +325,7 @@ def _raw_from_event(
             "org": SOURCE,
         },
         "severity": severity,
-        "status": status,
+        "status": "observed" if status in BLOCKED_STATUSES else status,
         "controls": controls or list(DEFAULT_CONTROLS),
         "evidence": {
             "evidence_id": str(event.get("evidence_id") or f"ev-runtime-{event_id}"),
@@ -333,6 +333,7 @@ def _raw_from_event(
             "evidence_collected_at": utc_iso(collected_at),
         },
         "attributes": {
+            "source_status": status,
             "tool": event.get("tool"),
             "policy": event.get("policy"),
             "reason": event.get("reason"),

@@ -6,7 +6,7 @@ import {
 } from "@playwright/test";
 
 const CONTROL_ID = "SOC2-CC6.4";
-const CONTROL_TITLE = "Access is removed or adjusted on role change";
+const CONTROL_TITLE = "Physical access is limited to authorized personnel";
 
 async function findingFor(request: APIRequestContext, controlId: string) {
   const rows = (await (await request.get("/api/v1/violations")).json()).data;
@@ -65,7 +65,7 @@ test("finding drawer says what is wrong and how to fix it", async ({
   ).toBeVisible();
 });
 
-test("finding task stays open when a note has no fresh passing retest", async ({
+test("finding task stays open without an independent human SSO reviewer", async ({
   page,
   request,
 }) => {
@@ -138,7 +138,7 @@ test("finding task stays open when a note has no fresh passing retest", async ({
       r.request().method() === "POST",
   );
   await modal.getByRole("button", { name: "Verify and resolve" }).click();
-  expect((await verified).status()).toBe(400);
+  expect((await verified).status()).toBe(403);
   await expect(modal).toContainText("Unable to resolve task");
   await expect(
     modal.getByRole("textbox", { name: /Evidence link or note/ }),

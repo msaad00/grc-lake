@@ -793,7 +793,6 @@ def _framework_scores(
             high = sum(SEVERITY_SCORE["high"] <= score < SEVERITY_SCORE["critical"] for score in scores)
         else:
             detail = [v for row in members for v in violations_by_control.get(row["control_id"], [])]
-            scores = [min(int(row["severity_score"]), 100) for row in detail]
             count = len(detail)
             critical = sum(row["severity"] == "critical" for row in detail)
             high = sum(row["severity"] == "high" for row in detail)

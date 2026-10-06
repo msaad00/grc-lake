@@ -1,6 +1,6 @@
 # Dependency security scope
 
-Reviewed 2026-10-03. Dependency advisories change; rerun both production and full
+Reviewed 2026-10-06. Dependency advisories change; rerun both production and full
 build-tool audits when reviewing or upgrading the lockfiles.
 
 ```bash
@@ -10,6 +10,19 @@ cd app/web
 npm audit --omit=dev --audit-level=high
 npm audit
 ```
+
+## Patched selector parser
+
+[GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf)
+(CVE-2026-104844) affects `postcss-selector-parser <7.1.6`: flat selector input can
+cause quadratic CPU usage. Scoped npm overrides pin the copies used by Tailwind 3
+and `postcss-nested` to patched version `7.1.6`. This removes the two affected
+moderate dependency nodes without changing the Tailwind major version.
+
+The console's static build produces byte-for-byte identical CSS before and after
+the override. Keep lint, typechecking, static builds, and browser regressions in
+the validation path. Remove the overrides once both upstream dependency ranges
+resolve to a patched parser without them, and regenerate the lockfile.
 
 ## Open build-tool advisory
 

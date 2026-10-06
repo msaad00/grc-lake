@@ -40,7 +40,7 @@ test.describe("mapping review", () => {
     ).toBeVisible();
   });
 
-  test("approves a pending mapping with a rationale and records it in history", async ({
+  test("insecure console cannot approve a pending mapping", async ({
     page,
   }) => {
     const table = await openQueue(page);
@@ -64,32 +64,17 @@ test.describe("mapping review", () => {
     await decision.getByLabel("Rationale").fill(rationale);
     await approve.click();
 
-    await expect(page.getByText("Recorded 1 decision")).toBeVisible();
+    // This browser suite uses the explicitly unauthenticated demo server.
+    // Successful authenticated review is covered by test_mapping_review_api.py.
+    await expect(
+      page.getByText(
+        /mapping review decisions require a signed-in console session/,
+      ),
+    ).toBeVisible();
+    await expect(page.getByText("Recorded 1 decision")).toHaveCount(0);
     await expect(
       table.locator(`tr[data-mapping="${safeguardId}|${controlId}"]`),
-    ).toHaveCount(0);
-
-    await page
-      .getByRole("combobox", { name: "Filter by review status" })
-      .selectOption("org_reviewed");
-    await page
-      .getByRole("searchbox", { name: "Search mappings" })
-      .fill(controlId);
-    const reviewedRow = table.locator(
-      `tr[data-mapping="${safeguardId}|${controlId}"]`,
-    );
-    await expect(reviewedRow).toBeVisible();
-    await expect(reviewedRow.getByText("org-reviewed")).toBeVisible();
-
-    await reviewedRow
-      .getByRole("button", { name: `History for ${safeguardId} ${controlId}` })
-      .click();
-    const drawer = page.getByRole("dialog");
-    await expect(drawer).toBeVisible();
-    await expect(drawer.getByText(rationale)).toBeVisible();
-    await expect(drawer.getByText("insecure@localhost").first()).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(drawer).toHaveCount(0);
+    ).toBeVisible();
   });
 
   test("works at 390px without horizontal page scroll", async ({ page }) => {

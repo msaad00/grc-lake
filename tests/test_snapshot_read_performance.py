@@ -191,6 +191,19 @@ def test_unterminated_escaped_string_is_rejected(suffix):
         strict_json.loads(raw)
 
 
+def test_repeated_escape_pattern_is_rejected():
+    # Pattern reported by CodeQL for the former string-token expression.
+    raw = '"\\a' + '\\\\"\\a' * 100_000
+    with pytest.raises(strict_json.InvalidJSON):
+        strict_json.loads(raw)
+
+
+def test_long_escaped_string_does_not_count_as_structure():
+    value = {"nested": ['\\"[]{}' * 100_000, {"after": "the string"}]}
+    decoded = strict_json.loads(json.dumps(value))
+    assert decoded == value
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [("evaluated_at", "2026-01-02T00:00:00+00:00"), ("prev_hash", "a" * 64), ("assessment_hash", "b" * 64)],

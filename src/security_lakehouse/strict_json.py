@@ -11,10 +11,10 @@ import re
 from typing import Any
 
 MAX_DEPTH = 64
-# Scan whole string tokens in C so brackets inside escaped JSON strings never
-# count as structure. The lone-quote alternative stops at an unterminated
-# string instead of repeatedly scanning its suffix from each escaped quote.
-_STRUCTURE = re.compile(r'"[^"\\]*(?:\\.[^"\\]*)*"|["\[\]{}]')
+# Search only for structural characters; let the JSON decoder scan strings
+# without a backtracking expression over untrusted input.
+_STRUCTURE = re.compile(r'["\[\]{}]')
+_STRING_DECODER = json.JSONDecoder()
 
 
 class InvalidJSON(json.JSONDecodeError):
@@ -70,12 +70,15 @@ def loads(raw: str | bytes) -> Any:
     """Decode strict UTF-8 JSON with duplicate-key and bounded-depth checks."""
     try:
         text = raw.decode("utf-8-sig") if isinstance(raw, bytes) else raw.removeprefix("\ufeff")
-        depth = 0
-        for match in _STRUCTURE.finditer(text):
+        depth = position = 0
+        while (match := _STRUCTURE.search(text, position)) is not None:
             char = text[match.start()]
-            if char == '"' and match.end() == match.start() + 1:
-                raise InvalidJSON("unterminated JSON string")
-            if char in "[{":
+            position = match.end()
+            if char == '"':
+                # Invoke the decoder only at quotes, never at a container that
+                # has not yet passed the depth guard.
+                _, position = _STRING_DECODER.raw_decode(text, match.start())
+            elif char in "[{":
                 depth += 1
                 if depth > MAX_DEPTH:
                     raise InvalidJSON("JSON nesting exceeds 64 levels")

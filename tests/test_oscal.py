@@ -327,9 +327,13 @@ def test_build_assessment_results_validates_against_oscal_schema(tmp_path: Path)
     Draft7Validator(_ASSESSMENT_RESULTS_SCHEMA).validate(doc)
 
 
-def test_build_assessment_results_empty_lake_still_validates(tmp_path: Path) -> None:
+def test_build_assessment_results_verified_empty_generation_still_validates(tmp_path: Path) -> None:
+    from security_lakehouse.pipeline import run_pipeline
+
     lake = tmp_path / "lake"
-    lake.mkdir(parents=True)
+    raw = tmp_path / "empty.jsonl"
+    raw.write_text("")
+    run_pipeline(raw, lake)
     doc = build_assessment_results(lake)
     assert "findings" not in doc["assessment-results"]["results"][0]
     assert "observations" not in doc["assessment-results"]["results"][0]

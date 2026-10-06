@@ -10,9 +10,9 @@
     {
       "control_id": "CIS-AWS-1.10",
       "framework": "CIS AWS Foundations Benchmark",
-      "title": "Ensure multi-factor authentication (MFA) is enabled for all IAM users that have a console password",
+      "title": "MFA is enabled for all IAM users with a console password",
       "risk_domain": "identity",
-      "owner": "security-platform"
+      "owner": "cloud-security"
     },
     {
       "control_id": "CIS-AWS-1.11",
@@ -38,9 +38,9 @@
     {
       "control_id": "CIS-AWS-1.14",
       "framework": "CIS AWS Foundations Benchmark",
-      "title": "Ensure access keys are rotated every 90 days or less",
+      "title": "Access keys are rotated every 90 days or less",
       "risk_domain": "identity",
-      "owner": "security-platform"
+      "owner": "cloud-security"
     },
     {
       "control_id": "CIS-AWS-1.15",
@@ -143,9 +143,9 @@
     {
       "control_id": "CIS-AWS-1.8",
       "framework": "CIS AWS Foundations Benchmark",
-      "title": "Ensure IAM password policy requires minimum length of 14 or greater",
+      "title": "IAM password policy requires a minimum length of 14 or greater",
       "risk_domain": "identity",
-      "owner": "security-platform"
+      "owner": "cloud-security"
     },
     {
       "control_id": "CIS-AWS-1.9",
@@ -563,14 +563,14 @@
     {
       "control_id": "CMMC-3.1.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.1.1 \u2014 Limit system access to authorized users, processes acting on behalf of authorized users, and devices (in",
+      "title": "CMMC L2 3.1.1 \u2014 Limit system access to authorized users, processes acting on behalf of authorized users, and devices (including other systems)",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.1.10",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.1.10 \u2014 Use session lock with pattern-hiding displays to prevent access and viewing of data after a period of i",
+      "title": "CMMC L2 3.1.10 \u2014 Use session lock with pattern-hiding displays to prevent access and viewing of data after a period of inactivity",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
@@ -640,7 +640,7 @@
     {
       "control_id": "CMMC-3.1.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.1.2 \u2014 Limit system access to the types of transactions and functions that authorized users are permitted to ex",
+      "title": "CMMC L2 3.1.2 \u2014 Limit system access to the types of transactions and functions that authorized users are permitted to execute",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
@@ -682,7 +682,7 @@
     {
       "control_id": "CMMC-3.1.5",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.1.5 \u2014 Employ the principle of least privilege, including for specific security functions and privileged accoun",
+      "title": "CMMC L2 3.1.5 \u2014 Employ the principle of least privilege, including for specific security functions and privileged accounts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
@@ -696,7 +696,7 @@
     {
       "control_id": "CMMC-3.1.7",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.1.7 \u2014 Prevent non-privileged users from executing privileged functions and capture the execution of such funct",
+      "title": "CMMC L2 3.1.7 \u2014 Prevent non-privileged users from executing privileged functions and capture the execution of such functions in audit logs",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
@@ -717,7 +717,7 @@
     {
       "control_id": "CMMC-3.10.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.10.1 \u2014 Limit physical access to organizational systems, equipment, and the respective operating environments t",
+      "title": "CMMC L2 3.10.1 \u2014 Limit physical access to organizational systems, equipment, and the respective operating environments to authorized individuals",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
@@ -759,14 +759,14 @@
     {
       "control_id": "CMMC-3.11.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.11.1 \u2014 Periodically assess the risk to organizational operations (including mission, functions, image, or repu",
+      "title": "CMMC L2 3.11.1 \u2014 Periodically assess the risk to organizational operations (including mission, functions, image, or reputation), organizational assets, and individuals, resul...",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "CMMC-3.11.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.11.2 \u2014 Scan for vulnerabilities in organizational systems and applications periodically and when new vulnerabi",
+      "title": "CMMC L2 3.11.2 \u2014 Scan for vulnerabilities in organizational systems and applications periodically and when new vulnerabilities affecting those systems and applications are id...",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
@@ -780,14 +780,14 @@
     {
       "control_id": "CMMC-3.12.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.12.1 \u2014 Periodically assess the security controls in organizational systems to determine if the controls are ef",
+      "title": "CMMC L2 3.12.1 \u2014 Periodically assess the security controls in organizational systems to determine if the controls are effective in their application",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "CMMC-3.12.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.12.2 \u2014 Develop and implement plans of action designed to correct deficiencies and reduce or eliminate vulnerab",
+      "title": "CMMC L2 3.12.2 \u2014 Develop and implement plans of action designed to correct deficiencies and reduce or eliminate vulnerabilities in organizational systems",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
@@ -801,14 +801,14 @@
     {
       "control_id": "CMMC-3.12.4",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.12.4 \u2014 Develop, document, and periodically update system security plans that describe system boundaries, syste",
+      "title": "CMMC L2 3.12.4 \u2014 Develop, document, and periodically update system security plans that describe system boundaries, system environments of operation, how security requirements...",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "CMMC-3.13.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.1 \u2014 Monitor, control, and protect communications (i.e., information transmitted or received by organization",
+      "title": "CMMC L2 3.13.1 \u2014 Monitor, control, and protect communications (i.e., information transmitted or received by organizational systems) at the external boundaries and key interna...",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -829,7 +829,7 @@
     {
       "control_id": "CMMC-3.13.12",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.12 \u2014 Prohibit remote activation of collaborative computing devices and provide indication of devices in use",
+      "title": "CMMC L2 3.13.12 \u2014 Prohibit remote activation of collaborative computing devices and provide indication of devices in use to users present at the device",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -864,7 +864,7 @@
     {
       "control_id": "CMMC-3.13.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.2 \u2014 Employ architectural designs, software development techniques, and systems engineering principles that ",
+      "title": "CMMC L2 3.13.2 \u2014 Employ architectural designs, software development techniques, and systems engineering principles that promote effective information security within organiza...",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -885,35 +885,35 @@
     {
       "control_id": "CMMC-3.13.5",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.5 \u2014 Implement subnetworks for publicly accessible system components that are physically or logically separa",
+      "title": "CMMC L2 3.13.5 \u2014 Implement subnetworks for publicly accessible system components that are physically or logically separated from internal networks",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.13.6",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.6 \u2014 Deny network communications traffic by default and allow network communications traffic by exception (i",
+      "title": "CMMC L2 3.13.6 \u2014 Deny network communications traffic by default and allow network communications traffic by exception (i.e., deny all, permit by exception)",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.13.7",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.7 \u2014 Prevent remote devices from simultaneously establishing non-remote connections with organizational syst",
+      "title": "CMMC L2 3.13.7 \u2014 Prevent remote devices from simultaneously establishing non-remote connections with organizational systems and communicating via some other connection to res...",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.13.8",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.8 \u2014 Implement cryptographic mechanisms to prevent unauthorized disclosure of CUI during transmission unless",
+      "title": "CMMC L2 3.13.8 \u2014 Implement cryptographic mechanisms to prevent unauthorized disclosure of CUI during transmission unless otherwise protected by alternative physical safeguards",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.13.9",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.13.9 \u2014 Terminate network connections associated with communications sessions at the end of the sessions or aft",
+      "title": "CMMC L2 3.13.9 \u2014 Terminate network connections associated with communications sessions at the end of the sessions or after a defined period of inactivity",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -948,14 +948,14 @@
     {
       "control_id": "CMMC-3.14.5",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.14.5 \u2014 Perform periodic scans of organizational systems and real-time scans of files from external sources as ",
+      "title": "CMMC L2 3.14.5 \u2014 Perform periodic scans of organizational systems and real-time scans of files from external sources as files are downloaded, opened, or executed",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "CMMC-3.14.6",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.14.6 \u2014 Monitor organizational systems, including inbound and outbound communications traffic, to detect attack",
+      "title": "CMMC L2 3.14.6 \u2014 Monitor organizational systems, including inbound and outbound communications traffic, to detect attacks and indicators of potential attacks",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
@@ -969,14 +969,14 @@
     {
       "control_id": "CMMC-3.2.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.2.1 \u2014 Ensure that managers, systems administrators, and users of organizational systems are made aware of the ",
+      "title": "CMMC L2 3.2.1 \u2014 Ensure that managers, systems administrators, and users of organizational systems are made aware of the security risks associated with their activities and o...",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "CMMC-3.2.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.2.2 \u2014 Ensure that personnel are trained to carry out their assigned information security- related duties and r",
+      "title": "CMMC L2 3.2.2 \u2014 Ensure that personnel are trained to carry out their assigned information security- related duties and responsibilities",
       "risk_domain": "governance",
       "owner": "grc"
     },
@@ -990,14 +990,14 @@
     {
       "control_id": "CMMC-3.3.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.3.1 \u2014 Create and retain system audit logs and records to the extent needed to enable the monitoring, analysis,",
+      "title": "CMMC L2 3.3.1 \u2014 Create and retain system audit logs and records to the extent needed to enable the monitoring, analysis, investigation, and reporting of unlawful or unauthor...",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "CMMC-3.3.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.3.2 \u2014 Ensure that the actions of individual system users can be uniquely traced to those users so they can be ",
+      "title": "CMMC L2 3.3.2 \u2014 Ensure that the actions of individual system users can be uniquely traced to those users so they can be held accountable for their actions",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
@@ -1018,7 +1018,7 @@
     {
       "control_id": "CMMC-3.3.5",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.3.5 \u2014 Correlate audit record review, analysis, and reporting processes for investigation and response to indic",
+      "title": "CMMC L2 3.3.5 \u2014 Correlate audit record review, analysis, and reporting processes for investigation and response to indications of unlawful, unauthorized, suspicious, or unus...",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
@@ -1032,7 +1032,7 @@
     {
       "control_id": "CMMC-3.3.7",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.3.7 \u2014 Provide a system capability that compares and synchronizes internal system clocks with an authoritative ",
+      "title": "CMMC L2 3.3.7 \u2014 Provide a system capability that compares and synchronizes internal system clocks with an authoritative source to generate time stamps for audit records",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
@@ -1053,14 +1053,14 @@
     {
       "control_id": "CMMC-3.4.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.4.1 \u2014 Establish and maintain baseline configurations and inventories of organizational systems (including hard",
+      "title": "CMMC L2 3.4.1 \u2014 Establish and maintain baseline configurations and inventories of organizational systems (including hardware, software, firmware, and documentation) througho...",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.4.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.4.2 \u2014 Establish and enforce security configuration settings for information technology products employed in or",
+      "title": "CMMC L2 3.4.2 \u2014 Establish and enforce security configuration settings for information technology products employed in organizational systems",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -1081,28 +1081,28 @@
     {
       "control_id": "CMMC-3.4.5",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.4.5 \u2014 Define, document, approve, and enforce physical and logical access restrictions associated with changes ",
+      "title": "CMMC L2 3.4.5 \u2014 Define, document, approve, and enforce physical and logical access restrictions associated with changes to organizational systems",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.4.6",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.4.6 \u2014 Employ the principle of least functionality by configuring organizational systems to provide only essent",
+      "title": "CMMC L2 3.4.6 \u2014 Employ the principle of least functionality by configuring organizational systems to provide only essential capabilities",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.4.7",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.4.7 \u2014 Restrict, disable, or prevent the use of nonessential programs, functions, ports, protocols, and service",
+      "title": "CMMC L2 3.4.7 \u2014 Restrict, disable, or prevent the use of nonessential programs, functions, ports, protocols, and services",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.4.8",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.4.8 \u2014 Apply deny-by-exception (blacklisting) policy to prevent the use of unauthorized software or deny-all, p",
+      "title": "CMMC L2 3.4.8 \u2014 Apply deny-by-exception (blacklisting) policy to prevent the use of unauthorized software or deny-all, permit-by-exception (whitelisting) policy to allow the...",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -1137,21 +1137,21 @@
     {
       "control_id": "CMMC-3.5.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.5.2 \u2014 Authenticate (or verify) the identities of users, processes, or devices, as a prerequisite to allowing a",
+      "title": "CMMC L2 3.5.2 \u2014 Authenticate (or verify) the identities of users, processes, or devices, as a prerequisite to allowing access to organizational systems",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.5.3",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.5.3 \u2014 Use multifactor authentication (MFA) for local and network access to privileged accounts and for network",
+      "title": "CMMC L2 3.5.3 \u2014 Use multifactor authentication (MFA) for local and network access to privileged accounts and for network access to non- privileged accounts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.5.4",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.5.4 \u2014 Employ replay-resistant authentication mechanisms for network access to privileged and non-privileged ac",
+      "title": "CMMC L2 3.5.4 \u2014 Employ replay-resistant authentication mechanisms for network access to privileged and non-privileged accounts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
@@ -1193,14 +1193,14 @@
     {
       "control_id": "CMMC-3.6.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.6.1 \u2014 Establish an operational incident-handling capability for organizational systems that includes preparati",
+      "title": "CMMC L2 3.6.1 \u2014 Establish an operational incident-handling capability for organizational systems that includes preparation, detection, analysis, containment, recovery, and u...",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "CMMC-3.6.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.6.2 \u2014 Track, document, and report incidents to designated officials and/or authorities both internal and exter",
+      "title": "CMMC L2 3.6.2 \u2014 Track, document, and report incidents to designated officials and/or authorities both internal and external to the organization",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
@@ -1235,14 +1235,14 @@
     {
       "control_id": "CMMC-3.7.4",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.7.4 \u2014 Check media containing diagnostic and test programs for malicious code before the media are used in orga",
+      "title": "CMMC L2 3.7.4 \u2014 Check media containing diagnostic and test programs for malicious code before the media are used in organizational systems",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "CMMC-3.7.5",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.7.5 \u2014 Require multifactor authentication to establish nonlocal maintenance sessions via external network conne",
+      "title": "CMMC L2 3.7.5 \u2014 Require multifactor authentication to establish nonlocal maintenance sessions via external network connections and terminate such connections when nonlocal m...",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
@@ -1256,7 +1256,7 @@
     {
       "control_id": "CMMC-3.8.1",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.8.1 \u2014 Protect (i.e., physically control and securely store) system media containing CUI, both paper and digita",
+      "title": "CMMC L2 3.8.1 \u2014 Protect (i.e., physically control and securely store) system media containing CUI, both paper and digital",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -1284,14 +1284,14 @@
     {
       "control_id": "CMMC-3.8.5",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.8.5 \u2014 Control access to media containing CUI and maintain accountability for media during transport outside of",
+      "title": "CMMC L2 3.8.5 \u2014 Control access to media containing CUI and maintain accountability for media during transport outside of controlled areas",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "CMMC-3.8.6",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.8.6 \u2014 Implement cryptographic mechanisms to protect the confidentiality of CUI stored on digital media during ",
+      "title": "CMMC L2 3.8.6 \u2014 Implement cryptographic mechanisms to protect the confidentiality of CUI stored on digital media during transport unless otherwise protected by alternative p...",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
@@ -1326,7 +1326,7 @@
     {
       "control_id": "CMMC-3.9.2",
       "framework": "CMMC 2.0 Level 2",
-      "title": "CMMC L2 3.9.2 \u2014 Ensure that organizational systems containing CUI are protected during and after personnel actions such ",
+      "title": "CMMC L2 3.9.2 \u2014 Ensure that organizational systems containing CUI are protected during and after personnel actions such as terminations and transfers",
       "risk_domain": "governance",
       "owner": "grc"
     },
@@ -2024,10 +2024,45 @@
       "owner": "platform-engineering"
     },
     {
+      "control_id": "EU-AI-ACT-Art.10",
+      "framework": "EU AI Act",
+      "title": "Data governance \u2014 training, validation, and testing datasets are appropriate",
+      "risk_domain": "ai-data-governance",
+      "owner": "ai-security"
+    },
+    {
       "control_id": "EU-AI-ACT-Art.11",
       "framework": "EU AI Act",
       "title": "Technical documentation maintained for high-risk AI",
       "risk_domain": "ai-governance",
+      "owner": "ai-security"
+    },
+    {
+      "control_id": "EU-AI-ACT-Art.12",
+      "framework": "EU AI Act",
+      "title": "Automatic record-keeping (logs) over the lifetime of high-risk AI systems",
+      "risk_domain": "ai-audit",
+      "owner": "detection-engineering"
+    },
+    {
+      "control_id": "EU-AI-ACT-Art.13",
+      "framework": "EU AI Act",
+      "title": "High-risk AI transparency information is available to deployers",
+      "risk_domain": "ai-transparency",
+      "owner": "ai-security"
+    },
+    {
+      "control_id": "EU-AI-ACT-Art.14",
+      "framework": "EU AI Act",
+      "title": "Human oversight measures are defined and evidenced",
+      "risk_domain": "ai-oversight",
+      "owner": "ai-security"
+    },
+    {
+      "control_id": "EU-AI-ACT-Art.15",
+      "framework": "EU AI Act",
+      "title": "Accuracy, robustness, and cybersecurity are tested for high-risk AI",
+      "risk_domain": "ai-security",
       "owner": "ai-security"
     },
     {
@@ -2094,2011 +2129,2018 @@
       "owner": "ai-security"
     },
     {
+      "control_id": "EU-AI-ACT-Art.9",
+      "framework": "EU AI Act",
+      "title": "Risk management system for high-risk AI is established and maintained",
+      "risk_domain": "ai-governance",
+      "owner": "ai-security"
+    },
+    {
       "control_id": "FEDRAMP-AC-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-1 \u2014 Policy and Procedures",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-11 \u2014 Device Lock",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-11.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-11.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-11.1 \u2014 Pattern-hiding Displays",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-12 \u2014 Session Termination",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-14",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-14 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-14 \u2014 Permitted Actions Without Identification or Authentication",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-17",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-17 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-17 \u2014 Remote Access",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-17.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-17.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-17.1 \u2014 Monitoring and Control",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-17.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-17.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-17.2 \u2014 Protection of Confidentiality and Integrity Using Encryption",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-17.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-17.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-17.3 \u2014 Managed Access Control Points",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-17.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-17.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-17.4 \u2014 Privileged Commands and Access",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-18",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-18 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-18 \u2014 Wireless Access",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-18.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-18.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-18.1 \u2014 Authentication and Encryption",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-18.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-18.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-18.3 \u2014 Disable Wireless Networking",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-19",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-19 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-19 \u2014 Access Control for Mobile Devices",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-19.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-19.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-19.5 \u2014 Full Device or Container-based Encryption",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-2 \u2014 Account Management",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-2.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-2.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-2.1 \u2014 Automated System Account Management",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-2.13",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-2.13 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-2.13 \u2014 Disable Accounts for High-risk Individuals",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-2.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-2.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-2.2 \u2014 Automated Temporary and Emergency Account Management",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-2.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-2.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-2.3 \u2014 Disable Accounts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-2.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-2.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-2.4 \u2014 Automated Audit Actions",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-2.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-2.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-2.5 \u2014 Inactivity Logout",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-20",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-20 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-20 \u2014 Use of External Systems",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-20.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-20.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-20.1 \u2014 Limits on Authorized Use",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-20.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-20.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-20.2 \u2014 Portable Storage Devices \u2014 Restricted Use",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-21",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-21 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-21 \u2014 Information Sharing",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-22",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-22 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-22 \u2014 Publicly Accessible Content",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-3 \u2014 Access Enforcement",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-4 \u2014 Information Flow Enforcement",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-5 \u2014 Separation of Duties",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-6 \u2014 Least Privilege",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-6.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-6.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-6.1 \u2014 Authorize Access to Security Functions",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-6.10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-6.10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-6.10 \u2014 Prohibit Non-privileged Users from Executing Privileged Functions",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-6.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-6.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-6.2 \u2014 Non-privileged Access for Nonsecurity Functions",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-6.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-6.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-6.5 \u2014 Privileged Accounts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-6.7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-6.7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-6.7 \u2014 Review of User Privileges",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-6.9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-6.9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-6.9 \u2014 Log Use of Privileged Functions",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-7 \u2014 Unsuccessful Logon Attempts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AC-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AC-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AC-8 \u2014 System Use Notification",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-AT-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AT-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AT-1 \u2014 Policy and Procedures",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-AT-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AT-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AT-2 \u2014 Literacy Training and Awareness",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-AT-2.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AT-2.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AT-2.2 \u2014 Insider Threat",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-AT-2.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AT-2.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AT-2.3 \u2014 Social Engineering and Mining",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-AT-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AT-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AT-3 \u2014 Role-based Training",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-AT-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AT-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AT-4 \u2014 Training Records",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-AU-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-1 \u2014 Policy and Procedures",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-11 \u2014 Audit Record Retention",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-12 \u2014 Audit Record Generation",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-2 \u2014 Event Logging",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-3 \u2014 Content of Audit Records",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-3.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-3.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-3.1 \u2014 Additional Audit Information",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-4 \u2014 Audit Log Storage Capacity",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-5 \u2014 Response to Audit Logging Process Failures",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-6 \u2014 Audit Record Review, Analysis, and Reporting",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-6.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-6.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-6.1 \u2014 Automated Process Integration",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-6.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-6.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-6.3 \u2014 Correlate Audit Record Repositories",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-7 \u2014 Audit Record Reduction and Report Generation",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-7.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-7.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-7.1 \u2014 Automatic Processing",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-8 \u2014 Time Stamps",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-9 \u2014 Protection of Audit Information",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-AU-9.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate AU-9.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "AU-9.4 \u2014 Access by Subset of Privileged Users",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-CA-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-1 \u2014 Policy and Procedures",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-2 \u2014 Control Assessments",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-2.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-2.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-2.1 \u2014 Independent Assessors",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-3 \u2014 Information Exchange",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-5 \u2014 Plan of Action and Milestones",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-6 \u2014 Authorization",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-7 \u2014 Continuous Monitoring",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-7.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-7.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-7.1 \u2014 Independent Assessment",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-7.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-7.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-7.4 \u2014 Risk Monitoring",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CA-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CA-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CA-9 \u2014 Internal System Connections",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-CM-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-1 \u2014 Policy and Procedures",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-10 \u2014 Software Usage Restrictions",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-11 \u2014 User-installed Software",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-12 \u2014 Information Location",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-12.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-12.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-12.1 \u2014 Automated Tools to Support Information Location",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-2 \u2014 Baseline Configuration",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-2.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-2.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-2.2 \u2014 Automation Support for Accuracy and Currency",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-2.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-2.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-2.3 \u2014 Retention of Previous Configurations",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-2.7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-2.7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-2.7 \u2014 Configure Systems and Components for High-risk Areas",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-3 \u2014 Configuration Change Control",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-3.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-3.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-3.2 \u2014 Testing, Validation, and Documentation of Changes",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-3.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-3.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-3.4 \u2014 Security and Privacy Representatives",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-4 \u2014 Impact Analyses",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-4.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-4.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-4.2 \u2014 Verification of Controls",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-5 \u2014 Access Restrictions for Change",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-6 \u2014 Configuration Settings",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-7 \u2014 Least Functionality",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-7.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-7.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-7.1 \u2014 Periodic Review",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-7.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-7.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-7.2 \u2014 Prevent Program Execution",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-7.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-7.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-7.5 \u2014 Authorized Software \u2014 Allow-by-exception",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-8 \u2014 System Component Inventory",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-8.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-8.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-8.1 \u2014 Updates During Installation and Removal",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-8.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-8.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-8.3 \u2014 Automated Unauthorized Component Detection",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CM-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CM-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CM-9 \u2014 Configuration Management Plan",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-CP-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-1 \u2014 Policy and Procedures",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-10 \u2014 System Recovery and Reconstitution",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-10.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-10.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-10.2 \u2014 Transaction Recovery",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-2 \u2014 Contingency Plan",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-2.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-2.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-2.1 \u2014 Coordinate with Related Plans",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-2.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-2.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-2.3 \u2014 Resume Mission and Business Functions",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-2.8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-2.8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-2.8 \u2014 Identify Critical Assets",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-3 \u2014 Contingency Training",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-4 \u2014 Contingency Plan Testing",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-4.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-4.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-4.1 \u2014 Coordinate with Related Plans",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-6 \u2014 Alternate Storage Site",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-6.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-6.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-6.1 \u2014 Separation from Primary Site",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-6.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-6.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-6.3 \u2014 Accessibility",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-7 \u2014 Alternate Processing Site",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-7.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-7.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-7.1 \u2014 Separation from Primary Site",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-7.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-7.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-7.2 \u2014 Accessibility",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-7.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-7.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-7.3 \u2014 Priority of Service",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-8 \u2014 Telecommunications Services",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-8.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-8.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-8.1 \u2014 Priority of Service Provisions",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-8.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-8.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-8.2 \u2014 Single Points of Failure",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-9 \u2014 System Backup",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-9.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-9.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-9.1 \u2014 Testing for Reliability and Integrity",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-CP-9.8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate CP-9.8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "CP-9.8 \u2014 Cryptographic Protection",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-IA-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-1 \u2014 Policy and Procedures",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-11 \u2014 Re-authentication",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-12 \u2014 Identity Proofing",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-12.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-12.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-12.2 \u2014 Identity Evidence",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-12.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-12.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-12.3 \u2014 Identity Evidence Validation and Verification",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-12.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-12.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-12.5 \u2014 Address Confirmation",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-2 \u2014 Identification and Authentication (Organizational Users)",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-2.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-2.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-2.1 \u2014 Multi-factor Authentication to Privileged Accounts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-2.12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-2.12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-2.12 \u2014 Acceptance of PIV Credentials",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-2.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-2.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-2.2 \u2014 Multi-factor Authentication to Non-privileged Accounts",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-2.8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-2.8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-2.8 \u2014 Access to Accounts \u2014 Replay Resistant",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-3 \u2014 Device Identification and Authentication",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-4 \u2014 Identifier Management",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-4.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-4.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-4.4 \u2014 Identify User Status",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-5 \u2014 Authenticator Management",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-5.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-5.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-5.1 \u2014 Password-based Authentication",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-5.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-5.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-5.2 \u2014 Public Key-based Authentication",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-5.6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-5.6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-5.6 \u2014 Protection of Authenticators",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-6 \u2014 Authentication Feedback",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-7 \u2014 Cryptographic Module Authentication",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-8 \u2014 Identification and Authentication (Non-organizational Users)",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-8.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-8.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-8.1 \u2014 Acceptance of PIV Credentials from Other Agencies",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-8.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-8.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-8.2 \u2014 Acceptance of External Authenticators",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IA-8.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IA-8.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IA-8.4 \u2014 Use of Defined Profiles",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-IR-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-1 \u2014 Policy and Procedures",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-2 \u2014 Incident Response Training",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-3 \u2014 Incident Response Testing",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-3.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-3.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-3.2 \u2014 Coordination with Related Plans",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-4 \u2014 Incident Handling",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-4.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-4.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-4.1 \u2014 Automated Incident Handling Processes",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-5 \u2014 Incident Monitoring",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-6 \u2014 Incident Reporting",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-6.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-6.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-6.1 \u2014 Automated Reporting",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-6.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-6.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-6.3 \u2014 Supply Chain Coordination",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-7 \u2014 Incident Response Assistance",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-7.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-7.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-7.1 \u2014 Automation Support for Availability of Information and Support",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-IR-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate IR-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "IR-8 \u2014 Incident Response Plan",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-MA-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-1 \u2014 Policy and Procedures",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-2 \u2014 Controlled Maintenance",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-3 \u2014 Maintenance Tools",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-3.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-3.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-3.1 \u2014 Inspect Tools",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-3.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-3.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-3.2 \u2014 Inspect Media",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-3.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-3.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-3.3 \u2014 Prevent Unauthorized Removal",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-4 \u2014 Nonlocal Maintenance",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-5 \u2014 Maintenance Personnel",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MA-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MA-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MA-6 \u2014 Timely Maintenance",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MP-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MP-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MP-1 \u2014 Policy and Procedures",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MP-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MP-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MP-2 \u2014 Media Access",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MP-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MP-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MP-3 \u2014 Media Marking",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MP-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MP-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MP-4 \u2014 Media Storage",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MP-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MP-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MP-5 \u2014 Media Transport",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MP-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MP-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MP-6 \u2014 Media Sanitization",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-MP-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate MP-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "MP-7 \u2014 Media Use",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-PE-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-1 \u2014 Policy and Procedures",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-10 \u2014 Emergency Shutoff",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-11 \u2014 Emergency Power",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-12 \u2014 Emergency Lighting",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-13",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-13 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-13 \u2014 Fire Protection",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-13.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-13.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-13.1 \u2014 Detection Systems \u2014 Automatic Activation and Notification",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-14",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-14 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-14 \u2014 Environmental Controls",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-15",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-15 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-15 \u2014 Water Damage Protection",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-16",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-16 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-16 \u2014 Delivery and Removal",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-17",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-17 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-17 \u2014 Alternate Work Site",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-2 \u2014 Physical Access Authorizations",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-3 \u2014 Physical Access Control",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-4 \u2014 Access Control for Transmission",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-5 \u2014 Access Control for Output Devices",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-6 \u2014 Monitoring Physical Access",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-6.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-6.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-6.1 \u2014 Intrusion Alarms and Surveillance Equipment",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-8 \u2014 Visitor Access Records",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PE-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PE-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PE-9 \u2014 Power Equipment and Cabling",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "FEDRAMP-PL-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PL-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PL-1 \u2014 Policy and Procedures",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PL-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PL-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PL-10 \u2014 Baseline Selection",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PL-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PL-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PL-11 \u2014 Baseline Tailoring",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PL-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PL-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PL-2 \u2014 System Security and Privacy Plans",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PL-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PL-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PL-4 \u2014 Rules of Behavior",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PL-4.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PL-4.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PL-4.1 \u2014 Social Media and External Site/Application Usage Restrictions",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PL-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PL-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PL-8 \u2014 Security and Privacy Architectures",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-1 \u2014 Policy and Procedures",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-2 \u2014 Position Risk Designation",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-3 \u2014 Personnel Screening",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-4 \u2014 Personnel Termination",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-5 \u2014 Personnel Transfer",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-6 \u2014 Access Agreements",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-7 \u2014 External Personnel Security",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-8 \u2014 Personnel Sanctions",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-PS-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate PS-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "PS-9 \u2014 Position Descriptions",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-1 \u2014 Policy and Procedures",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-2 \u2014 Security Categorization",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-3 \u2014 Risk Assessment",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-3.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-3.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-3.1 \u2014 Supply Chain Risk Assessment",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-5 \u2014 Vulnerability Monitoring and Scanning",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-5.11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-5.11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-5.11 \u2014 Public Disclosure Program",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-5.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-5.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-5.2 \u2014 Update Vulnerabilities to Be Scanned",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-5.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-5.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-5.5 \u2014 Privileged Access",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-7 \u2014 Risk Response",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-RA-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate RA-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "RA-9 \u2014 Criticality Analysis",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SA-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-1 \u2014 Policy and Procedures",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-10 \u2014 Developer Configuration Management",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-11 \u2014 Developer Testing and Evaluation",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-15",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-15 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-15 \u2014 Development Process, Standards, and Tools",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-15.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-15.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-15.3 \u2014 Criticality Analysis",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-2 \u2014 Allocation of Resources",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-22",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-22 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-22 \u2014 Unsupported System Components",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-3 \u2014 System Development Life Cycle",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-4 \u2014 Acquisition Process",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-4.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-4.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-4.1 \u2014 Functional Properties of Controls",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-4.10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-4.10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-4.10 \u2014 Use of Approved PIV Products",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-4.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-4.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-4.2 \u2014 Design and Implementation Information for Controls",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-4.9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-4.9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-4.9 \u2014 Functions, Ports, Protocols, and Services in Use",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-5 \u2014 System Documentation",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-8 \u2014 Security and Privacy Engineering Principles",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-9",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-9 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-9 \u2014 External System Services",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SA-9.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SA-9.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SA-9.2 \u2014 Identification of Functions, Ports, Protocols, and Services",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-1 \u2014 Policy and Procedures",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-10 \u2014 Network Disconnect",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-12 \u2014 Cryptographic Key Establishment and Management",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-13",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-13 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-13 \u2014 Cryptographic Protection",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-15",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-15 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-15 \u2014 Collaborative Computing Devices and Applications",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-17",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-17 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-17 \u2014 Public Key Infrastructure Certificates",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-18",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-18 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-18 \u2014 Mobile Code",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-2 \u2014 Separation of System and User Functionality",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-20",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-20 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-20 \u2014 Secure Name/Address Resolution Service (Authoritative Source)",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-21",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-21 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-21 \u2014 Secure Name/Address Resolution Service (Recursive or Caching Resolver)",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-22",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-22 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-22 \u2014 Architecture and Provisioning for Name/Address Resolution Service",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-23",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-23 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-23 \u2014 Session Authenticity",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-28",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-28 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-28 \u2014 Protection of Information at Rest",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-28.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-28.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-28.1 \u2014 Cryptographic Protection",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-39",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-39 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-39 \u2014 Process Isolation",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-4 \u2014 Information in Shared System Resources",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-5 \u2014 Denial-of-service Protection",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-7 \u2014 Boundary Protection",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-7.3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-7.3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-7.3 \u2014 Access Points",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-7.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-7.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-7.4 \u2014 External Telecommunications Services",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-7.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-7.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-7.5 \u2014 Deny by Default \u2014 Allow by Exception",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-7.7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-7.7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-7.7 \u2014 Split Tunneling for Remote Devices",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-7.8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-7.8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-7.8 \u2014 Route Traffic to Authenticated Proxy Servers",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-8 \u2014 Transmission Confidentiality and Integrity",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SC-8.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SC-8.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SC-8.1 \u2014 Cryptographic Protection",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "FEDRAMP-SI-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-1 \u2014 Policy and Procedures",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-10 \u2014 Information Input Validation",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-11 \u2014 Error Handling",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-12 \u2014 Information Management and Retention",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-16",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-16 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-16 \u2014 Memory Protection",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-2 \u2014 Flaw Remediation",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-2.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-2.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-2.2 \u2014 Automated Flaw Remediation Status",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-3 \u2014 Malicious Code Protection",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-4 \u2014 System Monitoring",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-4.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-4.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-4.2 \u2014 Automated Tools and Mechanisms for Real-time Analysis",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-4.4",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-4.4 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-4.4 \u2014 Inbound and Outbound Communications Traffic",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-4.5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-4.5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-4.5 \u2014 System-generated Alerts",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-5 \u2014 Security Alerts, Advisories, and Directives",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-7 \u2014 Software, Firmware, and Information Integrity",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-7.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-7.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-7.1 \u2014 Integrity Checks",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-7.7",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-7.7 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-7.7 \u2014 Integration of Detection and Response",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-8 \u2014 Spam Protection",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SI-8.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SI-8.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SI-8.2 \u2014 Automatic Updates",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "FEDRAMP-SR-1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-1 \u2014 Policy and Procedures",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-10",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-10 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-10 \u2014 Inspection of Systems or Components",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-11",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-11 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-11 \u2014 Component Authenticity",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-11.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-11.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-11.1 \u2014 Anti-counterfeit Training",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-11.2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-11.2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-11.2 \u2014 Configuration Control for Component Service and Repair",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-12",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-12 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-12 \u2014 Component Disposal",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-2",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-2 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-2 \u2014 Supply Chain Risk Management Plan",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-2.1",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-2.1 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-2.1 \u2014 Establish SCRM Team",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-3",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-3 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-3 \u2014 Supply Chain Controls and Processes",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-5",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-5 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-5 \u2014 Acquisition Strategies, Tools, and Methods",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-6",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-6 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-6 \u2014 Supplier Assessments and Reviews",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
     {
       "control_id": "FEDRAMP-SR-8",
-      "framework": "FedRAMP Moderate",
-      "title": "FedRAMP Moderate SR-8 \u2014 assessed from cloud posture and audit evidence",
+      "framework": "NIST 800-53B Moderate",
+      "title": "SR-8 \u2014 Notification Agreements",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
@@ -4145,10 +4187,52 @@
       "owner": "privacy-office"
     },
     {
+      "control_id": "GDPR-Art.25",
+      "framework": "GDPR",
+      "title": "Data protection by design and by default is evidenced",
+      "risk_domain": "privacy-engineering",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "GDPR-Art.28",
+      "framework": "GDPR",
+      "title": "Processor relationships are governed and evidenced",
+      "risk_domain": "third-party-risk",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "GDPR-Art.30",
+      "framework": "GDPR",
+      "title": "Records of processing activities are maintained and current",
+      "risk_domain": "governance",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "GDPR-Art.32",
+      "framework": "GDPR",
+      "title": "Security of processing \u2014 appropriate technical and organisational measures",
+      "risk_domain": "data-protection",
+      "owner": "platform-security"
+    },
+    {
+      "control_id": "GDPR-Art.33",
+      "framework": "GDPR",
+      "title": "Personal-data breach notification within 72 hours",
+      "risk_domain": "incident-response",
+      "owner": "detection-engineering"
+    },
+    {
       "control_id": "GDPR-Art.34",
       "framework": "GDPR",
       "title": "Communication of breach to data subjects",
       "risk_domain": "incident-response",
+      "owner": "privacy-office"
+    },
+    {
+      "control_id": "GDPR-Art.35",
+      "framework": "GDPR",
+      "title": "Data protection impact assessments are maintained for high-risk processing",
+      "risk_domain": "privacy-risk",
       "owner": "privacy-office"
     },
     {
@@ -4201,6 +4285,20 @@
       "owner": "privacy-office"
     },
     {
+      "control_id": "HIPAA-164.308(a)(1)(ii)(A)",
+      "framework": "HIPAA Security Rule",
+      "title": "Risk analysis is performed for systems handling electronic PHI",
+      "risk_domain": "risk-management",
+      "owner": "security-platform"
+    },
+    {
+      "control_id": "HIPAA-164.308(a)(1)(ii)(B)",
+      "framework": "HIPAA Security Rule",
+      "title": "Risk management actions reduce identified ePHI risks",
+      "risk_domain": "risk-management",
+      "owner": "security-platform"
+    },
+    {
       "control_id": "HIPAA-164.308(a)(2)",
       "framework": "HIPAA",
       "title": "Assigned security responsibility documented",
@@ -4213,6 +4311,13 @@
       "title": "Workforce security procedures evidenced",
       "risk_domain": "identity",
       "owner": "security-operations"
+    },
+    {
+      "control_id": "HIPAA-164.308(a)(4)",
+      "framework": "HIPAA Security Rule",
+      "title": "Information access management restricts PHI access to authorized roles",
+      "risk_domain": "identity",
+      "owner": "security-platform"
     },
     {
       "control_id": "HIPAA-164.308(a)(5)",
@@ -4285,6 +4390,20 @@
       "owner": "security-operations"
     },
     {
+      "control_id": "HIPAA-164.312(a)(2)(iv)",
+      "framework": "HIPAA Security Rule",
+      "title": "Encryption and decryption controls protect electronic PHI at rest",
+      "risk_domain": "data-protection",
+      "owner": "platform-security"
+    },
+    {
+      "control_id": "HIPAA-164.312(b)",
+      "framework": "HIPAA Security Rule",
+      "title": "Audit controls record activity on systems containing PHI",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering"
+    },
+    {
       "control_id": "HIPAA-164.312(c)",
       "framework": "HIPAA",
       "title": "Integrity controls for ePHI evidenced",
@@ -4297,6 +4416,13 @@
       "title": "Person or entity authentication",
       "risk_domain": "identity",
       "owner": "security-operations"
+    },
+    {
+      "control_id": "HIPAA-164.312(e)",
+      "framework": "HIPAA Security Rule",
+      "title": "Transmission security protects PHI in transit",
+      "risk_domain": "data-protection",
+      "owner": "platform-security"
     },
     {
       "control_id": "HIPAA-164.314(a)",
@@ -4371,9 +4497,9 @@
     {
       "control_id": "ISO27001-A.5.15",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.15 \u2014 assessed from ISMS and security operations evidence",
-      "risk_domain": "governance",
-      "owner": "grc"
+      "title": "Access control policy is enforced from identity and authorization evidence",
+      "risk_domain": "identity",
+      "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.5.16",
@@ -4490,9 +4616,9 @@
     {
       "control_id": "ISO27001-A.5.30",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.30 \u2014 assessed from ISMS and security operations evidence",
-      "risk_domain": "governance",
-      "owner": "grc"
+      "title": "ICT readiness for business continuity is exercised and evidenced",
+      "risk_domain": "resilience",
+      "owner": "platform-resilience"
     },
     {
       "control_id": "ISO27001-A.5.31",
@@ -4791,9 +4917,9 @@
     {
       "control_id": "ISO27001-A.8.16",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.16 \u2014 assessed from ISMS and security operations evidence",
-      "risk_domain": "controls-operations",
-      "owner": "security-platform"
+      "title": "Monitoring activities produce continuous detection evidence",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering"
     },
     {
       "control_id": "ISO27001-A.8.17",
@@ -5505,7 +5631,7 @@
     {
       "control_id": "ISO42001-6.1.3",
       "framework": "ISO 42001:2023",
-      "title": "Processes for responsible design and development of AI systems",
+      "title": "AI system risk treatment is planned and tracked",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
@@ -5591,6 +5717,13 @@
       "framework": "ISO 42001:2023",
       "title": "Data preparation",
       "risk_domain": "ai-governance",
+      "owner": "ai-security"
+    },
+    {
+      "control_id": "ISO42001-8.1",
+      "framework": "ISO 42001:2023",
+      "title": "Operational AI controls produce continuous evidence",
+      "risk_domain": "ai-operations",
       "owner": "ai-security"
     },
     {
@@ -13541,504 +13674,504 @@
     {
       "control_id": "NIST-AI-RMF-GOVERN-1.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 1.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 1.1 \u2014 Legal and regulatory requirements involving AI are understood, managed, and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-1.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 1.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 1.2 \u2014 The characteristics of trustworthy AI are integrated into organizational policies, processes, procedures, and practices.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-1.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 1.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 1.3 \u2014 Processes, procedures, and practices are in place to determine the needed level of risk management activities based on the organization\u2019s risk tolerance.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-1.4",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 1.4 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 1.4 \u2014 The risk management process and its outcomes are established through transparent policies, procedures, and other controls based on organizational risk priorities.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-1.5",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 1.5 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 1.5 \u2014 Ongoing monitoring and periodic review of the risk management process and its outcomes are planned and organizational roles and responsibilities clearly defined, including determining the frequency of periodic review.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-1.6",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 1.6 \u2014 assessed from AI governance and operational evidence",
-      "risk_domain": "ai-governance",
+      "title": "GOVERN 1.6 \u2014 Mechanisms are in place to inventory AI systems and are resourced according to organizational risk priorities.",
+      "risk_domain": "ai-inventory",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-1.7",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 1.7 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 1.7 \u2014 Processes and procedures are in place for decommissioning and phasing out AI systems safely and in a manner that does not increase risks or decrease the organization\u2019s trustworthiness.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-2.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 2.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 2.1 \u2014 Roles and responsibilities and lines of communication related to mapping, measuring, and managing AI risks are documented and are clear to individuals and teams throughout the organization.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-2.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 2.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 2.2 \u2014 The organization\u2019s personnel and partners receive AI risk management training to enable them to perform their duties and responsibilities consistent with related policies, procedures, and agreements.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-2.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 2.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 2.3 \u2014 Executive leadership of the organization takes responsibility for decisions about risks associated with AI system development and deployment.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-3.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 3.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 3.1 \u2014 Decision-making related to mapping, measuring, and managing AI risks throughout the lifecycle is informed by a diverse team (e.g., diversity of demographics, disciplines, experience, expertise, and backgrounds).",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-3.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 3.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 3.2 \u2014 Policies and procedures are in place to define and differentiate roles and responsibilities for human-AI configurations and oversight of AI systems.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-4.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 4.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 4.1 \u2014 Organizational policies and practices are in place to foster a critical thinking and safety-first mindset in the design, development, deployment, and uses of AI systems to minimize potential negative impacts.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-4.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 4.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 4.2 \u2014 Organizational teams document the risks and potential impacts of the AI technology they design, develop, deploy, evaluate, and use, and they communicate about the impacts more broadly.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-4.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 4.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 4.3 \u2014 Organizational practices are in place to enable AI testing, identification of incidents, and information sharing.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-5.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 5.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 5.1 \u2014 Organizational policies and practices are in place to collect, consider, prioritize, and integrate feedback from those external to the team that developed or deployed the AI system regarding the potential individual and societal impacts related to AI risks.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-5.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 5.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 5.2 \u2014 Mechanisms are established to enable the team that developed or deployed AI systems to regularly incorporate adjudicated feedback from relevant AI actors into system design and implementation.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-6.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 6.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 6.1 \u2014 Policies and procedures are in place that address AI risks associated with third-party entities, including risks of infringement of a third-party\u2019s intellectual property or other rights.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-GOVERN-6.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF GOVERN 6.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "GOVERN 6.2 \u2014 Contingency processes are in place to handle failures or incidents in third-party data or AI systems deemed to be high-risk.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-1.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 1.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 1.1 \u2014 A determination is made as to whether the AI system achieves its intended purposes and stated objectives and whether its development or deployment should proceed.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-1.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 1.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 1.2 \u2014 Treatment of documented AI risks is prioritized based on impact, likelihood, and available resources or methods.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-1.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 1.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 1.3 \u2014 Responses to the AI risks deemed high priority, as identified by the MAP function, are developed, planned, and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-1.4",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 1.4 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 1.4 \u2014 Negative residual risks (defined as the sum of all unmitigated risks) to both downstream acquirers of AI systems and end users are documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-2.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 2.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 2.1 \u2014 Resources required to manage AI risks are taken into account \u2013 along with viable non-AI alternative systems, approaches, or methods \u2013 to reduce the magnitude or likelihood of potential impacts.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-2.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 2.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 2.2 \u2014 Mechanisms are in place and applied to sustain the value of deployed AI systems.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-2.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 2.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 2.3 \u2014 Procedures are followed to respond to and recover from a previously unknown risk when it is identified.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-2.4",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 2.4 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 2.4 \u2014 Mechanisms are in place and applied, and responsibilities are assigned and understood, to supersede, disengage, or deactivate AI systems that demonstrate performance or outcomes inconsistent with intended use.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-3.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 3.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 3.1 \u2014 AI risks and benefits from third-party resources are regularly monitored, and risk controls are applied and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-3.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 3.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 3.2 \u2014 Pre-trained models which are used for development are monitored as part of AI system regular monitoring and maintenance.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-4.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 4.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 4.1 \u2014 Post-deployment AI system monitoring plans are implemented, including mechanisms for capturing and evaluating input from users and other relevant AI actors, appeal and override, decommissioning, incident response, recovery, and change management.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-4.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 4.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MANAGE 4.2 \u2014 Measurable activities for continual improvements are integrated into AI system updates and include regular engagement with interested parties, including relevant AI actors.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MANAGE-4.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MANAGE 4.3 \u2014 assessed from AI governance and operational evidence",
-      "risk_domain": "ai-risk",
-      "owner": "ai-security"
+      "title": "MANAGE 4.3 \u2014 Incidents and errors are communicated to relevant AI actors, including affected communities.",
+      "risk_domain": "ai-incident-response",
+      "owner": "detection-engineering"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-1.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 1.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 1.1 \u2014 Intended purposes, potentially beneficial uses, context-specific laws, norms and expectations, and prospective settings in which the AI system will be deployed are understood and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-1.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 1.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 1.2 \u2014 Interdisciplinary AI actors, competencies, skills, and capacities for establishing context reflect demographic diversity and broad domain and user experience expertise, and their participation is documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-1.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 1.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 1.3 \u2014 The organization\u2019s mission and relevant goals for AI technology are understood and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-1.4",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 1.4 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 1.4 \u2014 The business value or context of business use has been clearly defined or \u2013 in the case of assessing existing AI systems \u2013 re-evaluated.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-1.5",
       "framework": "NIST AI RMF",
-      "title": "AI system dependencies and operating context are mapped",
+      "title": "MAP 1.5 \u2014 Organizational risk tolerances are determined and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-1.6",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 1.6 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 1.6 \u2014 System requirements (e.g., \u201cthe system shall respect the privacy of its users\u201d) are elicited from and understood by relevant AI actors.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-2.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 2.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 2.1 \u2014 The specific tasks and methods used to implement the tasks that the AI system will support are defined (e.g., classifiers, generative models, recommenders).",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-2.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 2.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 2.2 \u2014 Information about the AI system\u2019s knowledge limits and how system output may be utilized and overseen by humans is documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-2.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 2.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 2.3 \u2014 Scientific integrity and TEVV considerations are identified and documented, including those related to experimental design, data collection and selection (e.g., availability, representativeness, suitability), system trustworthiness, and construct validation.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-3.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 3.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 3.1 \u2014 Potential benefits of intended AI system functionality and performance are examined and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-3.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 3.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 3.2 \u2014 Potential costs, including non-monetary costs, which result from expected or realized AI errors or system functionality and trustworthiness \u2013 as connected to organizational risk tolerance \u2013 are examined and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-3.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 3.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 3.3 \u2014 Targeted application scope is specified and documented based on the system\u2019s capability, established context, and AI system categorization.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-3.4",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 3.4 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 3.4 \u2014 Processes for operator and practitioner proficiency with AI system performance and trustworthiness \u2013 and relevant technical standards and certifications \u2013 are defined, assessed, and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-3.5",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 3.5 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 3.5 \u2014 Processes for human oversight are defined, assessed, and documented in accordance with organizational policies from the GOVERN function.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-4.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 4.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 4.1 \u2014 Approaches for mapping AI technology and legal risks of its components \u2013 including the use of third-party data or software \u2013 are in place, followed, and documented, as are risks of infringement of a third party\u2019s intellectual property or other rights.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-4.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 4.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 4.2 \u2014 Internal risk controls for components of the AI system, including third-party AI technologies, are identified and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-5.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 5.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 5.1 \u2014 Likelihood and magnitude of each identified impact (both potentially beneficial and harmful) based on expected use, past uses of AI systems in similar contexts, public incident reports, feedback from those external to the team that developed or deployed the AI system, or other data are identified and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MAP-5.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MAP 5.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MAP 5.2 \u2014 Practices and personnel for supporting regular engagement with relevant AI actors and integrating feedback about positive, negative, and unanticipated impacts are in place and documented.",
       "risk_domain": "ai-governance",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-1.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 1.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 1.1 \u2014 Approaches and metrics for measurement of AI risks enumerated during the MAP function are selected for implementation starting with the most significant AI risks.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-1.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 1.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 1.2 \u2014 Appropriateness of AI metrics and effectiveness of existing controls are regularly assessed and updated, including reports of errors and potential impacts on affected communities.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-1.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 1.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 1.3 \u2014 Internal experts who did not serve as front-line developers for the system and/or independent assessors are involved in regular assessments and updates.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.1 \u2014 Test sets, metrics, and details about the tools used during TEVV are documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.10",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.10 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.10 \u2014 Privacy risk of the AI system \u2013 as identified in the MAP function \u2013 is examined and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.11",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.11 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.11 \u2014 Fairness and bias \u2013 as identified in the MAP function \u2013 are evaluated and results are documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.12",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.12 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.12 \u2014 Environmental impact and sustainability of AI model training and management activities \u2013 as identified in the MAP function \u2013 are assessed and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.13",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.13 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.13 \u2014 Effectiveness of the employed TEVV metrics and processes in the MEASURE function are evaluated and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.2 \u2014 Evaluations involving human subjects meet applicable requirements (including human subject protection) and are representative of the relevant population.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.3 \u2014 AI system performance or assurance criteria are measured qualitatively or quantitatively and demonstrated for conditions similar to deployment setting(s).",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.4",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.4 \u2014 assessed from AI governance and operational evidence",
-      "risk_domain": "ai-risk",
-      "owner": "ai-security"
+      "title": "MEASURE 2.4 \u2014 The functionality and behavior of the AI system and its components \u2013 as identified in the MAP function \u2013 are monitored when in production.",
+      "risk_domain": "ai-monitoring",
+      "owner": "detection-engineering"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.5",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.5 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.5 \u2014 The AI system to be deployed is demonstrated to be valid and reliable.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.6",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.6 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.6 \u2014 The AI system is evaluated regularly for safety risks \u2013 as identified in the MAP function.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.7",
       "framework": "NIST AI RMF",
-      "title": "AI system risk indicators are measured and tracked",
+      "title": "MEASURE 2.7 \u2014 AI system security and resilience \u2013 as identified in the MAP function \u2013 are evaluated and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.8",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.8 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.8 \u2014 Risks associated with transparency and accountability \u2013 as identified in the MAP function \u2013 are examined and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-2.9",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 2.9 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 2.9 \u2014 The AI model is explained, validated, and documented, and AI system output is interpreted within its context \u2013 as identified in the MAP function \u2013 to inform responsible use and governance.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-3.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 3.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 3.1 \u2014 Approaches, personnel, and documentation are in place to regularly identify and track existing, unanticipated, and emergent AI risks based on factors such as intended and actual performance in deployed contexts.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-3.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 3.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 3.2 \u2014 Risk tracking approaches are considered for settings where AI risks are difficult to assess using currently available measurement techniques or where metrics are not yet available.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-3.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 3.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 3.3 \u2014 Feedback processes for end users and impacted communities to report problems and appeal system outcomes are established and integrated into AI system evaluation metrics.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-4.1",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 4.1 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 4.1 \u2014 Measurement approaches for identifying AI risks are connected to deployment context(s) and informed through consultation with domain experts and other end users.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-4.2",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 4.2 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 4.2 \u2014 Measurement results regarding AI system trustworthiness in deployment context(s) and across the AI lifecycle are informed by input from domain experts and relevant AI actors to validate whether the system is performing consistently as intended.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
     {
       "control_id": "NIST-AI-RMF-MEASURE-4.3",
       "framework": "NIST AI RMF",
-      "title": "NIST AI RMF MEASURE 4.3 \u2014 assessed from AI governance and operational evidence",
+      "title": "MEASURE 4.3 \u2014 Measurable performance improvements or declines based on consultations with relevant AI actors, including affected communities, and field data about context-relevant risks and trustworthiness characteristics are identified and documented.",
       "risk_domain": "ai-risk",
       "owner": "ai-security"
     },
@@ -14822,7 +14955,7 @@
     {
       "control_id": "NIST-RMF-A-6",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Assess A-6 \u2014 Prepare the plan of action and milestones based on the findings and recommendations of the assessment repor",
+      "title": "Assess A-6 \u2014 Prepare the plan of action and milestones based on the findings and recommendations of the assessment reports.",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
@@ -14864,42 +14997,42 @@
     {
       "control_id": "NIST-RMF-M-1",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Monitor M-1 \u2014 Monitor the information system and its environment of operation for changes that impact the security and p",
+      "title": "Monitor M-1 \u2014 Monitor the information system and its environment of operation for changes that impact the security and privacy posture of the system.",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "NIST-RMF-M-2",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Monitor M-2 \u2014 Assess the controls implemented within and inherited by the system in accordance with the continuous monit",
+      "title": "Monitor M-2 \u2014 Assess the controls implemented within and inherited by the system in accordance with the continuous monitoring strategy.",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "NIST-RMF-M-3",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Monitor M-3 \u2014 Respond to risk based on the results of ongoing monitoring activities, risk assessments, and outstanding i",
+      "title": "Monitor M-3 \u2014 Respond to risk based on the results of ongoing monitoring activities, risk assessments, and outstanding items in plans of action and milestones.",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "NIST-RMF-M-4",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Monitor M-4 \u2014 Update plans, assessment reports, and plans of action and milestones based on the results of the continuou",
+      "title": "Monitor M-4 \u2014 Update plans, assessment reports, and plans of action and milestones based on the results of the continuous monitoring process.",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "NIST-RMF-M-5",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Monitor M-5 \u2014 Report the security and privacy posture of the system to the authorizing official and other organizational",
+      "title": "Monitor M-5 \u2014 Report the security and privacy posture of the system to the authorizing official and other organizational officials on an ongoing basis in accordance with the organizational continuous monitoring strategy.",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "NIST-RMF-M-6",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Monitor M-6 \u2014 Review the security and privacy posture of the system on an ongoing basis to determine whether the risk re",
+      "title": "Monitor M-6 \u2014 Review the security and privacy posture of the system on an ongoing basis to determine whether the risk remains acceptable.",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
@@ -14941,7 +15074,7 @@
     {
       "control_id": "NIST-RMF-P-13",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Prepare P-13 \u2014 Identify and understand all stages of the information life cycle for each information type processed, sto",
+      "title": "Prepare P-13 \u2014 Identify and understand all stages of the information life cycle for each information type processed, stored, or transmitted by the system.",
       "risk_domain": "governance",
       "owner": "grc"
     },
@@ -14990,21 +15123,21 @@
     {
       "control_id": "NIST-RMF-P-3",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Prepare P-3 \u2014 Assess organization-wide security and privacy risk and update the risk assessment results on an ongoing ba",
+      "title": "Prepare P-3 \u2014 Assess organization-wide security and privacy risk and update the risk assessment results on an ongoing basis.",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "NIST-RMF-P-4",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Prepare P-4 \u2014 Establish, document, and publish organizationally-tailored control baselines and/or Cybersecurity Framewor",
+      "title": "Prepare P-4 \u2014 Establish, document, and publish organizationally-tailored control baselines and/or Cybersecurity Framework Profiles.",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "NIST-RMF-P-5",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Prepare P-5 \u2014 Identify, document, and publish organization-wide common controls that are available for inheritance by or",
+      "title": "Prepare P-5 \u2014 Identify, document, and publish organization-wide common controls that are available for inheritance by organizational systems.",
       "risk_domain": "governance",
       "owner": "grc"
     },
@@ -15025,28 +15158,28 @@
     {
       "control_id": "NIST-RMF-P-8",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Prepare P-8 \u2014 Identify the missions, business functions, and mission/business processes that the system is intended to s",
+      "title": "Prepare P-8 \u2014 Identify the missions, business functions, and mission/business processes that the system is intended to support.",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "NIST-RMF-P-9",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Prepare P-9 \u2014 Identify stakeholders who have an interest in the design, development, implementation, assessment, operati",
+      "title": "Prepare P-9 \u2014 Identify stakeholders who have an interest in the design, development, implementation, assessment, operation, maintenance, or disposal of the system.",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "NIST-RMF-R-1",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Authorize R-1 \u2014 Assemble the authorization package and submit the package to the authorizing official for an authorizati",
+      "title": "Authorize R-1 \u2014 Assemble the authorization package and submit the package to the authorizing official for an authorization decision.",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "NIST-RMF-R-2",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Authorize R-2 \u2014 Analyze and determine the risk from the operation or use of the system or the provision of common contro",
+      "title": "Authorize R-2 \u2014 Analyze and determine the risk from the operation or use of the system or the provision of common controls.",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
@@ -15060,14 +15193,14 @@
     {
       "control_id": "NIST-RMF-R-4",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Authorize R-4 \u2014 Determine if the risk from the operation or use of the information system or the provision or use of com",
+      "title": "Authorize R-4 \u2014 Determine if the risk from the operation or use of the information system or the provision or use of common controls is acceptable.",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
     {
       "control_id": "NIST-RMF-R-5",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Authorize R-5 \u2014 Report the authorization decision and any deficiencies in controls that represent significant security o",
+      "title": "Authorize R-5 \u2014 Report the authorization decision and any deficiencies in controls that represent significant security or privacy risk.",
       "risk_domain": "risk-management",
       "owner": "grc"
     },
@@ -15102,7 +15235,7 @@
     {
       "control_id": "NIST-RMF-S-5",
       "framework": "NIST RMF (SP 800-37 Rev 2)",
-      "title": "Select S-5 \u2014 Develop and implement a system-level strategy for monitoring control effectiveness that is consistent with ",
+      "title": "Select S-5 \u2014 Develop and implement a system-level strategy for monitoring control effectiveness that is consistent with and supplements the organizational continuous monitoring strategy.",
       "risk_domain": "governance",
       "owner": "grc"
     },
@@ -15119,6 +15252,20 @@
       "title": "Network security controls enforced",
       "risk_domain": "network-security",
       "owner": "security-operations"
+    },
+    {
+      "control_id": "PCI-DSS-10",
+      "framework": "PCI DSS",
+      "title": "All access to cardholder data is logged and monitored",
+      "risk_domain": "monitoring",
+      "owner": "detection-engineering"
+    },
+    {
+      "control_id": "PCI-DSS-11",
+      "framework": "PCI DSS",
+      "title": "Security of systems and networks is regularly tested",
+      "risk_domain": "vulnerability",
+      "owner": "appsec"
     },
     {
       "control_id": "PCI-DSS-12",
@@ -15161,6 +15308,13 @@
       "title": "Secure development practices evidenced",
       "risk_domain": "change-management",
       "owner": "engineering"
+    },
+    {
+      "control_id": "PCI-DSS-7",
+      "framework": "PCI DSS",
+      "title": "Access to cardholder data is restricted by business need to know",
+      "risk_domain": "identity",
+      "owner": "security-platform"
     },
     {
       "control_id": "PCI-DSS-8",
@@ -15333,7 +15487,7 @@
     {
       "control_id": "SOC2-CC6.1",
       "framework": "SOC 2",
-      "title": "Logical access security controls are implemented",
+      "title": "Logical access controls are evaluated from identity and authorization evidence",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
@@ -15354,14 +15508,14 @@
     {
       "control_id": "SOC2-CC6.4",
       "framework": "SOC 2",
-      "title": "Access is removed or adjusted on role change",
+      "title": "Physical access is limited to authorized personnel",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "SOC2-CC6.5",
       "framework": "SOC 2",
-      "title": "Physical access to facilities and assets is restricted",
+      "title": "Asset retirement prevents recovery of residual data and software",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
@@ -15396,7 +15550,7 @@
     {
       "control_id": "SOC2-CC7.2",
       "framework": "SOC 2",
-      "title": "Security events are monitored and evaluated",
+      "title": "Security monitoring controls are evaluated from runtime, audit, and detection evidence",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
@@ -15431,7 +15585,7 @@
     {
       "control_id": "SOC2-CC9.1",
       "framework": "SOC 2",
-      "title": "Vendor and partner risks are assessed before engagement",
+      "title": "Business disruption risks have mitigation measures",
       "risk_domain": "vendor-risk",
       "owner": "grc"
     },
@@ -15501,7 +15655,7 @@
     {
       "control_id": "SOC2-P5.2",
       "framework": "SOC 2",
-      "title": "Data subject access requests are fulfilled in a timely manner",
+      "title": "Personal data correction requests and denials are communicated",
       "risk_domain": "privacy",
       "owner": "grc"
     },
@@ -15515,42 +15669,42 @@
     {
       "control_id": "SOC2-P6.2",
       "framework": "SOC 2",
-      "title": "Third-party disclosures comply with privacy commitments",
+      "title": "Authorized disclosure records are complete and current",
       "risk_domain": "privacy",
       "owner": "grc"
     },
     {
       "control_id": "SOC2-P6.3",
       "framework": "SOC 2",
-      "title": "Data subjects are notified of privacy practices and changes",
+      "title": "Unauthorized disclosure records include reported breaches",
       "risk_domain": "privacy",
       "owner": "grc"
     },
     {
       "control_id": "SOC2-P6.4",
       "framework": "SOC 2",
-      "title": "Breach and incident notification procedures exist and are tested",
+      "title": "Third-party privacy compliance is assessed and corrected",
       "risk_domain": "privacy",
       "owner": "grc"
     },
     {
       "control_id": "SOC2-P6.5",
       "framework": "SOC 2",
-      "title": "Cross-border disclosure requirements are met",
+      "title": "Third-party breach reporting commitments support incident response",
       "risk_domain": "privacy",
       "owner": "grc"
     },
     {
       "control_id": "SOC2-P6.6",
       "framework": "SOC 2",
-      "title": "Government and legal disclosure requests are controlled",
+      "title": "Breach notification reaches affected people and authorities",
       "risk_domain": "privacy",
       "owner": "grc"
     },
     {
       "control_id": "SOC2-P6.7",
       "framework": "SOC 2",
-      "title": "Disclosure to third parties is monitored over time",
+      "title": "Disclosure accounting is available to data subjects on request",
       "risk_domain": "privacy",
       "owner": "grc"
     },

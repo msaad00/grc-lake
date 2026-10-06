@@ -50,7 +50,7 @@ def test_catalog_matches_manifest_ids_titles_and_baselines() -> None:
 def test_moderate_baseline_is_exactly_the_fedramp_moderate_pack() -> None:
     moderate = {row["id"] for row in MANIFEST["rows"] if "moderate" in row["baselines"]}
     fedramp = {
-        row["framework_ref"].removeprefix("FedRAMP Moderate ") for row in _framework("fedramp-moderate").values()
+        row["framework_ref"].removeprefix("NIST 800-53B Moderate ") for row in _framework("fedramp-moderate").values()
     }
     assert moderate == fedramp
 

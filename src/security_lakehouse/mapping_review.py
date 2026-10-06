@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
-from security_lakehouse.io import read_jsonl
+from security_lakehouse.io import canonical_sha256, read_jsonl, write_json
 from security_lakehouse.ledger import (
     append_chained_jsonl,
     append_chained_jsonl_batch,
@@ -136,9 +136,7 @@ def _write_tip(lake_dir: str | Path, length: int, tip_hash: str | None) -> None:
         return
     target = review_tip_path(lake_dir)
     body = {"length": length, "tip_hash": tip_hash, "mac": _tip_mac(key, length, tip_hash)}
-    tmp = target.with_name(target.name + ".tmp")
-    tmp.write_text(json.dumps(body, sort_keys=True), encoding="utf-8")
-    os.replace(tmp, target)
+    write_json(target, body)
 
 
 def _index(payload: JsonObject) -> dict[MappingKey, tuple[JsonObject, JsonObject]]:
@@ -218,6 +216,7 @@ def record_decisions(
         seen.add(key)
         resolved.append((key, entry, member))
 
+    controls = load_control_catalog()
     decided_at = utc_iso(now or datetime.now(UTC))
     batch_id = uuid.uuid4().hex
 
@@ -252,6 +251,8 @@ def record_decisions(
                     "evidence_ref": evidence,
                     "source_anchor": member_mapping_source(entry, member),
                     "shipped_review_status": member.get("review_status", "reviewed"),
+                    "control_sha256": canonical_sha256(controls.get(key[1], {})),
+                    "mapping_sha256": canonical_sha256(member),
                     "decided_at": decided_at,
                     "supersedes": latest.get(key),
                 }
@@ -332,8 +333,8 @@ def _verify_review_log_unlocked(lake_dir: str | Path) -> JsonObject:
     key = _tip_key()
     if key is None:
         return {**log, "tip_mac": "not_configured"}
-    if not log["length"] and log["ok"]:
-        return {**log, "tip_mac": "verified"}
+    if not log["length"] and log["ok"] and not review_tip_path(lake_dir).exists():
+        return {**log, "tip_mac": "empty"}
     try:
         sidecar = json.loads(review_tip_path(lake_dir).read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -461,11 +462,21 @@ def effective_safeguards(lake_dir: str | Path | None = None, *, payload: JsonObj
     """
     shipped = payload if payload is not None else load_safeguards()
     verified, decisions = _verified_latest_decisions(lake_dir)
+    return _effective_from_decisions(shipped, verified, decisions)
+
+
+def _effective_from_decisions(shipped, verified, decisions):
+    controls = load_control_catalog()
     effective = copy.deepcopy(shipped)
     effective["review_log_verified"] = verified
     for entry in effective.get("safeguards", []):
         for member in entry.get("satisfies", []):
             row = decisions.get((str(entry["safeguard_id"]), str(member.get("control_id"))))
+            if row and (
+                row.get("control_sha256") != canonical_sha256(controls.get(str(member.get("control_id")), {}))
+                or row.get("mapping_sha256") != canonical_sha256(member)
+            ):
+                row = None
             member["effective_review_state"] = effective_review_state(member, str(row.get("decision")) if row else None)
             member["org_review"] = _decision_summary(row) if row else None
     return effective
@@ -567,9 +578,11 @@ def review_attestation(lake_dir: str | Path) -> JsonObject:
     snapshot.
     """
     try:
-        log = verify_review_log(lake_dir)
-        effective = effective_safeguards(lake_dir)
-        coverage = coverage_by_framework(effective)
+        with chain_lock(review_log_path(lake_dir)):
+            log = _verify_review_log_unlocked(lake_dir)
+            decisions = latest_decisions(lake_dir) if log["ok"] else {}
+            effective = _effective_from_decisions(load_safeguards(), log["ok"], decisions)
+            coverage = coverage_by_framework(effective)
     except (OSError, ValueError) as exc:
         logger.warning("mapping review attestation could not be built (%s)", exc.__class__.__name__)
         return {"summary": None, "decision_log": {"ok": False, "error": DECISION_LOG_UNREADABLE}}

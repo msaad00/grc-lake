@@ -472,8 +472,12 @@ def collect_aws_inventory_evidence(
                         asset_id=f"aws:{service}:{region}:{resource_id}",
                         asset_type=f"aws_{service}_resource",
                         controls=IDENTITY_CONTROLS,
-                        status="pass",
-                        severity="info",
+                        status="open"
+                        if service == "cloudtrail" and resource.get("multi_region") is False
+                        else "observed",
+                        severity="medium"
+                        if service == "cloudtrail" and resource.get("multi_region") is False
+                        else "info",
                         evidence_ref=evidence_ref,
                         attributes={**resource, "account_id": account, "region": region, "service": service},
                     )

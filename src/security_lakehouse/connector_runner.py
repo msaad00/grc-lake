@@ -380,6 +380,7 @@ def run_connector_sync(
             credentials=credentials,
             options=options,
         )
+        rows = bind_safeguard_evidence(rows, options.get("safeguard_bindings") or {})
         raw_path = lake / CONNECTOR_RAW_FILE
         _upsert_raw_events(raw_path, rows, connector_id=connector_id, write_mode=write_mode)
         if any(is_offboarding_input(row) for row in rows):
@@ -1781,3 +1782,31 @@ def _refresh_offboarding(raw_path: Path, *, env: dict[str, str]) -> None:
 
 def _duration_ms(start: float) -> int:
     return max(0, int((time.perf_counter() - start) * 1000))
+
+
+def bind_safeguard_evidence(rows: list[dict[str, Any]], bindings: dict[str, list[str]]) -> list[dict[str, Any]]:
+    """Apply operator-declared event-type bindings, never infer them from framework tags."""
+    if not bindings:
+        return rows
+    from security_lakehouse.safeguards import load_safeguards
+
+    definitions = {row["safeguard_id"]: row for row in load_safeguards()["safeguards"]}
+    if not isinstance(bindings, dict) or len(bindings) > 100:
+        raise ValueError("safeguard_bindings must map at most 100 event types to safeguard IDs")
+    for event_type, ids in bindings.items():
+        if (
+            not isinstance(event_type, str)
+            or not event_type
+            or not isinstance(ids, list)
+            or not ids
+            or any(not isinstance(sid, str) or sid not in definitions for sid in ids)
+        ):
+            raise ValueError("invalid explicit safeguard binding")
+    result = []
+    for row in rows:
+        ids = bindings.get(str(row.get("event_type")), [])
+        asset_type = (row.get("entity") or {}).get("asset_type")
+        if any(asset_type not in definitions[sid].get("asset_types", []) for sid in ids):
+            raise ValueError("safeguard binding does not apply to the collected asset type")
+        result.append({**row, "safeguard_ids": sorted(set(row.get("safeguard_ids", [])) | set(ids))})
+    return result

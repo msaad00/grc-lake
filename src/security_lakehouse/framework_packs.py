@@ -297,19 +297,19 @@ def _fedramp_moderate_row_transform(row: PackManifestRow) -> PackControlSpec:
     article_id = _normalize_nist_control_id(row.id)
     risk = nist_family_risk_domain(article_id)
     owner = _soc2_owner(risk)
-    title = f"FedRAMP Moderate {article_id} — assessed from cloud posture and audit evidence"
+    title = f"NIST 800-53B Moderate {article_id} — assessed from cloud posture and audit evidence"
     return PackControlSpec(
         control_id=f"FEDRAMP-{article_id}",
         framework_id="fedramp-moderate",
-        framework="FedRAMP Moderate",
-        framework_ref=f"FedRAMP Moderate {article_id}",
+        framework="NIST 800-53B Moderate",
+        framework_ref=f"NIST 800-53B Moderate {article_id}",
         article_id=article_id,
         title=title,
         risk_domain=risk,
         owner=owner,
         evaluation_rule=_soc2_evaluation_rule(risk),
         evidence_requirement=(
-            f"Current evidence supports FedRAMP Moderate control {article_id} "
+            f"Current evidence supports NIST 800-53B Moderate control {article_id} "
             "with reviewed mappings and fresh operational proof."
         ),
         asset_types=_soc2_assets(risk),
@@ -319,7 +319,7 @@ def _fedramp_moderate_row_transform(row: PackManifestRow) -> PackControlSpec:
 
 
 def fedramp_moderate_specs() -> list[PackControlSpec]:
-    """FedRAMP Moderate foundation: NIST SP 800-53 Rev 5 Moderate baseline (287 controls).
+    """NIST 800-53B Moderate foundation: NIST SP 800-53 Rev 5 Moderate baseline (287 controls).
 
     Manifest-driven: identifiers come from ``nist_800_53_rev5_moderate.json``
     (``control_ids`` rows, plain strings — no per-ID title text exists at

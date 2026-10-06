@@ -33,8 +33,9 @@ def test_collect_runtime_fixture_evidence_validates() -> None:
     assert len(rows) == 2
     assert validate_raw_events(rows) == []
     assert {row["source"] for row in rows} == {"runtime-gateway"}
-    blocked = [row for row in rows if row["status"] == "blocked"]
+    blocked = [row for row in rows if row["attributes"]["source_status"] == "blocked"]
     assert len(blocked) == 1
+    assert blocked[0]["status"] == "observed"
     assert blocked[0]["attributes"]["tool"] == "sql.query"
 
 

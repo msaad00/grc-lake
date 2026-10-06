@@ -28,6 +28,8 @@ def test_training_safeguard_uses_the_nist_800_171_crosswalk() -> None:
         "framework_id": "cmmc-2-level2",
         "role": "equivalent",
         "review_status": "proposed",
+        "control_version": "1.0.0",
+        "current_control_version": "1.0.0",
         "mapping_source": {
             **SOURCE,
             "locator": "Appendix D, Table D-2, requirement 3.2.1 maps to AT-2",
@@ -38,6 +40,8 @@ def test_training_safeguard_uses_the_nist_800_171_crosswalk() -> None:
         "framework_id": "cmmc-2-level2",
         "role": "equivalent",
         "review_status": "proposed",
+        "control_version": "1.0.0",
+        "current_control_version": "1.0.0",
         "mapping_source": {
             **SOURCE,
             "locator": "Appendix D, Table D-2, requirement 3.2.2 maps to AT-3",

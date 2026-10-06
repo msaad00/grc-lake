@@ -46,12 +46,12 @@ def evaluate_safeguards(
             bound[safeguard_id][asset_key].append(event)
     # Index the observed population once. Avoid a safeguards x events scan.
     type_counts = Counter(next(iter(types)) for types in assets.values() if len(types) == 1)
-    ambiguous_count = sum(len(types) != 1 for types in assets.values())
     results = []
     asset_results = []
     for safeguard_id, definition in definitions.items():
         eligible_types = set(definition.get("asset_types") or [])
         eligible_count = sum(type_counts[t] for t in eligible_types)
+        ambiguous_count = sum(len(types) != 1 and bool(types & eligible_types) for types in assets.values())
         states = []
         assessed = 0
         invalid = 0

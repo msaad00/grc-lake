@@ -48,6 +48,10 @@ def verify_task(
     manifest = read_json(lake / "manifest.json")
     if not identity or manifest.get("tenant_id") != tenant_id or not verify_lake_integrity(lake)["ok"]:
         raise ValueError("verification requires an intact generation owned by this tenant")
+    history = json.loads(task.verification_history or "[]")
+    if history and any(receipt.get("generation") == identity for receipt in history):
+        raise ValueError("retest requires a new evidence generation after the previous verification")
+    threshold = max(_as_aware(task.created_at), _as_aware(task.updated_at)) if history else _as_aware(task.created_at)
     tests = [row for row in read_jsonl(lake / "gold/control_tests.jsonl") if row["control_id"] == task.control_id]
     posture = build_current_posture(lake, now=moment)
     if not tests or any(row.get("result") != "pass" for row in tests) or task.control_id in posture["stale_controls"]:
@@ -59,14 +63,26 @@ def verify_task(
     ]
     if not evidence:
         raise ValueError("control has no evidence to verify")
+    sources = {row.get("source") for row in evidence}
+    from security_lakehouse.connector_errors import collection_gaps
+
+    raw_rows = [
+        row["raw"]
+        for row in read_jsonl(lake / "bronze/raw_events.jsonl")
+        if row.get("raw", {}).get("source") in sources
+    ]
+    if collection_gaps(raw_rows):
+        raise ValueError("partial collection cannot verify a remediation retest")
+    from security_lakehouse.connector_state import latest_run
+
+    for connector in {row.get("connector_id") for row in evidence} - {None, ""}:
+        run = latest_run(lake, str(connector), kind="sync")
+        if not run or run.get("result") != "ok" or (run.get("metadata") or {}).get("partial"):
+            raise ValueError("partial or unsuccessful collection cannot verify a remediation retest")
     for row in evidence:
         observed = datetime.fromisoformat(row["event_time"].replace("Z", "+00:00"))
         collected = datetime.fromisoformat(row["evidence_collected_at"].replace("Z", "+00:00"))
-        if (
-            observed.tzinfo is None
-            or collected.tzinfo is None
-            or not (_as_aware(task.created_at) < observed <= collected <= moment)
-        ):
+        if observed.tzinfo is None or collected.tzinfo is None or not (threshold < observed <= collected <= moment):
             raise ValueError(
                 "retest evidence must be observed and collected after the task was created, and not in the future"
             )
@@ -104,3 +120,42 @@ def verify_task(
         raise ValueError("task changed during verification; reload it before retrying")
     session.refresh(task)
     return task
+
+
+def reconcile_published_tasks(lake: Path, *, tenant_id: str) -> int:
+    """Reopen verified tasks after a newly published failing control result.
+
+    Called after publication only when an application database already exists,
+    or in hosted mode with an explicitly configured external database.
+    """
+    import os
+
+    from sqlalchemy import select
+
+    from security_lakehouse.db.base import create_engine_for, session_factory, session_scope
+    from security_lakehouse.execution_mode import in_server_mode
+
+    root = lake.parent.parent if lake.parent.name == "tenants" else lake
+    if not (root / "server/app.db").is_file() and not (in_server_mode() and os.environ.get("TRUSTOPS_DATABASE_URL")):
+        return 0
+    failures = {r["control_id"] for r in read_jsonl(lake / "gold/control_posture.jsonl") if r.get("status") == "fail"}
+    if not failures:
+        return 0
+    engine = create_engine_for(root)
+    try:
+        with session_scope(session_factory(engine)) as session:
+            tasks = session.scalars(
+                select(RemediationTask).where(
+                    RemediationTask.tenant_id == tenant_id,
+                    RemediationTask.status == "resolved",
+                    RemediationTask.control_id.in_(failures),
+                )
+            ).all()
+            for task in tasks:
+                task.status = "open"
+                task.resolved_at = None
+                task.updated_at = datetime.now(UTC)
+                task.resolution_note = "Reopened: a newly published assessment reports a control regression. Prior verification receipts are retained."
+            return len(tasks)
+    finally:
+        engine.dispose()

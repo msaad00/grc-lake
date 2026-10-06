@@ -104,7 +104,7 @@ def test_queue_defaults_to_pending_and_is_paginated(tmp_path: Path) -> None:
         1
         for entry in load_safeguards()["safeguards"]
         for m in entry["satisfies"]
-        if m.get("review_status") == "proposed"
+        if m.get("review_status") == "proposed" or m.get("control_version") != m.get("current_control_version")
     )
     assert body["meta"]["count"] == pending
     row = body["data"][0]

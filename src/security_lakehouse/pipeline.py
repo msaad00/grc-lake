@@ -38,8 +38,8 @@ from security_lakehouse.validation import validate_raw_event, validate_raw_event
 
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
-NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v3"
-CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v3"
+NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v4"
+CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v4"
 
 
 @serialized_publication
@@ -186,6 +186,13 @@ def _materialize_from_rows(**kwargs) -> PipelineResult:
             raise ValueError("staged assessment mart verification failed")
     seal_generation(generation)
     publish_generation(lake, generation)
+    from security_lakehouse.execution_mode import in_server_mode
+
+    root = lake.parent.parent if lake.parent.name == "tenants" else lake
+    if (root / "server/app.db").is_file() or in_server_mode():
+        from security_lakehouse.remediation_verification import reconcile_published_tasks
+
+        reconcile_published_tasks(lake, tenant_id=kwargs.get("tenant_id", "default"))
     return result
 
 
@@ -565,7 +572,8 @@ def _silver_row(row: dict[str, Any], raw_sha256: str) -> dict[str, Any]:
         "severity": severity,
         "severity_score": SEVERITY_SCORE[severity],
         "status": normalize_event_status(row.get("status", "observed")),
-        "control_ids": [str(item) for item in row.get("controls", [])],
+        "evidence_available": bool(evidence),
+        "control_ids": list(dict.fromkeys(str(item) for item in row.get("controls", []))),
         "safeguard_ids": sorted(set(row.get("safeguard_ids", []))),
         "evidence_id": str(evidence.get("evidence_id") or event_identity(row)),
         "evidence_ref": _evidence_ref(row, evidence, raw_sha256),
@@ -613,7 +621,7 @@ def _build_control_rows(
         # overrides a verdict, including evidence-presence/coverage predicates.
         verdict_rows = [row for row in rows if normalize_event_status(row["status"]) != "observed"]
         unknown_rows = [row for row in verdict_rows if normalize_event_status(row["status"]) == "not_evaluated"]
-        verdict_evidence = [row for row in verdict_rows if row["evidence_ref"]]
+        verdict_evidence = [row for row in verdict_rows if row["evidence_ref"] and row.get("evidence_available", True)]
         evidence_rows = [row for row in rows if row["evidence_ref"]]
         max_score = max((row["severity_score"] for row in rows), default=0)
         top_open = max(failing_rows, key=lambda r: r["severity_score"], default=None)
@@ -635,7 +643,7 @@ def _build_control_rows(
         is_stale = control_id in stale or len(verdict_evidence) == 0
         if control_id not in control_map:
             status = "not_evaluated"
-        elif failing_rows and result.status == "fail":
+        elif result.status == "fail" and (failing_rows or not verdict_evidence):
             status = "fail"
         elif unknown_rows or not verdict_rows:
             status = "not_evaluated"

@@ -206,7 +206,22 @@ def seal_generation(generation: Path, *, legacy: bool = False) -> None:
 
 def verify_generation(generation: Path) -> None:
     manifest = json.loads((generation / "generation.json").read_text())
-    if manifest.get("generation_id") != generation.name or not manifest.get("artifacts"):
+    fields = {"schema_version", "generation_id", "legacy", "artifacts"}
+    if isinstance(manifest, dict) and manifest.get("schema_version") == "trustops.generation.v2":
+        fields.add("ccf_projection_version")
+    if (
+        not isinstance(manifest, dict)
+        or set(manifest) != fields
+        or manifest.get("schema_version") not in {"trustops.generation.v1", "trustops.generation.v2"}
+        or type(manifest.get("legacy")) is not bool
+        or not isinstance(manifest.get("artifacts"), dict)
+        or manifest.get("generation_id") != generation.name
+        or not manifest.get("artifacts")
+        or (
+            manifest.get("schema_version") == "trustops.generation.v2"
+            and manifest.get("ccf_projection_version") != (None if manifest["legacy"] else 1)
+        )
+    ):
         raise ValueError("invalid generation manifest")
     required = set(ARTIFACTS) - {"mart/security_data_lake.duckdb"}
     if manifest.get("schema_version") == "trustops.generation.v1":

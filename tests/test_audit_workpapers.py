@@ -253,3 +253,29 @@ def test_mixed_inputs_retain_synthetic_provenance(workpaper_env, tmp_path):
     content = build_workpaper(lake, **body)
     assert content["synthetic_fixture"] is True
     assert "Synthetic" in render_workpaper(content)
+
+
+def test_legacy_export_migration_requires_matching_original_json(workpaper_env, tmp_path):
+    from security_lakehouse.audit_workpapers import build_workpaper, export_workpaper, verify_workpaper_export
+    from security_lakehouse.evidence_migration import migrate_workpaper
+    from security_lakehouse.io import file_sha256
+
+    _, _, _, lake, body = workpaper_env
+    old = tmp_path / "old-export"
+    content = build_workpaper(lake, **body)
+    export_workpaper(content, old)
+    original_json = tmp_path / "original-workpaper.json"
+    (old / "workpaper.json").rename(original_json)
+    manifest = json.loads((old / "manifest.json").read_text())
+    manifest["files"].pop("workpaper.json")
+    manifest.pop("render_version")
+    (old / "manifest.json").write_text(json.dumps(manifest))
+    before = file_sha256(old / "manifest.json")
+    with pytest.raises(ValueError, match="JSON is required"):
+        migrate_workpaper(old, tmp_path / "missing")
+    migrate_workpaper(old, tmp_path / "new-export", content_path=original_json)
+    assert verify_workpaper_export(tmp_path / "new-export")["ok"]
+    assert file_sha256(old / "manifest.json") == before
+    original_json.write_text("{}")
+    with pytest.raises(ValueError, match="recorded content hash"):
+        migrate_workpaper(old, tmp_path / "forged", content_path=original_json)

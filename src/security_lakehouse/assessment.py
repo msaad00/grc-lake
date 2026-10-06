@@ -797,7 +797,7 @@ def _framework_scores(
             count = len(detail)
             critical = sum(row["severity"] == "critical" for row in detail)
             high = sum(row["severity"] == "high" for row in detail)
-        penalty = sum(scores) + unknown * 100
+        penalty = sum(min(int(row.get("risk_score") or 0), 100) for row in failing) + unknown * 100
         score = max(0, round(100 - penalty / max(1, total * 100) * 100 - stale * 5, 2))
         rows.append(
             {

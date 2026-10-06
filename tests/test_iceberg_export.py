@@ -312,6 +312,14 @@ def test_cli_receipt_and_connection_cleanup(setup, monkeypatch, capsys):
 
 def test_v2_table_requires_explicit_identity_column_evolution(setup, tmp_path, monkeypatch):
     with monkeypatch.context() as legacy:
+        normalize = pipeline._silver_row
+
+        def v2_row(row, digest):
+            result = normalize(row, digest)
+            result.pop("evidence_available")
+            return result
+
+        legacy.setattr(pipeline, "_silver_row", v2_row)
         legacy.setattr(pipeline, "NORMALIZATION_TRANSFORM_VERSION", "trustops.normalization.v2")
         pipeline.run_pipeline(RAW, setup[0], tenant_id=TENANT)
     first = publish(setup)
@@ -328,6 +336,9 @@ def test_v2_table_requires_explicit_identity_column_evolution(setup, tmp_path, m
     with table.update_schema() as update:
         update.add_column("connector_id", StringType(), required=False)
         update.add_column("source_event_id", StringType(), required=False)
+        from pyiceberg.types import BooleanType
+
+        update.add_column("evidence_available", BooleanType(), required=False)
     publish(setup)
     table = setup[1].load_table(("tenant_a", "evidence"))
     assert table.scan().to_arrow().to_pylist()[0]["source_event_id"] == rows[0]["event_id"]

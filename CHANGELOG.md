@@ -7,6 +7,11 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Preserve historical snapshot and workpaper recovery without rewriting recorded hashes, support independently retained integrity checkpoints, and reject malformed generation and integrity manifests.
+- Keep scores consistent when finding details are capped; distinguish missing provider evidence, avoid duplicate control counts, and report incomplete connector pagination and unavailable factor reads explicitly.
+- Pin mapping approvals to reviewed control versions, support explicit safeguard bindings, label the NIST 800-53B Moderate pack accurately, and reopen remediation tasks when published evidence regresses.
+- Carry normalized v4 evidence availability through Parquet and Iceberg exports while preserving source account identities and generation tenant isolation.
+
 - Correct ten SOC 2 criterion topics from the AICPA source manifest and regenerate catalog metadata without changing mapping review decisions.
 - Require human SSO for exception approvals, remediation retests, access decisions, policy acknowledgments, and workflow gates. Reject self-verification and linked-task dismissal without an evidence retest.
 - Keep the scheduler daemon alive after tick errors, fsync connector history, bound CronJob retries, and provide explicit runtime-tail recovery with preserved originals and deferred scheduling. Reject evidence timestamps that overflow UTC or freshness arithmetic.

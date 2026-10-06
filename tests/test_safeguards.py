@@ -181,6 +181,7 @@ def test_review_queue_lists_only_proposed_mappings_with_reviewed_anchors() -> No
         for entry in load_safeguards()["safeguards"]
         for member in entry["satisfies"]
         if member.get("review_status", "reviewed") == "proposed"
+        or member.get("control_version") != member.get("current_control_version")
     ]
     assert {(item["safeguard_id"], item["control_id"]) for item in queue} == set(proposed)
     assert queue, "expected a real review backlog today"

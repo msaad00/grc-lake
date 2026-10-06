@@ -400,6 +400,25 @@ def _parser() -> argparse.ArgumentParser:
     verify_workpaper = assessment_sub.add_parser("verify-workpaper", help="verify exported workpaper file hashes")
     verify_workpaper.add_argument("--dir", required=True)
     verify_workpaper.set_defaults(func=_assessment_verify_workpaper)
+    restore = assessment_sub.add_parser(
+        "restore-snapshots", help="recover ledger-named historical exports without changing the ledger"
+    )
+    restore.add_argument("--lake", required=True)
+    restore.add_argument("--source", required=True)
+    restore.set_defaults(func=_evidence_recovery)
+    migrate = assessment_sub.add_parser("migrate-workpaper", help="re-render a legacy workpaper into a new export")
+    migrate.add_argument("--source", required=True)
+    migrate.add_argument("--out", required=True)
+    migrate.add_argument("--content", default=None)
+    migrate.set_defaults(func=_evidence_recovery)
+    checkpoint = assessment_sub.add_parser("checkpoint", help="write a checkpoint to retain independently")
+    checkpoint.add_argument("--lake", required=True)
+    checkpoint.add_argument("--out", required=True)
+    checkpoint.set_defaults(func=_evidence_recovery)
+    check = assessment_sub.add_parser("verify-checkpoint", help="compare against an independently retained checkpoint")
+    check.add_argument("--lake", required=True)
+    check.add_argument("--checkpoint", required=True)
+    check.set_defaults(func=_evidence_recovery)
     population = assessment_sub.add_parser("population", help="reconcile declared inventory against collected evidence")
     population.add_argument("--lake", required=True)
     population.add_argument("--baseline", required=True)
@@ -459,6 +478,7 @@ def _parser() -> argparse.ArgumentParser:
     fixtures_load = fixtures_sub.add_parser("load", help="pipe a mockup company fixture through the pipeline")
     fixtures_load.add_argument("--company", required=True, help="company directory under mockup_companies/")
     fixtures_load.add_argument("--out", required=True, help="security data lake output directory")
+    fixtures_load.add_argument("--tenant-id", default="default", help="platform tenant owning this fixture generation")
     fixtures_load.add_argument(
         "--rebase-times",
         action="store_true",
@@ -1897,7 +1917,7 @@ def _fixtures_load(args: argparse.Namespace) -> int:
             "\n".join(json.dumps(row, separators=(",", ":")) for row in rebase_fixture_times(rows)) + "\n",
             encoding="utf-8",
         )
-    result = run_pipeline(raw_path, args.out)
+    result = run_pipeline(raw_path, args.out, tenant_id=getattr(args, "tenant_id", "default"))
     print(
         json.dumps(
             {
@@ -2469,6 +2489,36 @@ def _scheduler_repair_history(args: argparse.Namespace) -> int:
 
     print(json.dumps(repair_history(args.lake), indent=2))
     return 0
+
+
+def _evidence_recovery(args: argparse.Namespace) -> int:
+    from security_lakehouse.evidence_migration import (
+        integrity_checkpoint,
+        migrate_workpaper,
+        restore_snapshot_files,
+        verify_checkpoint,
+    )
+    from security_lakehouse.io import read_json
+
+    if args.assessment_command == "restore-snapshots":
+        result = restore_snapshot_files(Path(args.lake), Path(args.source))
+    elif args.assessment_command == "migrate-workpaper":
+        result = migrate_workpaper(
+            Path(args.source), Path(args.out), content_path=Path(args.content) if args.content else None
+        )
+    elif args.assessment_command == "checkpoint":
+        out = Path(args.out).resolve()
+        if out.is_relative_to(Path(args.lake).resolve()):
+            raise ValueError("retain checkpoints outside the lake")
+        result = integrity_checkpoint(Path(args.lake))
+        with out.open("x", encoding="utf-8") as stream:
+            json.dump(result, stream, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+    else:
+        result = verify_checkpoint(Path(args.lake), read_json(Path(args.checkpoint)))
+    print(json.dumps(result, indent=2))
+    return 0 if result.get("ok", True) else 1
 
 
 if __name__ == "__main__":

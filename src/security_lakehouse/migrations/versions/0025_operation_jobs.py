@@ -7,7 +7,7 @@ from alembic import op
 
 revision: str = "0025_operation_jobs"
 down_revision: str | None = "0024_agent_creator_identity"
-branch_labels: str | Sequence[str] | None = None
+_unused_branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 

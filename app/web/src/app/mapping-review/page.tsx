@@ -835,7 +835,7 @@ function MappingReviewContent() {
                           {item.role ?? "equivalent"}
                         </div>
                         {item.contributes_to_coverage === false ? (
-                          <div className="mt-1 text-amber-700 dark:text-amber-300">
+                          <div className="mt-1 text-warning-fg">
                             Context only · no coverage credit
                           </div>
                         ) : null}

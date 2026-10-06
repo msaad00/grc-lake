@@ -251,7 +251,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci-disposable-password
+          POSTGRES_PASSWORD: ci-disposable@pass%word
         ports:
           - 5432:5432
         options: >-
@@ -272,7 +272,7 @@ jobs:
         run: uv sync --frozen --extra server --extra dev
       - name: Upgrade, downgrade, preserve data, and check model drift
         env:
-          TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable-password@localhost:5432/postgres
+          TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable%40pass%25word@localhost:5432/postgres
         run: uv run pytest -q tests/test_migration_portability.py tests/test_agent_decision_authority.py
 
   iceberg-interop:

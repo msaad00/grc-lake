@@ -20,7 +20,9 @@ def _config(url: str):
     package_dir = Path(security_lakehouse.__file__).resolve().parent
     cfg = Config()
     cfg.set_main_option("script_location", str(package_dir / "migrations"))
-    cfg.set_main_option("sqlalchemy.url", url)
+    # Alembic stores options in ConfigParser: escape interpolation markers,
+    # preserving the original URL (including percent-encoded credentials) on read.
+    cfg.set_main_option("sqlalchemy.url", url.replace("%", "%%"))
     return cfg
 
 

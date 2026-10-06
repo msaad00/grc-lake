@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.event_status import FAIL_STATUSES, normalize_event_status
+from security_lakehouse.event_status import FAIL_STATUSES, PASS_STATUSES, normalize_event_status
 from security_lakehouse.generations import generation_identity, generation_reader
 from security_lakehouse.io import canonical_sha256, read_json, read_jsonl
 from security_lakehouse.safeguards import effective_review_state
@@ -172,7 +172,7 @@ def assess_control_plan(
                 sid in row["safeguard_ids"]
                 and _valid_at(row, as_of)
                 and start - timedelta(days=366) <= timestamp(row["event_time"]) <= start
-                and normalize_event_status(row["status"]) == "pass"
+                and normalize_event_status(row["status"]) in PASS_STATUSES
                 for row in design
             )
         )
@@ -213,7 +213,7 @@ def assess_control_plan(
             for row in operating
             if not _valid_at(row, as_of)
             or row["asset_type"] not in catalog[sid].get("asset_types", [])
-            or normalize_event_status(row["status"]) not in {"pass", *FAIL_STATUSES}
+            or normalize_event_status(row["status"]) not in PASS_STATUSES | FAIL_STATUSES
         )
         samples: list[dict[str, Any]] = []
         gaps = []

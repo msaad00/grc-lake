@@ -95,8 +95,17 @@ const SUMMARY = {
       score: 61.4789,
       state: "attention_required",
       control_count: 93,
+      catalog_control_count: 93,
+      evaluated_control_count: 93,
     },
-    { framework: "SOC 2", score: 97, state: "ready", control_count: 27 },
+    {
+      framework: "SOC 2",
+      score: 97,
+      state: "ready",
+      control_count: 27,
+      catalog_control_count: 27,
+      evaluated_control_count: 27,
+    },
   ],
 };
 

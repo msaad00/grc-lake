@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from security_lakehouse.db import poam as poam_db
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.services import NotFound, ValidationError
-from security_lakehouse.sprs import CMMC_FRAMEWORK_ID, build_sprs_report, requirement_id_from_control
+from security_lakehouse.sprs import CMMC_FRAMEWORK_ID, evaluate_cmmc_posture, requirement_id_from_control
 
 JsonObject = dict[str, Any]
 
@@ -103,9 +103,8 @@ def sync_poam_from_posture(
 ) -> JsonObject:
     """Upsert open POA&M rows for failing CMMC control tests; close resolved ones."""
     lake = Path(lake_dir)
-    sprs_report = build_sprs_report(lake)
+    sprs_report, outcomes = evaluate_cmmc_posture(lake)
     deductions = {row["requirement_id"]: row for row in sprs_report.get("deductions", [])}
-    failing_ids = set(deductions)
 
     created = 0
     updated = 0
@@ -130,9 +129,12 @@ def sync_poam_from_posture(
             )
             created += 1
             continue
-        if existing.status in {"completed", "risk_accepted"}:
+        if existing.status == "risk_accepted":
             continue
-        if existing.weakness != weakness or existing.sprs_points != int(meta["sprs_points"]):
+        reopened = existing.status == "completed"
+        if reopened:
+            poam_db.update_item(session, tenant_id=tenant_id, item_id=existing.id, changes={"status": "open"})
+        if reopened or existing.weakness != weakness or existing.sprs_points != int(meta["sprs_points"]):
             existing.weakness = weakness
             existing.sprs_points = int(meta["sprs_points"])
             updated += 1
@@ -141,7 +143,7 @@ def sync_poam_from_posture(
     open_items = poam_db.list_items(session, tenant_id=tenant_id, framework_id=framework_id, status="open")
     open_items.extend(poam_db.list_items(session, tenant_id=tenant_id, framework_id=framework_id, status="in_progress"))
     for item in open_items:
-        if item.requirement_id not in failing_ids:
+        if outcomes.get(item.requirement_id) == "pass":
             poam_db.update_item(session, tenant_id=tenant_id, item_id=item.id, changes={"status": "completed"})
             closed += 1
 

@@ -76,6 +76,7 @@ def test_real_http_reads_tenant_data_and_writes_only_authorized_remote_lake(tmp_
         snapshot = call_tool(server, "create_snapshot", reason="remote MCP integration")
         assert snapshot
         monkeypatch.setenv("TRUSTOPS_API_KEY", b_token)
+        assert call_tool(server, "get_snapshots_integrity")["length"] == 0
         assert call_tool(server, "list_controls") == []
         assert call_tool(server, "list_connector_runs") == []
         assert call_tool(server, "list_trust_shares") == []
@@ -250,5 +251,6 @@ def test_remote_operation_is_durable_and_can_be_polled(tmp_path, monkeypatch):
                 break
             time.sleep(0.05)
         assert completed["status"] == "succeeded"
+        assert call_tool(server, "get_snapshots_integrity") == {"ok": True, "length": 1, "issues": []}
         assert completed["response"]["data"]["reason"] == "background snapshot"
         assert call_tool(server, "list_operations")[0]["id"] == job["id"]

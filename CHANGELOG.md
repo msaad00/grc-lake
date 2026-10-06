@@ -14,6 +14,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Reject every unauthenticated production-server entry point, require authenticated sessions for human mapping review, and restore tenant-scoped snapshot integrity reads.
+
 - Stream bronze and silver integrity verification instead of retaining full evidence payloads, preserving hash linkage, duplicate detection, counts, and evidence-set digests.
 
 - Remove an unused framework-score assignment flagged by CodeQL; retain control-risk scoring for capped and uncapped assessments.

@@ -9,11 +9,12 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License: Apache 2.0"></a>
 </p>
 
-**Open-source trust operations, on your evidence lake.** Collect evidence from your
-stack, evaluate controls, track remediation, and export reproducible workpapers.
+**Open-source trust operations, on your evidence lake.** Assess logs and data
+already in your lake, or collect evidence from your stack. Evaluate controls,
+track remediation, and export reproducible workpapers.
 Run the console, API, CLI, and MCP server in infrastructure you control.
 
-[Quick start](#quick-start) · [Product tour](#product-tour) · [Self-host](#self-host) ·
+[Evidence modes](#evidence-modes) · [Quick start](#quick-start) · [Product tour](#product-tour) · [Self-host](#self-host) ·
 [Frameworks](#frameworks) · [Documentation](#documentation)
 
 <picture>
@@ -23,6 +24,22 @@ Run the console, API, CLI, and MCP server in infrastructure you control.
 
 _Screens show the bundled synthetic company. They demonstrate workflows, not a
 customer deployment or an audit opinion._
+
+## Evidence modes
+
+Both modes feed the same evaluation engine, assessments, and review workflows.
+
+| Mode              | Start with                                                                        | How it works                                                                                                                                                                                                                                                                                                 |
+| ----------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Existing lake** | Logs, security events, and evidence already ingested into your lake or warehouse. | Read-only readers query existing tables; [lake mappings](docs/BRING_YOUR_OWN_LAKE.md) translate their fields into evidence. Snowflake, ClickHouse, Databricks, BigQuery, and Iceberg/Parquet readers include OCSF presets for Amazon Security Lake. S3 evidence and SIEM exports are also supported sources. |
+| **Ingest**        | Cloud, identity, code, endpoint, and SaaS systems; no existing lake required.     | Read-only connectors collect evidence into storage you own. Sources include AWS, Azure, GCP, GitHub, GitLab, Okta, Google Workspace, Jira, Intune, and HR systems.                                                                                                                                           |
+
+**Already have a lake?** Start with [bring your own lake](docs/BRING_YOUR_OWN_LAKE.md).
+**Collecting new evidence?** Start with [connector setup](docs/CONNECTOR_CREDENTIALS.md).
+Lake mappings are experimental; preview and live-provider qualification vary by
+reader. See the [connector catalog](docs/CONNECTORS.md) for status. Existing-lake
+readers preserve the source system and materialize assessment evidence into the
+TrustOps lake; they do not move the TrustOps application into your warehouse.
 
 ## Quick start
 

@@ -122,3 +122,31 @@ test.describe("mapping review", () => {
     ).toBeVisible({ timeout: 20_000 });
   });
 });
+
+test("contextual mappings are visibly separate from coverage", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/mapping-reviews/queue?**", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    if (Array.isArray(body.data) && body.data.length > 1) {
+      body.data[0] = {
+        ...body.data[0],
+        role: "supporting",
+        contributes_to_coverage: false,
+      };
+      body.data[1] = {
+        ...body.data[1],
+        role: "inherited",
+        contributes_to_coverage: false,
+      };
+    }
+    await route.fulfill({ response, json: body });
+  });
+  const table = await openQueue(page);
+  await expect(
+    table.getByText("Context only · no coverage credit"),
+  ).toHaveCount(2);
+  await expect(table.getByText("supporting", { exact: true })).toBeVisible();
+  await expect(table.getByText("inherited", { exact: true })).toBeVisible();
+});

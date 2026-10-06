@@ -67,7 +67,9 @@ def validate_plan(plan: dict[str, Any]) -> tuple[datetime, datetime, datetime]:
     seen = set()
     for control in plan["controls"]:
         text_fields = {"safeguard_id", "activity", "owner", "system", "frequency", "procedure", "sampling_rationale"}
-        fields(control, text_fields | {"cadence_days", "sample_per_window", "design_event_ids"})
+        fields(control, text_fields | {"cadence_days", "sample_per_window", "design_event_ids"}, {"assessment_context"})
+        if "assessment_context" in control:
+            validate_assessment_context(control["assessment_context"])
         for key in text_fields:
             nonempty(control[key])
         if control["safeguard_id"] in seen:
@@ -83,6 +85,30 @@ def validate_plan(plan: dict[str, Any]) -> tuple[datetime, datetime, datetime]:
         if len(set(ids)) != len(ids):
             raise ValueError("duplicate design evidence IDs")
     return start, end, as_of
+
+
+def validate_assessment_context(context: Any) -> None:
+    """A human scope declaration, never a machine verdict or scoring override."""
+    extras = {
+        "not_applicable": set(),
+        "inherited": {"provider", "responsibilities"},
+        "compensating": {"alternative_control"},
+    }
+    if not isinstance(context, dict) or not isinstance(context.get("state"), str) or context["state"] not in extras:
+        raise ValueError("unsupported assessment context state")
+    text = {"state", "rationale"} | extras[context["state"]]
+    fields(context, text | {"evidence_event_ids"})
+    for key in text:
+        nonempty(context[key])
+        if len(context[key]) > 4000:
+            raise ValueError("assessment context text exceeds 4000 characters")
+    ids = context["evidence_event_ids"]
+    if not isinstance(ids, list) or not 1 <= len(ids) <= 100:
+        raise ValueError("assessment context requires 1 to 100 evidence event IDs")
+    for event_id in ids:
+        nonempty(event_id)
+    if len(set(ids)) != len(ids):
+        raise ValueError("duplicate assessment context evidence IDs")
 
 
 def evidence_reference(row: dict[str, Any]) -> dict[str, Any]:
@@ -120,6 +146,24 @@ def assess_control_plan(
         sid = control["safeguard_id"]
         if sid not in catalog:
             raise ValueError("test plan references an unknown safeguard")
+        context = control.get("assessment_context")
+        assessment_context = None
+        if context is not None:
+            context_rows = [by_id[event_id] for event_id in context["evidence_event_ids"] if event_id in by_id]
+            if len(context_rows) != len(context["evidence_event_ids"]) or any(
+                sid not in row["safeguard_ids"]
+                or not _valid_at(row, as_of)
+                or timestamp(row["event_time"]) < start - timedelta(days=366)
+                or not row.get("evidence_ref")
+                for row in context_rows
+            ):
+                raise ValueError("assessment context requires valid evidence bound to this safeguard and cutoff")
+            assessment_context = {
+                **context,
+                "evidence": [evidence_reference(row) for row in context_rows],
+                "scope": "workpaper_period_and_generation",
+                "effect": "context_only_no_verdict_or_score_change",
+            }
         design = [by_id[event_id] for event_id in control["design_event_ids"] if event_id in by_id]
         design_valid = (
             bool(design)
@@ -221,6 +265,7 @@ def assess_control_plan(
                     "sampling_method": "sha256-ranked-per-asset-window; all observed deviations retained",
                 },
                 "conclusion": "pending_human_review",
+                **({"assessment_context": assessment_context} if assessment_context is not None else {}),
             }
         )
     payload = {

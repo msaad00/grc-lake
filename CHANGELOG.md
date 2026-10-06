@@ -7,9 +7,14 @@ Python package, Helm chart, and bundled web console.
 
 ### Added
 
+- Supporting and inherited mapping relationships remain visible without coverage credit or OSCAL implementation claims.
+- Evidence-bound N/A, inherited, and compensating assessment context in period workpapers, preserved through independent human review without changing machine verdicts.
+
 - Durable tenant-scoped background operations for console and remote MCP evaluation, connector sync, scheduler ticks, and snapshots, with idempotent acceptance and explicit interrupted-work recovery.
 
 ### Fixed
+
+- Restore the README distinction between assessing an existing evidence lake and collecting new evidence through connectors.
 
 - Preserve flat-lake ownership and share revocation as tenants are added, isolate request audits, and enforce server-side auditor view scopes.
 - Bound graph detail, index connector history, coalesce stream computation, and cache unchanged catalogs. Add verified generation archival with snapshot and reader protection.

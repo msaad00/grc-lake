@@ -103,10 +103,13 @@ IDs and raw hashes. OSCAL observations link the same generation's source events.
 Historical snapshots never substitute today's population. Legacy snapshots
 without retained source detail cannot assert event-level lineage.
 
-Crosswalks express reviewed primary/equivalent mappings. They do not certify
-supporting evidence, inheritance, applicability exclusions, or compensating
-controls. These require a separately documented human assessment; a missing
-mapping or absent evidence remains unevaluated. Local DuckDB queries execute
+Crosswalks distinguish primary/equivalent implementation mappings from supporting
+and inherited context. Contextual relationships never add coverage or establish
+an implemented requirement, even after mapping review. Period workpapers can
+record evidence-bound N/A, inherited, or compensating assessment context through
+the [independent review workflow](AUDITOR_WALKTHROUGH.md#assessment-context).
+Approval leaves machine verdicts and score denominators unchanged; a missing
+implementation mapping or absent evidence remains unevaluated. Local DuckDB queries execute
 with the CLI operator's filesystem authority. Input JSONL must be UTF-8; an optional leading BOM is accepted by the strict
 JSON reader. Non-finite numbers, duplicate keys, and excessive nesting fail
 before publication. Evaluation responses stay sanitized; the private operator

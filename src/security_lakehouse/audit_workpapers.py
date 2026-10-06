@@ -39,6 +39,7 @@ def build_workpaper(
         referenced.update(row["event_id"] for row in control["operating"]["samples"])
         referenced.update(control["operating"]["deviation_event_ids"])
         referenced.update(control["operating"]["invalid_event_ids"])
+        referenced.update(row["event_id"] for row in control.get("assessment_context", {}).get("evidence", []))
     events = read_jsonl(lake / "silver/normalized_events.jsonl")
     evidence = {
         row["event_id"]: {**evidence_reference(row), "status": row["status"], "source": row["source"]}
@@ -111,10 +112,24 @@ def render_workpaper(content: dict[str, Any], *, review: dict[str, Any] | None =
         mappings = ", ".join(
             f"{row['control_id']} ({row['effective_review_state']})" for row in control["requirement_mappings"]
         )
+        context = control.get("assessment_context")
+        context_html = ""
+        if context:
+            details = "".join(
+                f"<p><strong>{escape(key.replace('_', ' ').title())}:</strong> {escape(context[key])}</p>"
+                for key in ("provider", "responsibilities", "alternative_control")
+                if key in context
+            )
+            context_html = (
+                f'<section class="notice"><strong>Assessment context: {escape(context["state"].replace("_", " ").title())}</strong>'
+                f"<p>{escape(context['rationale'])}</p>{details}"
+                f'<p class="meta">Workpaper review: {escape(status)}. Period and generation bound; machine outcomes and scores remain unchanged.</p>'
+                f'<p class="meta">Evidence: {escape(", ".join(context["evidence_event_ids"]))}</p></section>'
+            )
         cards.append(f'''<article><div class="eyebrow">{escape(control["safeguard_id"])}</div><h3>{escape(test["activity"])}</h3>
 <p class="meta">{escape(test["owner"])} · {escape(test["system"])} · {escape(test["frequency"])}</p>
 <div class="results"><span>Design: <strong>{escape(control["design"]["status"].replace("_", " "))}</strong></span><span class="{escape(operating["status"])}">{escape(labels[operating["status"]])}</span></div>
-<p>{escape(test["procedure"])}</p><p class="meta">Planned windows: {operating["planned_windows"]} · Observed assets: {operating["observed_asset_count"]} · Selected records: {len(operating["samples"])}</p>
+{context_html}<p>{escape(test["procedure"])}</p><p class="meta">Planned windows: {operating["planned_windows"]} · Observed assets: {operating["observed_asset_count"]} · Selected records: {len(operating["samples"])}</p>
 <details><summary>Inspect evidence and test rationale</summary><p>{escape(test["sampling_rationale"])}</p><p>Deviations: {escape(", ".join(operating["deviation_event_ids"]) or "None observed")}</p><pre>{escape(json.dumps(operating["gaps"], indent=2))}</pre><table><thead><tr><th>Event</th><th>Asset</th><th>Observed</th><th>Raw SHA-256</th></tr></thead><tbody>{rows}</tbody></table><p>Design records: {escape(", ".join(row["event_id"] for row in control["design"]["evidence"]))}</p><p>{escape(mappings)}</p></details></article>''')
     issues = "".join(
         f"<li><strong>{escape(name.replace('_', ' '))}: {section['count']}</strong><pre>{escape(json.dumps(section['items'], indent=2))}</pre>{'Additional details truncated' if section['truncated'] else ''}</li>"

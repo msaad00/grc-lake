@@ -22,6 +22,7 @@ from security_lakehouse.framework_provenance import build_framework_view, framew
 from security_lakehouse.mappings import DEFAULT_MAPPINGS, article_mapping_reviewed, load_control_article_mappings
 from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
+    contributes_to_coverage,
     effective_review_state,
     load_safeguards,
     safeguards_by_requirement,
@@ -107,7 +108,8 @@ def build_framework_coverage(
         for member in entry.get("satisfies", []):
             control_id = str(member.get("control_id"))
             state = effective_review_state(member)
-            states_by_control[control_id].add(state)
+            if contributes_to_coverage(member):
+                states_by_control[control_id].add(state)
             mapping_states[control_framework.get(control_id) or str(member.get("framework_id") or "")][state] += 1
     maintainer_by_framework: Counter[str] = Counter()
     org_by_framework: Counter[str] = Counter()

@@ -103,6 +103,22 @@ is rejected without rewriting the raw store. Historical materialized generations
 retain their earlier evidence. This ordering applies to records returned by the
 provider; it does not expand the connector's incremental query window.
 
+Snapshot readers share a lock; snapshot writers hold it exclusively. Every read
+still checks the complete ledger, safe paths, and fresh bytes of every snapshot.
+A process-local cache retains up to 4096 successful verification fingerprints,
+including ledger hash, predecessor, and timestamp, so unchanged bytes need not
+be strictly decoded and canonically hashed again. File timestamps alone never
+establish integrity. Cache eviction or a new worker triggers full verification.
+Historical files and their canonical hashes are unchanged.
+
+After verification, a snapshot detail read decodes only matching candidates and
+a limited framework trend read decodes only its selected snapshots. Each result
+is a fresh object. Reads still perform I/O proportional to the whole history;
+this is an optimization of repeated verification and decoding, not a constant-time
+history store. Reproduce a bounded synthetic warm-read benchmark with
+`PYTHONPATH=src python tools/benchmark_snapshot_reads.py`. Its medians exclude the
+initial verification and are not production capacity or cold-start estimates.
+
 ## Snowflake Production Pattern
 
 For Snowflake, `deploy/snowflake/bootstrap_poc.sql` and

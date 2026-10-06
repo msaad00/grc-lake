@@ -37,6 +37,16 @@ security-lakehouse benchmark pipeline --raw /tmp/audit-scale/raw.jsonl --out /tm
 
 Controls are sampled from the active catalog. Each open event fans out to `controls_per_event` findings during evaluation.
 
+## Integrity verification memory
+
+Lake verification streams bronze and silver records. It retains hashes, event-ID
+counts, and the sorted evidence-set metadata required by the existing digest
+format; it no longer retains every parsed evidence payload. Memory still grows
+with event count and the largest individual record. Evaluation and mart building
+remain separate memory consumers. This optimization does not qualify the default
+1 GiB Helm limit for a given dataset; measure the complete workload under its
+actual container limit.
+
 ## Latency and throughput enhancements
 
 ### Incremental materialize (`pipeline.run_pipeline_incremental`)

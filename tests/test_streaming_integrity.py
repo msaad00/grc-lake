@@ -117,3 +117,68 @@ def test_failed_generation_hash_retains_previous_assessment(tmp_path, monkeypatc
     assert generations.active_generation(lake) == before
     assert generations.generation_identity(lake) == identity
     assert verify_lake_integrity(lake)["ok"]
+
+
+def test_integrity_verification_does_not_retain_raw_payloads(tmp_path):
+    import tracemalloc
+
+    from security_lakehouse.io import write_jsonl_from_iterable
+    from security_lakehouse.scale_synthesis import iter_synthesize_audit_events
+
+    def events():
+        for row in iter_synthesize_audit_events(64, seed=42):
+            row["attributes"]["large_source_payload"] = "x" * (256 * 1024)
+            yield row
+
+    raw = tmp_path / "raw.jsonl"
+    write_jsonl_from_iterable(raw, events())
+    lake = tmp_path / "lake"
+    pipeline.run_pipeline(raw, lake)
+    # Measure only verification allocations, not fixture construction or pipeline
+    # evaluation. Sixteen MiB of raw payload must not be resident as parsed rows.
+    tracemalloc.start()
+    try:
+        result = verify_lake_integrity(lake)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert result["ok"], result["issues"]
+    assert result["bronze_count"] == result["silver_count"] == 64
+    assert peak < 5 * 1024 * 1024, f"verification allocated {peak / 2**20:.1f} MiB"
+
+
+@pytest.mark.parametrize(
+    ("mutation", "issue"),
+    [
+        ("raw", "raw_sha256 mismatch"),
+        ("missing_raw", "raw payload is missing"),
+        ("orphan", "silver rows reference missing bronze hashes"),
+        ("duplicate", "duplicate event_ids"),
+        ("truncate", "integrity manifest counts do not match evidence"),
+    ],
+)
+def test_streamed_integrity_checks_reach_evidence_tail(tmp_path, mutation, issue):
+    import json
+
+    from security_lakehouse.io import read_jsonl
+
+    lake = tmp_path / "lake"
+    pipeline.run_pipeline(RAW, lake)
+    generation = generations.active_generation(lake)
+    relative = "bronze/raw_events.jsonl" if mutation in {"raw", "missing_raw"} else "silver/normalized_events.jsonl"
+    path = generation / relative
+    rows = read_jsonl(path)
+    if mutation == "raw":
+        rows[-1]["raw"]["status"] = "tampered"
+    elif mutation == "missing_raw":
+        rows[-1].pop("raw")
+    elif mutation == "orphan":
+        rows[-1]["raw_sha256"] = "0" * 64
+    elif mutation == "duplicate":
+        rows[-1]["event_id"] = rows[0]["event_id"]
+    else:
+        rows.pop()
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    result = verify_lake_integrity(lake)
+    assert not result["ok"]
+    assert any(issue in message for message in result["issues"]), result["issues"]

@@ -501,9 +501,10 @@ export function IngestionStatusPanel({
                   </div>
                   <Badge
                     tone={
-                      job.status === "failed"
+                      job.status === "failed" || job.status === "interrupted"
                         ? "critical"
-                        : job.status === "completed"
+                        : job.status === "completed" ||
+                            job.status === "succeeded"
                           ? "ready"
                           : "attention"
                     }

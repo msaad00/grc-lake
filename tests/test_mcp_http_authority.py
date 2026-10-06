@@ -227,3 +227,28 @@ def test_remote_framework_pages_retain_counts_and_core_collection_metadata(tmp_p
         assert page["meta"]["count"] == 2
         assert page["meta"]["next_cursor"]
         assert len(page["data"]) == 1
+
+
+def test_remote_operation_is_durable_and_can_be_polled(tmp_path, monkeypatch):
+    import time
+
+    app = create_app(tmp_path)
+    tenant_id, _, token = _principal(app, "async", "security_admin")
+    lake = tmp_path / "tenants" / tenant_id
+    lake.mkdir(parents=True)
+    _seed_lake(lake)
+    server = mcp_server.build_server(tmp_path / "unused-local")
+    with _server(app) as base:
+        _remote(monkeypatch, base, token)
+        job = call_tool(server, "create_snapshot", reason="background snapshot", idempotency_key="stable-snapshot")
+        assert job["status"] in {"queued", "running", "succeeded"}
+        replay = call_tool(server, "create_snapshot", reason="background snapshot", idempotency_key="stable-snapshot")
+        assert replay["id"] == job["id"]
+        for _ in range(100):
+            completed = call_tool(server, "get_operation", job_id=job["id"])
+            if completed["status"] not in {"queued", "running"}:
+                break
+            time.sleep(0.05)
+        assert completed["status"] == "succeeded"
+        assert completed["response"]["data"]["reason"] == "background snapshot"
+        assert call_tool(server, "list_operations")[0]["id"] == job["id"]

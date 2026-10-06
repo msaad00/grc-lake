@@ -856,3 +856,32 @@ class AuditWorkpaper(Base):
     reviewed_by: Mapped[str | None] = mapped_column(String(320))
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     review_rationale: Mapped[str | None] = mapped_column(Text)
+
+
+class OperationJob(Base):
+    """Durable accepted work; no bearer tokens or provider credentials are stored."""
+
+    __tablename__ = "operation_jobs"
+    __table_args__ = (
+        UniqueConstraint("root_key", "tenant_id", "user_id", "idempotency_key", name="uq_operation_job_request"),
+        Index("ix_operation_jobs_queue", "root_key", "status", "created_at"),
+        Index("ix_operation_jobs_tenant", "root_key", "tenant_id", "created_at"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    root_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    api_key_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    auth_method: Mapped[str] = mapped_column(String(32), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    path: Mapped[str] = mapped_column(String(255), nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    worker_token: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[float] = mapped_column(Float, nullable=False)
+    started_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    heartbeat_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    finished_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    http_status: Mapped[int | None] = mapped_column(Integer, nullable=True)

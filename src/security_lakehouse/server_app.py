@@ -27,6 +27,7 @@ import time
 import uuid
 from collections import OrderedDict
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from pathlib import Path
@@ -1158,7 +1159,22 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     migrate.upgrade(lake)
     engine = create_engine_for(lake)
 
+    @asynccontextmanager
+    async def lifespan(application: FastAPI):
+        previous = application.state.operation_worker
+        worker = JobWorker(application.state.operation_queue, previous.execute)
+        application.state.operation_worker = worker
+        enabled = getattr(application.state, "job_worker_enabled", True)
+        if enabled:
+            worker.start()
+        try:
+            yield
+        finally:
+            if enabled:
+                await run_in_threadpool(worker.stop)
+
     app = FastAPI(
+        lifespan=lifespan,
         title="TrustOps API",
         version=api_v1.API_VERSION,
         description=(
@@ -1204,6 +1220,50 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             tenant_ids = []
         bound = tenancy.resolve_bound_tenant(lake, require_auth=app.state.require_auth, tenant_ids=tenant_ids)
         return tenancy.tenant_lake(lake, identity.tenant_id, bound_tenant=bound)
+
+    from security_lakehouse.operation_jobs import JobConflict, JobQueue, JobWorker
+
+    app.state.operation_queue = JobQueue(app.state.sessionmaker, lake)
+
+    def execute_operation(row) -> tuple[int, dict[str, Any]]:
+        from security_lakehouse.auth.dependencies import _INSECURE_IDENTITY, _apply_billing_state
+        from security_lakehouse.db.models import ApiKey, User
+
+        with app.state.sessionmaker() as session:
+            if row.auth_method == "insecure" and not app.state.require_auth:
+                identity = _INSECURE_IDENTITY
+            else:
+                user = session.get(User, row.user_id)
+                if user is None or user.tenant_id != row.tenant_id or not user.is_active:
+                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
+                key = session.get(ApiKey, row.api_key_id) if row.api_key_id else None
+                if row.api_key_id and (
+                    key is None or key.user_id != user.id or key.tenant_id != row.tenant_id or not key.is_active()
+                ):
+                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
+                identity = Identity(
+                    tenant_id=user.tenant_id,
+                    user_id=user.id,
+                    email=user.email,
+                    role=user.role,
+                    scopes=scopes_for_role(user.role),
+                    api_key_id=row.api_key_id,
+                    auth_method=row.auth_method,
+                )
+                identity = _apply_billing_state(session, identity)
+            if identity.tenant_id != row.tenant_id or not identity.has_scope(api_v1.required_post_scope(row.path)):
+                return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
+            with server_execution(identity.tenant_id):
+                code, payload = api_v1.handle_post(
+                    row.path,
+                    json.loads(row.payload_json),
+                    lake_for(identity),
+                    on_snapshot_written=_snapshot_written_hook(session, identity.tenant_id),
+                )
+            session.commit()
+            return int(code), payload
+
+    app.state.operation_worker = JobWorker(app.state.operation_queue, execute_operation)
 
     # OIDC SSO is optional; the OAuth client + signed session middleware are only
     # wired when an identity provider is configured via the environment.
@@ -2011,6 +2071,22 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         )
         return JSONResponse(api_v1.envelope("platform.audit-readiness", data))
 
+    @app.get("/api/v1/operations", tags=["platform"])
+    def operation_list(
+        limit: int = Query(50, ge=1, le=500),
+        offset: int = Query(0, ge=0),
+        identity: Identity = Depends(_require_read),
+    ) -> JSONResponse:
+        rows = app.state.operation_queue.list(identity.tenant_id, limit, offset)
+        return JSONResponse(_redact_payload(api_v1.envelope("operations", rows), identity))
+
+    @app.get("/api/v1/operations/{job_id}", tags=["platform"])
+    def operation_status(job_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:
+        row = app.state.operation_queue.get(identity.tenant_id, job_id)
+        if row is None:
+            raise HTTPException(status_code=404, detail="operation not found")
+        return JSONResponse(_redact_payload(api_v1.envelope("operations", row), identity))
+
     @app.get("/api/v1/platform/jobs", tags=["platform"])
     def platform_jobs_route(
         request: Request,
@@ -2031,6 +2107,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = build_platform_jobs(
             str(lake_for(identity)),
             agent_runs=[agent_runs_db.agent_run_to_dict(row) for row in agent_rows],
+            operations=app.state.operation_queue.list(identity.tenant_id, limit),
             limit=limit,
             kind=kind,
             status=status,
@@ -3597,6 +3674,22 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"requires scope: {required_scope}",
+            )
+        from security_lakehouse.operation_jobs import supported
+
+        if "respond-async" in request.headers.get("Prefer", "").lower() and supported(v1_path):
+            lake_for(identity)  # Bind legacy flat ownership at acceptance, before tenant growth.
+            key = request.headers.get("Idempotency-Key") or str(uuid.uuid4())
+            try:
+                job = app.state.operation_queue.enqueue(identity, v1_path, body, key)
+            except JobConflict as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            return JSONResponse(
+                api_v1.envelope("operations", job),
+                status_code=202,
+                headers={"Location": job["status_url"], "Preference-Applied": "respond-async", "Retry-After": "1"},
             )
         # handle_post rebuilds posture and writes a snapshot; offload so it does
         # not block the event loop. on_snapshot_written is a no-op for every

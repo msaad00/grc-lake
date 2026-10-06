@@ -1,6 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  readinessCoverage,
+  type ReadinessCoverage as Coverage,
+} from "@/lib/readiness-coverage";
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { FrameworkPosture, FrameworkView } from "@/lib/api/types";
@@ -42,21 +46,15 @@ function frameworkLabel(framework: FrameworkView) {
   return framework.name;
 }
 
-const MIN_COVERAGE = 0.5;
-
-type Coverage = { assessed: number; total: number | null; sufficient: boolean };
-
-// A score over a sliver of the catalog is not a readiness signal, so below
-// MIN_COVERAGE the card reports coverage instead of a percentage.
 function coverageFor(
   framework: FrameworkPosture,
   catalogById: Map<string, FrameworkView>,
 ): Coverage {
   const total =
     catalogById.get(frameworkIdFor(framework.framework))?.control_count ?? null;
-  const assessed = framework.control_count;
-  const sufficient = !total || assessed / total >= MIN_COVERAGE;
-  return { assessed, total: total || null, sufficient };
+  const assessed =
+    framework.control_count - (framework.not_evaluated_control_count ?? 0);
+  return readinessCoverage(assessed, total);
 }
 
 function statusFor(framework: FrameworkPosture, coverage: Coverage) {

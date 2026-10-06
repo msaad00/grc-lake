@@ -1,6 +1,7 @@
 // Wire types mirror security_lakehouse/assessment.py and gold/*.jsonl.
 
 export interface FrameworkPosture {
+  not_evaluated_control_count?: number;
   framework: string;
   score: number;
   state: "ready" | "attention_required";

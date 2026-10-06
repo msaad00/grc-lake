@@ -14,6 +14,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Accept normalized passing evidence in workpapers, preserve open POA&M items when evidence is unknown, reopen completed items on regression, and suppress readiness scores when framework coverage is insufficient.
+
 - Reject every unauthenticated production-server entry point, require authenticated sessions for human mapping review, and restore tenant-scoped snapshot integrity reads.
 
 - Stream bronze and silver integrity verification instead of retaining full evidence payloads, preserving hash linkage, duplicate detection, counts, and evidence-set digests.

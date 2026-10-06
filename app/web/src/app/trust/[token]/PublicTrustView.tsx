@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { readinessCoverage } from "@/lib/readiness-coverage";
 import { Lock, Loader2, ShieldAlert } from "lucide-react";
 import { TrustOpsLogo } from "@/components/brand/TrustOpsLogo";
 import { Badge } from "@/components/ui/badge";
@@ -218,7 +219,13 @@ export default function PublicTrustView() {
                   </p>
                 )}
                 {data.frameworks.map((row, index) => {
-                  const state = readiness(row.state);
+                  const coverage = readinessCoverage(
+                    row.evaluated_control_count,
+                    row.catalog_control_count,
+                  );
+                  const state = coverage.sufficient
+                    ? readiness(row.state)
+                    : { label: "Insufficient coverage", tone: "info" as const };
                   const detail = [
                     typeof row.catalog_control_count === "number" &&
                     row.catalog_control_count > 0
@@ -248,9 +255,11 @@ export default function PublicTrustView() {
                         data-testid="framework-score"
                         className="flex shrink-0 items-center gap-3"
                       >
-                        <span className="text-lg font-semibold">
-                          {roundScore(row.score)}
-                        </span>
+                        {coverage.sufficient && (
+                          <span className="text-lg font-semibold">
+                            {roundScore(row.score)}
+                          </span>
+                        )}
                         <Badge tone={state.tone}>{state.label}</Badge>
                       </div>
                     </div>

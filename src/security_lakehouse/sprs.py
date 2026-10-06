@@ -82,8 +82,8 @@ def compute_sprs_score(
     }
 
 
-def build_sprs_report(lake_dir: str | Path) -> dict[str, Any]:
-    """Compute SPRS from gold control tests for the tenant lake."""
+def evaluate_cmmc_posture(lake_dir: str | Path) -> tuple[dict[str, Any], dict[str, str]]:
+    """Return SPRS and explicit requirement outcomes from the same gold rows."""
     lake = Path(lake_dir)
     control_tests = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True, base_dir=lake)
     outcomes: dict[str, set[str]] = {}
@@ -104,4 +104,13 @@ def build_sprs_report(lake_dir: str | Path) -> dict[str, Any]:
         assessment_complete=not unknown,
         score=report["score"] if not unknown else None,
     )
-    return report
+    verdicts = {
+        key: "fail" if key in failing else "pass" if key in passing else "not_evaluated"
+        for key in _cmmc_sprs_metadata()
+    }
+    return report, verdicts
+
+
+def build_sprs_report(lake_dir: str | Path) -> dict[str, Any]:
+    """Compute SPRS from gold control tests for the tenant lake."""
+    return evaluate_cmmc_posture(lake_dir)[0]

@@ -14,6 +14,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Patch the console build selector parser through scoped overrides while preserving generated CSS; retain the separate unpatched braces advisory in dependency security documentation.
+
 - Restore the README distinction between assessing an existing evidence lake and collecting new evidence through connectors.
 
 - Preserve flat-lake ownership and share revocation as tenants are added, isolate request audits, and enforce server-side auditor view scopes.

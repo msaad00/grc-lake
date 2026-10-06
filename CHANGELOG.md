@@ -16,6 +16,7 @@ Python package, Helm chart, and bundled web console.
 - Preserve evaluated control verdicts when activity observations are also present, while retaining unknown, observation-only, failure, and stale states. Incremental evaluation refreshes existing verdicts without rewriting historical generations.
 - Accept changed connector records at the same source timestamp when their collection is newer, preventing alert status updates from blocking later syncs. Older redelivery cannot overwrite the newer collection; conflicting ties on both timestamps still fail without changing the store.
 - Keep inventory observations unevaluated, respect configured failure thresholds, and include declared eligible assets without period evidence in workpaper sampling gaps.
+- Keep declared workpaper assets in sampling even when evidence is missing or unbound; exclude only a known incompatible asset type established by the cutoff, preserving account isolation and earlier exports.
 - Retain failed login attempts as observations, preserve GCP IAM conditions, and identify broad/public access grants and open repository alert severity.
 - Reconcile missing HIPAA workstation, media, authentication, policy and documentation identities against eCFR, preserving historical catalog scope and proposed mapping review.
 - Persist scheduler attempts before execution so failed or interrupted workflows, connector syncs, and lake evaluations respect their configured interval; reject corrupt scheduler state without discarding retry history.

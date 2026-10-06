@@ -24,14 +24,18 @@ to the manifest; it is not an independently authenticated signature.
 
 ## What to inspect
 
-1. **Access and encryption:** documented design and passing period samples. Follow
-   the recorded event IDs and raw hashes. These results still await review.
+1. **Access and encryption:** documented design and passing observations, with
+   insufficient operating evidence across the declared population. Missing assets
+   and compatible assets without bound samples remain gaps. Follow the recorded
+   event IDs and raw hashes; these results still await review.
 2. **Production changes:** a failing observation remains visible even when a
    different observation is selected for the sample.
 3. **AI inventory:** the second daily window is missing. A policy document cannot
    fill that operating-evidence gap.
 4. **Population:** six assets were declared, five were observed. The missing asset
-   is named, and inventory completeness remains independently unverified.
+   is named in both reconciliation and operating sampling gaps. Its unknown type
+   cannot justify excluding it from any control. Inventory completeness remains
+   independently unverified.
 5. **Lineage:** each workpaper binds its plan, baseline, catalog mappings, evidence,
    and results to one verified generation. It records reviewed and proposed
    mapping states without converting proposed mappings into assurance.

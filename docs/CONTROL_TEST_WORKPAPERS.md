@@ -23,13 +23,23 @@ claims about this repository or a real organization.
   the safeguard, reports a passing outcome, predates the test period by at most
   366 days, and was collected by the assessment cutoff. A reviewer must still
   assess whether the design addresses the risk and inspect the underlying source.
-- **Sample pass:** each observed asset has enough valid observations in every
+- **Sample pass:** each expected asset has enough valid observations in every
   cadence window, and there are no observed deviations or unknown outcomes in the
   period. Sample ranking uses SHA-256 over the plan digest and event ID, making
   selection reproducible. All observed failures remain visible even if unselected.
 - **Sample fail:** at least one observed in-period outcome failed.
 - **Insufficient evidence:** missing windows, unbound observations, missing design
   documents, unknown outcomes, or invalid collection times prevent support.
+
+Standalone test plans use observed period assets. Workpapers also include the
+declared inventory, independently of whether its evidence binds to the tested
+safeguard. A declared asset is excluded only when evidence collected by the cutoff
+establishes one asset type recognized by the pinned catalog that is incompatible
+with the safeguard. Missing, unrecognized, or ambiguous type evidence cannot
+establish an exclusion. Such assets remain expected and missing bound samples
+appear as per-asset, per-window gaps. Source account and asset ID jointly identify
+the asset; evidence in another account cannot fill its gaps. Population
+reconciliation remains a separate claim and never substitutes for control samples.
 
 Windows are half-open `[start, end)`. Design evidence cannot also serve as
 operating evidence. Assessment periods must be closed, no longer than 366 days,

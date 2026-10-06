@@ -103,12 +103,17 @@ def assess_control_plan(
     start, end, as_of = validate_plan(plan)
     generation = verified_generation(lake, plan["tenant_id"])
     catalog = {row["safeguard_id"]: row for row in read_json(lake / "catalog/safeguards.json")["safeguards"]}
+    catalog_types = {asset_type for row in catalog.values() for asset_type in row.get("asset_types", [])}
     events = read_jsonl(lake / "silver/normalized_events.jsonl")
     by_id = {row["event_id"]: row for row in events}
     bound: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    declared_types: dict[tuple[str, str], set[str]] = defaultdict(set)
     for row in events:
         for safeguard_id in row["safeguard_ids"]:
             bound[safeguard_id].append(row)
+        asset_key = (row["tenant_id"], row["asset_id"])
+        if declared_assets is not None and asset_key in declared_assets and _valid_at(row, as_of):
+            declared_types[asset_key].add(row["asset_type"])
     plan_hash = canonical_sha256(plan)
     results = []
     for control in plan["controls"]:
@@ -133,13 +138,16 @@ def assess_control_plan(
             if row["event_id"] not in control["design_event_ids"] and start <= timestamp(row["event_time"]) < end
         ]
         observed_assets = {(row["tenant_id"], row["asset_id"]) for row in operating}
+        # Applicability cannot depend on having evidence bound to this control:
+        # missing bindings are precisely one of the gaps the test must expose.
+        # Exclude only a known, unambiguous incompatible type at the cutoff.
+        # Missing, unrecognized, or ambiguous types cannot establish an exclusion.
         eligible_declared = {
-            (row["tenant_id"], row["asset_id"])
-            for row in bound[sid]
-            if declared_assets is not None
-            and (row["tenant_id"], row["asset_id"]) in declared_assets
-            and row["asset_type"] in catalog[sid].get("asset_types", [])
-            and _valid_at(row, as_of)
+            asset
+            for asset in declared_assets or ()
+            if len(declared_types[asset]) != 1
+            or not declared_types[asset].issubset(catalog_types)
+            or not declared_types[asset].isdisjoint(catalog[sid].get("asset_types", []))
         }
         assets = sorted(observed_assets | eligible_declared)
         windows = []

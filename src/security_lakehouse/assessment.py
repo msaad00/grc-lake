@@ -497,8 +497,8 @@ def _snapshot_chain_rows_unlocked(
                     payload = {"evaluated_at": entry["evaluated_at"]}
                 assert payload is not None
                 rows.append((_parse_iso(payload["evaluated_at"]), payload, path))
-        except SnapshotIntegrityError as exc:
-            issues.append(f"entry {index}: {exc}")
+        except SnapshotIntegrityError:
+            issues.append(f"entry {index}: snapshot content hash or ledger metadata mismatch")
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             issues.append(f"entry {index}: snapshot file is unreadable or invalid")
         expected_prev = recorded_hash
@@ -807,6 +807,9 @@ def _framework_scores(
                 "not_evaluated_control_count": unknown,
                 "control_count": total,
                 "failing_control_count": len(failing),
+                "passing_control_count": sum(
+                    row.get("status") == "pass" and row["control_id"] not in stale_controls for row in members
+                ),
                 "violation_count": count,
                 "stale_control_count": stale,
                 "critical_violation_count": critical,

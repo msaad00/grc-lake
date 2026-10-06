@@ -1410,7 +1410,7 @@ def run_workflow(
     through yet -- a snapshot node reached only via resume does not dispatch
     webhooks in this slice.
     """
-    if actor not in _RUN_ACTORS:
+    if not in_server_mode() and actor not in _RUN_ACTORS:
         actor = "console"
     workflow = get_workflow(lake_dir, workflow_id)
     if workflow is None:
@@ -1486,6 +1486,12 @@ def _claim_workflow_decision(lake_dir: str | Path, run_id: str, actor: str, deci
         prior = get_workflow_run(lake_dir, run_id)
         if prior is None:
             raise ValueError(f"unknown run_id {run_id!r}")
+        if in_server_mode() and decision == "approval":
+            initiator = str(prior.get("actor") or "").casefold()
+            if initiator in {"", "console", "api"}:
+                raise ApprovalConflict("workflow initiator is unknown; start a new run for independent review")
+            if initiator == actor.casefold():
+                raise ApprovalConflict("workflow approval requires an independent reviewer")
         if (prior.get("status") or prior.get("result")) != "awaiting_approval":
             raise ApprovalConflict("run is not awaiting approval; reconcile an interrupted claim before retrying")
         workflow = get_workflow(lake_dir, str(prior["workflow_id"]))

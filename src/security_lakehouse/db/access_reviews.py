@@ -174,6 +174,16 @@ def record_decision(
     item = get_item(session, tenant_id=tenant_id, item_id=item_id)
     if item is None:
         return None
+    if (
+        decision == "certified"
+        and reviewer.strip()
+        and reviewer.strip().casefold()
+        in {
+            item.subject_id.strip().casefold(),
+            item.subject_name.strip().casefold(),
+        }
+    ):
+        raise ValueError("access certification requires an independent reviewer")
     item.decision = decision
     item.reviewer = reviewer
     item.note = note

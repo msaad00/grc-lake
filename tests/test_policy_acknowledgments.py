@@ -18,6 +18,7 @@ from security_lakehouse.audit_readiness import build_audit_readiness  # noqa: E4
 from security_lakehouse.db.base import session_scope  # noqa: E402
 from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
 from security_lakehouse.server_app import create_app  # noqa: E402
+from test_agent_decision_authority import human  # noqa: E402
 from test_api_v1 import _seed_lake  # noqa: E402
 
 
@@ -26,7 +27,8 @@ def _bearer(token: str) -> dict[str, str]:
 
 
 @pytest.fixture
-def env(tmp_path: Path):
+def env(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "local-test-grc-signing-key")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -56,7 +58,7 @@ def _published_policy(client: TestClient, admin_headers: dict[str, str]) -> str:
 def test_acknowledgment_requires_published_policy(env) -> None:
     client, tokens = env
     admin = _bearer(tokens["security_admin"])
-    reader = _bearer(tokens["read_only"])
+    reader = human(client.app, tokens["read_only"])
     draft = client.post(
         "/api/v1/policies",
         json={
@@ -72,7 +74,7 @@ def test_acknowledgment_requires_published_policy(env) -> None:
 def test_record_and_list_acknowledgment(env) -> None:
     client, tokens = env
     admin = _bearer(tokens["security_admin"])
-    reader = _bearer(tokens["read_only"])
+    reader = human(client.app, tokens["read_only"])
     document_id = _published_policy(client, admin)
 
     created = client.post(f"/api/v1/policies/{document_id}/acknowledgments", headers=reader, json={})

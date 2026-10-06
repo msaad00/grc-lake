@@ -2,10 +2,16 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from test_agent_decision_authority import human
 from test_remediation import _bearer
 from test_remediation import env as remediation_env
 
 env = remediation_env
+
+
+@pytest.fixture(autouse=True)
+def signing_key(monkeypatch):
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "test-governed-exceptions-signing-key")
 
 
 def request_body():
@@ -17,9 +23,9 @@ def request_body():
 
 
 def test_exception_requires_independent_authenticated_approval(env):
-    _, client, tokens = env
-    owner = _bearer(tokens["security_admin"])
-    reviewer = _bearer(tokens["admin"])
+    app, client, tokens = env
+    owner = human(app, tokens["security_admin"])
+    reviewer = human(app, tokens["admin"])
     created = client.post("/api/v1/remediation/exceptions", json=request_body(), headers=owner)
     assert created.status_code == 201
     row = created.json()["data"]
@@ -85,16 +91,16 @@ def test_expired_pending_request_and_other_tenant_cannot_be_approved(env):
         user = create_user(session, tenant_id=other.id, email="other@example.test", role="admin")
         _, token = create_api_key(session, tenant_id=other.id, user_id=user.id)
     url = f"/api/v1/remediation/exceptions/{request['id']}/approve"
-    assert client.post(url, headers=_bearer(token)).status_code == 400
+    assert client.post(url, headers=human(app, token)).status_code == 400
     with session_scope(app.state.sessionmaker) as session:
         session.get(ControlException, request["id"]).expires_at = datetime.now(UTC) - timedelta(seconds=1)
-    assert client.post(url, headers=_bearer(tokens["admin"])).status_code == 400
+    assert client.post(url, headers=human(app, tokens["admin"])).status_code == 400
 
 
 def test_pending_rows_do_not_consume_active_page(env):
-    _, client, tokens = env
-    owner = _bearer(tokens["security_admin"])
-    reviewer = _bearer(tokens["admin"])
+    app, client, tokens = env
+    owner = human(app, tokens["security_admin"])
+    reviewer = human(app, tokens["admin"])
     first = client.post("/api/v1/remediation/exceptions", json=request_body(), headers=owner).json()["data"]
     assert client.post(f"/api/v1/remediation/exceptions/{first['id']}/approve", headers=reviewer).status_code == 200
     client.post("/api/v1/remediation/exceptions", json=request_body(), headers=owner)

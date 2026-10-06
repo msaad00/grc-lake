@@ -40,3 +40,27 @@ complete inventory coverage, sustained operating effectiveness, or remediation o
 assets absent from the generation. A resolution note or external link is context,
 not proof of a passing retest. The console displays this distinction and keeps the
 note available when verification fails.
+
+## Recovering interrupted scheduler history
+
+The daemon logs a sanitized tick failure and tries again on its normal cadence.
+Corrupt history stays blocked until reconciled; it is never silently ignored.
+CronJobs use `restartPolicy: Never` and `backoffLimit: 0`, leaving the next scheduled
+job as the retry boundary.
+
+For an unterminated final line in one tenant's `scheduler_state.jsonl` or
+`connector_runs.jsonl`, run:
+
+```bash
+security-lakehouse scheduler repair-history --lake /path/to/tenant-lake
+```
+
+This explicit recovery takes scheduler and connector-history locks, preserves
+original bytes in the owner-only `gold/recovery` directory, and repairs only the
+final unterminated record. Interior or newline-terminated corrupt records require
+operator reconciliation. Evidence generations and assessment ledgers are outside
+this command's scope. A recovery marker blocks ticks if the command is interrupted;
+rerunning the command completes recovery. Every configured target waits a full
+schedule interval after recovery because the interrupted attempt's execution
+cannot be inferred from a torn record. Review the archived tail before retrying
+any external action manually.

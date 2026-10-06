@@ -92,7 +92,10 @@ def test_only_fresh_passing_owned_evidence_can_resolve(tmp_path, failure):
             assert json.loads(task.verification_history) == [proof]
 
 
-def test_authenticated_http_retest_binds_reviewer_and_rejects_claims(tmp_path):
+def test_authenticated_http_retest_binds_reviewer_and_rejects_claims(tmp_path, monkeypatch):
+    from test_agent_decision_authority import human
+
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "local-test-retest-signing-key")
     from fastapi.testclient import TestClient
 
     from security_lakehouse.db.models import RemediationTask
@@ -106,7 +109,7 @@ def test_authenticated_http_retest_binds_reviewer_and_rejects_claims(tmp_path):
         _, token = create_api_key(session, tenant_id=tenant.id, user_id=reviewer.id)
         contributor = create_user(session, tenant_id=tenant.id, email="owner@example.test", role="contributor")
         _, owner_token = create_api_key(session, tenant_id=tenant.id, user_id=contributor.id)
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = human(app, token)
     raw = json.loads(
         (Path(__file__).resolve().parents[1] / "data/raw/security_events.jsonl").read_text().splitlines()[0]
     )
@@ -120,7 +123,9 @@ def test_authenticated_http_retest_binds_reviewer_and_rejects_claims(tmp_path):
         row["control_id"] for row in read_jsonl(tmp_path / "gold/control_tests.jsonl") if row["result"] == "pass"
     )
     task = client.post(
-        "/api/v1/remediation/tasks", json={"title": "Fix", "control_id": control}, headers=headers
+        "/api/v1/remediation/tasks",
+        json={"title": "Fix", "control_id": control},
+        headers={"Authorization": f"Bearer {owner_token}"},
     ).json()["data"]
     url = f"/api/v1/remediation/tasks/{task['id']}/verify"
     assert client.post(url, json={}, headers={"Authorization": f"Bearer {owner_token}"}).status_code == 403

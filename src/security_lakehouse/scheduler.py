@@ -30,6 +30,7 @@ need full crontab grammar should call ``scheduler tick`` from a real cron.
 from __future__ import annotations
 
 import fcntl
+import logging
 import re
 import time
 from dataclasses import dataclass
@@ -385,6 +386,8 @@ def _tick_locked(
     connector_runner: Any | None = None,
     on_snapshot_written: SnapshotWrittenHook | None = None,
 ) -> list[dict[str, Any]]:
+    if (_gold(lake_dir) / "scheduler_recovery_pending.json").exists():
+        raise InvalidJSON("scheduler recovery is incomplete; run scheduler repair-history")
     moment = (now or _utc_now()).astimezone(UTC)
     scheduled = _scheduled_from_workflows(list_workflows(lake_dir))
     state = _read_state(lake_dir)
@@ -538,7 +541,105 @@ def run_forever(
     count = 0
     sleep = sleeper or time.sleep
     while iterations is None or count < iterations:
-        tick(lake_dir, all_tenants=all_tenants)
+        try:
+            tick(lake_dir, all_tenants=all_tenants)
+        except Exception:
+            # No exception text: connector errors may contain credentials or identifiers.
+            logging.getLogger(__name__).error("scheduler tick failed; inspect runtime state before reconciliation")
         sleep(tick_seconds)
         count += 1
     return count
+
+
+def repair_history(lake_dir: str | Path, *, now: datetime | None = None) -> dict[str, Any]:
+    """Explicitly recover only unterminated runtime tails; never evidence ledgers.
+
+    Original bytes are quarantined before mutation. A durable marker blocks all
+    ticks until recovery finishes. Every scheduled target is deferred one full
+    interval because a torn attempt record cannot establish whether it executed.
+    """
+    import hashlib
+    import os
+
+    from security_lakehouse import strict_json
+    from security_lakehouse.io import write_json, write_jsonl
+    from security_lakehouse.ledger import chain_lock
+
+    gold = _gold(lake_dir)
+    gold.mkdir(parents=True, exist_ok=True)
+    runs = gold / "connector_runs.jsonl"
+    marker = gold / "scheduler_recovery_pending.json"
+    with _lock_path(lake_dir).open("a") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        with chain_lock(runs):
+            repairs = []
+            for path in (gold / STATE_FILE, runs):
+                if path.is_symlink():
+                    raise ValueError("runtime recovery refuses symlinks")
+                if not path.exists():
+                    continue
+                raw = path.read_bytes()
+                lines = raw.splitlines(keepends=True)
+                rows = []
+                torn = False
+                for index, line in enumerate(lines):
+                    if not line.strip():
+                        continue
+                    try:
+                        row = strict_json.loads(line.decode("utf-8"))
+                        if not isinstance(row, dict):
+                            raise ValueError("runtime row must be an object")
+                        rows.append(row)
+                    except (ValueError, UnicodeError) as exc:
+                        if index != len(lines) - 1 or line.endswith(b"\n"):
+                            raise ValueError("only an unterminated final runtime record can be repaired") from exc
+                        torn = True
+                if torn or (raw and not raw.endswith(b"\n")):
+                    repairs.append((path, raw, rows))
+            if not repairs and not marker.exists():
+                return {"repaired": [], "deferred_targets": 0}
+            write_json(marker, {"status": "recovery_pending"})
+            directory = os.open(gold, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+            archive = gold / "recovery"
+            archive.mkdir(mode=0o700, exist_ok=True)
+            archive.chmod(0o700)
+            directory = os.open(gold, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+            for path, raw, rows in repairs:
+                backup = archive / f"{path.name}.{hashlib.sha256(raw).hexdigest()}.original"
+                fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600) if not backup.exists() else None
+                if fd is not None:
+                    with os.fdopen(fd, "wb") as handle:
+                        handle.write(raw)
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                elif backup.read_bytes() != raw:
+                    raise ValueError("runtime recovery archive does not match")
+                directory = os.open(archive, os.O_RDONLY)
+                try:
+                    os.fsync(directory)
+                finally:
+                    os.close(directory)
+                write_jsonl(path, rows)
+            _read_state(lake_dir)  # malformed complete state stays blocked for reconciliation
+            targets = [("workflow", entry.workflow_id) for entry in _scheduled_from_workflows(list_workflows(lake_dir))]
+            targets += [("connector", entry.connector_id) for entry in _scheduled_from_connectors(lake_dir)]
+            if _scheduled_lake_eval(lake_dir):
+                targets.append(("lake_eval", "default"))
+            moment = now or _utc_now()
+            for kind, target in targets:
+                _write_state(lake_dir, target_kind=kind, target_id=target, fired_at=moment, result="recovery_deferred")
+            marker.unlink()
+            directory = os.open(gold, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+            return {"repaired": [path.name for path, _, _ in repairs], "deferred_targets": len(targets)}

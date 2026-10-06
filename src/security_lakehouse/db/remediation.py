@@ -135,7 +135,7 @@ def update_task(
         status = str(changes["status"])
         if status not in REMEDIATION_STATUSES:
             raise ValueError(f"status must be one of {list(REMEDIATION_STATUSES)}, got {status!r}")
-        if status == "resolved" and (task.control_id or task.violation_id):
+        if status in {"resolved", "dismissed"} and (task.control_id or task.violation_id):
             raise ValueError("linked remediation requires an evidence retest via the verify endpoint")
         task.status = status
         task.resolved_at = moment if status == "resolved" else None

@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from security_lakehouse.db.base import session_scope  # noqa: E402
 from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
 from security_lakehouse.server_app import create_app  # noqa: E402
+from test_agent_decision_authority import human  # noqa: E402
 from test_api_v1 import _seed_lake  # noqa: E402
 
 
@@ -25,7 +26,8 @@ def _bearer(token: str) -> dict[str, str]:
 
 
 @pytest.fixture
-def env(tmp_path: Path):
+def env(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "local-test-grc-signing-key")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -59,7 +61,7 @@ def test_create_requires_control_manage(env) -> None:
 
 def test_full_campaign_lifecycle_over_api(env) -> None:
     client, tokens = env
-    admin = _bearer(tokens["security_admin"])
+    admin = human(client.app, tokens["security_admin"])
 
     campaign = client.post(
         "/api/v1/access-reviews", json={"name": "Q3 review", "scope": "okta-identity"}, headers=admin
@@ -100,7 +102,7 @@ def test_full_campaign_lifecycle_over_api(env) -> None:
 
 def test_invalid_decision_and_status_return_400(env) -> None:
     client, tokens = env
-    admin = _bearer(tokens["security_admin"])
+    admin = human(client.app, tokens["security_admin"])
     cid = client.post("/api/v1/access-reviews", json={"name": "r"}, headers=admin).json()["data"]["id"]
     assert client.patch(f"/api/v1/access-reviews/{cid}", json={"status": "bogus"}, headers=admin).status_code == (
         HTTPStatus.BAD_REQUEST
@@ -114,6 +116,6 @@ def test_invalid_decision_and_status_return_400(env) -> None:
 
 def test_unknown_campaign_returns_404(env) -> None:
     client, tokens = env
-    admin = _bearer(tokens["security_admin"])
+    admin = human(client.app, tokens["security_admin"])
     assert client.get("/api/v1/access-reviews/nope", headers=admin).status_code == HTTPStatus.NOT_FOUND
     assert client.get("/api/v1/access-reviews/nope/items", headers=admin).status_code == HTTPStatus.NOT_FOUND

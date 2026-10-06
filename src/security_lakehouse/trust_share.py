@@ -5,8 +5,7 @@ prospects) use to verify posture without internal-team-grade access. A
 share is a signed token tied to:
 
   * ``role``     — auditor (read-only, owner/assignee fields redacted)
-  * ``scope``    — what subset of posture is visible (currently always
-                    "posture_full"; future: per-framework scoping)
+  * ``scope``    — what subset of posture is visible (full or one framework)
   * ``expires_at``
   * ``created_by``
 
@@ -67,6 +66,11 @@ def create_share(
         raise ValueError(f"role must be one of {sorted(ALLOWED_ROLES)}")
     if scope not in ALLOWED_SCOPES:
         raise ValueError(f"scope must be one of {sorted(ALLOWED_SCOPES)}")
+    if scope == "posture_framework":
+        from security_lakehouse.catalog import load_framework_registry
+
+        if not framework_id or framework_id not in load_framework_registry():
+            raise ValueError("framework scope requires a known framework_id")
     sensitivity_ceiling = normalize_sensitivity(sensitivity_ceiling, default="")
     if sensitivity_ceiling not in ALLOWED_SENSITIVITY_CEILINGS:
         raise ValueError(f"sensitivity_ceiling must be one of {sorted(ALLOWED_SENSITIVITY_CEILINGS)}")

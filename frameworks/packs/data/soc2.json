@@ -87,11 +87,11 @@
     },
     {
       "id": "CC6.4",
-      "title": "Access is removed or adjusted on role change"
+      "title": "Physical access is limited to authorized personnel"
     },
     {
       "id": "CC6.5",
-      "title": "Physical access to facilities and assets is restricted"
+      "title": "Asset retirement prevents recovery of residual data and software"
     },
     {
       "id": "CC6.6",
@@ -131,7 +131,7 @@
     },
     {
       "id": "CC9.1",
-      "title": "Vendor and partner risks are assessed before engagement"
+      "title": "Business disruption risks have mitigation measures"
     },
     {
       "id": "CC9.2",
@@ -213,7 +213,7 @@
     },
     {
       "id": "P5.2",
-      "title": "Data subject access requests are fulfilled in a timely manner"
+      "title": "Personal data correction requests and denials are communicated"
     },
     {
       "id": "P6.1",
@@ -221,27 +221,27 @@
     },
     {
       "id": "P6.2",
-      "title": "Third-party disclosures comply with privacy commitments"
+      "title": "Authorized disclosure records are complete and current"
     },
     {
       "id": "P6.3",
-      "title": "Data subjects are notified of privacy practices and changes"
+      "title": "Unauthorized disclosure records include reported breaches"
     },
     {
       "id": "P6.4",
-      "title": "Breach and incident notification procedures exist and are tested"
+      "title": "Third-party privacy compliance is assessed and corrected"
     },
     {
       "id": "P6.5",
-      "title": "Cross-border disclosure requirements are met"
+      "title": "Third-party breach reporting commitments support incident response"
     },
     {
       "id": "P6.6",
-      "title": "Government and legal disclosure requests are controlled"
+      "title": "Breach notification reaches affected people and authorities"
     },
     {
       "id": "P6.7",
-      "title": "Disclosure to third parties is monitored over time"
+      "title": "Disclosure accounting is available to data subjects on request"
     },
     {
       "id": "P7.1",

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from security_lakehouse.event_identity import event_identity
@@ -20,7 +20,14 @@ def evidence_timestamp(value: object) -> datetime:
     """New evidence requires an explicit timezone; legacy readers keep their policy."""
     if not isinstance(value, str) or not re.fullmatch(TIMESTAMP_PATTERN, value):
         raise ValueError("timestamp must include a date, time, and timezone")
-    return datetime.fromisoformat(value.upper().replace("Z", "+00:00"))
+    try:
+        moment = datetime.fromisoformat(value.upper().replace("Z", "+00:00")).astimezone(UTC)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("timestamp cannot be represented in UTC") from exc
+    # Reserve boundary years for downstream freshness expiry and grace arithmetic.
+    if not 2 <= moment.year <= 9998:
+        raise ValueError("timestamp UTC year must be between 0002 and 9998")
+    return moment
 
 
 def validate_raw_event(row: dict[str, Any], *, index: int | None = None) -> list[str]:

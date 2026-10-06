@@ -12,12 +12,13 @@ spec:
   failedJobsHistoryLimit: {{ .Values.scheduler.failedJobsHistoryLimit }}
   jobTemplate:
     spec:
+      backoffLimit: 0
       template:
         metadata:
           labels:
             {{- include "trustops.selectorLabels" . | nindent 12 }}
         spec:
-          restartPolicy: OnFailure
+          restartPolicy: Never
           serviceAccountName: {{ include "trustops.serviceAccountName" . }}
           {{- if and .Values.lake.persistence.enabled (not .Values.lake.readOnly) (eq .Values.lake.persistence.accessMode "ReadWriteOnce") }}
           # A ReadWriteOnce lake volume is mountable read-write from a single

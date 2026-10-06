@@ -194,6 +194,13 @@ def _utc_now_iso() -> str:
 
 
 def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
+    from security_lakehouse.ledger import chain_lock
+
+    with chain_lock(path):
+        _append_jsonl_locked(path, record)
+
+
+def _append_jsonl_locked(path: Path, record: dict[str, Any]) -> None:
     """Append one JSON object as a line to a gold-zone JSONL file, owner-only.
 
     These files hold connector configuration. Secret-shaped values are redacted
@@ -217,6 +224,8 @@ def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
     with handle as fh:
         # lgtm[py/clear-text-storage-sensitive-data] record is sanitized before this write
         fh.write(line)
+        fh.flush()
+        os.fsync(fh.fileno())
     cache = _HISTORY_READS.get()
     if cache is not None:
         cache.pop(path.parent.parent.resolve(), None)

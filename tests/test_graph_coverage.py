@@ -113,7 +113,7 @@ def test_coverage_summary_counts_and_pct(tmp_path: Path) -> None:
     assert summary["orphan_controls"] == summary["total_controls"] - 1
     orphan_control_ids = {entry["id"] for entry in report["orphans"]["controls"]}
     assert "control:SOC2-CC6.1" not in orphan_control_ids
-    assert summary["orphan_controls"] == len(orphan_control_ids)
+    assert len(orphan_control_ids) == min(summary["orphan_controls"], report["detail_limit"])
 
 
 def test_coverage_orphan_frameworks(tmp_path: Path) -> None:

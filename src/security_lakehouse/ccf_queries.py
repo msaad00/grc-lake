@@ -104,7 +104,9 @@ def read_page(
     clauses = []
     parameters: list[str | int] = []
     for field, expected in filters.items():
-        if field not in FIELDS or not expected:
+        if field not in FIELDS:
+            raise ValueError("unknown filter field")
+        if not expected:
             clauses.append("0")
             continue
         placeholders = "SELECT value FROM json_each(?)"

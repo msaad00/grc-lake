@@ -123,6 +123,16 @@ function headers(): Record<string, string> {
   return out;
 }
 
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     cache: "no-store",
@@ -130,7 +140,7 @@ async function get<T>(path: string): Promise<T> {
     headers: headers(),
   });
   if (res.status === 401) redirectToLogin();
-  if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+  if (!res.ok) throw new ApiError(res.status, `${path} -> ${res.status}`);
   return (await res.json()) as T;
 }
 
@@ -149,7 +159,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
       (payload as { errors?: Array<{ detail?: string }> }).errors?.[0]
         ?.detail ??
       `${res.status}`;
-    throw new Error(`${path} -> ${reason}`);
+    throw new ApiError(res.status, `${path} -> ${reason}`);
   }
   return (await res.json()) as T;
 }
@@ -222,7 +232,7 @@ async function mutate<T>(
       (payload as { errors?: Array<{ detail?: string }> }).errors?.[0]
         ?.detail ??
       `${res.status}`;
-    throw new Error(`${path} -> ${reason}`);
+    throw new ApiError(res.status, `${path} -> ${reason}`);
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;

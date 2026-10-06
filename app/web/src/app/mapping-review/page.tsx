@@ -271,6 +271,14 @@ function DecisionForm({
 
   const submit = (decision: MappingReviewDecisionKind) => {
     if (!ready) return;
+    if (
+      items.length > 1 &&
+      decision === "approve" &&
+      !window.confirm(
+        `Approve ${items.length} selected mappings with this rationale?`,
+      )
+    )
+      return;
     record.mutate(
       {
         decision,

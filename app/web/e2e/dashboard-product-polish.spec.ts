@@ -27,10 +27,10 @@ test.describe("dashboard product polish", () => {
       frameworks.getByRole("img", { name: /framework$/ }).first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("tablist", { name: "Compliance views" }),
+      page.getByRole("tablist", { name: "Framework coverage views" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("tablist", { name: "Operations views" }),
+      page.getByRole("tablist", { name: "Priority actions views" }),
     ).toBeVisible();
   });
 

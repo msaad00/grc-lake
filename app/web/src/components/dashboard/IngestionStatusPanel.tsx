@@ -61,7 +61,7 @@ function Metric({
       <div className="mt-1 text-xl font-semibold leading-none text-ink">
         {value}
       </div>
-      <div className="mt-1 truncate text-xs text-muted">{detail}</div>
+      <div className="mt-1 text-xs leading-5 text-muted">{detail}</div>
     </div>
   );
 }

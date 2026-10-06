@@ -44,6 +44,7 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from security_lakehouse.assessment import _assessment_hash, load_snapshot
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
@@ -336,6 +337,14 @@ def build_assessment_results(
     generation_id = str(generation.get("generation_id")) if isinstance(generation, dict) else "current"
     subject_uuid = _uuid5("assessment-subject", generation_id)
 
+    # Resolve input lineage from the same verified generation as the controls.
+    # Legacy embedded snapshots have no retained input population to assert.
+    source_lake = (lake / "generations" / generation_id) if snapshot_id and isinstance(generation, dict) else lake
+    inputs: dict[str, list[JsonObject]] = {}
+    if not snapshot_id or isinstance(generation, dict):
+        for event in read_jsonl(source_lake / "silver/normalized_events.jsonl", missing_ok=True, base_dir=source_lake):
+            for control_id in set(event.get("control_ids", [])):
+                inputs.setdefault(control_id, []).append(event)
     observations: list[JsonObject] = []
     findings: list[JsonObject] = []
     control_selections: list[JsonObject] = []
@@ -358,6 +367,21 @@ def build_assessment_results(
             "subjects": [{"subject-uuid": subject_uuid, "type": "inventory-item"}],
             "collected": str(row.get("latest_event_time") or evaluated_at),
         }
+        observation["props"] = [_prop("trustops-generation-id", generation_id)]
+        for key in ("evaluation_version", "input_event_set_sha256"):
+            if row.get(key):
+                observation["props"].append(_prop("trustops-" + key.replace("_", "-"), row[key]))
+        events = sorted(
+            inputs.get(control_id, []), key=lambda e: (str(e.get("event_id", "")), str(e.get("raw_sha256", "")))
+        )
+        if events:
+            observation["relevant-evidence"] = [
+                {
+                    "href": "trustops://evidence/" + quote(str(event["event_id"]), safe=""),
+                    "description": f"Event {event['event_id']}; raw SHA-256 {event.get('raw_sha256', 'unavailable')}; generation {generation_id}.",
+                }
+                for event in events
+            ]
         reasons = row.get("rule_reasons")
         if isinstance(reasons, list) and reasons:
             observation["remarks"] = "; ".join(str(item) for item in reasons)

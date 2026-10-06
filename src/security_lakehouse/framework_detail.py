@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog
+from security_lakehouse.connectors import load_connector_catalog
 from security_lakehouse.evidence_hints import enabled_connector_ids, resolve_connector_hints
 from security_lakehouse.framework_provenance import build_framework_view
 from security_lakehouse.generations import generation_reader
@@ -73,6 +74,7 @@ def build_framework_detail(framework_id: str, lake_dir: str | Path) -> JsonObjec
     evidence = read_jsonl(lake / "silver" / "normalized_events.jsonl")
     freshness = read_jsonl(lake / "gold" / "evidence_freshness.jsonl")
     configured_connectors = enabled_connector_ids(lake)
+    connector_catalog = load_connector_catalog()
 
     evidence_by_control: dict[str, list[JsonObject]] = defaultdict(list)
     freshness_by_control: dict[str, list[JsonObject]] = defaultdict(list)
@@ -100,6 +102,7 @@ def build_framework_detail(framework_id: str, lake_dir: str | Path) -> JsonObjec
             control=control,
             article_ids=article_ids,
             enabled_connector_ids=configured_connectors,
+            connector_catalog=connector_catalog,
         )
         control_rows.append(
             {
@@ -148,6 +151,9 @@ def build_framework_detail(framework_id: str, lake_dir: str | Path) -> JsonObjec
     framework_evidence: list[JsonObject] = []
     for row in control_rows:
         framework_evidence.extend(evidence_by_control.get(str(row["control_id"]), []))
+    framework_evidence = list(
+        {(str(row.get("source") or ""), str(row.get("event_id") or "")): row for row in framework_evidence}.values()
+    )
     recommended = {hint["connector_id"] for row in control_rows for hint in row.get("connector_hints") or []}
     configured_recommended = {
         hint["connector_id"]
@@ -162,11 +168,44 @@ def build_framework_detail(framework_id: str, lake_dir: str | Path) -> JsonObjec
             "mapped_control_count": sum(1 for row in control_rows if row["articles"]),
             "passing_control_count": sum(1 for row in control_rows if row["posture"]["status"] == "pass"),
             "failing_control_count": sum(1 for row in control_rows if row["posture"]["status"] == "fail"),
-            "evidence_count": sum(int(row["evidence"]["count"]) for row in control_rows),
+            "evidence_count": len(framework_evidence),
             "source_count": len({source["source"] for row in control_rows for source in row["evidence"]["sources"]}),
             "recommended_connector_count": len(recommended),
             "configured_recommended_connector_count": len(configured_recommended),
         },
         "controls": control_rows,
         "sources": _source_rollups(framework_evidence, freshness),
+    }
+
+
+def page_framework_detail(
+    detail: JsonObject, *, limit: int = 20, offset: int = 0, include_details: bool = False
+) -> JsonObject:
+    """Bound response detail while retaining full framework counts."""
+    if not 1 <= limit <= 100 or offset < 0:
+        raise ValueError("limit must be 1..100 and offset must be nonnegative")
+    rows = detail["controls"]
+    page = rows[offset : offset + limit]
+    if not include_details:
+        page = [
+            {
+                **{key: row.get(key) for key in ("control_id", "title", "owner", "evaluation_rule", "posture")},
+                "evidence": {
+                    key: row.get("evidence", {}).get(key) for key in ("count", "latest_evidence_at", "freshness")
+                },
+            }
+            for row in page
+        ]
+    return {
+        "framework": detail["framework"],
+        "summary": detail["summary"],
+        "controls": page,
+        "pagination": {
+            "count": len(rows),
+            "returned": len(page),
+            "limit": limit,
+            "offset": offset,
+            "next_offset": offset + len(page) if offset + len(page) < len(rows) else None,
+        },
+        "detail_level": "full" if include_details else "compact",
     }

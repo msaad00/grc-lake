@@ -117,13 +117,13 @@ export function ControlTestTable({
   return (
     <Card className="overflow-hidden">
       <CardHeader>
-        <CardTitle>Live control test queue</CardTitle>
+        <CardTitle>Latest control test results</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <div
         className="overflow-x-auto"
         role="region"
-        aria-label="Live control test queue"
+        aria-label="Latest control test results"
         tabIndex={0}
       >
         <table className="min-w-[820px] w-full text-sm">

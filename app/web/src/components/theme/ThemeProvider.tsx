@@ -34,7 +34,7 @@ function applyThemeClass(resolved: "light" | "dark") {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>("light");
+  const [theme, setThemeState] = useState<ThemeMode>("system");
   const [resolved, setResolved] = useState<"light" | "dark">("light");
 
   const setTheme = useCallback((mode: ThemeMode) => {

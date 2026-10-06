@@ -10,6 +10,7 @@ pytest-asyncio plugin or extra configuration (``anyio`` ships with the MCP SDK).
 
 from __future__ import annotations
 
+import json
 from http import HTTPStatus
 from pathlib import Path
 
@@ -873,6 +874,7 @@ def test_create_remediation_exception_calls_api(tmp_path, monkeypatch):
         "create_remediation_exception",
         control_id="SOC2-CC6.1",
         reason="Compensating IAM review",
+        expires_at="2030-01-01T00:00:00Z",
     )
     assert result["data"]["id"] == "exc-1"
 
@@ -1192,3 +1194,14 @@ def test_detach_tag_calls_api(tmp_path, monkeypatch):
     monkeypatch.setattr(mcp_server, "_server_api_request", fake_request)
     result = call_tool(server, "detach_tag", tag_id="tag-1", entity_type="control", entity_id="SOC2-CC6.1")
     assert result["data"]["detached"] is True
+
+
+def test_large_framework_tool_is_bounded_and_paginates_without_gaps(tmp_path):
+    server = _seeded_server(tmp_path)
+    first = call_tool(server, "get_framework_detail", framework_id="nist-800-53-rev5")
+    assert len(json.dumps(first).encode()) < 64 * 1024
+    assert len(first["controls"]) == 20
+    second = call_tool(server, "get_framework_detail", framework_id="nist-800-53-rev5", offset=20)
+    assert first["pagination"]["next_offset"] == 20
+    assert not {r["control_id"] for r in first["controls"]} & {r["control_id"] for r in second["controls"]}
+    assert first["summary"] == second["summary"]

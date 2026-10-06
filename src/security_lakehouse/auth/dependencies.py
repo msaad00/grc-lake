@@ -45,8 +45,7 @@ def get_identity(
 ) -> Identity:
     """Resolve the authenticated identity, or raise 401."""
     if not getattr(request.app.state, "require_auth", True):
-        request.state.identity = _INSECURE_IDENTITY
-        return _INSECURE_IDENTITY
+        return _request_identity(request, _INSECURE_IDENTITY)
     now = datetime.now(UTC)
 
     # 1. API key (agents/CI): Authorization: Bearer <token>
@@ -73,8 +72,7 @@ def get_identity(
             auth_method="api_key",
         )
         identity = _apply_billing_state(session, identity)
-        request.state.identity = identity
-        return identity
+        return _request_identity(request, identity)
 
     # 2. Browser session (SSO): httpOnly cookie
     cookie_raw = request.cookies.get(SESSION_COOKIE)
@@ -108,14 +106,24 @@ def get_identity(
             api_key_id=source_key.id if source_key is not None else None,
         )
         identity = _apply_billing_state(session, identity)
-        request.state.identity = identity
-        return identity
+        return _request_identity(request, identity)
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="missing credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+def _request_identity(request: Request, identity: Identity) -> Identity:
+    # A caller may deliberately narrow its view. This never grants authority:
+    # even writes from a normally privileged session become forbidden.
+    if request.headers.get("X-Trust-Role", "").lower() == "auditor" or (
+        request.url.path == "/api/v1/stream" and request.query_params.get("role") == "auditor"
+    ):
+        identity = replace(identity, role="auditor", scopes=identity.scopes & frozenset({"read"}))
+    request.state.identity = identity
+    return identity
 
 
 def _apply_billing_state(session: Session, identity: Identity) -> Identity:

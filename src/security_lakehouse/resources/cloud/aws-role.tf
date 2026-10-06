@@ -32,7 +32,7 @@ variable "role_name" {
 
 resource "aws_iam_role" "trustops_posture_readonly" {
   name        = var.role_name
-  description = "Read-only role for TrustOps AWS IAM posture evidence collection."
+  description = "Read-only role for TrustOps AWS IAM and selected inventory evidence collection."
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -68,7 +68,14 @@ resource "aws_iam_role_policy" "trustops_posture_readonly" {
           "iam:GetLoginProfile",
           "iam:ListAccessKeys",
           "iam:ListMFADevices",
-          "iam:ListUsers"
+          "iam:ListUsers",
+          "ec2:DescribeInstances",
+          "s3:ListAllMyBuckets",
+          "rds:DescribeDBInstances",
+          "cloudtrail:DescribeTrails",
+          "config:DescribeConfigurationRecorders",
+          "securityhub:DescribeHub",
+          "organizations:DescribeOrganization"
         ]
         Resource = "*"
       }

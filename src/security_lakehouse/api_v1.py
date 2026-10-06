@@ -48,7 +48,7 @@ from security_lakehouse.connector_state import (
     run_probe,
 )
 from security_lakehouse.execution_mode import in_server_mode
-from security_lakehouse.framework_detail import build_framework_detail
+from security_lakehouse.framework_detail import build_framework_detail, page_framework_detail
 from security_lakehouse.framework_provenance import build_framework_view
 from security_lakehouse.generations import generation_identity, generation_reader, pinned_path
 from security_lakehouse.graph import (
@@ -223,7 +223,16 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
     ),
 }
 
+
 # Route -> (resource name, loader) for endpoints returning a row collection.
+def _violations_with_framework(lake: Path) -> list[JsonObject]:
+    rows = build_current_posture(lake)["violations"]
+    controls = {
+        r["control_id"]: r for r in read_jsonl(lake / "gold/control_posture.jsonl", missing_ok=True, base_dir=lake)
+    }
+    return [{**row, "framework": controls.get(row["control_id"], {}).get("framework", "unknown")} for row in rows]
+
+
 COLLECTION_LOADERS: dict[str, tuple[str, Callable[[Path], list[JsonObject]]]] = {
     "/api/v1/connector-runs": (
         "connector-runs",
@@ -253,7 +262,7 @@ COLLECTION_LOADERS: dict[str, tuple[str, Callable[[Path], list[JsonObject]]]] = 
         "assets",
         lambda lake: read_jsonl(lake / "gold" / "asset_risk.jsonl", missing_ok=True, base_dir=lake),
     ),
-    "/api/v1/violations": ("violations", lambda lake: build_current_posture(lake)["violations"]),
+    "/api/v1/violations": ("violations", _violations_with_framework),
     "/api/v1/snapshots": ("snapshots", list_snapshots),
     "/api/v1/ingestion/eval/runs": ("ingestion.eval.runs", list_eval_runs),
     "/api/v1/platform/ai-governance/inventory": (
@@ -1334,6 +1343,11 @@ def filter_collection(rows: list[JsonObject], params: Params) -> tuple[list[Json
     }
     if not filters:
         return rows, {}
+    if rows:
+        fields = {key for row in rows for key in row}
+        unknown = set(filters) - fields
+        if unknown:
+            raise ValueError("unknown filter field: " + ", ".join(sorted(unknown)))
 
     def matches(row: JsonObject) -> bool:
         for field, expected_values in filters.items():
@@ -1526,6 +1540,21 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
         detail = build_framework_detail(framework_id, lake)
         if detail is None:
             return HTTPStatus.NOT_FOUND, error_envelope("not_found", "unknown framework", resource="framework.detail")
+        if any(key in params for key in ("limit", "offset", "include_details")):
+            try:
+                include = first_param(params, "include_details") or "false"
+                if include not in {"true", "false"}:
+                    raise ValueError("include_details must be true or false")
+                detail = page_framework_detail(
+                    detail,
+                    limit=int(first_param(params, "limit") or "20"),
+                    offset=int(first_param(params, "offset") or "0"),
+                    include_details=include == "true",
+                )
+            except ValueError:
+                return HTTPStatus.BAD_REQUEST, error_envelope(
+                    "bad_request", "invalid framework page parameters", resource="framework.detail"
+                )
         return HTTPStatus.OK, envelope("framework.detail", detail)
     if path == "/api/v1/snapshots/integrity":
         return HTTPStatus.OK, envelope("snapshots.integrity", verify_snapshot_chain(lake))
@@ -1821,6 +1850,8 @@ def record_mapping_review(
 # single-sourced from connector_state so the boundary reject and the
 # forward-merge strip cannot drift apart.
 def _reject_local_only_options(options: JsonObject | None, *, resource: str) -> JsonObject | None:
+    if options is not None and not isinstance(options, dict):
+        return error_envelope("bad_request", "options must be an object", resource=resource)
     for name in _LOCAL_ONLY_OPTIONS:
         if options and name in options:
             return error_envelope(
@@ -2008,6 +2039,17 @@ def handle_post(
         return HTTPStatus.CREATED, envelope("trust-shares", revoked)
     configure = _connector_action(path, "configure")
     if configure is not None:
+        if payload.get("credentials") is not None and not isinstance(payload["credentials"], dict):
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", "credentials must be an object", resource="connector.configure"
+            )
+        if not isinstance(payload.get("state", "enabled"), str) or payload.get("state", "enabled").lower() not in {
+            "enabled",
+            "disabled",
+        }:
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", "state must be enabled or disabled", resource="connector.configure"
+            )
         rejection = _reject_local_only_options(payload.get("options"), resource="connector.configure")
         if rejection is not None:
             return HTTPStatus.BAD_REQUEST, rejection

@@ -14,7 +14,11 @@ bound tenant's data.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
+
+from security_lakehouse.io import read_json, write_json
+from security_lakehouse.ledger import chain_lock
 
 TENANTS_DIRNAME = "tenants"
 
@@ -36,8 +40,14 @@ def tenant_lake(root: str | Path, tenant_id: str, *, bound_tenant: str | None) -
     3. otherwise the (not-yet-created) ``<root>/tenants/<tenant_id>`` path, so an
        unprovisioned tenant reads an empty lake instead of another tenant's data.
     """
-    root_path = Path(root)
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", tenant_id):
+        raise ValueError("invalid tenant identifier")
+    root_path = Path(root).resolve()
     scoped = root_path / TENANTS_DIRNAME / tenant_id
+    if scoped.is_symlink() or scoped.resolve().parent != (root_path / TENANTS_DIRNAME).resolve():
+        raise ValueError("tenant directory must remain within the lake")
+    if (root_path / TENANTS_DIRNAME).is_symlink():
+        raise ValueError("tenant directory must remain within the lake")
     if scoped.exists():
         return scoped
     if bound_tenant is not None and tenant_id == bound_tenant and is_flat_lake(root_path):
@@ -50,12 +60,29 @@ def resolve_bound_tenant(root: str | Path, *, require_auth: bool, tenant_ids: li
 
     - Insecure no-auth mode binds the flat lake to the synthetic ``insecure``
       tenant so local demos keep working.
-    - Otherwise the flat lake is bound only when exactly one tenant exists; with
-      zero or multiple tenants it is bound to nobody and every tenant reads its
-      own ``tenants/<id>`` subtree (fail-closed — no shared data).
+    - The first authenticated sole tenant durably owns an existing flat lake.
+      Adding tenants cannot revoke that ownership or transfer it to a new tenant.
+      An unbound multi-tenant root remains inaccessible until explicitly migrated.
     """
     if not require_auth:
         return "insecure"
-    if len(tenant_ids) == 1:
-        return tenant_ids[0]
+    root = Path(root)
+    if not is_flat_lake(root):
+        return tenant_ids[0] if len(tenant_ids) == 1 else None
+    path = root / ".flat-lake-owner.json"
+    with chain_lock(path):
+        if path.is_symlink():
+            raise ValueError("invalid flat lake ownership record")
+        if path.exists():
+            record = read_json(path)
+            owner = record.get("tenant_id")
+            if not isinstance(owner, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", owner):
+                raise ValueError("invalid flat lake ownership record")
+            return owner if owner in tenant_ids else None
+        if len(tenant_ids) == 1:
+            owner = tenant_ids[0]
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", owner):
+                raise ValueError("invalid tenant identifier")
+            write_json(path, {"tenant_id": owner})
+            return owner
     return None

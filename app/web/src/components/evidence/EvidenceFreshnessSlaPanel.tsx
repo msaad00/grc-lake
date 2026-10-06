@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { AlertTriangle, Clock, Loader2, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,15 @@ import { formatMinutes, plural } from "@/lib/format";
 import { notify } from "@/lib/toast";
 
 export function EvidenceFreshnessSlaPanel() {
+  const [expanded, setExpanded] = useState(false);
   const summary = useEvidenceFreshnessSummary();
+  const sources = [...(summary.data?.sources ?? [])].sort(
+    (a, b) =>
+      b.stale_count +
+      b.expired_count +
+      b.missing_count -
+      (a.stale_count + a.expired_count + a.missing_count),
+  );
   const escalate = useEscalateStaleEvidenceMutation();
 
   const escalateTasks = async () => {
@@ -90,7 +99,7 @@ export function EvidenceFreshnessSlaPanel() {
               )}
 
               <div className="grid gap-2">
-                {(summary.data.sources ?? []).slice(0, 6).map((row) => (
+                {sources.slice(0, expanded ? sources.length : 6).map((row) => (
                   <div
                     key={row.source}
                     className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3 py-2"
@@ -125,6 +134,18 @@ export function EvidenceFreshnessSlaPanel() {
                   </div>
                 ))}
               </div>
+              {sources.length > 6 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setExpanded(!expanded)}
+                  aria-expanded={expanded}
+                >
+                  {expanded
+                    ? "Show highest priority sources"
+                    : `Show all ${sources.length} sources`}
+                </Button>
+              )}
             </>
           )}
         </QueryState>

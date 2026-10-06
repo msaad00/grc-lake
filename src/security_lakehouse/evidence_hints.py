@@ -99,9 +99,10 @@ def resolve_connector_hints(
     control: JsonObject,
     article_ids: list[str],
     enabled_connector_ids: set[str] | None = None,
+    connector_catalog: dict[str, JsonObject] | None = None,
 ) -> list[JsonObject]:
     """Return recommended connectors for a control with configured state."""
-    catalog = load_connector_catalog()
+    catalog = connector_catalog if connector_catalog is not None else load_connector_catalog()
     enabled = enabled_connector_ids or set()
     risk_domain = str(control.get("risk_domain") or "governance")
     asset_types = [str(item) for item in control.get("asset_types") or []]

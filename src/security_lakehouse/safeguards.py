@@ -385,7 +385,7 @@ def requirement_status(control_id: str, safeguard_results: dict[str, str], paylo
     "we have not modelled this yet" and "we tested it and it failed" are different
     answers to an auditor.
     """
-    mapped = safeguards_by_requirement(payload).get(control_id, [])
+    mapped = safeguards_by_requirement(payload, reviewed_only=True).get(control_id, [])
     if not mapped:
         return "unmapped"
     statuses = {safeguard_results.get(sid, "unknown") for sid in mapped}

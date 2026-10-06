@@ -14,7 +14,7 @@ export function AuditorBanner() {
         redacted.
       </span>
       <a
-        href="?"
+        href="?role=default"
         className="rounded-md border border-warning/40 bg-surface px-2.5 py-1 text-xs font-semibold text-warning-fg hover:bg-warning-bg"
       >
         Exit auditor mode

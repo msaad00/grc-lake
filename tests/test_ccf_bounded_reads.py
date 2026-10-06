@@ -51,7 +51,7 @@ def test_summary_and_page_never_load_full_asset_json(lake, monkeypatch):
         {"event_ids": ["event-0,event-3"], "sort": ["event_ids"]},
         {"sort": ["-reasons"]},
         {"sort": ["--asset_id"]},
-        {"unknown": ["x' OR 1=1 --"]},
+        {"asset_id": ["x' OR 1=1 --"]},
         {"sort": ["unknown"], "cursor": [api_v1.encode_cursor(3)], "limit": ["2"]},
         {"asset_id": [""]},
     ],
@@ -140,3 +140,12 @@ def test_publication_between_page_entry_and_query_stays_pinned(lake, tmp_path, m
     assert body["meta"]["count"] == 8
     assert body["meta"]["generation"] == before
     assert api_v1.handle_get("/api/v1/ccf/assessment", {}, lake)[1]["data"]["asset_result_count"] == 1
+
+
+def test_indexed_and_json_collections_reject_unknown_filter_fields(lake):
+    rows = read_json(lake / "gold/ccf_assessment.json")["asset_results"]
+    with pytest.raises(ValueError, match="unknown filter field"):
+        api_v1.collection_response("ccf.asset-results", rows, {"unknown": ["x' OR 1=1 --"]})
+    status, body = api_v1.handle_get("/api/v1/ccf/asset-results", {"unknown": ["x' OR 1=1 --"]}, lake)
+    assert status == 400
+    assert body["errors"][0]["code"] == "bad_request"

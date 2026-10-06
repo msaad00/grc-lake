@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import sys
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -219,6 +221,14 @@ def validate_evidence_controls(control_ids: set[str], catalog_path: str | Path |
 
 
 def _read_json(path: str | Path) -> dict[str, Any]:
+    source = Path(path).resolve()
+    stat = source.stat()
+    fingerprint = (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+    return copy.deepcopy(_cached_json(str(source), fingerprint))
+
+
+@lru_cache(maxsize=32)
+def _cached_json(path: str, fingerprint: tuple[int, ...]) -> dict[str, Any]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError(f"{path} must contain a JSON object")

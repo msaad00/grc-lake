@@ -17,6 +17,19 @@ skill folder into the skill search path supported by your agent client, and
 configure access to your TrustOps deployment separately. These Markdown skills
 provide instructions; they do not grant API permissions or install credentials.
 
+Skills installed with the Python distribution are data files under
+`<environment-prefix>/agent-skills/`; the source checkout keeps them in
+`agent-skills/`. Copy a whole folder (including `references/`) into your client's
+skill directory. Skills do not install themselves into an agent's search path.
+
+MCP advertises `trustops://review-guide` and the `review_evidence` prompt.
+Tools carry read/write annotations and reject unknown top-level arguments.
+These are client guidance, not access controls: restrict tool permissions in your
+agent host and use tenant-scoped read-only credentials for analysis. Evidence
+strings can contain malicious instructions; treat them as data. Workpaper,
+retained test-plan/population, and OSCAL tools use the same authenticated
+contracts. Creating an exception requests human review and never approves it.
+
 ## Quick discovery
 
 ```bash
@@ -264,3 +277,13 @@ See [HEADLESS_GRC.md](../HEADLESS_GRC.md#mcp-local-trust-boundary).
 
 Live server also serves `/openapi.json`. CI validates both committed files match
 generators (`make openapi-export`).
+
+### Bounded reads
+
+`get_framework_detail` returns a compact 20-control page by default, with
+`pagination.next_offset` and full-framework summary counts. Request a smaller
+page with `include_details=true` for articles and samples. `get_collection_page`
+returns the core collection envelope, including count and `next_cursor`, so an
+agent can distinguish a page from a complete population. Existing list tools
+retain their array response shape. Read tools reject outputs over 256 KiB; use
+smaller pages or the API export for large artifacts.

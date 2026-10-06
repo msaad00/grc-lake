@@ -212,6 +212,14 @@ def _parser() -> argparse.ArgumentParser:
 
     lake = sub.add_parser("lake", help="bring-your-own-lake mapping commands (experimental)")
     lake_sub = lake.add_subparsers(dest="lake_command", required=True)
+    retention = lake_sub.add_parser(
+        "retention", help="report generation storage or explicitly archive old unreferenced generations"
+    )
+    retention.add_argument("--lake", required=True)
+    retention.add_argument("--older-than-days", type=int, default=90)
+    retention.add_argument("--keep-latest", type=int, default=3)
+    retention.add_argument("--archive-to", default=None, help="external archive destination; omitted means report only")
+    retention.set_defaults(func=_lake_retention)
     lake_map = lake_sub.add_parser(
         "map",
         help="validate a lake mapping and preview mapped rows (--dry-run; writes nothing)",
@@ -1795,6 +1803,8 @@ def _assessment_population(args: argparse.Namespace) -> int:
 def _assessment_status(args: argparse.Namespace) -> int:
     from security_lakehouse.assessment import build_current_posture
 
+    if not Path(args.lake).is_dir():
+        raise ValueError("assessment lake directory does not exist")
     assessment = build_current_posture(args.lake, freshness_days=args.freshness_days)
     if args.format == "summary":
         posture = assessment["posture"]
@@ -1817,6 +1827,8 @@ def _assessment_status(args: argparse.Namespace) -> int:
 def _assessment_snapshot(args: argparse.Namespace) -> int:
     from security_lakehouse.assessment import write_assessment_snapshot
 
+    if not Path(args.lake).is_dir():
+        raise ValueError("assessment lake directory does not exist")
     path = write_assessment_snapshot(args.lake, output=args.out, freshness_days=args.freshness_days, reason=args.reason)
     print(f"wrote assessment snapshot: {path}")
     return 0
@@ -2237,6 +2249,11 @@ _REVIEW_EXPORT_FIELDS = (
 )
 
 
+def _csv_cell(value: object) -> str:
+    text = "" if value is None else str(value)
+    return "'" + text if text.lstrip().startswith(("=", "+", "-", "@")) or text.startswith(("\t", "\r", "\n")) else text
+
+
 def _frameworks_review_export(args: argparse.Namespace) -> int:
     """Export the org decision log (oldest first) with its hash-chain verification."""
     import csv
@@ -2250,9 +2267,7 @@ def _frameworks_review_export(args: argparse.Namespace) -> int:
         writer = csv.DictWriter(buffer, fieldnames=_REVIEW_EXPORT_FIELDS, extrasaction="ignore")
         writer.writeheader()
         for row in decisions:
-            writer.writerow(
-                {field: "" if row.get(field) is None else row.get(field) for field in _REVIEW_EXPORT_FIELDS}
-            )
+            writer.writerow({field: _csv_cell(row.get(field)) for field in _REVIEW_EXPORT_FIELDS})
         text = buffer.getvalue()
     else:
         text = json.dumps(
@@ -2414,7 +2429,11 @@ def _policy_lint(args: argparse.Namespace) -> int:
     from security_lakehouse.policy import validate_rule
 
     catalog = read_json(args.catalog or DEFAULT_CATALOG_PATH)
-    controls = catalog.get("controls", []) if isinstance(catalog, dict) else []
+    if not isinstance(catalog, dict) or not isinstance(catalog.get("controls"), list):
+        raise ValueError("policy catalog must be an object containing a controls array")
+    controls = catalog["controls"]
+    if any(not isinstance(control, dict) for control in controls):
+        raise ValueError("policy catalog controls must be objects")
     failures: list[str] = []
     for control in controls:
         control_id = str(control.get("control_id", "?"))
@@ -2519,6 +2538,19 @@ def _evidence_recovery(args: argparse.Namespace) -> int:
         result = verify_checkpoint(Path(args.lake), read_json(Path(args.checkpoint)))
     print(json.dumps(result, indent=2))
     return 0 if result.get("ok", True) else 1
+
+
+def _lake_retention(args: argparse.Namespace) -> int:
+    from security_lakehouse.generation_retention import archive_generations
+
+    result = archive_generations(
+        Path(args.lake),
+        older_than_days=args.older_than_days,
+        keep_latest=args.keep_latest,
+        archive_to=Path(args.archive_to) if args.archive_to else None,
+    )
+    print(json.dumps(result, indent=2))
+    return 0
 
 
 if __name__ == "__main__":

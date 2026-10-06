@@ -23,6 +23,7 @@ import math
 import os
 import secrets
 import threading
+import time
 import uuid
 from collections import OrderedDict
 from collections.abc import AsyncIterator
@@ -31,7 +32,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
@@ -78,7 +79,6 @@ from security_lakehouse.auth.sessions import (
     ensure_cookie_signing_configured,
 )
 from security_lakehouse.catalog import load_control_catalog
-from security_lakehouse.dashboard import render_dashboard
 from security_lakehouse.data_policy import normalize_sensitivity, redact_payload
 from security_lakehouse.db import agent_runs as agent_runs_db
 from security_lakehouse.db import metrics as metrics_db
@@ -151,6 +151,9 @@ def _bearer_digest(request: Request) -> str | None:
         token = auth[7:].strip()
         if token:
             return hashlib.sha256(token.encode("utf-8")).hexdigest()[:32]
+    cookie = request.cookies.get(SESSION_COOKIE)
+    if cookie:
+        return hashlib.sha256(("session:" + cookie).encode("utf-8")).hexdigest()[:32]
     return None
 
 
@@ -1077,6 +1080,43 @@ def _legacy_post_response(
     return JSONResponse(payload, status_code=int(status_code))
 
 
+_STREAM_CACHE: OrderedDict[tuple, tuple[float, dict[str, object]]] = OrderedDict()
+_STREAM_CACHE_LOCK = threading.Lock()
+
+
+def _stream_payloads(lake: Path, tenant_id: str | None, sessionmaker, interval: float) -> dict[str, object]:
+    from security_lakehouse.ai_governance import build_ai_governance_status
+    from security_lakehouse.evidence_freshness import build_freshness_summary
+    from security_lakehouse.evidence_freshness_workflows import load_freshness_records
+    from security_lakehouse.generations import generation_identity
+
+    identity = generation_identity(lake)
+    key = (str(lake.resolve()), tenant_id, id(sessionmaker), json.dumps(identity, sort_keys=True))
+    with _STREAM_CACHE_LOCK:
+        previous = _STREAM_CACHE.get(key)
+        if previous is not None and time.monotonic() - previous[0] < min(interval, 10.0):
+            _STREAM_CACHE.move_to_end(key)
+            return previous[1]
+        status, body = api_v1.handle_get("/api/v1/posture/current", {}, lake)
+        if status >= 400:
+            raise ValueError("stream assessment unavailable")
+        payloads: dict[str, object] = {
+            "posture": body.get("data", {}),
+            "freshness": build_freshness_summary(load_freshness_records(str(lake))),
+            "ai-governance": build_ai_governance_status(lake=lake),
+        }
+        if tenant_id and sessionmaker is not None:
+            from security_lakehouse.audit_readiness import build_audit_readiness
+
+            with sessionmaker() as session:
+                payloads["audit-readiness"] = build_audit_readiness(lake=lake, session=session, tenant_id=tenant_id)
+        _STREAM_CACHE[key] = (time.monotonic(), payloads)
+        _STREAM_CACHE.move_to_end(key)
+        while len(_STREAM_CACHE) > 32:
+            _STREAM_CACHE.popitem(last=False)
+        return payloads
+
+
 async def platform_event_stream(
     lake: Path,
     request: Request,
@@ -1084,53 +1124,19 @@ async def platform_event_stream(
     tenant_id: str | None = None,
     sessionmaker=None,
     interval: float = 10.0,
+    role: str = "read_only",
 ) -> AsyncIterator[str]:
-    """SSE frames for continuous eval: posture, freshness, audit-readiness, and AI governance on change."""
-    last = {"posture": "", "freshness": "", "audit_readiness": "", "ai_governance": ""}
+    """Share collection across tabs; redact each subscriber's view independently."""
+    last: dict[str, str] = {}
     while not await request.is_disconnected():
         emitted = False
-
-        _status, body = await run_in_threadpool(api_v1.handle_get, "/api/v1/posture/current", {}, lake)
-        posture_payload = json.dumps(body.get("data", {}), default=str, sort_keys=True)
-        if posture_payload != last["posture"]:
-            last["posture"] = posture_payload
-            yield f"event: posture\ndata: {posture_payload}\n\n"
-            emitted = True
-
-        from security_lakehouse.evidence_freshness import build_freshness_summary
-        from security_lakehouse.evidence_freshness_workflows import load_freshness_records
-
-        records = await run_in_threadpool(load_freshness_records, str(lake))
-        freshness_payload = json.dumps(build_freshness_summary(records), default=str, sort_keys=True)
-        if freshness_payload != last["freshness"]:
-            last["freshness"] = freshness_payload
-            yield f"event: freshness\ndata: {freshness_payload}\n\n"
-            emitted = True
-
-        if tenant_id and sessionmaker is not None:
-
-            def _audit_readiness() -> dict[str, object]:
-                from security_lakehouse.audit_readiness import build_audit_readiness
-
-                with sessionmaker() as session:
-                    return build_audit_readiness(lake=lake, session=session, tenant_id=tenant_id)
-
-            audit_data = await run_in_threadpool(_audit_readiness)
-            audit_payload = json.dumps(audit_data, default=str, sort_keys=True)
-            if audit_payload != last["audit_readiness"]:
-                last["audit_readiness"] = audit_payload
-                yield f"event: audit-readiness\ndata: {audit_payload}\n\n"
+        payloads = await run_in_threadpool(_stream_payloads, lake, tenant_id, sessionmaker, interval)
+        for event, data in payloads.items():
+            payload = json.dumps(redact_payload(data, role=role), default=str, sort_keys=True)
+            if payload != last.get(event):
+                last[event] = payload
+                yield f"event: {event}\ndata: {payload}\n\n"
                 emitted = True
-
-        from security_lakehouse.ai_governance import build_ai_governance_status
-
-        ai_data = await run_in_threadpool(build_ai_governance_status, lake=lake)
-        ai_payload = json.dumps(ai_data, default=str, sort_keys=True)
-        if ai_payload != last["ai_governance"]:
-            last["ai_governance"] = ai_payload
-            yield f"event: ai-governance\ndata: {ai_payload}\n\n"
-            emitted = True
-
         if not emitted:
             yield ": ping\n\n"
         await asyncio.sleep(interval)
@@ -1147,8 +1153,6 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     """Build the server-mode ASGI app bound to a security data lake directory."""
     _assert_insecure_allowed()
     lake = resolve_path(lake_dir)
-    dashboard = lake / "console.html"
-    render_dashboard(lake, dashboard)
     web_dist = web_dist_dir() if web_dist_index() else None
 
     migrate.upgrade(lake)
@@ -1260,7 +1264,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             # event loop on every authenticated request.
             await run_in_threadpool(
                 append_request_audit,
-                lake,
+                lake_for(identity) if identity is not None else lake,
                 method=request.method,
                 route=path,
                 status_code=response.status_code,
@@ -1293,7 +1297,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             identity = getattr(request.state, "identity", None)
             if response.status_code == HTTPStatus.UNAUTHORIZED:
                 known.discard(digest)
-            elif identity is not None and getattr(identity, "api_key_id", None):
+            elif identity is not None and identity.auth_method != "insecure":
                 known.add(digest)
         return response
 
@@ -1446,6 +1450,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 request,
                 tenant_id=identity.tenant_id,
                 sessionmaker=app.state.sessionmaker,
+                role=identity.role,
             ),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
@@ -3444,9 +3449,20 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         )
 
     @app.get("/api/v1/frameworks/{framework_id}/detail", tags=["data"])
-    def v1_framework_detail(framework_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:
+    def v1_framework_detail(
+        framework_id: str,
+        identity: Identity = Depends(_require_read),
+        limit: int | None = Query(default=None, ge=1, le=100),
+        offset: int = Query(default=0, ge=0),
+        include_details: bool = False,
+    ) -> JSONResponse:
+        params = (
+            {"limit": [str(limit or 20)], "offset": [str(offset)], "include_details": [str(include_details).lower()]}
+            if limit is not None or offset or include_details
+            else {}
+        )
         with server_execution(identity.tenant_id):
-            _status, body = api_v1.handle_get(f"/api/v1/frameworks/{framework_id}/detail", {}, lake_for(identity))
+            _status, body = api_v1.handle_get(f"/api/v1/frameworks/{framework_id}/detail", params, lake_for(identity))
         return JSONResponse(_redact_payload(body, identity), status_code=int(_status))
 
     @app.get("/api/v1/frameworks/coverage", tags=["data"])
@@ -3652,8 +3668,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     @app.get("/console", response_class=HTMLResponse)
-    def console() -> HTMLResponse:
-        return HTMLResponse(dashboard.read_text(encoding="utf-8"))
+    def console() -> Response:
+        if web_dist is not None:
+            return RedirectResponse("/console/dashboard/", status_code=307)
+        return HTMLResponse(
+            "<!doctype html><title>TrustOps</title><h1>TrustOps</h1><p>The console bundle is not installed. Build the web console or use the authenticated API.</p>"
+        )
 
     brand_mark = Path(__file__).resolve().parent / "static" / "trustops-mark.svg"
 

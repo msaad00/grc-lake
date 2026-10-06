@@ -14,6 +14,7 @@ RAW = Path(__file__).resolve().parents[1] / "data/raw/security_events.jsonl"
 def test_interrupted_publication_retains_previous_generation(tmp_path, monkeypatch, failure):
     lake = tmp_path / "lake"
     pipeline.run_pipeline(RAW, lake)
+    original_generations = set((lake / "generations").iterdir())
     before = {
         p: (lake / p).read_bytes()
         for p in [
@@ -38,6 +39,7 @@ def test_interrupted_publication_retains_previous_generation(tmp_path, monkeypat
     with pytest.raises(OSError, match="injected"):
         pipeline.run_pipeline(changed, lake)
     assert {p: (lake / p).read_bytes() for p in before} == before
+    assert set((lake / "generations").iterdir()) == original_generations
 
 
 def test_result_paths_remain_pinned_after_next_publication(tmp_path):

@@ -44,7 +44,7 @@ def test_a_requirement_needing_two_safeguards_fails_when_either_fails() -> None:
     safeguard report the monitoring requirement as met, which is the failure mode
     a CCF exists to prevent.
     """
-    mapping = safeguards_by_requirement()
+    mapping = safeguards_by_requirement(reviewed_only=True)
     shared = [cid for cid, sids in mapping.items() if len(sids) > 1]
     assert shared, "expected at least one requirement satisfied by multiple safeguards"
 

@@ -19,7 +19,7 @@ Load `references/sources.md` before making ISO/IEC 27001 claims.
 ## Workflow
 
 1. Read current posture.
-2. Filter controls where `framework == "ISO 27001"`.
+2. Filter controls where `framework == "ISO 27001:2022"`.
 3. Group gaps by ISMS owner, risk domain, evidence freshness, and asset.
 4. Identify missing or stale documented evidence.
 5. Recommend owner actions and snapshot needs.

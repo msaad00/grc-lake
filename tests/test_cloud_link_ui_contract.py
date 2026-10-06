@@ -125,7 +125,7 @@ def test_aws_linking_accepts_account_id_or_role_arn() -> None:
 def test_azure_linking_is_provider_identity_first() -> None:
     panel = PANEL.read_text(encoding="utf-8")
     forms = (ROOT / "app/web/src/lib/connector-forms.ts").read_text(encoding="utf-8")
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme = (ROOT / "docs/CONNECTOR_CREDENTIALS.md").read_text(encoding="utf-8")
     live_poc = (ROOT / "docs/LIVE_CLOUD_POC.md").read_text(encoding="utf-8")
 
     assert "Read-only Azure identity" in panel
@@ -164,7 +164,7 @@ def test_azure_linking_is_provider_identity_first() -> None:
 def test_snowflake_linking_uses_secret_references_not_passwords() -> None:
     drawer = DRAWER.read_text(encoding="utf-8")
     forms = (ROOT / "app/web/src/lib/connector-forms.ts").read_text(encoding="utf-8")
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme = (ROOT / "docs/CONNECTOR_CREDENTIALS.md").read_text(encoding="utf-8")
 
     assert "Read-only Snowflake role" in drawer
     assert "Secret reference only" in drawer

@@ -199,7 +199,7 @@ def test_aws_posture_role_bootstrap_matches_connector_contract() -> None:
 
 
 def test_aws_assume_role_lifecycle_is_documented_for_operators() -> None:
-    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    readme = (REPO_ROOT / "docs/CONNECTOR_CREDENTIALS.md").read_text(encoding="utf-8")
     runbook = (REPO_ROOT / "docs" / "LIVE_CLOUD_POC.md").read_text(encoding="utf-8")
     deploy_readme = (REPO_ROOT / "deploy" / "README.md").read_text(encoding="utf-8")
     connectors = (REPO_ROOT / "docs" / "CONNECTORS.md").read_text(encoding="utf-8")

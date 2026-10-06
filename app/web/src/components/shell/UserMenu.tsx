@@ -29,7 +29,9 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
   const { theme, setTheme } = useTheme();
 
   const sessionLabel =
-    whoami.data?.email ??
+    (whoami.data?.auth_method === "insecure"
+      ? "Local demo"
+      : whoami.data?.email) ??
     (auditor
       ? `${workspaceIdentity.orgName} · auditor`
       : workspaceIdentity.primaryLabel);
@@ -53,14 +55,16 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           aria-label={`${sessionLabel} — account menu`}
-          className={`${compact ? "h-8 w-8 justify-center !border-transparent !bg-transparent !p-0" : ""} inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink hover:bg-rail-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-rail`}
+          className={`${compact ? "h-8 justify-center !border-transparent !bg-transparent !px-0" : ""} inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink hover:bg-rail-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-rail`}
         >
           <span className="grid h-6 w-6 place-items-center rounded-full bg-brand text-[11px] text-onBrand">
             {avatar}
           </span>
           <span
             className={
-              compact ? "sr-only" : "hidden max-w-[190px] truncate 2xl:inline"
+              compact
+                ? "hidden max-w-[140px] truncate lg:inline"
+                : "hidden max-w-[190px] truncate sm:inline"
             }
           >
             {sessionLabel}
@@ -84,7 +88,12 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
                 <span className="min-w-0 truncate text-ink">
                   {whoami.data.email}
                   <span className="block text-[10px] font-semibold text-muted">
-                    {whoami.data.role}
+                    {whoami.data.role} ·{" "}
+                    {whoami.data.auth_method === "insecure"
+                      ? "Local demo"
+                      : whoami.data.auth_method?.startsWith("session:")
+                        ? "Signed-in session"
+                        : "API identity"}
                   </span>
                 </span>
               </DropdownMenu.Item>
@@ -97,15 +106,14 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
           <DropdownMenu.Item className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-surfaceMuted">
             <Building2 className="h-4 w-4 text-muted" />
             <span className="truncate text-ink">
-              {workspaceIdentity.orgName} — {workspaceIdentity.environmentName}
+              {workspaceIdentity.orgName}
+              {workspaceIdentity.environmentName
+                ? ` — ${workspaceIdentity.environmentName}`
+                : ""}
             </span>
             <span className="rounded-full bg-success-bg px-1.5 py-0.5 text-[10px] font-semibold text-success-fg">
               active
             </span>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted outline-none data-[highlighted]:bg-surfaceMuted">
-            <Building2 className="h-4 w-4" />
-            {workspaceIdentity.secondaryLabel}
           </DropdownMenu.Item>
           <DropdownMenu.Separator className="my-1 h-px bg-line" />
           <DropdownMenu.Label className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted">

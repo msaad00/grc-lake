@@ -7,6 +7,11 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Preserve flat-lake ownership and share revocation as tenants are added, isolate request audits, and enforce server-side auditor view scopes.
+- Bound graph detail, index connector history, coalesce stream computation, and cache unchanged catalogs. Add verified generation archival with snapshot and reader protection.
+- Carry control input digests and event-level OSCAL lineage, validate query filters, harden MCP schemas and tool authority, and correct packaged skills and AWS permissions.
+- Clarify console permissions and approval eligibility, improve responsive overview and freshness detail, respect system theme, and refresh the concise README and synthetic demo screens.
+
 - Preserve historical snapshot and workpaper recovery without rewriting recorded hashes, support independently retained integrity checkpoints, and reject malformed generation and integrity manifests.
 - Keep scores consistent when finding details are capped; distinguish missing provider evidence, avoid duplicate control counts, and report incomplete connector pagination and unavailable factor reads explicitly.
 - Pin mapping approvals to reviewed control versions, support explicit safeguard bindings, label the NIST 800-53B Moderate pack accurately, and reopen remediation tasks when published evidence regresses.

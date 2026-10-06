@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from collections.abc import Mapping
@@ -97,6 +98,7 @@ def run_lake_eval(
         error = str(exc)
         write_lake_scale_state(lake, {**strategy, "last_error": error})
     except Exception:  # noqa: BLE001 - eval runs record sanitized errors
+        logging.getLogger(__name__).exception("Lake evaluation failed; see the private operator log for the cause")
         result = "error"
         error = (
             "local assessment published; warehouse export failed"

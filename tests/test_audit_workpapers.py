@@ -105,6 +105,25 @@ def test_html_escapes_drafts_and_retains_factual_gaps(workpaper_env):
     assert "day2-1" in response.text
 
 
+def test_workpaper_api_retains_declared_asset_without_evidence(workpaper_env):
+    _, client, headers, _, body = workpaper_env
+    response = client.post("/api/v1/audit-workpapers", json=body, headers=headers["author"])
+    assert response.status_code == 201
+    row = response.json()["data"]
+    operating = [item["operating"] for item in row["content"]["assurance"]["controls"]]
+    assert [item["status"] for item in operating] == [
+        "insufficient_evidence",
+        "sample_fail",
+        "insufficient_evidence",
+        "insufficient_evidence",
+        "insufficient_evidence",
+    ]
+    assert all(any(gap["asset_id"] == "synthetic-asset-5" for gap in item["gaps"]) for item in operating)
+    html = client.get(f"/api/v1/audit-workpapers/{row['id']}/html", headers=headers["author"])
+    assert html.status_code == 200
+    assert "<strong>0</strong><span>Passing sample sets</span>" in html.text
+
+
 def test_local_bundle_is_reproducible_and_never_overwrites(workpaper_env, tmp_path):
     from security_lakehouse.audit_workpapers import build_workpaper, export_workpaper, verify_workpaper_export
 

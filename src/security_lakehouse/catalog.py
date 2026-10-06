@@ -6,6 +6,7 @@ import copy
 import json
 import os
 import sys
+import sysconfig
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,8 @@ def _data_root() -> Path:
     Resolution order:
       1. ``TRUSTOPS_DATA_DIR`` environment variable — set by the Docker
          image and Helm chart so the wheel can find the JSON catalogs.
-      2. Known install/check-out roots that contain the runtime catalogs.
+      2. The user-install data scheme, only when this module was installed there.
+      3. Known install/check-out roots that contain the runtime catalogs.
          Editable installs keep them in the repository root; wheels install
          ``data-files`` under the environment prefix.
     """
@@ -27,6 +29,12 @@ def _data_root() -> Path:
     if override:
         return Path(override)
     module_path = Path(__file__).resolve()
+    user_scheme = sysconfig.get_preferred_scheme("user")
+    user_libraries = (Path(sysconfig.get_path(name, scheme=user_scheme)).resolve() for name in ("purelib", "platlib"))
+    if any(module_path.is_relative_to(directory) for directory in user_libraries):
+        # Only the active user-installed wheel may use user data. Do not borrow
+        # catalogs from an unrelated system installation if these are missing.
+        return Path(sysconfig.get_path("data", scheme=user_scheme))
     candidates = (
         module_path.parents[2],
         Path(sys.prefix),

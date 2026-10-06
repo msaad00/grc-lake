@@ -450,6 +450,12 @@ def _parser() -> argparse.ArgumentParser:
     verify_snapshots = assessment_sub.add_parser("verify-snapshots", help="verify the append-only snapshot hash-chain")
     verify_snapshots.add_argument("--lake", required=True, help="security data lake output directory")
     verify_snapshots.set_defaults(func=_assessment_verify_snapshots)
+    reconcile = assessment_sub.add_parser(
+        "reconcile-snapshots", help="preview or quarantine uncommitted snapshots without changing the ledger"
+    )
+    reconcile.add_argument("--lake", required=True, help="security data lake output directory")
+    reconcile.add_argument("--apply", action="store_true", help="quarantine unledgered files; otherwise preview only")
+    reconcile.set_defaults(func=_assessment_reconcile_snapshots)
     verify_tracking = assessment_sub.add_parser("verify-tracking", help="verify the append-only triage hash-chain")
     verify_tracking.add_argument("--lake", required=True, help="security data lake output directory")
     verify_tracking.set_defaults(func=_assessment_verify_tracking)
@@ -1840,6 +1846,14 @@ def _assessment_verify_snapshots(args: argparse.Namespace) -> int:
     result = verify_snapshot_chain(args.lake)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1
+
+
+def _assessment_reconcile_snapshots(args: argparse.Namespace) -> int:
+    from security_lakehouse.snapshot_recovery import reconcile_snapshots
+
+    result = reconcile_snapshots(args.lake, apply=args.apply)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0 if not args.apply or result["integrity"]["ok"] else 1
 
 
 def _assessment_verify_tracking(args: argparse.Namespace) -> int:

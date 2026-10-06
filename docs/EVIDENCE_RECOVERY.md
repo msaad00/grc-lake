@@ -19,6 +19,33 @@ symlinks, unledgered files, ambiguous names, and changed content. Repeating a
 successful recovery does not duplicate history. Missing originals cannot be
 reconstructed from their hashes.
 
+## Interrupted snapshot writes
+
+A crash after writing a snapshot but before appending its ledger entry leaves
+an uncommitted file. Normal snapshot creation stays blocked; an operator can
+preview the orphaned files, then explicitly quarantine them:
+
+```sh
+security-lakehouse assessment reconcile-snapshots --lake ./lake
+security-lakehouse assessment reconcile-snapshots --lake ./lake --apply
+security-lakehouse assessment verify-snapshots --lake ./lake
+```
+
+Preview leaves evidence unchanged. Apply validates committed history under the
+snapshot writer lock, then preserves unledgered files byte-for-byte under
+`gold/snapshot_recovery/<recovery-id>/files/`. Its manifest records original
+names, SHA-256 hashes, and recovery timestamps. A durable pending journal allows
+the same command to resume after interruption; new snapshots remain blocked
+until pending recovery completes. Rerunning completed recovery is a no-op.
+
+Quarantine never appends these files to trusted history or rewrites the ledger.
+Missing or changed committed snapshots, unsafe paths, and changed pending
+archive bytes stop recovery. Restore committed files from verified originals
+using the command above; do not delete or reseal the ledger. Recovery hashes
+files in chunks and verifies committed history before and after applying; its
+I/O grows with retained history and orphaned bytes. This is local POSIX recovery,
+not distributed transactions or an external integrity anchor.
+
 ## Legacy workpaper exports
 
 ```sh

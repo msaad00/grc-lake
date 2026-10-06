@@ -312,6 +312,9 @@ def write_assessment_snapshot(
     # Concurrent snapshot requests must not read the same chain tip: serialize
     # the tip-read through ledger-append span so the chain can never fork.
     with chain_lock(_ledger_path(lake)):
+        recovery_pending = lake / "gold/snapshot_recovery/pending.json"
+        if recovery_pending.exists() or recovery_pending.is_symlink():
+            raise SnapshotIntegrityError("snapshot recovery is pending; rerun reconcile-snapshots")
         if not _snapshot_chain_rows_unlocked(lake.resolve(), metadata_only=True)[1]["ok"]:
             raise SnapshotIntegrityError("snapshot integrity verification failed; history requires reconciliation")
         prev_hash = _chain_tip(lake)
@@ -438,7 +441,12 @@ def _snapshot_chain_rows(
 
 
 def _snapshot_chain_rows_unlocked(
-    lake: Path, *, limit: int | None = None, snapshot_id: str | None = None, metadata_only: bool = False
+    lake: Path,
+    *,
+    limit: int | None = None,
+    snapshot_id: str | None = None,
+    metadata_only: bool = False,
+    allow_unledgered: bool = False,
 ) -> tuple[list[tuple[datetime, dict[str, Any], Path]], dict[str, Any]]:
     snapshots_dir = lake / "gold/snapshots"
     issues: list[str] = []
@@ -502,7 +510,7 @@ def _snapshot_chain_rows_unlocked(
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             issues.append(f"entry {index}: snapshot file is unreadable or invalid")
         expected_prev = recorded_hash
-    if {path.name for path in snapshots_dir.glob("*.json")} - names:
+    if not allow_unledgered and {path.name for path in snapshots_dir.glob("*.json")} - names:
         issues.append("unledgered snapshot files are present")
     return rows, {"ok": not issues, "length": len(entries), "issues": issues}
 

@@ -86,16 +86,22 @@ def build_sprs_report(lake_dir: str | Path) -> dict[str, Any]:
     """Compute SPRS from gold control tests for the tenant lake."""
     lake = Path(lake_dir)
     control_tests = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True, base_dir=lake)
-    failing: set[str] = set()
+    outcomes: dict[str, set[str]] = {}
     for row in control_tests:
         if str(row.get("framework_id", "")) != CMMC_FRAMEWORK_ID:
             continue
-        result = str(row.get("result", "")).lower()
-        if result not in {"fail", "failing", "open"}:
-            continue
         requirement_id = requirement_id_from_control(str(row.get("control_id", "")))
         if requirement_id:
-            failing.add(requirement_id)
+            outcomes.setdefault(requirement_id, set()).add(str(row.get("result", "")).lower())
+    failing = {key for key, values in outcomes.items() if values & {"fail", "failing", "open"}}
+    passing = {key for key, values in outcomes.items() if values == {"pass"}}
+    unknown = set(_cmmc_sprs_metadata()) - failing - passing
     report = compute_sprs_score(failing_requirement_ids=failing)
-    report["source"] = "gold/control_tests.jsonl"
+    report.update(
+        source="gold/control_tests.jsonl",
+        requirements_met=len(passing),
+        requirements_not_evaluated=len(unknown),
+        assessment_complete=not unknown,
+        score=report["score"] if not unknown else None,
+    )
     return report

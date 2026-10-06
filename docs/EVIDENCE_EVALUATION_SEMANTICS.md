@@ -52,3 +52,23 @@ hash separately.
 
 These rules are bounded signal classifications, not comprehensive provider
 security assessments or authenticated deployment qualification.
+
+## Scores and external summaries
+
+SPRS reports distinguish passing, failing, and unevaluated requirements. Missing,
+observed, stale, or conflicting evidence does not count as met. An incomplete
+assessment returns `score: null` and `assessment_complete: false`; known failure
+deductions remain available. A complete assessment retains the weighted score.
+Metrics count explicit current passes, with a zero pass rate when no controls
+are present.
+
+Public framework shares expose only the selected framework and derive their
+summary from that subset. Their issuer comes from the authenticated principal.
+Observed control counts, evaluated counts, catalog counts, and coverage ratios
+are separate: limited evidence is labeled `partial_evidence`, not full framework
+readiness. Catalog coverage does not establish inventory completeness or an
+auditor's opinion.
+
+New evidence timestamps must normalize to UTC years 0002 through 9998, reserving
+boundary years for freshness expiry and grace arithmetic. Validation rejects
+out-of-range timestamps before normalization or pipeline writes.

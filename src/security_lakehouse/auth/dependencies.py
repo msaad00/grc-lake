@@ -142,3 +142,12 @@ def require_scope(scope: str) -> Callable[..., Identity]:
         return identity
 
     return dependency
+
+
+def require_human(identity: Identity) -> Identity:
+    """A machine key or a cookie derived from one cannot attest for a person."""
+    if identity.auth_method not in {"session:oidc", "session:saml"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="this action requires a signed-in human SSO session"
+        )
+    return identity

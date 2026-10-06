@@ -49,7 +49,7 @@ from security_lakehouse.assessment import (
     write_assessment_snapshot,
 )
 from security_lakehouse.auth.api_key_session import ApiKeySessionError, exchange_api_key_for_browser_session
-from security_lakehouse.auth.dependencies import get_session, require_scope
+from security_lakehouse.auth.dependencies import get_session, require_human, require_scope
 from security_lakehouse.auth.json_body import StrictJSONMiddleware
 from security_lakehouse.auth.oidc import OIDCLoginError, build_oauth, complete_oidc_login, load_oidc_config
 from security_lakehouse.auth.presentation import build_auth_methods_payload
@@ -730,15 +730,39 @@ def _public_trust_summary(lake: Path, share: dict[str, object]) -> dict[str, obj
     posture_block = redacted.get("posture")
     posture_block = posture_block if isinstance(posture_block, dict) else {}
     frameworks_raw = redacted.get("frameworks")
-    frameworks: list[dict[str, object]] = []
+    from collections import Counter
+
+    from security_lakehouse.catalog import load_control_catalog, load_framework_registry
+
+    registry = load_framework_registry()
+    catalog = load_control_catalog()
+    names = {str(row["framework"]): str(row["framework_id"]) for row in catalog.values()}
+    catalog_counts = Counter(str(row["framework_id"]) for row in catalog.values())
+    scoped = share.get("scope") == "posture_framework"
+    selected = str(share.get("framework_id") or "")
+    if scoped and selected not in registry:
+        raise HTTPException(status_code=404, detail="share unavailable")
+    frameworks: list[dict[str, Any]] = []
     if isinstance(frameworks_raw, list):
         for row in frameworks_raw:
             if not isinstance(row, dict):
                 continue
+            framework_id = names.get(str(row.get("framework")), "")
+            if scoped and framework_id != selected:
+                continue
+            total = catalog_counts.get(framework_id, 0)
+            observed = int(row.get("control_count") or 0)
+            evaluated = max(0, observed - int(row.get("not_evaluated_control_count") or 0))
+            partial = not total or evaluated < total
             framework_row: dict[str, object] = {
+                "framework_id": framework_id,
+                "catalog_control_count": total,
+                "evaluated_control_count": evaluated,
+                "coverage_ratio": min(1.0, round(evaluated / total, 4)) if total else None,
+                "coverage_basis": "observed_controls",
                 "framework": row.get("framework"),
                 "score": row.get("score"),
-                "state": row.get("state"),
+                "state": "partial_evidence" if partial else row.get("state"),
                 "control_count": row.get("control_count"),
             }
             if detailed:
@@ -759,6 +783,20 @@ def _public_trust_summary(lake: Path, share: dict[str, object]) -> dict[str, obj
             "stale_control_count",
         ):
             posture_summary[key] = posture_block.get(key)
+    if scoped:
+        count = sum(int(row.get("control_count") or 0) for row in frameworks)
+        posture_summary = {
+            "score": round(
+                sum(float(row.get("score") or 0) * int(row.get("control_count") or 0) for row in frameworks) / count, 2
+            )
+            if count
+            else 0,
+            "state": frameworks[0]["state"] if frameworks else "not_evaluated",
+            "framework_count": len(frameworks),
+            "control_count": count,
+        }
+    elif any(row["state"] == "partial_evidence" for row in frameworks):
+        posture_summary["state"] = "partial_evidence"
     return {
         "schema_version": "trustops.public_trust.v1",
         "sensitivity": "public",
@@ -2402,6 +2440,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_control_manage),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
+        require_human(identity)
         from security_lakehouse.remediation_verification import verify_task
 
         try:
@@ -2539,6 +2578,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_control_manage),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
+        require_human(identity)
         try:
             row = remediation.approve_exception(
                 session,
@@ -2872,15 +2912,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_read),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
+        require_human(identity)
         target_email = (body.user_email or identity.email or "").strip()
-        if (
-            body.user_email
-            and identity.role not in {"admin", "security_admin"}
-            and target_email.lower() != (identity.email or "").lower()
-        ):
+        if body.user_email and target_email.lower() != (identity.email or "").lower():
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="only admins may record acknowledgments for other users",
+                detail="acknowledgments must be recorded by the employee themselves",
             )
         try:
             row = policy_document_services.record_acknowledgment(
@@ -3040,6 +3077,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_control_manage),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
+        require_human(identity)
         try:
             item = access_review_services.record_decision(
                 session,
@@ -3530,6 +3568,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         body = _attributed(await _json_object_body(request), identity)
         v1_path = f"/api/v1/{rest}"
+        if v1_path in {"/api/v1/trust-shares", "/api/trust-shares"}:
+            body["created_by"] = identity.email or identity.user_id
+        if v1_path.startswith(("/api/v1/workflows/runs/", "/api/workflows/runs/")) and v1_path.endswith(
+            ("/approve", "/reject")
+        ):
+            require_human(identity)
         if request.headers.get("Idempotency-Key") and "idempotency_key" not in body:
             body = {**body, "idempotency_key": request.headers["Idempotency-Key"]}
         required_scope = api_v1.required_post_scope(v1_path)
@@ -3574,6 +3618,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     ) -> JSONResponse:
         body = _attributed(await _json_object_body(request), identity)
         legacy_path = f"/api/{rest}"
+        if legacy_path in {"/api/v1/trust-shares", "/api/trust-shares"}:
+            body["created_by"] = identity.email or identity.user_id
+        if legacy_path.startswith(("/api/v1/workflows/runs/", "/api/workflows/runs/")) and legacy_path.endswith(
+            ("/approve", "/reject")
+        ):
+            require_human(identity)
         required_scope = api_legacy.required_post_scope(legacy_path)
         if not identity.has_scope(required_scope):
             raise HTTPException(

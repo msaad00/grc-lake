@@ -6,7 +6,7 @@
   "crosswalk_count": 2251,
   "components": {
     "frameworks": "2b46444467ecf7d5c645826f234291c934329934f0e74c15711e7732fef8ebf5",
-    "controls": "2e30b62292dce3e09c72093dde81449903e5e7104c598b7b225163d3275b02b6",
+    "controls": "d539e766090294eba3ec5a7cd5a8986fb28017e9eb4666850e813b0567d0b497",
     "crosswalk": "63cf6605c7f1a2547695f2dc1ec327bd1199c18730818bf11507f1c306d5d54c",
     "safeguards": "1b2ae04abd4a7b64473a6a9fbfaa889ac33dda4338632be59c0fb64bd75558a5"
   },
@@ -15925,5 +15925,5 @@
       "lifecycle_status": "active"
     }
   ],
-  "bundle_sha256": "2efbfa1eddfcd4e85ceb57946874ffbbbc2e6b79c0cc8617bb04d8536c9a070b"
+  "bundle_sha256": "6c680552321e929f0c01709a9788cf4a9a7886f5d2a408ef94069ff84c7b4f81"
 }

@@ -400,3 +400,19 @@ The bundled console redirects unauthenticated browser traffic to `/console/login
 That page reads `GET /api/v1/auth/methods` and only enables login buttons for
 configured OIDC or SAML providers. Agent and CI access should continue to use
 API keys.
+
+## Human review boundaries
+
+Exception approvals, remediation verification, access-review decisions, policy
+acknowledgments, and workflow approval/rejection require an OIDC or SAML session
+in addition to the existing role scope. API keys and cookies exchanged from keys
+cannot perform these actions. Policy acknowledgment records the signed-in
+employee only; admins cannot attest on another employee's behalf.
+
+Remediation creators and assigned owners cannot verify their own tasks. Hosted
+workflow initiators cannot approve their own run. Access certification rejects a
+reviewer whose email matches the item's subject ID or subject name; opaque
+provider subject identifiers still require an independently assigned reviewer.
+Linked remediation tasks must use the evidence retest endpoint instead of being
+resolved or dismissed through a status edit. Unauthenticated local serving is
+forbidden in production and staging, including with the insecure override.

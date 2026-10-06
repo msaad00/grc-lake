@@ -120,3 +120,20 @@ def test_integrity_route_in_catalog() -> None:
     assert row is not None
     assert row["resource"] == "snapshots.integrity"
     assert row["methods"] == ["GET"]
+
+
+def test_snapshot_integrity_diagnostics_do_not_expose_exception_text(tmp_path, monkeypatch):
+    from security_lakehouse import assessment
+
+    lake = _seeded_lake(tmp_path)
+    _write_chain(lake, 1)
+
+    def corrupt(*args, **kwargs):
+        raise assessment.SnapshotIntegrityError("private-path/password=secret")
+
+    monkeypatch.setattr(assessment, "_verified_snapshot_payload", corrupt)
+    status, body = api_v1.handle_get("/api/v1/snapshots/integrity", {}, lake)
+    assert status == HTTPStatus.OK
+    assert body["data"]["ok"] is False
+    assert "private-path" not in json.dumps(body)
+    assert "secret" not in json.dumps(body)

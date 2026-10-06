@@ -11,6 +11,8 @@ type FrameworkRow = {
   score: number | null;
   state: string | null;
   control_count: number | null;
+  catalog_control_count?: number;
+  evaluated_control_count?: number;
   failing_control_count?: number | null;
   stale_control_count?: number | null;
 };
@@ -50,6 +52,8 @@ function readiness(state: string | null): {
   label: string;
   tone: "ready" | "info";
 } {
+  if (state === "partial_evidence")
+    return { label: "Partial evidence", tone: "info" };
   if (state === "ready") return { label: "Ready", tone: "ready" };
   if (state === "not_evaluated") return { label: "Not assessed", tone: "info" };
   return { label: "In progress", tone: "info" };
@@ -174,7 +178,7 @@ export default function PublicTrustView() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wide text-muted">
-                    Overall posture
+                    Observed evidence score
                   </p>
                   <p className="mt-1 text-5xl font-semibold">
                     {data.posture.state === "not_evaluated"
@@ -191,7 +195,7 @@ export default function PublicTrustView() {
                   value={data.posture.framework_count ?? 0}
                 />
                 <Stat
-                  label="Controls"
+                  label="Observed controls"
                   value={data.posture.control_count ?? 0}
                 />
                 {typeof openViolations === "number" && (
@@ -215,7 +219,12 @@ export default function PublicTrustView() {
                 )}
                 {data.frameworks.map((row, index) => {
                   const state = readiness(row.state);
-                  const detail = [plural(row.control_count ?? 0, "control")];
+                  const detail = [
+                    typeof row.catalog_control_count === "number" &&
+                    row.catalog_control_count > 0
+                      ? `${row.evaluated_control_count ?? 0} / ${row.catalog_control_count} catalog controls evaluated`
+                      : plural(row.control_count ?? 0, "observed control"),
+                  ];
                   if (typeof row.failing_control_count === "number") {
                     detail.push(`${row.failing_control_count} failing`);
                   }

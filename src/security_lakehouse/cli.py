@@ -666,6 +666,9 @@ def _parser() -> argparse.ArgumentParser:
         "--all-tenants", action="store_true", help="schedule registered tenants from the server lake root"
     )
     scheduler_run_cmd.set_defaults(func=_scheduler_run)
+    repair = scheduler_sub.add_parser("repair-history", help="quarantine torn runtime tails and defer scheduled work")
+    repair.add_argument("--lake", required=True, help="one tenant lake; evidence ledgers are never repaired")
+    repair.set_defaults(func=_scheduler_repair_history)
 
     db = sub.add_parser("db", help="server-mode application-state database (requires the 'server' extra)")
     db_sub = db.add_subparsers(dest="db_command", required=True)
@@ -1485,6 +1488,8 @@ def _refuse_exposed_local_mode(host: str) -> None:
     Refusing here rather than warning is deliberate: a warning scrolls past in a
     container log, and the failure it precedes is silent.
     """
+    if os.environ.get("TRUSTOPS_ENV", "").strip().lower() in {"production", "prod", "staging"}:
+        raise SystemExit("unauthenticated local mode is forbidden in production or staging; use --server")
     if host in _LOCAL_ONLY_HOSTS or host.startswith("127."):
         return
     if os.environ.get("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", "").strip().lower() in {"1", "true", "yes"}:
@@ -2456,6 +2461,13 @@ def _publish_iceberg(args: argparse.Namespace) -> int:
     finally:
         catalog.close()
     print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def _scheduler_repair_history(args: argparse.Namespace) -> int:
+    from security_lakehouse.scheduler import repair_history
+
+    print(json.dumps(repair_history(args.lake), indent=2))
     return 0
 
 

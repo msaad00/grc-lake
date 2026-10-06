@@ -7,6 +7,11 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Correct ten SOC 2 criterion topics from the AICPA source manifest and regenerate catalog metadata without changing mapping review decisions.
+- Require human SSO for exception approvals, remediation retests, access decisions, policy acknowledgments, and workflow gates. Reject self-verification and linked-task dismissal without an evidence retest.
+- Keep the scheduler daemon alive after tick errors, fsync connector history, bound CronJob retries, and provide explicit runtime-tail recovery with preserved originals and deferred scheduling. Reject evidence timestamps that overflow UTC or freshness arithmetic.
+- Report incomplete SPRS assessments without a numeric score, count only explicit current passes in metrics, bind share issuers to authenticated identities, and enforce framework scope with observed-versus-catalog coverage counts.
+
 - Avoid repeated snapshot decoding and canonical hashing on unchanged history, allow concurrent verified readers, and decode only requested trend payloads after verification while retaining whole-chain tamper detection.
 
 - Record failed agent decisions without blocking other proposals, and let independent SSO reviewers close abandoned execution claims without replaying side effects or racing a live worker.

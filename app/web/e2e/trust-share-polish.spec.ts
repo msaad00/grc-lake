@@ -177,3 +177,47 @@ test("public trust view shows defect counts only for detailed shares", async ({
   await expect(page.getByText("Open violations")).toBeVisible();
   await expect(page.getByText("Stale controls")).toBeVisible();
 });
+
+test("partial public evidence shows the evaluated catalog denominator", async ({
+  page,
+}) => {
+  await page.route("**/api/public/trust/**", (route) =>
+    route.fulfill({
+      json: {
+        ...SUMMARY,
+        posture: {
+          score: 100,
+          state: "partial_evidence",
+          framework_count: 1,
+          control_count: 1,
+        },
+        frameworks: [
+          {
+            framework: "SOC 2",
+            score: 100,
+            state: "partial_evidence",
+            control_count: 1,
+            evaluated_control_count: 1,
+            catalog_control_count: 61,
+            coverage_ratio: 1 / 61,
+          },
+        ],
+      },
+    }),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/console/trust/trust_tok123");
+  await expect(page.getByText("Partial evidence").first()).toBeVisible();
+  await expect(
+    page.getByText("1 / 61 catalog controls evaluated"),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({
+    path: test.info().outputPath("partial-evidence.png"),
+    fullPage: true,
+  });
+  await expect(page.getByText("Observed evidence score")).toBeVisible();
+  await expect(page.getByText("Ready", { exact: true })).toHaveCount(0);
+});

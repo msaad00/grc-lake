@@ -38,6 +38,9 @@ def verify_task(
         raise ValueError("verification requires a task with a control in this tenant")
     if not reviewer_id or not reviewer:
         raise ValueError("verification requires an authenticated reviewer")
+    actors = {reviewer.strip().casefold(), reviewer_id.strip().casefold()}
+    if any(value and value.strip().casefold() in actors for value in (task.created_by, task.owner)):
+        raise ValueError("verification requires an independent reviewer, not the creator or owner")
     moment = now or datetime.now(UTC)
     identity = generation_identity(lake)
     if not identity:

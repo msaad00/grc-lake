@@ -53,11 +53,10 @@ def capture_metric_point(
     critical_violations: int = int(p.get("critical_violation_count", 0))
     stale_controls: int = int(p.get("stale_control_count", 0))
 
-    # control pass rate: (total - failing) / total; default 1.0 when no controls
-    total_controls: int = int(p.get("control_count", 0))
-    # framework scores carry failing_control_count per framework; sum them up
-    failing_controls: int = sum(int(f.get("failing_control_count", 0)) for f in posture.get("frameworks", []))
-    control_pass_rate: float = (total_controls - failing_controls) / total_controls if total_controls > 0 else 1.0
+    # Only explicit current passes count; unknown and stale controls are not passes.
+    total_controls = int(p.get("control_count", 0))
+    passing_controls = sum(int(f.get("passing_control_count", 0)) for f in posture.get("frameworks", []))
+    control_pass_rate = passing_controls / total_controls if total_controls else 0.0
 
     # evidence freshness percentage
     ef = posture.get("evidence_freshness", {})

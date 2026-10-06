@@ -1513,7 +1513,9 @@ export interface SprsReport {
   framework_id: string;
   base_score: number;
   minimum_score: number;
-  score: number;
+  score: number | null;
+  requirements_not_evaluated: number;
+  assessment_complete: boolean;
   deduction_total: number;
   requirements_total: number;
   requirements_met: number;

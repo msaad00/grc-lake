@@ -5,6 +5,10 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+### Added
+
+- Durable tenant-scoped background operations for console and remote MCP evaluation, connector sync, scheduler ticks, and snapshots, with idempotent acceptance and explicit interrupted-work recovery.
+
 ### Fixed
 
 - Preserve flat-lake ownership and share revocation as tenants are added, isolate request audits, and enforce server-side auditor view scopes.

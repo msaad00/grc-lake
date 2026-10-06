@@ -1301,6 +1301,36 @@ def merge_openapi(spec: JsonObject) -> JsonObject:
     paths.pop("/api/{rest}", None)
     for path, item in openapi_paths().items():
         paths.setdefault(path, item)
+    for path in (
+        "/api/v1/ingestion/eval",
+        "/api/v1/scheduler/tick",
+        "/api/v1/snapshots",
+        "/api/v1/connectors/{connector_id}/sync",
+    ):
+        operation = paths.get(path, {}).get("post")
+        if operation is None:
+            continue
+        operation.setdefault("parameters", []).extend(
+            [
+                {
+                    "name": "Prefer",
+                    "in": "header",
+                    "required": False,
+                    "schema": {"type": "string", "enum": ["respond-async"]},
+                },
+                {
+                    "name": "Idempotency-Key",
+                    "in": "header",
+                    "required": False,
+                    "schema": {"type": "string", "minLength": 1, "maxLength": 200},
+                },
+            ]
+        )
+        operation["responses"]["202"] = {
+            "description": "Durable operation accepted. Poll Location; acceptance does not establish completion.",
+            "headers": {"Location": {"schema": {"type": "string"}}, "Retry-After": {"schema": {"type": "integer"}}},
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/V1Envelope"}}},
+        }
     spec["paths"] = paths
 
     components = dict(spec.get("components") or {})

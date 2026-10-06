@@ -43,10 +43,44 @@ Auditor redaction applies to each subscriber. Graph coverage counts the complete
 population but bounds detail to 200 assets and 50 controls per asset; the API
 reports truncation explicitly. Export source evidence for complete populations.
 
-Collection and evaluation HTTP calls remain synchronous. Run scheduled or large
-collections through the scheduler/CLI, with deployment timeouts appropriate to
-the workload. Recollecting unchanged provider state still records a new
-observation time; it must not silently preserve old freshness as new evidence.
+### Background HTTP operations
+
+The console and remote MCP submit evaluation, connector sync, scheduler ticks,
+and snapshots with `Prefer: respond-async`. The server commits a durable job
+before returning HTTP 202, a `Location` status URL, and `Retry-After: 1`. Read
+`GET /api/v1/operations/{id}` for status and the completed API response, or page
+`GET /api/v1/operations?limit=50&offset=0`. Recent jobs remain visible in the
+console after a tab closes. Remote MCP returns the job immediately; use
+`get_operation` to poll it and `list_operations` to inspect recent submissions.
+Queued and running states do not establish successful collection or evaluation.
+
+Send a stable `Idempotency-Key` (1–200 characters) when retrying an uncertain
+submission. Reusing it for different work returns 409. Keys are scoped to the
+lake root, tenant, and initiating user. Operations are authorized before
+acceptance and again before execution against the current user role, API-key
+revocation, and billing state. Queue payloads do not accept credentials or paths.
+Existing HTTP clients without the preference retain synchronous responses;
+local CLI and local MCP also retain direct execution.
+
+The server lifespan starts one worker per process. SQL conditional claims
+prevent duplicate execution of the same job across workers. Queued work survives
+restart. Running work renews a 90-second lease; after a lost lease it becomes
+`interrupted` and is never retried automatically. Effects may already have
+occurred: inspect connector, evaluation, workflow, snapshot, and webhook delivery
+history before submitting new work. HTTP errors become `failed`; a successful
+HTTP result must still be interpreted using its domain outcome (for example,
+blocked connectors or partially successful scheduler ticks). Responses over
+1 MiB require inspection through the domain history and become `interrupted`.
+
+Workers sharing an application database must use the same absolute lake-root
+mount path and shared lake storage. Keep clocks synchronized. Back up application
+state with the lake. Graceful shutdown waits up to 30 seconds for active work;
+longer work or a forced stop requires interrupted-work reconciliation. The queue is for these
+bounded operation types, not a general-purpose execution service. Other webhook
+producers and legacy synchronous callers retain their existing delivery behavior.
+
+Recollecting unchanged provider state still records a new observation time; it
+must not silently preserve old freshness as new evidence.
 Warehouse setup, authenticated-provider behavior, and production capacity need
 separate verification in the target environment.
 

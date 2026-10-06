@@ -145,10 +145,20 @@ async function get<T>(path: string): Promise<T> {
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
+  const deferred =
+    path === "/v1/ingestion/eval" ||
+    path === "/v1/scheduler/tick" ||
+    path === "/v1/snapshots" ||
+    /^\/v1\/connectors\/[A-Za-z0-9_-]+\/sync$/.test(path);
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     credentials: "same-origin",
-    headers: headers(),
+    headers: {
+      ...headers(),
+      ...(deferred
+        ? { Prefer: "respond-async", "Idempotency-Key": crypto.randomUUID() }
+        : {}),
+    },
     body: JSON.stringify(body ?? {}),
   });
   if (res.status === 401) redirectToLogin();
@@ -161,7 +171,33 @@ async function post<T>(path: string, body: unknown): Promise<T> {
       `${res.status}`;
     throw new ApiError(res.status, `${path} -> ${reason}`);
   }
-  return (await res.json()) as T;
+  const payload = await res.json();
+  if (res.status === 202 && payload.meta?.resource === "operations") {
+    const id = payload.data.id as string;
+    const deadline = Date.now() + 30 * 60 * 1000;
+    while (Date.now() < deadline) {
+      const { data: job } = await get<{
+        data: {
+          status: string;
+          http_status: number | null;
+          response: T | null;
+        };
+      }>(`/v1/operations/${encodeURIComponent(id)}`);
+      if (job.status === "succeeded" && job.response) return job.response;
+      if (job.status === "failed" || job.status === "interrupted") {
+        throw new ApiError(
+          job.http_status && job.http_status >= 400 ? job.http_status : 409,
+          `Operation ${id} ${job.status}. Check recent jobs before trying again.`,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new ApiError(
+      408,
+      `Operation ${id} is still pending. Check recent jobs; it continues after this page closes.`,
+    );
+  }
+  return payload as T;
 }
 
 // MAX_PAGE_LIMIT in security_lakehouse/db/base.py. Asking for more is not

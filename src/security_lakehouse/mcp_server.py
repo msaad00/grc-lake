@@ -21,9 +21,11 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
@@ -162,7 +164,9 @@ def _open_api_request(request: urllib.request.Request, *, timeout: float) -> Any
     return netguard.open_guarded(request, timeout=timeout, validate=validate, label="TRUSTOPS_API_URL")
 
 
-def _server_api_request(method: str, path: str, body: dict[str, Any] | None = None, **params: Any) -> JsonObject:
+def _server_api_request(
+    method: str, path: str, body: dict[str, Any] | None = None, *, idempotency_key: str | None = None, **params: Any
+) -> JsonObject:
     """Call the authenticated server API for DB-backed/headless MCP tools."""
     if not _remote_api_configured():
         raise ValueError("This tool requires remote MCP mode with TRUSTOPS_API_URL and TRUSTOPS_API_KEY")
@@ -176,6 +180,10 @@ def _server_api_request(method: str, path: str, body: dict[str, Any] | None = No
         url = f"{url}?{urllib.parse.urlencode(query)}"
     data = strict_json.dumps(body or {}).encode("utf-8") if method.upper() != "GET" else None
     token = _api_key()
+    deferred = method.upper() == "POST" and (
+        path in {"/api/v1/ingestion/eval", "/api/v1/scheduler/tick", "/api/v1/snapshots"}
+        or re.fullmatch(r"/api/v1/connectors/[A-Za-z0-9_-]+/sync", path) is not None
+    )
     request = urllib.request.Request(
         url,
         data=data,
@@ -183,6 +191,9 @@ def _server_api_request(method: str, path: str, body: dict[str, Any] | None = No
         headers={
             "accept": "application/json",
             "authorization": f"Bearer {token}",
+            **(
+                {"Prefer": "respond-async", "Idempotency-Key": idempotency_key or str(uuid.uuid4())} if deferred else {}
+            ),
             **({"content-type": "application/json"} if data is not None else {}),
         },
     )
@@ -223,9 +234,11 @@ def _parse_json_object(raw: str, field_name: str) -> dict[str, Any]:
     return parsed
 
 
-def _post(path: str, lake: Path, payload: dict[str, Any]) -> JsonObject:
+def _post(path: str, lake: Path, payload: dict[str, Any], *, idempotency_key: str | None = None) -> JsonObject:
     if _remote_api_configured():
-        return _server_api_request("POST", path, payload)["data"]
+        return _server_api_request(
+            "POST", path, payload, **({"idempotency_key": idempotency_key} if idempotency_key else {})
+        )["data"]
     status, body = api_v1.handle_post(path, payload, lake)
     if status not in {HTTPStatus.CREATED, HTTPStatus.OK}:
         errors = body.get("errors") or [{"detail": "request failed"}]
@@ -564,28 +577,42 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         return _get("/api/v1/ingestion/eval/runs", lake, limit=str(limit))
 
     @trustops_tool(title="Run Lake Eval")
-    def run_lake_eval(actor: str = "mcp") -> JsonObject:
+    def run_lake_eval(actor: str = "mcp", idempotency_key: str | None = None) -> JsonObject:
         """Materialize and evaluate the lake on the scale-appropriate path.
+
+        Remote mode returns a durable job, not a completed result. Poll get_operation
+        with its id. Reuse idempotency_key when retrying an uncertain submission;
+        interrupted jobs require inspection before any new request.
 
         Uses incremental materialize below 100k events, or projects to a configured
         warehouse sink above that threshold. This is the lake-wide eval step that
         split schedules run separately from connector ingest syncs.
         """
-        return _post("/api/v1/ingestion/eval", lake, {"actor": actor})
+        return _post("/api/v1/ingestion/eval", lake, {"actor": actor}, idempotency_key=idempotency_key)
 
     @trustops_tool(title="Scheduler Tick")
-    def run_scheduler_tick() -> JsonObject:
+    def run_scheduler_tick(idempotency_key: str | None = None) -> JsonObject:
         """Fire every due connector sync, lake eval, and cron workflow once.
+
+        Remote mode returns a durable job, not a completed result. Poll get_operation
+        with its id. Reuse idempotency_key when retrying an uncertain submission;
+        interrupted jobs require inspection before any new request.
 
         Mirrors ``security-lakehouse scheduler tick`` and the production CronJob:
         ingest-only connector syncs on ``sync_schedule``, lake eval on
         ``eval_schedule``, with advisory locking to prevent double-fires.
         """
-        return _post("/api/v1/scheduler/tick", lake, {})
+        return _post("/api/v1/scheduler/tick", lake, {}, idempotency_key=idempotency_key)
 
     @trustops_tool(title="Sync Connector")
-    def sync_connector(connector_id: str, materialize: bool | None = None, actor: str = "mcp") -> JsonObject:
+    def sync_connector(
+        connector_id: str, materialize: bool | None = None, actor: str = "mcp", idempotency_key: str | None = None
+    ) -> JsonObject:
         """Run one connector sync into the managed raw lake.
+
+        Remote mode returns a durable job, not a completed result. Poll get_operation
+        with its id. Reuse idempotency_key when retrying an uncertain submission;
+        interrupted jobs require inspection before any new request.
 
         When ``materialize`` is omitted, split ingest/eval defaults apply
         (ingest-only if ``split_ingest_eval`` is enabled on the connector).
@@ -594,7 +621,21 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         if materialize is not None:
             payload["materialize"] = materialize
         path = f"/api/v1/connectors/{urllib.parse.quote(connector_id, safe='')}/sync"
-        return _post(path, lake, payload)
+        return _post(path, lake, payload, idempotency_key=idempotency_key)
+
+    @trustops_tool(title="Get Operation")
+    def get_operation(job_id: str) -> JsonObject:
+        """Read a tenant-scoped remote job; response contains its completed API result.
+
+        Queued/running is not success. Interrupted work must be reconciled before
+        submitting another request because effects may already have occurred.
+        """
+        return _server_api_request("GET", f"/api/v1/operations/{urllib.parse.quote(job_id, safe='')}")["data"]
+
+    @trustops_tool(title="List Operations")
+    def list_operations(limit: int = 25, offset: int = 0) -> list[JsonObject]:
+        """List a bounded page of remote queued, running and completed operations."""
+        return _server_api_request("GET", "/api/v1/operations", limit=limit, offset=offset)["data"]
 
     @trustops_tool(title="List Connectors")
     def list_connectors(limit: int = 100, offset: int = 0) -> list[JsonObject]:
@@ -1494,8 +1535,12 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     # ------------------------------------------------------------------
 
     @trustops_tool()
-    def create_snapshot(reason: str = "mcp_request") -> JsonObject:
+    def create_snapshot(reason: str = "mcp_request", idempotency_key: str | None = None) -> JsonObject:
         """Write a point-in-time assessment snapshot to the gold zone.
+
+        Remote mode returns a durable job, not a completed result. Poll get_operation
+        with its id. Reuse idempotency_key when retrying an uncertain submission;
+        interrupted jobs require inspection before any new request.
 
         Captures the current posture, controls, violations, and evidence
         rollups as an immutable record (for audit trails / just-in-time
@@ -1503,7 +1548,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
 
         This is a WRITE: it appends a new snapshot file to the lake.
         """
-        return _post("/api/v1/snapshots", lake, {"reason": reason})
+        return _post("/api/v1/snapshots", lake, {"reason": reason}, idempotency_key=idempotency_key)
 
     @trustops_tool()
     def list_workflows() -> list[JsonObject]:

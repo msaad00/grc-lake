@@ -15,13 +15,14 @@ def build_platform_jobs(
     lake_dir: str,
     *,
     agent_runs: list[dict[str, Any]] | None = None,
+    operations: list[dict[str, Any]] | None = None,
     limit: int = 50,
     kind: str | None = None,
     status: str | None = None,
 ) -> dict[str, Any]:
     """Return a single sorted job feed across lake + tenant-scoped agent runs."""
     per_source = max(1, min(limit, 200))
-    jobs: list[JobRow] = []
+    jobs: list[JobRow] = list(operations or [])
 
     for row in list_connector_runs(lake_dir, limit=per_source):
         jobs.append(_connector_job(row))
@@ -46,7 +47,7 @@ def build_platform_jobs(
     for row in capped:
         key = str(row["kind"])
         counts[key] = counts.get(key, 0) + 1
-    running = sum(1 for row in capped if row.get("status") in {"running", "in_progress", "pending"})
+    running = sum(1 for row in capped if row.get("status") in {"running", "in_progress", "pending", "queued"})
     return {
         "jobs": capped,
         "count": len(capped),

@@ -287,3 +287,13 @@ returns the core collection envelope, including count and `next_cursor`, so an
 agent can distinguish a page from a complete population. Existing list tools
 retain their array response shape. Read tools reject outputs over 256 KiB; use
 smaller pages or the API export for large artifacts.
+
+### Durable remote operations
+
+Remote `run_lake_eval`, `sync_connector`, `run_scheduler_tick`, and
+`create_snapshot` return durable jobs. Poll `get_operation(job_id)` until a
+terminal status; inspect `response` for the actual domain outcome. Reuse an
+explicit `idempotency_key` to recover an uncertain submission. `interrupted`
+requires checking existing effects before submitting new work. `list_operations`
+returns a bounded page. Local MCP keeps direct execution. See
+[evidence operations](../OPERATIONS_CONTRACTS.md#background-http-operations).

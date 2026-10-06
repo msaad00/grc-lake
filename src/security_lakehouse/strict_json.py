@@ -7,9 +7,14 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from typing import Any
 
 MAX_DEPTH = 64
+# Search only for structural characters; let the JSON decoder scan strings
+# without a backtracking expression over untrusted input.
+_STRUCTURE = re.compile(r'["\[\]{}]')
+_STRING_DECODER = json.JSONDecoder()
 
 
 class InvalidJSON(json.JSONDecodeError):
@@ -65,18 +70,14 @@ def loads(raw: str | bytes) -> Any:
     """Decode strict UTF-8 JSON with duplicate-key and bounded-depth checks."""
     try:
         text = raw.decode("utf-8-sig") if isinstance(raw, bytes) else raw.removeprefix("\ufeff")
-        depth = 0
-        in_string = escaped = False
-        for char in text:
-            if in_string:
-                if escaped:
-                    escaped = False
-                elif char == "\\":
-                    escaped = True
-                elif char == '"':
-                    in_string = False
-            elif char == '"':
-                in_string = True
+        depth = position = 0
+        while (match := _STRUCTURE.search(text, position)) is not None:
+            char = text[match.start()]
+            position = match.end()
+            if char == '"':
+                # Invoke the decoder only at quotes, never at a container that
+                # has not yet passed the depth guard.
+                _, position = _STRING_DECODER.raw_decode(text, match.start())
             elif char in "[{":
                 depth += 1
                 if depth > MAX_DEPTH:

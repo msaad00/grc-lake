@@ -15,12 +15,14 @@ import heapq
 import json
 import logging
 import re
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
+from security_lakehouse import strict_json
 from security_lakehouse.event_status import FAIL_STATUSES
 from security_lakehouse.evidence_freshness import (
     build_evidence_freshness,
@@ -310,7 +312,7 @@ def write_assessment_snapshot(
     # Concurrent snapshot requests must not read the same chain tip: serialize
     # the tip-read through ledger-append span so the chain can never fork.
     with chain_lock(_ledger_path(lake)):
-        if not _snapshot_chain_rows_unlocked(lake.resolve())[1]["ok"]:
+        if not _snapshot_chain_rows_unlocked(lake.resolve(), metadata_only=True)[1]["ok"]:
             raise SnapshotIntegrityError("snapshot integrity verification failed; history requires reconciliation")
         prev_hash = _chain_tip(lake)
         prior_payload = _prior_snapshot_payload(lake)
@@ -380,16 +382,64 @@ def write_assessment_snapshot(
     return output_path
 
 
-def _snapshot_chain_rows(lake: Path) -> tuple[list[tuple[datetime, dict[str, Any], Path]], dict[str, Any]]:
-    """Read each payload once and compare it with the local ledger under its lock."""
+# Cache only successful verification metadata, never mutable payload objects or
+# filesystem timestamps. Every lookup hashes fresh bytes from every chain file.
+_SNAPSHOT_CACHE_LIMIT = 4096
+_verified_snapshot_bytes: OrderedDict[tuple[bytes, str, str | None, str], None] = OrderedDict()
+_snapshot_cache_lock = Lock()
+
+
+def _verified_snapshot_payload(path: Path, entry: dict[str, Any], *, include_payload: bool) -> dict[str, Any] | None:
+    recorded_hash, previous, stamp = entry.get("assessment_hash"), entry.get("prev_hash"), entry.get("evaluated_at")
+    if (
+        not isinstance(recorded_hash, str)
+        or len(recorded_hash) != 64
+        or (previous is not None and (not isinstance(previous, str) or len(previous) != 64))
+        or not isinstance(stamp, str)
+    ):
+        raise ValueError("invalid snapshot ledger metadata")
+    _parse_iso(stamp)
+    raw = path.read_bytes()
+    key = (hashlib.sha256(raw).digest(), recorded_hash, previous, stamp)
+    with _snapshot_cache_lock:
+        cached = key in _verified_snapshot_bytes
+        if cached:
+            _verified_snapshot_bytes.move_to_end(key)
+    if cached:
+        # These exact bytes already passed strict decoding and canonical hashing.
+        # A fresh object prevents a caller from mutating another reader's result.
+        return json.loads(raw) if include_payload else None
+    payload = strict_json.loads(raw)
+    if not isinstance(payload, dict):
+        raise ValueError("snapshot must be an object")
+    if _assessment_hash(payload) != recorded_hash or payload.get("assessment_hash") != recorded_hash:
+        raise SnapshotIntegrityError("content hash does not match the ledger")
+    if payload.get("prev_hash") != previous:
+        raise SnapshotIntegrityError("payload prev_hash differs from ledger")
+    if payload.get("evaluated_at") != stamp:
+        raise SnapshotIntegrityError("snapshot timestamp differs from ledger")
+    with _snapshot_cache_lock:
+        _verified_snapshot_bytes[key] = None
+        _verified_snapshot_bytes.move_to_end(key)
+        while len(_verified_snapshot_bytes) > _SNAPSHOT_CACHE_LIMIT:
+            _verified_snapshot_bytes.popitem(last=False)
+    return payload if include_payload else None
+
+
+def _snapshot_chain_rows(
+    lake: Path, *, limit: int | None = None, snapshot_id: str | None = None, metadata_only: bool = False
+) -> tuple[list[tuple[datetime, dict[str, Any], Path]], dict[str, Any]]:
+    """Verify the whole chain, retaining payloads only for the selected rows."""
     snapshots_dir = lake / "gold/snapshots"
     if not snapshots_dir.exists():
         return [], {"ok": True, "length": 0, "issues": []}
-    with chain_lock(_ledger_path(lake)):
-        return _snapshot_chain_rows_unlocked(lake)
+    with chain_lock(_ledger_path(lake), shared=True):
+        return _snapshot_chain_rows_unlocked(lake, limit=limit, snapshot_id=snapshot_id, metadata_only=metadata_only)
 
 
-def _snapshot_chain_rows_unlocked(lake: Path) -> tuple[list[tuple[datetime, dict[str, Any], Path]], dict[str, Any]]:
+def _snapshot_chain_rows_unlocked(
+    lake: Path, *, limit: int | None = None, snapshot_id: str | None = None, metadata_only: bool = False
+) -> tuple[list[tuple[datetime, dict[str, Any], Path]], dict[str, Any]]:
     snapshots_dir = lake / "gold/snapshots"
     issues: list[str] = []
     rows: list[tuple[datetime, dict[str, Any], Path]] = []
@@ -399,6 +449,23 @@ def _snapshot_chain_rows_unlocked(lake: Path) -> tuple[list[tuple[datetime, dict
         entries = read_jsonl(_ledger_path(lake), missing_ok=True)
     except (ValueError, OSError):
         return [], {"ok": False, "length": 0, "issues": ["snapshot ledger is unreadable"]}
+    selected = set(range(len(entries)))
+    if limit is not None and limit > 0:
+        try:
+            ordered = sorted(range(len(entries)), key=lambda index: _parse_iso(entries[index]["evaluated_at"]))
+            selected = set(ordered[-limit:])
+        except (ValueError, KeyError, TypeError, AttributeError):
+            return [], {"ok": False, "length": len(entries), "issues": ["invalid snapshot timestamp"]}
+    if snapshot_id is not None:
+        selected = {
+            index
+            for index, entry in enumerate(entries)
+            if isinstance(entry, dict)
+            and (
+                (isinstance(entry.get("snapshot"), str) and Path(entry["snapshot"]).stem == snapshot_id)
+                or (isinstance(entry.get("assessment_hash"), str) and entry["assessment_hash"].startswith(snapshot_id))
+            )
+        }
     expected_prev: str | None = None
     names: set[str] = set()
     for index, entry in enumerate(entries):
@@ -424,16 +491,14 @@ def _snapshot_chain_rows_unlocked(lake: Path) -> tuple[list[tuple[datetime, dict
             expected_prev = recorded_hash
             continue
         try:
-            payload = read_json(path)
-            if not isinstance(payload, dict):
-                raise ValueError("snapshot must be an object")
-            if _assessment_hash(payload) != recorded_hash or payload.get("assessment_hash") != recorded_hash:
-                issues.append(f"entry {index}: content hash does not match the ledger")
-            if payload.get("prev_hash") != entry.get("prev_hash"):
-                issues.append(f"entry {index}: payload prev_hash differs from ledger")
-            if payload.get("evaluated_at") != entry.get("evaluated_at"):
-                issues.append(f"entry {index}: snapshot timestamp differs from ledger")
-            rows.append((_parse_iso(payload["evaluated_at"]), payload, path))
+            payload = _verified_snapshot_payload(path, entry, include_payload=index in selected and not metadata_only)
+            if index in selected:
+                if metadata_only:
+                    payload = {"evaluated_at": entry["evaluated_at"]}
+                assert payload is not None
+                rows.append((_parse_iso(payload["evaluated_at"]), payload, path))
+        except SnapshotIntegrityError as exc:
+            issues.append(f"entry {index}: {exc}")
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             issues.append(f"entry {index}: snapshot file is unreadable or invalid")
         expected_prev = recorded_hash
@@ -444,7 +509,7 @@ def _snapshot_chain_rows_unlocked(lake: Path) -> tuple[list[tuple[datetime, dict
 
 def verify_snapshot_chain(lake_dir: str | Path) -> dict[str, Any]:
     """Verify local snapshot content and ledger linkage; this is not external anchoring."""
-    return _snapshot_chain_rows(Path(lake_dir).resolve())[1]
+    return _snapshot_chain_rows(Path(lake_dir).resolve(), metadata_only=True)[1]
 
 
 def _parse_iso(value: str | datetime) -> datetime:
@@ -466,9 +531,13 @@ def _parse_iso(value: str | datetime) -> datetime:
     return parsed.astimezone(UTC)
 
 
-def _iter_snapshots(lake_dir: str | Path) -> list[tuple[datetime, dict[str, Any], Path]]:
+def _iter_snapshots(
+    lake_dir: str | Path, *, limit: int | None = None, snapshot_id: str | None = None, metadata_only: bool = False
+) -> list[tuple[datetime, dict[str, Any], Path]]:
     """Return verified ledger-backed payloads, without modifying corrupt history."""
-    rows, result = _snapshot_chain_rows(Path(lake_dir).resolve())
+    rows, result = _snapshot_chain_rows(
+        Path(lake_dir).resolve(), limit=limit, snapshot_id=snapshot_id, metadata_only=metadata_only
+    )
     if not result["ok"]:
         raise SnapshotIntegrityError("snapshot integrity verification failed")
     return sorted(rows, key=lambda item: item[0])
@@ -476,7 +545,7 @@ def _iter_snapshots(lake_dir: str | Path) -> list[tuple[datetime, dict[str, Any]
 
 def list_snapshot_times(lake_dir: str | Path) -> list[str]:
     """Return the ``evaluated_at`` timestamps of all snapshots, oldest-first."""
-    return [payload["evaluated_at"] for _ts, payload, _path in _iter_snapshots(lake_dir)]
+    return [payload["evaluated_at"] for _ts, payload, _path in _iter_snapshots(lake_dir, metadata_only=True)]
 
 
 _SNAPSHOT_ID_RE = re.compile(r"^[A-Za-z0-9._+=,@:-]+$")
@@ -511,7 +580,7 @@ def _resolve_snapshot(lake_dir: str | Path, snapshot_id: str) -> tuple[dict[str,
     token = normalize_snapshot_id(snapshot_id)
     if token is None:
         return None
-    rows = _iter_snapshots(lake_dir)
+    rows = _iter_snapshots(lake_dir, snapshot_id=token)
     matches = [(payload, path) for _time, payload, path in rows if path.stem == token]
     if not matches:
         matches = [

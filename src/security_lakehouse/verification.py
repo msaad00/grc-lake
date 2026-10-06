@@ -16,7 +16,7 @@ from typing import Any
 from security_lakehouse.event_identity import event_identity
 from security_lakehouse.generations import ARTIFACTS, generation_reader, pin_generation, verify_generation
 from security_lakehouse.io import canonical_sha256 as _canonical_sha256
-from security_lakehouse.io import file_sha256, read_json, read_jsonl
+from security_lakehouse.io import file_sha256, iter_jsonl, read_json, read_jsonl
 
 
 def _bronze_paths(lake_dir: str | Path) -> list[Path]:
@@ -193,43 +193,47 @@ def verify_lake_integrity(lake_dir: str | Path) -> dict[str, Any]:
         if expected_sha != actual_sha:
             issues.append(f"artifact {name}: sha256 mismatch")
 
-    bronze_rows = read_jsonl(lake / "bronze" / "raw_events.jsonl", missing_ok=True)
-    silver_rows = read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True)
-    raw_hashes = []
-    for index, row in enumerate(bronze_rows):
+    # Keep linkage metadata, not full evidence payloads, resident during the
+    # second integrity pass over the pipeline's freshly written generation.
+    bronze_hashes: set[str] = set()
+    bronze_count = 0
+    for index, row in enumerate(iter_jsonl(lake / "bronze" / "raw_events.jsonl", missing_ok=True)):
+        bronze_count += 1
+        bronze_hashes.add(str(row.get("raw_sha256") or ""))
         raw = row.get("raw")
         if not isinstance(raw, dict):
             issues.append(f"bronze row {index}: raw payload is missing")
             continue
         computed = _canonical_sha256(raw)
-        raw_hashes.append(computed)
         if row.get("raw_sha256") != computed:
             issues.append(f"bronze row {index}: raw_sha256 mismatch")
 
-    bronze_hashes = {str(row.get("raw_sha256") or "") for row in bronze_rows}
-    missing = sorted({str(row.get("raw_sha256") or "") for row in silver_rows} - bronze_hashes)
-    if missing:
-        issues.append(f"silver rows reference missing bronze hashes: {', '.join(missing[:5])}")
+    evidence_items = []
+    event_ids: Counter[str] = Counter()
+    missing_hashes: set[str] = set()
+    for row in iter_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True):
+        event_id = str(row.get("event_id") or "")
+        raw_hash = str(row.get("raw_sha256") or "")
+        event_ids[event_id] += 1
+        if raw_hash not in bronze_hashes:
+            missing_hashes.add(raw_hash)
+        evidence_items.append({"event_id": event_id, "raw_sha256": raw_hash})
+    silver_count = len(evidence_items)
+    if missing_hashes:
+        issues.append(f"silver rows reference missing bronze hashes: {', '.join(sorted(missing_hashes)[:5])}")
 
-    event_ids = [str(row.get("event_id") or "") for row in silver_rows]
     if manifest.get("counts") != {
-        "raw": len(bronze_rows),
-        "bronze": len(bronze_rows),
-        "silver": len(silver_rows),
-        "unique_event_ids": len(set(event_ids)),
+        "raw": bronze_count,
+        "bronze": bronze_count,
+        "silver": silver_count,
+        "unique_event_ids": len(event_ids),
     }:
         issues.append("integrity manifest counts do not match evidence")
-    duplicate_event_ids = sorted(event_id for event_id, count in Counter(event_ids).items() if event_id and count > 1)
+    duplicate_event_ids = sorted(event_id for event_id, count in event_ids.items() if event_id and count > 1)
     if duplicate_event_ids:
         issues.append(f"duplicate event_ids: {', '.join(duplicate_event_ids[:10])}")
 
-    evidence_items = sorted(
-        (
-            {"event_id": str(row.get("event_id") or ""), "raw_sha256": str(row.get("raw_sha256") or "")}
-            for row in silver_rows
-        ),
-        key=lambda item: (item["event_id"], item["raw_sha256"]),
-    )
+    evidence_items.sort(key=lambda item: (item["event_id"], item["raw_sha256"]))
     expected_evidence_set = str((manifest.get("idempotency") or {}).get("evidence_set_sha256") or "")
     actual_evidence_set = _canonical_sha256(evidence_items)
     if expected_evidence_set != actual_evidence_set:
@@ -241,6 +245,6 @@ def verify_lake_integrity(lake_dir: str | Path) -> dict[str, Any]:
         "manifest_sha256": manifest_hash,
         "evidence_set_sha256": expected_evidence_set,
         "recomputed_evidence_set_sha256": actual_evidence_set,
-        "bronze_count": len(bronze_rows),
-        "silver_count": len(silver_rows),
+        "bronze_count": bronze_count,
+        "silver_count": silver_count,
     }

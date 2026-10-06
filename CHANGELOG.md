@@ -14,6 +14,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Stream bronze and silver integrity verification instead of retaining full evidence payloads, preserving hash linkage, duplicate detection, counts, and evidence-set digests.
+
 - Remove an unused framework-score assignment flagged by CodeQL; retain control-risk scoring for capped and uncapped assessments.
 
 - Patch the console build selector parser through scoped overrides while preserving generated CSS; retain the separate unpatched braces advisory in dependency security documentation.

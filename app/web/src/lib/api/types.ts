@@ -1983,6 +1983,7 @@ export interface MappingReviewItem {
   control_title: string | null;
   framework_id: string;
   role: string | null;
+  contributes_to_coverage?: boolean;
   shipped_review_status: string;
   review_state: MappingReviewState;
   review_label: string;

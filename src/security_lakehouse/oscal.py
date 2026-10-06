@@ -54,6 +54,7 @@ from security_lakehouse.models import utc_iso
 from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
     REVIEW_STATE_LABELS,
+    contributes_to_coverage,
     effective_review_state,
     load_ccf_families,
     load_safeguards,
@@ -153,7 +154,9 @@ def build_component_definition(
     for entry in payload.get("safeguards", []):
         safeguard_id = str(entry["safeguard_id"])
         reviewed = [
-            member for member in entry.get("satisfies", []) if effective_review_state(member) in ATTESTABLE_STATES
+            member
+            for member in entry.get("satisfies", [])
+            if contributes_to_coverage(member) and effective_review_state(member) in ATTESTABLE_STATES
         ]
         by_framework: dict[str, list[JsonObject]] = {}
         for member in reviewed:

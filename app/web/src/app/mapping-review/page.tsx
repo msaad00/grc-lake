@@ -831,8 +831,13 @@ function MappingReviewContent() {
                       </td>
                       <td className="px-2 py-3 text-xs text-ink">
                         {basisLabel(item)}
-                        {item.role === "primary" ? (
-                          <div className="text-muted">Primary</div>
+                        <div className="capitalize text-muted">
+                          {item.role ?? "equivalent"}
+                        </div>
+                        {item.contributes_to_coverage === false ? (
+                          <div className="mt-1 text-warning-fg">
+                            Context only · no coverage credit
+                          </div>
                         ) : null}
                       </td>
                       <td className="max-w-[14rem] px-2 py-3 text-xs">

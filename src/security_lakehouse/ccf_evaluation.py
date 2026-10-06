@@ -11,7 +11,7 @@ from typing import Any
 from security_lakehouse.event_status import FAIL_STATUSES, normalize_event_status
 from security_lakehouse.evidence_freshness import build_evidence_freshness
 from security_lakehouse.policy import ControlContext, evaluate_control
-from security_lakehouse.safeguards import ATTESTABLE_STATES, effective_review_state
+from security_lakehouse.safeguards import ATTESTABLE_STATES, contributes_to_coverage, effective_review_state
 
 JsonObject = dict[str, Any]
 
@@ -122,10 +122,15 @@ def evaluate_safeguards(
         )
     by_id = {row["safeguard_id"]: row["status"] for row in results}
     mappings: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    contextual: dict[str, list[JsonObject]] = defaultdict(list)
     for safeguard_id, definition in definitions.items():
         for member in definition["satisfies"]:
             state = effective_review_state(member)
-            if state != "rejected":
+            if state != "rejected" and not contributes_to_coverage(member):
+                contextual[str(member["control_id"])].append(
+                    {"safeguard_id": safeguard_id, "role": member.get("role"), "review_state": state}
+                )
+            elif state != "rejected":
                 mappings[str(member["control_id"])].append((safeguard_id, state))
     requirements = []
     for control_id, control in sorted(controls.items()):
@@ -142,6 +147,7 @@ def evaluate_safeguards(
                 "status": _combine(statuses) if links else "unmapped",
                 "reviewed_safeguard_ids": sorted(reviewed),
                 "pending_mapping_count": pending,
+                "contextual_mappings": contextual.get(control_id, []),
             }
         )
     return {

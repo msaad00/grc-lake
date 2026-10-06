@@ -32,7 +32,8 @@ from security_lakehouse.catalog import ROOT, load_control_catalog
 DEFAULT_SAFEGUARDS = ROOT / "controls" / "safeguards.json"
 
 SCHEMA = "trustops.safeguards.v1"
-VALID_ROLES = {"primary", "equivalent"}
+IMPLEMENTATION_ROLES = frozenset({"primary", "equivalent"})
+VALID_ROLES = IMPLEMENTATION_ROLES | {"supporting", "inherited"}
 VALID_REVIEW_STATES = {"reviewed", "proposed"}
 
 # Effective review state of one safeguard->requirement mapping for one tenant.
@@ -239,6 +240,17 @@ def effective_review_state(member: JsonObject, decision: str | None = None) -> s
     return "proposed"
 
 
+def contributes_to_coverage(member: JsonObject) -> bool:
+    """Only implementation relationships can establish requirement coverage.
+
+    Supporting evidence and inherited responsibility are context, even when the
+    relationship is reviewed. They require separate assessment and never imply
+    that this safeguard implements the requirement. Missing roles retain the
+    legacy equivalent contract; unknown roles fail closed.
+    """
+    return member.get("role", "equivalent") in IMPLEMENTATION_ROLES
+
+
 def safeguards_by_requirement(
     payload: JsonObject | None = None, *, reviewed_only: bool = False
 ) -> dict[str, list[str]]:
@@ -253,7 +265,7 @@ def safeguards_by_requirement(
     for entry in data["safeguards"]:
         for member in entry.get("satisfies", []):
             state = effective_review_state(member)
-            if state == "rejected":
+            if state == "rejected" or not contributes_to_coverage(member):
                 continue
             if reviewed_only and state not in ATTESTABLE_STATES:
                 continue
@@ -322,7 +334,7 @@ def mapping_review_items(
         anchors = [
             str(member.get("control_id"))
             for member in entry.get("satisfies", [])
-            if effective_review_state(member) in ATTESTABLE_STATES
+            if contributes_to_coverage(member) and effective_review_state(member) in ATTESTABLE_STATES
         ]
         for member in entry.get("satisfies", []):
             if framework_id and str(member.get("framework_id")) != framework_id:
@@ -336,7 +348,8 @@ def mapping_review_items(
                     "risk_domain": entry.get("risk_domain"),
                     "control_id": control_id,
                     "framework_id": str(member.get("framework_id")),
-                    "role": member.get("role"),
+                    "role": member.get("role", "equivalent"),
+                    "contributes_to_coverage": contributes_to_coverage(member),
                     "shipped_review_status": member.get("review_status", "reviewed"),
                     "review_state": state,
                     "review_label": REVIEW_STATE_LABELS[state],
@@ -416,6 +429,7 @@ def _mapping_ledger() -> dict[str, Any]:
         "frameworks": set(),
         "control_ids": set(),
         "mapping_count": 0,
+        "contextual_mapping_count": 0,
         "states": dict.fromkeys(REVIEW_STATE_LABELS, 0),
     }
 
@@ -426,6 +440,9 @@ def _add_safeguard(ledger: dict[str, Any], entry: JsonObject) -> None:
         state = effective_review_state(member)
         ledger["mapping_count"] += 1
         ledger["states"][state] += 1
+        if not contributes_to_coverage(member):
+            ledger["contextual_mapping_count"] += 1
+            continue
         if state == "rejected":
             continue
         ledger["control_ids"].add(str(member.get("control_id")))
@@ -450,6 +467,7 @@ def _ledger_counts(ledger: dict[str, Any]) -> JsonObject:
         "frameworks": sorted(ledger["frameworks"]),
         "mapped_requirement_count": len(ledger["control_ids"]),
         "mapping_count": ledger["mapping_count"],
+        "contextual_mapping_count": ledger["contextual_mapping_count"],
         # reviewed = maintainer + org; the split is reported alongside so
         # the two kinds of confirmation are never blended.
         "reviewed_mapping_count": reviewed,
@@ -542,9 +560,13 @@ def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[st
     mapped = safeguards_by_requirement(data)
     states_by_control: dict[str, set[str]] = {}
     mapping_states: dict[str, dict[str, int]] = {}
+    contextual_mappings = 0
     for entry in data["safeguards"]:
         for member in entry.get("satisfies", []):
             control_id = str(member.get("control_id"))
+            if not contributes_to_coverage(member):
+                contextual_mappings += 1
+                continue
             state = effective_review_state(member)
             states_by_control.setdefault(control_id, set()).add(state)
             framework = str(controls.get(control_id, {}).get("framework_id") or member.get("framework_id") or "unknown")
@@ -592,6 +614,7 @@ def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[st
     all_states = {state: sum(counts[state] for counts in mapping_states.values()) for state in REVIEW_STATE_LABELS}
     return {
         "safeguards": len(data["safeguards"]),
+        "contextual_mappings": contextual_mappings,
         "controls": total,
         "covered": covered,
         # Split so unconfirmed curation is never reported as attested coverage,

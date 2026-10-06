@@ -90,3 +90,37 @@ actual generated artifact. Existing console screenshots remain a separate produc
 tour. See [control test plans](CONTROL_TEST_WORKPAPERS.md),
 [population reconciliation](POPULATION_RECONCILIATION.md), and
 [governed remediation](GOVERNED_REMEDIATION.md) for each boundary.
+
+## Assessment context
+
+A control in a test plan may include `assessment_context` to record a human
+assessment distinct from automated test results:
+
+```json
+{
+  "state": "inherited",
+  "rationale": "The provider operates this service; assess the retained responsibilities separately.",
+  "evidence_event_ids": ["provider-responsibility-record"],
+  "provider": "Example provider",
+  "responsibilities": "Provider operates the service; customer owns access approval and review."
+}
+```
+
+Supported states are `not_applicable`, `inherited`, and `compensating`. Every
+state requires a rationale and 1–100 distinct evidence event IDs from the sealed
+generation, explicitly bound to that safeguard and available at the assessment
+cutoff. Inheritance also requires `provider` and `responsibilities`; compensation
+requires `alternative_control`. Unknown fields, forged reviewers, missing or
+unbound evidence, and future observations are rejected.
+
+The API, CLI `assessment test-plan` / workpaper exports, and MCP workpaper tools
+accept this optional field through the existing plan object. JSON and HTML retain
+the declaration, evidence hashes, period, and generation. Existing plans remain
+valid. Server workpapers start as drafts and use the existing independent human
+review of the exact content digest. Local exports remain unreviewed drafts.
+
+Approval acknowledges the declaration and its supporting evidence for that
+workpaper's period and generation. It does not certify provider effectiveness,
+apply to future generations, erase failures or population gaps, exclude controls
+from scoring, or turn a compensating measure into an automated pass. The console
+mapping-review table labels supporting and inherited relationships as context only.

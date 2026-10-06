@@ -250,18 +250,18 @@ Crosswalk review is only one input to that assessment work.
 
 `controls/safeguards.json`, `schema: trustops.safeguards.v1`.
 
-| Field                        | Meaning                                                                        |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| `safeguard_id`               | `SG-<RISKDOMAIN>-<NNN>`, stable                                                |
-| `title`                      | What the safeguard does                                                        |
-| `risk_domain`                | Shared taxonomy with the control catalog                                       |
-| `objective`                  | Why these requirements are genuinely the same thing                            |
-| `evidence_requirement`       | The single statement this safeguard proves                                     |
-| `evaluation_rule`            | The single test                                                                |
-| `owner`, `frequency`         | Who operates it, how often                                                     |
-| `satisfies[]`                | `control_id`, `framework_id`, `role` (`primary`/`equivalent`), `review_status` |
-| `mapping_source`             | Optional source name, HTTPS URL, SHA-256, and exact locator for a crosswalk    |
-| `satisfies[].mapping_source` | Per-mapping provenance; overrides safeguard-level provenance in review output  |
+| Field                        | Meaning                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `safeguard_id`               | `SG-<RISKDOMAIN>-<NNN>`, stable                                                                         |
+| `title`                      | What the safeguard does                                                                                 |
+| `risk_domain`                | Shared taxonomy with the control catalog                                                                |
+| `objective`                  | Why these requirements are genuinely the same thing                                                     |
+| `evidence_requirement`       | The single statement this safeguard proves                                                              |
+| `evaluation_rule`            | The single test                                                                                         |
+| `owner`, `frequency`         | Who operates it, how often                                                                              |
+| `satisfies[]`                | `control_id`, `framework_id`, `role` (`primary`/`equivalent`/`supporting`/`inherited`), `review_status` |
+| `mapping_source`             | Optional source name, HTTPS URL, SHA-256, and exact locator for a crosswalk                             |
+| `satisfies[].mapping_source` | Per-mapping provenance; overrides safeguard-level provenance in review output                           |
 
 Exactly one member carries `role: primary` — the requirement whose wording the
 safeguard is drafted against. Every `control_id` must exist in the catalog; the
@@ -280,3 +280,17 @@ declared inventory and collection receipts. Neither silently changes the CCF
 assessment's observed-population scope. The [auditor walkthrough](AUDITOR_WALKTHROUGH.md)
 combines these results, evidence hashes, and remediation receipts in a reproducible
 workpaper with an independent authenticated review decision.
+
+### Relationship roles and assessment context
+
+`primary` and `equivalent` relationships contribute to evaluated coverage;
+reviewed relationships can contribute to attestable coverage. `supporting` and
+`inherited` relationships record relevant evidence or provider responsibility.
+They remain visible in mapping review and CCF assessment JSON but do not add
+coverage, serve as reviewed equivalence anchors, or export as OSCAL implemented
+requirements. Reviewing the relationship does not change that boundary.
+
+An inherited mapping alone does not establish provider control effectiveness.
+Period-bound workpapers can record explicit `not_applicable`, `inherited`, or
+`compensating` assessment context with evidence and an independent review. See
+[the workpaper contract](AUDITOR_WALKTHROUGH.md#assessment-context).

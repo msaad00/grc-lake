@@ -538,12 +538,13 @@ def _production_env_blocked() -> bool:
     return env in {"production", "prod", "staging"}
 
 
-def _assert_insecure_allowed() -> None:
-    if _insecure_requested() and _production_env_blocked():
-        raise RuntimeError("TRUSTOPS_ALLOW_INSECURE_NO_AUTH is forbidden when TRUSTOPS_ENV is production or staging")
-    if _insecure_requested():
+def _assert_insecure_allowed(*, require_auth: bool) -> None:
+    insecure = not require_auth or _insecure_requested()
+    if insecure and _production_env_blocked():
+        raise RuntimeError("Unauthenticated server mode is forbidden when TRUSTOPS_ENV is production or staging")
+    if insecure:
         logging.getLogger(__name__).warning(
-            "TRUSTOPS_ALLOW_INSECURE_NO_AUTH is enabled: every request runs as synthetic admin"
+            "Unauthenticated server mode is enabled: every request runs as synthetic admin"
         )
 
 
@@ -1152,7 +1153,7 @@ async def posture_event_stream(lake: Path, request: Request, *, interval: float 
 
 def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     """Build the server-mode ASGI app bound to a security data lake directory."""
-    _assert_insecure_allowed()
+    _assert_insecure_allowed(require_auth=require_auth)
     lake = resolve_path(lake_dir)
     web_dist = web_dist_dir() if web_dist_index() else None
 
@@ -3599,6 +3600,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             auth_method=identity.auth_method,
         )
         return JSONResponse(payload, status_code=int(result_status))
+
+    @app.get("/api/v1/snapshots/integrity", include_in_schema=False)
+    def snapshot_integrity(identity: Identity = Depends(_require_read)) -> JSONResponse:
+        from security_lakehouse.assessment import verify_snapshot_chain
+
+        return JSONResponse(api_v1.envelope("snapshots.integrity", verify_snapshot_chain(lake_for(identity))))
 
     @app.get(
         "/api/v1/snapshots/{snapshot_id}",

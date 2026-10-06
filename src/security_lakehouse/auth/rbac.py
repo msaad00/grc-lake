@@ -60,5 +60,5 @@ class Identity:
 
     @property
     def is_interactive_session(self) -> bool:
-        """True for a signed-in console session (or local no-auth mode), never a bearer key."""
-        return self.auth_method in {"session:oidc", "session:saml", "insecure"}
+        """True only for an authenticated OIDC or SAML console session."""
+        return self.auth_method in {"session:oidc", "session:saml"}

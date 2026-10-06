@@ -63,7 +63,7 @@ export function FixNext({
                   </Badge>
                   <span className="min-w-0">
                     <span
-                      className="block truncate text-sm font-medium text-ink"
+                      className="line-clamp-2 text-sm font-medium leading-5 text-ink"
                       title={title ?? v.control_id}
                     >
                       {title ?? v.control_id}

@@ -113,7 +113,7 @@ source evidence
 | Current posture   | `build/lakehouse/gold/current_posture.json`                                  |
 | Violations        | `security-lakehouse assessment violations --lake build/lakehouse`            |
 | Snapshot          | `security-lakehouse assessment snapshot --lake build/lakehouse --reason ...` |
-| API               | `src/security_lakehouse/server.py`                                           |
+| API               | `src/security_lakehouse/server_app.py`                                       |
 
 ## Connector Contract
 

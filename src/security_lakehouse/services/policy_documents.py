@@ -156,10 +156,11 @@ def control_coverage(session: Session, tenant_id: str) -> list[dict[str, Any]]:
     controls = load_control_catalog()
     published = pd.published_control_ids(session, tenant_id=tenant_id)
     rows: list[dict[str, Any]] = []
+    templates = list_policy_templates()
     for control_id, control in controls.items():
         related = [
             template["template_id"]
-            for template in list_policy_templates()
+            for template in templates
             if control_id in (template.get("related_control_ids") or [])
         ]
         if not related:

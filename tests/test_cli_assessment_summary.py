@@ -53,14 +53,14 @@ def test_summary_reports_the_golden_assessment_counts(tmp_path, capsys) -> None:
 
 
 @pytest.mark.parametrize("format_args", [[], ["--format", "json"]])
-def test_json_preserves_existing_serialization(monkeypatch, capsys, format_args) -> None:
+def test_json_preserves_existing_serialization(monkeypatch, capsys, format_args, tmp_path) -> None:
     payload = {"z": ["évidence"], "posture": {"score": 3.14, "state": "critical"}, "a": None}
     monkeypatch.setattr(assessment, "build_current_posture", lambda *args, **kwargs: payload)
-    assert main(["assessment", "status", "--lake", "unused", *format_args]) == 0
+    assert main(["assessment", "status", "--lake", str(tmp_path), *format_args]) == 0
     assert capsys.readouterr().out == json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
-def test_summary_uses_aggregate_counts_once_not_truncated_details(monkeypatch, capsys) -> None:
+def test_summary_uses_aggregate_counts_once_not_truncated_details(monkeypatch, capsys, tmp_path) -> None:
     calls = []
 
     def build(lake, *, freshness_days):
@@ -84,8 +84,8 @@ def test_summary_uses_aggregate_counts_once_not_truncated_details(monkeypatch, c
         }
 
     monkeypatch.setattr(assessment, "build_current_posture", build)
-    assert main(["assessment", "status", "--lake", "unused", "--freshness-days", "3", "--format", "summary"]) == 0
-    assert calls == [("unused", 3)]
+    assert main(["assessment", "status", "--lake", str(tmp_path), "--freshness-days", "3", "--format", "summary"]) == 0
+    assert calls == [(str(tmp_path), 3)]
     output = capsys.readouterr().out
     assert "50 total, 7 not evaluated, 9 stale" in output
     assert "1000 open (200 critical, 300 high)" in output
@@ -101,12 +101,12 @@ def test_empty_lake_summary_stays_not_evaluated(tmp_path, capsys) -> None:
 
 
 @pytest.mark.parametrize("output_format", ["json", "summary"])
-def test_failed_assessment_does_not_print_a_success_summary(monkeypatch, capsys, output_format) -> None:
+def test_failed_assessment_does_not_print_a_success_summary(monkeypatch, capsys, output_format, tmp_path) -> None:
     def fail(*args, **kwargs):
         raise RuntimeError("assessment unavailable")
 
     monkeypatch.setattr(assessment, "build_current_posture", fail)
-    assert main(["assessment", "status", "--lake", "unused", "--format", output_format]) == 1
+    assert main(["assessment", "status", "--lake", str(tmp_path), "--format", output_format]) == 1
     output = capsys.readouterr()
     assert output.out == ""
     assert output.err == "error: assessment unavailable\n"

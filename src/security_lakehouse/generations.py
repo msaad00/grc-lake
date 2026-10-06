@@ -84,7 +84,16 @@ def serialized_publication(func):
     @wraps(func)
     def wrapped(raw_path, out_dir, *args, **kwargs):
         with publication_lock(out_dir):
-            return func(raw_path, out_dir, *args, **kwargs)
+            parent = Path(out_dir).resolve() / "generations"
+            before = set(parent.iterdir()) if parent.is_dir() else set()
+            try:
+                return func(raw_path, out_dir, *args, **kwargs)
+            except BaseException:
+                active = active_generation(out_dir)
+                for candidate in set(parent.iterdir()) - before if parent.is_dir() else set():
+                    if candidate != active and candidate.is_dir() and not candidate.is_symlink():
+                        shutil.rmtree(candidate)
+                raise
 
     return wrapped
 
@@ -95,25 +104,41 @@ def pin_generation(lake: str | Path):
     if root in _pinned.get():
         yield _pinned.get()[root]
         return
-    # Legacy readers hold a shared lock until finished, so initial migration
-    # cannot change their file paths between reads. Published readers only need
-    # the lock long enough to capture the pointer.
     lock = None
-    generation = active_generation(root)
-    if generation is None and root.exists() and root not in _writers.get() and not (root / "generation.json").is_file():
-        lock = os.open(root, os.O_RDONLY)
-        fcntl.flock(lock, fcntl.LOCK_SH)
+    generation_lock = None
     try:
-        generation = active_generation(root)
-        if generation is not None and lock is not None:
-            os.close(lock)
-            lock = None
+        while True:
+            generation = active_generation(root)
+            if generation is None:
+                # Only legacy readers block publication. An existing generation
+                # stays readable while a new one is built under the writer lock.
+                if root.exists() and root not in _writers.get() and not (root / "generation.json").is_file():
+                    lock = os.open(root, os.O_RDONLY)
+                    fcntl.flock(lock, fcntl.LOCK_SH)
+                    generation = active_generation(root)
+                if generation is None:
+                    break
+            try:
+                generation_lock = os.open(generation, os.O_RDONLY)
+            except FileNotFoundError:
+                continue  # Retention won the race before the read lease.
+            fcntl.flock(generation_lock, fcntl.LOCK_SH)
+            if generation.is_dir():
+                if lock is not None:
+                    os.close(lock)
+                    lock = None
+                break
+            os.close(generation_lock)
+            generation_lock = None
+
         token = _pinned.set({**_pinned.get(), root: generation})
         try:
             yield generation
         finally:
             _pinned.reset(token)
     finally:
+        if generation_lock is not None:
+            os.close(generation_lock)
         if lock is not None:
             os.close(lock)
 

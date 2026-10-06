@@ -254,7 +254,9 @@ test("control queue rows open the drawer and obey the filters", async ({
   page,
 }) => {
   await page.goto("/console/controls/");
-  const queue = page.getByRole("region", { name: "Live control test queue" });
+  const queue = page.getByRole("region", {
+    name: "Latest control test results",
+  });
   await expect(queue).toBeVisible();
   await expect(page.getByTestId("control-card-grid")).toHaveCount(0);
 

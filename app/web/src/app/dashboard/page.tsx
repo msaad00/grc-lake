@@ -47,7 +47,10 @@ export default function DashboardPage() {
 
   return (
     <div className="page-shell grid gap-5">
-      <PageHeader title={ROUTE_LABELS["/dashboard"]} />
+      <PageHeader
+        title={ROUTE_LABELS["/dashboard"]}
+        description="Your evidence, coverage gaps, and next actions in one place."
+      />
 
       <QueryState queries={[posture, ingestion]} label="overview">
         <AssessmentOverview
@@ -58,7 +61,7 @@ export default function DashboardPage() {
 
         <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <DashboardPanel
-            title="Compliance"
+            title="Framework coverage"
             storageKey="dashboard-compliance-panel"
             tabs={[
               {
@@ -93,7 +96,7 @@ export default function DashboardPage() {
             ]}
           />
           <DashboardPanel
-            title="Operations"
+            title="Priority actions"
             storageKey="dashboard-operations-panel"
             tabs={[
               {

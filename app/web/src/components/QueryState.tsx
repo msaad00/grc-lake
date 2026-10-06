@@ -1,5 +1,6 @@
 import * as React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { ApiError } from "@/lib/api/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrustOpsMark } from "@/components/brand/TrustOpsMark";
 
@@ -10,6 +11,7 @@ import { TrustOpsMark } from "@/components/brand/TrustOpsMark";
  */
 export interface QueryLike {
   isError: boolean;
+  error?: unknown;
   isPending: boolean;
   refetch: () => unknown;
 }
@@ -17,10 +19,21 @@ export interface QueryLike {
 function ErrorState({
   label,
   onRetry,
+  error,
 }: {
   label: string;
   onRetry: () => void;
+  error?: unknown;
 }) {
+  const status = error instanceof ApiError ? error.status : undefined;
+  const permission = status === 403;
+  const message = permission
+    ? `You do not have permission to view ${label}. Ask a workspace administrator for access.`
+    : status === 401
+      ? "Your session has ended. Sign in again to continue."
+      : status === 429
+        ? "Too many requests. Wait a moment, then retry."
+        : `Couldn’t load ${label}. The API is unavailable or returned an error.`;
   return (
     <div
       role="alert"
@@ -28,17 +41,18 @@ function ErrorState({
     >
       <span className="flex items-center gap-2">
         <AlertTriangle className="h-4 w-4 flex-none" />
-        Couldn&rsquo;t load {label}. The API is unavailable or returned an
-        error.
+        {message}
       </span>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="inline-flex items-center gap-1.5 rounded-md border border-danger/40 bg-surface px-2.5 py-1 font-semibold text-danger-fg outline-none hover:bg-danger-bg focus-visible:ring-2 focus-visible:ring-danger"
-      >
-        <RefreshCw className="h-3.5 w-3.5" />
-        Retry
-      </button>
+      {!permission && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="inline-flex items-center gap-1.5 rounded-md border border-danger/40 bg-surface px-2.5 py-1 font-semibold text-danger-fg outline-none hover:bg-danger-bg focus-visible:ring-2 focus-visible:ring-danger"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          Retry
+        </button>
+      )}
     </div>
   );
 }
@@ -85,6 +99,7 @@ export function QueryState({
     return (
       <ErrorState
         label={label}
+        error={list.find((q) => q.isError)?.error}
         onRetry={() => list.forEach((q) => q.refetch())}
       />
     );

@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/PageHeader";
 import { QueryState } from "@/components/QueryState";
 import {
+  useAuthWhoami,
   useApproveControlExceptionMutation,
   useVerifyTaskMutation,
   useControlExceptions,
@@ -589,6 +590,11 @@ function EvidenceRequestsSection() {
 }
 
 function ExceptionsSection() {
+  const identity = useAuthWhoami();
+  const humanReviewer =
+    ["session:oidc", "session:saml"].includes(
+      identity.data?.auth_method ?? "",
+    ) && (identity.data?.scopes ?? []).includes("control_manage");
   const exceptions = useControlExceptions();
   const create = useCreateControlExceptionMutation();
   const revoke = useRevokeControlExceptionMutation();
@@ -695,7 +701,20 @@ function ExceptionsSection() {
               {exc.status === "pending" && (
                 <Button
                   size="sm"
-                  disabled={approve.isPending}
+                  disabled={
+                    approve.isPending ||
+                    !humanReviewer ||
+                    exc.created_by.toLowerCase() ===
+                      identity.data?.email.toLowerCase()
+                  }
+                  title={
+                    !humanReviewer
+                      ? "An independent human SSO reviewer is required"
+                      : exc.created_by.toLowerCase() ===
+                          identity.data?.email.toLowerCase()
+                        ? "Another reviewer must approve your request"
+                        : "Approve this exception"
+                  }
                   onClick={() => approve.mutate(exc.id)}
                 >
                   Approve
@@ -705,7 +724,14 @@ function ExceptionsSection() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => revoke.mutate(exc.id)}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Revoke the exception for ${exc.control_id}? Its approval history will be retained.`,
+                      )
+                    )
+                      revoke.mutate(exc.id);
+                  }}
                 >
                   Revoke
                 </Button>

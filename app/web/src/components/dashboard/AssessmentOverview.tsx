@@ -82,9 +82,7 @@ function Tile({
         </span>
         {suffix ? <span className="text-sm text-muted">{suffix}</span> : null}
       </span>
-      <span className="line-clamp-2 text-xs text-muted sm:truncate">
-        {detail}
-      </span>
+      <span className="text-xs leading-5 text-muted">{detail}</span>
       {children}
     </Link>
   );

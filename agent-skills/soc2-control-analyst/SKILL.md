@@ -20,18 +20,12 @@ licensed standard text.
 
 ## Workflow
 
-1. Read `GET /api/v1/posture/current` or `build/lakehouse/gold/current_posture.json`.
-2. Filter controls where `framework == "SOC 2"`.
-3. Pull violations for those controls from `GET /api/v1/violations`.
-4. Validate each claim against local evidence fields:
-   - `control_id`
-   - `event_id`
-   - `asset_id`
-   - `asset_owner`
-   - `evidence_ref`
-   - `raw_sha256`
-5. Mark unmapped criteria as `not_mapped`.
-6. Recommend owner actions without claiming certification status.
+1. Read `GET /api/v1/posture/current` for the aggregate summary.
+2. Read all pages of `GET /api/v1/controls?framework=SOC%202` (or `list_controls` and filter returned rows by `framework == "SOC 2"`). A posture summary is not the control list.
+3. Read all pages of `GET /api/v1/violations?framework=SOC%202` and retain each `control_id`, asset, owner, and finding state.
+4. Resolve supporting records through `GET /api/v1/evidence?control_ids=<control_id>`. Cite the returned `event_id`, `raw_sha256`, `evidence_ref`, source, and collection time; a finding row alone is not a source evidence record.
+5. Compare observed controls with the catalog from `GET /api/v1/frameworks/soc2/detail`. Report absent evidence as `not_evaluated`; use `unmapped` only when no reviewed safeguard mapping exists.
+6. Recommend owner actions without claiming certification status. Verify freshness and scope before drawing conclusions.
 
 ## Response Rules
 

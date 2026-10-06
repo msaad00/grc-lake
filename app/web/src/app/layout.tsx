@@ -12,7 +12,6 @@ const metadataBase = new URL(
 
 export const metadata: Metadata = {
   metadataBase,
-  title: { default: BRAND.consoleName, template: `%s · ${BRAND.name}` },
   description: BRAND.description,
   applicationName: BRAND.name,
   openGraph: {

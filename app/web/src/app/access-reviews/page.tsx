@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  useAuthWhoami,
   useAccessReview,
   useAccessReviewCoverage,
   useAccessReviewItems,
@@ -165,6 +166,10 @@ function CampaignRow({
 }
 
 function CampaignDetail({ campaignId }: { campaignId: string }) {
+  const identity = useAuthWhoami();
+  const humanReviewer = ["session:oidc", "session:saml"].includes(
+    identity.data?.auth_method ?? "",
+  );
   const detail = useAccessReview(campaignId);
   const items = useAccessReviewItems(campaignId);
   const seed = useSeedAccessReviewMutation();
@@ -221,10 +226,21 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
                       key={d}
                       size="sm"
                       variant={item.decision === d ? "dark" : "ghost"}
-                      disabled={decide.isPending}
-                      onClick={() =>
-                        decide.mutate({ itemId: item.id, decision: d })
+                      disabled={decide.isPending || !humanReviewer}
+                      title={
+                        !humanReviewer
+                          ? "Human SSO sign-in is required to record a decision"
+                          : undefined
                       }
+                      onClick={() => {
+                        if (
+                          d !== "revoked" ||
+                          window.confirm(
+                            `Record revoked access for ${item.subject_name}? This records the review decision and does not revoke access at the provider.`,
+                          )
+                        )
+                          decide.mutate({ itemId: item.id, decision: d });
+                      }}
                     >
                       {d}
                     </Button>

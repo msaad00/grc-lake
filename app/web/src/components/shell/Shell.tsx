@@ -12,6 +12,7 @@ import { ApiHealthBanner } from "@/components/ApiHealthBanner";
 import { AuditorBanner } from "@/components/AuditorBanner";
 import { SnapshotModal } from "@/components/modals/SnapshotModal";
 import { api } from "@/lib/api/client";
+import { ROUTE_LABELS } from "@/lib/console-copy";
 import { notify } from "@/lib/toast";
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -28,6 +29,8 @@ export function Shell({ children }: { children: ReactNode }) {
   // holding a token; it must bypass the authed Shell (nav, auditor banner,
   // API-health probes) entirely, the same way /login does.
   const isPublicTrustRoute = /(^|\/)trust\/[^/]+$/.test(normalizedPathname);
+  const route = normalizedPathname.replace(/^\/console/, "");
+  const pageTitle = `${ROUTE_LABELS[route as keyof typeof ROUTE_LABELS] ?? (isPublicTrustRoute ? "Shared trust report" : isLoginRoute ? "Sign in" : "Page not found")} · TrustOps`;
   const qc = useQueryClient();
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -51,11 +54,17 @@ export function Shell({ children }: { children: ReactNode }) {
   }, []);
 
   if (isLoginRoute || isPublicTrustRoute) {
-    return <div className="min-h-screen bg-panel">{children}</div>;
+    return (
+      <div className="min-h-screen bg-panel">
+        <title>{pageTitle}</title>
+        {children}
+      </div>
+    );
   }
 
   return (
     <MotionConfig reducedMotion="user">
+      <title>{pageTitle}</title>
       <div className="flex min-h-dvh w-full min-w-0 max-w-none flex-col bg-rail">
         <a
           href="#main-content"

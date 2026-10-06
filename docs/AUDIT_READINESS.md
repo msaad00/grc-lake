@@ -25,7 +25,7 @@ See [HEADLESS_GRC.md](HEADLESS_GRC.md) for the overall architecture.
 
 ## Workflow checklist
 
-### Shipped (audit-ready today)
+### Implemented workflows
 
 1. **Connect sources** — AWS/Azure/GCP/Snowflake/GitHub/Okta connectors with probe + sync health
 2. **Map frameworks** — Register packs; dashboard framework readiness bars

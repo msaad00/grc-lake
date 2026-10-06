@@ -1,4 +1,4 @@
-import { BRAND } from "@/lib/brand";
+import { BRAND } from "./brand";
 
 /** "A", "A and B", "A, B, and C" (serial comma); `conjunction` may be "or". */
 export function joinList(
@@ -56,6 +56,7 @@ export function formatDate(iso: string | null | undefined): string {
         year: "numeric",
         month: "short",
         day: "numeric",
+        ...(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? { timeZone: "UTC" } : {}),
       });
 }
 

@@ -92,7 +92,7 @@ test.describe("console smoke", () => {
     await page.getByRole("button", { name: "Show fewer", exact: true }).click();
     await expect(portfolio.getByRole("link")).toHaveCount(previewCount);
     const toggle = page.getByRole("button", {
-      name: /^Compliance$/,
+      name: /^Framework coverage$/,
     });
     await toggle.click();
     await expect(portfolio).not.toBeVisible();

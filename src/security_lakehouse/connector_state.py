@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import heapq
 import json
 import os
 import secrets
+import sqlite3
+import threading
 import time
+from collections import OrderedDict
 from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -952,7 +954,23 @@ class _History:
     configs: dict[str, dict[str, Any]]
     latest: dict[tuple[str, str | None], dict[str, Any]]
     successful: dict[tuple[str, str], dict[str, Any]]
-    runs: list[dict[str, Any]]
+    runs: sqlite3.Connection
+
+
+_HISTORY_CACHE: OrderedDict[Path, tuple[tuple, _History]] = OrderedDict()
+_HISTORY_LOCK = threading.RLock()
+
+
+def _history_fingerprint(lake: Path) -> tuple:
+    stamps: list[tuple[int, int, int, int, int] | None] = []
+    for name in (CONFIG_FILE, RUNS_FILE):
+        path = _gold(lake) / name
+        try:
+            stat = path.stat()
+            stamps.append((stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns))
+        except FileNotFoundError:
+            stamps.append(None)
+    return tuple(stamps)
 
 
 _HISTORY_READS: ContextVar[dict[Path, _History] | None] = ContextVar("connector_history_reads", default=None)
@@ -988,6 +1006,14 @@ def _history(lake_dir: str | Path) -> _History:
     cache = _HISTORY_READS.get()
     if cache is not None and lake in cache:
         return cache[lake]
+    fingerprint = _history_fingerprint(lake)
+    with _HISTORY_LOCK:
+        cached = _HISTORY_CACHE.get(lake)
+        if cached is not None and cached[0] == fingerprint:
+            _HISTORY_CACHE.move_to_end(lake)
+            if cache is not None:
+                cache[lake] = cached[1]
+            return cached[1]
     configs: dict[str, dict[str, Any]] = {}
     latest: dict[tuple[str, str | None], dict[str, Any]] = {}
     successful: dict[tuple[str, str], dict[str, Any]] = {}
@@ -1009,7 +1035,27 @@ def _history(lake_dir: str | Path) -> _History:
             previous = successful.get(success_key)
             if previous is None or _run_order(row) > _run_order(previous):
                 successful[success_key] = row
-    history = _History(configs, latest, successful, runs)
+    # A temporary SQLite index keeps paginated history off the Python heap.
+    # JSONL remains authoritative; any source metadata change rebuilds the index.
+    index = sqlite3.connect("", check_same_thread=False)
+    index.execute("CREATE TABLE runs (seq INTEGER PRIMARY KEY, connector TEXT, occurred TEXT, payload TEXT)")
+    index.executemany(
+        "INSERT INTO runs (connector, occurred, payload) VALUES (?, ?, ?)",
+        ((str(row.get("connector_id") or ""), _run_order(row), json.dumps(row)) for row in runs),
+    )
+    index.execute("CREATE INDEX run_order ON runs(occurred DESC, seq)")
+    index.execute("CREATE INDEX connector_order ON runs(connector, occurred DESC, seq)")
+    index.commit()
+    if _history_fingerprint(lake) != fingerprint:
+        index.close()
+        raise ValueError("connector history changed during read; retry")
+    history = _History(configs, latest, successful, index)
+    with _HISTORY_LOCK:
+        _HISTORY_CACHE[lake] = (fingerprint, history)
+        _HISTORY_CACHE.move_to_end(lake)
+        while len(_HISTORY_CACHE) > 8:
+            # Live requests retain their own reference until finished.
+            _HISTORY_CACHE.popitem(last=False)
     if cache is not None:
         cache[lake] = history
     return history
@@ -1047,9 +1093,14 @@ def list_runs(
     *,
     limit: int = 50,
 ) -> list[dict[str, Any]]:
-    rows = _history(lake_dir).runs
-    matching = (row for row in rows if not connector_id or row.get("connector_id") == connector_id)
-    return copy.deepcopy(heapq.nlargest(max(0, limit), matching, key=_run_order))
+    history = _history(lake_dir)
+    where = "WHERE connector = ?" if connector_id else ""
+    parameters = (connector_id, max(0, limit)) if connector_id else (max(0, limit),)
+    with _HISTORY_LOCK:
+        rows = history.runs.execute(
+            f"SELECT payload FROM runs {where} ORDER BY occurred DESC, seq LIMIT ?", parameters
+        ).fetchall()
+    return [json.loads(row[0]) for row in rows]
 
 
 def _evaluate_freshness(

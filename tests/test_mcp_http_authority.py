@@ -136,3 +136,94 @@ def test_private_opt_in_does_not_relax_general_ssrf_guard(monkeypatch):
     monkeypatch.setenv("TRUSTOPS_API_ALLOW_PRIVATE", "1")
     with pytest.raises(ValueError, match="non-public"):
         netguard.assert_url_is_public("http://127.0.0.1:8787")
+
+
+def test_exception_request_has_valid_real_http_contract(tmp_path, monkeypatch):
+    app = create_app(tmp_path / "hosted")
+    _, _, token = _principal(app, "requester", "security_admin")
+    server = mcp_server.build_server(tmp_path / "operator")
+    with _server(app) as base:
+        _remote(monkeypatch, base, token)
+        result = call_tool(
+            server,
+            "create_remediation_exception",
+            control_id="SOC2-CC6.1",
+            reason="Compensating review with owner and expiry",
+            expires_at="2030-01-01T00:00:00Z",
+        )
+        assert result["data"]["status"] == "pending"
+        with pytest.raises(Exception, match="(?i)extra|approved_by"):
+            call_tool(
+                server,
+                "create_remediation_exception",
+                control_id="SOC2-CC6.1",
+                reason="Review",
+                expires_at="2030-01-01T00:00:00Z",
+                approved_by="spoofed",
+            )
+
+
+def test_tool_contracts_are_strict_and_classify_writes(tmp_path):
+    import anyio
+
+    server = mcp_server.build_server(tmp_path)
+    tools = anyio.run(server.list_tools)
+    assert tools
+    for tool in tools:
+        assert tool.inputSchema.get("additionalProperties") is False
+        assert tool.annotations is not None
+    tools = {t.name: t for t in tools}
+    assert tools["get_posture"].annotations.readOnlyHint is True
+    assert tools["configure_connector"].annotations.readOnlyHint is False
+    with pytest.raises(Exception, match="extra"):
+        call_tool(server, "get_posture", unwanted="instruction")
+
+
+def test_workpaper_tools_preserve_real_http_scope_and_content(tmp_path, monkeypatch):
+    import json
+    from pathlib import Path
+
+    from security_lakehouse.io import canonical_sha256
+    from security_lakehouse.pipeline import run_pipeline
+
+    app = create_app(tmp_path / "hosted")
+    tenant, _, token = _principal(app, "workpaper", "security_admin")
+    root = Path(__file__).resolve().parents[1] / "examples/control-assurance"
+    run_pipeline(root / "events.jsonl", tmp_path / "hosted/tenants" / tenant, tenant_id=tenant)
+    plan = json.loads((root / "plan.json").read_text())
+    baseline = json.loads((root / "baseline.json").read_text())
+    plan["tenant_id"] = baseline["tenant_id"] = tenant
+    with _server(app) as base:
+        _remote(monkeypatch, base, token)
+        server = mcp_server.build_server(tmp_path / "operator")
+        created = call_tool(
+            server, "create_audit_workpaper", plan_json=json.dumps(plan), baseline_json=json.dumps(baseline)
+        )["data"]
+        workpaper_id = created["id"]
+        read = call_tool(server, "get_audit_workpaper", workpaper_id=workpaper_id)["data"]
+        assert read["status"] == "draft"
+        assert read["content_sha256"] == canonical_sha256(read["content"])
+        assert call_tool(server, "get_workpaper_test_plan", workpaper_id=workpaper_id) == read["content"]["plan"]
+        assert call_tool(server, "get_workpaper_population", workpaper_id=workpaper_id) == read["content"]["population"]
+        assert call_tool(server, "list_audit_workpapers")["data"][0]["id"] == workpaper_id
+        assert "assessment-results" in call_tool(server, "get_oscal_assessment")
+
+
+def test_remote_framework_pages_retain_counts_and_core_collection_metadata(tmp_path, monkeypatch):
+    app = create_app(tmp_path / "hosted")
+    tenant, _, token = _principal(app, "pages", "read_only")
+    lake = tmp_path / "hosted/tenants" / tenant
+    lake.mkdir(parents=True)
+    _seed_lake(lake)
+    with _server(app) as base:
+        _remote(monkeypatch, base, token)
+        server = mcp_server.build_server(tmp_path / "operator")
+        first = call_tool(server, "get_framework_detail", framework_id="nist-800-53-rev5", limit=2)
+        second = call_tool(server, "get_framework_detail", framework_id="nist-800-53-rev5", limit=2, offset=2)
+        assert first["pagination"]["returned"] == second["pagination"]["returned"] == 2
+        assert first["pagination"]["count"] > 1000
+        assert first["controls"][0]["control_id"] != second["controls"][0]["control_id"]
+        page = call_tool(server, "get_collection_page", path="/api/v1/controls", limit=1)
+        assert page["meta"]["count"] == 2
+        assert page["meta"]["next_cursor"]
+        assert len(page["data"]) == 1

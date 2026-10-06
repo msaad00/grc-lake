@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuditorMode } from "@/lib/state/auditor";
+
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
@@ -10,12 +12,16 @@ import type {
 } from "../types";
 
 export function usePlatformStream(): { connected: boolean } {
+  const auditor = useAuditorMode();
   const qc = useQueryClient();
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined" || typeof EventSource === "undefined")
       return;
-    const es = new EventSource("/api/v1/stream", { withCredentials: true });
+    const es = new EventSource(
+      auditor ? "/api/v1/stream?role=auditor" : "/api/v1/stream",
+      { withCredentials: true },
+    );
     es.addEventListener("posture", (event) => {
       try {
         const data = JSON.parse((event as MessageEvent).data) as Assessment;
@@ -56,7 +62,7 @@ export function usePlatformStream(): { connected: boolean } {
     es.onopen = () => setConnected(true);
     es.onerror = () => setConnected(false);
     return () => es.close();
-  }, [qc]);
+  }, [qc, auditor]);
   return { connected };
 }
 

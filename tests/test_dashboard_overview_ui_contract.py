@@ -15,8 +15,8 @@ def test_dashboard_overview_is_source_aligned_and_tabbed() -> None:
     dashboard = DASHBOARD.read_text(encoding="utf-8")
     assessment = ASSESSMENT.read_text(encoding="utf-8")
 
-    assert 'title="Compliance"' in dashboard
-    assert 'title="Operations"' in dashboard
+    assert 'title="Framework coverage"' in dashboard
+    assert 'title="Priority actions"' in dashboard
     for label in ("Frameworks", "Control families", "Test results", "Findings", "Sources"):
         assert f'label: "{label}"' in dashboard
     # Export status is shown once, in the header status line.

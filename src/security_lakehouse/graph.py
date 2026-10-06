@@ -208,6 +208,53 @@ def build_compliance_graph(lake_dir: str | Path) -> dict[str, Any]:
     return {"nodes": nodes, "edges": edges, "counts": counts}
 
 
+def _coverage_graph(lake_dir: str | Path) -> dict[str, Any]:
+    """Attribute controls through actual event/asset bindings, not shared type nodes."""
+    controls = load_control_catalog()
+    frameworks = load_framework_registry()
+    nodes = {
+        f"control:{cid}": {
+            "id": f"control:{cid}",
+            "kind": "control",
+            "label": row.get("title", cid),
+            "framework_id": row.get("framework_id"),
+        }
+        for cid, row in controls.items()
+    }
+    edges = []
+    for cid, control in controls.items():
+        fid = str(control.get("framework_id") or "")
+        framework = frameworks.get(fid, {})
+        nodes[f"framework:{fid}"] = {"id": f"framework:{fid}", "kind": "framework", "label": framework.get("name", fid)}
+        edges.append({"kind": "framework_has_control", "source": f"framework:{fid}", "target": f"control:{cid}"})
+    bindings = set()
+    for event in _silver_event_rows(Path(lake_dir)):
+        raw_asset = str(event.get("asset_id") or "")
+        if not raw_asset:
+            continue
+        aid = f"asset:{_escape_id_segment(raw_asset)}"
+        nodes[aid] = {
+            "id": aid,
+            "kind": "asset",
+            "label": event.get("asset_name") or raw_asset,
+            "subtitle": event.get("asset_type"),
+            "owner": event.get("asset_owner"),
+            "environment": event.get("environment"),
+        }
+        for cid in event.get("control_ids", []):
+            if cid not in controls or (cid, aid) in bindings:
+                continue
+            bindings.add((cid, aid))
+            eid = f"binding:{len(bindings)}"
+            edges.extend(
+                [
+                    {"kind": "control_requires_evidence", "source": f"control:{cid}", "target": eid},
+                    {"kind": "evidence_covers_asset", "source": eid, "target": aid},
+                ]
+            )
+    return {"nodes": list(nodes.values()), "edges": edges}
+
+
 @generation_reader
 def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) -> dict[str, Any]:
     """Compute compliance coverage and gaps over the directed compliance graph.
@@ -223,7 +270,7 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
     Returns a JSON-able dict with ``summary``, ``assets``, and ``orphans``.
     """
     if graph is None:
-        graph = build_compliance_graph(lake_dir)
+        graph = _coverage_graph(lake_dir)
     nodes = list(graph["nodes"])
     edges = graph["edges"]
 
@@ -302,6 +349,8 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
         is_covered = bool(controls_for)
         if is_covered:
             covered_assets += 1
+        if len(assets_report) >= 200:
+            continue
         node = nodes_by_id.get(asset_id, {})
         assets_report.append(
             {
@@ -312,7 +361,9 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
                 "environment": node.get("environment"),
                 "covered": is_covered,
                 "is_gap": not is_covered,
-                "controls": [{"id": cid, "label": _label(cid)} for cid in controls_for],
+                "controls": [{"id": cid, "label": _label(cid)} for cid in controls_for[:50]],
+                "control_count": len(controls_for),
+                "controls_truncated": len(controls_for) > 50,
                 "frameworks": [{"id": fid, "label": _label(fid)} for fid in frameworks_for],
             }
         )
@@ -347,11 +398,16 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
 
     return {
         "summary": summary,
-        "assets": assets_report,
+        "assets": assets_report[:200],
+        "details_truncated": total_assets > 200
+        or len(orphan_controls) > 200
+        or len(orphan_assets) > 200
+        or any(r["controls_truncated"] for r in assets_report),
+        "detail_limit": 200,
         "orphans": {
-            "controls": [_node_brief(cid) for cid in orphan_controls],
+            "controls": [_node_brief(cid) for cid in orphan_controls[:200]],
             "frameworks": [_node_brief(fid) for fid in orphan_frameworks],
-            "assets": [_node_brief(aid) for aid in orphan_assets],
+            "assets": [_node_brief(aid) for aid in orphan_assets[:200]],
         },
     }
 

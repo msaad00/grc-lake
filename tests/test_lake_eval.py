@@ -180,3 +180,15 @@ def test_ingestion_status_includes_latest_eval_after_run(tmp_path: Path) -> None
     status = build_ingestion_status(lake)
     assert status["scale"]["latest_eval"]["actor"] == "test"
     assert status["scale"]["latest_eval"]["result"] == "ok"
+
+
+def test_failed_evaluation_preserves_operator_diagnostic_without_returning_it(tmp_path, monkeypatch, caplog):
+    def fail(*args, **kwargs):
+        raise RuntimeError("operator-only diagnostic marker")
+
+    monkeypatch.setattr("security_lakehouse.lake_eval.normalize_raw_events", fail)
+    result = run_lake_eval(tmp_path)
+    assert result.result == "error"
+    assert "diagnostic marker" not in str(result.to_dict())
+    assert "operator-only diagnostic marker" in caplog.text
+    assert "diagnostic marker" not in str(list_eval_runs(tmp_path))

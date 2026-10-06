@@ -666,6 +666,16 @@ def _build_control_rows(
                 "owner": str(control.get("owner", "security")),
                 "status": status,
                 "evaluation_rule": result.rule,
+                "evaluation_version": CONTROL_EVALUATION_VERSION,
+                "input_event_set_sha256": _canonical_sha256(
+                    sorted(
+                        [
+                            {"event_id": str(row.get("event_id", "")), "raw_sha256": str(row.get("raw_sha256", ""))}
+                            for row in rows
+                        ],
+                        key=lambda item: (item["event_id"], item["raw_sha256"]),
+                    )
+                ),
                 "rule_reasons": result.reasons,
                 "risk_score": max_score,
                 "event_count": len(rows),

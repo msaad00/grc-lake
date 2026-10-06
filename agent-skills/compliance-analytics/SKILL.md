@@ -11,16 +11,9 @@ metadata:
   data_flow: >-
     Reads generated lakehouse JSON and SQLite artifacts from the local repo.
     Does not call external services and does not modify production systems.
-  file_reads:
-    - build/fixture-lake/gold/current_posture.json
-    - build/fixture-lake/gold/metrics.json
-    - build/fixture-lake/gold/control_posture.jsonl
-    - build/fixture-lake/gold/asset_risk.jsonl
-    - build/fixture-lake/mart/security_lakehouse.sqlite
-    - deploy/snowflake/schema.sql
-    - deploy/clickhouse/schema.sql
-  file_writes: []
-  network: false
+  file_reads: "Generated lake JSON, SQLite marts, and deployment schema definitions"
+  file_writes: "None unless the user requests an assessment snapshot"
+  network: "false"
   autonomous_invocation: read_only
 ---
 

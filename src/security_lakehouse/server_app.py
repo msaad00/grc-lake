@@ -18,7 +18,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import logging
 import math
 import os
 import secrets
@@ -33,7 +32,7 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from http import HTTPStatus
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.concurrency import run_in_threadpool
@@ -75,6 +74,8 @@ from security_lakehouse.auth.saml import (
     load_saml_config,
     saml_request_data,
 )
+from security_lakehouse.auth.server_mode import assert_insecure_allowed as _assert_insecure_allowed
+from security_lakehouse.auth.server_mode import insecure_requested as _insecure_requested
 from security_lakehouse.auth.sessions import (
     SESSION_COOKIE,
     decode_session_cookie,
@@ -93,6 +94,8 @@ from security_lakehouse.demo_links import build_demo_kit
 from security_lakehouse.execution_mode import run_in_server_mode, server_execution
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import resolve_path
+from security_lakehouse.operation_execution import execute_operation, execute_stored_operation
+from security_lakehouse.operation_jobs import JobConflict, JobQueue, JobWorker
 from security_lakehouse.public_url import normalize_public_url
 from security_lakehouse.server_routes.schemas.base import StrictModel as _StrictModel
 from security_lakehouse.services import NotFound, ValidationError
@@ -101,6 +104,7 @@ from security_lakehouse.services import grc as grc_services
 from security_lakehouse.services import policy_documents as policy_document_services
 from security_lakehouse.services import vendor_risk as vendor_risk_services
 from security_lakehouse.services import webhooks as webhook_services
+from security_lakehouse.services.snapshot_events import snapshot_written_hook as _snapshot_written_hook
 from security_lakehouse.web import web_dist_dir, web_dist_index
 
 _COOKIE_SECURE = os.environ.get("TRUSTOPS_COOKIE_SECURE", "true").lower() in {"1", "true", "yes", "on"}
@@ -462,40 +466,6 @@ class MappingReviewDecisionRequest(_StrictModel):
     evidence_ref: str | None = Field(default=None, max_length=1000)
 
 
-def _snapshot_written_hook(session: Session, tenant_id: str) -> SnapshotWrittenHook:
-    """Build the ``write_assessment_snapshot`` hook that dispatches webhook events.
-
-    Captures ``session``/``tenant_id`` by closure so ``assessment.py`` itself
-    never needs to know about the application-state DB or tenancy; see
-    ``assessment.write_assessment_snapshot`` for why the hook fires only after
-    its chain lock is released.
-
-    ``dispatch_snapshot_events``/``dispatch_event`` never commit or roll back
-    ``session`` themselves (see ``services.webhooks.dispatch_event``) -- every
-    caller of this hook must commit ``session`` itself afterward (once, atomic
-    with whatever else that caller's own transaction is doing) or the staged
-    delivery-log rows are silently discarded when the request-scoped session
-    closes.
-    """
-
-    def _hook(
-        snapshot_path: Path,
-        assessment: dict[str, Any],
-        new_violations: list[dict[str, Any]],
-        newly_failing_controls: list[str],
-    ) -> None:
-        webhook_services.dispatch_snapshot_events(
-            session,
-            tenant_id,
-            snapshot_path=snapshot_path,
-            assessment=assessment,
-            new_violations=new_violations,
-            newly_failing_controls=newly_failing_controls,
-        )
-
-    return _hook
-
-
 def _parse_dt(value: str | None) -> datetime | None:
     if value is None or value == "":
         return None
@@ -529,25 +499,6 @@ def _pagination(params: dict[str, list[str]]) -> tuple[int, int]:
 def _page_meta(limit: int, offset: int, count: int) -> dict[str, int]:
     """Envelope ``meta`` fields describing the returned page."""
     return {"count": count, "limit": limit, "offset": offset}
-
-
-def _insecure_requested() -> bool:
-    return os.environ.get("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", "").lower() in {"1", "true", "yes"}
-
-
-def _production_env_blocked() -> bool:
-    env = os.environ.get("TRUSTOPS_ENV", "").strip().lower()
-    return env in {"production", "prod", "staging"}
-
-
-def _assert_insecure_allowed(*, require_auth: bool) -> None:
-    insecure = not require_auth or _insecure_requested()
-    if insecure and _production_env_blocked():
-        raise RuntimeError("Unauthenticated server mode is forbidden when TRUSTOPS_ENV is production or staging")
-    if insecure:
-        logging.getLogger(__name__).warning(
-            "Unauthenticated server mode is enabled: every request runs as synthetic admin"
-        )
 
 
 def _portable_references(payload: object) -> object:
@@ -1255,39 +1206,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         bound = tenancy.resolve_bound_tenant(lake, require_auth=app.state.require_auth, tenant_ids=tenant_ids)
         return tenancy.tenant_lake(lake, identity.tenant_id, bound_tenant=bound)
 
-    if TYPE_CHECKING:
-        from security_lakehouse.operation_jobs import JobConflict
-    from security_lakehouse.operation_jobs import JobQueue, JobWorker, execute_stored_operation
-
     app.state.operation_queue = JobQueue(app.state.sessionmaker, lake)
-
-    def execute_operation(row) -> tuple[int, dict[str, Any]]:
-        from security_lakehouse.auth.authority import AuthorityError, CredentialReference, resolve_authority
-
-        with app.state.sessionmaker() as session:
-            try:
-                identity = resolve_authority(
-                    session,
-                    CredentialReference(row.user_id, row.tenant_id, row.auth_method, row.api_key_id, row.session_id),
-                    allow_insecure=not app.state.require_auth,
-                )
-            except AuthorityError:
-                return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-            if identity.tenant_id != row.tenant_id or not identity.has_scope(api_v1.required_post_scope(row.path)):
-                return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-            with server_execution(identity.tenant_id):
-                code, payload = api_v1.handle_post(
-                    row.path,
-                    json.loads(row.payload_json),
-                    lake_for(identity),
-                    on_snapshot_written=_snapshot_written_hook(session, identity.tenant_id),
-                )
-            session.commit()
-            return int(code), payload
 
     app.state.operation_worker = JobWorker(
         app.state.operation_queue,
-        execute_operation,
+        partial(execute_operation, lake, factory=app.state.sessionmaker, require_auth=app.state.require_auth),
         subprocess_execute=partial(execute_stored_operation, require_auth=require_auth),
         timeout_seconds=float(os.environ.get("TRUSTOPS_OPERATION_TIMEOUT_SECONDS", "900")),
     )
@@ -2140,10 +2063,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             row = app.state.operation_queue.cancel(identity, job_id)
         except PermissionError as exc:
             raise HTTPException(status_code=403, detail=str(exc)) from exc
-        except Exception as exc:
-            if exc.__class__.__name__ == "JobConflict":
-                raise HTTPException(status_code=409, detail=str(exc)) from exc
-            raise
+        except JobConflict as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         if row is None:
             raise HTTPException(status_code=404, detail="operation not found")
         return JSONResponse(_redact_payload(api_v1.envelope("operations", row), identity))

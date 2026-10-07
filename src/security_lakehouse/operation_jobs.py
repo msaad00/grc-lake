@@ -376,24 +376,6 @@ class JobQueue:
             )
 
 
-_EXECUTE_STORED_OPERATION_IMPL: Callable[[Path, OperationJob, bool], tuple[int, dict[str, Any]]] | None = None
-
-
-def set_execute_stored_operation_impl(
-    impl: Callable[[Path, OperationJob, bool], tuple[int, dict[str, Any]]]
-) -> None:
-    """Register the concrete stored-operation executor without importing server_app here."""
-    global _EXECUTE_STORED_OPERATION_IMPL
-    _EXECUTE_STORED_OPERATION_IMPL = impl
-
-
-def execute_stored_operation(root: Path, row: OperationJob, *, require_auth: bool) -> tuple[int, dict[str, Any]]:
-    """Execute stored operation through configured implementation; avoids cyclic imports."""
-    if _EXECUTE_STORED_OPERATION_IMPL is None:
-        raise RuntimeError("stored operation executor is not configured")
-    return _EXECUTE_STORED_OPERATION_IMPL(root, row, require_auth)
-
-
 def _subprocess_entry(root: Path, row: OperationJob, execute, connection, timeout_seconds: float) -> None:
     from security_lakehouse.db.base import create_engine_for, session_factory
 

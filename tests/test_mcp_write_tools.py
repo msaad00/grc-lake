@@ -20,15 +20,14 @@ from mcp.server.fastmcp.exceptions import ToolError  # noqa: E402
 
 from security_lakehouse import mcp_server, workflows  # noqa: E402
 from test_api_v1 import _seed_lake  # noqa: E402
-from test_mcp_server import call_tool, tool_names  # noqa: E402
+from test_mcp_server import call_tool, structured_result, tool_names  # noqa: E402
 
 
 async def _call_struct_async(server, name, arguments):
-    result = await server.call_tool(name, arguments)
     # Return the structured payload verbatim. Unlike test_mcp_server.call_tool,
     # this does NOT unwrap a top-level ``result`` key, because a workflow run
     # record legitimately carries ``result`` ("ok"/"error") as a field.
-    return result[1] if isinstance(result, tuple) else result
+    return structured_result(await server.call_tool(name, arguments))
 
 
 def call_tool_struct(server, name: str, **arguments):

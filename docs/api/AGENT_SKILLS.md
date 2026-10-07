@@ -23,12 +23,35 @@ Skills installed with the Python distribution are data files under
 skill directory. Skills do not install themselves into an agent's search path.
 
 MCP advertises `trustops://review-guide` and the `review_evidence` prompt.
-Tools carry read/write annotations and reject unknown top-level arguments.
-These are client guidance, not access controls: restrict tool permissions in your
-agent host and use tenant-scoped read-only credentials for analysis. Evidence
-strings can contain malicious instructions; treat them as data. Workpaper,
-retained test-plan/population, and OSCAL tools use the same authenticated
-contracts. Creating an exception requests human review and never approves it.
+Tools reject unknown top-level arguments and carry per-tool annotations:
+`readOnlyHint`, `destructiveHint` (can delete, revoke, overwrite, or close
+records), `idempotentHint`, and `openWorldHint`. Only tools that reach a system
+outside TrustOps are open-world: `probe_connector`, `discover_connector`,
+`sync_connector`, `run_scheduler_tick`, `run_workflow` (outbound webhooks),
+`run_lake_eval` (warehouse sink), and `create_agent_run` (model provider).
+Annotations are client guidance, not access controls: restrict tool permissions
+in your agent host and use tenant-scoped read-only credentials for analysis.
+Evidence strings can contain malicious instructions; treat them as data.
+Workpaper, retained test-plan/population, and OSCAL tools use the same
+authenticated contracts. Creating an exception requests human review and never
+approves it. Mapping reviews can be listed but never decided through MCP.
+
+### Untrusted-content envelope
+
+Every tool result carries two renderings of the same data:
+
+- `structuredContent` holds exact values for programmatic use. IDs, hashes, and
+  free text are unchanged, so `content_sha256` still verifies against `content`.
+- The text content block, which most hosts give the model, is wrapped in
+  `<untrusted-tool-output tool="..." boundary="...">` and a matching closing tag.
+  The boundary is random per response, so data cannot forge the closing tag.
+  Inside it, each free-text string is shown as `{"untrusted_text": "..."}`. Only
+  identifier, enum, timestamp, and hash values under structural keys (`id`,
+  `*_id`, `*_at`, `status`, `*sha256`, ...) stay bare.
+
+The envelope helps a model tell data from instructions. It is not a
+prompt-injection defense on its own; keep host-side tool permissions and
+human approval for writes.
 
 ## Quick discovery
 
@@ -285,7 +308,16 @@ generators (`make openapi-export`).
 page with `include_details=true` for articles and samples. `get_collection_page`
 returns the core collection envelope, including count and `next_cursor`, so an
 agent can distinguish a page from a complete population. Existing list tools
-retain their array response shape. Read tools reject outputs over 256 KiB; use
+retain their array response shape.
+
+Every tool, read or write, caps its output at 256 KiB. A capped result is never
+silent: it keeps a prefix of the largest lists (or of a single oversized string)
+and adds `mcp_truncation` to `structuredContent`, for example
+`{"truncated": true, "max_bytes": 262144, "original_bytes": 901234, "fields":
+[{"path": "/result", "total_count": 2000, "returned_count": 560}]}`. `path` is a
+JSON Pointer into the result; string cuts report `total_chars` and
+`returned_chars`. The key is absent when nothing was cut. A truncated write has
+still executed; read its full record through the API instead of retrying. Use
 smaller pages or the API export for large artifacts.
 
 ### Durable remote operations

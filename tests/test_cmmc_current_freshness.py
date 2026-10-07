@@ -157,3 +157,51 @@ def test_observation_cannot_supply_attachment_for_a_passing_verdict(tmp_path):
         ],
     )
     assert evaluate_cmmc_posture(tmp_path)[1]["3.1.1"] == "not_evaluated"
+
+
+@pytest.mark.parametrize("consumer", ["report", "poam"])
+def test_cmmc_reader_pins_gold_and_source_across_publication(tmp_path, monkeypatch, consumer):
+    from security_lakehouse import sprs
+    from security_lakehouse.generations import active_generation
+
+    raw, lake = tmp_path / "raw.jsonl", tmp_path / "lake"
+    write_jsonl(raw, [{**event(), "controls": [CONTROL]}])
+    run_pipeline(raw, lake, tenant_id="audit")
+    first_generation = active_generation(lake)
+    changed = tmp_path / "changed.jsonl"
+    write_jsonl(changed, [{**event("fail"), "controls": [CONTROL]}])
+    original_read = sprs.read_jsonl
+    switched = False
+
+    def publish_between_reads(path, **kwargs):
+        nonlocal switched
+        rows = original_read(path, **kwargs)
+        if not switched and path.name == "control_tests.jsonl":
+            switched = True
+            run_pipeline(changed, lake, tenant_id="audit")
+        return rows
+
+    monkeypatch.setattr(sprs, "read_jsonl", publish_between_reads)
+    if consumer == "report":
+        report, outcomes = sprs.evaluate_cmmc_posture(lake)
+        assert report["requirements_met"] == 1
+        assert outcomes["3.1.1"] == "pass"
+    else:
+        app = create_app(lake)
+        with session_scope(app.state.sessionmaker) as session:
+            tenant = create_tenant(session, slug="audit", name="Audit")
+            poam.create_poam_item(
+                session,
+                tenant.id,
+                requirement_id="3.1.1",
+                control_id=CONTROL,
+                title="Fixture",
+                weakness="Previous failure",
+                sprs_points=5,
+            )
+            assert poam.sync_poam_from_posture(session, tenant.id, lake)["closed"] == 1
+            assert poam.sync_poam_from_posture(session, tenant.id, lake)["updated"] == 1
+            assert poam.list_poam_items(session, tenant.id)[0]["status"] == "open"
+    assert switched
+    assert active_generation(lake) != first_generation
+    assert sprs.evaluate_cmmc_posture(lake)[1]["3.1.1"] == "fail"

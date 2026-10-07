@@ -17,6 +17,7 @@ from security_lakehouse.catalog import load_control_catalog
 from security_lakehouse.connectors import load_connector_catalog
 from security_lakehouse.event_status import PASS_STATUSES, normalize_event_status
 from security_lakehouse.evidence_freshness import summarize_control_freshness
+from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.pack_data import PACK_DATA_DIR
 from security_lakehouse.programs import with_program_requirements
@@ -135,6 +136,7 @@ def _current_passing_requirements(lake: Path, candidates: set[str], control_test
     return passing
 
 
+@generation_reader
 def evaluate_cmmc_posture(lake_dir: str | Path) -> tuple[dict[str, Any], dict[str, str]]:
     """Return SPRS and explicit requirement outcomes from the same gold rows."""
     lake = Path(lake_dir)

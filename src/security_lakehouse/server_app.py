@@ -2134,14 +2134,14 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.post("/api/v1/operations/{job_id}/cancel", tags=["platform"])
     def operation_cancel(job_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:
-        from security_lakehouse.operation_jobs import JobConflict
-
         try:
             row = app.state.operation_queue.cancel(identity, job_id)
         except PermissionError as exc:
             raise HTTPException(status_code=403, detail=str(exc)) from exc
-        except JobConflict as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except Exception as exc:
+            if exc.__class__.__name__ == "JobConflict":
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+            raise
         if row is None:
             raise HTTPException(status_code=404, detail="operation not found")
         return JSONResponse(_redact_payload(api_v1.envelope("operations", row), identity))

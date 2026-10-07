@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import sysconfig
+from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -90,6 +91,14 @@ def validate_catalog(
     errors: list[str] = []
     registry = load_framework_registry(registry_path)
     catalog = load_control_catalog(catalog_path)
+    raw_ids = Counter(
+        str(item.get("control_id")) for item in _read_json(catalog_path or DEFAULT_CONTROL_CATALOG)["controls"]
+    )
+    errors.extend(
+        f"duplicate control_id {control_id} would shadow another control"
+        for control_id, count in sorted(raw_ids.items())
+        if count > 1
+    )
     for framework_id, framework in registry.items():
         for required in ("name", "version", "official_source_url", "implementation_status"):
             if not str(framework.get(required, "")).strip():

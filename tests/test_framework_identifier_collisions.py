@@ -21,3 +21,13 @@ def test_soc2_reference_titles_follow_corrected_topics():
     mappings = load_control_article_mappings()
     for ref in ("CC6.4", "CC6.5", "CC6.6", "CC7.5", "CC9.1", "P5.2"):
         assert mappings[f"SOC2-{ref}"]["articles"][0]["title"] == specs[ref].title
+
+
+def test_iso_annex_controls_never_share_an_id_with_a_management_clause():
+    controls = load_control_catalog()
+    for spec in iso_42001_2023_specs():
+        row = controls.get(spec.control_id)
+        assert row is not None, spec.control_id
+        assert row["framework_ref"] == spec.framework_ref, (
+            f"{spec.framework_ref} resolves to {spec.control_id}, which the catalog uses for {row['framework_ref']}"
+        )

@@ -3,7 +3,9 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.2.21 - 2026-10-07
+
+- Harden evidence verdicts, human approval authority, tenant isolation, recovery, background operations, and portable reports.
 
 ### Added
 

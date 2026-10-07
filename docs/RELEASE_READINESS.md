@@ -1,11 +1,12 @@
 # Release readiness
 
-TrustOps **0.2.20** hardens assessment truth, scoped CCF evaluation, indexed
-assessment reads, hosted tenant attribution, and DuckDB export recovery. The
-README tour is captured from the bundled synthetic company. See [the
-changelog](../CHANGELOG.md) for release scope. The current qualification does
-not establish live-provider accuracy, distributed availability, or capacity for
-an unspecified customer workload.
+TrustOps **0.2.21** prepares the evidence, authorization, and recovery changes
+listed in the [changelog](../CHANGELOG.md). It adds durable tenant-scoped
+background operations and frozen offline reports, aligns control and CCF
+verdicts, and strengthens current-evidence and independent-human-review gates.
+The README tour uses the bundled synthetic company. Source and CI qualification
+do not establish publication, live-provider accuracy, distributed availability,
+or capacity for an unspecified customer workload.
 
 ## Release gates
 

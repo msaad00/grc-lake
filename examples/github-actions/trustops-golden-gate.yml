@@ -32,7 +32,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install TrustOps
-        run: pip install "trustops-security-data-lake[server]==0.2.22"
+        run: pip install "trustops-security-data-lake[server]==0.2.23"
 
       - name: Load the sample company
         run: security-lakehouse fixtures load --company golden --out "$RUNNER_TEMP/lake" --rebase-times
@@ -52,7 +52,7 @@ jobs:
 
       - name: Ratchet gate (sample baseline)
         id: baseline
-        uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.22
+        uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.23
         with:
           trustops-url: ${{ env.TRUSTOPS_URL }}
           min-score: "5"
@@ -63,7 +63,7 @@ jobs:
       - name: Strict gate (expected to fail on the sample)
         id: strict
         continue-on-error: true
-        uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.22
+        uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.23
         with:
           trustops-url: ${{ env.TRUSTOPS_URL }}
           min-score: "70"

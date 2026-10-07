@@ -1,12 +1,12 @@
 # Release readiness
 
-TrustOps **0.2.21** prepares the evidence, authorization, and recovery changes
-listed in the [changelog](../CHANGELOG.md). It adds durable tenant-scoped
-background operations and frozen offline reports, aligns control and CCF
-verdicts, and strengthens current-evidence and independent-human-review gates.
-The README tour uses the bundled synthetic company. Source and CI qualification
-do not establish publication, live-provider accuracy, distributed availability,
-or capacity for an unspecified customer workload.
+TrustOps **0.2.22** prepares the deployment fixes listed in the
+[changelog](../CHANGELOG.md): runnable Helm scheduler commands, required signing
+configuration, explicit no-auth guards, and staged EKS bootstrap guidance.
+The deployment tests use synthetic secrets and mocked infrastructure plans.
+Source and CI qualification do not establish publication, live-provider accuracy,
+or a working customer deployment. The open build-tool advisory is documented in
+[dependency security scope](DEPENDENCY_SECURITY.md).
 
 ## Release gates
 

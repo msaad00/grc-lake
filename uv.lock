@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
@@ -4464,7 +4464,7 @@ wheels = [
 
 [[package]]
 name = "trustops-security-data-lake"
-version = "0.2.21"
+version = "0.2.22"
 source = { editable = "." }
 
 [package.optional-dependencies]

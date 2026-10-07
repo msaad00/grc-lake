@@ -56,7 +56,7 @@ jobs:
     steps:
       - name: Evaluate TrustOps posture
         id: gate
-        uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.21
+        uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.22
         with:
           trustops-url: ${{ secrets.TRUSTOPS_URL }}
           api-token: ${{ secrets.TRUSTOPS_API_TOKEN }}

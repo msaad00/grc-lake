@@ -1,6 +1,6 @@
 # Dependency security scope
 
-Reviewed 2026-10-06. Dependency advisories change; rerun both production and full
+Reviewed 2026-10-07. Dependency advisories change; rerun both production and full
 build-tool audits when reviewing or upgrading the lockfiles.
 
 ```bash

@@ -3,6 +3,14 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Keep a revoked trust share revoked when a copy of its record still sits in another lake the owner can reach, such as a flat root copied into a scoped tenant directory. List copied shares once.
+
+### Upgrade notes
+
+- Since 0.2.23, trust shares stored in a flat root lake resolve publicly only while no server tenant exists or after one tenant owns that lake. In a deployment with several tenants and no recorded flat-lake owner, CLI-issued links stored in the flat root return 404. Reissue them from the tenant that should own them.
+
 ## 0.2.23 - 2026-10-07
 
 - Keep legacy flat-lake shares visible and revocable by their original tenant after a scoped tenant directory is created. Reject public access to ambiguous tenant-managed flat-root shares without an established owner, and add mutation-verified coverage for snapshot payload/ledger predecessor mismatches.

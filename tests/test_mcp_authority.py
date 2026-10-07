@@ -35,6 +35,11 @@ CASES = [
 ]
 
 
+def _structured(result):
+    structured = result.structuredContent
+    return structured.get("result", structured)
+
+
 @pytest.mark.parametrize("name,args,method,path", CASES)
 def test_tenant_tool_uses_remote_api_without_local_access(tmp_path, monkeypatch, name, args, method, path):
     monkeypatch.setenv("TRUSTOPS_API_URL", "https://remote.example.test")
@@ -47,7 +52,7 @@ def test_tenant_tool_uses_remote_api_without_local_access(tmp_path, monkeypatch,
 
     monkeypatch.setattr(mcp_server, "_server_api_request", remote)
     server = mcp_server.build_server(tmp_path)
-    result = server._tool_manager.get_tool(name).fn(**args)
+    result = _structured(server._tool_manager.get_tool(name).fn(**args))
     assert result["remote"] is True
     assert calls == [(method, path)]
     assert list(tmp_path.iterdir()) == []
@@ -85,7 +90,7 @@ def test_remote_share_tools_do_not_touch_local_lake(tmp_path, monkeypatch, name,
         return {"data": {"remote": True}, "meta": {}, "errors": []}
 
     monkeypatch.setattr(mcp_server, "_server_api_request", remote)
-    result = mcp_server.build_server(tmp_path)._tool_manager.get_tool(name).fn(**args)
+    result = _structured(mcp_server.build_server(tmp_path)._tool_manager.get_tool(name).fn(**args))
     assert result["remote"] is True
     assert calls == [("GET" if name.startswith("list") else "POST", "/api/v1/trust-shares")]
     assert list(tmp_path.iterdir()) == []

@@ -242,4 +242,6 @@ Both accept `limit` (1–100) and `offset`. Their `pagination` object reports th
 limit, offset, full list counts, and whether more rows remain. CCF applies the
 same page bounds separately to safeguards and requirements; asset results use
 `list_ccf_asset_results`. Mapping summary counts describe the full filtered
-backlog, not only the returned page. Read responses remain capped at 256 KiB.
+backlog, not only the returned page. Tool output stays capped at 256 KiB; a cut
+result reports it under `mcp_truncation` (see
+[bounded reads](../api/AGENT_SKILLS.md#bounded-reads)).

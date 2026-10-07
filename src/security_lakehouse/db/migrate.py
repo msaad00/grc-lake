@@ -7,6 +7,7 @@ the ``security-lakehouse db`` CLI, without depending on the ini file.
 
 from __future__ import annotations
 
+import sys
 from io import StringIO
 from pathlib import Path
 
@@ -18,7 +19,7 @@ def _config(url: str):
     from alembic.config import Config
 
     package_dir = Path(security_lakehouse.__file__).resolve().parent
-    cfg = Config()
+    cfg = Config(stdout=sys.stdout)
     cfg.set_main_option("script_location", str(package_dir / "migrations"))
     # Alembic stores options in ConfigParser: escape interpolation markers,
     # preserving the original URL (including percent-encoded credentials) on read.

@@ -14,7 +14,10 @@ from typing import Any
 
 from security_lakehouse.aibom import aibom_status, list_aibom_items
 from security_lakehouse.asset_names import load_asset_names, with_asset_names
+from security_lakehouse.catalog import load_control_catalog
+from security_lakehouse.evidence_freshness import build_evidence_freshness, stale_control_ids
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.programs import with_program_requirements
 from security_lakehouse.safeguards import coverage_by_framework
 
 INVENTORY_EVENT_TYPES = frozenset(
@@ -99,6 +102,12 @@ def _framework_rows(
     verdict or evidence in this lake, and ``None`` when there are none.
     """
     coverage = coverage_by_framework()["frameworks"]
+    catalog = with_program_requirements(load_control_catalog())
+    freshness = build_evidence_freshness(events)
+    stale = stale_control_ids(
+        freshness, required_types={key: row.get("required_evidence_types") or [] for key, row in catalog.items()}
+    )
+    evidenced = {str(control_id) for row in freshness for control_id in row["control_ids"]}
     rows: list[dict[str, Any]] = []
     for framework_id, label, prefix in AI_FRAMEWORKS:
         pack = coverage.get(framework_id, {})
@@ -110,6 +119,8 @@ def _framework_rows(
             for row in controls
             if str(row.get("control_id", "")).startswith(prefix)
             and str(row.get("status", "")).lower() in {"pass", "passed", "ready"}
+            and str(row["control_id"]) not in stale
+            and str(row["control_id"]) in evidenced
         }
         failing = sum(
             1
@@ -139,9 +150,10 @@ def _framework_rows(
 
 
 def _framework_score(frameworks: list[dict[str, Any]]) -> int:
-    """Average over the packs this lake evaluates; unevaluated packs are not 0%."""
-    scores = [int(row["score"]) for row in frameworks if row["score"] is not None]
-    return round(sum(scores) / len(scores)) if scores else 0
+    """Fresh passing controls over the observed control scope."""
+    total = sum(int(row.get("controls_with_evidence") or 0) for row in frameworks)
+    passing = sum(int(row.get("passing_controls") or 0) for row in frameworks)
+    return round(100 * passing / total) if total else 0
 
 
 def _inventory_items(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -234,7 +246,7 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
     with_lineage = sum(1 for row in inventory if row["lineage_complete"] or "model.lineage" in row["event_types"])
 
     model_cards = with_model_card + len(repo_artifacts)
-    frameworks = _framework_rows(controls=controls, events=ai_events)
+    frameworks = _framework_rows(controls=controls, events=events)
 
     gaps: list[dict[str, str]] = []
     if not inventory_events and not inventory:
@@ -270,7 +282,15 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
             }
         )
 
-    framework_ready = sum(1 for row in frameworks if row["score"] is not None and int(row["score"]) >= 85)
+    from security_lakehouse.audit_readiness import FRAMEWORK_READY_MIN_COVERAGE_PCT
+
+    framework_ready = sum(
+        1
+        for row in frameworks
+        if row["score"] == 100
+        and row["requirements"] > 0
+        and 100 * row["controls_with_evidence"] / row["requirements"] >= FRAMEWORK_READY_MIN_COVERAGE_PCT
+    )
     inventory_score = round(
         100
         * (

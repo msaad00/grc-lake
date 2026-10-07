@@ -27,7 +27,7 @@ def evaluate_evidence_verdict(control_id: str, rows: list[dict[str, Any]], rule:
         evidence_status="stale" if stale else "fresh",
     )
     result = evaluate_control(context, rule)
-    if result.status == "fail" and (failures or not evidence):
+    if result.status == "fail" and (failures or (verdict_rows and not evidence)):
         return result
     if unknown or not verdict_rows:
         result.status = "not_evaluated"

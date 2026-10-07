@@ -23,6 +23,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_controls import mapped_controls
 from security_lakehouse.connector_errors import ConnectorConfigError
 from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.execution_mode import in_server_mode
@@ -592,19 +593,7 @@ def _event(
 
 
 def _controls(row: dict[str, Any], default: list[str]) -> list[str]:
-    raw = row.get("controls") or row.get("control_ids") or row.get("control_id")
-    values: list[str]
-    if isinstance(raw, list):
-        values = [str(item).strip() for item in raw if str(item).strip()]
-    elif isinstance(raw, str):
-        values = [part.strip() for part in re.split(r"[,|]", raw) if part.strip()]
-    else:
-        values = []
-    out: list[str] = []
-    for item in [*values, *default]:
-        if item and item not in out:
-            out.append(item)
-    return out
+    return mapped_controls(row, default)
 
 
 def _first(row: dict[str, Any], *keys: str) -> Any:

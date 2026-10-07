@@ -58,6 +58,13 @@ RESOURCE_CONTROLS = ["SOC2-CC6.1", "ISO27001-A.5.15"]
 # holding one of these at subscription scope is the noteworthy assignment for an
 # auditor to review, so we surface it as an open finding.
 PRIVILEGED_ROLE_NAMES = {"owner", "contributor", "user access administrator"}
+# Stable provider-defined IDs remain usable when roleDefinitions/read is denied.
+# https://learn.microsoft.com/azure/role-based-access-control/built-in-roles/privileged
+BUILTIN_PRIVILEGED_ROLES = {
+    "8e3af657-a8ff-443c-a75c-2fe8c4bcb635": "Owner",
+    "b24988ac-6180-42a0-ab88-20f7382dd24c": "Contributor",
+    "18d7d88d-d35e-4fb5-a5c3-7773c20a72d9": "User Access Administrator",
+}
 
 _SAFE_ERROR_CODE = re.compile(r"^[A-Za-z][A-Za-z0-9.]{0,63}$")
 _CREDENTIALS_UNAVAILABLE = (
@@ -405,7 +412,7 @@ def _role_assignment_event(
         asset_id=f"azure:role-assignment:{_id_slug(assignment_id)}",
         asset_type="identity_role_assignment",
         controls=IDENTITY_CONTROLS,
-        status="open" if noteworthy else "observed",
+        status="open" if noteworthy else "observed" if role_name else "not_evaluated",
         severity="high" if noteworthy else "info",
         evidence_ref=assignment_id,
         attributes={
@@ -416,7 +423,7 @@ def _role_assignment_event(
             "principal_type": principal_type,
             "identity_type": classify_identity_type(principal_type=principal_type),
             "scope": scope,
-            "privileged_role": privileged,
+            "privileged_role": privileged if role_name else None,
             "subscription_scope": subscription_scope,
             "broad_scope": broad_scope,
         },
@@ -537,7 +544,8 @@ def _role_definition_name_map(
 
 def _resolve_role_name(role_definition_id: str, role_name_by_id: dict[str, str]) -> str:
     key = role_definition_id.lower()
-    return role_name_by_id.get(key) or role_name_by_id.get(key.rsplit("/", 1)[-1], "")
+    short = key.rsplit("/", 1)[-1]
+    return role_name_by_id.get(key) or role_name_by_id.get(short) or BUILTIN_PRIVILEGED_ROLES.get(short, "")
 
 
 def _props(item: dict[str, Any]) -> dict[str, Any]:

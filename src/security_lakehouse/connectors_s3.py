@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.connector_controls import mapped_controls
 from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.delegation import require_aws_delegation, server_env_override
 from security_lakehouse.io import read_json
@@ -313,19 +314,7 @@ def _object_event(
 
 
 def _controls(row: dict[str, Any], default: list[str]) -> list[str]:
-    raw = row.get("controls") or row.get("control_ids")
-    values: list[str]
-    if isinstance(raw, list):
-        values = [str(item).strip() for item in raw if str(item).strip()]
-    elif isinstance(raw, str):
-        values = [part.strip() for part in re.split(r"[,|]", raw) if part.strip()]
-    else:
-        values = []
-    out: list[str] = []
-    for item in [*values, *default]:
-        if item and item not in out:
-            out.append(item)
-    return out
+    return mapped_controls(row, default)
 
 
 def _status(value: Any) -> str:

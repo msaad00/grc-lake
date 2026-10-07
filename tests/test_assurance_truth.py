@@ -28,6 +28,15 @@ def event(status="pass"):
     }
 
 
+def complete_events(status="pass"):
+    return [
+        {**event(status), "event_id": f"assurance-{index}", "event_type": kind}
+        for index, kind in enumerate(
+            ("identity.access_review", "cloud.config", "secret.finding", "compliance.evidence_bundle")
+        )
+    ]
+
+
 @pytest.mark.parametrize(
     "status,expected",
     [
@@ -42,7 +51,7 @@ def event(status="pass"):
 )
 def test_imported_status_never_silently_passes(tmp_path, status, expected):
     raw = tmp_path / "raw.jsonl"
-    write_jsonl(raw, [event(status)])
+    write_jsonl(raw, complete_events(status))
     lake = tmp_path / "lake"
     pipeline.run_pipeline(raw, lake, tenant_id="audit")
     assert read_jsonl(lake / "gold/control_posture.jsonl")[0]["status"] == expected
@@ -60,7 +69,7 @@ def test_imported_status_never_silently_passes(tmp_path, status, expected):
 
 def test_incremental_evaluation_refreshes_expired_unchanged_evidence(tmp_path, monkeypatch):
     raw = tmp_path / "raw.jsonl"
-    write_jsonl(raw, [event()])
+    write_jsonl(raw, complete_events())
     lake = tmp_path / "lake"
     pipeline.run_pipeline(raw, lake, tenant_id="audit")
     previous = active_generation(lake)

@@ -358,7 +358,8 @@ def test_role_resolution_is_best_effort_when_role_definitions_unreadable() -> No
     assert validate_raw_events(rows) == []
     role = _by_type(rows, "azure.cloud.role_assignment")[0]
     assert role["attributes"]["role_name"] == ""
-    assert role["attributes"]["privileged_role"] is False
+    assert role["attributes"]["privileged_role"] is None
+    assert role["status"] == "not_evaluated"
     assert role["attributes"]["role_definition_id"] == role_def_id
 
 

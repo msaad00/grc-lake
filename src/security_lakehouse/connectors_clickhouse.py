@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_controls import mapped_controls
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json
 from security_lakehouse.lake_mapping import (
@@ -351,7 +352,7 @@ def _raw_from_row(row: dict[str, Any], *, tenant_id: str) -> dict[str, Any] | No
     if not event_id:
         return None
     event_time = _event_time_iso(row.get("event_time"))
-    controls = [str(item) for item in row.get("control_ids") or row.get("controls") or DEFAULT_CONTROLS]
+    controls = mapped_controls(row, list(DEFAULT_CONTROLS), fields=("control_ids", "controls", "control_id"))
     asset_id = str(row.get("asset_id") or f"clickhouse:event:{event_id}")
     evidence_id = str(row.get("evidence_id") or f"ev-{event_id}")
     evidence_ref = str(row.get("evidence_ref") or f"clickhouse://{event_id}")

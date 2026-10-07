@@ -107,6 +107,17 @@ scheduler:
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   concurrencyPolicy: Forbid
+  # Automatic retention (off by default). With a schedule set, each tick runs
+  # the same archival as `lake retention` / `lake operational-retention` once
+  # per period per tenant lake. Without archiveDir it only previews candidates;
+  # with archiveDir it copies, verifies, and flushes eligible history there
+  # before reclaiming lake storage. Mount archiveDir from separately controlled
+  # storage via extraVolumes/extraVolumeMounts. See docs/OPERATIONS_CONTRACTS.md.
+  retention:
+    schedule: "" # e.g. "@daily" or "every 12h"; empty disables
+    archiveDir: "" # absolute path outside the lake mount; empty = preview only
+    olderThanDays: 90
+    keepLatest: 3
 
 # Runtime environment and Kubernetes Secret references (auth, OIDC/SAML, SCIM).
 env: []

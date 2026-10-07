@@ -11,6 +11,12 @@ true (the default whenever ``sync_schedule`` is set), syncs ingest raw evidence
 only and a separate lake-wide ``eval_schedule`` (default ``every 6h``) runs
 ``run_lake_eval`` to materialize and evaluate.
 
+Retention (``lake retention`` / ``lake operational-retention``) becomes
+eligible when ``TRUSTOPS_RETENTION_SCHEDULE`` is set; see
+:mod:`security_lakehouse.scheduled_retention`. Generation retention runs per
+lake; operational retention runs once per deployment root because job rows and
+request-audit logs belong to the root, never to one tenant.
+
 Two execution surfaces:
   * ``security-lakehouse scheduler tick --lake build/lakehouse`` runs the
     tick once and exits (intended for system cron / k8s CronJob).
@@ -33,6 +39,8 @@ import fcntl
 import logging
 import re
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -45,14 +53,20 @@ from security_lakehouse.execution_mode import in_server_mode, server_execution, 
 from security_lakehouse.io import append_jsonl, read_jsonl
 from security_lakehouse.lake_eval import run_lake_eval
 from security_lakehouse.lake_scale import connector_materialize_on_sync, lake_eval_schedule
+from security_lakehouse.schedule_expr import parse_schedule
+from security_lakehouse.scheduled_retention import (
+    GENERATIONS,
+    OPERATIONAL,
+    RetentionPolicy,
+    retention_policy,
+    run_retention,
+)
 from security_lakehouse.strict_json import InvalidJSON
 from security_lakehouse.workflows import list_workflows, run_workflow
 
 STATE_FILE = "scheduler_state.jsonl"
 LOCK_FILE = ".scheduler.lock"
 DEFAULT_TICK_SECONDS = 60
-
-_INTERVAL_RE = re.compile(r"^every\s+(\d+)\s*(m|h)$", re.IGNORECASE)
 
 
 def _utc_now() -> datetime:
@@ -65,28 +79,6 @@ def _utc_iso(dt: datetime) -> str:
 
 def _gold(lake_dir: str | Path) -> Path:
     return Path(lake_dir) / "gold"
-
-
-def parse_schedule(schedule: str) -> timedelta | None:
-    """Return the period for a schedule expression, or None if unrecognised."""
-    if not schedule:
-        return None
-    text = schedule.strip().lower()
-    if text == "@hourly":
-        return timedelta(hours=1)
-    if text == "@daily":
-        return timedelta(days=1)
-    match = _INTERVAL_RE.match(text)
-    if not match:
-        return None
-    value, unit = int(match.group(1)), match.group(2)
-    if value <= 0:
-        return None
-    if unit == "m":
-        return timedelta(minutes=value)
-    if unit == "h":
-        return timedelta(hours=value)
-    return None
 
 
 @dataclass(frozen=True)
@@ -212,7 +204,7 @@ def _read_state(lake_dir: str | Path) -> dict[str, datetime]:
         target_id = row.get("target_id", row.get("workflow_id"))
         last = row.get("last_fired_at")
         if (
-            target_kind not in ("workflow", "connector", "lake_eval")
+            target_kind not in ("workflow", "connector", "lake_eval", "retention")
             or not isinstance(target_id, str)
             or not target_id
             or not isinstance(last, str)
@@ -249,6 +241,81 @@ def _write_state(lake_dir: str | Path, *, target_kind: str, target_id: str, fire
 
 def _lock_path(lake_dir: str | Path) -> Path:
     return _gold(lake_dir) / LOCK_FILE
+
+
+@contextmanager
+def _try_scheduler_lock(lake_dir: str | Path) -> Iterator[bool]:
+    lock_path = _lock_path(lake_dir)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("w", encoding="utf-8") as lock_fd:
+        try:
+            fcntl.flock(lock_fd.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(lock_fd.fileno(), fcntl.LOCK_UN)
+
+
+_INVALID_RETENTION = {
+    "target_kind": "retention",
+    "target_id": "configuration",
+    "result": "error",
+    "error": "invalid retention configuration",
+}
+
+
+def _retention_policy_or_error() -> tuple[RetentionPolicy | None, list[dict[str, Any]]]:
+    try:
+        return retention_policy(), []
+    except ValueError as exc:
+        logging.getLogger(__name__).error("retention disabled: %s", exc)
+        return None, [dict(_INVALID_RETENTION)]
+
+
+def _retention_kinds(lake_dir: str | Path) -> tuple[str, ...]:
+    # A tenant-scoped tick must never compact the deployment's shared job table.
+    return (GENERATIONS,) if server_tenant_id(lake_dir) is not None else (GENERATIONS, OPERATIONAL)
+
+
+def _fire_retention(
+    lake_dir: str | Path,
+    state: dict[str, datetime],
+    moment: datetime,
+    kinds: tuple[str, ...],
+) -> list[dict[str, Any]]:
+    """Caller holds the lake's scheduler lock; attempts are recorded before running."""
+    policy, errors = _retention_policy_or_error()
+    if policy is None:
+        return errors
+    results: list[dict[str, Any]] = []
+    for kind in kinds:
+        last_fired = state.get(_state_key("retention", kind))
+        if last_fired is not None and moment < last_fired + policy.period:
+            continue
+        _write_state(lake_dir, target_kind="retention", target_id=kind, fired_at=moment, result="started")
+        record = run_retention(lake_dir, kind, policy, fired_at=moment)
+        results.append(record)
+        _write_state(lake_dir, target_kind="retention", target_id=kind, fired_at=moment, result=record["result"])
+    return results
+
+
+def _tick_root_retention(root: Path, *, now: datetime | None) -> list[dict[str, Any]]:
+    policy, errors = _retention_policy_or_error()
+    if policy is None:
+        return errors
+    try:
+        with _try_scheduler_lock(root) as locked:
+            if not locked:
+                return [{"target_kind": "retention", "target_id": OPERATIONAL, "skipped_locked": True, "fired": []}]
+            if (_gold(root) / "scheduler_recovery_pending.json").exists():
+                raise InvalidJSON("scheduler recovery is incomplete; run scheduler repair-history")
+            moment = (now or _utc_now()).astimezone(UTC)
+            return _fire_retention(root, _read_state(root), moment, (OPERATIONAL,))
+    except Exception:  # noqa: BLE001 - scheduler results must not expose exception details
+        return [{"target_kind": "retention", "target_id": OPERATIONAL, "result": "error", "error": "internal error"}]
 
 
 def tick(
@@ -375,6 +442,7 @@ def _tick_hosted_root(
                 )
     finally:
         engine.dispose()
+    results.extend(_tick_root_retention(root, now=now))
     return results
 
 
@@ -526,6 +594,7 @@ def _tick_locked(
                 fired_at=moment,
                 result=str(results[-1]["result"]),
             )
+    results.extend(_fire_retention(lake_dir, state, moment, _retention_kinds(lake_dir)))
     return results
 
 
@@ -633,6 +702,11 @@ def repair_history(lake_dir: str | Path, *, now: datetime | None = None) -> dict
             targets += [("connector", entry.connector_id) for entry in _scheduled_from_connectors(lake_dir)]
             if _scheduled_lake_eval(lake_dir):
                 targets.append(("lake_eval", "default"))
+            try:
+                if retention_policy() is not None:
+                    targets += [("retention", kind) for kind in _retention_kinds(lake_dir)]
+            except ValueError:
+                pass  # an invalid policy never runs, so there is no attempt to defer
             moment = now or _utc_now()
             for kind, target in targets:
                 _write_state(lake_dir, target_kind=kind, target_id=target, fired_at=moment, result="recovery_deferred")

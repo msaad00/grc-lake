@@ -383,7 +383,7 @@ def test_flat_share_management_survives_owner_scoped_directory(tmp_path, prefix,
     assert tenancy.tenant_lake(tmp_path, owner.id, bound_tenant=owner.id) == scoped
 
 
-def test_public_share_does_not_search_an_unowned_flat_root(tmp_path):
+def test_public_share_does_not_search_an_ambiguous_tenant_managed_flat_root(tmp_path):
     from security_lakehouse import trust_share
 
     _seed_lake(tmp_path)

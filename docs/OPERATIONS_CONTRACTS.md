@@ -96,7 +96,8 @@ The API's auditor view narrows both fields and write scopes; leaving that view
 restores only the identity's actual permissions. When a flat single-tenant lake
 is first bound to a tenant, its ownership is retained as more tenants are added.
 A multitenant flat lake without an owner requires explicit migration rather than
-guessing its owner. Public share lookup also excludes that unowned flat root.
+guessing its owner. Public share lookup also excludes that ambiguous flat root.
+CLI-issued links remain usable before any server tenant is registered.
 
 If the original owner later gets a scoped tenant directory, share listing and
 revocation still include its legacy flat-root shares. A copied share is revoked

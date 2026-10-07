@@ -222,7 +222,9 @@ def lake_search_paths(
         _add(tenancy.tenant_lake(root_path, bound_tenant, bound_tenant=bound_tenant))
     for tenant_id in sorted(tenant_ids or [], reverse=True):
         _add(tenancy.tenant_lake(root_path, tenant_id, bound_tenant=bound_tenant))
-    if bound_tenant is not None and tenancy.is_flat_lake(root_path):
+    # CLI-issued shares remain public before server tenants are provisioned.
+    # Once tenants exist, the flat root must have an established owner.
+    if (bound_tenant is not None or not tenant_ids) and tenancy.is_flat_lake(root_path):
         _add(root_path)
     return paths
 

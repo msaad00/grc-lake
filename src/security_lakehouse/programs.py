@@ -12,7 +12,7 @@ from security_lakehouse.catalog import _data_root, load_control_catalog, load_fr
 from security_lakehouse.connectors import load_connector_catalog
 from security_lakehouse.event_status import FAIL_STATUSES
 from security_lakehouse.evidence_freshness import summarize_control_freshness
-from security_lakehouse.models import utc_iso
+from security_lakehouse.models import parse_event_time, utc_iso
 
 ROOT = _data_root()
 DEFAULT_PROGRAM_CATALOG = ROOT / "programs" / "catalog.json"
@@ -96,9 +96,10 @@ def build_control_tests(
     *,
     program_path: str | Path | None = None,
     now: datetime | None = None,
+    control_catalog: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     catalog = load_program_catalog(program_path)
-    control_catalog = load_control_catalog()
+    control_catalog = with_program_requirements(control_catalog or load_control_catalog(), program_path=program_path)
     connectors = load_connector_catalog()
     evaluated_at = now or datetime.now(UTC)
     test_configs = {
@@ -116,10 +117,7 @@ def build_control_tests(
         evidence_events = events_by_control.get(control_id, [])
         failing_events = [event for event in evidence_events if event["status"] in FAIL_STATUSES]
         required_types = [
-            str(item)
-            for item in config.get("required_evidence_types")
-            or control_catalog.get(control_id, {}).get("required_evidence_types")
-            or []
+            str(item) for item in control_catalog.get(control_id, {}).get("required_evidence_types") or []
         ]
         observed_types = sorted(
             {str(evidence_type) for event in evidence_events for evidence_type in _event_evidence_types(event)}
@@ -179,6 +177,18 @@ def build_control_tests(
     return sorted(rows, key=lambda item: (item["result"] == "pass", -int(item["confidence_score"]), item["control_id"]))
 
 
+def with_program_requirements(
+    controls: dict[str, dict[str, Any]], *, program_path: str | Path | None = None
+) -> dict[str, dict[str, Any]]:
+    """Preserve the union of catalog and every applicable program requirement."""
+    required = {key: set(value.get("required_evidence_types") or []) for key, value in controls.items()}
+    for program in load_program_catalog(program_path)["programs"]:
+        for test in program["control_tests"]:
+            if test["control_id"] in required:
+                required[test["control_id"]].update(test.get("required_evidence_types") or [])
+    return {key: {**value, "required_evidence_types": sorted(required[key])} for key, value in controls.items()}
+
+
 def _confidence_inputs(
     control: dict[str, Any],
     events: list[dict[str, Any]],
@@ -218,11 +228,9 @@ def _test_result(
     failing_events: list[dict[str, Any]],
     freshness: dict[str, Any],
 ) -> str:
-    if not events or int(control.get("evidence_count") or 0) == 0:
-        return "needs_evidence"
     if control.get("status") == "fail" or (not control.get("status") and failing_events):
         return "fail"
-    if control.get("status") == "not_evaluated":
+    if not events or int(control.get("evidence_count") or 0) == 0 or control.get("status") != "pass":
         return "needs_evidence"
     if freshness["status"] in {"stale", "expired", "missing"}:
         return "needs_evidence"
@@ -255,7 +263,7 @@ def _next_action(result: str, missing_types: list[str], freshness: dict[str, Any
 def _latest_evidence_at(events: list[dict[str, Any]]) -> str | None:
     values = [str(event.get("evidence_collected_at") or event.get("event_time") or "") for event in events]
     values = [value for value in values if value]
-    return max(values) if values else None
+    return max(values, key=parse_event_time) if values else None
 
 
 def _event_evidence_types(event: dict[str, Any]) -> list[str]:

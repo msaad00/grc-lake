@@ -95,7 +95,7 @@ class JiraClient:
                     "jql": self.jql,
                     "startAt": start,
                     "maxResults": SEARCH_PAGE_LIMIT,
-                    "fields": "summary,status,assignee,duedate,labels,priority,project,updated,created",
+                    "fields": "summary,status,resolution,assignee,duedate,labels,priority,project,updated,created",
                 }
             )
             payload = self._json(f"{self.base_url}/rest/api/3/search?{query}")
@@ -234,6 +234,16 @@ def _ticket_event(
 ) -> dict[str, Any]:
     status_name, category = _status(fields)
     is_done = category in DONE_STATUS_CATEGORIES
+    resolution = fields.get("resolution")
+    resolution_name = str(resolution.get("name") or "") if isinstance(resolution, dict) else ""
+    negative_status = status_name.casefold().replace("’", "'") in {
+        "won't do",
+        "won't fix",
+        "cancelled",
+        "canceled",
+        "duplicate",
+    }
+    resolved = is_done and not negative_status and resolution_name.strip().casefold() in {"fixed", "done", "resolved"}
     assignee = _assignee(fields)
     due_date = fields.get("duedate")
     # An open remediation ticket that is unassigned or past its SLA due date is
@@ -253,7 +263,7 @@ def _ticket_event(
         asset_id=f"jira:issue:{key}",
         asset_type="workflow_ticket",
         controls=TICKET_CONTROLS,
-        status="pass" if is_done else ("open" if needs_attention else "observed"),
+        status=("pass" if resolved else "not_evaluated") if is_done else ("open" if needs_attention else "observed"),
         severity=_ticket_severity(is_done, needs_attention),
         evidence_ref=evidence_ref,
         attributes={
@@ -262,6 +272,8 @@ def _ticket_event(
             "status": status_name,
             "status_category": category,
             "is_done": is_done,
+            "resolution": resolution_name,
+            "explicit_success": resolved,
             "assignee": assignee,
             "is_assigned": bool(assignee),
             "due_date": due_date,
@@ -300,8 +312,8 @@ def _transition_event(
         asset_id=f"jira:issue:{key}",
         asset_type="workflow_transition",
         controls=TRANSITION_CONTROLS,
-        status="observed" if is_done else "open",
-        severity="info" if is_done else "low",
+        status="observed",
+        severity="info",
         evidence_ref=evidence_ref,
         attributes={
             "issue_key": key,

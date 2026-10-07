@@ -89,7 +89,12 @@ def test_siem_recollection_updates_posture_and_preserves_generation(tmp_path, mo
     current = read_jsonl(tmp_path / "silver/normalized_events.jsonl")
     assert len(current) == 1
     assert current[0]["status"] == "closed"
-    assert all(row["status"] == "pass" for row in read_jsonl(tmp_path / "gold/control_posture.jsonl"))
+    # Closing the alert clears the finding; the SOC 2 program still needs its
+    # other required evidence types before it can pass.
+    assert {row["control_id"]: row["status"] for row in read_jsonl(tmp_path / "gold/control_posture.jsonl")} == {
+        "SOC2-CC7.2": "stale",
+        "ISO27001-A.8.16": "pass",
+    }
     assert verify_event(tmp_path, current[0]["event_id"])["verified"]
     assert read_watermark(tmp_path, "siem-alerts") == cursor
     assert (previous / "silver/normalized_events.jsonl").read_bytes() == previous_bytes

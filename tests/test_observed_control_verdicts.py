@@ -10,7 +10,7 @@ from security_lakehouse.event_status import PASS_STATUSES
 from security_lakehouse.generations import active_generation
 from security_lakehouse.golden_fixture import build_golden_events
 from security_lakehouse.io import canonical_sha256, read_json, read_jsonl, write_jsonl
-from test_assurance_truth import event
+from test_assurance_truth import complete_events, event
 
 
 def silver(status, *, evidence_ref="fixture://verdict"):
@@ -103,7 +103,7 @@ def test_golden_scores_survive_added_activity(tmp_path):
 
 def test_incremental_refreshes_v2_verdict_without_rewriting_history(tmp_path, monkeypatch):
     raw, lake = tmp_path / "raw.jsonl", tmp_path / "lake"
-    write_jsonl(raw, [event("pass"), {**event("observed"), "event_id": "activity"}])
+    write_jsonl(raw, [*complete_events(), {**event("observed"), "event_id": "activity"}])
     current_builder = pipeline._build_control_rows
 
     def v2_builder(*args, **kwargs):
@@ -122,8 +122,12 @@ def test_incremental_refreshes_v2_verdict_without_rewriting_history(tmp_path, mo
     current = active_generation(lake)
     assert current != previous
     assert read_jsonl(lake / "gold/control_posture.jsonl")[0]["status"] == "pass"
-    assert read_json(lake / "manifest.json")["control_evaluation_version"] == "trustops.control_evaluation.v6"
+    assert read_json(lake / "manifest.json")["control_evaluation_version"] == "trustops.control_evaluation.v7"
     assert (previous / "gold/control_posture.jsonl").read_bytes() == previous_bytes
     assert read_jsonl(previous / "gold/control_posture.jsonl")[0]["status"] == "not_evaluated"
     pipeline.run_pipeline_incremental(raw, lake, tenant_id="audit")
     assert active_generation(lake) == current
+
+
+def test_activity_only_stays_unevaluated_when_required_evidence_is_missing():
+    assert evaluate([silver("observed")], rule="fail_when_stale_evidence", stale=True)["status"] == "not_evaluated"

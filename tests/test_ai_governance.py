@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from http import HTTPStatus
 from pathlib import Path
 
@@ -219,7 +220,15 @@ def test_ai_posture_separates_pass_fail_and_unevaluated_controls():
             {"control_id": "NIST-AI-RMF-GOVERN-1.1", "status": "pass"},
             {"control_id": "NIST-AI-RMF-GOVERN-1.2", "status": "fail"},
         ],
-        events=[{"control_ids": ["NIST-AI-RMF-GOVERN-1.3"], "status": "observed"}],
+        events=[
+            {"control_ids": ["NIST-AI-RMF-GOVERN-1.3"], "status": "observed"},
+            {
+                "control_ids": ["NIST-AI-RMF-GOVERN-1.1"],
+                "status": "pass",
+                "event_time": datetime.now(UTC).isoformat(),
+                "evidence_ref": "fixture://current",
+            },
+        ],
     )
     row = next(r for r in rows if r["framework_id"] == "nist-ai-rmf")
     assert row["score"] == 33
@@ -248,7 +257,7 @@ def test_ai_frameworks_use_catalog_ids_and_the_safeguard_mapped_count():
 def test_unevaluated_ai_frameworks_do_not_drag_the_governance_score(tmp_path: Path) -> None:
     from security_lakehouse.ai_governance import _framework_score
 
-    rows = [{"score": 90}, {"score": None}, {"score": None}]
+    rows = [{"score": 90, "controls_with_evidence": 10, "passing_controls": 9}, {"score": None}, {"score": None}]
     assert _framework_score(rows) == 90
     assert _framework_score([{"score": None}]) == 0
 

@@ -14,6 +14,9 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Align catalog/program evidence requirements and current AI/CCF summaries, preserve observation-only uncertainty, and compare evidence timestamps as instants.
+- Preserve explicit imported control mappings, require positive Jira resolutions, retain unresolved Azure role uncertainty, and detect unsafe added Kubernetes capabilities.
+
 - Make assessment scores a versioned percentage of fresh passing controls, so new failures cannot improve them and passing severity cannot increase control risk.
 
 - Share rule-aware verdict evaluation between controls and CCF safeguards, preserve source-tenant freshness boundaries, and reject bronze pointers as proof of available source evidence.

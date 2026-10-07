@@ -34,13 +34,13 @@ from security_lakehouse.io import canonical_sha256 as _canonical_sha256
 from security_lakehouse.io import file_sha256, iter_jsonl, read_json, read_jsonl, write_json, write_jsonl
 from security_lakehouse.models import SEVERITY_SCORE, PipelineResult, parse_event_time, utc_iso
 from security_lakehouse.policy import RuleResult
-from security_lakehouse.programs import build_control_tests
+from security_lakehouse.programs import build_control_tests, with_program_requirements
 from security_lakehouse.validation import validate_raw_event, validate_raw_events
 
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
 NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v4"
-CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v6"
+CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v7"
 
 
 @serialized_publication
@@ -101,7 +101,7 @@ def run_pipeline_incremental(
     """Materialize only raw evidence that changed since the last manifest."""
     tenant_id = evaluation_tenant_id(out_dir, tenant_id)
     # Validate the catalog even when no raw rows changed.
-    current_controls = load_control_map(mapping_path)
+    current_controls = with_program_requirements(load_control_map(mapping_path))
     out = active_generation(out_dir) or Path(out_dir)
     manifest_path = out / "manifest.json"
     if not manifest_path.is_file():
@@ -219,7 +219,7 @@ def _write_generation(
     for directory in (bronze_dir, silver_dir, gold_dir, mart_dir):
         directory.mkdir(parents=True, exist_ok=True)
 
-    control_map = load_control_map(mapping_path)
+    control_map = with_program_requirements(load_control_map(mapping_path))
     from security_lakehouse.ccf_evaluation import evaluate_safeguards
     from security_lakehouse.mapping_review import effective_safeguards
 
@@ -249,7 +249,7 @@ def _write_generation(
         {k: sorted(v) for k, v in applicability.items()},
         asset_names_from_raw(raw_rows),
     )
-    control_test_rows = build_control_tests(silver_rows, control_rows, now=evaluated_at)
+    control_test_rows = build_control_tests(silver_rows, control_rows, now=evaluated_at, control_catalog=control_map)
     metrics = _build_metrics(silver_rows, control_rows, asset_rows)
     metrics.update(_build_freshness_metrics(evidence_freshness_rows))
     metrics.update(_build_control_test_metrics(control_test_rows))
@@ -279,7 +279,7 @@ def _write_generation(
         "control_posture": control_rows,
         "control_tests": control_test_rows,
         "asset_risk": asset_rows,
-        "recent_events": sorted(silver_rows, key=lambda item: item["event_time"], reverse=True)[:10],
+        "recent_events": sorted(silver_rows, key=lambda item: parse_event_time(item["event_time"]), reverse=True)[:10],
     }
 
     write_jsonl(bronze_dir / "raw_events.jsonl", bronze_rows)
@@ -651,7 +651,7 @@ def _build_control_rows(
                 "open_event_count": len(failing_rows),
                 "evidence_count": len(evidence_rows),
                 "evidence_coverage": coverage,
-                "latest_event_time": max(row["event_time"] for row in rows),
+                "latest_event_time": max((row["event_time"] for row in rows), key=parse_event_time),
             }
         )
     return sorted(control_rows, key=lambda item: (-int(item["risk_score"]), item["control_id"]))
@@ -682,7 +682,7 @@ def _build_asset_rows(
             "high_open": sev["high"],
             "event_count": len(rows),
             "applicable_control_ids": applies.get(asset_type, []),
-            "latest_event_time": max(row["event_time"] for row in rows),
+            "latest_event_time": max((row["event_time"] for row in rows), key=parse_event_time),
         }
         if asset_id in names:
             asset["asset_name"] = names[asset_id]

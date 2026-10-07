@@ -3,6 +3,7 @@
     "key": "SEC-101",
     "fields": {
       "summary": "Rotate exposed CI credential",
+      "resolution": { "name": "Fixed" },
       "status": {
         "name": "Done",
         "statusCategory": { "key": "done", "name": "Done" }

@@ -89,7 +89,29 @@ WORKLOAD_KINDS: dict[str, tuple[str, str]] = {
     "Job": ("/apis/batch/v1", "jobs"),
     "Pod": ("/api/v1", "pods"),
 }
-_HIGH_FINDINGS = {"privileged_container", "host_path_volume", "host_network", "host_pid", "host_ipc"}
+_HIGH_FINDINGS = {
+    "privileged_container",
+    "host_path_volume",
+    "host_network",
+    "host_pid",
+    "host_ipc",
+    "unsafe_added_capability",
+}
+_BASELINE_CAPABILITIES = {
+    "AUDIT_WRITE",
+    "CHOWN",
+    "DAC_OVERRIDE",
+    "FOWNER",
+    "FSETID",
+    "KILL",
+    "MKNOD",
+    "NET_BIND_SERVICE",
+    "SETFCAP",
+    "SETGID",
+    "SETPCAP",
+    "SETUID",
+    "SYS_CHROOT",
+}
 _AUDIT_POLICY_FLAG = "--audit-policy-file"
 _AUDIT_SINK_FLAGS = ("--audit-log-path", "--audit-webhook-config-file")
 
@@ -456,6 +478,11 @@ def pod_security_findings(pod_spec: dict[str, Any]) -> list[dict[str, str | None
         sc = container.get("securityContext") or {}
         if sc.get("privileged") is True:
             findings.append({"reason": "privileged_container", "target": cname})
+        # Pod Security Standards Baseline explicit-add allowlist. This check
+        # alone does not claim conformance to the full Restricted profile.
+        capabilities = (sc.get("capabilities") or {}).get("add") or []
+        if any(str(capability) not in _BASELINE_CAPABILITIES for capability in capabilities):
+            findings.append({"reason": "unsafe_added_capability", "target": cname})
         run_as_user = sc.get("runAsUser", pod_sc.get("runAsUser"))
         run_as_non_root = sc.get("runAsNonRoot", pod_sc.get("runAsNonRoot"))
         if run_as_user == 0:

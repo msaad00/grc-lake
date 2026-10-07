@@ -66,7 +66,7 @@ def test_collect_jira_evidence_is_schema_valid_and_mapped() -> None:
 
     # Transition events track lifecycle position for ageing in-progress work.
     in_progress = transitions["jira:issue:GOV-7"]
-    assert in_progress["status"] == "open"
+    assert in_progress["status"] == "observed"
     assert in_progress["attributes"]["in_progress"] is True
 
     # Asset + evidence shapes are Jira-scoped and point at the read-only API.

@@ -115,6 +115,16 @@ def evaluate_safeguards(
         reviewed = [sid for sid, state in links if state in ATTESTABLE_STATES]
         pending = sum(state not in ATTESTABLE_STATES for _, state in links)
         statuses = [by_id[sid] for sid in reviewed]
+        required = control.get("required_evidence_types") or []
+        if reviewed and required:
+            requirement_rows = [
+                freshness[(str(row.get("tenant_id", "")), str(row["event_id"]))]
+                for sid in reviewed
+                for asset_rows in bound.get(sid, {}).values()
+                for row in asset_rows
+            ]
+            if current_evidence_is_stale(requirement_rows, required_types=required):
+                statuses.append("stale")
         if pending or not payload.get("review_log_verified", False):
             statuses.append("not_evaluated")
         requirements.append(

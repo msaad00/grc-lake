@@ -7,7 +7,7 @@ presence/coverage predicates. Aggregate event and evidence counts still include
 observations. Observation-only controls remain unevaluated; explicit unknown
 and unevaluated outcomes still prevent a pass. An empty dataset has a zero
 control pass rate. These changes affect newly evaluated generations; historical
-evidence is retained. Manifests record `trustops.control_evaluation.v6`; the
+evidence is retained. Manifests record `trustops.control_evaluation.v7`; the
 incremental dependency fingerprint forces re-evaluation of older generations even
 when raw inputs have not changed, while retaining the earlier generation.
 
@@ -27,8 +27,12 @@ remain additional gates; agreement is expected for identical rules and scope,
 not for differently scoped requirements.
 
 Program control tests can require more evidence types than a catalog control.
-The current assessment retains those broader freshness requirements. A passing
-catalog predicate alone does not clear a program's missing-evidence requirement.
+Materialized controls, program tests, current assessments, and reviewed CCF
+requirements retain the union of catalog and applicable program evidence types.
+A passing predicate alone does not clear a missing-evidence requirement. A
+confirmed failure still takes precedence; missing evidence does not turn an
+observation into an evaluated failure. AI framework summaries recheck current
+evidence freshness and weight their aggregate by control counts, not pack counts.
 
 Workpapers include declared assets with valid, explicitly bound safeguard
 observations by the assessment cutoff, even if those observations fall outside
@@ -144,3 +148,25 @@ organization review. Shipped mappings carry their control version, retaining
 historical versions where the catalog records them; mismatched versions become
 proposed. The `fedramp-moderate` compatibility ID labels the NIST SP 800-53B
 Moderate baseline only, without the FedRAMP overlay or an authorization claim.
+
+## Connector verdict boundaries
+
+Jira terminal status alone does not establish remediation. A done-category issue
+passes only with an explicit Fixed, Done, or Resolved resolution; cancellation,
+duplication, Won't Do, and unknown resolutions remain unevaluated. Transition
+activity remains an observation. See [Jira resolutions](https://support.atlassian.com/jira-cloud-administration/docs/what-is-a-resolution-in-jira/).
+
+Azure role assignments whose role definitions cannot be resolved remain
+unevaluated. The published Owner, Contributor, and User Access Administrator
+built-in IDs can identify those privileged roles even when their display names
+are absent. See [Azure privileged roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/privileged).
+
+Kubernetes workload checks report added Linux capabilities outside the
+[Pod Security Baseline allowlist](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
+for application, init, and ephemeral containers. This is a bounded configuration
+check, not a complete Restricted-profile assessment.
+
+S3, Snowflake, and ClickHouse evidence readers preserve an explicit control
+mapping instead of adding unrelated defaults. A list of nonempty strings or a
+comma/pipe-delimited string is accepted. Empty or malformed explicit mappings
+are rejected; default mappings apply only when no mapping field was provided.

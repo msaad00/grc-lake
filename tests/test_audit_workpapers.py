@@ -275,7 +275,24 @@ def test_legacy_export_migration_requires_matching_original_json(workpaper_env, 
         migrate_workpaper(old, tmp_path / "missing")
     migrate_workpaper(old, tmp_path / "new-export", content_path=original_json)
     assert verify_workpaper_export(tmp_path / "new-export")["ok"]
+    migrated = json.loads((tmp_path / "new-export/workpaper.json").read_text())
+    assert migrated["migration"]["source_manifest_sha256"] == before
+    assert migrated["migration"]["source_content_sha256"] == manifest["content_sha256"]
+    assert migrated["migration"]["authentication"] == "hash_consistency_only"
+    assert "Migrated export" in (tmp_path / "new-export/index.html").read_text()
     assert file_sha256(old / "manifest.json") == before
     original_json.write_text("{}")
     with pytest.raises(ValueError, match="recorded content hash"):
         migrate_workpaper(old, tmp_path / "forged", content_path=original_json)
+
+
+@pytest.mark.parametrize("extra", [{"reviewed_by": "claimed-auditor"}, {"status": "approved"}])
+def test_export_verification_rejects_unrecognized_manifest_claims(workpaper_env, tmp_path, extra):
+    from security_lakehouse.audit_workpapers import build_workpaper, export_workpaper, verify_workpaper_export
+
+    _, _, _, lake, body = workpaper_env
+    out = tmp_path / "export"
+    export_workpaper(build_workpaper(lake, **body), out)
+    manifest = json.loads((out / "manifest.json").read_text())
+    (out / "manifest.json").write_text(json.dumps({**manifest, **extra}))
+    assert verify_workpaper_export(out)["ok"] is False

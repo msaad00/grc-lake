@@ -119,3 +119,24 @@ def test_unknown_campaign_returns_404(env) -> None:
     admin = human(client.app, tokens["security_admin"])
     assert client.get("/api/v1/access-reviews/nope", headers=admin).status_code == HTTPStatus.NOT_FOUND
     assert client.get("/api/v1/access-reviews/nope/items", headers=admin).status_code == HTTPStatus.NOT_FOUND
+
+
+def test_completed_campaign_freezes_api_decisions_and_membership(env):
+    client, tokens = env
+    admin = human(client.app, tokens["security_admin"])
+    cid = client.post("/api/v1/access-reviews", json={"name": "Review"}, headers=admin).json()["data"]["id"]
+    base = f"/api/v1/access-reviews/{cid}"
+    client.patch(base, json={"status": "active"}, headers=admin)
+    item = client.post(base + "/items", json={"subject_id": "someone-else"}, headers=admin).json()["data"]
+    assert client.patch(base, json={"status": "completed"}, headers=admin).status_code == 400
+    decision_url = f"/api/v1/access-reviews/items/{item['id']}/decision"
+    assert client.post(decision_url, json={"decision": "certified"}, headers=admin).status_code == 200
+    completed = client.patch(base, json={"status": "completed"}, headers=admin)
+    assert completed.status_code == 200
+    for decision in ("pending", "revoked", "certified"):
+        assert client.post(decision_url, json={"decision": decision}, headers=admin).status_code == 400
+    assert client.post(base + "/items", json={"subject_id": "new"}, headers=admin).status_code == 400
+    assert client.post(base + "/seed", headers=admin).status_code == 400
+    assert client.patch(base, json={"status": "draft"}, headers=admin).status_code == 400
+    repeated = client.patch(base, json={"status": "completed"}, headers=admin)
+    assert repeated.json()["data"]["completed_at"] == completed.json()["data"]["completed_at"]

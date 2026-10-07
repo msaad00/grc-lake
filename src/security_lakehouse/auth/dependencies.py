@@ -103,6 +103,7 @@ def get_identity(
             scopes=scopes_for_role(sess.user.role),
             workspace_id=source_key.workspace_id if source_key is not None else sess.tenant_id,
             auth_method=f"session:{sess.idp or 'unknown'}",
+            session_id=sess.id,
             api_key_id=source_key.id if source_key is not None else None,
         )
         identity = _apply_billing_state(session, identity)

@@ -100,6 +100,16 @@ def verify_event(lake_dir: str | Path, event_id: str) -> dict[str, Any]:
     canonical = json.dumps(raw_payload, sort_keys=True, separators=(",", ":"), default=str)
     computed = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     verified = bool(expected) and computed == expected
+    if verified and generation is None and not verify_lake_integrity(lake_dir)["ok"]:
+        return {
+            "event_id": event_id,
+            "verified": False,
+            "expected_sha256": expected,
+            "computed_sha256": computed,
+            "source_layer": "bronze",
+            "reason": "legacy lake integrity verification failed",
+            "verification_scope": "lake_and_bronze_hash",
+        }
     return {
         "event_id": event_id,
         "verified": verified,
@@ -107,7 +117,7 @@ def verify_event(lake_dir: str | Path, event_id: str) -> dict[str, Any]:
         "computed_sha256": computed,
         "source_layer": "bronze",
         "reason": None if verified else "computed hash does not match stored raw_sha256",
-        "verification_scope": "generation_and_bronze_hash" if generation is not None else "bronze_hash_only",
+        "verification_scope": "generation_and_bronze_hash" if generation is not None else "lake_and_bronze_hash",
     }
 
 

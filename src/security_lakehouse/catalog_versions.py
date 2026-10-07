@@ -42,6 +42,7 @@ from security_lakehouse.catalog import (
     load_framework_registry,
 )
 from security_lakehouse.io import append_jsonl, read_jsonl
+from security_lakehouse.models import instant_sort_key
 from security_lakehouse.safeguards import load_safeguards
 
 CONTROL_SCHEMA_VERSION = "trustops.control.v2"
@@ -113,7 +114,7 @@ def active_controls(catalog_path: str | Path | None = None) -> dict[str, dict[st
 def load_history(history_path: str | Path | None = None) -> list[dict[str, Any]]:
     """Return all retired control versions, oldest-first by ``retired_at``."""
     rows = read_jsonl(Path(history_path or DEFAULT_HISTORY_PATH), missing_ok=True)
-    return sorted(rows, key=lambda r: str(r.get("retired_at") or ""))
+    return sorted(rows, key=lambda r: instant_sort_key(r.get("retired_at")))
 
 
 def control_history(
@@ -131,7 +132,7 @@ def control_history(
     active = active_controls(catalog_path).get(control_id)
     if active is not None:
         versions.append(active)
-    versions.sort(key=lambda r: (str(r.get("valid_from") or ""), str(r.get("version") or "")))
+    versions.sort(key=lambda r: (instant_sort_key(r.get("valid_from")), str(r.get("version") or "")))
     return versions
 
 

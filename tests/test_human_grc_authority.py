@@ -26,6 +26,7 @@ credentials = credentials_fixture
         ("policies/missing/acknowledgments", {}),
         ("workflows/runs/missing/approve", {}),
         ("workflows/runs/missing/reject", {}),
+        ("workflows/runs/missing/reconcile", {"note": "review"}),
     ],
 )
 def test_machine_credentials_cannot_attest(credentials, derived, path, body):

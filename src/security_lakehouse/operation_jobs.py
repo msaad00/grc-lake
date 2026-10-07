@@ -122,6 +122,7 @@ class JobQueue:
                     tenant_id=identity.tenant_id,
                     user_id=identity.user_id,
                     api_key_id=identity.api_key_id,
+                    session_id=identity.session_id,
                     auth_method=identity.auth_method,
                     idempotency_key=key_hash,
                     request_hash=digest,

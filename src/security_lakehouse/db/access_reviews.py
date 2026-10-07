@@ -12,15 +12,17 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, select, update
 from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
+from security_lakehouse.db.identity_aliases import identity_aliases, identity_key
 from security_lakehouse.db.models import (
     ACCESS_REVIEW_DECISIONS,
     ACCESS_REVIEW_STATUSES,
     AccessReviewCampaign,
     AccessReviewItem,
+    _as_aware,
 )
 
 
@@ -29,7 +31,46 @@ def _now(now: datetime | None) -> datetime:
 
 
 def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+    return _as_aware(value).astimezone(UTC).isoformat() if value else None
+
+
+def _lock_campaign(
+    session: Session, *, tenant_id: str, campaign_id: str | None = None, item_id: str | None = None
+) -> AccessReviewCampaign | None:
+    """Serialize membership, decisions and completion in one DB transaction.
+
+    A no-op UPDATE locks the campaign on both SQLite and PostgreSQL. A plain
+    SELECT FOR UPDATE would silently omit locking on SQLite. Refresh ORM state
+    after acquiring the lock so previously loaded objects cannot bypass it.
+    """
+    target = (
+        select(AccessReviewItem.campaign_id)
+        .where(AccessReviewItem.id == item_id, AccessReviewItem.tenant_id == tenant_id)
+        .scalar_subquery()
+        if item_id is not None
+        else campaign_id
+    )
+    locked = session.scalar(
+        update(AccessReviewCampaign)
+        .where(AccessReviewCampaign.id == target, AccessReviewCampaign.tenant_id == tenant_id)
+        .values(updated_at=AccessReviewCampaign.updated_at)
+        .returning(AccessReviewCampaign.id)
+        .execution_options(synchronize_session=False)
+    )
+    if locked is None:
+        return None
+    return session.scalar(
+        select(AccessReviewCampaign)
+        .where(AccessReviewCampaign.id == locked, AccessReviewCampaign.tenant_id == tenant_id)
+        .execution_options(populate_existing=True)
+    )
+
+
+def get_mutable_campaign(session: Session, *, tenant_id: str, campaign_id: str) -> AccessReviewCampaign | None:
+    campaign = _lock_campaign(session, tenant_id=tenant_id, campaign_id=campaign_id)
+    if campaign is not None and campaign.status not in {"draft", "active"}:
+        raise ValueError("cannot add subjects to a terminal campaign")
+    return campaign
 
 
 # --- campaigns ---------------------------------------------------------------
@@ -92,9 +133,20 @@ def set_campaign_status(
 ) -> AccessReviewCampaign | None:
     if status not in ACCESS_REVIEW_STATUSES:
         raise ValueError(f"status must be one of {list(ACCESS_REVIEW_STATUSES)}, got {status!r}")
-    campaign = get_campaign(session, tenant_id=tenant_id, campaign_id=campaign_id)
+    campaign = _lock_campaign(session, tenant_id=tenant_id, campaign_id=campaign_id)
     if campaign is None:
         return None
+    if campaign.status == status:
+        return campaign
+    transitions = {"draft": {"active", "cancelled"}, "active": {"completed", "cancelled"}}
+    if status not in transitions.get(campaign.status, set()):
+        raise ValueError(f"campaign cannot transition from {campaign.status} to {status}")
+    if status == "completed":
+        progress = campaign_progress(session, tenant_id=tenant_id, campaign_id=campaign_id)
+        if not progress["total"]:
+            raise ValueError("cannot complete an empty campaign")
+        if progress["pending"]:
+            raise ValueError("cannot complete a campaign with pending decisions")
     moment = _now(now)
     campaign.status = status
     campaign.completed_at = moment if status == "completed" else None
@@ -118,7 +170,8 @@ def add_item(
 ) -> AccessReviewItem:
     if not subject_id.strip():
         raise ValueError("access review item requires a subject_id")
-    if get_campaign(session, tenant_id=tenant_id, campaign_id=campaign_id) is None:
+    campaign = get_mutable_campaign(session, tenant_id=tenant_id, campaign_id=campaign_id)
+    if campaign is None:
         raise ValueError("campaign not found in this tenant")
     item = AccessReviewItem(
         tenant_id=tenant_id,
@@ -171,19 +224,31 @@ def record_decision(
 ) -> AccessReviewItem | None:
     if decision not in ACCESS_REVIEW_DECISIONS:
         raise ValueError(f"decision must be one of {list(ACCESS_REVIEW_DECISIONS)}, got {decision!r}")
-    item = get_item(session, tenant_id=tenant_id, item_id=item_id)
+    campaign = _lock_campaign(session, tenant_id=tenant_id, item_id=item_id)
+    if campaign is None:
+        return None
+    if campaign.status != "active":
+        raise ValueError("decisions require an active campaign")
+    if not reviewer.strip():
+        raise ValueError("a named reviewer is required")
+    item = session.scalar(
+        select(AccessReviewItem)
+        .where(AccessReviewItem.id == item_id, AccessReviewItem.tenant_id == tenant_id)
+        .execution_options(populate_existing=True)
+    )
     if item is None:
         return None
-    if (
-        decision == "certified"
-        and reviewer.strip()
-        and reviewer.strip().casefold()
-        in {
-            item.subject_id.strip().casefold(),
-            item.subject_name.strip().casefold(),
-        }
-    ):
+    if decision == "certified" and identity_aliases(session, tenant_id, reviewer) & {
+        identity_key(item.subject_id),
+        identity_key(item.subject_name),
+    }:
         raise ValueError("access certification requires an independent reviewer")
+    if item.decision != "pending":
+        if (item.decision, item.reviewer, item.note) == (decision, reviewer, note):
+            return item
+        raise ValueError("a recorded decision cannot be replaced; create a new review campaign")
+    if decision == "pending":
+        return item
     item.decision = decision
     item.reviewer = reviewer
     item.note = note

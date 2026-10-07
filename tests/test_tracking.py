@@ -167,6 +167,26 @@ def _write_bronze_silver(tmp_path: Path) -> str:
     (bronze_dir / "raw_events.jsonl").write_text(json.dumps(bronze_record) + "\n", encoding="utf-8")
     silver_record = {"event_id": "evt-001", "raw_sha256": expected, "source": "cspm"}
     (silver_dir / "normalized_events.jsonl").write_text(json.dumps(silver_record) + "\n", encoding="utf-8")
+    # A matching event hash only qualifies as verified when its legacy lake's
+    # complete integrity manifest also verifies.
+    from security_lakehouse.io import write_json
+    from security_lakehouse.pipeline import build_evidence_integrity
+
+    artifacts = {
+        "bronze_raw_events": bronze_dir / "raw_events.jsonl",
+        "silver_normalized_events": silver_dir / "normalized_events.jsonl",
+    }
+    for name in ("control_posture", "control_tests", "evidence_freshness", "asset_risk", "metrics", "dashboard_data"):
+        path = tmp_path / "gold" / (name + (".json" if name in {"metrics", "dashboard_data"} else ".jsonl"))
+        path.parent.mkdir(exist_ok=True)
+        path.write_text("{}" if path.suffix == ".json" else "")
+        artifacts["gold_" + name] = path
+    write_json(
+        tmp_path / "gold/evidence_integrity.json",
+        build_evidence_integrity(
+            raw_rows=[raw], bronze_rows=[bronze_record], silver_rows=[silver_record], artifact_paths=artifacts
+        ),
+    )
     return expected
 
 
@@ -174,7 +194,7 @@ def test_verify_event_matches(tmp_path: Path) -> None:
     expected = _write_bronze_silver(tmp_path)
     result = verify_event(tmp_path, "evt-001")
     assert result["verified"] is True
-    assert result["verification_scope"] == "bronze_hash_only"
+    assert result["verification_scope"] == "lake_and_bronze_hash"
     assert result["expected_sha256"] == expected
     assert result["computed_sha256"] == expected
 

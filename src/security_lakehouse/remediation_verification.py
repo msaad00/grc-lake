@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.assessment import build_current_posture
 from security_lakehouse.db import remediation
+from security_lakehouse.db.identity_aliases import identity_aliases
 from security_lakehouse.db.models import RemediationTask, _as_aware
 from security_lakehouse.generations import generation_identity, generation_reader
 from security_lakehouse.io import read_json, read_jsonl
@@ -38,8 +39,13 @@ def verify_task(
         raise ValueError("verification requires a task with a control in this tenant")
     if not reviewer_id or not reviewer:
         raise ValueError("verification requires an authenticated reviewer")
-    actors = {reviewer.strip().casefold(), reviewer_id.strip().casefold()}
-    if any(value and value.strip().casefold() in actors for value in (task.created_by, task.owner)):
+    if task.authority_history is None:
+        raise ValueError("historical task authority is unavailable; create a new task for an independent retest")
+    actors = identity_aliases(session, tenant_id, reviewer) | identity_aliases(session, tenant_id, reviewer_id)
+    implementers = set(json.loads(task.authority_history))
+    implementers.update(identity_aliases(session, tenant_id, task.created_by))
+    implementers.update(identity_aliases(session, tenant_id, task.owner))
+    if (actors - {""}) & implementers:
         raise ValueError("verification requires an independent reviewer, not the creator or owner")
     moment = now or datetime.now(UTC)
     identity = generation_identity(lake)
@@ -107,6 +113,7 @@ def verify_task(
             RemediationTask.tenant_id == tenant_id,
             RemediationTask.verification_history == previous_history,
             RemediationTask.updated_at == task.updated_at,
+            RemediationTask.authority_history == task.authority_history,
         )
         .values(
             verification_history=json.dumps(history, sort_keys=True),

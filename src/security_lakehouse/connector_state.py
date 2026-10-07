@@ -51,7 +51,7 @@ from security_lakehouse.connectors_snowflake import CONNECTOR_ID as SNOWFLAKE_CO
 from security_lakehouse.connectors_snowflake import discover_snowflake_scope, probe_snowflake_access
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.lake_scale import apply_split_schedule_defaults
-from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.models import instant_sort_key, parse_event_time, utc_iso
 from security_lakehouse.secret_refs import ref_payload_error
 
 CONFIG_FILE = "connector_config.jsonl"
@@ -358,7 +358,7 @@ def _mapping_error(options: dict[str, Any]) -> str | None:
 
 def _latest_config_with_access_payload(lake_dir: str | Path, connector_id: str) -> dict[str, Any] | None:
     events = [e for e in _read_jsonl(_gold(lake_dir) / CONFIG_FILE) if e.get("connector_id") == connector_id]
-    events.sort(key=lambda e: str(e.get("occurred_at") or ""), reverse=True)
+    events.sort(key=lambda e: instant_sort_key(e.get("occurred_at")), reverse=True)
     for event in events:
         credentials = event.get("credentials")
         options = event.get("options")

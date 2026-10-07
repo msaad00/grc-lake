@@ -1228,7 +1228,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     def execute_operation(row) -> tuple[int, dict[str, Any]]:
         from security_lakehouse.auth.dependencies import _INSECURE_IDENTITY, _apply_billing_state
-        from security_lakehouse.db.models import ApiKey, User
+        from security_lakehouse.db.models import ApiKey, User, UserSession
 
         with app.state.sessionmaker() as session:
             if row.auth_method == "insecure" and not app.state.require_auth:
@@ -1236,6 +1236,18 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             else:
                 user = session.get(User, row.user_id)
                 if user is None or user.tenant_id != row.tenant_id or not user.is_active:
+                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
+                if row.auth_method.startswith("session:"):
+                    login = session.get(UserSession, row.session_id) if row.session_id else None
+                    if (
+                        login is None
+                        or not login.is_active()
+                        or login.user_id != user.id
+                        or login.tenant_id != row.tenant_id
+                        or row.auth_method != f"session:{login.idp}"
+                    ):
+                        return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
+                elif row.auth_method != "api_key" or not row.api_key_id:
                     return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
                 key = session.get(ApiKey, row.api_key_id) if row.api_key_id else None
                 if row.api_key_id and (
@@ -1249,6 +1261,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                     role=user.role,
                     scopes=scopes_for_role(user.role),
                     api_key_id=row.api_key_id,
+                    session_id=row.session_id,
                     auth_method=row.auth_method,
                 )
                 identity = _apply_billing_state(session, identity)
@@ -3149,6 +3162,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             result = access_review_services.seed_campaign_from_evidence(
                 session, lake_for(identity), identity.tenant_id, campaign_id
             )
+        except ValidationError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
         except NotFound as exc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
         return JSONResponse(api_v1.envelope("access-reviews", result))
@@ -3671,7 +3686,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if v1_path in {"/api/v1/trust-shares", "/api/trust-shares"}:
             body["created_by"] = identity.email or identity.user_id
         if v1_path.startswith(("/api/v1/workflows/runs/", "/api/workflows/runs/")) and v1_path.endswith(
-            ("/approve", "/reject")
+            ("/approve", "/reject", "/reconcile")
         ):
             require_human(identity)
         if request.headers.get("Idempotency-Key") and "idempotency_key" not in body:
@@ -3737,7 +3752,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if legacy_path in {"/api/v1/trust-shares", "/api/trust-shares"}:
             body["created_by"] = identity.email or identity.user_id
         if legacy_path.startswith(("/api/v1/workflows/runs/", "/api/workflows/runs/")) and legacy_path.endswith(
-            ("/approve", "/reject")
+            ("/approve", "/reject", "/reconcile")
         ):
             require_human(identity)
         required_scope = api_legacy.required_post_scope(legacy_path)

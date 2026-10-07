@@ -63,6 +63,8 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -73,6 +75,7 @@ from security_lakehouse.assessment import SnapshotWrittenHook, write_assessment_
 from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
 from security_lakehouse.io import append_jsonl, canonical_sha256, read_jsonl
 from security_lakehouse.ledger import chain_lock
+from security_lakehouse.models import instant_sort_key
 from security_lakehouse.secret_refs import tenant_secret_prefix
 from security_lakehouse.tracking import append_event as append_triage_event
 
@@ -146,7 +149,7 @@ def _check_control_pass(lake: Path, params: dict[str, Any], *, dry_run: bool = F
     rows = [r for r in read_jsonl(tests) if r.get("control_id") == control_id]
     if not rows:
         return {"control_id": control_id, "passed": False, "reason": "control not found"}
-    rows.sort(key=lambda r: str(r.get("evaluated_at") or ""), reverse=True)
+    rows.sort(key=lambda r: instant_sort_key(r.get("evaluated_at")), reverse=True)
     latest = rows[0]
     return {
         "control_id": control_id,
@@ -1003,7 +1006,7 @@ def list_workflows(lake_dir: str | Path) -> list[dict[str, Any]]:
         prev = latest.get(wid)
         if prev is None or int(row.get("version") or 0) > int(prev.get("version") or 0):
             latest[wid] = row
-    return sorted(latest.values(), key=lambda r: str(r.get("occurred_at") or ""), reverse=True)
+    return sorted(latest.values(), key=lambda r: instant_sort_key(r.get("occurred_at")), reverse=True)
 
 
 def _evidence_changed_trigger(workflow: dict[str, Any]) -> dict[str, Any] | None:
@@ -1448,7 +1451,7 @@ def list_runs(lake_dir: str | Path, workflow_id: str | None = None, *, limit: in
     rows = list({str(row["run_id"]): row for row in history}.values())
     if workflow_id:
         rows = [r for r in rows if r.get("workflow_id") == workflow_id]
-    rows.sort(key=lambda r: str(r.get("started_at") or ""), reverse=True)
+    rows.sort(key=lambda r: instant_sort_key(r.get("started_at")), reverse=True)
     return rows[:limit]
 
 
@@ -1468,7 +1471,7 @@ def retry_workflow_run(
     prior = get_workflow_run(lake_dir, run_id)
     if prior is None:
         raise ValueError(f"unknown run_id {run_id!r}")
-    if str(prior.get("status") or "").endswith("_claimed"):
+    if str(prior.get("status") or "").endswith("_claimed") or prior.get("failure_code") == "outcome_unknown":
         raise ApprovalConflict("reconcile the interrupted decision before retrying")
     return run_workflow(
         lake_dir, workflow_id=str(prior["workflow_id"]), actor=actor, dry_run=bool(prior.get("dry_run"))
@@ -1477,6 +1480,62 @@ def retry_workflow_run(
 
 class ApprovalConflict(ValueError):
     """An approval is stale, already consumed, or requires reconciliation."""
+
+
+@contextmanager
+def _decision_execution_lock(lake_dir: str | Path, run_id: str) -> Iterator[None]:
+    # A process-owned lock disappears on exit; reconciliation cannot race a live
+    # execution, even when another server process handles the request.
+    lock_path = _gold(lake_dir) / "workflow_execution" / canonical_sha256(run_id)
+    try:
+        with chain_lock(lock_path, blocking=False):
+            yield
+    except BlockingIOError as exc:
+        raise ApprovalConflict("workflow decision is still executing") from exc
+
+
+def approve_workflow_run(
+    lake_dir: str | Path, *, run_id: str, actor: str = "console", note: str = ""
+) -> dict[str, Any]:
+    with _decision_execution_lock(lake_dir, run_id):
+        return _approve_workflow_run(lake_dir, run_id=run_id, actor=actor, note=note)
+
+
+def reject_workflow_run(lake_dir: str | Path, *, run_id: str, actor: str = "console", note: str = "") -> dict[str, Any]:
+    with _decision_execution_lock(lake_dir, run_id):
+        return _reject_workflow_run(lake_dir, run_id=run_id, actor=actor, note=note)
+
+
+def reconcile_workflow_run(lake_dir: str | Path, *, run_id: str, actor: str, note: str = "") -> dict[str, Any]:
+    """Close an abandoned claim with an unknown outcome, never replay actions."""
+    with _decision_execution_lock(lake_dir, run_id), chain_lock(_gold(lake_dir) / "workflow_approvals"):
+        prior = get_workflow_run(lake_dir, run_id)
+        if prior is None or not str(prior.get("status") or "").endswith("_claimed"):
+            raise ApprovalConflict("only interrupted decision claims can be reconciled")
+        if (
+            not note.strip()
+            or not actor.strip()
+            or actor.casefold()
+            in {
+                "console",
+                "api",
+                "scheduler",
+                str(prior.get("actor") or "").casefold(),
+                str(prior.get("decision_actor") or "").casefold(),
+            }
+        ):
+            raise ValueError("reconciliation requires an independent named reviewer and reason")
+        result = {
+            **prior,
+            "status": "interrupted",
+            "result": "interrupted",
+            "failure_code": "outcome_unknown",
+            "reconciled_by": actor,
+            "reconciliation_note": note,
+            "finished_at": _utc_now_iso(),
+        }
+        _append_run_record(lake_dir, result)
+        return result
 
 
 def _claim_workflow_decision(lake_dir: str | Path, run_id: str, actor: str, decision: str):
@@ -1516,7 +1575,7 @@ def _claim_workflow_decision(lake_dir: str | Path, run_id: str, actor: str, deci
         return prior, workflow
 
 
-def approve_workflow_run(
+def _approve_workflow_run(
     lake_dir: str | Path,
     *,
     run_id: str,
@@ -1598,7 +1657,7 @@ def approve_workflow_run(
     return run
 
 
-def reject_workflow_run(
+def _reject_workflow_run(
     lake_dir: str | Path,
     *,
     run_id: str,

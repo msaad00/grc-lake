@@ -6,6 +6,7 @@ from typing import Any
 
 from security_lakehouse.connector_state import list_runs as list_connector_runs
 from security_lakehouse.lake_eval import list_eval_runs
+from security_lakehouse.models import instant_sort_key
 from security_lakehouse.workflows import list_runs as list_workflow_runs
 
 JobRow = dict[str, Any]
@@ -41,7 +42,7 @@ def build_platform_jobs(
     if status:
         jobs = [row for row in jobs if row["status"] == status]
 
-    jobs.sort(key=lambda row: str(row.get("started_at") or ""), reverse=True)
+    jobs.sort(key=lambda row: instant_sort_key(row.get("started_at")), reverse=True)
     capped = jobs[: max(1, min(limit, 500))]
     counts: dict[str, int] = {}
     for row in capped:

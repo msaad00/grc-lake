@@ -56,6 +56,11 @@ The original files must match their manifest, and the original JSON must match
 its recorded content hash. Omit `--content` when the export already contains
 `workpaper.json`. The destination must be new. Recovery re-renders HTML from JSON;
 it never extracts assessment claims from HTML or restores server review approval.
+The new JSON retains a migration record with the original manifest and content
+hashes, and the rendered export is labeled migrated. This records hash
+consistency only; it does not authenticate the original provider or reviewer.
+Symlinked sources and manifests are rejected.
+
 If no original JSON survives, regenerate a new workpaper from retained evidence
 and obtain a new review. Keep the old export as historical material.
 

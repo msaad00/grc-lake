@@ -30,6 +30,20 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     _alembic_revision_markers()
+    connection = op.get_bind()
+    if (
+        connection.execute(
+            sa.text("SELECT count(*) FROM remediation_tasks WHERE verification_history <> '[]'")
+        ).scalar()
+        or connection.execute(
+            sa.text(
+                "SELECT count(*) FROM control_exceptions WHERE requested_by_id IS NOT NULL OR approved_by_id IS NOT NULL OR approved_at IS NOT NULL"
+            )
+        ).scalar()
+    ):
+        raise RuntimeError(
+            "downgrade would erase retained review evidence; retain this schema and restore a verified backup for an older application"
+        )
     with op.batch_alter_table("control_exceptions") as batch:
         batch.drop_column("approved_at")
         batch.drop_column("approved_by_id")

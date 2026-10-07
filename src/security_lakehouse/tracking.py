@@ -30,6 +30,7 @@ from typing import Any
 
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.ledger import append_chained_jsonl, verify_chained_jsonl
+from security_lakehouse.models import instant_sort_key
 
 ALLOWED_STATES = {"open", "triaged", "in_progress", "resolved", "dismissed"}
 
@@ -87,7 +88,7 @@ def latest_state(lake_dir: str | Path, *, violation_id: str) -> dict[str, Any] |
     events = list_events(lake_dir, violation_id=violation_id)
     if not events:
         return None
-    return max(events, key=lambda r: str(r.get("occurred_at") or ""))
+    return max(events, key=lambda r: instant_sort_key(r.get("occurred_at")))
 
 
 def verify_tracking_chain(lake_dir: str | Path) -> dict[str, Any]:

@@ -899,6 +899,14 @@
     {
       "kind": "singleton",
       "methods": ["POST"],
+      "path": "/api/v1/workflows/runs/{run_id}/reconcile",
+      "path_params": ["run_id"],
+      "resource": "workflows.run",
+      "scopes": ["workflow_manage"]
+    },
+    {
+      "kind": "singleton",
+      "methods": ["POST"],
       "path": "/api/v1/workflows/runs/{run_id}/reject",
       "path_params": ["run_id"],
       "resource": "workflows.run",

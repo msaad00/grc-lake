@@ -117,6 +117,7 @@ def test_list_pagination_and_filter(tmp_path: Path) -> None:
         assert len(page) == 2
         # Filter by decision.
         first = ar.list_items(session, tenant_id=tenant.id, campaign_id=campaign.id)[0]
-        ar.record_decision(session, tenant_id=tenant.id, item_id=first.id, decision="certified")
+        ar.set_campaign_status(session, tenant_id=tenant.id, campaign_id=campaign.id, status="active")
+        ar.record_decision(session, tenant_id=tenant.id, item_id=first.id, decision="certified", reviewer="reviewer")
         certified = ar.list_items(session, tenant_id=tenant.id, campaign_id=campaign.id, decision="certified")
         assert len(certified) == 1

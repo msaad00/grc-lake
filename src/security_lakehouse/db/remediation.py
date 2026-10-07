@@ -15,6 +15,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
+from security_lakehouse.db.identity_aliases import identity_aliases
 from security_lakehouse.db.models import (
     EVIDENCE_REQUEST_STATUSES,
     EXCEPTION_STATUSES,
@@ -68,6 +69,11 @@ def create_task(
         priority=priority,
         due_at=due_at,
         created_by=created_by,
+        authority_history=json.dumps(
+            sorted(
+                identity_aliases(session, tenant_id, created_by) | identity_aliases(session, tenant_id, owner) - {""}
+            )
+        ),
     )
     session.add(task)
     session.flush()
@@ -127,9 +133,20 @@ def update_task(
     changes: dict[str, Any],
     now: datetime | None = None,
 ) -> RemediationTask | None:
+    # Serialize owner history with all task mutations across processes.
+    locked = session.scalar(
+        update(RemediationTask)
+        .where(RemediationTask.id == task_id, RemediationTask.tenant_id == tenant_id)
+        .values(updated_at=RemediationTask.updated_at)
+        .returning(RemediationTask.id)
+        .execution_options(synchronize_session=False)
+    )
+    if locked is None:
+        return None
     task = get_task(session, tenant_id=tenant_id, task_id=task_id)
     if task is None:
         return None
+    session.refresh(task)
     moment = _now(now)
     if "status" in changes:
         status = str(changes["status"])
@@ -146,6 +163,11 @@ def update_task(
         task.priority = priority
     for field in ("title", "description", "owner"):
         if field in changes and changes[field] is not None:
+            if field == "owner" and task.authority_history is not None:
+                history = set(json.loads(task.authority_history))
+                history.update(identity_aliases(session, tenant_id, task.owner))
+                history.update(identity_aliases(session, tenant_id, str(changes[field])))
+                task.authority_history = json.dumps(sorted(history - {""}))
             setattr(task, field, str(changes[field]))
     if "due_at" in changes:
         task.due_at = changes["due_at"]
@@ -177,6 +199,7 @@ def task_to_dict(task: RemediationTask, *, now: datetime | None = None) -> dict[
         "resolved_at": _iso(task.resolved_at),
         "resolution_note": task.resolution_note or "",
         "verification_history": json.loads(task.verification_history or "[]"),
+        "authority_history_available": task.authority_history is not None,
     }
 
 

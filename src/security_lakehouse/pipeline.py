@@ -40,7 +40,7 @@ from security_lakehouse.validation import validate_raw_event, validate_raw_event
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
 NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v4"
-CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v7"
+CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v8"
 
 
 @serialized_publication
@@ -962,11 +962,29 @@ def _write_sqlite_mart(
         )
         conn.executemany(
             "INSERT INTO control_posture VALUES (:tenant_id,:control_id,:framework,:title,:risk_domain,:owner,:status,:risk_score,:event_count,:open_event_count,:evidence_count,:evidence_coverage,:latest_event_time)",
-            [{"tenant_id": tenant_id, **row} for row in control_rows],
+            [
+                {
+                    "tenant_id": tenant_id,
+                    **row,
+                    "latest_event_time": parse_event_time(row["latest_event_time"])
+                    .isoformat(timespec="microseconds")
+                    .replace("+00:00", "Z"),
+                }
+                for row in control_rows
+            ],
         )
         conn.executemany(
             "INSERT INTO asset_risk VALUES (:tenant_id,:asset_id,:asset_type,:asset_owner,:environment,:risk_score,:critical_open,:high_open,:event_count,:latest_event_time)",
-            [{"tenant_id": tenant_id, **row} for row in asset_rows],
+            [
+                {
+                    "tenant_id": tenant_id,
+                    **row,
+                    "latest_event_time": parse_event_time(row["latest_event_time"])
+                    .isoformat(timespec="microseconds")
+                    .replace("+00:00", "Z"),
+                }
+                for row in asset_rows
+            ],
         )
         conn.executemany(
             """

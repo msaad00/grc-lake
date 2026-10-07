@@ -230,6 +230,8 @@ def seal_generation(generation: Path, *, legacy: bool = False) -> None:
 
 
 def verify_generation(generation: Path) -> None:
+    if generation.is_symlink() or (generation / "generation.json").is_symlink():
+        raise ValueError("invalid generation manifest path")
     manifest = json.loads((generation / "generation.json").read_text())
     fields = {"schema_version", "generation_id", "legacy", "artifacts"}
     if isinstance(manifest, dict) and manifest.get("schema_version") == "trustops.generation.v2":
@@ -253,6 +255,12 @@ def verify_generation(generation: Path) -> None:
         required -= {"catalog/safeguards.json", "gold/ccf_assessment.json"}
     if not manifest.get("legacy", False) and not required <= set(manifest["artifacts"]):
         raise ValueError("generation is missing required assessment artifacts")
+    expected_paths = set(manifest["artifacts"]) | {"generation.json"}
+    for path in generation.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("invalid generation artifact path")
+        if not path.is_dir() and (not path.is_file() or path.relative_to(generation).as_posix() not in expected_paths):
+            raise ValueError("unlisted generation artifact")
     for relative, expected in manifest["artifacts"].items():
         if relative not in ARTIFACTS:
             raise ValueError("unknown generation artifact")

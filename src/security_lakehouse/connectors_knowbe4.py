@@ -48,7 +48,7 @@ from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.oauth import CredentialRejectedError
 from security_lakehouse.ingestion.paginate import paginate
 from security_lakehouse.io import read_json
-from security_lakehouse.models import utc_iso
+from security_lakehouse.models import instant_sort_key, utc_iso
 
 KNOWBE4_REGIONS: dict[str, str] = {
     "us": "us.api.knowbe4.com",
@@ -322,7 +322,7 @@ def _phishing_event(
         "clicked_count": clicked,
         "phish_prone_percentage": percentage,
         "phish_prone_threshold": PHISH_PRONE_THRESHOLD,
-        "latest_test_started_at": max((str(t.get("started_at")) for t in recent), default=None),
+        "latest_test_started_at": max((str(t.get("started_at")) for t in recent), key=instant_sort_key, default=None),
         "finding_reason": reason,
     }
     return _event(

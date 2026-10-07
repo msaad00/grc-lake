@@ -17,6 +17,7 @@ from security_lakehouse.asset_names import load_asset_names, with_asset_names
 from security_lakehouse.catalog import load_control_catalog
 from security_lakehouse.evidence_freshness import build_evidence_freshness, stale_control_ids
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.models import instant_sort_key
 from security_lakehouse.programs import with_program_requirements
 from security_lakehouse.safeguards import coverage_by_framework
 
@@ -197,7 +198,7 @@ def _inventory_items(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if attrs.get("lineage_complete"):
             item["lineage_complete"] = True
         event_time = str(row.get("event_time") or "")
-        if event_time > item["last_seen_at"]:
+        if instant_sort_key(event_time) > instant_sort_key(item["last_seen_at"]):
             item["last_seen_at"] = event_time
         if not item["owner"]:
             item["owner"] = _asset_owner(row)

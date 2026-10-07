@@ -246,6 +246,24 @@ def _post(path: str, lake: Path, payload: dict[str, Any], *, idempotency_key: st
     return body["data"]
 
 
+def _page_fields(payload: JsonObject, fields: tuple[str, ...], limit: int, offset: int) -> JsonObject:
+    if not 1 <= limit <= 100 or offset < 0:
+        raise ValueError("limit must be 1-100 and offset must be nonnegative")
+    result = dict(payload)
+    counts = {}
+    for field in fields:
+        rows = payload.get(field, [])
+        counts[field] = len(rows)
+        result[field] = rows[offset : offset + limit]
+    result["pagination"] = {
+        "limit": limit,
+        "offset": offset,
+        "counts": counts,
+        "has_more": any(count > offset + limit for count in counts.values()),
+    }
+    return result
+
+
 def build_server(lake_dir: Path | None = None) -> FastMCP:
     """Construct the FastMCP server with the read tools bound to a lake directory.
 
@@ -253,15 +271,27 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     the optional dependency installed.
     """
     from mcp.server.fastmcp import FastMCP
+    from mcp.types import Tool as MCPTool
+
+    remote_tools: set[str] = set()
+
+    class TrustOpsMCP(FastMCP):
+        async def list_tools(self) -> list[MCPTool]:
+            tools = await super().list_tools()
+            return tools if _remote_api_configured() else [tool for tool in tools if tool.name not in remote_tools]
 
     lake = (lake_dir or resolve_lake_dir()).resolve()
     tool_icons = mcp_icons()
-    mcp = FastMCP(
+    mcp = TrustOpsMCP(
         MCP_SERVER_NAME,
         instructions=MCP_INSTRUCTIONS,
         website_url=MCP_WEBSITE_URL,
         icons=tool_icons,
     )
+
+    from security_lakehouse import __version__
+
+    mcp._mcp_server.version = __version__
 
     mutation_tools = frozenset(
         {
@@ -309,9 +339,15 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     def trustops_tool(**kwargs):  # noqa: ANN003
         """Register an MCP tool with TrustOps display title and brand icon."""
         title = kwargs.pop("title", None)
-        icons = kwargs.pop("icons", tool_icons)
+        icons = kwargs.pop("icons", None)
+        remote_only = kwargs.pop("remote_only", False)
+        human_only = kwargs.pop("human_only", False)
 
         def decorator(fn):  # noqa: ANN001
+            if human_only:
+                return fn
+            if remote_only:
+                remote_tools.add(fn.__name__)
             display_title = title or human_tool_title(fn.__name__)
             from mcp.types import ToolAnnotations
 
@@ -500,13 +536,13 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         return {"summary": framework_coverage_summary(rows), "frameworks": rows}
 
     @trustops_tool(title="CCF Assessment")
-    def get_ccf_assessment() -> JsonObject:
+    def get_ccf_assessment(limit: int = 25, offset: int = 0) -> JsonObject:
         """Read frozen safeguard and requirement results within observed asset scope.
 
         Only explicit safeguard evidence is evaluated. Mapping coverage does not
         imply a pass or establish inventory completeness.
         """
-        return _get("/api/v1/ccf/assessment", lake)
+        return _page_fields(_get("/api/v1/ccf/assessment", lake), ("safeguards", "requirements"), limit, offset)
 
     @trustops_tool(title="CCF Asset Results")
     def list_ccf_asset_results(limit: int = 100, offset: int = 0) -> list[JsonObject]:
@@ -514,7 +550,9 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         return _get("/api/v1/ccf/asset-results", lake, limit=str(limit), offset=str(offset))
 
     @trustops_tool(title="Mapping Review Queue")
-    def get_mapping_review_queue(framework_id: str | None = None, risk_domain: str | None = None) -> JsonObject:
+    def get_mapping_review_queue(
+        framework_id: str | None = None, risk_domain: str | None = None, limit: int = 25, offset: int = 0
+    ) -> JsonObject:
         """Proposed safeguard→requirement mappings awaiting domain-expert sign-off.
 
         This is the backlog that turns ``evaluatable`` coverage into ``attestable``
@@ -526,14 +564,10 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         equivalence judgment made in the console or CLI, never by an agent.
         Mappings this organization already approved or rejected are not listed.
         """
-        if _remote_api_configured():
-            return _get(
-                "/api/v1/mapping-reviews/report", lake, framework_id=framework_id or "", risk_domain=risk_domain or ""
-            )
-        from security_lakehouse.mapping_review import effective_safeguards
-        from security_lakehouse.safeguards import mapping_review_report
-
-        return mapping_review_report(effective_safeguards(lake), framework_id=framework_id, risk_domain=risk_domain)
+        report = _get(
+            "/api/v1/mapping-reviews/report", lake, framework_id=framework_id or "", risk_domain=risk_domain or ""
+        )
+        return _page_fields(report, ("items",), limit, offset)
 
     @trustops_tool(title="Mapping Review Decisions")
     def list_mapping_review_decisions(
@@ -623,7 +657,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         path = f"/api/v1/connectors/{urllib.parse.quote(connector_id, safe='')}/sync"
         return _post(path, lake, payload, idempotency_key=idempotency_key)
 
-    @trustops_tool(title="Get Operation")
+    @trustops_tool(title="Get Operation", remote_only=True)
     def get_operation(job_id: str) -> JsonObject:
         """Read a tenant-scoped remote job; response contains its completed API result.
 
@@ -632,7 +666,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         """
         return _server_api_request("GET", f"/api/v1/operations/{urllib.parse.quote(job_id, safe='')}")["data"]
 
-    @trustops_tool(title="List Operations")
+    @trustops_tool(title="List Operations", remote_only=True)
     def list_operations(limit: int = 25, offset: int = 0) -> list[JsonObject]:
         """List a bounded page of remote queued, running and completed operations."""
         return _server_api_request("GET", "/api/v1/operations", limit=limit, offset=offset)["data"]
@@ -723,7 +757,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     # tenant isolation, and audit events live behind the server API boundary.
     # ------------------------------------------------------------------
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def list_agent_runs(limit: int = 100, harness: str = "", status: str = "") -> JsonObject:
         """List persisted human/headless agent harness runs through the authenticated API.
 
@@ -732,7 +766,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         """
         return _server_api_request("GET", "/api/v1/agent-runs", limit=limit, harness=harness, status=status)
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def create_agent_run(
         harness: str = "posture_review",
         objective: str = "",
@@ -768,12 +802,12 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["max_output_tokens"] = max_output_tokens
         return _server_api_request("POST", "/api/v1/agent-runs", payload)
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def get_agent_run(run_id: str) -> JsonObject:
         """Inspect one persisted agent harness run through the authenticated API."""
         return _server_api_request("GET", f"/api/v1/agent-runs/{urllib.parse.quote(run_id, safe='')}")
 
-    @trustops_tool(title="Approve Agent Decision")
+    @trustops_tool(title="Approve Agent Decision", remote_only=True, human_only=True)
     def approve_agent_decision(run_id: str, decision_index: int, note: str = "") -> JsonObject:
         """Approve one stored harness decision and execute its allowlisted TrustOps write.
 
@@ -788,7 +822,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             {"note": note},
         )
 
-    @trustops_tool(title="Reject Agent Decision")
+    @trustops_tool(title="Reject Agent Decision", remote_only=True, human_only=True)
     def reject_agent_decision(run_id: str, decision_index: int, reason: str) -> JsonObject:
         """Reject one stored harness decision so it is never executed.
 
@@ -803,7 +837,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             {"reason": reason},
         )
 
-    @trustops_tool(title="Audit Readiness")
+    @trustops_tool(title="Audit Readiness", remote_only=True)
     def get_audit_readiness() -> JsonObject:
         """Return audit score, per-framework coverage, and blocking gaps.
 
@@ -827,7 +861,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             offset=str(offset),
         )
 
-    @trustops_tool(title="Evidence Freshness Summary")
+    @trustops_tool(title="Evidence Freshness Summary", remote_only=True)
     def get_evidence_freshness_summary() -> JsonObject:
         """Return SLA breach rollups: fresh rate, stale counts, and top breaches by source."""
         return _server_api_request("GET", "/api/v1/evidence/freshness/summary")
@@ -846,7 +880,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
 
         return build_repository_graph(lake)
 
-    @trustops_tool(title="List Platform Jobs")
+    @trustops_tool(title="List Platform Jobs", remote_only=True)
     def list_platform_jobs(limit: int = 25, kind: str = "", status: str = "") -> JsonObject:
         """Return unified mid-run jobs: connector syncs, lake evals, workflows, and agent runs."""
         params: dict[str, Any] = {"limit": limit}
@@ -856,7 +890,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["status"] = status
         return _server_api_request("GET", "/api/v1/platform/jobs", **params)
 
-    @trustops_tool(title="Escalate Stale Evidence")
+    @trustops_tool(title="Escalate Stale Evidence", remote_only=True)
     def escalate_stale_evidence(limit: int = 10) -> JsonObject:
         """Create remediation tasks for stale, expired, or missing evidence rows."""
         return _server_api_request(
@@ -865,7 +899,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             body={"limit": limit, "statuses": ["stale", "expired", "missing"]},
         )
 
-    @trustops_tool(title="Request Stale Evidence")
+    @trustops_tool(title="Request Stale Evidence", remote_only=True)
     def request_stale_evidence(limit: int = 10) -> JsonObject:
         """Open evidence requests for controls tied to stale, expired, or missing proof."""
         return _server_api_request(
@@ -874,32 +908,32 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             body={"limit": limit, "statuses": ["stale", "expired", "missing"]},
         )
 
-    @trustops_tool(title="Insights Timeseries")
+    @trustops_tool(title="Insights Timeseries", remote_only=True)
     def get_insights_timeseries(limit: int = 14) -> JsonObject:
         """Return captured posture trend points (score, fresh rate, violations)."""
         return _server_api_request("GET", "/api/v1/insights/timeseries", limit=str(limit))
 
-    @trustops_tool(title="Insights Remediation")
+    @trustops_tool(title="Insights Remediation", remote_only=True)
     def get_insights_remediation() -> JsonObject:
         """Return remediation SLA rollups: open/overdue counts, MTTR, attainment."""
         return _server_api_request("GET", "/api/v1/insights/remediation")
 
-    @trustops_tool(title="Insights Framework Trends")
+    @trustops_tool(title="Insights Framework Trends", remote_only=True)
     def get_insights_framework_trends(limit: int = 90) -> JsonObject:
         """Return per-framework readiness scores over time from snapshots and live posture."""
         return _server_api_request("GET", "/api/v1/insights/framework-trends", limit=str(limit))
 
-    @trustops_tool(title="Insights SLA Heatmap")
+    @trustops_tool(title="Insights SLA Heatmap", remote_only=True)
     def get_insights_sla_heatmap() -> JsonObject:
         """Return remediation task counts by priority and SLA state for exec dashboards."""
         return _server_api_request("GET", "/api/v1/insights/sla-heatmap")
 
-    @trustops_tool(title="Capture Insights Point")
+    @trustops_tool(title="Capture Insights Point", remote_only=True)
     def capture_insights_point() -> JsonObject:
         """Append a posture metric point to the insights timeseries (`write` scope)."""
         return _server_api_request("POST", "/api/v1/insights/capture", {})
 
-    @trustops_tool(title="List Vendor Assessments")
+    @trustops_tool(title="List Vendor Assessments", remote_only=True)
     def list_vendor_assessments(status: str = "", limit: int = 100) -> JsonObject:
         """List tenant vendor diligence questionnaires (requires server API auth)."""
         params: dict[str, Any] = {"limit": limit}
@@ -907,13 +941,13 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["status"] = status
         return _server_api_request("GET", "/api/v1/vendor-assessments", **params)
 
-    @trustops_tool(title="Get Vendor Assessment")
+    @trustops_tool(title="Get Vendor Assessment", remote_only=True)
     def get_vendor_assessment(assessment_id: str) -> JsonObject:
         """Return one tenant vendor assessment by id."""
         path = f"/api/v1/vendor-assessments/{urllib.parse.quote(assessment_id, safe='')}"
         return _server_api_request("GET", path)
 
-    @trustops_tool(title="Create Vendor Assessment")
+    @trustops_tool(title="Create Vendor Assessment", remote_only=True)
     def create_vendor_assessment(
         vendor_name: str,
         template_id: str,
@@ -933,34 +967,34 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["due_at"] = due_at
         return _server_api_request("POST", "/api/v1/vendor-assessments", payload)
 
-    @trustops_tool(title="Submit Vendor Assessment")
+    @trustops_tool(title="Submit Vendor Assessment", remote_only=True)
     def submit_vendor_assessment(assessment_id: str) -> JsonObject:
         """Submit a completed vendor assessment for audit-room rollups."""
         path = f"/api/v1/vendor-assessments/{urllib.parse.quote(assessment_id, safe='')}/submit"
         return _server_api_request("POST", path, {})
 
-    @trustops_tool(title="List Vendor Questionnaires")
+    @trustops_tool(title="List Vendor Questionnaires", remote_only=True)
     def list_vendor_questionnaires() -> JsonObject:
         """List bundled vendor diligence questionnaire templates."""
         return _server_api_request("GET", "/api/v1/vendor-questionnaires")
 
-    @trustops_tool(title="Get Vendor Questionnaire")
+    @trustops_tool(title="Get Vendor Questionnaire", remote_only=True)
     def get_vendor_questionnaire(template_id: str) -> JsonObject:
         """Return one bundled vendor questionnaire template by id."""
         path = f"/api/v1/vendor-questionnaires/{urllib.parse.quote(template_id, safe='')}"
         return _server_api_request("GET", path)
 
-    @trustops_tool(title="POC Readiness")
+    @trustops_tool(title="POC Readiness", remote_only=True)
     def get_poc_readiness() -> JsonObject:
         """Return platform POC readiness checklist and demo kit (requires admin API auth)."""
         return _server_api_request("GET", "/api/v1/platform/poc-readiness")
 
-    @trustops_tool(title="Platform Usage")
+    @trustops_tool(title="Platform Usage", remote_only=True)
     def get_platform_usage() -> JsonObject:
         """Return hosted plan tier and usage vs limits (requires admin API auth)."""
         return _server_api_request("GET", "/api/v1/platform/usage")
 
-    @trustops_tool(title="List Policies")
+    @trustops_tool(title="List Policies", remote_only=True)
     def list_policies(status: str = "", limit: int = 100) -> JsonObject:
         """List tenant policy documents adopted from bundled templates."""
         params: dict[str, Any] = {"limit": limit}
@@ -968,24 +1002,24 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["status"] = status
         return _server_api_request("GET", "/api/v1/policies", **params)
 
-    @trustops_tool(title="List Policy Templates")
+    @trustops_tool(title="List Policy Templates", remote_only=True)
     def list_policy_templates() -> JsonObject:
         """List bundled policy templates available for adoption."""
         return _server_api_request("GET", "/api/v1/policy-templates")
 
-    @trustops_tool(title="Get Policy Template")
+    @trustops_tool(title="Get Policy Template", remote_only=True)
     def get_policy_template(template_id: str) -> JsonObject:
         """Return one bundled policy template by id."""
         path = f"/api/v1/policy-templates/{urllib.parse.quote(template_id, safe='')}"
         return _server_api_request("GET", path)
 
-    @trustops_tool(title="Get Policy")
+    @trustops_tool(title="Get Policy", remote_only=True)
     def get_policy(document_id: str) -> JsonObject:
         """Return one tenant policy document by id."""
         path = f"/api/v1/policies/{urllib.parse.quote(document_id, safe='')}"
         return _server_api_request("GET", path)
 
-    @trustops_tool(title="List Access Reviews")
+    @trustops_tool(title="List Access Reviews", remote_only=True)
     def list_access_reviews(status: str = "", limit: int = 100) -> JsonObject:
         """List periodic access-review campaigns (requires server API auth)."""
         params: dict[str, Any] = {"limit": limit}
@@ -993,13 +1027,13 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["status"] = status
         return _server_api_request("GET", "/api/v1/access-reviews", **params)
 
-    @trustops_tool(title="Get Access Review")
+    @trustops_tool(title="Get Access Review", remote_only=True)
     def get_access_review(campaign_id: str) -> JsonObject:
         """Return one access-review campaign by id."""
         path = f"/api/v1/access-reviews/{urllib.parse.quote(campaign_id, safe='')}"
         return _server_api_request("GET", path)
 
-    @trustops_tool(title="List Access Review Items")
+    @trustops_tool(title="List Access Review Items", remote_only=True)
     def list_access_review_items(campaign_id: str, decision: str = "", limit: int = 100) -> JsonObject:
         """List certification items for an access-review campaign."""
         path = f"/api/v1/access-reviews/{urllib.parse.quote(campaign_id, safe='')}/items"
@@ -1008,7 +1042,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["decision"] = decision
         return _server_api_request("GET", path, **params)
 
-    @trustops_tool(title="Create Access Review")
+    @trustops_tool(title="Create Access Review", remote_only=True)
     def create_access_review(
         campaign_name: str,
         description: str = "",
@@ -1028,24 +1062,24 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["due_at"] = due_at
         return _server_api_request("POST", "/api/v1/access-reviews", payload)
 
-    @trustops_tool(title="Seed Access Review Items")
+    @trustops_tool(title="Seed Access Review Items", remote_only=True)
     def seed_access_review(campaign_id: str) -> JsonObject:
         """Populate access-review items from IdP connector evidence."""
         path = f"/api/v1/access-reviews/{urllib.parse.quote(campaign_id, safe='')}/seed"
         return _server_api_request("POST", path, {})
 
-    @trustops_tool(title="Record Access Review Decision")
+    @trustops_tool(title="Record Access Review Decision", remote_only=True, human_only=True)
     def record_access_review_decision(item_id: str, decision: str, note: str = "") -> JsonObject:
         """Certify, revoke, or flag one access-review item."""
         path = f"/api/v1/access-reviews/items/{urllib.parse.quote(item_id, safe='')}/decision"
         return _server_api_request("POST", path, {"decision": decision, "note": note})
 
-    @trustops_tool(title="Access Review Coverage")
+    @trustops_tool(title="Access Review Coverage", remote_only=True)
     def get_access_reviews_coverage() -> JsonObject:
         """Return control coverage rows for active access-review campaigns."""
         return _server_api_request("GET", "/api/v1/access-reviews/coverage")
 
-    @trustops_tool(title="List Evidence Requests")
+    @trustops_tool(title="List Evidence Requests", remote_only=True)
     def list_evidence_requests(status: str = "", limit: int = 100) -> JsonObject:
         """List open or historical evidence requests tied to controls."""
         params: dict[str, Any] = {"limit": limit}
@@ -1089,12 +1123,12 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             return _post("/api/v1/trust-shares", lake, kwargs)
         return create_share(lake, **kwargs)
 
-    @trustops_tool(title="Policy Attestation Summary")
+    @trustops_tool(title="Policy Attestation Summary", remote_only=True)
     def get_policy_attestation_summary() -> JsonObject:
         """Return published vs acknowledged policy counts for audit prep."""
         return _server_api_request("GET", "/api/v1/policies/attestation-summary")
 
-    @trustops_tool(title="Adopt Policy Template")
+    @trustops_tool(title="Adopt Policy Template", remote_only=True)
     def adopt_policy(template_id: str, owner: str = "", variables_json: str = "{}") -> JsonObject:
         """Adopt a bundled policy template into the tenant policy library."""
         import json as _json
@@ -1108,19 +1142,19 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         payload: dict[str, Any] = {"template_id": template_id, "owner": owner, "variables": variables}
         return _server_api_request("POST", "/api/v1/policies", payload)
 
-    @trustops_tool(title="Publish Policy")
+    @trustops_tool(title="Publish Policy", remote_only=True)
     def publish_policy(document_id: str) -> JsonObject:
         """Publish an adopted policy document for employee attestation."""
         path = f"/api/v1/policies/{urllib.parse.quote(document_id, safe='')}/publish"
         return _server_api_request("POST", path, {})
 
-    @trustops_tool(title="List Policy Acknowledgments")
+    @trustops_tool(title="List Policy Acknowledgments", remote_only=True)
     def list_policy_acknowledgments(document_id: str) -> JsonObject:
         """List employee acknowledgments for a published policy."""
         path = f"/api/v1/policies/{urllib.parse.quote(document_id, safe='')}/acknowledgments"
         return _server_api_request("GET", path)
 
-    @trustops_tool(title="Acknowledge Policy")
+    @trustops_tool(title="Acknowledge Policy", remote_only=True, human_only=True)
     def acknowledge_policy(document_id: str, user_email: str = "", display_name: str = "") -> JsonObject:
         """Record employee acknowledgment for a published policy."""
         path = f"/api/v1/policies/{urllib.parse.quote(document_id, safe='')}/acknowledgments"
@@ -1129,12 +1163,12 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["user_email"] = user_email
         return _server_api_request("POST", path, payload)
 
-    @trustops_tool(title="List Tags")
+    @trustops_tool(title="List Tags", remote_only=True)
     def list_tags() -> JsonObject:
         """List tenant tags for cross-entity navigation and filtering."""
         return _server_api_request("GET", "/api/v1/tags")
 
-    @trustops_tool(title="List Tag Entities")
+    @trustops_tool(title="List Tag Entities", remote_only=True)
     def list_tag_entities(tag_id: str, entity_type: str = "") -> JsonObject:
         """List entity ids attached to a tag, optionally filtered by entity type."""
         params: dict[str, Any] = {"tag_id": tag_id}
@@ -1142,7 +1176,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["entity_type"] = entity_type
         return _server_api_request("GET", "/api/v1/tags/entities", **params)
 
-    @trustops_tool(title="Attach Tag")
+    @trustops_tool(title="Attach Tag", remote_only=True)
     def attach_tag(tag_id: str, entity_type: str, entity_id: str) -> JsonObject:
         """Attach a tenant tag to a control, violation, asset, or other entity."""
         return _server_api_request(
@@ -1151,7 +1185,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             {"tag_id": tag_id, "entity_type": entity_type, "entity_id": entity_id},
         )
 
-    @trustops_tool(title="Detach Tag")
+    @trustops_tool(title="Detach Tag", remote_only=True)
     def detach_tag(tag_id: str, entity_type: str, entity_id: str) -> JsonObject:
         """Remove a tag association from an entity."""
         return _server_api_request(
@@ -1160,7 +1194,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             {"tag_id": tag_id, "entity_type": entity_type, "entity_id": entity_id},
         )
 
-    @trustops_tool(title="List Saved Views")
+    @trustops_tool(title="List Saved Views", remote_only=True)
     def list_saved_views(surface: str = "") -> JsonObject:
         """List saved filter views for a console surface (e.g. controls, violations)."""
         params: dict[str, Any] = {}
@@ -1168,7 +1202,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["surface"] = surface
         return _server_api_request("GET", "/api/v1/saved-views", **params)
 
-    @trustops_tool(title="List Risks")
+    @trustops_tool(title="List Risks", remote_only=True)
     def list_risks(limit: int = 100, status: str = "", severity: str = "", owner: str = "") -> JsonObject:
         """List tenant risk register entries (requires server API auth)."""
         params: dict[str, Any] = {"limit": limit}
@@ -1180,7 +1214,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["owner"] = owner
         return _server_api_request("GET", "/api/v1/risks", **params)
 
-    @trustops_tool(title="Create Risk")
+    @trustops_tool(title="Create Risk", remote_only=True)
     def create_risk(
         title: str,
         description: str = "",
@@ -1215,7 +1249,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["due_at"] = due_at
         return _server_api_request("POST", "/api/v1/risks", payload)
 
-    @trustops_tool(title="Update Risk")
+    @trustops_tool(title="Update Risk", remote_only=True)
     def update_risk(
         risk_id: str,
         title: str = "",
@@ -1254,13 +1288,13 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         path = f"/api/v1/risks/{urllib.parse.quote(risk_id, safe='')}"
         return _server_api_request("PATCH", path, payload)
 
-    @trustops_tool(title="Delete Risk")
+    @trustops_tool(title="Delete Risk", remote_only=True)
     def delete_risk(risk_id: str) -> JsonObject:
         """Remove a risk register row from the tenant catalog."""
         path = f"/api/v1/risks/{urllib.parse.quote(risk_id, safe='')}"
         return _server_api_request("DELETE", path, {})
 
-    @trustops_tool(title="List Remediation Exceptions")
+    @trustops_tool(title="List Remediation Exceptions", remote_only=True)
     def list_remediation_exceptions(limit: int = 100, active_only: bool = False) -> JsonObject:
         """List control exceptions (compensating controls) with optional active-only filter."""
         params: dict[str, Any] = {"limit": limit}
@@ -1268,7 +1302,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["active"] = "true"
         return _server_api_request("GET", "/api/v1/remediation/exceptions", **params)
 
-    @trustops_tool(title="Create Remediation Exception")
+    @trustops_tool(title="Create Remediation Exception", remote_only=True)
     def create_remediation_exception(control_id: str, reason: str, expires_at: str) -> JsonObject:
         """Request a time-bounded control exception, pending independent human SSO approval.
 
@@ -1285,18 +1319,18 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             },
         )
 
-    @trustops_tool(title="Revoke Remediation Exception")
+    @trustops_tool(title="Revoke Remediation Exception", remote_only=True)
     def revoke_remediation_exception(exception_id: str) -> JsonObject:
         """Revoke an active compensating control exception."""
         path = f"/api/v1/remediation/exceptions/{urllib.parse.quote(exception_id, safe='')}"
         return _server_api_request("DELETE", path, {})
 
-    @trustops_tool(title="Policy Coverage")
+    @trustops_tool(title="Policy Coverage", remote_only=True)
     def get_policies_coverage() -> JsonObject:
         """Return control coverage rows for adopted policy documents."""
         return _server_api_request("GET", "/api/v1/policies/coverage")
 
-    @trustops_tool(title="List Remediation Tasks")
+    @trustops_tool(title="List Remediation Tasks", remote_only=True)
     def list_remediation_tasks(
         limit: int = 100, status: str = "", owner: str = "", overdue: bool = False
     ) -> JsonObject:
@@ -1310,13 +1344,13 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["overdue"] = "true"
         return _server_api_request("GET", "/api/v1/remediation/tasks", **params)
 
-    @trustops_tool(title="Get Remediation Task")
+    @trustops_tool(title="Get Remediation Task", remote_only=True)
     def get_remediation_task(task_id: str) -> JsonObject:
         """Return one remediation task by id."""
         path = f"/api/v1/remediation/tasks/{urllib.parse.quote(task_id, safe='')}"
         return _server_api_request("GET", path)
 
-    @trustops_tool(title="Create Remediation Task")
+    @trustops_tool(title="Create Remediation Task", remote_only=True)
     def create_remediation_task(
         title: str,
         description: str = "",
@@ -1341,7 +1375,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["due_at"] = due_at
         return _server_api_request("POST", "/api/v1/remediation/tasks", payload)
 
-    @trustops_tool(title="Update Remediation Task")
+    @trustops_tool(title="Update Remediation Task", remote_only=True)
     def update_remediation_task(
         task_id: str,
         title: str = "",
@@ -1368,7 +1402,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         path = f"/api/v1/remediation/tasks/{urllib.parse.quote(task_id, safe='')}"
         return _server_api_request("PATCH", path, payload)
 
-    @trustops_tool(title="Create Evidence Request")
+    @trustops_tool(title="Create Evidence Request", remote_only=True)
     def create_evidence_request(
         control_id: str,
         requested_from: str = "",
@@ -1385,18 +1419,18 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["due_at"] = due_at
         return _server_api_request("POST", "/api/v1/remediation/evidence-requests", payload)
 
-    @trustops_tool(title="Update Evidence Request")
+    @trustops_tool(title="Update Evidence Request", remote_only=True)
     def update_evidence_request(request_id: str, status: str) -> JsonObject:
         """Update evidence request workflow status (for example fulfilled or waived)."""
         path = f"/api/v1/remediation/evidence-requests/{urllib.parse.quote(request_id, safe='')}"
         return _server_api_request("PATCH", path, {"status": status})
 
-    @trustops_tool(title="SPRS Score")
+    @trustops_tool(title="SPRS Score", remote_only=True)
     def get_sprs_score() -> JsonObject:
         """Return CMMC Level 2 SPRS score from failing NIST SP 800-171 Rev 2 practices."""
         return _server_api_request("GET", "/api/v1/gov-compliance/sprs")
 
-    @trustops_tool(title="List POA&M Items")
+    @trustops_tool(title="List POA&M Items", remote_only=True)
     def list_poam_items(framework_id: str = "cmmc-2-level2", status: str = "", limit: int = 100) -> JsonObject:
         """List Plan of Action & Milestones rows for gov/defense programs."""
         params: dict[str, Any] = {"limit": limit, "framework_id": framework_id}
@@ -1404,12 +1438,12 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             params["status"] = status
         return _server_api_request("GET", "/api/v1/gov-compliance/poam", **params)
 
-    @trustops_tool(title="Sync POA&M From Posture")
+    @trustops_tool(title="Sync POA&M From Posture", remote_only=True)
     def sync_poam_from_posture() -> JsonObject:
         """Auto-create POA&M rows from failing CMMC control tests and refresh SPRS."""
         return _server_api_request("POST", "/api/v1/gov-compliance/poam/sync", {})
 
-    @trustops_tool(title="Create POA&M Item")
+    @trustops_tool(title="Create POA&M Item", remote_only=True)
     def create_poam_item(
         requirement_id: str,
         control_id: str,
@@ -1441,7 +1475,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             payload["remediation_task_id"] = remediation_task_id
         return _server_api_request("POST", "/api/v1/gov-compliance/poam", payload)
 
-    @trustops_tool(title="Update POA&M Item")
+    @trustops_tool(title="Update POA&M Item", remote_only=True)
     def update_poam_item(
         item_id: str,
         status: str = "",
@@ -1468,7 +1502,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         path = f"/api/v1/gov-compliance/poam/{urllib.parse.quote(item_id, safe='')}"
         return _server_api_request("PATCH", path, payload)
 
-    @trustops_tool(title="Collection Page")
+    @trustops_tool(title="Collection Page", remote_only=True)
     def get_collection_page(path: str, limit: int = 25, offset: int = 0) -> JsonObject:
         """Read a core collection with count, next_cursor, and completeness metadata.
 
@@ -1604,27 +1638,27 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             return _post(f"/api/v1/workflows/{urllib.parse.quote(workflow_id, safe='')}/run", lake, {})
         return workflows.run_workflow(lake, workflow_id=workflow_id, actor="api")
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def list_audit_workpapers(limit: int = 50, offset: int = 0) -> JsonObject:
         """List immutable workpaper records and their review status through the authenticated server."""
         return _server_api_request("GET", "/api/v1/audit-workpapers", limit=limit, offset=offset)
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def get_audit_workpaper(workpaper_id: str) -> JsonObject:
         """Read one tenant-owned workpaper with its retained evidence and review."""
         return _server_api_request("GET", f"/api/v1/audit-workpapers/{urllib.parse.quote(workpaper_id, safe='')}")
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def get_workpaper_test_plan(workpaper_id: str) -> JsonObject:
         """Read the exact test plan retained in an immutable workpaper."""
         return get_audit_workpaper(workpaper_id)["data"]["content"]["plan"]
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def get_workpaper_population(workpaper_id: str) -> JsonObject:
         """Read declared inventory reconciliation and gaps from a retained workpaper."""
         return get_audit_workpaper(workpaper_id)["data"]["content"]["population"]
 
-    @trustops_tool()
+    @trustops_tool(remote_only=True)
     def create_audit_workpaper(plan_json: str, baseline_json: str) -> JsonObject:
         """Create an unreviewed immutable workpaper from a test plan and inventory baseline.
 
@@ -1664,7 +1698,12 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
 
 def main() -> None:
     """Run the MCP server over stdio (FastMCP default transport)."""
-    build_server().run()
+    try:
+        build_server().run()
+    except ModuleNotFoundError as exc:
+        if exc.name != "mcp" and not str(exc.name).startswith("mcp."):
+            raise
+        raise SystemExit("MCP support requires: pip install 'trustops-security-data-lake[mcp]'") from None
 
 
 if __name__ == "__main__":  # pragma: no cover

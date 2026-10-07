@@ -26,6 +26,7 @@ from typing import Any
 from security_lakehouse import strict_json, tenancy
 from security_lakehouse.data_policy import SENSITIVITY_LEVELS, normalize_sensitivity
 from security_lakehouse.io import append_jsonl
+from security_lakehouse.models import instant_sort_key
 
 ALLOWED_ROLES = {"auditor"}
 ALLOWED_SCOPES = {"posture_full", "posture_framework"}
@@ -171,7 +172,7 @@ def _latest_shares(lake_dir: str | Path) -> tuple[list[dict[str, Any]], dict[str
         if not sid:
             continue
         prev = latest.get(sid)
-        if prev is None or str(row.get("created_at") or "") >= str(prev.get("created_at") or ""):
+        if prev is None or instant_sort_key(row.get("created_at")) >= instant_sort_key(prev.get("created_at")):
             latest[sid] = row
     records = list(latest.values())
     by_token = {str(r["token_sha256"]): r for r in records if r.get("token_sha256")}
@@ -189,7 +190,7 @@ def list_shares(lake_dir: str | Path, *, include_revoked: bool = False) -> list[
     now = _utc_now()
     for row in rows:
         row["expired"] = _is_expired(row.get("expires_at"), now)
-    rows.sort(key=lambda r: str(r.get("created_at") or ""), reverse=True)
+    rows.sort(key=lambda r: instant_sort_key(r.get("created_at")), reverse=True)
     return rows
 
 

@@ -6,6 +6,40 @@ from security_lakehouse import api_v1
 from security_lakehouse.server_app import create_app
 
 
+def test_revoked_browser_session_cannot_execute_queued_work(tmp_path, monkeypatch):
+    from datetime import UTC, datetime
+
+    from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie
+    from security_lakehouse.db.models import ApiKey, OperationJob
+    from security_lakehouse.db.repository import create_user_session
+
+    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "local-test-operation-signing")
+    app, key_id, _, _ = _authenticated(tmp_path)
+    with app.state.sessionmaker.begin() as session:
+        key = session.get(ApiKey, key_id)
+        login, token = create_user_session(session, tenant_id=key.tenant_id, user_id=key.user_id, idp="oidc")
+        login_id = login.id
+    client = TestClient(app)
+    headers = {"Cookie": f"{SESSION_COOKIE}={encode_session_cookie(token)}", "Prefer": "respond-async"}
+    response = client.post("/api/v1/ingestion/eval", json={}, headers=headers)
+    assert response.status_code == 202
+    job = response.json()["data"]
+    with app.state.sessionmaker.begin() as session:
+        from security_lakehouse.db.models import UserSession
+
+        session.get(UserSession, login_id).revoked_at = datetime.now(UTC)
+    calls = []
+    monkeypatch.setattr(
+        api_v1, "handle_post", lambda *args, **kwargs: (calls.append(1), (200, api_v1.envelope("eval", {})))[1]
+    )
+    app.state.operation_worker.run_once()
+    assert calls == []
+    with app.state.sessionmaker() as session:
+        stored = session.get(OperationJob, job["id"])
+        assert stored.status == "failed"
+        assert stored.http_status == 403
+
+
 def test_async_eval_is_persisted_before_execution(tmp_path, monkeypatch):
     calls = []
     monkeypatch.setattr(

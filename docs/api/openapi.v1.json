@@ -8486,6 +8486,26 @@
         "tags": ["workflows"]
       }
     },
+    "/api/v1/workflows/runs/{run_id}/reconcile": {
+      "post": {
+        "description": "Requires scope: workflow_manage.",
+        "operationId": "post_workflows_run",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "v1 envelope"
+          }
+        },
+        "summary": "Post workflows.run",
+        "tags": ["workflows"]
+      }
+    },
     "/api/v1/workflows/runs/{run_id}/reject": {
       "post": {
         "description": "Requires scope: workflow_manage.",

@@ -40,3 +40,15 @@ def parse_event_time(value: str) -> datetime:
 
 def utc_iso(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def instant_sort_key(value: object) -> datetime:
+    """Order read projections by UTC time; absent/invalid dates sort oldest.
+
+    This is not timestamp validation or evidence of freshness. Write boundaries
+    continue to reject malformed dates; historical displays can contain blanks.
+    """
+    try:
+        return parse_event_time(str(value or ""))
+    except (ValueError, OverflowError):
+        return datetime.min.replace(tzinfo=UTC)

@@ -17,6 +17,7 @@ from security_lakehouse.agents.tools import assess_data_readiness
 from security_lakehouse.data_policy import redact_payload
 from security_lakehouse.event_status import FAIL_STATUSES
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.models import instant_sort_key
 
 SOC_EVENT_PREFIXES = (
     "detection.",
@@ -65,7 +66,7 @@ def load_soc_alerts(lake_dir: str | Path, *, role: str, limit: int = 25) -> list
         if isinstance(redacted, dict):
             alerts.append(redacted)
     alerts.sort(
-        key=lambda item: (int(item.get("severity_score") or 0), str(item.get("event_time") or "")), reverse=True
+        key=lambda item: (int(item.get("severity_score") or 0), instant_sort_key(item.get("event_time"))), reverse=True
     )
     return alerts[:limit]
 

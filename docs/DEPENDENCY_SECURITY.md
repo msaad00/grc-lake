@@ -11,6 +11,13 @@ npm audit --omit=dev --audit-level=high
 npm audit
 ```
 
+## Patched template lookup
+
+The Python lockfile uses Mako 1.4.3, above the 1.4.2 fix for Windows drive-letter
+path traversal in `TemplateLookup`. Mako is used by Alembic migration tooling.
+The server and development extras require Mako 1.4.3 or newer so package
+upgrades also replace vulnerable versions in existing environments.
+
 ## Patched selector parser
 
 [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf)

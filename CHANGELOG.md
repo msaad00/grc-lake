@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## 0.2.22 - 2026-10-07
 
+- Update the locked Mako dependency to 1.4.3, resolving its Windows template-lookup path traversal advisory.
+
 - Align self-hosted deployment examples with runtime authentication, require cookie signing configuration in hosted Helm profiles, and launch scheduler CronJobs through the container's CLI executable. Refresh the EKS reference version, add staged infrastructure bootstrap and operator Helm values, and cover deployment plans and chart-to-server startup in CI.
 
 ## 0.2.21 - 2026-10-07

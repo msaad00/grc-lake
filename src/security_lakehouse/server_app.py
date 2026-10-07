@@ -33,7 +33,7 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.concurrency import run_in_threadpool
@@ -1255,7 +1255,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         bound = tenancy.resolve_bound_tenant(lake, require_auth=app.state.require_auth, tenant_ids=tenant_ids)
         return tenancy.tenant_lake(lake, identity.tenant_id, bound_tenant=bound)
 
-    from security_lakehouse.operation_jobs import JobConflict, JobQueue, JobWorker, execute_stored_operation
+    if TYPE_CHECKING:
+        from security_lakehouse.operation_jobs import JobConflict
+    from security_lakehouse.operation_jobs import JobQueue, JobWorker, execute_stored_operation
 
     app.state.operation_queue = JobQueue(app.state.sessionmaker, lake)
 

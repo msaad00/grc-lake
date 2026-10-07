@@ -1,7 +1,7 @@
 # TrustOps Roadmap
 
-Status as of v0.2.20. Remaining gaps come first; the shipped priority lists below are
-kept as the delivery record. Track work in GitHub issues.
+Source status for v0.2.21 release preparation. Remaining gaps come first; the
+shipped priority lists below are kept as the delivery record. Track work in GitHub issues.
 
 ## Remaining gaps
 
@@ -14,6 +14,16 @@ The linked epics are closed on GitHub; each row names what is still left.
 | [#609](https://github.com/msaad00/trustops-security-data-lake/issues/609) | Existing lakes | Databricks, Iceberg/Parquet, and BigQuery readers are preview and lake mappings are experimental; live verification pending                                           |
 | [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform       | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                                                                       |
 | —                                                                         | Mapping review | 1,348 proposed safeguard mappings (including all NIST RMF, ISO 27701, NIST 800-171 Rev 3, NIS2, and DORA mappings) await human review before they are attestable      |
+
+## Prepared for 0.2.21
+
+- Consistent control/CCF verdicts, current-evidence checks, and coverage-aware readiness displays.
+- Persistent human-review authority, tenant-scoped operations, and explicit interruption recovery.
+- Verified generation and snapshot recovery, source-bound catalogs, and frozen offline reports.
+- Bounded read projections, streaming integrity checks, and explicit operational archival.
+
+See the [changelog](CHANGELOG.md) and [release gates](docs/RELEASE_READINESS.md)
+for scope and the distinction between source qualification and publication.
 
 ## Shipped for 0.2.20
 

@@ -54,8 +54,8 @@ security-lakehouse assessment status --lake ./lake | jq '.posture'
 security-lakehouse assessment violations --lake ./lake
 ```
 
-Source checkouts after 0.2.20 also support a concise terminal summary and the
-installed package version (these flags are not in the published 0.2.20 release):
+Version 0.2.21 adds a concise terminal summary and the installed package
+version (these flags are unavailable in 0.2.20 and earlier):
 
 ```bash
 security-lakehouse --version

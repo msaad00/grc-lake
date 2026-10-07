@@ -11689,6 +11689,21 @@
       ]
     },
     {
+      "control_id": "ISO42001-A.6.1.3",
+      "framework_id": "iso-42001-2023",
+      "articles": [
+        {
+          "article_id": "A.6.1.3",
+          "title": "Processes for responsible design and development of AI systems",
+          "official_source_url": "https://www.iso.org/standard/42001",
+          "reviewed_by": "automated-source-reconciliation",
+          "review_status": "proposed",
+          "reviewed_at": "2026-10-06T00:00:00Z",
+          "rationale": "Pack mapping to ISO 42001:2023 A.6.1.3."
+        }
+      ]
+    },
+    {
       "control_id": "NIS2-Art21.2(a)",
       "framework_id": "nis2-2022-2555",
       "articles": [
@@ -32435,7 +32450,7 @@
       "articles": [
         {
           "article_id": "CC6.4",
-          "title": "Access is removed or adjusted on role change",
+          "title": "Physical access is limited to authorized personnel",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32449,7 +32464,7 @@
       "articles": [
         {
           "article_id": "CC6.5",
-          "title": "Physical access to facilities and assets is restricted",
+          "title": "Asset retirement prevents recovery of residual data and software",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32463,7 +32478,7 @@
       "articles": [
         {
           "article_id": "CC6.6",
-          "title": "External party access is authorized and monitored",
+          "title": "Logical access protections address threats from outside the system",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32561,7 +32576,7 @@
       "articles": [
         {
           "article_id": "CC7.5",
-          "title": "Recovery and continuity activities are defined and tested",
+          "title": "Recovery activities address identified security incidents",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32589,7 +32604,7 @@
       "articles": [
         {
           "article_id": "CC9.1",
-          "title": "Vendor and partner risks are assessed before engagement",
+          "title": "Business disruption risks have mitigation measures",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32729,7 +32744,7 @@
       "articles": [
         {
           "article_id": "P5.2",
-          "title": "Data subject access requests are fulfilled in a timely manner",
+          "title": "Personal data correction requests and denials are communicated",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32757,7 +32772,7 @@
       "articles": [
         {
           "article_id": "P6.2",
-          "title": "Third-party disclosures comply with privacy commitments",
+          "title": "Authorized disclosure records are complete and current",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32771,7 +32786,7 @@
       "articles": [
         {
           "article_id": "P6.3",
-          "title": "Data subjects are notified of privacy practices and changes",
+          "title": "Unauthorized disclosure records include reported breaches",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32785,7 +32800,7 @@
       "articles": [
         {
           "article_id": "P6.4",
-          "title": "Breach and incident notification procedures exist and are tested",
+          "title": "Third-party privacy compliance is assessed and corrected",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32799,7 +32814,7 @@
       "articles": [
         {
           "article_id": "P6.5",
-          "title": "Cross-border disclosure requirements are met",
+          "title": "Third-party breach reporting commitments support incident response",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32813,7 +32828,7 @@
       "articles": [
         {
           "article_id": "P6.6",
-          "title": "Government and legal disclosure requests are controlled",
+          "title": "Breach notification reaches affected people and authorities",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",
@@ -32827,7 +32842,7 @@
       "articles": [
         {
           "article_id": "P6.7",
-          "title": "Disclosure to third parties is monitored over time",
+          "title": "Disclosure accounting is available to data subjects on request",
           "official_source_url": "https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022",
           "reviewed_by": "internal-trust-team",
           "reviewed_at": "2026-06-30T00:00:00Z",

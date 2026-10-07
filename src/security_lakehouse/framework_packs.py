@@ -478,7 +478,9 @@ def iso_27017_2015_specs() -> list[PackControlSpec]:
 
 def _iso_42001_row_transform(row: PackManifestRow) -> PackControlSpec:
     ref, short_title = row.id, row.title
-    article_id = ref.removeprefix("A.")
+    # Keep existing noncolliding IDs stable. The management clause 6.1.3
+    # already owns the short ID; Annex A.6.1.3 is a separate obligation.
+    article_id = ref if ref == "A.6.1.3" else ref.removeprefix("A.")
     return PackControlSpec(
         control_id=f"ISO42001-{article_id}",
         framework_id="iso-42001-2023",
@@ -493,6 +495,7 @@ def _iso_42001_row_transform(row: PackManifestRow) -> PackControlSpec:
         asset_types=("ai_model", "ai_agent", "service", "data_store", "audit_log"),
         source_url=ISO_42001_SOURCE,
         official_source_ref="iso-42001-2023",
+        reconciled_at="2026-10-06" if ref == "A.6.1.3" else None,
     )
 
 

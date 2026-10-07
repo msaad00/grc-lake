@@ -154,9 +154,9 @@ NIST 800-53B Moderate foundation, not a complete FedRAMP authorization package.
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**20 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,251 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
+**20 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,252 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
 
-1,415 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
+1,415 requirements have safeguard mappings; **340 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 
 Control families by category:
 

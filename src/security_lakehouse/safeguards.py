@@ -439,10 +439,10 @@ def _add_safeguard(ledger: dict[str, Any], entry: JsonObject) -> None:
     for member in entry.get("satisfies", []):
         state = effective_review_state(member)
         ledger["mapping_count"] += 1
-        ledger["states"][state] += 1
         if not contributes_to_coverage(member):
             ledger["contextual_mapping_count"] += 1
             continue
+        ledger["states"][state] += 1
         if state == "rejected":
             continue
         ledger["control_ids"].add(str(member.get("control_id")))

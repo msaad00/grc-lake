@@ -65,7 +65,7 @@ Each catalog entry also carries **UX metadata** consumed by the console and demo
 
 `release_stage` is optional: `"preview"` marks an implemented connector that has not
 been verified against a live tenant (the console shows a Preview badge); absent or
-`"ga"` means generally available. `security-lakehouse connectors validate` rejects any
+`"ga"` is the legacy standard release-stage label. It does not prove a successful live run against your provider, permission set, or data shape. Committed fixtures and local tests establish bounded adapter behavior; validate a read-only live collection before relying on its results. `security-lakehouse connectors validate` rejects any
 other value.
 
 Connection field definitions live in `app/web/src/lib/connector-forms.ts`; vendor

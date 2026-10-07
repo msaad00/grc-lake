@@ -36,7 +36,7 @@ _FORMAT_PATTERNS: dict[str, str] = {
     "hipaa-security-rule": r"^164\.",
     "pci-dss-v4": r"^Req-\d",
     "eu-ai-act-2024-1689": r"^Art\.\d+$",
-    "iso-42001-2023": r"^\d+(\.\d+)*$",
+    "iso-42001-2023": r"^(A\.)?\d+(\.\d+)*$",
     "cis_aws": r"^\d+(\.\d+)*$",
     "cmmc-2-level2": r"^3\.\d+\.\d+$",
     "fedramp-moderate": r"^[A-Z]{2}-\d",

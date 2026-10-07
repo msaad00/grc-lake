@@ -35,7 +35,7 @@ export function SnapshotModal({ open, onClose, onToast }: Props) {
   const submit = async () => {
     try {
       const r = await create.mutateAsync(reason);
-      onToast(`Snapshot frozen: ${r.snapshot_path}`);
+      onToast(`Snapshot frozen: ${r.snapshot_path.split(/[\\/]/).pop()}`);
       onClose();
     } catch (err) {
       onToast(`Snapshot failed: ${(err as Error).message}`);
@@ -60,7 +60,7 @@ export function SnapshotModal({ open, onClose, onToast }: Props) {
       open={open}
       onOpenChange={(o) => !o && onClose()}
       title="Freeze assessment snapshot"
-      description="A signed point-in-time snapshot is written to gold/snapshots/ and added to the auditor trail."
+      description="A hash-chained point-in-time snapshot is written to gold/snapshots/ and added to the auditor trail."
       footer={
         <div className="flex items-center justify-end gap-2">
           <Button variant="default" onClick={onClose}>
@@ -118,7 +118,7 @@ export function SnapshotModal({ open, onClose, onToast }: Props) {
                 </Badge>
               </div>
               <code className="break-all text-xs text-ink">
-                {last.snapshot_path}
+                {last.snapshot_id}
               </code>
               <div className="text-xs text-muted">
                 open {last.open_violation_count ?? 0} · critical{" "}

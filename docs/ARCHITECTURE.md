@@ -95,3 +95,32 @@ and lake evaluation do not inherit those destinations or credentials. Hosted run
 at the warehouse threshold stop with the existing scale-policy error until a
 tenant-scoped export destination contract is implemented. This boundary does not
 qualify shared Snowflake or ClickHouse schemas for multi-tenant writes.
+
+## Durable operations and live reads
+
+The API accepts bounded snapshot, evaluation, scheduler, and connector requests
+into tenant-scoped durable operation rows. Acceptance supports an Idempotency-Key;
+a conflicting request with the same key is rejected. The single writable deployment
+rotates claims between tenants instead of draining one tenant's backlog. Admission
+serializes each tenant's count-and-insert and caps pending work at 100 operations.
+
+Background execution uses a spawned process with an independent hard deadline
+(default 900 seconds; TRUSTOPS_OPERATION_TIMEOUT_SECONDS must be positive and at
+most 3600). The parent renews the claim and stops the child on shutdown, cancellation
+or claim loss. A filesystem execution lock prevents stale-claim recovery while a
+writer is still active. Interrupted work is not replayed: external or committed
+side effects may already exist. Inspect domain history before submitting new work.
+Queued cancellation guarantees the job was not claimed; cancellation overlapping
+execution reports an interrupted outcome. Results and cancellation require the
+owner or an administrator with the operation's current write scope.
+
+SSE coalesces reads by tenant, database factory, and generation. Expensive work
+holds only a per-key lock, allowing other tenants to build independently. A new
+generation invalidates the key; same-generation freshness and database changes
+may take up to 60 seconds to appear. The cache retains at most 32 entries, and
+unused per-key locks are released. This reduces repeated computation without
+claiming that a synthetic benchmark establishes production capacity.
+
+Anonymous request audit belongs to the operator's server/security_audit directory;
+authenticated records remain tenant-scoped. Recorded route templates omit path
+parameters, including share tokens.

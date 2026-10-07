@@ -828,6 +828,7 @@ export interface IngestionScale {
 }
 
 export interface PlatformJob {
+  can_cancel?: boolean;
   id: string;
   kind: "connector_sync" | "lake_eval" | "workflow" | "agent_run" | string;
   status: string;

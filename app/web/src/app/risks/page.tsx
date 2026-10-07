@@ -12,6 +12,7 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { QueryState } from "@/components/QueryState";
 import {
+  useAuthWhoami,
   useCreateRiskMutation,
   useDeleteRiskMutation,
   useRisks,
@@ -19,6 +20,7 @@ import {
 } from "@/lib/api/hooks";
 import type { Risk, RiskLevel, RiskStatus } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { formatDate as fmtDate } from "@/lib/format";
 import { displayLabel } from "@/lib/display";
 
 const inputClass =
@@ -54,13 +56,8 @@ const NEXT_STATUS: Record<RiskStatus, RiskStatus | null> = {
   closed: null,
 };
 
-function fmtDate(value: string | null): string {
-  if (!value) return "—";
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString();
-}
-
 function CreateRiskForm() {
+  const canWrite = useAuthWhoami().data?.scopes.includes("write") === true;
   const create = useCreateRiskMutation();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -151,11 +148,22 @@ function CreateRiskForm() {
           ))}
         </select>
       </label>
+      {!canWrite && (
+        <p className="w-full text-sm text-muted">
+          Your role can view risks. A contributor or administrator can change
+          them.
+        </p>
+      )}
+      {create.isError && (
+        <p role="alert" className="w-full text-sm text-danger-fg">
+          Risk could not be saved. Check your permission and try again.
+        </p>
+      )}
       <Button
         variant="primary"
         size="sm"
         onClick={submit}
-        disabled={create.isPending || !title.trim()}
+        disabled={!canWrite || create.isPending || !title.trim()}
       >
         Add risk
       </Button>
@@ -164,6 +172,7 @@ function CreateRiskForm() {
 }
 
 function RiskRow({ risk }: { risk: Risk }) {
+  const canWrite = useAuthWhoami().data?.scopes.includes("write") === true;
   const update = useUpdateRiskMutation();
   const del = useDeleteRiskMutation();
   const next = NEXT_STATUS[risk.status];
@@ -185,12 +194,17 @@ function RiskRow({ risk }: { risk: Risk }) {
       <Badge tone={LEVEL_TONE[risk.likelihood]}>likely {risk.likelihood}</Badge>
       <Badge tone={LEVEL_TONE[risk.impact]}>impact {risk.impact}</Badge>
       <Badge tone={STATUS_TONE[risk.status]}>{displayLabel(risk.status)}</Badge>
+      {(update.isError || del.isError) && (
+        <p role="alert" className="text-sm text-danger-fg">
+          Risk change failed. Refresh the record and check your permission.
+        </p>
+      )}
       <div className="flex gap-1.5">
         {next && (
           <Button
             size="sm"
             variant="ghost"
-            disabled={update.isPending}
+            disabled={!canWrite || update.isPending}
             onClick={() =>
               update.mutate({ id: risk.id, payload: { status: next } })
             }
@@ -202,7 +216,7 @@ function RiskRow({ risk }: { risk: Risk }) {
           <Button
             size="sm"
             variant="ghost"
-            disabled={update.isPending}
+            disabled={!canWrite || update.isPending}
             onClick={() =>
               update.mutate({ id: risk.id, payload: { status: "closed" } })
             }
@@ -213,8 +227,11 @@ function RiskRow({ risk }: { risk: Risk }) {
         <Button
           size="sm"
           variant="ghost"
-          disabled={del.isPending}
-          onClick={() => del.mutate(risk.id)}
+          disabled={!canWrite || del.isPending}
+          onClick={() => {
+            if (window.confirm(`Delete risk “${risk.title}”?`))
+              del.mutate(risk.id);
+          }}
         >
           Delete
         </Button>

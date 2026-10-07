@@ -184,10 +184,13 @@ async function post<T>(path: string, body: unknown): Promise<T> {
         };
       }>(`/v1/operations/${encodeURIComponent(id)}`);
       if (job.status === "succeeded" && job.response) return job.response;
-      if (job.status === "failed" || job.status === "interrupted") {
+      if (["failed", "interrupted", "cancelled"].includes(job.status)) {
+        const reason = (
+          job.response as { errors?: Array<{ detail?: string }> } | null
+        )?.errors?.[0]?.detail;
         throw new ApiError(
           job.http_status && job.http_status >= 400 ? job.http_status : 409,
-          `Operation ${id} ${job.status}. Check recent jobs before trying again.`,
+          `Operation ${id} ${job.status}. ${reason ? `${reason} ` : ""}Check recent jobs before trying again.`,
         );
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -456,6 +459,8 @@ export const api = {
     get<{ data: IngestionStatus }>("/v1/ingestion/status").then(
       (body) => body.data,
     ),
+  cancelOperation: (id: string) =>
+    post(`/v1/operations/${encodeURIComponent(id)}/cancel`, {}),
   platformJobs: (query = "") =>
     get<{ data: PlatformJobsFeed }>(`/v1/platform/jobs${query}`).then(
       (body) => body.data,

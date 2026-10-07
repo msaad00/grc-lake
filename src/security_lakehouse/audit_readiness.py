@@ -119,7 +119,7 @@ def _workflow_checklist(*, posture_score: int, framework_total: int) -> list[dic
 
 IDENTITY_CONNECTOR_IDS = frozenset({"okta-identity", "okta-system-log"})
 
-FRAMEWORK_READY_SCORE = 85
+FRAMEWORK_READY_SCORE = 100
 FRAMEWORK_READY_MIN_COVERAGE_PCT = 50.0
 
 
@@ -148,6 +148,7 @@ def _framework_readiness(frameworks: list[dict[str, Any]]) -> list[dict[str, Any
                 "coverage_pct": coverage_pct,
                 "ready": coverage_pct is not None
                 and score >= FRAMEWORK_READY_SCORE
+                and row.get("state", "ready") == "ready"
                 and coverage_pct >= FRAMEWORK_READY_MIN_COVERAGE_PCT,
             }
         )

@@ -80,7 +80,7 @@ export const SCORE_COPY = {
   assessment: {
     label: "Assessment score",
     definition:
-      "Risk-weighted control results across assessed frameworks, less stale evidence.",
+      "Percentage of observed controls with fresh passing evidence. Missing, unknown, stale, and failing controls receive no credit; catalog coverage is shown separately.",
   },
   auditReadiness: {
     label: "Audit readiness",

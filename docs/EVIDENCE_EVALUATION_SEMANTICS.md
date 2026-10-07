@@ -7,7 +7,7 @@ presence/coverage predicates. Aggregate event and evidence counts still include
 observations. Observation-only controls remain unevaluated; explicit unknown
 and unevaluated outcomes still prevent a pass. An empty dataset has a zero
 control pass rate. These changes affect newly evaluated generations; historical
-evidence is retained. Manifests record `trustops.control_evaluation.v5`; the
+evidence is retained. Manifests record `trustops.control_evaluation.v6`; the
 incremental dependency fingerprint forces re-evaluation of older generations even
 when raw inputs have not changed, while retaining the earlier generation.
 
@@ -67,6 +67,21 @@ These rules are bounded signal classifications, not comprehensive provider
 security assessments or authenticated deployment qualification.
 
 ## Scores and external summaries
+
+Current framework scores are `100 × fresh passing controls / observed controls`.
+Failing, stale, unknown and observation-only controls receive no credit. The
+assessment score uses the same counts across frameworks, avoiding rounding
+artifacts from intermediate framework percentages. A Ready state requires every
+observed control to pass with current evidence. Catalog coverage is separate:
+100% within a small observed scope does not establish full framework coverage.
+
+Severity remains available in violation and control-risk metrics; passing
+observations do not increase failure risk. A newly failing control cannot improve
+the score, and refreshing a stale/unknown control into a failure grants no credit.
+New assessments and snapshots identify `trustops.assessment_scoring.v2` with
+`score_scope: observed_controls`. Historical snapshots retain their original
+scores and metadata; snapshots without a scoring version used the legacy formula
+and must not be treated as directly comparable score trends across this change.
 
 SPRS reports distinguish passing, failing, and unevaluated requirements. Missing,
 observed, stale, or conflicting evidence does not count as met. An incomplete

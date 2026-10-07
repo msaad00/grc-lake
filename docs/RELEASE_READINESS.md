@@ -69,7 +69,7 @@ comment, and the Dockerfile pins its base images by digest. Dependabot's
 
 ## What the overview means
 
-- **Assessment score** is the control-count-weighted framework score out of 100.
+- **Assessment score** is the percentage of observed controls with fresh passing evidence; catalog coverage is reported separately.
 - **Control pass rate** is passing test rows divided by total test rows. The chart
   separates pass, fail, warning, and remaining **Other** results. Unevaluated
   controls are not displayed as a zero-percent result.

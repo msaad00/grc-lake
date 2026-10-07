@@ -21,9 +21,11 @@ def _data_root() -> Path:
       1. ``TRUSTOPS_DATA_DIR`` environment variable — set by the Docker
          image and Helm chart so the wheel can find the JSON catalogs.
       2. The user-install data scheme, only when this module was installed there.
-      3. Known install/check-out roots that contain the runtime catalogs.
-         Editable installs keep them in the repository root; wheels install
-         ``data-files`` under the environment prefix.
+      3. The prefix whose Python library contains this imported module.
+      4. The source checkout root for editable installs.
+
+    Missing catalogs fail at their owning location; another installation must
+    never silently supply a different catalog version.
     """
     override = os.environ.get("TRUSTOPS_DATA_DIR")
     if override:
@@ -35,16 +37,15 @@ def _data_root() -> Path:
         # Only the active user-installed wheel may use user data. Do not borrow
         # catalogs from an unrelated system installation if these are missing.
         return Path(sysconfig.get_path("data", scheme=user_scheme))
-    candidates = (
-        module_path.parents[2],
-        Path(sys.prefix),
-        Path(sys.base_prefix),
-    )
-    for candidate in candidates:
-        if (candidate / "connectors" / "catalog.json").is_file() and (
-            candidate / "controls" / "catalog.json"
-        ).is_file():
-            return candidate
+    for prefix in dict.fromkeys((sys.prefix, sys.base_prefix)):
+        paths = sysconfig.get_paths(vars={"base": prefix, "platbase": prefix})
+        if any(module_path.is_relative_to(Path(paths[name]).resolve()) for name in ("purelib", "platlib")):
+            # Includes base-environment packages visible to a venv through
+            # --system-site-packages. Data belongs to the imported package,
+            # regardless of whether another prefix happens to contain catalogs.
+            return Path(paths["data"])
+    # Editable imports resolve to <checkout>/src/security_lakehouse/catalog.py.
+    # Keep missing checkout data visible as an error instead of borrowing it.
     return module_path.parents[2]
 
 

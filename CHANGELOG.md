@@ -14,6 +14,10 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Reject symlinked audit-source parents during retention, make cancellation atomic with claims, and enforce isolated native-code deadlines in the operating system.
+- Revalidate current CMMC source evidence before SPRS credit or POA&M closure, and bind catalog discovery to the imported installation.
+- Render portable dashboard reports directly from frozen data, with offline browser support, exact embedded JSON, safe evidence markup, and explicit coverage.
+
 - Share current credential authority across HTTP, queued work, and live streams;
   reject inconsistent tenant or source-key bindings and reconnect streams when
   persistent authority changes.

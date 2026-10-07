@@ -242,20 +242,15 @@ def test_dashboard_render_uses_gold_data(tmp_path: Path) -> None:
     output = render_dashboard(tmp_path / "lake", tmp_path / "dashboard" / "index.html")
 
     html = output.read_text(encoding="utf-8")
-    # Either the React single-file export (when web/dist/ is packaged) or the
-    # The React export or offline fallback must surface its stable heading and
-    # embed the current assessment payload for the downstream auditor.
+    # The frozen report renders its stable heading and embeds the current
+    # assessment payload for the downstream auditor.
     assert ">Overview<" in html
     assert "TrustOps" in html
     assert "SOC2-CC6.1" in html
     assert "container:rag-api@sha256:91ab" in html
-    # Data payload is injected for hydration / offline review.
+    # Data payload is retained for offline review.
     assert '<script id="app-data"' in html
-    # Output must be self-contained — no fetched <script src> or <link href>
-    # may point at /console/_next/... after inlining. (Webpack runtime still
-    # carries the chunk URLs as string literals inside the inlined JS for its
-    # internal lookup table; that's expected and never triggers a network
-    # request because every chunk is already in the bundle.)
+    # The report requires no JavaScript, stylesheet, or API downloads.
     assert 'src="/console/_next/' not in html
     assert 'href="/console/_next/' not in html
 
@@ -312,8 +307,7 @@ def test_validation_rejects_duplicate_event_ids() -> None:
 
 
 def test_offline_fallback_uses_the_console_page_name() -> None:
-    # Rendered when the React bundle is not packaged (a fresh checkout); it
-    # must name the page the way the console does.
+    # The static report uses the same page name as the online console.
     from security_lakehouse.dashboard import _fallback_html
 
     html = _fallback_html({})

@@ -45,3 +45,63 @@ def test_cancellation_racing_completion_cannot_strand_running_state(tmp_path):
     assert client.post(job["status_url"] + "/cancel", headers=headers).json()["data"]["status"] == "cancelling"
     app.state.operation_queue.finish(row, 200, api_v1.envelope("fixture", {"done": True}))
     assert client.get(job["status_url"], headers=headers).json()["data"]["status"] == "interrupted"
+
+
+def test_cancel_follows_a_claim_that_wins_before_its_update(tmp_path):
+    from sqlalchemy import event
+
+    app, _, headers, _ = _authenticated(tmp_path)
+    queue = app.state.operation_queue
+    client = TestClient(app)
+    job = client.post("/api/v1/ingestion/eval", json={}, headers=headers).json()["data"]
+    engine = queue.factory.kw["bind"]
+    claimed = []
+
+    def claim_before_update(conn, cursor, statement, parameters, context, executemany):
+        if not claimed and statement.startswith("UPDATE operation_jobs"):
+            claimed.append(None)
+            claimed[0] = queue.claim()
+            assert claimed[0].id == job["id"]
+
+    event.listen(engine, "before_cursor_execute", claim_before_update)
+    try:
+        response = client.post(job["status_url"] + "/cancel", headers=headers)
+    finally:
+        event.remove(engine, "before_cursor_execute", claim_before_update)
+
+    assert response.status_code == 200
+    assert response.json()["data"]["status"] == "cancelling"
+    assert response.json()["data"]["finished_at"] is None
+    queue.finish(claimed[0], 200, api_v1.envelope("fixture", {"done": True}))
+    assert client.get(job["status_url"], headers=headers).json()["data"]["status"] == "interrupted"
+
+
+def test_cancel_does_not_acknowledge_when_completion_wins_before_its_update(tmp_path):
+    from sqlalchemy import event
+
+    app, _, headers, _ = _authenticated(tmp_path)
+    queue = app.state.operation_queue
+    client = TestClient(app)
+    job = client.post("/api/v1/ingestion/eval", json={}, headers=headers).json()["data"]
+    engine = queue.factory.kw["bind"]
+    raced = False
+
+    def complete_before_update(conn, cursor, statement, parameters, context, executemany):
+        nonlocal raced
+        if not raced and statement.startswith("UPDATE operation_jobs"):
+            raced = True
+            row = queue.claim()
+            assert row.id == job["id"]
+            queue.finish(row, 200, api_v1.envelope("fixture", {"done": True}))
+
+    event.listen(engine, "before_cursor_execute", complete_before_update)
+    try:
+        response = client.post(job["status_url"] + "/cancel", headers=headers)
+    finally:
+        event.remove(engine, "before_cursor_execute", complete_before_update)
+
+    assert raced
+    assert response.status_code == 409
+    result = client.get(job["status_url"], headers=headers).json()["data"]
+    assert result["status"] == "succeeded"
+    assert result["response"]["data"] == {"done": True}

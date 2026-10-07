@@ -11,7 +11,6 @@ import json
 import logging
 import math
 import multiprocessing
-import os
 import re
 import signal
 import threading
@@ -23,7 +22,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -196,16 +195,17 @@ class JobQueue:
                     "requires operation ownership or administrator authority and its current write scope"
                 )
             if row.status in {"queued", "running"}:
-                previous = row.status
+                # Choose from the current database state: a claim may have won
+                # since the authorization read. Completed outcomes are excluded.
                 session.execute(
                     update(OperationJob)
                     .where(
                         OperationJob.id == row.id,
-                        OperationJob.status == previous,
+                        OperationJob.status.in_(["queued", "running"]),
                     )
                     .values(
-                        status="cancelled" if previous == "queued" else "cancelling",
-                        finished_at=time.time() if previous == "queued" else None,
+                        status=case((OperationJob.status == "queued", "cancelled"), else_="cancelling"),
+                        finished_at=case((OperationJob.status == "queued", time.time()), else_=None),
                     )
                 )
                 session.expire(row)
@@ -379,8 +379,9 @@ class JobQueue:
 def _subprocess_entry(root: Path, row: OperationJob, execute, connection, timeout_seconds: float) -> None:
     from security_lakehouse.db.base import create_engine_for, session_factory
 
-    # The child retains its own hard deadline if the parent exits unexpectedly.
-    signal.signal(signal.SIGALRM, lambda *_: os._exit(124))
+    # The kernel enforces this even while native code prevents Python signal
+    # callbacks from running, or the parent watchdog has exited unexpectedly.
+    signal.signal(signal.SIGALRM, signal.SIG_DFL)
     signal.setitimer(signal.ITIMER_REAL, timeout_seconds)
     engine = create_engine_for(root)
     queue = JobQueue(session_factory(engine), root)
@@ -463,7 +464,7 @@ class JobWorker:
         if response is not None and self.queue.owns_claim(row):
             self.queue.finish(row, *response)
         else:
-            if process.exitcode == 124:
+            if process.exitcode == -signal.SIGALRM:
                 reason = "execution_timeout"
             with self.queue.factory.begin() as session:
                 session.execute(

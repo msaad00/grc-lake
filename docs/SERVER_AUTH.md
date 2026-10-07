@@ -56,9 +56,10 @@ security-lakehouse auth list-keys --lake build/lakehouse --tenant-slug acme
 
 The console **Access** page (`/console/auth/`) lets admins create, list, and
 revoke keys with a one-time token reveal. The CLI `auth issue-key` and
-`platform seed-dev` commands also return the new bearer token exactly once,
-after the database commit. Store that output securely; later list commands
-return metadata only. These keys authorize automation, not human attestations.
+`platform seed-dev` commands deliver each new bearer token in a new owner-only (0600) file under `LAKE/server/credentials`,
+and print only its `token_file` path after the database commit. Transfer the
+credential to your secret manager, then remove the delivery file. Standard
+output and later list commands contain metadata only. These keys authorize automation, not human attestations.
 
 ## OIDC
 

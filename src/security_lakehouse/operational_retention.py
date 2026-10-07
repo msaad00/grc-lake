@@ -16,7 +16,7 @@ from security_lakehouse.db.base import create_engine_for, session_factory
 from security_lakehouse.db.models import OperationJob
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import parse_event_time
-from security_lakehouse.operation_jobs import root_key
+from security_lakehouse.tenancy import root_key
 
 ARCHIVE_MARKER = "trustops.operation_archive.v1"
 

@@ -22,8 +22,9 @@ from typing import Any
 
 from security_lakehouse.generation_retention import archive_generations
 from security_lakehouse.io import append_jsonl
-from security_lakehouse.operation_jobs import root_key
 from security_lakehouse.operational_retention import archive_operational_history
+from security_lakehouse.schedule_expr import parse_schedule
+from security_lakehouse.tenancy import root_key
 
 SCHEDULE_ENV = "TRUSTOPS_RETENTION_SCHEDULE"
 ARCHIVE_ENV = "TRUSTOPS_RETENTION_ARCHIVE_DIR"
@@ -62,8 +63,6 @@ def _positive_int(raw: str, name: str, default: int) -> int:
 
 def retention_policy(env: Mapping[str, str] | None = None) -> RetentionPolicy | None:
     """Return the configured policy, ``None`` when disabled; raise when misconfigured."""
-    from security_lakehouse.scheduler import parse_schedule
-
     source = os.environ if env is None else env
     schedule = source.get(SCHEDULE_ENV, "").strip()
     if not schedule:

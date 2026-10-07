@@ -62,6 +62,7 @@ function UserRow({
         </p>
       </div>
       <select
+        aria-label={`Role for ${row.email}`}
         value={role}
         disabled={saving}
         onChange={(e) => setRole(e.target.value)}

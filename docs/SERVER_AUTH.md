@@ -433,9 +433,26 @@ reassignment. Migration 0026 preserves existing tasks but leaves their unknown
 historical authority unset; those tasks require a new task and independent
 retest rather than manufactured ownership history.
 
+Requests, queued operations, and live streams share one persistent authority
+resolver. It checks the active user and credential, tenant/user bindings, session
+provider, and the original API key behind a key-derived session before deriving
+current role permissions. Credential references are internal provenance, not
+credentials accepted from clients. Billing restrictions and the requested auditor
+view can only narrow the resulting permissions.
+
 Queued operations retain the authorizing session ID and revalidate that session
 at execution. Revoked or expired sessions cannot execute queued work. Jobs from
 older versions without session provenance fail closed.
+
+Live streams revalidate authority immediately before yielding each event or
+heartbeat, including events remaining in an already collected batch. Revoked, expired, disabled, or mismatched credentials
+close the stream. Changed effective roles or scopes also close it so reconnection
+authenticates against current permissions. The normal polling interval is ten
+seconds; revocation stops subsequent emissions but cannot recall data already
+emitted. Shared payload caching never caches a subscriber's
+authority. Each check uses a short-lived database session and two or three indexed
+credential/user reads per emitted frame when billing is disabled; idle streams
+perform one check per heartbeat. Checks do not update credential usage timestamps. Billing checks may add reads when enabled.
 
 An independent SSO reviewer with `workflow_manage` can close an interrupted
 workflow approval claim using `POST /api/v1/workflows/runs/{run_id}/reconcile`

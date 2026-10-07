@@ -67,9 +67,9 @@ tests, open violations, and stale/expired/missing evidence. JSON remains the
 default; `--format json` selects it explicitly. Summary counts use the same
 assessment totals as JSON, including when detailed violation lists are capped.
 
-The sample company is deliberately unhealthy: a score of about 6.6 out of 100,
-state `critical`, 19 open violations (4 critical), and 19 failing control tests.
-Every failure links to the evidence record that caused it.
+The sample company is deliberately unhealthy. Counts and scores depend on the
+evaluation policy and evidence freshness at run time; use the summary above for
+current values. Every failure links to the evidence record that caused it.
 
 With Compose, run CLI commands inside the container and use `/lake`:
 
@@ -126,7 +126,7 @@ security-lakehouse frameworks review approve --lake ./lake \
   --reviewer you@example.com
 
 security-lakehouse frameworks safeguards --lake ./lake --format table | head -3
-# ... 350 maintainer-reviewed, 1 org-reviewed ...
+# Counts reflect the current catalog and your organization review decisions.
 ```
 
 The decision is appended to a hash-chained log in the lake. In server mode

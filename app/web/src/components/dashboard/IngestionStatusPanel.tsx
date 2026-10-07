@@ -14,6 +14,7 @@ import type { IngestionStatus } from "@/lib/api/types";
 import { CONNECT_FLOW } from "@/lib/console-copy";
 import {
   usePlatformJobs,
+  useCancelOperationMutation,
   useRunLakeEvalMutation,
   useRunSchedulerTickMutation,
 } from "@/lib/api/hooks";
@@ -69,7 +70,7 @@ function Metric({
 function labelForScaleMode(mode?: string) {
   if (mode === "warehouse_required") return "Warehouse required";
   if (mode === "warehouse") return "Warehouse eval";
-  if (mode === "local_incremental") return "Changed evidence only";
+  if (mode === "local_incremental") return "Incremental evaluation";
   if (mode === "local_full") return "Full local";
   return mode?.replace(/_/g, " ") ?? "unknown";
 }
@@ -103,6 +104,7 @@ export function IngestionStatusPanel({
   const runEval = useRunLakeEvalMutation();
   const runTick = useRunSchedulerTickMutation();
   const platformJobs = usePlatformJobs(6);
+  const cancelOperation = useCancelOperationMutation();
   const summary = status?.summary;
   const scale = status?.scale;
   const health = status?.health;
@@ -511,6 +513,28 @@ export function IngestionStatusPanel({
                   >
                     {displayLabel(job.status)}
                   </Badge>
+                  {job.can_cancel && (
+                    <Button
+                      size="sm"
+                      disabled={cancelOperation.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Cancel ${job.label}? Work that has started may already have changed evidence.`,
+                          )
+                        )
+                          return;
+                        cancelOperation.mutate(job.id, {
+                          onError: () =>
+                            notify.error(
+                              "Cancellation failed. Refresh jobs and check your permission.",
+                            ),
+                        });
+                      }}
+                    >
+                      Cancel job
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

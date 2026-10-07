@@ -84,13 +84,14 @@ def test_server_mode_singletons_are_enveloped(client: TestClient) -> None:
         assert body["errors"] == []
 
 
-def test_server_mode_snapshot_post(client: TestClient) -> None:
+def test_server_mode_snapshot_post(client: TestClient, tmp_path: Path) -> None:
     resp = client.post("/api/v1/snapshots", json={"reason": "vendor_review"})
     assert resp.status_code == HTTPStatus.CREATED
     body = resp.json()
     assert body["meta"]["resource"] == "snapshots"
     assert body["data"]["reason"] == "vendor_review"
-    assert Path(body["data"]["snapshot_path"]).is_file()
+    assert not Path(body["data"]["snapshot_path"]).is_absolute()
+    assert (tmp_path / "gold/snapshots" / body["data"]["snapshot_path"]).is_file()
 
 
 def test_server_mode_error_envelopes(client: TestClient) -> None:

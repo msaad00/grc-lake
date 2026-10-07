@@ -5,7 +5,7 @@ test.describe("dashboard product polish", () => {
     await page.goto("/console/dashboard/");
 
     const commandCenter = page.getByRole("region", {
-      name: "Current assessment",
+      name: "Latest lake assessment",
     });
     await expect(commandCenter).toBeVisible({ timeout: 20_000 });
     await expect(
@@ -54,11 +54,11 @@ test.describe("dashboard product polish", () => {
 
     await expect(page.locator("html")).toHaveClass(/dark/);
     await expect(
-      page.getByRole("region", { name: "Current assessment" }),
+      page.getByRole("region", { name: "Latest lake assessment" }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(
       page
-        .getByRole("region", { name: "Current assessment" })
+        .getByRole("region", { name: "Latest lake assessment" })
         .getByText("Needs attention", { exact: true }),
     ).toBeVisible();
     expect(

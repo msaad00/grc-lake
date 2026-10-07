@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  useAuthWhoami,
   useCreateTrustShare,
   usePosture,
   useRevokeTrustShare,
@@ -107,6 +108,9 @@ function expiryLabel(hours: number): string {
 
 export default function TrustCenterPage() {
   const auditor = useAuditorMode();
+  const identity = useAuthWhoami();
+  const canShare =
+    !auditor && identity.data?.scopes.includes("snapshot") === true;
   const shares = useTrustShares();
   const createShare = useCreateTrustShare();
   const revoke = useRevokeTrustShare();
@@ -118,6 +122,7 @@ export default function TrustCenterPage() {
   const flash = (msg: string) => notify.success(msg);
 
   const issue = async () => {
+    if (!canShare) return;
     try {
       const { share } = await createShare.mutateAsync({
         role: "auditor",
@@ -147,6 +152,12 @@ export default function TrustCenterPage() {
 
   return (
     <div className="page-shell grid gap-4">
+      {!canShare && (
+        <p className="text-sm text-muted">
+          Your role can view shares. Creating or revoking a link requires
+          snapshot permission.
+        </p>
+      )}
       <PageHeader
         title={ROUTE_LABELS["/trust-center"]}
         description="Share your evaluated posture with customers and auditors without exposing private evidence. Every link is read-only, expires automatically, and can be revoked."
@@ -187,7 +198,7 @@ export default function TrustCenterPage() {
                   key={item.id}
                   type="button"
                   aria-pressed={selected}
-                  disabled={auditor}
+                  disabled={!canShare}
                   onClick={() => setAudience(item.id)}
                   className={cn(
                     "grid min-w-0 content-start gap-1 rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand",
@@ -241,7 +252,7 @@ export default function TrustCenterPage() {
                 value={expiresInHours}
                 onChange={(e) => setExpiresInHours(Number(e.target.value))}
                 className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-semibold normal-case tracking-normal text-ink focus:outline-none focus:ring-1 focus:ring-brand"
-                disabled={auditor}
+                disabled={!canShare}
               >
                 {HOURS_OPTIONS.map((h) => (
                   <option key={h} value={h}>
@@ -254,7 +265,7 @@ export default function TrustCenterPage() {
               variant="primary"
               className="h-10"
               onClick={issue}
-              disabled={createShare.isPending || auditor}
+              disabled={createShare.isPending || !canShare}
             >
               {createShare.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -379,8 +390,14 @@ export default function TrustCenterPage() {
                 <Button
                   variant="default"
                   size="sm"
-                  disabled={auditor || revoke.isPending}
+                  disabled={!canShare || revoke.isPending}
                   onClick={async () => {
+                    if (
+                      !window.confirm(
+                        "Revoke this share link? Anyone using it will lose access.",
+                      )
+                    )
+                      return;
                     try {
                       await revoke.mutateAsync(share.share_id);
                       flash("Share link revoked.");

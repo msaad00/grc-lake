@@ -35,6 +35,7 @@ import type {
 } from "@/lib/api/types";
 import { findingHref, safeHttpUrl } from "@/lib/finding-links";
 import { ROUTE_LABELS } from "@/lib/console-copy";
+import { formatDate as fmtDate } from "@/lib/format";
 import { displayLabel } from "@/lib/display";
 
 const inputClass =
@@ -66,12 +67,6 @@ const PRIORITY_TONE: Record<
   high: "attention",
   critical: "critical",
 };
-
-function fmtDate(value: string | null): string {
-  if (!value) return "—";
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString();
-}
 
 const TASK_PRIORITIES: RemediationTask["priority"][] = [
   "low",
@@ -168,6 +163,7 @@ function ResolveTaskModal({
 }
 
 function TasksSection() {
+  const canWrite = useAuthWhoami().data?.scopes.includes("write") === true;
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedOwner = searchParams.get("owner") ?? "";
@@ -264,6 +260,12 @@ function TasksSection() {
           {selectedOwner ? ` Filtered to ${selectedOwner}.` : ""}
         </CardDescription>
       </CardHeader>
+      {!canWrite && (
+        <p className="px-5 pb-3 text-sm text-muted">
+          Your role can view these records. An authorized team member can change
+          them.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2 px-5 pb-3">
         <label className="flex items-center gap-2 text-xs font-medium text-muted">
           Owner
@@ -349,7 +351,7 @@ function TasksSection() {
           ))}
         </select>
         <input
-          aria-label="Task due date"
+          aria-label="Task due date (UTC)"
           className={inputClass}
           type="date"
           value={dueAt}
@@ -359,7 +361,7 @@ function TasksSection() {
           variant="primary"
           size="sm"
           onClick={submit}
-          disabled={create.isPending || !title.trim()}
+          disabled={!canWrite || create.isPending || !title.trim()}
         >
           Add task
         </Button>
@@ -393,7 +395,8 @@ function TasksSection() {
                 </div>
                 <div className="text-xs leading-5 text-muted [overflow-wrap:anywhere]">
                   {task.control_id ?? "no control"} ·{" "}
-                  {task.owner || "unassigned"} · due {fmtDate(task.due_at)}
+                  {task.owner || "unassigned"} · due{" "}
+                  {fmtDate(task.due_at?.slice(0, 10))}
                 </div>
                 {task.violation_id && (
                   <Link
@@ -431,6 +434,7 @@ function TasksSection() {
                 <div className="flex gap-1.5">
                   <Button
                     size="sm"
+                    disabled={!canWrite}
                     onClick={() => {
                       resolveMutation.reset();
                       verifyMutation.reset();
@@ -442,6 +446,7 @@ function TasksSection() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    disabled={!canWrite}
                     className="font-medium text-muted hover:text-ink"
                     onClick={() =>
                       update.mutate({
@@ -470,6 +475,8 @@ function TasksSection() {
 }
 
 function EvidenceRequestsSection() {
+  const canWrite =
+    useAuthWhoami().data?.scopes.includes("evidence_request") === true;
   const searchParams = useSearchParams();
   const requests = useEvidenceRequests();
   const create = useCreateEvidenceRequestMutation();
@@ -497,6 +504,12 @@ function EvidenceRequestsSection() {
         <CardTitle>Evidence requests</CardTitle>
         <CardDescription>Owners and fulfillment status.</CardDescription>
       </CardHeader>
+      {!canWrite && (
+        <p className="px-5 pb-3 text-sm text-muted">
+          Your role can view these records. An authorized team member can change
+          them.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2 px-5 pb-4">
         <input
           className={`${inputClass} w-44`}
@@ -516,7 +529,7 @@ function EvidenceRequestsSection() {
           variant="primary"
           size="sm"
           onClick={submit}
-          disabled={create.isPending || !controlId.trim()}
+          disabled={!canWrite || create.isPending || !controlId.trim()}
         >
           Request evidence
         </Button>
@@ -564,6 +577,7 @@ function EvidenceRequestsSection() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    disabled={!canWrite}
                     onClick={() =>
                       setStatus.mutate({ id: req.id, status: "fulfilled" })
                     }
@@ -573,6 +587,7 @@ function EvidenceRequestsSection() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    disabled={!canWrite}
                     onClick={() =>
                       setStatus.mutate({ id: req.id, status: "cancelled" })
                     }
@@ -591,6 +606,7 @@ function EvidenceRequestsSection() {
 
 function ExceptionsSection() {
   const identity = useAuthWhoami();
+  const canWrite = identity.data?.scopes.includes("control_manage") === true;
   const humanReviewer =
     ["session:oidc", "session:saml"].includes(
       identity.data?.auth_method ?? "",
@@ -631,6 +647,12 @@ function ExceptionsSection() {
           Accepted risk does not make a control pass.
         </CardDescription>
       </CardHeader>
+      {!canWrite && (
+        <p className="px-5 pb-3 text-sm text-muted">
+          Your role can view these records. An authorized team member can change
+          them.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2 px-5 pb-4">
         <input
           className={`${inputClass} w-44`}
@@ -647,7 +669,7 @@ function ExceptionsSection() {
           onChange={(e) => setReason(e.target.value)}
         />
         <input
-          aria-label="Exception expiry date"
+          aria-label="Exception expiry date (UTC)"
           className={inputClass}
           type="date"
           value={expiresAt}
@@ -658,6 +680,7 @@ function ExceptionsSection() {
           size="sm"
           onClick={submit}
           disabled={
+            !canWrite ||
             create.isPending ||
             !controlId.trim() ||
             !reason.trim() ||
@@ -667,6 +690,12 @@ function ExceptionsSection() {
           Request exception
         </Button>
       </div>
+      <p className="px-5 pb-3 text-sm text-muted">
+        Signed in as {identity.data?.email ?? "unknown"}.{" "}
+        {humanReviewer
+          ? "A different authorized reviewer must approve requests you created."
+          : "Approval requires an independent reviewer signed in through OIDC or SAML SSO with control-management permission."}
+      </p>
       {(create.isError || revoke.isError || approve.isError) && (
         <p
           role="alert"
@@ -692,7 +721,7 @@ function ExceptionsSection() {
                 </div>
                 <div className="text-xs leading-5 text-muted">
                   {exc.reason || "no reason"} · by {exc.approved_by || "—"} ·
-                  expires {fmtDate(exc.expires_at)}
+                  expires {fmtDate(exc.expires_at?.slice(0, 10))}
                 </div>
               </div>
               <Badge tone={exc.active ? "ready" : STATUS_TONE[exc.status]}>
@@ -724,6 +753,7 @@ function ExceptionsSection() {
                 <Button
                   size="sm"
                   variant="ghost"
+                  disabled={!canWrite}
                   onClick={() => {
                     if (
                       window.confirm(

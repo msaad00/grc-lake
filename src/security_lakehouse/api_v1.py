@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import copy
 import json
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
@@ -76,6 +77,7 @@ from security_lakehouse.mappings import (
     load_control_article_mappings,
 )
 from security_lakehouse.oscal import build_assessment_results, build_component_definition
+from security_lakehouse.projected_reads import read_projection
 from security_lakehouse.readiness import build_readiness_view
 from security_lakehouse.safeguards import (
     PENDING_STATES,
@@ -251,7 +253,7 @@ COLLECTION_LOADERS: dict[str, tuple[str, Callable[[Path], list[JsonObject]]]] = 
     "/api/v1/evidence": (
         "evidence",
         lambda lake: with_asset_names(
-            read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True, base_dir=lake),
+            read_projection(lake / "silver" / "normalized_events.jsonl", None, missing_ok=True, base_dir=lake),
             load_asset_names(lake),
         ),
     ),
@@ -1305,6 +1307,7 @@ def openapi_paths() -> JsonObject:
 
 def merge_openapi(spec: JsonObject) -> JsonObject:
     """Fold the catch-all-served routes into a FastAPI-generated schema."""
+    spec = copy.deepcopy(spec)
     paths = dict(spec.get("paths") or {})
     # The catch-all itself documents nothing and implies a route that takes an
     # arbitrary path segment, which is worse than absent.
@@ -1321,27 +1324,30 @@ def merge_openapi(spec: JsonObject) -> JsonObject:
         operation = paths.get(path, {}).get("post")
         if operation is None:
             continue
-        operation.setdefault("parameters", []).extend(
-            [
-                {
-                    "name": "Prefer",
-                    "in": "header",
-                    "required": False,
-                    "schema": {"type": "string", "enum": ["respond-async"]},
-                },
-                {
-                    "name": "Idempotency-Key",
-                    "in": "header",
-                    "required": False,
-                    "schema": {"type": "string", "minLength": 1, "maxLength": 200},
-                },
-            ]
-        )
+        parameters = operation.setdefault("parameters", [])
+        for header, schema in (
+            ("Prefer", {"type": "string", "enum": ["respond-async"]}),
+            ("Idempotency-Key", {"type": "string", "minLength": 1, "maxLength": 200}),
+        ):
+            if not any(item.get("name") == header and item.get("in") == "header" for item in parameters):
+                parameters.append({"name": header, "in": "header", "required": False, "schema": schema})
         operation["responses"]["202"] = {
             "description": "Durable operation accepted. Poll Location; acceptance does not establish completion.",
             "headers": {"Location": {"schema": {"type": "string"}}, "Retry-After": {"schema": {"type": "integer"}}},
             "content": {"application/json": {"schema": {"$ref": "#/components/schemas/V1Envelope"}}},
         }
+    # JSONResponse endpoints bypass FastAPI's response inference. Their common
+    # wire envelope is still a real contract; domain data may remain generic.
+    for path, item in paths.items():
+        if not path.startswith("/api/v1/"):
+            continue
+        for operation in item.values():
+            if not isinstance(operation, dict):
+                continue
+            for code, response in operation.get("responses", {}).items():
+                content = response.get("content", {}).get("application/json")
+                if str(code).startswith("2") and content is not None and not content.get("schema"):
+                    content["schema"] = {"$ref": "#/components/schemas/V1Envelope"}
     spec["paths"] = paths
 
     components = dict(spec.get("components") or {})

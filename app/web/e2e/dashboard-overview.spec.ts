@@ -26,7 +26,7 @@ test("assessment overview links to workspaces and discloses provenance", async (
 }) => {
   await page.goto("/console/dashboard/");
   const overview = page.getByRole("region", {
-    name: "Current assessment",
+    name: "Latest lake assessment",
     exact: true,
   });
   await expect(
@@ -70,7 +70,7 @@ test("every overview KPI is a label, one number, one line, no icon", async ({
 }) => {
   await page.goto("/console/dashboard/");
   const overview = page.getByRole("region", {
-    name: "Current assessment",
+    name: "Latest lake assessment",
     exact: true,
   });
   const tiles = overview.getByRole("link").filter({
@@ -132,7 +132,7 @@ test("overview leads with overall posture and distinguishes score from test pass
   const { data: ingestion } = await ingestionResponse.json();
   await page.goto("/console/dashboard/");
   const overview = page.getByRole("region", {
-    name: "Current assessment",
+    name: "Latest lake assessment",
     exact: true,
   });
   await expect(
@@ -184,7 +184,7 @@ test("unevaluated controls do not appear as a zero-percent result", async ({
   });
   await page.goto("/console/dashboard/");
   const passRate = page
-    .getByRole("region", { name: "Current assessment", exact: true })
+    .getByRole("region", { name: "Latest lake assessment", exact: true })
     .getByRole("link", { name: /Control pass rate/ });
   await expect(
     passRate.getByText("Not evaluated", { exact: true }),
@@ -206,7 +206,7 @@ test("overview shows actual finding severity and stays compact at tablet width",
   await page.setViewportSize({ width: 720, height: 900 });
   await page.goto("/console/dashboard/");
   const overview = page.getByRole("region", {
-    name: "Current assessment",
+    name: "Latest lake assessment",
     exact: true,
   });
   await expect(

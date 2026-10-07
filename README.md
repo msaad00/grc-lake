@@ -154,9 +154,9 @@ NIST 800-53B Moderate foundation, not a complete FedRAMP authorization package.
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**20 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,251 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
+**20 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,252 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
 
-1,415 requirements have safeguard mappings; **350 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
+1,415 requirements have safeguard mappings; **340 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 
 Control families by category:
 
@@ -194,14 +194,14 @@ local history replacement. See [evidence recovery](docs/EVIDENCE_RECOVERY.md) an
 
 ## Documentation
 
-| Need                             | Start here                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------- |
-| Try a complete workflow          | [5-minute tutorial](docs/TUTORIAL_5_MIN.md)                                                 |
-| Deploy and authenticate          | [Deployment](deploy/README.md) · [Server auth](docs/SERVER_AUTH.md)                         |
-| Understand storage and retention | [Data flow](docs/DATA_FLOW.md) · [Operations](docs/OPERATIONS_CONTRACTS.md)                 |
-| Integrate an agent               | [Headless GRC](docs/HEADLESS_GRC.md) · [Agent skills](docs/api/AGENT_SKILLS.md)             |
-| Evaluate audit evidence          | [Audit readiness](docs/AUDIT_READINESS.md) · [Evidence recovery](docs/EVIDENCE_RECOVERY.md) |
-| Contribute                       | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)                                   |
+| Need                             | Start here                                                                                           |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Try a complete workflow          | [5-minute tutorial](docs/TUTORIAL_5_MIN.md)                                                          |
+| Deploy and authenticate          | [Deployment](deploy/README.md) · [Server auth](docs/SERVER_AUTH.md)                                  |
+| Understand storage and retention | [Data flow](docs/DATA_FLOW.md) · [Operations](docs/OPERATIONS_CONTRACTS.md)                          |
+| Integrate an agent               | [Headless GRC](docs/HEADLESS_GRC.md) · [Agent skills](docs/api/AGENT_SKILLS.md)                      |
+| Evaluate audit evidence          | [Audit readiness](docs/AUDIT_READINESS.md) · [Evidence recovery](docs/EVIDENCE_RECOVERY.md)          |
+| Contribute                       | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Trust boundaries](docs/THREAT_MODEL.md) |
 
 ## Develop
 

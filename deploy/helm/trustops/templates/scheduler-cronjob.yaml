@@ -24,7 +24,7 @@ spec:
           # A ReadWriteOnce lake volume is mountable read-write from a single
           # node only. Pin the scheduler to the API pod's node so both can mount
           # it; otherwise the CronJob can be scheduled elsewhere and fail to
-          # mount the PVC. (For multi-node HA use lake.persistence.accessMode=ReadWriteMany.)
+          # mount the PVC. ReadWriteMany changes mountability, not the single-writer contract.
           affinity:
             podAffinity:
               requiredDuringSchedulingIgnoredDuringExecution:

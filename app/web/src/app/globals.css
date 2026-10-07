@@ -104,35 +104,35 @@
   .dark {
     /*
      * Dark elevation steps: panel < rail < surface < surface-muted, each
-     * separated by a visible 1px line. Neutral grays, not tinted navy.
+     * separated by a visible 1px line. Lifted charcoal surfaces keep dense evidence screens readable.
      */
     /* tokens:dark:start */
-    --color-panel: #0a0b0e;
-    --rgb-panel: 10 11 14;
-    --color-rail: #0f1116;
-    --rgb-rail: 15 17 22;
-    --color-rail-line: #232730;
-    --rgb-rail-line: 35 39 48;
-    --color-rail-hover: #1a1d24;
-    --rgb-rail-hover: 26 29 36;
-    --color-rail-active: #1d2436;
-    --rgb-rail-active: 29 36 54;
+    --color-panel: #14171d;
+    --rgb-panel: 20 23 29;
+    --color-rail: #1a1e26;
+    --rgb-rail: 26 30 38;
+    --color-rail-line: #353c49;
+    --rgb-rail-line: 53 60 73;
+    --color-rail-hover: #252c38;
+    --rgb-rail-hover: 37 44 56;
+    --color-rail-active: #303c5a;
+    --rgb-rail-active: 48 60 90;
     --color-rail-text: #c3c8d2;
     --rgb-rail-text: 195 200 210;
     --color-rail-heading: #8b93a2;
     --rgb-rail-heading: 139 147 162;
-    --color-surface: #16191f;
-    --rgb-surface: 22 25 31;
-    --color-surface-muted: #1f232a;
-    --rgb-surface-muted: 31 35 42;
-    --color-line: #2a2e37;
-    --rgb-line: 42 46 55;
+    --color-surface: #222831;
+    --rgb-surface: 34 40 49;
+    --color-surface-muted: #2b333e;
+    --rgb-surface-muted: 43 51 62;
+    --color-line: #3d4654;
+    --rgb-line: 61 70 84;
     --color-line-strong: #6b7383;
     --rgb-line-strong: 107 115 131;
     --color-ink: #eceef2;
     --rgb-ink: 236 238 242;
-    --color-muted: #a3aab6;
-    --rgb-muted: 163 170 182;
+    --color-muted: #b2bac8;
+    --rgb-muted: 178 186 200;
     --color-brand: #8ea5ff;
     --rgb-brand: 142 165 255;
     --color-on-brand: #0c1224;

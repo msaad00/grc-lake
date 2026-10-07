@@ -14,6 +14,12 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Share current credential authority across HTTP, queued work, and live streams;
+  reject inconsistent tenant or source-key bindings and reconnect streams when
+  persistent authority changes.
+- Share tenant-aware framework mapping coverage across CCF, Frameworks, and AI Governance, keeping contextual relationships separate from reviewed implementation mappings.
+- Require sufficient current catalog coverage before reporting AI governance as governed; retain the composite score formula and reject non-catalog control IDs as passing coverage.
+
 - Align catalog/program evidence requirements and current AI/CCF summaries, preserve observation-only uncertainty, and compare evidence timestamps as instants.
 - Preserve explicit imported control mappings, require positive Jira resolutions, retain unresolved Azure role uncertainty, and detect unsafe added Kubernetes capabilities.
 

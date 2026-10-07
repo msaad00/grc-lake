@@ -187,8 +187,37 @@ def test_failed_evaluation_preserves_operator_diagnostic_without_returning_it(tm
         raise RuntimeError("operator-only diagnostic marker")
 
     monkeypatch.setattr("security_lakehouse.lake_eval.normalize_raw_events", fail)
+    raw = tmp_path / "raw/connector_events.jsonl"
+    raw.parent.mkdir()
+    write_audit_scale_fixture(raw, 1, controls_per_event=1, seed=1)
     result = run_lake_eval(tmp_path)
     assert result.result == "error"
     assert "diagnostic marker" not in str(result.to_dict())
     assert "operator-only diagnostic marker" in caplog.text
     assert "diagnostic marker" not in str(list_eval_runs(tmp_path))
+
+
+def test_eval_can_reassess_a_pipeline_run_lake_without_connector_raw(tmp_path):
+    source = tmp_path / "imported.jsonl"
+    lake = tmp_path / "lake"
+    write_audit_scale_fixture(source, 4, controls_per_event=1, seed=1)
+    run_pipeline(source, lake)
+    source.unlink()  # Re-evaluation must use retained evidence, not the old import path.
+    assert not (lake / "raw/connector_events.jsonl").exists()
+    result = run_lake_eval(lake, actor="reassess-import")
+    assert result.result == "ok"
+    assert result.pipeline.silver_count == 4
+
+
+def test_import_reassessment_rejects_tampered_retained_evidence(tmp_path):
+    from security_lakehouse.generations import active_generation
+
+    source = tmp_path / "imported.jsonl"
+    lake = tmp_path / "lake"
+    write_audit_scale_fixture(source, 2, controls_per_event=1, seed=1)
+    run_pipeline(source, lake)
+    generation = active_generation(lake)
+    bronze = generation / "bronze/raw_events.jsonl"
+    bronze.write_bytes(bronze.read_bytes() + b"\n")
+    assert run_lake_eval(lake).result == "error"
+    assert active_generation(lake) == generation

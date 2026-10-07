@@ -23,7 +23,7 @@ def test_dashboard_overview_is_source_aligned_and_tabbed() -> None:
     assert 'label: "Exports"' not in dashboard
     assert "assessment={data}" in dashboard
     assert "ingestion={ingestion.data}" in dashboard
-    assert "Current assessment" in assessment
+    assert "Latest lake assessment" in assessment
     assert "Control pass rate" in assessment
     assert "Open findings" in assessment
     assert "Assessment export" in assessment
@@ -80,7 +80,7 @@ def test_dashboard_kpis_are_flat_theme_tiles_and_pass_the_framework_catalog() ->
 def test_assessment_status_and_details_are_accessible() -> None:
     assessment = ASSESSMENT.read_text(encoding="utf-8")
 
-    assert re.search(r'<h2[^>]*className="sr-only"[^>]*>\s*Current assessment\s*</h2>', assessment)
+    assert re.search(r'<h2[^>]*className="sr-only"[^>]*>\s*Latest lake assessment\s*</h2>', assessment)
     assert "<h2>{status}</h2>" not in assessment
     assert "formatDateTime(evaluatedAt)" in assessment
     assert "evaluatedAt={assessment.evaluated_at}" in assessment

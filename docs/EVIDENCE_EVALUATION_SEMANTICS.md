@@ -176,3 +176,16 @@ text-backed aggregation retains the same ordering. Evaluation v8 regenerates
 those projections when older unchanged inputs are evaluated incrementally.
 Historical generations retain their original bytes. Missing or invalid dates in
 operational display feeds sort oldest; this fallback never establishes freshness.
+
+## Catalog reference corrections
+
+ISO/IEC 42001 management clause 6.1.3 and Annex A.6.1.3 have different obligations.
+The clause keeps `ISO42001-6.1.3`; the restored Annex entry is
+`ISO42001-A.6.1.3`, proposed and unmapped pending review. Other existing IDs remain
+stable. Historical evidence is not relabeled as evidence for the new requirement.
+
+SOC 2 CC6.6 is summarized as protection against threats originating outside the
+system; CC7.5 concerns recovery from identified security incidents. Catalog,
+reference mappings, and compatibility titles share these short internal summaries
+of the [AICPA Trust Services Criteria](https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022).
+Correcting a title does not create a new organizational review or certification.

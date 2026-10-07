@@ -64,6 +64,8 @@ export interface AssetRisk {
 
 export interface Assessment {
   schema_version: string;
+  /** True when any retained evidence is explicitly marked synthetic. Absence is not origin verification. */
+  synthetic_fixture?: boolean;
   assessment_type: string;
   evaluated_at: string;
   freshness_days: number;
@@ -524,6 +526,18 @@ export interface AiGovernanceFramework {
   /** Requirements mapped to a safeguard; the Frameworks page's figure. */
   mapped_requirements: number;
   mapped_pct: number;
+  reviewed_requirements?: number;
+  reviewed_pct?: number;
+  maintainer_reviewed_requirements?: number;
+  org_reviewed_requirements?: number;
+  contextual_mapping_count?: number;
+  review_log_verified?: boolean;
+  /** Current explicit verdicts with valid evidence and a known catalog ID. */
+  evaluated_control_count?: number;
+  catalog_control_count?: number;
+  coverage_pct?: number | null;
+  coverage_sufficient?: boolean;
+  unknown_control_count?: number;
   controls_with_evidence: number;
   evidence_pct: number;
   passing_controls: number;
@@ -541,6 +555,12 @@ export interface AiGovernanceGap {
 
 export interface AiGovernance {
   state: "governed" | "on_track" | "needs_work" | string;
+  state_reason?: string;
+  coverage_sufficient?: boolean;
+  coverage_scope?: "observed_ai_frameworks";
+  coverage_min_pct?: number;
+  frameworks_observed?: number;
+  review_log_verified?: boolean;
   governance_score: number;
   evaluated_at: string;
   inventory: {
@@ -828,6 +848,7 @@ export interface IngestionScale {
 }
 
 export interface PlatformJob {
+  can_cancel?: boolean;
   id: string;
   kind: "connector_sync" | "lake_eval" | "workflow" | "agent_run" | string;
   status: string;

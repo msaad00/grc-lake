@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import logging
 import os
+import tempfile
 import time
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -53,6 +55,31 @@ class LakeEvalResult:
         return asdict(self)
 
 
+@contextmanager
+def _evaluation_input(lake: Path, raw_path: Path) -> Iterator[Path]:
+    """Reassess retained import evidence when there is no connector landing file."""
+    from security_lakehouse.generations import active_generation, publication_lock, verify_generation
+    from security_lakehouse.io import iter_jsonl, write_jsonl_from_iterable
+    from security_lakehouse.verification import verify_lake_integrity
+
+    with publication_lock(lake):
+        if raw_path.exists():
+            yield raw_path
+            return
+        generation = active_generation(lake)
+        if generation is None:
+            raise ValueError("evaluation requires raw evidence or a retained verified generation")
+        verify_generation(generation)
+        if not verify_lake_integrity(generation)["ok"]:
+            raise ValueError("retained evaluation evidence failed integrity verification")
+        with tempfile.TemporaryDirectory(prefix="trustops-reevaluation-") as directory:
+            retained = Path(directory) / "retained-evidence.jsonl"
+            write_jsonl_from_iterable(
+                retained, (row["raw"] for row in iter_jsonl(generation / "bronze/raw_events.jsonl"))
+            )
+            yield retained
+
+
 def run_lake_eval(
     lake_dir: str | Path,
     *,
@@ -78,13 +105,14 @@ def run_lake_eval(
         if mode == "warehouse_required":
             raise LakeEvalError(str(strategy["recommendation"]))
         local_result = "error"
-        pipeline = normalize_raw_events(
-            raw_path,
-            lake,
-            mapping_path=mapping_path,
-            tenant_id=tenant_id,
-            incremental=mode == "local_incremental" or (mode == "warehouse" and _incremental_ready(lake)),
-        )
+        with _evaluation_input(lake, raw_path) as evaluation_input:
+            pipeline = normalize_raw_events(
+                evaluation_input,
+                lake,
+                mapping_path=mapping_path,
+                tenant_id=tenant_id,
+                incremental=mode == "local_incremental" or (mode == "warehouse" and _incremental_ready(lake)),
+            )
         local_result = "ok"
         if mode == "warehouse":
             export_result = "error"

@@ -197,8 +197,17 @@ export function AssessmentOverview({
       className="grid min-w-0 gap-4"
     >
       <h2 id="current-assessment-heading" className="sr-only">
-        Current assessment
+        Latest lake assessment
       </h2>
+      {assessment?.synthetic_fixture === true && (
+        <p
+          role="note"
+          className="rounded-lg border border-line bg-info-bg px-3 py-2 text-sm text-info-fg"
+        >
+          Contains synthetic demonstration evidence; synthetic rows are not
+          production proof.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
         <Badge tone={state ? STATE_BADGE[state] : "default"}>
           <StatusIcon aria-hidden="true" className="h-3.5 w-3.5" />

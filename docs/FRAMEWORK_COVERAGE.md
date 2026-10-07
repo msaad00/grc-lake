@@ -6,8 +6,8 @@ not operating effectiveness, assessment completion, or certification. API fields
 retain `evaluatable` and `attestable` names for compatibility.
 
 Framework packs: 20 with catalogued requirements (2 more registry entries planned or superseded)
-Requirements catalogued: 2251 (all source-cited)
-Mapped (touched by a safeguard): 1415 (62.9%)
+Requirements catalogued: 2252 (all source-cited)
+Mapped (touched by a safeguard): 1415 (62.8%)
 **Reviewed safeguard mappings: 340 (15.1%)**
 Asset types modeled: 20
 
@@ -27,7 +27,7 @@ Asset types modeled: 20
 | ISO/IEC 27017:2015 Cloud security controls | [ISO/IEC 27017:2015](https://www.iso.org/standard/43757.html) | implemented_full_pack | 47 | 47 | 44 | 18 | 38.3% | never pulled |
 | ISO/IEC 27701:2019 Privacy information management | [ISO/IEC 27701:2019](https://www.iso.org/standard/71670.html) | planned | 0 | 0 | 0 | 0 | 0.0% | never pulled |
 | ISO/IEC 27701:2025 Privacy information management | [ISO/IEC 27701:2025](https://www.iso.org/standard/27701) | implemented_limited_mapping | 10 | 10 | 8 | 0 | 0.0% | fresh |
-| ISO/IEC 42001:2023 AI management system | [ISO/IEC 42001:2023](https://www.iso.org/standard/42001) | implemented_full_pack | 39 | 39 | 37 | 9 | 23.1% | never pulled |
+| ISO/IEC 42001:2023 AI management system | [ISO/IEC 42001:2023](https://www.iso.org/standard/42001) | implemented_full_pack | 40 | 40 | 37 | 9 | 22.5% | never pulled |
 | NIS2 Directive (EU) 2022/2555 | [EUR-Lex, Directive (EU) 2022/2555 (CELEX 32022L2555)](https://eur-lex.europa.eu/eli/dir/2022/2555/oj) | implemented_limited_mapping | 17 | 17 | 17 | 0 | 0.0% | fresh |
 | NIST SP 800-171 Rev 3 (Protecting CUI in Nonfederal Systems) | [NIST SP 800-171 Rev. 3 (OSCAL catalog, usnistgov/oscal-content)](https://csrc.nist.gov/pubs/sp/800/171/r3/final) | implemented_limited_mapping | 97 | 97 | 83 | 0 | 0.0% | fresh |
 | NIST SP 800-53 Rev 5 Security and Privacy Controls | [NIST SP 800-53 Rev 5 (OSCAL catalog, usnistgov/oscal-content)](https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final) | implemented_limited_mapping | 1014 | 1014 | 285 | 96 | 9.5% | fresh |
@@ -44,8 +44,8 @@ Every seeded control declares the asset types it applies to. The pipeline joins 
 
 | Asset type | Applicable controls |
 | --- | ---: |
-| `service` | 1788 |
-| `audit_log` | 762 |
+| `service` | 1789 |
+| `audit_log` | 763 |
 | `cloud_resource` | 650 |
 | `cloud_policy` | 636 |
 | `iam_role` | 405 |
@@ -53,11 +53,11 @@ Every seeded control declares the asset types it applies to. The pipeline joins 
 | `host` | 347 |
 | `identity_group` | 342 |
 | `okta_user` | 341 |
-| `data_store` | 232 |
+| `data_store` | 233 |
 | `container_image` | 195 |
 | `repo` | 193 |
-| `ai_model` | 127 |
-| `ai_agent` | 119 |
+| `ai_model` | 128 |
+| `ai_agent` | 120 |
 | `s3_bucket` | 69 |
 | `identity_account` | 62 |
 | `user` | 5 |

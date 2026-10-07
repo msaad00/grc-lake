@@ -173,7 +173,9 @@ def test_request_audit_records_decisions(tmp_path: Path, env) -> None:
     client, tokens = env  # the env fixture seeds the lake at tmp_path
     client.get("/api/v1/controls")  # denied (no token)
     client.get("/api/v1/controls", headers=_bearer(tokens["admin"]))  # allowed
-    entries = build_audit_log(tmp_path, category="request")
+    entries = build_audit_log(tmp_path, category="request") + build_audit_log(
+        tmp_path / "server/security_audit", category="request"
+    )
     decisions = {entry["result"] for entry in entries}
     assert {"allow", "deny"} <= decisions
 
@@ -199,7 +201,7 @@ def test_anonymous_request_floods_do_not_grow_the_audit_log_unbounded(tmp_path: 
         client.get("/api/v1/controls")
         client.get("/api/v1/platform/pricing")
         client.post("/api/v1/snapshots", json={})
-    anonymous = [row for row in _request_rows(tmp_path) if row["actor"] == "anonymous"]
+    anonymous = [row for row in _request_rows(tmp_path / "server/security_audit") if row["actor"] == "anonymous"]
     # Still visible: the first denial and the first anonymous read from this client.
     assert {row["decision"] for row in anonymous} == {"allow", "deny"}
     assert len(anonymous) <= 4

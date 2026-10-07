@@ -99,3 +99,76 @@ test("real snapshot completes through the server worker", async ({ page }) => {
     timeout: 30_000,
   });
 });
+
+test("failed work presents the server's safe reason", async ({ page }) => {
+  await page.route("**/api/v1/ingestion/eval", (r) =>
+    r.fulfill({
+      status: 202,
+      json: {
+        meta: { resource: "operations" },
+        data: { id: "failed-job", status: "queued" },
+      },
+    }),
+  );
+  await page.route("**/api/v1/operations/failed-job", (r) =>
+    r.fulfill({
+      json: {
+        data: {
+          status: "failed",
+          http_status: 409,
+          response: {
+            errors: [
+              { detail: "Evidence changed; evaluate the current generation." },
+            ],
+          },
+        },
+      },
+    }),
+  );
+  await page.goto("/console/dashboard/");
+  await page.getByRole("tab", { name: "Sources", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Run control eval", exact: true })
+    .click();
+  await expect(
+    page.getByText(/Evidence changed; evaluate the current generation/),
+  ).toBeVisible();
+});
+
+test("an authorized queued job can be cancelled with confirmation", async ({
+  page,
+}) => {
+  let cancelled = false;
+  await page.route("**/api/v1/platform/jobs*", (r) =>
+    r.fulfill({
+      json: {
+        data: {
+          jobs: [
+            {
+              id: "cancel-me",
+              kind: "operation",
+              label: "Lake evaluation",
+              status: cancelled ? "cancelled" : "queued",
+              can_cancel: !cancelled,
+            },
+          ],
+          count: 1,
+          running_count: cancelled ? 0 : 1,
+          counts_by_kind: { operation: 1 },
+        },
+      },
+    }),
+  );
+  await page.route("**/api/v1/operations/cancel-me/cancel", (r) => {
+    cancelled = true;
+    return r.fulfill({ json: { data: { status: "cancelled" } } });
+  });
+  await page.goto("/console/dashboard/");
+  await page.getByRole("tab", { name: "Sources", exact: true }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Cancel job", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Cancel job", exact: true }),
+  ).toHaveCount(0);
+  expect(cancelled).toBe(true);
+});

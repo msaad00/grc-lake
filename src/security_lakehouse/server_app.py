@@ -18,17 +18,18 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import logging
 import math
 import os
 import secrets
 import threading
 import time
 import uuid
+import weakref
 from collections import OrderedDict
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
+from functools import partial
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Literal
@@ -51,7 +52,7 @@ from security_lakehouse.assessment import (
     write_assessment_snapshot,
 )
 from security_lakehouse.auth.api_key_session import ApiKeySessionError, exchange_api_key_for_browser_session
-from security_lakehouse.auth.dependencies import get_session, require_human, require_scope
+from security_lakehouse.auth.dependencies import auditor_view_requested, get_session, require_human, require_scope
 from security_lakehouse.auth.json_body import StrictJSONMiddleware
 from security_lakehouse.auth.oidc import OIDCLoginError, build_oauth, complete_oidc_login, load_oidc_config
 from security_lakehouse.auth.presentation import build_auth_methods_payload
@@ -73,6 +74,8 @@ from security_lakehouse.auth.saml import (
     load_saml_config,
     saml_request_data,
 )
+from security_lakehouse.auth.server_mode import assert_insecure_allowed as _assert_insecure_allowed
+from security_lakehouse.auth.server_mode import insecure_requested as _insecure_requested
 from security_lakehouse.auth.sessions import (
     SESSION_COOKIE,
     decode_session_cookie,
@@ -91,6 +94,8 @@ from security_lakehouse.demo_links import build_demo_kit
 from security_lakehouse.execution_mode import run_in_server_mode, server_execution
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import resolve_path
+from security_lakehouse.operation_execution import execute_operation, execute_stored_operation
+from security_lakehouse.operation_jobs import JobConflict, JobQueue, JobWorker
 from security_lakehouse.public_url import normalize_public_url
 from security_lakehouse.server_routes.schemas.base import StrictModel as _StrictModel
 from security_lakehouse.services import NotFound, ValidationError
@@ -99,6 +104,7 @@ from security_lakehouse.services import grc as grc_services
 from security_lakehouse.services import policy_documents as policy_document_services
 from security_lakehouse.services import vendor_risk as vendor_risk_services
 from security_lakehouse.services import webhooks as webhook_services
+from security_lakehouse.services.snapshot_events import snapshot_written_hook as _snapshot_written_hook
 from security_lakehouse.web import web_dist_dir, web_dist_index
 
 _COOKIE_SECURE = os.environ.get("TRUSTOPS_COOKIE_SECURE", "true").lower() in {"1", "true", "yes", "on"}
@@ -460,40 +466,6 @@ class MappingReviewDecisionRequest(_StrictModel):
     evidence_ref: str | None = Field(default=None, max_length=1000)
 
 
-def _snapshot_written_hook(session: Session, tenant_id: str) -> SnapshotWrittenHook:
-    """Build the ``write_assessment_snapshot`` hook that dispatches webhook events.
-
-    Captures ``session``/``tenant_id`` by closure so ``assessment.py`` itself
-    never needs to know about the application-state DB or tenancy; see
-    ``assessment.write_assessment_snapshot`` for why the hook fires only after
-    its chain lock is released.
-
-    ``dispatch_snapshot_events``/``dispatch_event`` never commit or roll back
-    ``session`` themselves (see ``services.webhooks.dispatch_event``) -- every
-    caller of this hook must commit ``session`` itself afterward (once, atomic
-    with whatever else that caller's own transaction is doing) or the staged
-    delivery-log rows are silently discarded when the request-scoped session
-    closes.
-    """
-
-    def _hook(
-        snapshot_path: Path,
-        assessment: dict[str, Any],
-        new_violations: list[dict[str, Any]],
-        newly_failing_controls: list[str],
-    ) -> None:
-        webhook_services.dispatch_snapshot_events(
-            session,
-            tenant_id,
-            snapshot_path=snapshot_path,
-            assessment=assessment,
-            new_violations=new_violations,
-            newly_failing_controls=newly_failing_controls,
-        )
-
-    return _hook
-
-
 def _parse_dt(value: str | None) -> datetime | None:
     if value is None or value == "":
         return None
@@ -529,27 +501,21 @@ def _page_meta(limit: int, offset: int, count: int) -> dict[str, int]:
     return {"count": count, "limit": limit, "offset": offset}
 
 
-def _insecure_requested() -> bool:
-    return os.environ.get("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", "").lower() in {"1", "true", "yes"}
-
-
-def _production_env_blocked() -> bool:
-    env = os.environ.get("TRUSTOPS_ENV", "").strip().lower()
-    return env in {"production", "prod", "staging"}
-
-
-def _assert_insecure_allowed(*, require_auth: bool) -> None:
-    insecure = not require_auth or _insecure_requested()
-    if insecure and _production_env_blocked():
-        raise RuntimeError("Unauthenticated server mode is forbidden when TRUSTOPS_ENV is production or staging")
-    if insecure:
-        logging.getLogger(__name__).warning(
-            "Unauthenticated server mode is enabled: every request runs as synthetic admin"
-        )
+def _portable_references(payload: object) -> object:
+    if isinstance(payload, list):
+        return [_portable_references(value) for value in payload]
+    if isinstance(payload, dict):
+        return {
+            key: Path(value).name
+            if key.endswith("_path") and isinstance(value, str) and Path(value).is_absolute()
+            else _portable_references(value)
+            for key, value in payload.items()
+        }
+    return payload
 
 
 def _redact_payload(payload: object, identity: Identity) -> object:
-    return redact_payload(payload, role=identity.role)
+    return _portable_references(redact_payload(payload, role=identity.role))
 
 
 def _role_allowed_for_actor(requested_role: str, identity: Identity) -> bool:
@@ -804,6 +770,7 @@ def _public_trust_summary(lake: Path, share: dict[str, object]) -> dict[str, obj
         posture_summary["state"] = "partial_evidence"
     return {
         "schema_version": "trustops.public_trust.v1",
+        "synthetic_fixture": redacted.get("synthetic_fixture") is True,
         "sensitivity": "public",
         "visibility": "external_reviewer",
         "redaction_policy": "trustops.public_summary.v1",
@@ -1079,11 +1046,12 @@ def _legacy_post_response(
         return JSONResponse(_legacy_error_payload(HTTPStatus.INTERNAL_SERVER_ERROR), status_code=500)
     if status_code >= HTTPStatus.BAD_REQUEST:
         return JSONResponse(_legacy_error_payload(status_code), status_code=int(status_code))
-    return JSONResponse(payload, status_code=int(status_code))
+    return JSONResponse(_redact_payload(payload, identity), status_code=int(status_code))
 
 
 _STREAM_CACHE: OrderedDict[tuple, tuple[float, dict[str, object]]] = OrderedDict()
 _STREAM_CACHE_LOCK = threading.Lock()
+_STREAM_BUILD_LOCKS: weakref.WeakValueDictionary = weakref.WeakValueDictionary()
 
 
 def _stream_payloads(lake: Path, tenant_id: str | None, sessionmaker, interval: float) -> dict[str, object]:
@@ -1095,10 +1063,18 @@ def _stream_payloads(lake: Path, tenant_id: str | None, sessionmaker, interval: 
     identity = generation_identity(lake)
     key = (str(lake.resolve()), tenant_id, id(sessionmaker), json.dumps(identity, sort_keys=True))
     with _STREAM_CACHE_LOCK:
-        previous = _STREAM_CACHE.get(key)
-        if previous is not None and time.monotonic() - previous[0] < min(interval, 10.0):
-            _STREAM_CACHE.move_to_end(key)
-            return previous[1]
+        lock = _STREAM_BUILD_LOCKS.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _STREAM_BUILD_LOCKS[key] = lock
+    # Coalesce the same tenant/generation without holding a process-global lock
+    # over filesystem, database, or assessment computation.
+    with lock:
+        with _STREAM_CACHE_LOCK:
+            previous = _STREAM_CACHE.get(key)
+            if previous is not None and time.monotonic() - previous[0] < (60.0 if interval > 0 else 0):
+                _STREAM_CACHE.move_to_end(key)
+                return previous[1]
         status, body = api_v1.handle_get("/api/v1/posture/current", {}, lake)
         if status >= 400:
             raise ValueError("stream assessment unavailable")
@@ -1112,10 +1088,11 @@ def _stream_payloads(lake: Path, tenant_id: str | None, sessionmaker, interval: 
 
             with sessionmaker() as session:
                 payloads["audit-readiness"] = build_audit_readiness(lake=lake, session=session, tenant_id=tenant_id)
-        _STREAM_CACHE[key] = (time.monotonic(), payloads)
-        _STREAM_CACHE.move_to_end(key)
-        while len(_STREAM_CACHE) > 32:
-            _STREAM_CACHE.popitem(last=False)
+        with _STREAM_CACHE_LOCK:
+            _STREAM_CACHE[key] = (time.monotonic(), payloads)
+            _STREAM_CACHE.move_to_end(key)
+            while len(_STREAM_CACHE) > 32:
+                _STREAM_CACHE.popitem(last=False)
         return payloads
 
 
@@ -1127,6 +1104,7 @@ async def platform_event_stream(
     sessionmaker=None,
     interval: float = 10.0,
     role: str = "read_only",
+    authority_check: Callable[[], bool] | None = None,
 ) -> AsyncIterator[str]:
     """Share collection across tabs; redact each subscriber's view independently."""
     last: dict[str, str] = {}
@@ -1136,10 +1114,14 @@ async def platform_event_stream(
         for event, data in payloads.items():
             payload = json.dumps(redact_payload(data, role=role), default=str, sort_keys=True)
             if payload != last.get(event):
+                if authority_check is not None and not await run_in_threadpool(authority_check):
+                    return
                 last[event] = payload
                 yield f"event: {event}\ndata: {payload}\n\n"
                 emitted = True
         if not emitted:
+            if authority_check is not None and not await run_in_threadpool(authority_check):
+                return
             yield ": ping\n\n"
         await asyncio.sleep(interval)
 
@@ -1163,7 +1145,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     @asynccontextmanager
     async def lifespan(application: FastAPI):
         previous = application.state.operation_worker
-        worker = JobWorker(application.state.operation_queue, previous.execute)
+        worker = JobWorker(
+            application.state.operation_queue,
+            previous.execute,
+            subprocess_execute=previous.subprocess_execute,
+            timeout_seconds=previous.timeout_seconds,
+        )
         application.state.operation_worker = worker
         enabled = getattr(application.state, "job_worker_enabled", True)
         if enabled:
@@ -1222,62 +1209,14 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         bound = tenancy.resolve_bound_tenant(lake, require_auth=app.state.require_auth, tenant_ids=tenant_ids)
         return tenancy.tenant_lake(lake, identity.tenant_id, bound_tenant=bound)
 
-    from security_lakehouse.operation_jobs import JobConflict, JobQueue, JobWorker
-
     app.state.operation_queue = JobQueue(app.state.sessionmaker, lake)
 
-    def execute_operation(row) -> tuple[int, dict[str, Any]]:
-        from security_lakehouse.auth.dependencies import _INSECURE_IDENTITY, _apply_billing_state
-        from security_lakehouse.db.models import ApiKey, User, UserSession
-
-        with app.state.sessionmaker() as session:
-            if row.auth_method == "insecure" and not app.state.require_auth:
-                identity = _INSECURE_IDENTITY
-            else:
-                user = session.get(User, row.user_id)
-                if user is None or user.tenant_id != row.tenant_id or not user.is_active:
-                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                if row.auth_method.startswith("session:"):
-                    login = session.get(UserSession, row.session_id) if row.session_id else None
-                    if (
-                        login is None
-                        or not login.is_active()
-                        or login.user_id != user.id
-                        or login.tenant_id != row.tenant_id
-                        or row.auth_method != f"session:{login.idp}"
-                    ):
-                        return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                elif row.auth_method != "api_key" or not row.api_key_id:
-                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                key = session.get(ApiKey, row.api_key_id) if row.api_key_id else None
-                if row.api_key_id and (
-                    key is None or key.user_id != user.id or key.tenant_id != row.tenant_id or not key.is_active()
-                ):
-                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                identity = Identity(
-                    tenant_id=user.tenant_id,
-                    user_id=user.id,
-                    email=user.email,
-                    role=user.role,
-                    scopes=scopes_for_role(user.role),
-                    api_key_id=row.api_key_id,
-                    session_id=row.session_id,
-                    auth_method=row.auth_method,
-                )
-                identity = _apply_billing_state(session, identity)
-            if identity.tenant_id != row.tenant_id or not identity.has_scope(api_v1.required_post_scope(row.path)):
-                return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-            with server_execution(identity.tenant_id):
-                code, payload = api_v1.handle_post(
-                    row.path,
-                    json.loads(row.payload_json),
-                    lake_for(identity),
-                    on_snapshot_written=_snapshot_written_hook(session, identity.tenant_id),
-                )
-            session.commit()
-            return int(code), payload
-
-    app.state.operation_worker = JobWorker(app.state.operation_queue, execute_operation)
+    app.state.operation_worker = JobWorker(
+        app.state.operation_queue,
+        partial(execute_operation, lake, factory=app.state.sessionmaker, require_auth=app.state.require_auth),
+        subprocess_execute=partial(execute_stored_operation, require_auth=require_auth),
+        timeout_seconds=float(os.environ.get("TRUSTOPS_OPERATION_TIMEOUT_SECONDS", "900")),
+    )
 
     # OIDC SSO is optional; the OAuth client + signed session middleware are only
     # wired when an identity provider is configured via the environment.
@@ -1338,9 +1277,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             # event loop on every authenticated request.
             await run_in_threadpool(
                 append_request_audit,
-                lake_for(identity) if identity is not None else lake,
+                lake_for(identity) if identity is not None else lake / "server/security_audit",
                 method=request.method,
-                route=path,
+                route=getattr(request.scope.get("route"), "path", "/api/{unmatched}"),
                 status_code=response.status_code,
                 decision="allow" if response.status_code < 400 else "deny",
                 correlation_id=correlation_id,
@@ -1518,6 +1457,25 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     # console audit room stays live without polling.
     @app.get("/api/v1/stream")
     async def stream(request: Request, identity: Identity = Depends(_require_read)) -> StreamingResponse:
+        from security_lakehouse.auth.authority import AuthorityError, CredentialReference, resolve_authority
+
+        reference = CredentialReference.from_identity(identity)
+        auditor_view = auditor_view_requested(request)
+
+        def authority_current() -> bool:
+            try:
+                with app.state.sessionmaker() as session:
+                    current = resolve_authority(
+                        session,
+                        reference,
+                        allow_insecure=not app.state.require_auth,
+                        auditor_view=auditor_view,
+                    )
+                # Reconnection authenticates again using the new permissions.
+                return current.has_scope("read") and (current.role, current.scopes) == (identity.role, identity.scopes)
+            except AuthorityError:
+                return False
+
         return StreamingResponse(
             platform_event_stream(
                 lake_for(identity),
@@ -1525,6 +1483,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 tenant_id=identity.tenant_id,
                 sessionmaker=app.state.sessionmaker,
                 role=identity.role,
+                authority_check=authority_current,
             ),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
@@ -2091,12 +2050,24 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         offset: int = Query(0, ge=0),
         identity: Identity = Depends(_require_read),
     ) -> JSONResponse:
-        rows = app.state.operation_queue.list(identity.tenant_id, limit, offset)
+        rows = app.state.operation_queue.list(identity.tenant_id, limit, offset, viewer=identity)
         return JSONResponse(_redact_payload(api_v1.envelope("operations", rows), identity))
 
     @app.get("/api/v1/operations/{job_id}", tags=["platform"])
     def operation_status(job_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:
-        row = app.state.operation_queue.get(identity.tenant_id, job_id)
+        row = app.state.operation_queue.get(identity.tenant_id, job_id, viewer=identity)
+        if row is None:
+            raise HTTPException(status_code=404, detail="operation not found")
+        return JSONResponse(_redact_payload(api_v1.envelope("operations", row), identity))
+
+    @app.post("/api/v1/operations/{job_id}/cancel", tags=["platform"])
+    def operation_cancel(job_id: str, identity: Identity = Depends(_require_read)) -> JSONResponse:
+        try:
+            row = app.state.operation_queue.cancel(identity, job_id)
+        except PermissionError as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
+        except JobConflict as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         if row is None:
             raise HTTPException(status_code=404, detail="operation not found")
         return JSONResponse(_redact_payload(api_v1.envelope("operations", row), identity))
@@ -2121,7 +2092,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         data = build_platform_jobs(
             str(lake_for(identity)),
             agent_runs=[agent_runs_db.agent_run_to_dict(row) for row in agent_rows],
-            operations=app.state.operation_queue.list(identity.tenant_id, limit),
+            operations=app.state.operation_queue.list(identity.tenant_id, limit, viewer=identity),
             limit=limit,
             kind=kind,
             status=status,
@@ -3709,7 +3680,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             except ValueError as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             return JSONResponse(
-                api_v1.envelope("operations", job),
+                _redact_payload(api_v1.envelope("operations", job), identity),
                 status_code=202,
                 headers={"Location": job["status_url"], "Preference-Applied": "respond-async", "Retry-After": "1"},
             )
@@ -3730,7 +3701,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             on_snapshot_written=_snapshot_written_hook(session, identity.tenant_id),
         )
         session.commit()
-        return JSONResponse(payload, status_code=int(_status))
+        return JSONResponse(_redact_payload(payload, identity), status_code=int(_status))
 
     # --- legacy console surface (authenticated; same handlers as local mode) ---
     # Registered after the v1 routes so /api/v1/* and /api/healthz keep priority.

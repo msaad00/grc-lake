@@ -9,11 +9,16 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
+import multiprocessing
+import os
 import re
+import signal
 import threading
 import time
 import uuid
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -24,6 +29,7 @@ from sqlalchemy.orm import sessionmaker
 
 from security_lakehouse.auth.rbac import Identity
 from security_lakehouse.db.models import OperationJob
+from security_lakehouse.ledger import chain_lock
 
 _LOG = logging.getLogger(__name__)
 LEASE_SECONDS = 90
@@ -44,7 +50,10 @@ def serialize(row: OperationJob, *, include_result: bool = True) -> dict[str, An
     def stamp(value: float | None) -> str | None:
         return datetime.fromtimestamp(value, UTC).isoformat() if value is not None else None
 
+    result = json.loads(row.result_json) if row.result_json else None
+    archived = isinstance(result, dict) and result.get("schema_version") == "trustops.operation_archive.v1"
     return {
+        "result_archived": archived,
         "id": row.id,
         "kind": "operation",
         "label": {
@@ -58,7 +67,7 @@ def serialize(row: OperationJob, *, include_result: bool = True) -> dict[str, An
         "finished_at": stamp(row.finished_at),
         "status_url": f"/api/v1/operations/{row.id}",
         "http_status": row.http_status,
-        **({"response": json.loads(row.result_json) if row.result_json else None} if include_result else {}),
+        **({"response": None if archived else result} if include_result else {}),
     }
 
 
@@ -69,9 +78,16 @@ class JobConflict(ValueError):
 class JobQueue:
     def __init__(self, factory: sessionmaker, root: Path):
         self.factory = factory
+        self.root = root.resolve()
         self.root_key = root_key(root)
 
     def enqueue(self, identity: Identity, path: str, payload: dict[str, Any], key: str) -> dict[str, Any]:
+        # Serialize count-and-insert across API processes sharing the writer lake.
+        tenant_key = hashlib.sha256(identity.tenant_id.encode()).hexdigest()
+        with chain_lock(self.root / "server/operation_admission" / tenant_key):
+            return self._enqueue(identity, path, payload, key)
+
+    def _enqueue(self, identity: Identity, path: str, payload: dict[str, Any], key: str) -> dict[str, Any]:
         if not supported(path):
             raise ValueError("operation does not support asynchronous execution")
         if not key or len(key) > 200:
@@ -112,7 +128,7 @@ class JobQueue:
                     .where(
                         OperationJob.root_key == self.root_key,
                         OperationJob.tenant_id == identity.tenant_id,
-                        OperationJob.status.in_(["queued", "running"]),
+                        OperationJob.status.in_(["queued", "running", "cancelling"]),
                     )
                 )
                 if pending and pending >= 100:
@@ -143,7 +159,7 @@ class JobQueue:
                 raise JobConflict("Idempotency-Key already identifies a different request")
             return serialize(existing)
 
-    def get(self, tenant_id: str, job_id: str) -> dict[str, Any] | None:
+    def get(self, tenant_id: str, job_id: str, *, viewer: Identity | None = None) -> dict[str, Any] | None:
         with self.factory() as session:
             row = session.scalar(
                 select(OperationJob).where(
@@ -152,9 +168,54 @@ class JobQueue:
                     OperationJob.tenant_id == tenant_id,
                 )
             )
-            return serialize(row) if row else None
+            return serialize(row, include_result=viewer is None or self.can_manage(row, viewer)) if row else None
 
-    def list(self, tenant_id: str, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    @staticmethod
+    def can_manage(row: OperationJob, identity: Identity) -> bool:
+        from security_lakehouse.api_v1 import required_post_scope
+
+        return (
+            row.tenant_id == identity.tenant_id
+            and (row.user_id == identity.user_id or identity.role in {"admin", "security_admin"})
+            and identity.has_scope(required_post_scope(row.path))
+        )
+
+    def cancel(self, identity: Identity, job_id: str) -> dict[str, Any] | None:
+        with self.factory.begin() as session:
+            row = session.scalar(
+                select(OperationJob).where(
+                    OperationJob.id == job_id,
+                    OperationJob.root_key == self.root_key,
+                    OperationJob.tenant_id == identity.tenant_id,
+                )
+            )
+            if row is None:
+                return None
+            if not self.can_manage(row, identity):
+                raise PermissionError(
+                    "requires operation ownership or administrator authority and its current write scope"
+                )
+            if row.status in {"queued", "running"}:
+                previous = row.status
+                session.execute(
+                    update(OperationJob)
+                    .where(
+                        OperationJob.id == row.id,
+                        OperationJob.status == previous,
+                    )
+                    .values(
+                        status="cancelled" if previous == "queued" else "cancelling",
+                        finished_at=time.time() if previous == "queued" else None,
+                    )
+                )
+                session.expire(row)
+            if row.status not in {"cancelled", "cancelling", "interrupted"}:
+                raise JobConflict("operation already finished; cancellation cannot undo its effects")
+            return serialize(row)
+
+    def list(
+        self, tenant_id: str, limit: int = 50, offset: int = 0, *, viewer: Identity | None = None
+    ) -> list[dict[str, Any]]:
         with self.factory() as session:
             rows = session.scalars(
                 select(OperationJob)
@@ -166,30 +227,79 @@ class JobQueue:
                 .limit(min(500, max(1, limit)))
                 .offset(max(0, offset))
             )
-            return [serialize(row, include_result=False) for row in rows]
+            return [
+                {
+                    **serialize(row, include_result=False),
+                    "can_cancel": viewer is not None
+                    and row.status in {"queued", "running"}
+                    and self.can_manage(row, viewer),
+                }
+                for row in rows
+            ]
+
+    def execution_lock(self, row: OperationJob):
+        return chain_lock(self.root / "server/operation_execution" / row.id, blocking=False)
+
+    def owns_claim(self, row: OperationJob) -> bool:
+        with self.factory() as session:
+            return (
+                session.scalar(
+                    select(OperationJob.id).where(
+                        OperationJob.id == row.id,
+                        OperationJob.root_key == self.root_key,
+                        OperationJob.status == "running",
+                        OperationJob.worker_token == row.worker_token,
+                    )
+                )
+                is not None
+            )
 
     def recover(self) -> None:
-        with self.factory.begin() as session:
-            session.execute(
-                update(OperationJob)
-                .where(
-                    OperationJob.root_key == self.root_key,
-                    OperationJob.status == "running",
-                    OperationJob.heartbeat_at < time.time() - LEASE_SECONDS,
+        with self.factory() as session:
+            stale = list(
+                session.scalars(
+                    select(OperationJob).where(
+                        OperationJob.root_key == self.root_key,
+                        OperationJob.status.in_(["running", "cancelling"]),
+                        OperationJob.heartbeat_at < time.time() - LEASE_SECONDS,
+                    )
                 )
-                .values(status="interrupted", finished_at=time.time())
             )
+            for row in stale:
+                try:
+                    with self.execution_lock(row):
+                        session.execute(
+                            update(OperationJob)
+                            .where(
+                                OperationJob.id == row.id,
+                                OperationJob.status.in_(["running", "cancelling"]),
+                                OperationJob.heartbeat_at < time.time() - LEASE_SECONDS,
+                            )
+                            .values(status="interrupted", finished_at=time.time())
+                        )
+                        session.commit()
+                except BlockingIOError:
+                    # A process still owns execution. Its independent deadline
+                    # bounds its lifetime; never fence a live writer mid-action.
+                    continue
 
     def claim(self) -> OperationJob | None:
         self.recover()
         with self.factory() as session:
+            turns = (
+                select(OperationJob.tenant_id, func.max(OperationJob.started_at).label("last_started"))
+                .where(OperationJob.root_key == self.root_key)
+                .group_by(OperationJob.tenant_id)
+                .subquery()
+            )
             job_id = session.scalar(
                 select(OperationJob.id)
+                .join(turns, turns.c.tenant_id == OperationJob.tenant_id)
                 .where(
                     OperationJob.root_key == self.root_key,
                     OperationJob.status == "queued",
                 )
-                .order_by(OperationJob.created_at, OperationJob.id)
+                .order_by(func.coalesce(turns.c.last_started, 0), OperationJob.created_at, OperationJob.id)
                 .limit(1)
             )
             if job_id is None:
@@ -210,9 +320,9 @@ class JobQueue:
             session.expunge(row)
             return row
 
-    def renew(self, row: OperationJob) -> None:
+    def renew(self, row: OperationJob) -> bool:
         with self.factory.begin() as session:
-            session.execute(
+            result = session.execute(
                 update(OperationJob)
                 .where(
                     OperationJob.id == row.id,
@@ -221,6 +331,8 @@ class JobQueue:
                 )
                 .values(heartbeat_at=time.time())
             )
+
+            return result.rowcount == 1
 
     def finish(self, row: OperationJob, code: int, response: dict[str, Any]) -> None:
         raw = json.dumps(response, allow_nan=False)
@@ -238,19 +350,154 @@ class JobQueue:
                 )
                 .values(status=state, http_status=code, result_json=raw, finished_at=time.time())
             )
+            session.execute(
+                update(OperationJob)
+                .where(
+                    OperationJob.id == row.id,
+                    OperationJob.status == "cancelling",
+                    OperationJob.worker_token == row.worker_token,
+                )
+                .values(
+                    status="interrupted",
+                    finished_at=time.time(),
+                    result_json=json.dumps(
+                        {
+                            "data": None,
+                            "meta": {},
+                            "errors": [
+                                {
+                                    "code": "cancelled",
+                                    "detail": "Cancellation overlapped execution; inspect domain history before starting new work.",
+                                }
+                            ],
+                        }
+                    ),
+                )
+            )
+
+
+def _subprocess_entry(root: Path, row: OperationJob, execute, connection, timeout_seconds: float) -> None:
+    from security_lakehouse.db.base import create_engine_for, session_factory
+
+    # The child retains its own hard deadline if the parent exits unexpectedly.
+    signal.signal(signal.SIGALRM, lambda *_: os._exit(124))
+    signal.setitimer(signal.ITIMER_REAL, timeout_seconds)
+    engine = create_engine_for(root)
+    queue = JobQueue(session_factory(engine), root)
+    try:
+        with queue.execution_lock(row):
+            if not queue.owns_claim(row):
+                return
+            connection.send(execute(root, row))
+    except Exception:
+        _LOG.exception("isolated operation %s failed", row.id)
+        connection.send(
+            (500, {"data": None, "errors": [{"detail": "operation failed; inspect operator logs"}], "meta": {}})
+        )
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        connection.close()
+        engine.dispose()
 
 
 class JobWorker:
-    def __init__(self, queue: JobQueue, execute: Callable[[OperationJob], tuple[int, dict[str, Any]]]):
+    def __init__(
+        self,
+        queue: JobQueue,
+        execute: Callable[[OperationJob], tuple[int, dict[str, Any]]],
+        *,
+        subprocess_execute: Callable[[Path, OperationJob], tuple[int, dict[str, Any]]] | None = None,
+        timeout_seconds: float = 900,
+    ):
+        if not math.isfinite(timeout_seconds) or not 0 < timeout_seconds <= 3600:
+            raise ValueError("operation timeout must be between 0 and 3600 seconds")
         self.queue = queue
         self.execute = execute
+        self.subprocess_execute = subprocess_execute
+        self.timeout_seconds = timeout_seconds
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self.run, name="trustops-operations", daemon=True)
 
-    def run_once(self) -> bool:
+    def _isolated(self, row: OperationJob) -> None:
+        context = multiprocessing.get_context("spawn")
+        receiver, sender = context.Pipe(duplex=False)
+        process = context.Process(
+            target=_subprocess_entry,
+            args=(self.queue.root, row, self.subprocess_execute, sender, self.timeout_seconds),
+            daemon=True,
+        )
+        process.start()
+        sender.close()
+        deadline = time.monotonic() + self.timeout_seconds
+        heartbeat_at = time.monotonic()
+        response = None
+        reason = "outcome_unknown"
+        try:
+            while process.is_alive():
+                if receiver.poll(0.1):
+                    with suppress(EOFError):
+                        response = receiver.recv()
+                    break
+                if self.stop_event.is_set():
+                    reason = "worker_stopped"
+                    break
+                if time.monotonic() >= deadline:
+                    reason = "execution_timeout"
+                    break
+                if time.monotonic() - heartbeat_at >= min(LEASE_SECONDS / 3, 1):
+                    if not self.queue.renew(row):
+                        reason = "claim_lost"
+                        break
+                    heartbeat_at = time.monotonic()
+            if response is None and receiver.poll():
+                with suppress(EOFError):
+                    response = receiver.recv()
+        finally:
+            if process.is_alive():
+                process.terminate()
+            process.join(5)
+            if process.is_alive():
+                process.kill()
+                process.join()
+            receiver.close()
+        if response is not None and self.queue.owns_claim(row):
+            self.queue.finish(row, *response)
+        else:
+            if process.exitcode == 124:
+                reason = "execution_timeout"
+            with self.queue.factory.begin() as session:
+                session.execute(
+                    update(OperationJob)
+                    .where(
+                        OperationJob.id == row.id,
+                        OperationJob.status.in_(["running", "cancelling"]),
+                        OperationJob.worker_token == row.worker_token,
+                    )
+                    .values(
+                        status="interrupted",
+                        finished_at=time.time(),
+                        result_json=json.dumps(
+                            {
+                                "data": None,
+                                "errors": [
+                                    {
+                                        "code": reason,
+                                        "detail": "Execution stopped; inspect domain history before starting new work.",
+                                    }
+                                ],
+                                "meta": {},
+                            }
+                        ),
+                    )
+                )
+
+    def run_once(self, *, isolated: bool = False) -> bool:
         row = self.queue.claim()
         if row is None:
             return False
+        if isolated and self.subprocess_execute is not None:
+            self._isolated(row)
+            return True
         done = threading.Event()
 
         def heartbeat() -> None:
@@ -263,15 +510,18 @@ class JobWorker:
         pulse = threading.Thread(target=heartbeat, daemon=True)
         pulse.start()
         try:
-            try:
-                code, response = self.execute(row)
-            except Exception:
-                _LOG.exception("operation %s failed", row.id)
-                code, response = (
-                    500,
-                    {"data": None, "errors": [{"detail": "operation failed; inspect operator logs"}], "meta": {}},
-                )
-            self.queue.finish(row, code, response)
+            with self.queue.execution_lock(row):
+                if not self.queue.owns_claim(row):
+                    return True
+                try:
+                    code, response = self.execute(row)
+                except Exception:
+                    _LOG.exception("operation %s failed", row.id)
+                    code, response = (
+                        500,
+                        {"data": None, "errors": [{"detail": "operation failed; inspect operator logs"}], "meta": {}},
+                    )
+                self.queue.finish(row, code, response)
         finally:
             done.set()
             pulse.join()
@@ -280,7 +530,7 @@ class JobWorker:
     def run(self) -> None:
         while not self.stop_event.is_set():
             try:
-                worked = self.run_once()
+                worked = self.run_once(isolated=True)
             except Exception:
                 _LOG.exception("operation worker failed")
                 worked = False

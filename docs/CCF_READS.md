@@ -29,6 +29,38 @@ evidence/reason list. Exact counts and unindexed/list sorts can scan rows or use
 SQLite temporary storage; this is not a constant-time or fixed-byte guarantee.
 The evaluation pipeline itself still materializes evidence in memory.
 
+## Mapping coverage and AI status
+
+Frameworks, CCF coverage, and AI Governance use the same tenant-effective mapping
+ledger and seeded control-catalog denominator. Covered requirements include
+proposed implementation mappings; reviewed requirements count only maintainer or
+organization reviews. Maintainer and organization requirement buckets are disjoint,
+and neither bucket measures operating effectiveness. Supporting and inherited
+relationships are counted separately as context, even when reviewed. Source-cited
+article mappings remain a separate catalog-curation measure.
+
+A rejected mapping leaves that tenant's evaluated mapping coverage. A mapping
+marked needs changes stays proposed. If the review log fails verification, the
+views fall back to shipped mapping states and expose `review_log_verified: false`;
+they do not retain unverified organization approvals. Catalog-version mismatches
+retain the existing proposed-review behavior.
+
+The AI governance score remains 55% inventory signals and 45% the observed-control
+pass rate. The `governed` state additionally requires current evaluated evidence
+for at least 50% of the catalog in every observed AI framework, with at least one
+observed framework. Unseen frameworks remain unassessed and are excluded from this
+scope; the state is not a claim that all AI frameworks or organizational assets
+are covered. An otherwise high-scoring result with insufficient coverage remains
+`on_track` and carries an explicit `state_reason` and `coverage_sufficient: false`.
+
+AI rows expose `evaluated_control_count`, `catalog_control_count`, and
+`coverage_pct` separately from the existing `controls_with_evidence` observed
+count. Unknown, missing, stale, and non-catalog evidence cannot fill the evaluated
+coverage numerator. Non-catalog identifiers cannot supply passing control credit.
+Mapping review counts never supply either an operating pass or evaluated evidence.
+Invalid or missing denominators fail closed, and the 50% comparison uses counts
+before rounding the displayed percentage.
+
 ## Reproduce an isolated read measurement
 
 ```bash

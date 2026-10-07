@@ -55,7 +55,9 @@ for (const theme of ["light", "dark"] as const) {
     }, theme);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/console/dashboard/");
-    const overview = page.getByRole("region", { name: "Current assessment" });
+    const overview = page.getByRole("region", {
+      name: "Latest lake assessment",
+    });
     await expect(overview).toBeVisible({ timeout: 20_000 });
     if (theme === "dark")
       await expect(page.locator("html")).toHaveClass(/dark/);

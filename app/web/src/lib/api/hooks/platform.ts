@@ -194,3 +194,13 @@ export function usePlatformUsage(enabled = true, opts?: Opts<PlatformUsage>) {
     ...opts,
   });
 }
+
+export function useCancelOperationMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.cancelOperation,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["platform", "jobs"] });
+    },
+  });
+}

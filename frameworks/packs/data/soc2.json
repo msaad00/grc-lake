@@ -95,7 +95,7 @@
     },
     {
       "id": "CC6.6",
-      "title": "External party access is authorized and monitored"
+      "title": "Logical access protections address threats from outside the system"
     },
     {
       "id": "CC6.7",
@@ -123,7 +123,7 @@
     },
     {
       "id": "CC7.5",
-      "title": "Recovery and continuity activities are defined and tested"
+      "title": "Recovery activities address identified security incidents"
     },
     {
       "id": "CC8.1",

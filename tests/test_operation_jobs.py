@@ -209,6 +209,8 @@ def test_lifespan_worker_completes_without_holding_request(tmp_path, monkeypatch
 
     monkeypatch.setattr(api_v1, "handle_post", run)
     app = create_app(tmp_path, require_auth=False)
+    # This unit test exercises mocked in-process dispatch; process isolation has real smoke coverage.
+    app.state.operation_worker.subprocess_execute = None
     with TestClient(app) as client:
         response = client.post("/api/v1/ingestion/eval", json={}, headers={"Prefer": "respond-async"})
         assert response.status_code == 202
@@ -230,6 +232,8 @@ def test_reentered_lifespan_can_process_new_jobs(tmp_path, monkeypatch):
 
     monkeypatch.setattr(api_v1, "handle_post", lambda *a, **kw: (201, api_v1.envelope("ingestion.eval", {})))
     app = create_app(tmp_path, require_auth=False)
+    # This unit test exercises mocked in-process dispatch; process isolation has real smoke coverage.
+    app.state.operation_worker.subprocess_execute = None
     for _ in range(2):
         with TestClient(app) as client:
             response = client.post("/api/v1/ingestion/eval", json={}, headers={"Prefer": "respond-async"})

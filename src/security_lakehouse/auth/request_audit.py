@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import threading
 import time
 import uuid
@@ -12,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.auth.rbac import Identity
+from security_lakehouse.io import append_jsonl
+from security_lakehouse.ledger import chain_lock
 
 REQUEST_AUDIT_FILE = "request_audit.jsonl"
 
@@ -104,6 +105,6 @@ def append_request_audit(
     }
     path = Path(lake_dir) / "gold" / REQUEST_AUDIT_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(event, sort_keys=True, default=str) + "\n")
+    with chain_lock(path):
+        append_jsonl(path, event)
     return event

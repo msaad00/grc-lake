@@ -1,6 +1,6 @@
 """Common Control Framework: safeguards as the operated object.
 
-The control catalog is framework-first — 942 requirements, each carrying its own
+The control catalog is framework-first, with each requirement carrying its own
 ``evidence_requirement``. Answering all of them means answering the same question
 once per framework.
 
@@ -439,10 +439,10 @@ def _add_safeguard(ledger: dict[str, Any], entry: JsonObject) -> None:
     for member in entry.get("satisfies", []):
         state = effective_review_state(member)
         ledger["mapping_count"] += 1
-        ledger["states"][state] += 1
         if not contributes_to_coverage(member):
             ledger["contextual_mapping_count"] += 1
             continue
+        ledger["states"][state] += 1
         if state == "rejected":
             continue
         ledger["control_ids"].add(str(member.get("control_id")))
@@ -546,8 +546,10 @@ def coverage_by_category(payload: JsonObject | None = None) -> list[JsonObject]:
     return rows
 
 
-def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[str, Any] | None = None) -> JsonObject:
-    """Report how much of each framework the CCF currently covers.
+def framework_mapping_coverage(
+    payload: JsonObject | None = None, *, catalog: dict[str, Any] | None = None
+) -> JsonObject:
+    """Shared catalog-denominated mapping ledger, separate from operating verdicts.
 
     Requirement counts are disjoint: ``maintainer_reviewed`` requirements have at
     least one maintainer-reviewed mapping; ``org_reviewed`` requirements are
@@ -560,16 +562,16 @@ def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[st
     mapped = safeguards_by_requirement(data)
     states_by_control: dict[str, set[str]] = {}
     mapping_states: dict[str, dict[str, int]] = {}
-    contextual_mappings = 0
+    contextual_by_framework: dict[str, int] = {}
     for entry in data["safeguards"]:
         for member in entry.get("satisfies", []):
             control_id = str(member.get("control_id"))
+            framework = str(controls.get(control_id, {}).get("framework_id") or member.get("framework_id") or "unknown")
             if not contributes_to_coverage(member):
-                contextual_mappings += 1
+                contextual_by_framework[framework] = contextual_by_framework.get(framework, 0) + 1
                 continue
             state = effective_review_state(member)
             states_by_control.setdefault(control_id, set()).add(state)
-            framework = str(controls.get(control_id, {}).get("framework_id") or member.get("framework_id") or "unknown")
             counts = mapping_states.setdefault(framework, dict.fromkeys(REVIEW_STATE_LABELS, 0))
             counts[state] += 1
 
@@ -605,8 +607,12 @@ def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[st
             row["rejected_requirements"] += 1
     for framework, row in per_framework.items():
         counts = mapping_states.get(framework, dict.fromkeys(REVIEW_STATE_LABELS, 0))
-        row["rejected_mappings"] = counts["rejected"]
-        row["needs_changes_mappings"] = counts["needs_changes"]
+        for state in REVIEW_STATE_LABELS:
+            row[f"{state}_mappings"] = counts[state]
+        row["contextual_mappings"] = contextual_by_framework.get(framework, 0)
+        row["reviewed"] = row["maintainer_reviewed"] + row["org_reviewed"]
+        row["proposed"] = row["covered"] - row["reviewed"]
+        row["uncovered"] = row["controls"] - row["covered"]
 
     total = len(controls)
     covered = sum(1 for cid in controls if cid in mapped)
@@ -614,7 +620,8 @@ def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[st
     all_states = {state: sum(counts[state] for counts in mapping_states.values()) for state in REVIEW_STATE_LABELS}
     return {
         "safeguards": len(data["safeguards"]),
-        "contextual_mappings": contextual_mappings,
+        "contextual_mappings": sum(contextual_by_framework.values()),
+        "review_log_verified": bool(data.get("review_log_verified", True)),
         "controls": total,
         "covered": covered,
         # Split so unconfirmed curation is never reported as attested coverage,
@@ -635,9 +642,18 @@ def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[st
             name: {
                 **row,
                 "coverage_pct": round(100.0 * row["covered"] / row["controls"], 1) if row["controls"] else 0.0,
+                "reviewed_pct": round(100.0 * row["reviewed"] / row["controls"], 1) if row["controls"] else 0.0,
             }
             for name, row in sorted(per_framework.items())
         },
+    }
+
+
+def coverage_by_framework(payload: JsonObject | None = None, *, catalog: dict[str, Any] | None = None) -> JsonObject:
+    """Framework mapping coverage with the existing family/category summaries."""
+    data = payload if payload is not None else load_safeguards()
+    return {
+        **framework_mapping_coverage(data, catalog=catalog),
         "families": coverage_by_family(data),
         "categories": coverage_by_category(data),
     }

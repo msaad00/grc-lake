@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -196,16 +196,17 @@ class JobQueue:
                     "requires operation ownership or administrator authority and its current write scope"
                 )
             if row.status in {"queued", "running"}:
-                previous = row.status
+                # Choose from the current database state: a claim may have won
+                # since the authorization read. Completed outcomes are excluded.
                 session.execute(
                     update(OperationJob)
                     .where(
                         OperationJob.id == row.id,
-                        OperationJob.status == previous,
+                        OperationJob.status.in_(["queued", "running"]),
                     )
                     .values(
-                        status="cancelled" if previous == "queued" else "cancelling",
-                        finished_at=time.time() if previous == "queued" else None,
+                        status=case((OperationJob.status == "queued", "cancelled"), else_="cancelling"),
+                        finished_at=case((OperationJob.status == "queued", time.time()), else_=None),
                     )
                 )
                 session.expire(row)

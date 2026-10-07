@@ -184,12 +184,19 @@ def _latest_shares(lake_dir: str | Path) -> tuple[list[dict[str, Any]], dict[str
 def list_shares(
     lake_dir: str | Path, *, include_revoked: bool = False, additional_lakes: tuple[Path, ...] = ()
 ) -> list[dict[str, Any]]:
-    """Return current shares from the lake and caller-authorized additional lakes."""
-    records, _by_token = _latest_shares(lake_dir)
-    rows = [dict(r) for r in records]
-    for other in additional_lakes:
-        if other.resolve() != Path(lake_dir).resolve():
-            rows.extend(list_shares(other, include_revoked=include_revoked))
+    """Return current shares from the lake and caller-authorized additional lakes.
+
+    A share copied into several lakes is listed once; a revocation in any copy wins.
+    """
+    merged: dict[str, dict[str, Any]] = {}
+    lakes = [Path(lake_dir), *(other for other in additional_lakes if other.resolve() != Path(lake_dir).resolve())]
+    for lake in lakes:
+        records, _by_token = _latest_shares(lake)
+        for record in records:
+            sid = str(record["share_id"])
+            if sid not in merged or _supersedes(record, merged[sid]):
+                merged[sid] = record
+    rows = [dict(r) for r in merged.values()]
     if not include_revoked:
         rows = [r for r in rows if not r.get("revoked_at")]
     now = _utc_now()
@@ -197,6 +204,12 @@ def list_shares(
         row["expired"] = _is_expired(row.get("expires_at"), now)
     rows.sort(key=lambda r: instant_sort_key(r.get("created_at")), reverse=True)
     return rows
+
+
+def _supersedes(candidate: dict[str, Any], current: dict[str, Any]) -> bool:
+    if bool(candidate.get("revoked_at")) != bool(current.get("revoked_at")):
+        return bool(candidate.get("revoked_at"))
+    return instant_sort_key(candidate.get("created_at")) > instant_sort_key(current.get("created_at"))
 
 
 def lake_search_paths(
@@ -241,11 +254,21 @@ def resolve_share_from_root(
     Returns the live share record and the lake directory that owns it, or
     ``None`` when the token is unknown, revoked, or expired in every candidate.
     """
+    if not token:
+        return None
+    token_hash = _hash_token(token)
+    found: tuple[dict[str, Any], Path] | None = None
     for lake_dir in lake_search_paths(root, tenant_ids=tenant_ids, bound_tenant=bound_tenant):
-        share = resolve_share(lake_dir, token)
-        if share is not None:
-            return share, lake_dir
-    return None
+        _records, by_token = _latest_shares(lake_dir)
+        record = by_token.get(token_hash)
+        if record is not None and record.get("revoked_at"):
+            # A copy revoked in any candidate lake must not stay public elsewhere.
+            return None
+        if found is None:
+            share = resolve_share(lake_dir, token)
+            if share is not None:
+                found = (share, lake_dir)
+    return found
 
 
 def resolve_share(lake_dir: str | Path, token: str) -> dict[str, Any] | None:

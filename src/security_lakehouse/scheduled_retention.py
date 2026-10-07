@@ -51,8 +51,8 @@ class RetentionPolicy:
         return "preview" if self.archive_dir is None else "archive"
 
 
-def _positive_int(env: Mapping[str, str], name: str, default: int) -> int:
-    raw = env.get(name, "").strip()
+def _positive_int(raw: str, name: str, default: int) -> int:
+    raw = raw.strip()
     if not raw:
         return default
     if not raw.isdigit() or int(raw) < 1:
@@ -78,8 +78,10 @@ def retention_policy(env: Mapping[str, str] | None = None) -> RetentionPolicy | 
     return RetentionPolicy(
         schedule=schedule,
         period=period,
-        older_than_days=_positive_int(source, OLDER_THAN_DAYS_ENV, DEFAULT_OLDER_THAN_DAYS),
-        keep_latest=_positive_int(source, KEEP_LATEST_ENV, DEFAULT_KEEP_LATEST),
+        older_than_days=_positive_int(
+            source.get(OLDER_THAN_DAYS_ENV, ""), OLDER_THAN_DAYS_ENV, DEFAULT_OLDER_THAN_DAYS
+        ),
+        keep_latest=_positive_int(source.get(KEEP_LATEST_ENV, ""), KEEP_LATEST_ENV, DEFAULT_KEEP_LATEST),
         archive_dir=archive_dir,
     )
 

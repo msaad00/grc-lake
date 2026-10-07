@@ -227,7 +227,18 @@ class GCPClient:
             for policy in listing:
                 spec = getattr(policy, "spec", None)
                 rules = getattr(spec, "rules", []) if spec is not None else []
-                enforced = any(bool(getattr(rule, "enforce", False)) for rule in rules)
+                # Only an explicit unconditional boolean rule establishes the
+                # listed policy's enforcement. Conditions and reset/list rules
+                # require effective-policy evaluation, not an any(True) guess.
+                enforced = None
+                if len(rules) == 1 and not getattr(spec, "reset", False):
+                    rule = rules[0]
+                    condition = getattr(getattr(rule, "condition", None), "expression", "")
+                    protobuf = getattr(rule, "_pb", None)
+                    kind = protobuf.WhichOneof("kind") if protobuf is not None else None
+                    value = getattr(rule, "enforce", None)
+                    if not condition and isinstance(value, bool) and (protobuf is None or kind == "enforce"):
+                        enforced = value
                 policies.append(
                     {
                         "name": getattr(policy, "name", ""),
@@ -444,24 +455,35 @@ def _policy_event(
     collected_at: datetime,
     tenant_id: str,
 ) -> dict[str, Any]:
-    constraint = str(policy.get("constraint") or policy.get("name") or "")
-    enforced = bool(policy.get("enforced"))
+    resource = str(policy.get("constraint") or policy.get("name") or "")
+    identifier = resource.split("/policies/")[-1].removeprefix("constraints/")
+    constraint = f"constraints/{identifier}" if identifier else ""
+    raw_enforced = policy.get("enforced")
+    enforced = raw_enforced if isinstance(raw_enforced, bool) else None
     expected = constraint in EXPECTED_ENFORCED_CONSTRAINTS
     # An expected-on constraint that is not enforced is the finding to raise.
-    needs_enforcement = expected and not enforced
+    needs_enforcement = expected and enforced is False
     return _event(
         project=project,
         collected_at=collected_at,
         tenant_id=tenant_id,
         signal="org_policy",
-        dedupe_key=constraint,
+        dedupe_key=resource,
         event_type="gcp.cloud.org_policy",
         asset_id=f"gcp:project:{project}",
         asset_type="account_config",
         controls=POLICY_CONTROLS,
-        status="open" if needs_enforcement else ("pass" if enforced else "observed"),
+        status=(
+            "observed"
+            if not expected
+            else "not_evaluated"
+            if enforced is None
+            else "open"
+            if needs_enforcement
+            else "pass"
+        ),
         severity="medium" if needs_enforcement else "info",
-        evidence_ref=f"//orgpolicy.googleapis.com/projects/{project}/policies/{constraint}",
+        evidence_ref=f"//orgpolicy.googleapis.com/projects/{project}/policies/{identifier}",
         attributes={
             "constraint": constraint,
             "enforced": enforced,

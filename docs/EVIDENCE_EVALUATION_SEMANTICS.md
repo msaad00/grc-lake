@@ -86,6 +86,23 @@ New evidence timestamps must normalize to UTC years 0002 through 9998, reserving
 boundary years for freshness expiry and grace arithmetic. Validation rejects
 out-of-range timestamps before normalization or pipeline writes.
 
+## Connector applicability and provider fields
+
+MFA observations for suspended/deprovisioned identities and AWS users without a
+console password are not passing evidence. They remain observations outside the
+checked population; unknown lifecycle or enrollment fields remain unevaluated.
+Active applicable identities require affirmative enrollment evidence to pass.
+See the [AWS console-MFA scope](https://docs.aws.amazon.com/securityhub/latest/userguide/iam-controls.html),
+[Okta lifecycle statuses](https://developer.okta.com/okta-sdk-java/20.0.1/apidocs/com/okta/sdk/resource/model/UserStatus.html),
+and [Google Directory enrollment fields](https://developers.google.com/workspace/admin/directory/reference/rest/v1/users).
+
+GCP organization-policy v2 resource names and fixture constraint names resolve
+to the same constraint. Only a recognized relevant constraint with an explicit
+unconditional boolean enforcement rule establishes this policy signal's pass.
+Conditional, reset and unsupported rule shapes remain unevaluated; unrelated
+constraints remain observations. This does not prove the effective inherited
+policy or the state of existing resources. See [GCP policy rules](https://docs.cloud.google.com/organization-policy/create-organization-policies).
+
 ## Collection and version boundaries
 
 Inventory is an observation. AWS CloudTrail's explicit `multi_region=false`

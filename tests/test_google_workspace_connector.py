@@ -117,7 +117,7 @@ def test_collect_google_workspace_evidence_is_schema_valid_and_mapped() -> None:
     assert missing["attributes"]["needs_mfa"] is True
 
     suspended = mfa["google_workspace:user:100000000000000000003"]
-    assert suspended["status"] == "pass"
+    assert suspended["status"] == "observed"
     assert suspended["attributes"]["needs_mfa"] is False
 
     # The suspended account surfaces as an open identity-access signal.

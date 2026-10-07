@@ -266,6 +266,8 @@ def _mfa_event(
     factor_types = sorted({str(f.get("factorType")) for f in active_factors if f.get("factorType")})
     lifecycle = str(user.get("status") or "UNKNOWN").upper()
     can_authenticate = lifecycle in ACTIVE_USER_STATUSES
+    known_inactive = lifecycle in {"SUSPENDED", "DEPROVISIONED", "STAGED", "LOCKED_OUT"}
+    applicable = True if can_authenticate else (False if known_inactive else None)
     # An active account with no usable MFA factor is the finding worth raising.
     needs_mfa = can_authenticate and factors is not None and not enrolled
     evidence_ref = f"{org_url}/api/v1/users/{user_id}/factors"
@@ -279,13 +281,22 @@ def _mfa_event(
         asset_id=f"okta:user:{user_id}",
         asset_type="identity_account",
         controls=MFA_CONTROLS,
-        status="not_evaluated" if factors is None else ("open" if needs_mfa else "pass"),
+        status=(
+            "not_evaluated"
+            if factors is None or applicable is None
+            else "observed"
+            if not applicable
+            else "open"
+            if needs_mfa
+            else "pass"
+        ),
         severity="high" if needs_mfa else "info",
         evidence_ref=evidence_ref,
         attributes={
             "user_id": user_id,
             "mfa_enrolled": enrolled if factors is not None else None,
             "factor_read_complete": factors is not None,
+            "mfa_applicable": applicable,
             "active_factor_count": len(active_factors),
             "factor_types": factor_types,
             "lifecycle_status": lifecycle,

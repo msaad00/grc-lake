@@ -590,7 +590,7 @@ def _mfa_event(
         asset_id=f"aws:iam:user/{user_name}",
         asset_type="identity_account",
         controls=MFA_CONTROLS,
-        status="open" if needs_mfa else "pass",
+        status="observed" if not console_access else ("open" if needs_mfa else "pass"),
         severity="high" if needs_mfa else "info",
         evidence_ref=f"{arn}/mfa-devices",
         attributes={

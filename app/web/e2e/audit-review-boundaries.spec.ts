@@ -41,6 +41,10 @@ async function mockAi(page: Page, observed = 1, catalogued = 10) {
               requirements: catalogued,
               mapped_requirements: 8,
               controls_with_evidence: observed,
+              evaluated_control_count: observed,
+              catalog_control_count: catalogued,
+              coverage_sufficient:
+                catalogued > 0 && observed / catalogued >= 0.5,
               passing_controls: observed,
               failing_controls: 0,
               score: 100,

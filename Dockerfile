@@ -10,7 +10,7 @@
 #                   runs `security-lakehouse serve` as a non-root user
 #
 # Build:  docker build -t trustops:dev .
-# Run:    docker run --rm -p 8787:8787 -v $PWD/build/lakehouse:/lake trustops:dev
+# Run: see deploy/README.md for authenticated Compose and Kubernetes profiles.
 
 # Base images are pinned by multi-arch index digest so a rebuild of the same
 # commit gets the same bytes; Dependabot's docker ecosystem bumps tag + digest

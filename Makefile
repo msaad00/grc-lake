@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help demo-screenshots demo-screenshots-full demo-local framework-packs coverage-doc release-build compile lint format-check typecheck diff-check test validate validate-json validate-generated validate-brand validate-doc-images pipeline dashboard api-smoke smoke ci web-install web-dev web-typecheck web-build web-clean web-ci docker-build helm-lint helm-template terraform-fmt terraform-validate deploy-check uv-sync uv-lock pre-commit-install pre-commit-run pip-audit npm-audit security openapi-export readme-header
+.PHONY: help demo-screenshots demo-screenshots-full demo-local framework-packs coverage-doc release-build compile lint format-check typecheck diff-check test validate validate-json validate-generated validate-brand validate-doc-images pipeline dashboard api-smoke smoke ci web-install web-dev web-typecheck web-build web-clean web-ci docker-build helm-lint helm-template terraform-fmt terraform-validate terraform-test deploy-check uv-sync uv-lock pre-commit-install pre-commit-run pip-audit npm-audit security openapi-export readme-header
 
 help: ## List available commands without running builds or tests.
 	@awk -F ':.*## ' 'BEGIN { printf "Usage: make <target>\n\n" } /^[a-zA-Z][a-zA-Z0-9_-]*:.*## / { printf "  %-24s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -117,13 +117,16 @@ helm-template: ## Render the Helm chart to /tmp/trustops-helm-render.yaml.
 	@echo "wrote /tmp/trustops-helm-render.yaml ($$(wc -l < /tmp/trustops-helm-render.yaml) lines)"
 
 terraform-fmt: ## Check formatting of the EKS Terraform reference.
-	terraform -chdir=deploy/eks-terraform fmt -check
+	terraform -chdir=deploy/eks-terraform fmt -check -recursive
 
 terraform-validate: ## Initialize without a backend and validate EKS Terraform.
 	terraform -chdir=deploy/eks-terraform init -backend=false -input=false
 	terraform -chdir=deploy/eks-terraform validate
 
-deploy-check: helm-lint helm-template terraform-fmt terraform-validate ## Validate the Helm chart and EKS Terraform reference.
+terraform-test: terraform-validate ## Test deployment plans with mocked cloud providers.
+	terraform -chdir=deploy/eks-terraform test
+
+deploy-check: helm-lint helm-template terraform-fmt terraform-test ## Validate the Helm chart and EKS Terraform reference.
 
 # --- Supply-chain + commit hooks -------------------------------------------
 # uv is the recommended package manager (deterministic + locked install).

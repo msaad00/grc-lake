@@ -54,7 +54,7 @@ def test_ingress_passes_with_cookie_signing_key() -> None:
     assert result.returncode == 0
 
 
-def test_ingress_passes_with_session_secret() -> None:
+def test_session_secret_alone_does_not_replace_cookie_signing_key() -> None:
     result = _helm_template(
         [
             "ingress.enabled=true",
@@ -62,7 +62,7 @@ def test_ingress_passes_with_session_secret() -> None:
             "env[0].value=super-secret-for-tests",
         ]
     )
-    assert result.returncode == 0
+    assert result.returncode != 0
 
 
 def test_multi_replica_rwo_lake_blocked_without_read_only() -> None:
@@ -116,3 +116,95 @@ def test_scheduler_tenant_scope_matches_deployment(settings, expected):
     cron = next(doc for doc in yaml.safe_load_all(result.stdout) if doc and doc["kind"] == "CronJob")
     args = cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["args"]
     assert ("--all-tenants" in args) is expected
+
+
+@pytest.mark.parametrize("name", ["TRUSTOPS_OIDC_CLIENT_ID", "TRUSTOPS_SAML_IDP_METADATA_URL"])
+def test_identity_provider_without_signing_secret_is_not_bootable(name):
+    result = _helm_template(["ingress.enabled=true", f"env[0].name={name}", "env[0].value=idp-example"])
+    assert result.returncode != 0
+    assert "signing" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "source", ["value=", "valueFrom.secretKeyRef.name=", "valueFrom.fieldRef.fieldPath=metadata.name"]
+)
+def test_empty_or_nonsecret_signing_configuration_is_rejected(source):
+    result = _helm_template(
+        ["security.requireAuthentication=true", "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY", f"env[0].{source}"]
+    )
+    assert result.returncode != 0
+    assert "signing" in result.stderr
+
+
+def test_secret_reference_renders_for_application_and_scheduler():
+    import yaml
+
+    result = _helm_template(
+        [
+            "security.requireAuthentication=true",
+            "ingress.enabled=true",
+            "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].valueFrom.secretKeyRef.name=trustops-server",
+            "env[0].valueFrom.secretKeyRef.key=TRUSTOPS_COOKIE_SIGNING_KEY",
+        ]
+    )
+    assert result.returncode == 0, result.stderr
+    documents = {doc["kind"]: doc for doc in yaml.safe_load_all(result.stdout) if doc}
+    for spec in (
+        documents["Deployment"]["spec"]["template"]["spec"],
+        documents["CronJob"]["spec"]["jobTemplate"]["spec"]["template"]["spec"],
+    ):
+        secret = next(item for item in spec["containers"][0]["env"] if item["name"] == "TRUSTOPS_COOKIE_SIGNING_KEY")
+        assert secret["valueFrom"]["secretKeyRef"] == {"name": "trustops-server", "key": "TRUSTOPS_COOKIE_SIGNING_KEY"}
+
+
+def test_scheduler_launches_cli_under_the_image_tini_entrypoint():
+    import json
+
+    import yaml
+
+    result = _helm_template()
+    assert result.returncode == 0, result.stderr
+    cron = next(doc for doc in yaml.safe_load_all(result.stdout) if doc and doc["kind"] == "CronJob")
+    container = cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
+    dockerfile = (CHART.parents[2] / "Dockerfile").read_text()
+    entrypoint = json.loads(
+        next(line.removeprefix("ENTRYPOINT ") for line in dockerfile.splitlines() if line.startswith("ENTRYPOINT "))
+    )
+    assert entrypoint == ["/usr/bin/tini", "--"]
+    # Kubernetes args replace Docker CMD, not ENTRYPOINT. tini must receive
+    # the executable before the scheduler subcommand.
+    assert container.get("command", container["args"])[0] == "security-lakehouse"
+
+
+@pytest.mark.parametrize("with_session", [False, True])
+def test_oidc_also_requires_its_separate_session_secret(with_session):
+    settings = [
+        "ingress.enabled=true",
+        "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+        "env[0].value=test-cookie-key",
+        "env[1].name=TRUSTOPS_OIDC_CLIENT_ID",
+        "env[1].value=test-client",
+        "env[2].name=TRUSTOPS_OIDC_ISSUER",
+        "env[2].value=https://idp.example.com",
+        "env[3].name=TRUSTOPS_OIDC_CLIENT_SECRET",
+        "env[3].value=test-client-secret",
+    ]
+    if with_session:
+        settings += ["env[4].name=TRUSTOPS_SESSION_SECRET", "env[4].value=test-oauth-key"]
+    result = _helm_template(settings)
+    assert (result.returncode == 0) is with_session
+
+
+def test_env_cannot_bypass_explicit_no_auth_guard():
+    result = _helm_template(
+        [
+            "security.requireAuthentication=true",
+            "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].value=test-cookie-key",
+            "env[1].name=TRUSTOPS_ALLOW_INSECURE_NO_AUTH",
+            "env[1].value=1",
+        ]
+    )
+    assert result.returncode != 0
+    assert "security.allowInsecureNoAuth" in result.stderr

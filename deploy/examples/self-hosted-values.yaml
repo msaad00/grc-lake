@@ -1,0 +1,21 @@
+# Authenticated single-replica deployment. Create trustops-server first and
+# configure human OIDC/SAML login using docs/SERVER_AUTH.md before sharing a URL.
+# Inherit image.tag from the versioned chart rather than maintaining another pin.
+security:
+  requireAuthentication: true
+replicaCount: 1
+lake:
+  readOnly: false
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+scheduler:
+  enabled: true
+env:
+  - name: TRUSTOPS_ENV
+    value: production
+  - name: TRUSTOPS_COOKIE_SIGNING_KEY
+    valueFrom:
+      secretKeyRef:
+        name: trustops-server
+        key: TRUSTOPS_COOKIE_SIGNING_KEY

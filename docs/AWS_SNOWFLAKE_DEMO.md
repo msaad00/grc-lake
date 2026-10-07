@@ -13,7 +13,10 @@ scheduler-driven use.
 
 ## Prerequisites
 
-- EKS cluster with an ingress controller and DNS for `trustops-poc.example.com`.
+- EKS cluster with AWS Load Balancer Controller, an ACM certificate covering
+  `trustops-poc.example.com`, and DNS pointing to the resulting ALB.
+- EBS CSI driver with an encrypted `gp3` StorageClass (or change the values).
+  [EKS bootstrap](../deploy/eks-terraform/README.md) covers these prerequisites.
 - Helm 3 and `kubectl` configured for the cluster.
 - Snowflake bootstrap complete:
   - role: `TRUSTOPS_READER`
@@ -30,6 +33,7 @@ scheduler-driven use.
 kubectl create namespace trustops --dry-run=client -o yaml | kubectl apply -f -
 
 kubectl -n trustops create secret generic trustops-server \
+  --from-literal=TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
   --from-literal=TRUSTOPS_SESSION_SECRET="$(openssl rand -hex 32)"
 
 kubectl -n trustops create secret generic trustops-snowflake-key \
@@ -49,7 +53,7 @@ POC but should not become the permanent source of record.
 
 ## 2. Deploy
 
-Copy the example values and set the host, TLS secret, image tag, OIDC issuer,
+Copy the example values and set the host, ACM certificate ARN, Snowflake account, OIDC issuer,
 and IRSA role ARN:
 
 ```bash
@@ -94,9 +98,9 @@ The UI, CLI, API, scheduler, and agent harness all use the same lake-backed
 contracts:
 
 ```bash
-curl -fsS https://trustops-poc.example.com/api/v1/connectors
-curl -fsS https://trustops-poc.example.com/api/v1/current-posture
-curl -fsS https://trustops-poc.example.com/api/v1/agent-runs
+curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" https://trustops-poc.example.com/api/v1/connectors
+curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" https://trustops-poc.example.com/api/v1/posture/current
+curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" https://trustops-poc.example.com/api/v1/agent-runs
 ```
 
 Optional LangGraph runs are advisory. They can read redacted posture and propose

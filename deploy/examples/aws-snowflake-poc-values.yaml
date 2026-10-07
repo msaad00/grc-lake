@@ -1,13 +1,16 @@
 # AWS-hosted TrustOps POC with Snowflake as the governed evidence lake.
 #
 # This file is intentionally renderable as-is for `helm template`, but the
-# hostname, image tag, and IRSA role ARN must be changed for a real cluster.
+# hostname, certificate ARN, Snowflake account, and IRSA role ARN must be changed for a real cluster.
 # Snowflake object names match the TrustOps bootstrap scripts.
 
 image:
   repository: ghcr.io/msaad00/trustops
-  tag: "0.2.21" # pin a released version; never a moving tag
+  tag: "" # inherit the checked-out release chart appVersion
   pullPolicy: IfNotPresent
+
+security:
+  requireAuthentication: true
 
 replicaCount: 1
 
@@ -26,22 +29,21 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/healthcheck-path: /api/healthz
+    alb.ingress.kubernetes.io/healthcheck-path: /api/readyz
+    # ALB terminates TLS using ACM, not a Kubernetes TLS Secret.
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000
   hosts:
     - host: trustops-poc.example.com
       paths:
         - path: /
           pathType: Prefix
-  tls:
-    - secretName: trustops-poc-tls
-      hosts:
-        - trustops-poc.example.com
 
 lake:
   persistence:
     enabled: true
     size: 50Gi
     accessMode: ReadWriteOnce
+    storageClassName: gp3 # provision an encrypted EBS CSI StorageClass first
 
 scheduler:
   enabled: true
@@ -49,6 +51,13 @@ scheduler:
   concurrencyPolicy: Forbid
 
 env:
+  - name: TRUSTOPS_ENV
+    value: production
+  - name: TRUSTOPS_COOKIE_SIGNING_KEY
+    valueFrom:
+      secretKeyRef:
+        name: trustops-server
+        key: TRUSTOPS_COOKIE_SIGNING_KEY
   - name: TRUSTOPS_PUBLIC_URL
     value: https://trustops-poc.example.com
   - name: TRUSTOPS_SESSION_SECRET
@@ -76,7 +85,7 @@ env:
   # Snowflake service-user key-pair auth. TrustOps receives a mounted key file,
   # not a password or browser user credential.
   - name: SNOWFLAKE_ACCOUNT
-    value: MJFAYEE-YS65534
+    value: YOUR_ORG-YOUR_ACCOUNT
   - name: SNOWFLAKE_USER
     value: TRUSTOPS_INGEST_SVC
   - name: SNOWFLAKE_AUTHENTICATOR

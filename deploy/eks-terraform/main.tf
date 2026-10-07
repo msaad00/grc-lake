@@ -11,7 +11,7 @@
 #                                                                             #
 # Customer evidence stays in the customer S3 bucket. Nothing about this stack #
 # requires the bucket to be inside the same AWS account; cross-account is a   #
-# matter of bucket policy + role assumption.                                  #
+# matter of granting this IRSA role access in the bucket policy.             #
 ###############################################################################
 
 locals {
@@ -69,9 +69,13 @@ module "eks" {
   subnet_ids = module.vpc.private_subnets
 
   enable_irsa = true
+  # The creating operator must be able to bootstrap add-ons and secrets and
+  # authenticate the Kubernetes/Helm providers. Additional access is operator-owned.
+  enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
     workbench = {
+      ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = var.node_instance_types
       min_size       = var.node_min_size
       max_size       = var.node_max_size
@@ -163,21 +167,25 @@ module "trustops_irsa" {
 # Kubernetes + Helm providers wired to the new cluster                        #
 ###############################################################################
 
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
-}
-
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.this.token
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--region", var.region, "--cluster-name", module.eks.cluster_name]
+  }
 }
 
 provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    token                  = data.aws_eks_cluster_auth.this.token
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--region", var.region, "--cluster-name", module.eks.cluster_name]
+    }
   }
 }
 
@@ -190,17 +198,36 @@ resource "kubernetes_namespace" "trustops" {
   }
 }
 
+# Preserve the address of existing releases when adding the bootstrap phase.
+moved {
+  from = helm_release.trustops
+  to   = helm_release.trustops[0]
+}
+
 resource "helm_release" "trustops" {
+  count     = var.deploy_application ? 1 : 0
   name      = "trustops"
   namespace = kubernetes_namespace.trustops.metadata[0].name
   chart     = "${path.module}/../helm/trustops"
 
-  values = [
+  values = concat([
     yamlencode({
       image = {
         repository = var.image_repository
         tag        = var.image_tag
       }
+      env = [
+        { name = "TRUSTOPS_ENV", value = "production" },
+        {
+          name = "TRUSTOPS_COOKIE_SIGNING_KEY"
+          valueFrom = {
+            secretKeyRef = {
+              name = var.server_secret_name
+              key  = "TRUSTOPS_COOKIE_SIGNING_KEY"
+            }
+          }
+        },
+      ]
       serviceAccount = {
         create = true
         name   = "trustops"
@@ -223,7 +250,16 @@ resource "helm_release" "trustops" {
         }]
       }
     }),
-  ]
+    ], [for path in var.helm_values_files : file(path)], [
+    # Fail closed even when an operator profile omits auth or requests no-auth.
+    yamlencode({
+      security = {
+        requireAuthentication = true
+        allowInsecureNoAuth   = false
+        allowInsecureOverride = ""
+      }
+    }),
+  ])
 
   depends_on = [
     module.eks,

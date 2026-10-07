@@ -3,6 +3,10 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Align self-hosted deployment examples with runtime authentication, require cookie signing configuration in hosted Helm profiles, and launch scheduler CronJobs through the container's CLI executable. Refresh the EKS reference version, add staged infrastructure bootstrap and operator Helm values, and cover deployment plans and chart-to-server startup in CI.
+
 ## 0.2.21 - 2026-10-07
 
 - Harden evidence verdicts, human approval authority, tenant isolation, recovery, background operations, and portable reports.

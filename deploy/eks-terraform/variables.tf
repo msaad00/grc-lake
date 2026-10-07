@@ -13,7 +13,7 @@ variable "cluster_name" {
 variable "cluster_version" {
   description = "EKS Kubernetes version."
   type        = string
-  default     = "1.30"
+  default     = "1.35"
 }
 
 variable "namespace" {
@@ -81,4 +81,27 @@ variable "tags" {
   default = {
     "trustops:component" = "workbench"
   }
+}
+
+variable "deploy_application" {
+  description = "Install the application after cluster storage, ingress and secrets are ready. Use false only for initial infrastructure bootstrap; changing an existing deployment to false removes its Helm release."
+  type        = bool
+  default     = true
+}
+
+variable "server_secret_name" {
+  description = "Existing Kubernetes Secret in the TrustOps namespace containing TRUSTOPS_COOKIE_SIGNING_KEY. Create it outside Terraform so secret bytes stay out of state."
+  type        = string
+  default     = "trustops-server"
+
+  validation {
+    condition     = length(trimspace(var.server_secret_name)) > 0
+    error_message = "server_secret_name must reference an existing signing Secret."
+  }
+}
+
+variable "helm_values_files" {
+  description = "Ordered paths to operator Helm values (OIDC, ingress TLS, storage, connector secret references). Use references only: inline secret bytes would enter Terraform state. env lists replace the default list, so retain the signing Secret reference."
+  type        = list(string)
+  default     = []
 }

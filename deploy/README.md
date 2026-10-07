@@ -1,11 +1,12 @@
 # Deploy
 
-Three install surfaces — pick the one that fits your blast radius.
+Install locally, on a single host, or in your Kubernetes cluster. Cloud evidence
+roles and warehouse bootstrap scripts are connector setup, not application hosting.
 
 | Surface                      | When to use                                                                                  | Command                                                                                                                                                                                                                                          |
 | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Python wheel**             | Local demos, single laptop, contributor onboarding                                           | `pip install trustops-security-data-lake && security-lakehouse serve --lake build/lakehouse`                                                                                                                                                     |
-| **Container image**          | CI, Docker Compose, single-host servers                                                      | `docker run -p 8787:8787 -v $PWD/build/lakehouse:/lake ghcr.io/msaad00/trustops:0.2.21`                                                                                                                                                          |
+| **Python wheel**             | Local demos, single laptop, contributor onboarding                                           | See [Python and MCP installation](../docs/DEPLOYMENT.md#python-and-mcp)                                                                                                                                                                          |
+| **Container image**          | CI, Docker Compose, single-host servers                                                      | `docker compose up -d trustops-server` (configure `trustops.env` first)                                                                                                                                                                          |
 | **Helm + EKS**               | Production self-hosted, customer-data-residency requirement                                  | See [Helm chart](helm/trustops/) + [EKS reference IaC](eks-terraform/) below                                                                                                                                                                     |
 | **Snowflake POC**            | Governed evidence lake using customer-owned Snowflake views                                  | Run [`snowflake/bootstrap_poc.sql`](snowflake/bootstrap_poc.sql), then connect the reader role                                                                                                                                                   |
 | **Databricks POC (preview)** | Unity Catalog evidence views read by a service principal through a SQL warehouse             | Run [`databricks/bootstrap_poc.sql`](databricks/bootstrap_poc.sql), then connect the service principal                                                                                                                                           |
@@ -15,8 +16,8 @@ Three install surfaces — pick the one that fits your blast radius.
 To publish a real HTTPS link for evaluators, follow the
 [shareable POC hosting runbook](../docs/SHAREABLE_POC_HOSTING.md). It combines
 the chart, server auth, persistent lake storage, scheduler, and server-side
-connector secrets into one operator path. For the current AWS + Snowflake
-demo target, use the checked-in values profile at
+connector secrets into one operator path. For an AWS + Snowflake
+POC example, use the checked-in values profile at
 [`deploy/examples/aws-snowflake-poc-values.yaml`](examples/aws-snowflake-poc-values.yaml).
 Before sending the URL, run the gate in
 [`docs/RELEASE_READINESS.md`](../docs/RELEASE_READINESS.md): health, auth,
@@ -28,19 +29,25 @@ For production operations, see the
 PVC at `/lake` and the application-state database (`server/app.db` or
 `TRUSTOPS_DATABASE_URL`).
 
-For HA deployments (read replicas + single writer), see
-[HA read replicas](../docs/runbooks/HA_READ_REPLICAS.md).
+The supported topology is **one writable application replica**, with one
+scheduler owner per lake. Read replicas and distributed writers are unsupported;
+updates use `Recreate` and have downtime. See the
+[topology and recovery boundary](../docs/runbooks/HA_READ_REPLICAS.md).
 
 Commercial hosted invites, SCIM, and billing are documented in
 [COMMERCIAL_HOSTED.md](../docs/COMMERCIAL_HOSTED.md).
 
 ## Container image
 
-The repo ships a multi-stage `Dockerfile` at the root. Build locally:
+The repo ships a multi-stage `Dockerfile`; `make docker-build` creates a local
+`trustops:dev` image. To run the published release with authentication:
 
 ```bash
-make docker-build              # builds tag trustops:dev
-docker run --rm -p 8787:8787 -v $PWD/build/lakehouse:/lake trustops:dev
+cp deploy/compose/trustops.env.example trustops.env
+chmod 600 trustops.env
+$EDITOR trustops.env            # signing key, public URL, optional OIDC
+# Use the release pinned by compose.yaml:
+docker compose up -d trustops-server
 ```
 
 Notes:
@@ -52,23 +59,31 @@ Notes:
 
 ## Helm chart
 
-Renders in any conformant Kubernetes ≥ 1.27:
+The chart declares Kubernetes ≥ 1.27 syntax compatibility. Use a Kubernetes
+version still supported by your provider; this minimum is not a support-lifecycle
+claim. The chart is checked into the release source; the release workflow
+publishes the container, not a separate Helm repository or OCI chart.
+
+Create the signing Secret, then install the authenticated profile. Configure
+OIDC/SAML, ingress/TLS and the storage class for your cluster before sharing it:
 
 ```bash
-helm install trustops ./deploy/helm/trustops \
-  --namespace trustops --create-namespace \
-  --set ingress.enabled=true \
-  --set ingress.hosts[0].host=trustops.example.com
+kubectl create namespace trustops --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n trustops create secret generic trustops-server \
+  --from-literal=TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)"
+helm upgrade --install trustops ./deploy/helm/trustops \
+  --namespace trustops \
+  --values deploy/examples/self-hosted-values.yaml
 ```
 
 Key value groups:
 
 - `image` — repository, tag, pull policy, pull secrets. `image.tag` defaults to the chart's `appVersion`, so the chart and image versions move together.
-- `lake.persistence` — PVC backing for `gold/` + `silver/` + `bronze/` (use a CSI driver that supports `ReadWriteMany` only if you also run multiple replicas).
+- `lake.persistence` — PVC backing for `gold/` + `silver/` + `bronze/` (a working CSI driver and StorageClass are operator prerequisites; RWX does not enable multiple replicas).
 - `serviceAccount.annotations` — bind an IRSA role (EKS) or Workload Identity (GKE) here for read-only access to the customer evidence bucket.
-- `scheduler` — opt-in CronJob that runs `security-lakehouse scheduler tick` to fire `trigger.cron` workflows. Disable with `scheduler.enabled=false` if you drive it from an external scheduler.
+- `scheduler` — enabled-by-default CronJob that runs `security-lakehouse scheduler tick` to fire `trigger.cron` workflows. Disable with `scheduler.enabled=false` if you drive it from an external scheduler.
 - `defaultTrustRole` — set to `auditor` for the Trust Center deployment so it serves the redacted projection by default.
-- `security` — production guards: `requireAuthentication`, `allowInsecureNoAuth` (requires `allowInsecureOverride=acknowledged`), ingress auth enforcement, and multi-replica + RWO lake checks. See [HA read replicas](../docs/runbooks/HA_READ_REPLICAS.md).
+- `security` — production guards: `requireAuthentication`, `allowInsecureNoAuth` (requires `allowInsecureOverride=acknowledged`), ingress auth enforcement, and rejection of every replica count except one and every read-only lake. See [topology limits](../docs/runbooks/HA_READ_REPLICAS.md).
 - `extraVolumes` / `extraVolumeMounts` — mount customer-managed secrets such as
   a Snowflake service-user private key into both the API pod and scheduler
   CronJob. TrustOps should receive only a file path such as
@@ -78,26 +93,17 @@ Key value groups:
 
 ## EKS reference IaC
 
-`deploy/eks-terraform/` provisions a minimal but real EKS cluster:
+`deploy/eks-terraform/` defines a VPC, managed EKS control plane and node group,
+IRSA read-only evidence role, namespace, and optional Helm release. The default
+Kubernetes version is 1.35 with AL2023 x86-64 nodes. Follow the
+[EKS bootstrap runbook](eks-terraform/README.md) to prepare storage, controller,
+TLS and Secret prerequisites before enabling the application. Terraform accepts
+operator Helm values through `helm_values_files`; no secret bytes belong there.
 
-- VPC with public + private subnets across 2 AZs
-- EKS managed control plane + one managed node group
-- OIDC provider for IRSA
-- IAM role bound to the `trustops` ServiceAccount, with **read-only** access to your customer evidence S3 bucket
-- Helm release of the chart with that IRSA annotation applied
-
-```bash
-cd deploy/eks-terraform
-cp terraform.tfvars.example terraform.tfvars
-$EDITOR terraform.tfvars               # set evidence_bucket_name
-terraform init
-terraform plan
-terraform apply
-$(terraform output -raw kubeconfig_update_command)
-kubectl -n trustops get pods
-```
-
-The IAM policy is intentionally tiny: `s3:ListBucket` + `s3:GetObject*` on the named evidence bucket. No write/delete actions, no other AWS resources. That's the customer-data-residency boundary: TrustOps reads where the data lives, and the principal it runs as can't move bytes anywhere else.
+The evidence IAM policy grants S3 list/read operations on the named bucket(s).
+It does not enforce network egress or prevent separately configured connectors
+and sinks from exporting data. Cross-account access needs a bucket policy that
+grants this role access; the template does not grant `sts:AssumeRole`.
 
 ## Cloud posture POC roles
 
@@ -127,7 +133,7 @@ The live AWS, Azure, and GCP posture connectors can be proven without static key
   Workload Identity so the runtime impersonates it with no exported key.
   TrustOps uses Application Default Credentials at runtime.
 
-Both templates are bootstrap helpers for read-only evidence collection. They do
+These templates are bootstrap helpers for read-only evidence collection. They do
 not create users, credentials, long-lived access keys, or remediation
 permissions.
 
@@ -149,8 +155,8 @@ continuous ingestion. See
 [`docs/CONTINUOUS_INGESTION.md`](../docs/CONTINUOUS_INGESTION.md) for the
 production API/scheduler contract.
 
-## What's not in this PR
+## Infrastructure not supplied here
 
 - ECR repo + image push pipeline (use `ghcr.io/msaad00/trustops` from a public release for now).
-- Cross-account bucket policy examples (the IRSA role can already assume into another account if the bucket policy allows).
+- Cross-account bucket policies or additional role-assumption permissions.
 - GKE / AKS reference IaC — same chart works; pull-requests welcome.

@@ -1,249 +1,137 @@
-# Backup And Restore Runbook
+# Backup and restore
 
-TrustOps splits durable state into two places:
+Back up the **whole lake root** and the application-state database together.
+The lake includes bronze/silver/gold, published generations and their `current`
+pointer, snapshots, integrity/review ledgers and operational history. Copying
+only selected JSONL files can lose the generation or audit chain they reference.
+SQLite defaults to `server/app.db` inside the lake. When `TRUSTOPS_DATABASE_URL`
+selects PostgreSQL, that database requires a separate backup.
 
-```text
-TRUSTOPS_LAKE (/lake)
-  ├── bronze/ silver/ gold/     <- compliance truth (evidence, posture, snapshots)
-  ├── gold/connector_runs.jsonl <- sync/probe/discover history
-  ├── gold/connector_config.jsonl
-  ├── gold/scheduler_state.jsonl
-  └── server/app.db             <- application-state DB (default SQLite)
+Keep runtime signing keys, OIDC settings, connector secrets and encryption keys
+in an independently backed-up secret manager. Record the deployed image digest,
+chart revision, Helm values and database revision with each backup. API-key
+plaintext cannot be recovered from its stored hash.
 
-TRUSTOPS_DATABASE_URL (optional)
-  └── Postgres (or other SQLAlchemy URL) replaces server/app.db
-```
+## Quiesce Kubernetes writers
 
-Back up **both** the lake directory and the application-state database. Restoring
-only one leaves the console, remediation queue, agent runs, and API keys out of
-sync with posture and evidence.
-
-## What To Back Up
-
-| Path / object                              | Contents                                                       | RPO guidance                      |
-| ------------------------------------------ | -------------------------------------------------------------- | --------------------------------- |
-| `$TRUSTOPS_LAKE/bronze/`                   | Immutable raw evidence replay                                  | Same as lake                      |
-| `$TRUSTOPS_LAKE/silver/`                   | Normalized evidence facts                                      | Same as lake                      |
-| `$TRUSTOPS_LAKE/gold/`                     | Posture, controls, snapshots, connector state, workflows       | Same as lake                      |
-| `$TRUSTOPS_LAKE/gold/connector_runs.jsonl` | Probe/sync/discover run history                                | Same as lake                      |
-| `$TRUSTOPS_LAKE/server/app.db`             | Tenants, users, API keys, tasks, evidence requests, agent runs | Same as DB backup                 |
-| Kubernetes Secret refs                     | Session secret, OIDC, Snowflake key mounts                     | Independent secret-manager backup |
-
-Catalog files (`controls/`, `connectors/`, `frameworks/`) ship inside the
-container image (`TRUSTOPS_DATA_DIR=/opt/trustops-data`). You do not need to
-back them up separately unless you maintain custom overlays in the lake.
-
-## Helm / Kubernetes Backup
-
-The chart mounts a PVC at `lake.mountPath` (default `/lake`):
-
-```yaml
-# deploy/helm/trustops/values.yaml
-lake:
-  persistence:
-    enabled: true
-    size: 20Gi
-    accessMode: ReadWriteOnce
-  mountPath: /lake
-```
-
-PVC name: `{release}-lake` (e.g. `trustops-lake` when release is `trustops`).
-
-### 1. Quiesce Writes (recommended)
-
-Scale the deployment to zero and wait for the scheduler CronJob to finish:
+The chart supports one writable application replica and one scheduler owner.
+Pause external CLI/automation writers too. First prevent new scheduled jobs:
 
 ```bash
 NS=trustops
 RELEASE=trustops
+kubectl -n "$NS" patch cronjob/"$RELEASE"-scheduler --type=merge \
+  -p '{"spec":{"suspend":true}}'
+kubectl -n "$NS" get jobs
+```
 
+If the scheduler is disabled, skip the CronJob command. Suspending a CronJob
+**does not stop an already-running Job**. Identify its active Jobs by their
+CronJob owner reference and wait for them to complete before proceeding. Do not
+ignore failures or assume an empty label selector proves that no jobs are active.
+
+Then stop the API and verify that its pod has terminated and no other process
+is writing this lake:
+
+```bash
 kubectl -n "$NS" scale deployment/"$RELEASE" --replicas=0
-kubectl -n "$NS" wait --for=condition=complete job -l job-name --timeout=120s 2>/dev/null || true
+kubectl -n "$NS" get pods,jobs
 ```
 
-For a consistent SQLite snapshot, stop the API pod before copying `server/app.db`.
-Postgres deployments can use native point-in-time recovery instead.
+Keep the writers stopped until both lake and database backups finish. A live
+PostgreSQL dump can be internally consistent yet still disagree with a lake
+snapshot taken at a different point in the workflow.
 
-### 2. Snapshot The PVC
+## Capture storage
 
-**Volume snapshot (preferred on EBS/GCE/Azure Disk):**
+For Kubernetes, use your CSI driver's VolumeSnapshot procedure and wait for
+`readyToUse` before considering the snapshot complete. The chart's default PVC
+is `trustops-lake`; resolve the actual claim from the Deployment volume when
+using a different release name or name overrides:
 
 ```bash
-kubectl -n "$NS" get pvc "${RELEASE}-lake"
-# Create a VolumeSnapshot via your CSI driver / cloud console.
+kubectl -n "$NS" get deployment "$RELEASE" \
+  -o jsonpath='{.spec.template.spec.volumes[?(@.name=="lake")].persistentVolumeClaim.claimName}'
 ```
 
-**File-level copy via temporary pod:**
+Snapshot classes, retention and encryption are cluster-specific prerequisites;
+the application chart does not provision them. Follow the
+[Kubernetes volume snapshot procedure](https://kubernetes.io/docs/concepts/storage/volume-snapshots/)
+and the cloud provider's restore instructions. A temporary pod's `emptyDir` is
+not a durable backup destination, and deleting that pod deletes the output.
 
-```bash
-kubectl -n "$NS" run lake-backup --rm -it --restart=Never \
-  --image=busybox:1.36 \
-  --overrides='{
-    "spec": {
-      "containers": [{
-        "name": "backup",
-        "image": "busybox:1.36",
-        "command": ["tar", "czf", "/backup/lake.tar.gz", "-C", "/lake", "."],
-        "volumeMounts": [
-          {"name": "lake", "mountPath": "/lake", "readOnly": true},
-          {"name": "out", "mountPath": "/backup"}
-        ]
-      }],
-      "volumes": [
-        {"name": "lake", "persistentVolumeClaim": {"claimName": "'"${RELEASE}"'-lake"}},
-        {"name": "out", "emptyDir": {}}
-      ]
-    }
-  }'
-kubectl -n "$NS" cp lake-backup:/backup/lake.tar.gz "./trustops-lake-$(date +%F).tar.gz"
-```
-
-### 3. Back Up Postgres (when configured)
-
-If Helm values set `TRUSTOPS_DATABASE_URL` to Postgres, back up that database
-with your standard tooling (`pg_dump`, managed snapshots, WAL archiving). The
-lake PVC does **not** contain Postgres rows.
-
-Example Helm env:
-
-```yaml
-env:
-  - name: TRUSTOPS_DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: trustops-database
-        key: url
-```
-
-## Local / Docker Backup
+For local files, after stopping all writers:
 
 ```bash
 LAKE="${TRUSTOPS_LAKE:-build/lakehouse}"
-tar czf "trustops-lake-$(date +%F).tar.gz" -C "$LAKE" .
+BACKUP="$PWD/trustops-lake-$(date +%F).tar.gz"
+tar czf "$BACKUP" -C "$LAKE" .
+tar tzf "$BACKUP" >/dev/null
 ```
 
-Docker bind mount:
+For Compose, stop `trustops-server` first and identify its actual mounted volume
+with `docker inspect`; Compose may prefix the logical volume name with its
+project name. Archive that volume to durable external storage. A bind-mount
+installation can use the local command above. Do not use `docker compose down
+-v`, which removes named volumes.
+
+When using PostgreSQL, capture `pg_dump` or a managed database snapshot at the
+same quiesced boundary. Store backups encrypted outside the source lake and
+apply an explicit retention policy. Test recovery, not just archive creation.
+
+## Restore into an isolated target
+
+Keep production writers stopped. Restore a CSI snapshot into a replacement PVC
+or staging namespace according to your driver; do not overwrite the only copy
+of the current volume. Preserve permissions needed by the container's UID/GID 1100. Mount the restored PVC at `/lake` with the same application image and
+Secret references used by the recorded deployment.
+
+For a local drill, extract into a new empty directory rather than merging into
+an existing lake:
 
 ```bash
-docker run --rm -v trustops-lake:/lake -v "$PWD":/backup busybox \
-  tar czf /backup/lake-backup.tar.gz -C /lake .
+RESTORED_LAKE=$(mktemp -d)
+tar xzf "$BACKUP" -C "$RESTORED_LAKE"
+security-lakehouse db upgrade --lake "$RESTORED_LAKE"
+security-lakehouse db current --lake "$RESTORED_LAKE"
 ```
 
-Verify integrity hashes after restore:
+For PostgreSQL, restore the matching database to a separate target and set the
+restored application's `TRUSTOPS_DATABASE_URL` accordingly. SQLite comes with
+the full lake backup. Run migrations with the intended release version and
+keep the pre-migration backup. In Kubernetes the normal application startup
+runs migrations on its mounted lake/database; a standalone migration pod must
+mount that same restored PVC and receive the same database Secret references.
+An unmounted `kubectl run` pod does not migrate the restored application state.
+
+## Verify, then resume
+
+Start one application replica while the scheduler remains suspended:
 
 ```bash
-curl -s "$TRUSTOPS_URL/api/v1/snapshots/integrity" | jq .
-curl -s "$TRUSTOPS_URL/api/v1/tracking/integrity" | jq .
-```
-
-## Restore Procedure
-
-### 1. Restore Lake Files
-
-**Helm — replace PVC contents:**
-
-```bash
-NS=trustops
-RELEASE=trustops
-BACKUP=trustops-lake-2026-07-03.tar.gz
-
-kubectl -n "$NS" scale deployment/"$RELEASE" --replicas=0
-kubectl -n "$NS" scale cronjob/"$RELEASE"-scheduler --suspend=true
-
-kubectl -n "$NS" run lake-restore --rm -it --restart=Never \
-  --image=busybox:1.36 -- sh -c '
-    tar xzf /backup/lake.tar.gz -C /lake
-  ' \
-  --overrides='...'  # mount PVC at /lake and backup file at /backup/lake.tar.gz
-```
-
-**Local:**
-
-```bash
-LAKE="${TRUSTOPS_LAKE:-build/lakehouse}"
-rm -rf "$LAKE"
-mkdir -p "$LAKE"
-tar xzf trustops-lake-2026-07-03.tar.gz -C "$LAKE"
-```
-
-Confirm key artifacts exist:
-
-```bash
-ls "$LAKE/gold/current_posture.json"
-ls "$LAKE/gold/connector_runs.jsonl"
-ls "$LAKE/server/app.db"    # when using default SQLite
-```
-
-### 2. Restore Application-State DB
-
-**SQLite (default):** restored automatically when `server/app.db` is inside the
-lake tarball.
-
-**Postgres:** restore from your `pg_dump` or snapshot into the DSN referenced by
-`TRUSTOPS_DATABASE_URL`.
-
-### 3. Migrate Schema
-
-After any restore, run Alembic to the current revision:
-
-```bash
-security-lakehouse db upgrade --lake "$LAKE"
-security-lakehouse db current --lake "$LAKE"
-```
-
-In Kubernetes:
-
-```bash
-kubectl -n "$NS" run db-upgrade --rm -it --restart=Never \
-  --image=ghcr.io/msaad00/trustops:latest \
-  --env="TRUSTOPS_LAKE=/lake" \
-  -- security-lakehouse db upgrade --lake /lake
-```
-
-### 4. Bring Traffic Back
-
-```bash
-kubectl -n "$NS" scale cronjob/"$RELEASE"-scheduler --suspend=false
 kubectl -n "$NS" scale deployment/"$RELEASE" --replicas=1
 kubectl -n "$NS" rollout status deployment/"$RELEASE"
 curl -fsS "$TRUSTOPS_URL/api/healthz"
+curl -fsS "$TRUSTOPS_URL/api/readyz"
+curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+  "$TRUSTOPS_URL/api/v1/snapshots/integrity"
+curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+  "$TRUSTOPS_URL/api/v1/tracking/integrity"
 ```
 
-### 5. Post-Restore Validation
+Check human login, tenant scope, retained snapshot/workpaper retrieval, posture,
+connector history and review-ledger integrity. Only after those checks pass,
+resume the scheduler if it was previously enabled:
 
-Run the checks from [Release Readiness](../RELEASE_READINESS.md):
+```bash
+kubectl -n "$NS" patch cronjob/"$RELEASE"-scheduler --type=merge \
+  -p '{"spec":{"suspend":false}}'
+```
 
-- `GET /api/healthz` over HTTPS
-- Browser or API-key login
-- `GET /api/v1/ingestion/status` — enabled connectors show recent syncs
-- `GET /api/v1/posture/current` — score and violations load
-- One connector run in `gold/connector_runs.jsonl` with `result=ok`
-- Scheduler CronJob `{release}-scheduler` completes successfully
-- Snapshot and tracking integrity endpoints return ok
+Verify a scheduled run completes, then re-enable other writers and traffic.
+Record the recovery point and time actually observed in a staging restore
+drill. Configuration checks do not establish an RPO, RTO or production backup.
 
-## Restore Drill Checklist
-
-Schedule at least quarterly:
-
-- [ ] Restore lake tarball to a staging namespace or laptop path
-- [ ] Run `security-lakehouse db upgrade --lake <path>`
-- [ ] Confirm `gold/connector_runs.jsonl` and `current_posture.json` readable
-- [ ] Issue a test API key and call `/api/v1/posture/current`
-- [ ] Trigger one connector sync and confirm a new run row
-- [ ] Document RTO/RPO actually observed
-
-## Retention Notes
-
-- `gold/connector_runs.jsonl` is append-only; backups grow with sync frequency.
-  Archive old tarballs to object storage with encryption and lifecycle rules.
-- Assessment snapshots under `gold/snapshots/` are hash-chained; do not edit
-  individual files during restore — replace the whole lake prefix.
-- API keys are stored hashed; you cannot recover plaintext tokens from backup.
-  Re-issue keys after a compromise restore.
-
-## Related Docs
-
-- [Shareable POC Hosting](../SHAREABLE_POC_HOSTING.md) — PVC and scheduler defaults
-- [Deploy README](../../deploy/README.md) — Helm value groups
-- [Continuous Ingestion](../CONTINUOUS_INGESTION.md) — connector run contract
-- [Release Readiness](../RELEASE_READINESS.md) — post-restore gate
+See [deployment topology](HA_READ_REPLICAS.md),
+[shareable hosting](../SHAREABLE_POC_HOSTING.md), and
+[release readiness](../RELEASE_READINESS.md).

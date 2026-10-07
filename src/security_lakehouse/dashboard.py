@@ -201,7 +201,7 @@ th,td{{padding:12px;border-bottom:1px solid #e2e8f0;vertical-align:top;overflow-
 summary{{cursor:pointer;font-weight:650;padding:4px 0 16px}}code{{font-family:ui-monospace,monospace;overflow-wrap:anywhere;font-size:12px}}
 footer{{margin-top:24px;border-top:1px solid #ccd6e3;padding-top:16px}}:focus-visible{{outline:3px solid #3656d6;outline-offset:3px}}
 @media(max-width:640px){{main{{padding:24px 14px 40px}}.metrics{{grid-template-columns:repeat(2,minmax(0,1fr))}}h1{{font-size:30px}}section{{padding:16px}}}}
-@media print{{:root{{background:#fff}}main{{max-width:none;padding:0}}section,.metric{{break-inside:avoid}}details{{display:block}}}}
+@media print{{:root{{background:#fff}}main{{max-width:none;padding:0}}section,.metric{{break-inside:avoid}}details{{display:block}}details::details-content{{content-visibility:visible;display:block}}}}
 </style></head><body>
 <script id="app-data" type="application/json">{payload}</script>
 <main><header><div class="brand">TrustOps · Frozen evidence report</div><h1>Overview</h1>

@@ -60,6 +60,11 @@ for (const javaScriptEnabled of [true, false]) {
     await expect(
       page.getByText("Insufficient coverage", { exact: true }).first(),
     ).toBeVisible();
+    await page.emulateMedia({ media: "print" });
+    await expect(
+      page.getByRole("table", { name: "Recorded control results" }),
+    ).toBeVisible();
+    await page.emulateMedia({ media: "screen" });
     await page.getByText("Control results", { exact: true }).click();
     await expect(
       page.getByRole("table", { name: "Recorded control results" }),

@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "demo-screenshots": "node scripts/capture_demo_screenshots.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:dependencies": "node --test scripts/test_braces_security.mjs"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.1.1",
@@ -59,6 +60,7 @@
     },
     "postcss-nested": {
       "postcss-selector-parser": "7.1.6"
-    }
+    },
+    "braces": "npm:@dieub/braces-depth-guard@3.0.3-pn.3"
   }
 }

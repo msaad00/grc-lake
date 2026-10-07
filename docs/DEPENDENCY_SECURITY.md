@@ -31,27 +31,42 @@ the override. Keep lint, typechecking, static builds, and browser regressions in
 the validation path. Remove the overrides once both upstream dependency ranges
 resolve to a patched parser without them, and regenerate the lockfile.
 
-## Open build-tool advisory
+## Bounded braces replacement
 
 [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
 (CVE-2026-93687) affects `braces <=3.0.3`: deeply nested brace patterns can exhaust
-the stack. The advisory lists no patched release as of this review. The full npm
-audit reports seven affected dependency nodes stemming from this one advisory,
-including Tailwind 3 and the Next.js ESLint plugin through globbing dependencies.
-This finding remains open; a clean production audit does not close it.
+the stack. There is still no official patched upstream release. The console
+uses an exact npm override to
+[`@dieub/braces-depth-guard@3.0.3-pn.3`](https://www.npmjs.com/package/@dieub/braces-depth-guard/v/3.0.3-pn.3),
+a separately maintained MIT-licensed derivative of braces 3.0.3.
 
-The repository's runtime image contains the Python environment and static browser
-assets, not the Node build environment or its `node_modules`. The affected tools
-run when building and linting repository content. The current CI uses time-bounded
-jobs with read-only repository permissions; pull-request build content must be
-treated as untrusted. Keep builds isolated from deployment credentials and do not
-feed externally supplied glob patterns into these tools. These measures constrain
-exposure but do not patch the vulnerable parser.
+The reviewed package caps brace/parenthesis nesting and recursive AST traversal
+at 100 levels. Excessive string nesting raises a controlled `SyntaxError`;
+excessive direct AST depth raises a controlled `RangeError`. It retains ordinary
+alternatives, ranges, escapes, and stringify behavior. This intentionally rejects
+patterns deeper than 100 rather than allowing JavaScript stack exhaustion. It
+does not establish general bounds on expansion cardinality, AST width, arbitrary
+malformed objects, or regular-expression complexity.
 
-CI blocks known Python vulnerabilities and high-or-critical production npm
-vulnerabilities. It also retains the full npm audit as a separate, non-blocking
-build-tool report. A successful CI result is not a claim of zero development
-dependency advisories. Do not silence this advisory or force unrelated major
-upgrades to produce a clean audit. Close it only after a patched dependency chain
-or verified replacement passes lint, typechecking, the static build, and browser
-regressions. Recheck the upstream advisory during each dependency update.
+The initial adoption review compared the published runtime files with both
+upstream 3.0.3 and derivative source commit
+[`305a2e4bfe324bb53c336c1b03387ee1251c926f`](https://github.com/dieub/braces-depth-guard/tree/305a2e4bfe324bb53c336c1b03387ee1251c926f).
+The tarball matches that tagged source; registry signatures and publishing
+provenance verify with `npm audit signatures`. The lockfile records the tarball
+SHA-512 integrity. There are no install lifecycle scripts in the replacement.
+Do not replace this exact pin with a floating range without reviewing the new
+artifact and provenance.
+
+`npm run test:dependencies` exercises the copies resolved by micromatch and
+chokidar: 100/101 boundaries, 4,000-level inputs in a small-stack child process,
+direct ASTs, stricter limits, and ordinary syntax. A clean npm audit alone does
+not establish that a renamed dependency fixes the issue. Keep these behavioral
+regressions, lint, typechecking, static builds, and browser checks in the gate.
+Remove the override only when an official patched upstream dependency chain
+passes those checks.
+
+The runtime image contains Python and static browser assets, not the Node build
+environment. CI blocks known Python vulnerabilities and high-or-critical npm
+vulnerabilities across both production and development dependencies, and retains
+the complete npm audit report. Builds still process untrusted repository content
+and must remain isolated from deployment credentials.

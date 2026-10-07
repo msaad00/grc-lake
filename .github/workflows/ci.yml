@@ -28,6 +28,8 @@ jobs:
           cache-dependency-path: app/web/package-lock.json
       - name: Install
         run: npm ci --no-audit --no-fund
+      - name: Dependency security regressions
+        run: npm run test:dependencies
       - name: ESLint
         run: npm run lint
       - name: Typecheck
@@ -168,10 +170,9 @@ jobs:
       - name: npm audit (production deps, high+)
         working-directory: app/web
         run: npm audit --omit=dev --audit-level=high
-      - name: npm audit (full build-tool report)
+      - name: npm audit (all dependencies, high+)
         working-directory: app/web
-        continue-on-error: true
-        run: npm audit --json > "${{ runner.temp }}/npm-audit-full.json"
+        run: npm audit --audit-level=high --json > "${{ runner.temp }}/npm-audit-full.json"
       - name: Retain full dependency audit
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

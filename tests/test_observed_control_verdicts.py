@@ -122,7 +122,7 @@ def test_incremental_refreshes_v2_verdict_without_rewriting_history(tmp_path, mo
     current = active_generation(lake)
     assert current != previous
     assert read_jsonl(lake / "gold/control_posture.jsonl")[0]["status"] == "pass"
-    assert read_json(lake / "manifest.json")["control_evaluation_version"] == "trustops.control_evaluation.v7"
+    assert read_json(lake / "manifest.json")["control_evaluation_version"] == "trustops.control_evaluation.v8"
     assert (previous / "gold/control_posture.jsonl").read_bytes() == previous_bytes
     assert read_jsonl(previous / "gold/control_posture.jsonl")[0]["status"] == "not_evaluated"
     pipeline.run_pipeline_incremental(raw, lake, tenant_id="audit")

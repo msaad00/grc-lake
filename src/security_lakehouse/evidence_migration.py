@@ -80,6 +80,8 @@ def migrate_workpaper(source: Path, out: Path, *, content_path: Path | None = No
     """
     from security_lakehouse.audit_workpapers import export_workpaper
 
+    if source.is_symlink() or not source.is_dir() or (source / "manifest.json").is_symlink():
+        raise ValueError("workpaper migration requires a regular source directory and manifest, without symlinks")
     manifest = read_json(source / "manifest.json")
     files = manifest.get("files")
     if not isinstance(files, dict) or not files or not set(files) <= {"index.html", "workpaper.json"}:
@@ -96,12 +98,13 @@ def migrate_workpaper(source: Path, out: Path, *, content_path: Path | None = No
 
     if canonical_sha256(content) != manifest.get("content_sha256"):
         raise ValueError("workpaper JSON does not match the original recorded content hash")
-    export_workpaper(content, out)
-    return {
-        "out": str(out),
+    provenance = {
         "source_manifest_sha256": file_sha256(source / "manifest.json"),
+        "source_content_sha256": manifest["content_sha256"],
         "authentication": "hash_consistency_only",
     }
+    export_workpaper({**content, "migration": provenance}, out)
+    return {"out": str(out), **provenance}
 
 
 @generation_reader

@@ -7,7 +7,7 @@ presence/coverage predicates. Aggregate event and evidence counts still include
 observations. Observation-only controls remain unevaluated; explicit unknown
 and unevaluated outcomes still prevent a pass. An empty dataset has a zero
 control pass rate. These changes affect newly evaluated generations; historical
-evidence is retained. Manifests record `trustops.control_evaluation.v7`; the
+evidence is retained. Manifests record `trustops.control_evaluation.v8`; the
 incremental dependency fingerprint forces re-evaluation of older generations even
 when raw inputs have not changed, while retaining the earlier generation.
 
@@ -170,3 +170,9 @@ S3, Snowflake, and ClickHouse evidence readers preserve an explicit control
 mapping instead of adding unrelated defaults. A list of nonempty strings or a
 comma/pipe-delimited string is accepted. Empty or malformed explicit mappings
 are rejected; default mappings apply only when no mapping field was provided.
+Read projections compare timestamps as UTC instants, including offsets and
+fractional seconds. SQL posture timestamps use fixed-width microseconds so
+text-backed aggregation retains the same ordering. Evaluation v8 regenerates
+those projections when older unchanged inputs are evaluated incrementally.
+Historical generations retain their original bytes. Missing or invalid dates in
+operational display feeds sort oldest; this fallback never establishes freshness.

@@ -95,6 +95,7 @@ from security_lakehouse.workflows import (
     get_workflow,
     get_workflow_run,
     list_workflows,
+    reconcile_workflow_run,
     reject_workflow_run,
     retry_workflow_run,
     run_action,
@@ -365,6 +366,8 @@ def required_post_scope(path: str) -> str:
         return "workflow_run"
     if _suffix_match(path, "/api/v1/workflows/runs/", "/approve") is not None:
         return "workflow_manage"
+    if _suffix_match(path, "/api/v1/workflows/runs/", "/reconcile") is not None:
+        return "workflow_manage"
     if _suffix_match(path, "/api/v1/workflows/runs/", "/reject") is not None:
         return "workflow_manage"
     if path == "/api/v1/mapping-reviews/decisions":
@@ -493,6 +496,14 @@ EXTENDED_RESOURCES: list[JsonObject] = [
     {
         "resource": "workflows.run",
         "path": "/api/v1/workflows/runs/{run_id}/approve",
+        "kind": "singleton",
+        "methods": ["POST"],
+        "scopes": ["workflow_manage"],
+        "path_params": ["run_id"],
+    },
+    {
+        "resource": "workflows.run",
+        "path": "/api/v1/workflows/runs/{run_id}/reconcile",
         "kind": "singleton",
         "methods": ["POST"],
         "scopes": ["workflow_manage"],
@@ -2003,6 +2014,24 @@ def handle_post(
         except (ValueError, TypeError):
             return HTTPStatus.BAD_REQUEST, error_envelope("bad_request", "invalid request", resource="workflows.run")
         return HTTPStatus.CREATED, envelope("workflows.run", run)
+    workflow_reconcile = _suffix_match(path, "/api/v1/workflows/runs/", "/reconcile")
+    if workflow_reconcile is not None:
+        try:
+            run = reconcile_workflow_run(
+                lake,
+                run_id=workflow_reconcile,
+                actor=str(payload.get("actor") or ""),
+                note=str(payload.get("note") or ""),
+            )
+        except ApprovalConflict:
+            return HTTPStatus.CONFLICT, error_envelope(
+                "conflict", "claim is active or not eligible for reconciliation", resource="workflows.run"
+            )
+        except (ValueError, TypeError):
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", "independent reviewer and reconciliation reason required", resource="workflows.run"
+            )
+        return HTTPStatus.OK, envelope("workflows.run", run)
     workflow_retry = _suffix_match(path, "/api/v1/workflows/runs/", "/retry")
     if workflow_retry is not None:
         try:

@@ -15,6 +15,27 @@ from security_lakehouse.remediation_verification import verify_task
 from security_lakehouse.server_app import create_app
 
 
+@pytest.mark.parametrize("owner_alias", ["email", "id", "external"])
+def test_owner_reassignment_cannot_erase_independence_boundary(tmp_path, owner_alias):
+    from security_lakehouse.db.repository import create_user
+
+    app = create_app(tmp_path)
+    with session_scope(app.state.sessionmaker) as session:
+        tenant = create_tenant(session, slug="reassignment", name="Reassignment")
+        user = create_user(session, tenant_id=tenant.id, email="implementer@example.test", role="security_admin")
+        user.scim_external_id = "provider-implementer"
+        session.flush()
+        owner = {"email": user.email, "id": user.id, "external": user.scim_external_id}[owner_alias]
+        task = remediation.create_task(session, tenant_id=tenant.id, title="Fix", control_id="SOC2-CC6.1", owner=owner)
+        remediation.update_task(
+            session, tenant_id=tenant.id, task_id=task.id, changes={"owner": "replacement@example.test"}
+        )
+        with pytest.raises(ValueError, match="independent"):
+            verify_task(
+                session, tmp_path, tenant_id=tenant.id, task_id=task.id, reviewer_id=user.id, reviewer=user.email
+            )
+
+
 @pytest.mark.parametrize("failure", [None, "old", "future", "failed", "foreign", "tampered", "concurrent"])
 def test_only_fresh_passing_owned_evidence_can_resolve(tmp_path, failure):
     app = create_app(tmp_path)

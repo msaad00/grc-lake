@@ -32,6 +32,7 @@ from security_lakehouse.auth.request_audit import REQUEST_AUDIT_FILE
 from security_lakehouse.connector_state import CONFIG_FILE as CONNECTOR_CONFIG_FILE
 from security_lakehouse.connector_state import RUNS_FILE as CONNECTOR_RUNS_FILE
 from security_lakehouse.io import iter_jsonl
+from security_lakehouse.models import instant_sort_key
 from security_lakehouse.trust_share import SHARES_FILE as TRUST_SHARES_FILE
 from security_lakehouse.workflows import RUNS_FILE as WORKFLOW_RUNS_FILE
 
@@ -278,5 +279,5 @@ def build_audit_log(
         entries = [e for e in entries if e["category"] == category]
     if actor:
         entries = [e for e in entries if e["actor"] == actor]
-    entries.sort(key=lambda e: str(e.get("occurred_at") or ""), reverse=True)
+    entries.sort(key=lambda e: instant_sort_key(e.get("occurred_at")), reverse=True)
     return entries[:limit]

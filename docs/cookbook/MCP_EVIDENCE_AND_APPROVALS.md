@@ -19,7 +19,7 @@ transport supports one data authority per configuration:
 | Mode           | Configuration                                                      | Authority                                                                                                                                 |
 | -------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Remote         | `TRUSTOPS_MCP_MODE=remote`, `TRUSTOPS_API_URL`, `TRUSTOPS_API_KEY` | All tenant-backed reads and writes use the authenticated API, including evidence, snapshots, shares, workflows, ingestion and scheduling. |
-| Local          | `TRUSTOPS_MCP_MODE=local`, `TRUSTOPS_LAKE` (default `./lake`)      | Lake-backed tools use the operator's filesystem and execution permissions. Server-only tools fail explicitly.                             |
+| Local          | `TRUSTOPS_MCP_MODE=local`, `TRUSTOPS_LAKE` (default `./lake`)      | Lake-backed tools use the operator's filesystem and execution permissions. Server-only tools are omitted from discovery.                  |
 | Auto (default) | No mode override                                                   | Either API setting selects remote mode and requires both. With neither setting, lake-backed tools use local mode.                         |
 
 Missing or invalid remote configuration fails closed; it never falls back to a
@@ -76,8 +76,9 @@ Install the MCP server in Cursor, Claude Desktop, or another MCP host using
 stdio transport and the env vars above. Copy
 [`examples/mcp/mcp.json.example`](../../examples/mcp/mcp.json.example) as a starting point.
 
-The server advertises **TrustOps icons** on `serverInfo` and each tool (MCP
-SEP-973). Hosted deployments should set `TRUSTOPS_PUBLIC_URL` so clients can
+The server advertises a **TrustOps icon** once on `serverInfo` (MCP SEP-973),
+and reports the installed TrustOps package version. Tools retain readable titles
+without repeating the embedded image in every discovery entry. Hosted deployments should set `TRUSTOPS_PUBLIC_URL` so clients can
 load `https://<host>/brand/trustops-mark.svg`. Stdio mode embeds the SVG as a
 data URI fallback.
 
@@ -147,9 +148,10 @@ approval. Route those through the workflow engine.
 Open the stored run in the console and have an eligible reviewer, different
 from its creator, approve the reviewed decision through OIDC/SAML SSO. MCP API
 keys cannot approve or reject these human-reserved decisions, regardless of role.
-The compatibility tools `approve_agent_decision` and `reject_agent_decision` return
-403 when called with API-key credentials; do not exchange a key for a session to
-try to change that authority.
+MCP does not register agent-decision approval/rejection, access certification,
+or employee acknowledgment tools, because its API-key credentials cannot perform
+those human attestations. Exchanging a key for a session does not change that
+authority.
 
 On success the server:
 
@@ -232,3 +234,12 @@ or execute writes without approval.
 - [Agent API](../api/AGENT_API.md) — full `/api/v1/agent-runs` surface
 - [Connectors](../CONNECTORS.md) — sync history in `gold/connector_runs.jsonl`
 - [Server Auth](../SERVER_AUTH.md) — API keys, roles, and scopes
+
+## Bounded assurance reads
+
+`get_ccf_assessment` and `get_mapping_review_queue` default to 25 rows per list.
+Both accept `limit` (1–100) and `offset`. Their `pagination` object reports the
+limit, offset, full list counts, and whether more rows remain. CCF applies the
+same page bounds separately to safeguards and requirements; asset results use
+`list_ccf_asset_results`. Mapping summary counts describe the full filtered
+backlog, not only the returned page. Read responses remain capped at 256 KiB.

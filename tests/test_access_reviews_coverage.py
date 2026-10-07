@@ -23,9 +23,10 @@ CONTROL = "SOC2-CC6.1"  # exists in the shipped control catalog
 def _completed_campaign_with_decisions(session, tenant_id: str) -> None:
     campaign = ars.create_campaign(session, tenant_id, name="Q3 access", control_id=CONTROL)
     cid = campaign["id"]
+    ars.set_campaign_status(session, tenant_id, cid, status="active")
     for subject, decision in (("okta:user:1", "certified"), ("okta:user:2", "revoked")):
         item = ar.add_item(session, tenant_id=tenant_id, campaign_id=cid, subject_id=subject)
-        ar.record_decision(session, tenant_id=tenant_id, item_id=item.id, decision=decision)
+        ar.record_decision(session, tenant_id=tenant_id, item_id=item.id, decision=decision, reviewer="reviewer")
     ars.set_campaign_status(session, tenant_id, cid, status="completed")
 
 

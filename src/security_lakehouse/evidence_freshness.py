@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from security_lakehouse.connectors import load_connector_catalog
-from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.models import instant_sort_key, parse_event_time, utc_iso
 
 STALE_STATUSES = {"stale", "expired", "missing"}
 STATUS_SCORES = {"fresh": 100, "stale": 30, "expired": 0, "missing": 0}
@@ -72,7 +72,7 @@ def summarize_source_freshness(records: list[dict[str, Any]]) -> list[dict[str, 
     out: list[dict[str, Any]] = []
     for source, items in grouped.items():
         statuses = Counter(str(item["status"]) for item in items)
-        latest = max(str(item.get("evidence_collected_at") or "") for item in items)
+        latest = max((str(item.get("evidence_collected_at") or "") for item in items), key=instant_sort_key)
         stale_count = sum(statuses[status] for status in STALE_STATUSES)
         status = _source_status(statuses)
         out.append(

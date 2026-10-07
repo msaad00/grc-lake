@@ -173,7 +173,7 @@ def test_mcp_server_branding(tmp_path: Path) -> None:
     assert len(server.icons) >= 1
     tools = anyio.run(server.list_tools)
     assert tools
-    assert all(getattr(tool, "icons", None) for tool in tools)
+    assert not any(getattr(tool, "icons", None) for tool in tools)
     assert all(getattr(tool, "title", None) for tool in tools)
 
 
@@ -196,9 +196,17 @@ def test_resolve_api_base_url(monkeypatch):
     assert mcp_server.resolve_api_base_url() == "https://trustops.example.test"
 
 
-def test_expected_tools_registered(tmp_path):
+def test_expected_tools_registered(tmp_path, monkeypatch):
+    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
+    monkeypatch.setenv("TRUSTOPS_API_URL", "https://example.test")
+    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture")
     server = _seeded_server(tmp_path)
-    assert tool_names(server) >= EXPECTED_TOOLS
+    assert tool_names(server) >= EXPECTED_TOOLS - {
+        "record_access_review_decision",
+        "acknowledge_policy",
+        "approve_agent_decision",
+        "reject_agent_decision",
+    }
 
 
 def test_get_posture_has_score(tmp_path):
@@ -747,17 +755,15 @@ def test_seed_access_review_calls_api(tmp_path, monkeypatch):
     assert result["data"]["seeded"] == 12
 
 
-def test_record_access_review_decision_calls_api(tmp_path, monkeypatch):
+def test_record_access_review_decision_is_not_an_agent_tool(tmp_path, monkeypatch):
+    from mcp.server.fastmcp.exceptions import ToolError
+
     server = _seeded_server(tmp_path)
-
-    def fake_request(method, path, body=None, **params):
-        assert method == "POST"
-        assert path == "/api/v1/access-reviews/items/item-7/decision"
-        assert body == {"decision": "certify", "note": "still needed"}
-        return {"data": {"item_id": "item-7", "decision": "certify"}, "meta": {}, "errors": []}
-
-    monkeypatch.setattr(mcp_server, "_server_api_request", fake_request)
-    call_tool(server, "record_access_review_decision", item_id="item-7", decision="certify", note="still needed")
+    monkeypatch.setattr(
+        mcp_server, "_server_api_request", lambda *a, **k: pytest.fail("machine performed human review")
+    )
+    with pytest.raises(ToolError, match="Unknown tool"):
+        call_tool(server, "record_access_review_decision")
 
 
 def test_list_access_review_items_calls_api(tmp_path, monkeypatch):
@@ -1036,17 +1042,15 @@ def test_publish_policy_calls_api(tmp_path, monkeypatch):
     assert result["data"]["status"] == "published"
 
 
-def test_acknowledge_policy_calls_api(tmp_path, monkeypatch):
+def test_acknowledge_policy_is_not_an_agent_tool(tmp_path, monkeypatch):
+    from mcp.server.fastmcp.exceptions import ToolError
+
     server = _seeded_server(tmp_path)
-
-    def fake_request(method, path, body=None, **params):
-        assert method == "POST"
-        assert path == "/api/v1/policies/doc-1/acknowledgments"
-        assert body == {"display_name": "Alice", "user_email": "alice@example.com"}
-        return {"data": {"user_email": "alice@example.com"}, "meta": {}, "errors": []}
-
-    monkeypatch.setattr(mcp_server, "_server_api_request", fake_request)
-    call_tool(server, "acknowledge_policy", document_id="doc-1", user_email="alice@example.com", display_name="Alice")
+    monkeypatch.setattr(
+        mcp_server, "_server_api_request", lambda *a, **k: pytest.fail("machine performed human review")
+    )
+    with pytest.raises(ToolError, match="Unknown tool"):
+        call_tool(server, "acknowledge_policy")
 
 
 def test_mcp_agent_run_tools_call_authenticated_api(tmp_path, monkeypatch):
@@ -1074,9 +1078,7 @@ def test_mcp_agent_run_tools_call_authenticated_api(tmp_path, monkeypatch):
     )
     assert created["meta"]["resource"] == "agent-runs"
     fetched = call_tool(server, "get_agent_run", run_id="run/id with space")
-    approved = call_tool(server, "approve_agent_decision", run_id="run/id with space", decision_index=2, note="ok")
     assert fetched["data"]["ok"] is True
-    assert approved["data"]["ok"] is True
 
     assert calls[0] == {
         "method": "GET",
@@ -1096,15 +1098,7 @@ def test_mcp_agent_run_tools_call_authenticated_api(tmp_path, monkeypatch):
         "max_fact_items": 5,
     }
     assert calls[2]["path"] == "/api/v1/agent-runs/run%2Fid%20with%20space"
-    assert calls[3]["path"] == "/api/v1/agent-runs/run%2Fid%20with%20space/decisions/2/approve"
-    assert calls[3]["body"] == {"note": "ok"}
-
-    rejected = call_tool(
-        server, "reject_agent_decision", run_id="run/id with space", decision_index=1, reason="covered elsewhere"
-    )
-    assert rejected["data"]["ok"] is True
-    assert calls[4]["path"] == "/api/v1/agent-runs/run%2Fid%20with%20space/decisions/1/reject"
-    assert calls[4]["body"] == {"reason": "covered elsewhere"}
+    assert len(calls) == 3
 
 
 def test_list_evidence_freshness_reads_lake(tmp_path):

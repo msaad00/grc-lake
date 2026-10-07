@@ -203,7 +203,10 @@ def seed_campaign_from_evidence(
     a fresh sync only adds newly-discovered identities. Uses the campaign's own
     ``scope`` unless an explicit ``scope`` overrides it.
     """
-    campaign = ar.get_campaign(session, tenant_id=tenant_id, campaign_id=campaign_id)
+    try:
+        campaign = ar.get_mutable_campaign(session, tenant_id=tenant_id, campaign_id=campaign_id)
+    except ValueError as exc:
+        raise ValidationError(str(exc)) from exc
     if campaign is None:
         raise NotFound("access review campaign not found")
     effective_scope = scope or campaign.scope or "all"

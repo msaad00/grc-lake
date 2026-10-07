@@ -318,6 +318,9 @@ class RemediationTask(Base):
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolution_note: Mapped[str] = mapped_column(Text, nullable=False, default="", server_default="")
     verification_history: Mapped[str] = mapped_column(Text, nullable=False, default="[]", server_default="[]")
+    # Null legacy histories cannot establish separation of duties after an
+    # unrecorded reassignment. New tasks retain every creator/owner binding.
+    authority_history: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     @property
     def is_open(self) -> bool:
@@ -872,6 +875,7 @@ class OperationJob(Base):
     tenant_id: Mapped[str] = mapped_column(String(128), nullable=False)
     user_id: Mapped[str] = mapped_column(String(36), nullable=False)
     api_key_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    session_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     auth_method: Mapped[str] = mapped_column(String(32), nullable=False)
     idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
     request_hash: Mapped[str] = mapped_column(String(64), nullable=False)

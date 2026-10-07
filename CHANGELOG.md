@@ -18,6 +18,10 @@ Python package, Helm chart, and bundled web console.
 - Preserve explicit imported control mappings, require positive Jira resolutions, retain unresolved Azure role uncertainty, and detect unsafe added Kubernetes capabilities.
 
 - Make assessment scores a versioned percentage of fresh passing controls, so new failures cannot improve them and passing severity cannot increase control risk.
+- Preserve remediation authority across owner changes, serialize access-review decisions and terminal campaigns, and revalidate queued session authority.
+- Reconcile interrupted workflow claims without replay, preserve review evidence during rollback, and repair SQLite acknowledgment defaults.
+- Reject unlisted generation files, unsafe workpaper recovery, forged export metadata, and missing-lake verification; preserve recovery provenance and compare timestamp instants across read projections.
+- Bound MCP assurance pages, advertise mode-appropriate tools, keep human attestations out of API-key MCP, and return bootstrap API credentials once.
 
 - Share rule-aware verdict evaluation between controls and CCF safeguards, preserve source-tenant freshness boundaries, and reject bronze pointers as proof of available source evidence.
 - Keep excluded or unknown MFA populations out of passing coverage, and classify GCP organization policies by their relevant constraint and explicit unconditional enforcement.

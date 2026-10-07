@@ -1620,7 +1620,7 @@ def _auth_issue_key(args: argparse.Namespace) -> int:
             from datetime import UTC, datetime, timedelta
 
             expires_at = datetime.now(UTC) + timedelta(days=args.expires_days)
-        key, _token = repository.create_api_key(
+        key, token = repository.create_api_key(
             session, tenant_id=tenant.id, user_id=user.id, name=args.name, expires_at=expires_at
         )
         result = {
@@ -1629,10 +1629,10 @@ def _auth_issue_key(args: argparse.Namespace) -> int:
             "api_key_id": key.id,
             "prefix": key.prefix,
             "status": key.status,
-            "token_revealed": False,
-            "warning": "Token omitted from CLI output. Use the authenticated console or API create-key endpoint for one-time reveal.",
+            "token": token,
+            "token_revealed": True,
         }
-        print(json.dumps(result, indent=2, sort_keys=True))
+    print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 
@@ -1690,7 +1690,7 @@ def _platform_seed_dev(args: argparse.Namespace) -> int:
                 display_name=args.display_name,
                 role="admin",
             )
-        key, _token = repository.create_api_key(session, tenant_id=tenant.id, user_id=user.id, name="local-dev")
+        key, token = repository.create_api_key(session, tenant_id=tenant.id, user_id=user.id, name="local-dev")
         result = {
             "tenant_id": tenant.id,
             "tenant_slug": tenant.slug,
@@ -1699,8 +1699,8 @@ def _platform_seed_dev(args: argparse.Namespace) -> int:
             "role": user.role,
             "api_key_id": key.id,
             "api_key_prefix": key.prefix,
-            "token_revealed": False,
-            "warning": "Token omitted from CLI output. Use the authenticated console or API create-key endpoint for one-time reveal.",
+            "token": token,
+            "token_revealed": True,
         }
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
@@ -1843,6 +1843,8 @@ def _assessment_snapshot(args: argparse.Namespace) -> int:
 def _assessment_verify_snapshots(args: argparse.Namespace) -> int:
     from security_lakehouse.assessment import verify_snapshot_chain
 
+    if not Path(args.lake).is_dir():
+        raise ValueError("assessment lake directory does not exist")
     result = verify_snapshot_chain(args.lake)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1
@@ -1859,6 +1861,8 @@ def _assessment_reconcile_snapshots(args: argparse.Namespace) -> int:
 def _assessment_verify_tracking(args: argparse.Namespace) -> int:
     from security_lakehouse.tracking import verify_tracking_chain
 
+    if not Path(args.lake).is_dir():
+        raise ValueError("assessment lake directory does not exist")
     result = verify_tracking_chain(args.lake)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1

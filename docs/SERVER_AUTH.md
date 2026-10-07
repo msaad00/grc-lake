@@ -56,9 +56,9 @@ security-lakehouse auth list-keys --lake build/lakehouse --tenant-slug acme
 
 The console **Access** page (`/console/auth/`) lets admins create, list, and
 revoke keys with a one-time token reveal. The CLI `auth issue-key` and
-`platform seed-dev` commands are metadata-only so bearer tokens do not land in
-terminal logs; use the authenticated console or API create-key endpoint when a
-human must copy the one-time secret.
+`platform seed-dev` commands also return the new bearer token exactly once,
+after the database commit. Store that output securely; later list commands
+return metadata only. These keys authorize automation, not human attestations.
 
 ## OIDC
 
@@ -416,3 +416,34 @@ provider subject identifiers still require an independently assigned reviewer.
 Linked remediation tasks must use the evidence retest endpoint instead of being
 resolved or dismissed through a status edit. Unauthenticated local serving is
 forbidden in production and staging, including with the insecure override.
+
+## Review authority and interrupted claims
+
+Access-review decisions require an active campaign and a named human reviewer.
+Completed and cancelled campaigns are immutable; completing a campaign requires
+at least one item and no pending decisions. A recorded item decision cannot be
+reset. Begin a new campaign for a later review.
+
+Separation of duties resolves tenant-owned email, user ID, and SCIM external-ID
+bindings, including `mailto:` email aliases. Provider identifiers such as ARNs
+must be bound through the identity directory; display-name guesses do not prove
+ownership. Remediation retests retain creators and all recorded owners across
+reassignment. Migration 0026 preserves existing tasks but leaves their unknown
+historical authority unset; those tasks require a new task and independent
+retest rather than manufactured ownership history.
+
+Queued operations retain the authorizing session ID and revalidate that session
+at execution. Revoked or expired sessions cannot execute queued work. Jobs from
+older versions without session provenance fail closed.
+
+An independent SSO reviewer with `workflow_manage` can close an interrupted
+workflow approval claim using `POST /api/v1/workflows/runs/{run_id}/reconcile`
+with a nonempty `note`. Inspect provider receipts first. Recovery records
+`interrupted` and `outcome_unknown`; it never reruns actions or asserts success.
+It refuses a live worker and blocks retry of the reconciled run. If further work
+is necessary, explicitly start a new workflow run after checking its side effects.
+
+Downgrade refuses to discard retained remediation review receipts, exception
+approval identity, or task/job authority provenance. Restore an independently
+verified backup to use an older application; do not erase audit evidence to make
+a schema downgrade succeed. Empty installations still support migration reversal.

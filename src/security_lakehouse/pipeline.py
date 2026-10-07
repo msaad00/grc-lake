@@ -40,7 +40,7 @@ from security_lakehouse.validation import validate_raw_event, validate_raw_event
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
 NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v4"
-CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v5"
+CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v6"
 
 
 @serialized_publication
@@ -619,7 +619,7 @@ def _build_control_rows(
         control = rows[0]["_control"]
         failing_rows = [row for row in rows if row["status"] in FAIL_STATUSES]
         evidence_rows = [row for row in rows if row["evidence_ref"]]
-        max_score = max((row["severity_score"] for row in rows), default=0)
+        max_score = max((row["severity_score"] for row in failing_rows), default=0)
         result = (
             evaluate_evidence_verdict(control_id, rows, control.get("evaluation_rule"), stale=control_id in stale)
             if control_id in control_map

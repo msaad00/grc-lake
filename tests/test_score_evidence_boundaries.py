@@ -113,6 +113,7 @@ def test_framework_share_requires_known_framework(tmp_path, framework):
 
 def test_sprs_complete_population_retains_weighted_score(tmp_path):
     from security_lakehouse.sprs import _cmmc_sprs_metadata
+    from test_cmmc_current_freshness import source
 
     write_jsonl(
         tmp_path / "gold/control_tests.jsonl",
@@ -120,6 +121,10 @@ def test_sprs_complete_population_retains_weighted_score(tmp_path):
             {"framework_id": "cmmc-2-level2", "control_id": "CMMC-" + key, "result": "pass"}
             for key in _cmmc_sprs_metadata()
         ],
+    )
+    write_jsonl(
+        tmp_path / "silver/normalized_events.jsonl",
+        [source(control_ids=["CMMC-" + key for key in _cmmc_sprs_metadata()])],
     )
     report = build_sprs_report(tmp_path)
     assert report["score"] == 110

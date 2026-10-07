@@ -223,3 +223,12 @@ def test_snapshot_pins_catalog_bundle_and_chain_holds(tmp_path: Path) -> None:
     assert bundle["bundle_sha256"] == cv.compute_bundle()["bundle_sha256"]
     # The pin is covered by the tamper-evident chain.
     assert verify_snapshot_chain(tmp_path)["ok"] is True
+
+
+def test_validate_flags_duplicate_control_ids(tmp_path: Path) -> None:
+    catalog = _copy_catalog(tmp_path)
+    payload = json.loads(catalog.read_text())
+    payload["controls"].append(dict(payload["controls"][0]))
+    catalog.write_text(json.dumps(payload), encoding="utf-8")
+    errors = validate_catalog(registry_path=DEFAULT_FRAMEWORK_REGISTRY, catalog_path=catalog)
+    assert any("duplicate control_id" in e for e in errors)

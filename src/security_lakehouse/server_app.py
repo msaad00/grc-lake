@@ -1110,15 +1110,17 @@ async def platform_event_stream(
     while not await request.is_disconnected():
         emitted = False
         payloads = await run_in_threadpool(_stream_payloads, lake, tenant_id, sessionmaker, interval)
-        if authority_check is not None and not await run_in_threadpool(authority_check):
-            return
         for event, data in payloads.items():
             payload = json.dumps(redact_payload(data, role=role), default=str, sort_keys=True)
             if payload != last.get(event):
+                if authority_check is not None and not await run_in_threadpool(authority_check):
+                    return
                 last[event] = payload
                 yield f"event: {event}\ndata: {payload}\n\n"
                 emitted = True
         if not emitted:
+            if authority_check is not None and not await run_in_threadpool(authority_check):
+                return
             yield ": ping\n\n"
         await asyncio.sleep(interval)
 

@@ -311,3 +311,48 @@ def test_stream_checks_authority_after_payload_collection(tmp_path, monkeypatch)
             await anext(response.body_iterator)
 
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("change", ["revoke", "role"])
+def test_stream_revocation_stops_remaining_frames_in_collected_batch(tmp_path, monkeypatch, change):
+    app, headers, user_id, _, login_id, _ = _principal(tmp_path)
+    request = Request(
+        {
+            "type": "http",
+            "app": app,
+            "method": "GET",
+            "path": "/api/v1/stream",
+            "query_string": b"",
+            "headers": [(k.lower().encode(), v.encode()) for k, v in headers.items()],
+        }
+    )
+    with app.state.sessionmaker() as session:
+        identity = get_identity(request, credentials=None, session=session)
+    monkeypatch.setattr(
+        server_app,
+        "_stream_payloads",
+        lambda *args: {
+            "posture": {"owner": "first owner"},
+            "ai-governance": {"sensitivity": "restricted", "owner": "must not escape"},
+        },
+    )
+
+    async def connected():
+        return False
+
+    monkeypatch.setattr(request, "is_disconnected", connected)
+    endpoint = next(route.endpoint for route in app.routes if getattr(route, "path", None) == "/api/v1/stream")
+
+    async def exercise():
+        response = await endpoint(request, identity=identity)
+        iterator = response.body_iterator
+        assert "event: posture" in await anext(iterator)
+        with app.state.sessionmaker.begin() as session:
+            if change == "revoke":
+                session.get(UserSession, login_id).revoked_at = datetime.now(UTC)
+            else:
+                session.get(User, user_id).role = "auditor"
+        with pytest.raises(StopAsyncIteration):
+            await anext(iterator)
+
+    asyncio.run(exercise())

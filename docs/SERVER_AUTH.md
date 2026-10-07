@@ -444,15 +444,15 @@ Queued operations retain the authorizing session ID and revalidate that session
 at execution. Revoked or expired sessions cannot execute queued work. Jobs from
 older versions without session provenance fail closed.
 
-Live streams revalidate authority after collecting each batch, before emitting
-its events or heartbeat. Revoked, expired, disabled, or mismatched credentials
+Live streams revalidate authority immediately before yielding each event or
+heartbeat, including events remaining in an already collected batch. Revoked, expired, disabled, or mismatched credentials
 close the stream. Changed effective roles or scopes also close it so reconnection
 authenticates against current permissions. The normal polling interval is ten
-seconds; this is a batch boundary check, not a guarantee that previously emitted
-data can be recalled. Shared payload caching never caches a subscriber's
+seconds; revocation stops subsequent emissions but cannot recall data already
+emitted. Shared payload caching never caches a subscriber's
 authority. Each check uses a short-lived database session and two or three indexed
-credential/user reads when billing is disabled; it does not update credential
-usage timestamps. Billing checks may add reads when enabled.
+credential/user reads per emitted frame when billing is disabled; idle streams
+perform one check per heartbeat. Checks do not update credential usage timestamps. Billing checks may add reads when enabled.
 
 An independent SSO reviewer with `workflow_manage` can close an interrupted
 workflow approval claim using `POST /api/v1/workflows/runs/{run_id}/reconcile`

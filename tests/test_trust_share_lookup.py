@@ -157,3 +157,33 @@ def test_bound_tenant_share_resolves_before_the_lake_has_any_data(tmp_path: Path
 
     assert resolved is not None
     assert resolved[1] == tenant_dir
+
+
+def _copy_flat_shares_into(root: Path, scoped: Path) -> None:
+    (scoped / "gold").mkdir(parents=True, exist_ok=True)
+    with (scoped / "gold" / trust_share.SHARES_FILE).open("ab") as target:
+        target.write((root / "gold" / trust_share.SHARES_FILE).read_bytes())
+
+
+def test_revocation_in_any_owner_lake_wins_over_a_live_flat_copy(tmp_path: Path) -> None:
+    (tmp_path / "silver").mkdir()
+    share = trust_share.create_share(tmp_path, role="auditor")
+    scoped = tmp_path / "tenants" / "owner"
+    _copy_flat_shares_into(tmp_path, scoped)
+    # Revocations made before flat-root fallback existed only reached the scoped copy.
+    trust_share.revoke_share(scoped, share["share_id"])
+
+    assert (
+        trust_share.resolve_share_from_root(tmp_path, share["token"], tenant_ids=["owner"], bound_tenant="owner")
+        is None
+    )
+    assert trust_share.list_shares(scoped, additional_lakes=(tmp_path,)) == []
+
+
+def test_share_copied_into_two_owner_lakes_is_listed_once(tmp_path: Path) -> None:
+    share = trust_share.create_share(tmp_path, role="auditor")
+    scoped = tmp_path / "tenants" / "owner"
+    _copy_flat_shares_into(tmp_path, scoped)
+
+    listed = trust_share.list_shares(scoped, include_revoked=True, additional_lakes=(tmp_path,))
+    assert [row["share_id"] for row in listed] == [share["share_id"]]

@@ -243,3 +243,21 @@ def test_trend_limit_preserves_history_order_and_unlimited_semantics(tmp_path, l
     result = framework_readiness_trends(tmp_path, limit=limit, include_current=False)
     selected = paths[-limit:] if limit > 0 else paths
     assert [point["snapshot_id"] for point in result["points"]] == [path.stem for path in selected]
+
+
+@pytest.mark.parametrize("warm", [False, True])
+def test_snapshot_read_rejects_self_consistent_payload_with_wrong_previous_hash(tmp_path, warm):
+    paths, ledger = history(tmp_path, count=1)
+    if warm:
+        assessment.load_snapshot(tmp_path, paths[0].stem)
+    payload = json.loads(paths[0].read_text())
+    payload["prev_hash"] = "f" * 64
+    payload["assessment_hash"] = assessment._assessment_hash(payload)
+    paths[0].write_text(json.dumps(payload, sort_keys=True))
+    entry = json.loads(ledger.read_text())
+    entry["assessment_hash"] = payload["assessment_hash"]
+    # Ledger remains a valid genesis, while payload hashes are internally valid.
+    # Only the read-time payload/ledger prev_hash comparison detects this mismatch.
+    ledger.write_text(json.dumps(entry) + "\n")
+    with pytest.raises(assessment.SnapshotIntegrityError, match="snapshot integrity verification failed"):
+        assessment.load_snapshot(tmp_path, paths[0].stem)

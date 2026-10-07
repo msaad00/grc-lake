@@ -110,7 +110,9 @@ def required_post_scope(path: str) -> str:
 
 
 @generation_reader
-def handle_get(path: str, query: Query, lake_dir: str | Path) -> tuple[HTTPStatus, Body]:
+def handle_get(
+    path: str, query: Query, lake_dir: str | Path, *, share_lakes: tuple[Path, ...] = ()
+) -> tuple[HTTPStatus, Body]:
     """Resolve a legacy GET into ``(status, body)``. Auditor redaction is applied by the transport."""
     lake = resolve_path(lake_dir)
     if path == "/api/posture/current":
@@ -206,7 +208,7 @@ def handle_get(path: str, query: Query, lake_dir: str | Path) -> tuple[HTTPStatu
         return HTTPStatus.OK, {"workflow_id": workflow_runs, "runs": list_workflow_runs(lake, workflow_runs)}
     if path == "/api/trust-shares":
         include_revoked = (_first(query, "include_revoked") or "false").lower() in {"1", "true", "yes"}
-        shares = list_shares(lake, include_revoked=include_revoked)
+        shares = list_shares(lake, include_revoked=include_revoked, additional_lakes=share_lakes)
         return HTTPStatus.OK, {"count": len(shares), "shares": shares}
     if path == "/api/audit-log":
         limit = int(_first(query, "limit") or "200")
@@ -240,6 +242,7 @@ def handle_post(
     *,
     role: str = "",
     on_snapshot_written: SnapshotWrittenHook | None = None,
+    share_lakes: tuple[Path, ...] = (),
 ) -> tuple[HTTPStatus, Body]:
     """Resolve a legacy POST into ``(status, body)``.
 
@@ -416,7 +419,7 @@ def handle_post(
         return HTTPStatus.CREATED, {"share": share}
     revoke = _suffix_match(path, "/api/trust-shares/", "/revoke")
     if revoke is not None:
-        revoked = revoke_share(lake, revoke)
+        revoked = revoke_share(lake, revoke, additional_lakes=share_lakes)
         if revoked is None:
             return HTTPStatus.NOT_FOUND, {"error": "not_found"}
         return HTTPStatus.CREATED, {"share": revoked}

@@ -1543,10 +1543,12 @@ def collection_page_response(
 
 @generation_reader
 @connector_state_reader
-def handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPStatus, JsonObject]:
+def handle_get(
+    path: str, params: Params, lake_dir: str | Path, *, share_lakes: tuple[Path, ...] = ()
+) -> tuple[HTTPStatus, JsonObject]:
     """Resolve a v1 GET against one pinned assessment generation."""
     try:
-        status, body = _handle_get(path, params, lake_dir)
+        status, body = _handle_get(path, params, lake_dir, share_lakes=share_lakes)
         strict_json.validate(body)
     except strict_json.InvalidJSON:
         return HTTPStatus.SERVICE_UNAVAILABLE, error_envelope("invalid_stored_data", "stored data failed validation")
@@ -1564,7 +1566,9 @@ def handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSta
     return status, body
 
 
-def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPStatus, JsonObject]:
+def _handle_get(
+    path: str, params: Params, lake_dir: str | Path, *, share_lakes: tuple[Path, ...] = ()
+) -> tuple[HTTPStatus, JsonObject]:
     lake = resolve_path(lake_dir)
     if path == "/api/v1":
         return HTTPStatus.OK, envelope("index", index_payload())
@@ -1683,7 +1687,7 @@ def _handle_get(path: str, params: Params, lake_dir: str | Path) -> tuple[HTTPSt
         return HTTPStatus.OK, envelope("workflows", workflow)
     if path == "/api/v1/trust-shares":
         include_revoked = (params.get("include_revoked") or ["false"])[0].lower() in {"1", "true", "yes"}
-        shares = list_shares(lake, include_revoked=include_revoked)
+        shares = list_shares(lake, include_revoked=include_revoked, additional_lakes=share_lakes)
         collection_params = {key: values for key, values in params.items() if key != "include_revoked"}
         try:
             return HTTPStatus.OK, collection_response("trust-shares", shares, collection_params)
@@ -1915,6 +1919,7 @@ def handle_post(
     lake_dir: str | Path,
     *,
     on_snapshot_written: SnapshotWrittenHook | None = None,
+    share_lakes: tuple[Path, ...] = (),
 ) -> tuple[HTTPStatus, JsonObject]:
     """Resolve a v1 POST into an ``(status, body)`` pair.
 
@@ -2098,7 +2103,7 @@ def handle_post(
         return HTTPStatus.CREATED, envelope("trust-shares", share)
     revoke = _suffix_match(path, "/api/v1/trust-shares/", "/revoke")
     if revoke is not None:
-        revoked = revoke_share(lake, revoke)
+        revoked = revoke_share(lake, revoke, additional_lakes=share_lakes)
         if revoked is None:
             return HTTPStatus.NOT_FOUND, error_envelope("not_found", f"unknown share {revoke}", resource="trust-shares")
         return HTTPStatus.CREATED, envelope("trust-shares", revoked)

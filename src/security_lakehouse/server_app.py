@@ -1036,11 +1036,12 @@ def _legacy_post_response(
     lake: Path,
     identity: Identity,
     on_snapshot_written: SnapshotWrittenHook | None = None,
+    share_lakes: tuple[Path, ...] = (),
 ) -> JSONResponse:
     """Dispatch a legacy POST with a fail-closed server-mode error boundary."""
     try:
         status_code, payload = api_legacy.handle_post(
-            path, body, lake, role=identity.role, on_snapshot_written=on_snapshot_written
+            path, body, lake, role=identity.role, on_snapshot_written=on_snapshot_written, share_lakes=share_lakes
         )
     except Exception:  # noqa: BLE001 - do not expose internal exception text at the HTTP boundary
         return JSONResponse(_legacy_error_payload(HTTPStatus.INTERNAL_SERVER_ERROR), status_code=500)
@@ -1208,6 +1209,24 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             tenant_ids = []
         bound = tenancy.resolve_bound_tenant(lake, require_auth=app.state.require_auth, tenant_ids=tenant_ids)
         return tenancy.tenant_lake(lake, identity.tenant_id, bound_tenant=bound)
+
+    def additional_share_lakes(identity: Identity, rest: str) -> tuple[Path, ...]:
+        """Keep legacy shares manageable only by their durable flat-lake owner.
+
+        A scoped evidence directory may supersede the flat lake without moving
+        old share records. Never grant that fallback to another tenant, and do
+        not change where evidence reads, writes, or new shares are routed.
+        """
+        if rest != "trust-shares" and not rest.startswith("trust-shares/"):
+            return ()
+        with app.state.sessionmaker() as session:
+            tenant_ids = repository.list_tenant_ids(session) if app.state.require_auth else []
+        bound = tenancy.resolve_bound_tenant(lake, require_auth=app.state.require_auth, tenant_ids=tenant_ids)
+        if bound != identity.tenant_id or not tenancy.is_flat_lake(lake):
+            return ()
+        if tenancy.tenant_lake(lake, identity.tenant_id, bound_tenant=bound) == lake:
+            return ()
+        return (lake,)
 
     app.state.operation_queue = JobQueue(app.state.sessionmaker, lake)
 
@@ -3642,7 +3661,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     @app.get("/api/v1/{rest:path}")
     def v1_get(rest: str, request: Request, identity: Identity = Depends(_require_read)) -> JSONResponse:
         with server_execution(identity.tenant_id):
-            _status, body = api_v1.handle_get(f"/api/v1/{rest}", _params(request), lake_for(identity))
+            _status, body = api_v1.handle_get(
+                f"/api/v1/{rest}",
+                _params(request),
+                lake_for(identity),
+                share_lakes=additional_share_lakes(identity, rest),
+            )
         return JSONResponse(_redact_payload(body, identity), status_code=int(_status))
 
     @app.post("/api/v1/{rest:path}")
@@ -3699,6 +3723,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             body,
             lake_for(identity),
             on_snapshot_written=_snapshot_written_hook(session, identity.tenant_id),
+            share_lakes=additional_share_lakes(identity, rest),
         )
         session.commit()
         return JSONResponse(_redact_payload(payload, identity), status_code=int(_status))
@@ -3708,7 +3733,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     @app.get("/api/{rest:path}")
     def legacy_get(rest: str, request: Request, identity: Identity = Depends(_require_read)) -> JSONResponse:
         with server_execution(identity.tenant_id):
-            _status, body = api_legacy.handle_get(f"/api/{rest}", _params(request), lake_for(identity))
+            _status, body = api_legacy.handle_get(
+                f"/api/{rest}", _params(request), lake_for(identity), share_lakes=additional_share_lakes(identity, rest)
+            )
         return JSONResponse(_redact_payload(body, identity), status_code=int(_status))
 
     @app.post("/api/{rest:path}")
@@ -3748,6 +3775,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             lake_for(identity),
             identity,
             _snapshot_written_hook(session, identity.tenant_id),
+            additional_share_lakes(identity, rest),
         )
         session.commit()
         return response

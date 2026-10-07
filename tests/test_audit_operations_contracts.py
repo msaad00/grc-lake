@@ -330,3 +330,62 @@ def test_invalid_connector_configuration_is_a_client_error(tmp_path, payload):
     client = TestClient(create_app(tmp_path, require_auth=False), raise_server_exceptions=False)
     response = client.post("/api/v1/connectors/github-security/configure", json=payload)
     assert response.status_code in {400, 422}
+
+
+@pytest.mark.parametrize("prefix", ["/api/v1", "/api"])
+@pytest.mark.parametrize("copied", [False, True])
+def test_flat_share_management_survives_owner_scoped_directory(tmp_path, prefix, copied):
+    from security_lakehouse import trust_share
+
+    _seed_lake(tmp_path)
+    app = create_app(tmp_path)
+    with session_scope(app.state.sessionmaker) as session:
+        owner = create_tenant(session, slug="owner", name="Owner")
+        user = create_user(session, tenant_id=owner.id, email="owner@example.test", role="security_admin")
+        _, token = create_api_key(session, tenant_id=owner.id, user_id=user.id)
+    client = TestClient(app)
+    headers = {"Authorization": "Bearer " + token}
+    made = client.post("/api/v1/trust-shares", headers=headers, json={"role": "auditor"})
+    assert made.status_code == 201
+    original = made.json()["data"]
+    scoped = tmp_path / "tenants" / owner.id
+    scoped.mkdir(parents=True)
+    new_share = trust_share.create_share(scoped, role="auditor")
+    if copied:
+        # A partial migration can leave the same token in both authorized lakes.
+        with (scoped / "gold" / trust_share.SHARES_FILE).open("ab") as target:
+            target.write((tmp_path / "gold" / trust_share.SHARES_FILE).read_bytes())
+    assert client.get("/api/public/trust/" + original["token"]).status_code == 200
+
+    with session_scope(app.state.sessionmaker) as session:
+        other = create_tenant(session, slug="other", name="Other")
+        other_user = create_user(session, tenant_id=other.id, email="other@example.test", role="security_admin")
+        _, other_token = create_api_key(session, tenant_id=other.id, user_id=other_user.id)
+    other_headers = {"Authorization": "Bearer " + other_token}
+    assert original["share_id"] not in client.get(prefix + "/trust-shares", headers=other_headers).text
+    assert (
+        client.post(
+            prefix + "/trust-shares/" + original["share_id"] + "/revoke", headers=other_headers, json={}
+        ).status_code
+        == 404
+    )
+    assert trust_share.resolve_share(tmp_path, original["token"]) is not None
+
+    listing = client.get(prefix + "/trust-shares", headers=headers)
+    assert listing.status_code == 200
+    assert original["share_id"] in listing.text
+    assert new_share["share_id"] in listing.text
+    for share in (original, new_share):
+        response = client.post(prefix + "/trust-shares/" + share["share_id"] + "/revoke", headers=headers, json={})
+        assert response.status_code == 201
+        assert client.get("/api/public/trust/" + share["token"]).status_code == 404
+    # Share management must not change the selected evidence lake.
+    assert tenancy.tenant_lake(tmp_path, owner.id, bound_tenant=owner.id) == scoped
+
+
+def test_public_share_does_not_search_an_ambiguous_tenant_managed_flat_root(tmp_path):
+    from security_lakehouse import trust_share
+
+    _seed_lake(tmp_path)
+    share = trust_share.create_share(tmp_path, role="auditor")
+    assert trust_share.resolve_share_from_root(tmp_path, share["token"], tenant_ids=["a", "b"]) is None

@@ -15,7 +15,7 @@ Visual references for architecture, ingestion, auth, and deployment.
 | Evaluation lifecycle                        | [evaluation-lifecycle.md](evaluation-lifecycle.md)                 |
 | Hosting topology                            | [hosting.md](hosting.md)                                           |
 | Unified lake + app DB model                 | [unified-data-model.md](unified-data-model.md)                     |
-| HA read replicas + single writer            | [../runbooks/HA_READ_REPLICAS.md](../runbooks/HA_READ_REPLICAS.md) |
+| Single-replica topology and HA limits       | [../runbooks/HA_READ_REPLICAS.md](../runbooks/HA_READ_REPLICAS.md) |
 | Agent workflow                              | [agent-workflow.md](agent-workflow.md)                             |
 
 ## SVG (README & docs)

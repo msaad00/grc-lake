@@ -46,6 +46,7 @@ spec:
               securityContext:
                 {{- toYaml .Values.containerSecurityContext | nindent 16 }}
               args:
+                - security-lakehouse
                 - scheduler
                 - tick
                 {{- if and .Values.scheduler.allTenants (not .Values.security.allowInsecureNoAuth) }}

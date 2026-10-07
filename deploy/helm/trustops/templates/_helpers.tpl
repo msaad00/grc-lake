@@ -63,19 +63,23 @@ Image reference (repository:tag, defaulting tag to appVersion).
 {{- end -}}
 
 {{/*
-Return "true" when Helm values configure an authentication path (OIDC, SAML,
-API-only insecure override with acknowledgement, or explicit auth secret).
+Return "true" when the runtime has its required signing secret, or an
+explicit local-only insecure override. OIDC/SAML settings alone cannot boot
+the authenticated server. Secret references are checked structurally here;
+Kubernetes resolves their contents at deployment time.
 */}}
 {{- define "trustops.authConfigured" -}}
 {{- if and .Values.security.allowInsecureNoAuth (eq .Values.security.allowInsecureOverride "acknowledged") -}}
 true
 {{- else -}}
-{{- $found := false -}}
+{{- $configured := dict -}}
 {{- range .Values.env -}}
-{{- if or (eq .name "TRUSTOPS_OIDC_CLIENT_ID") (eq .name "TRUSTOPS_SAML_IDP_METADATA_URL") (eq .name "TRUSTOPS_SESSION_SECRET") (eq .name "TRUSTOPS_COOKIE_SIGNING_KEY") -}}
-{{- $found = true -}}
+{{- $ref := get (default dict .valueFrom) "secretKeyRef" | default dict -}}
+{{- if or (ne (trim (toString (default "" .value))) "") (and (get $ref "name") (get $ref "key") (not (get $ref "optional"))) -}}
+{{- $_ := set $configured .name true -}}
 {{- end -}}
 {{- end -}}
-{{- if $found -}}true{{- else -}}false{{- end -}}
+{{- $oidc := and (hasKey $configured "TRUSTOPS_OIDC_ISSUER") (hasKey $configured "TRUSTOPS_OIDC_CLIENT_ID") (hasKey $configured "TRUSTOPS_OIDC_CLIENT_SECRET") -}}
+{{- if and (hasKey $configured "TRUSTOPS_COOKIE_SIGNING_KEY") (or (not $oidc) (hasKey $configured "TRUSTOPS_SESSION_SECRET")) -}}true{{- else -}}false{{- end -}}
 {{- end -}}
 {{- end -}}

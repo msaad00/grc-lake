@@ -28,3 +28,8 @@ output "kubeconfig_update_command" {
   description = "Command to update local kubeconfig for the new cluster."
   value       = "aws eks update-kubeconfig --region ${var.region} --name ${module.eks.cluster_name}"
 }
+
+output "region" {
+  description = "AWS region for kubeconfig bootstrap."
+  value       = var.region
+}

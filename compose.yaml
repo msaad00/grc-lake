@@ -21,7 +21,7 @@
 #   its own `trustops-lake` volume. See docs/DEPLOYMENT.md for TLS and backups.
 #
 # Pin a different release with TRUSTOPS_VERSION, e.g.
-#   TRUSTOPS_VERSION=0.2.18 docker compose up
+#   TRUSTOPS_VERSION=<release-version> docker compose up
 
 name: trustops
 

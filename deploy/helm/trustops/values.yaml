@@ -83,7 +83,7 @@ resources:
     cpu: 1000m
     memory: 1Gi
 
-# Liveness + readiness target /api/healthz (the Python server's built-in).
+# Liveness targets /api/healthz; readiness checks DB/storage at /api/readyz.
 probes:
   liveness:
     enabled: true
@@ -108,11 +108,11 @@ scheduler:
   failedJobsHistoryLimit: 3
   concurrencyPolicy: Forbid
 
-# Optional: extra env vars (e.g. for SCIM / OIDC integration in future PRs).
+# Runtime environment and Kubernetes Secret references (auth, OIDC/SAML, SCIM).
 env: []
 
-# Per-replica API rate limits. Set ``redisUrl`` for a shared budget across
-# replicas (requires the ``redis`` package in the server image).
+# API rate limits. Optional Redis shares the rate-limit budget; it does not
+# enable multiple application replicas or distributed lake writers.
 rateLimit:
   rps: 50
   burst: 100
@@ -121,7 +121,8 @@ rateLimit:
 # Production guard: never enable insecure no-auth on a shareable hosted URL.
 # Override only for local `helm template` experiments with an explicit token.
 security:
-  # Set true for shareable/hosted installs (requires OIDC/SAML/session env below).
+  # Set true for shareable/hosted installs. Requires TRUSTOPS_COOKIE_SIGNING_KEY;
+  # OIDC also needs TRUSTOPS_SESSION_SECRET (direct values or required Secret refs).
   requireAuthentication: false
   allowInsecureNoAuth: false
   allowInsecureOverride: ""

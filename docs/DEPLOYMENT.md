@@ -47,10 +47,29 @@ company with authentication off, on `127.0.0.1` only. The
 From a source checkout the console must be built first (`make web-install
 web-build`, Node 22+); without that build `/console/` is a 404.
 
+### Python and MCP
+
+The wheel includes the CLI and static console. Optional extras select runtime
+dependencies; they are not separate hosted services:
+
+```bash
+pip install 'trustops-security-data-lake[server,mcp]'
+TRUSTOPS_LAKE=./lake trustops-mcp
+```
+
+`trustops-mcp` speaks stdio to an MCP client. It can read the operator's local
+lake or call an authenticated TrustOps API using `TRUSTOPS_API_URL` and
+`TRUSTOPS_API_KEY`. The HTTP server and console use `security-lakehouse serve
+--server`; configure [server auth](SERVER_AUTH.md) before exposing them.
+The Docker image also includes MCP, but its default command starts the HTTP
+server. Neither package publication nor container publication creates a cloud
+service.
+
 ### Self-hosted
 
-Production shape: Helm chart on EKS/AKS/GKE (or Docker Compose for small pilots),
-OIDC/SAML for humans, API keys for agents, persistent `/lake`, scheduler-driven
+Self-hosted shape: Helm chart on EKS/AKS/GKE (or Docker Compose for small pilots),
+**one writable application replica**, OIDC/SAML for humans, API keys for agents,
+persistent `/lake`, scheduler-driven
 connector syncs, and token-scoped trust-center links.
 
 | Component | Typical POC                        | Production hardening                               |
@@ -59,6 +78,11 @@ connector syncs, and token-scoped trust-center links.
 | Auth      | One tenant, OIDC/SAML              | SCIM lifecycle, enforced SSO, least-privilege RBAC |
 | State     | Encrypted PVC at `/lake`           | Backup/restore, per-tenant prefixes                |
 | Evidence  | Read-only cloud/service identities | Customer IaC owns roles, grants, rotation          |
+
+The chart rejects read-only lakes and multiple application replicas, even with
+RWX storage or PostgreSQL. Updates have downtime. See the
+[topology boundary](runbooks/HA_READ_REPLICAS.md). EKS has reference Terraform;
+AKS/GKE use the same chart with operator-provisioned infrastructure.
 
 Runbook: [Shareable POC Hosting](SHAREABLE_POC_HOSTING.md),
 [deploy/README.md](../deploy/README.md),

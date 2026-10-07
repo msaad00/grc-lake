@@ -10,9 +10,20 @@ evidence_bucket_name = "acme-trustops-evidence"
 # Optional second bucket (Iceberg catalog, etc.) granted read-only.
 # evidence_bucket_arn_prefix = "arn:aws:s3:::acme-iceberg-catalog"
 
-# Optional ALB ingress.
+# First bootstrap infrastructure with deploy_application=false. After the
+# storage driver, controllers and secrets are ready, use true (the default).
+# See README.md; switching an existing release to false uninstalls it.
+# deploy_application = false
+
+# Required signing Secret created outside Terraform.
+# server_secret_name = "trustops-server"
+
+# Helm overrides with OIDC, TLS and storage settings; use Secret references.
+# helm_values_files = ["poc-values.yaml"]
+
+# Optional ALB ingress (requires the AWS Load Balancer Controller + TLS values).
 # ingress_host = "trustops.acme.io"
 
 # Pin the image. Empty defaults to chart appVersion.
 # image_repository = "ghcr.io/msaad00/trustops"
-# image_tag        = "0.2.0"
+# image_tag        = "" # use the versioned chart appVersion

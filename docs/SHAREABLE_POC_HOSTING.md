@@ -45,10 +45,12 @@ Do not publish:
 
 ## 1. Build Or Use The Image
 
-For a public POC, use an immutable tag from GHCR or your own registry:
+For a public POC, use the version pinned in your checked-out release chart;
+record the image digest for reproducibility:
 
 ```bash
-docker pull ghcr.io/msaad00/trustops:latest
+TRUSTOPS_VERSION=$(awk '/^appVersion:/ {gsub(/"/, "", $2); print $2}' deploy/helm/trustops/Chart.yaml)
+docker pull "ghcr.io/msaad00/trustops:$TRUSTOPS_VERSION"
 ```
 
 For a private build:
@@ -75,6 +77,7 @@ Minimum server secrets:
 
 ```bash
 kubectl -n trustops create secret generic trustops-server \
+  --from-literal=TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
   --from-literal=TRUSTOPS_SESSION_SECRET="$(openssl rand -hex 32)"
 ```
 
@@ -95,8 +98,8 @@ static keys:
 
 ## 3. Deploy With Helm
 
-For a generic deployment, create a POC values file. For the current AWS +
-Snowflake demo, start from the checked-in profile instead:
+For a generic deployment, create a POC values file. For an AWS +
+Snowflake POC, start from the checked-in profile instead:
 
 ```bash
 cp deploy/examples/aws-snowflake-poc-values.yaml poc-values.yaml
@@ -110,7 +113,7 @@ mount, and EKS IRSA annotation. The minimal shape is:
 # poc-values.yaml
 image:
   repository: ghcr.io/msaad00/trustops
-  tag: latest
+  tag: "" # inherit appVersion from the checked-out release chart
 
 ingress:
   enabled: true
@@ -134,14 +137,24 @@ scheduler:
   enabled: true
   schedule: "*/5 * * * *"
 
+security:
+  requireAuthentication: true
+
 env:
-  - name: TRUSTOPS_PUBLIC_URL
-    value: https://trustops-poc.example.com
+  - name: TRUSTOPS_ENV
+    value: production
+  - name: TRUSTOPS_COOKIE_SIGNING_KEY
+    valueFrom:
+      secretKeyRef:
+        name: trustops-server
+        key: TRUSTOPS_COOKIE_SIGNING_KEY
   - name: TRUSTOPS_SESSION_SECRET
     valueFrom:
       secretKeyRef:
         name: trustops-server
         key: TRUSTOPS_SESSION_SECRET
+  - name: TRUSTOPS_PUBLIC_URL
+    value: https://trustops-poc.example.com
   - name: SNOWFLAKE_PRIVATE_KEY_FILE
     value: /var/run/secrets/trustops/snowflake_key.p8
 
@@ -176,10 +189,27 @@ curl -fsS https://trustops-poc.example.com/api/healthz
 
 For a shareable link, do not use `--allow-insecure-no-auth`.
 
-Configure OIDC if the identity provider supports it:
+Configure OIDC before sharing the URL. Merge these settings with the existing
+`env` entries; Helm replaces lists rather than appending them. Preserve both
+signing Secret references:
 
 ```yaml
+security:
+  requireAuthentication: true
+
 env:
+  - name: TRUSTOPS_ENV
+    value: production
+  - name: TRUSTOPS_COOKIE_SIGNING_KEY
+    valueFrom:
+      secretKeyRef:
+        name: trustops-server
+        key: TRUSTOPS_COOKIE_SIGNING_KEY
+  - name: TRUSTOPS_SESSION_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: trustops-server
+        key: TRUSTOPS_SESSION_SECRET
   - name: TRUSTOPS_PUBLIC_URL
     value: https://trustops-poc.example.com
   - name: TRUSTOPS_OIDC_ISSUER
@@ -249,13 +279,14 @@ integrity, workflow, and agent-review verification.
 
 ## Current Gaps
 
-The repo is ready for a controlled self-hosted POC. A public multi-customer
+The repository supplies a self-hosted POC path. A running deployment still needs
+the readiness checks above. A public multi-customer
 SaaS-style launch still needs:
 
 - external secret-manager integration beyond mounted Kubernetes secrets;
 - polished first-run tenant/user bootstrap;
-- hosted invite flow and SCIM lifecycle;
-- shared rate limiting for multi-replica API deployments;
+- operator qualification of the gated hosted invites, SCIM and billing features;
+- distributed writer fencing and read-replica support before considering HA;
 - managed backups and restore drills for `/lake`;
 - deeper hosted observability around connector failures and scheduler lag.
 

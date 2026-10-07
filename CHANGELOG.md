@@ -3,6 +3,10 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Prevent braces stack exhaustion in console build tooling with an exact, provenance-verified depth-guard replacement. Check transitive parser behavior in CI and block high-severity development dependency advisories alongside production advisories.
+
 ## 0.2.22 - 2026-10-07
 
 - Update the locked Mako dependency to 1.4.3, resolving its Windows template-lookup path traversal advisory.

@@ -71,16 +71,15 @@ def test_offline_dashboard_renders_label_without_altering_recorded_posture(tmp_p
     recorded = read_json(lake / "gold/current_posture.json") if (lake / "gold/current_posture.json").is_file() else None
     if recorded:
         assert app_data["posture"] == recorded
-    monkeypatch.setattr(dashboard, "web_dist_index", lambda: None)
-    body = dashboard.render_dashboard(lake, tmp_path / "fallback.html").read_text()
+    body = dashboard.render_dashboard(lake, tmp_path / "report.html").read_text()
     assert (f'<aside role="note">{NOTICE}</aside>' in body) is synthetic
-    # Exercise the bundled path independently of a checked-in React build.
-    dist = tmp_path / "dist"
-    (dist / "dashboard").mkdir(parents=True)
-    (dist / "dashboard/index.html").write_text("<html><body><main>Overview</main></body></html>")
-    monkeypatch.setattr(dashboard, "web_dist_dir", lambda: dist)
-    inline = dashboard._inline_react_dashboard(app_data)
-    assert (f'<aside role="note">{NOTICE}</aside>' in inline) is synthetic
+    # Reports preserve the frozen payload instead of requiring a React build.
+    import json
+    import re
+
+    embedded = re.search(r'<script id="app-data"[^>]*>(.*?)</script>', body, re.S)
+    assert embedded is not None
+    assert json.loads(embedded[1])["posture"] == app_data["posture"]
 
 
 @pytest.mark.parametrize("synthetic", [True, False])

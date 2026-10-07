@@ -1,47 +1,31 @@
-"""Single-file React workbench export.
+"""Self-contained, frozen HTML evidence reports.
 
-`security-lakehouse dashboard` produces a self-contained HTML for offline
-distribution (auditors, evidence-room handoffs, archive snapshots). The file
-is built from the Next.js static export packaged in
-``security_lakehouse/web/dist/`` by inlining every referenced JS/CSS asset
-into ``dist/dashboard/index.html`` and injecting the current assessment
-payload into ``<script id="app-data">``.
-
-If the React bundle has not been built locally yet (clean dev checkout), the
-``serve`` command still works because it can render dynamically from the API;
-the offline ``dashboard render`` falls back to a minimal evidence-bundle HTML
-that contains the same data + a pointer to ``security-lakehouse serve``.
+Reports render saved data directly. The API-backed console remains available
+through ``serve``; an exported file requires neither that API nor JavaScript.
 """
 
 from __future__ import annotations
 
 import html
 import json
-import re
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
 from security_lakehouse.assessment import build_current_posture
+from security_lakehouse.catalog import load_control_catalog
 from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import read_json, read_jsonl
-from security_lakehouse.web import web_dist_dir, web_dist_index
-
-# Captures src/href values for /console/_next/static/... and other dist assets.
-_HREF_RE = re.compile(r'(?P<attr>\b(?:src|href))="(?P<url>/console/[^"]+)"')
-_INLINE_DATA_RE = re.compile(r'<script\s+id="app-data"[^>]*>.*?</script>', re.DOTALL | re.IGNORECASE)
+from security_lakehouse.readiness_coverage import readiness_coverage
 
 
 def render_dashboard(lake_dir: str | Path, out_path: str | Path) -> Path:
-    """Write a self-contained dashboard HTML and return its path."""
-    lake = Path(lake_dir)
-    app_data = _load_app_data(lake)
+    """Write a complete offline report without depending on a console build."""
+    app_data = _load_app_data(Path(lake_dir))
     output = Path(out_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    if web_dist_index() is not None:
-        output.write_text(_inline_react_dashboard(app_data), encoding="utf-8")
-    else:
-        output.write_text(_fallback_html(app_data), encoding="utf-8")
+    output.write_text(_fallback_html(app_data), encoding="utf-8")
     return output
 
 
@@ -84,6 +68,7 @@ def _load_app_data(lake: Path) -> dict[str, Any]:
     events = read_jsonl(silver_path) if silver_path.is_file() else []
     return {
         "synthetic_fixture": contains_synthetic_evidence(lake, events),
+        "framework_catalog_counts": dict(Counter(str(row["framework"]) for row in load_control_catalog().values())),
         "generated_at": dashboard.get("generated_at"),
         "metrics": dashboard.get("metrics", {}),
         "controls": dashboard.get("control_posture", []),
@@ -97,107 +82,136 @@ def _load_app_data(lake: Path) -> dict[str, Any]:
     }
 
 
-def _inline_react_dashboard(app_data: dict[str, Any]) -> str:
-    """Bundle dist/dashboard/index.html into one self-contained file."""
-    dist = web_dist_dir()
-    source = dist / "dashboard" / "index.html"
-    if not source.is_file():
-        # Bundled but the dashboard route is missing (corrupt build); fall back.
-        return _fallback_html(app_data)
-    html_text = source.read_text(encoding="utf-8")
-    html_text = _inline_assets(html_text, dist)
-    payload = html.escape(json.dumps(app_data, sort_keys=True, default=str), quote=False)
-    replacement = f'<script id="app-data" type="application/json">{payload}</script>'
-    if _INLINE_DATA_RE.search(html_text):
-        html_text = _INLINE_DATA_RE.sub(lambda _match: replacement, html_text)
-    else:
-        html_text = html_text.replace("</body>", f"{replacement}</body>")
-    notice = _synthetic_notice(app_data)
-    if notice:
-        html_text = re.sub(
-            r"(<body\b[^>]*>)", lambda match: match.group(0) + notice, html_text, count=1, flags=re.IGNORECASE
-        )
-    return html_text
+def _text(value: object) -> str:
+    return html.escape(str(value if value is not None else "—"), quote=True)
 
 
-def _synthetic_notice(app_data: dict[str, Any]) -> str:
-    if app_data.get("synthetic_fixture") is not True:
-        return ""
+def _table(headers: list[str], rows: list[list[object]], *, caption: str, empty: str) -> str:
+    if not rows:
+        return f'<p class="muted">{_text(empty)}</p>'
+    head = "".join(f'<th scope="col">{_text(label)}</th>' for label in headers)
+    body = "".join("<tr>" + "".join(f"<td>{_text(value)}</td>" for value in row) + "</tr>" for row in rows)
     return (
-        '<aside role="note">Contains synthetic demonstration evidence; synthetic rows are not production proof.</aside>'
+        f'<div class="table-scroll" role="region" aria-label="{_text(caption)}" tabindex="0">'
+        f"<table><caption>{_text(caption)}</caption><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>"
     )
 
 
-def _inline_assets(html_text: str, dist: Path) -> str:
-    def replace(match: re.Match[str]) -> str:
-        attr = match.group("attr")
-        url = match.group("url")
-        rel = url[len("/console/") :].split("?", 1)[0].split("#", 1)[0]
-        target = (dist / rel).resolve()
-        try:
-            target.relative_to(dist.resolve())
-        except ValueError:
-            return match.group(0)
-        if not target.is_file():
-            return match.group(0)
-        content = target.read_text(encoding="utf-8", errors="ignore")
-        if attr == "href" and target.suffix == ".css":
-            return f"<style>{content}</style>__DROP_TAG__"
-        if attr == "src" and target.suffix in {".js", ".mjs"}:
-            return f"<script>\n{content}\n</script>__DROP_TAG__"
-        return match.group(0)
-
-    html_text = _HREF_RE.sub(replace, html_text)
-    # Drop the original <link>/<script> tag once we've inlined its body.
-    html_text = re.sub(r"<link[^>]*>__DROP_TAG__", "", html_text)
-    html_text = re.sub(r"</script>__DROP_TAG__", "", html_text)
-    # Drop Next.js' <link rel="preload"|"modulepreload"> hints — every asset
-    # they point at is already inlined, so the browser would otherwise issue
-    # 404s when this HTML is opened offline.
-    html_text = re.sub(r'<link[^>]+rel="(?:preload|modulepreload)"[^>]*>', "", html_text)
-    return html_text
+def _framework_coverage(row: dict[str, Any], counts: dict[str, int]) -> tuple[object, object, bool]:
+    observed = row.get("control_count")
+    unknown = row.get("not_evaluated_control_count", 0)
+    evaluated = (
+        observed - unknown if type(observed) is int and type(unknown) is int and 0 <= unknown <= observed else None
+    )
+    total = counts.get(str(row.get("framework")))
+    _, sufficient = readiness_coverage(evaluated, total)
+    return evaluated, total, sufficient
 
 
 def _fallback_html(app_data: dict[str, Any]) -> str:
-    """Minimal HTML packet used when the React bundle is not packaged.
+    """Render the frozen report, including when the console is installed.
 
-    Contains the same data payload so the file is still grep-able and the
-    dashboard artifact CI step keeps passing.
+    Keep the original JSON payload byte-semantically recoverable. HTML entities
+    are not decoded in a script raw-text element; JSON Unicode escapes safely
+    preserve markup-like evidence without creating executable tags.
     """
-    payload = html.escape(json.dumps(app_data, sort_keys=True, default=str), quote=False)
-    posture = app_data.get("posture", {}).get("posture", {})
-    score = posture.get("score", "—")
-    state = posture.get("state", "—")
-    return _FALLBACK_TEMPLATE.format(payload=payload, score=score, state=state, notice=_synthetic_notice(app_data))
+    payload = json.dumps(app_data, sort_keys=True, default=str).replace("<", "\\u003c").replace("&", "\\u0026")
+    assessment = app_data.get("posture", {})
+    posture = assessment.get("posture", {})
+    frameworks = assessment.get("frameworks", [])
+    counts = app_data.get("framework_catalog_counts", {})
+    framework_rows: list[list[object]] = []
+    sufficient = bool(frameworks)
+    for row in frameworks:
+        evaluated, total, covered = _framework_coverage(row, counts)
+        sufficient = sufficient and covered
+        framework_rows.append(
+            [
+                row.get("framework"),
+                f"{evaluated if evaluated is not None else '—'} / {total if total is not None else '—'}",
+                f"{row.get('score', '—')}%" if covered else "Insufficient coverage",
+                ("Ready" if row.get("state") == "ready" else "Needs attention") if covered else "Insufficient coverage",
+            ]
+        )
+    score = f"{posture.get('score', '—')}%" if sufficient else "Insufficient coverage" if frameworks else "Not assessed"
+    metrics = [
+        ("Assessment score", score),
+        ("Observed controls", posture.get("control_count", 0)),
+        ("Open findings", posture.get("open_violation_count", 0)),
+        ("Evidence rows", len(app_data.get("events", []))),
+    ]
+    cards = "".join(
+        f'<div class="metric"><dt>{_text(label)}</dt><dd>{_text(value)}</dd></div>' for label, value in metrics
+    )
+    coverage = _table(
+        ["Framework", "Evaluated / catalog", "Score", "Status"],
+        framework_rows,
+        caption="Framework coverage",
+        empty="No frameworks were assessed in this saved report.",
+    )
+    findings = _table(
+        ["Control", "Severity", "Asset", "Owner"],
+        [
+            [row.get(key) for key in ("control_id", "severity", "asset_id", "asset_owner")]
+            for row in assessment.get("violations", [])
+        ],
+        caption="Recorded findings",
+        empty="No open findings were recorded. This does not establish complete evidence coverage.",
+    )
+    controls = _table(
+        ["Control", "Title", "Status", "Owner"],
+        [[row.get(key) for key in ("control_id", "title", "status", "owner")] for row in app_data.get("controls", [])],
+        caption="Recorded control results",
+        empty="No control results were recorded.",
+    )
+    notice = (
+        '<aside role="note">Contains synthetic demonstration evidence; synthetic rows are not production proof.</aside>'
+        if app_data.get("synthetic_fixture") is True
+        else ""
+    )
+    return _REPORT_TEMPLATE.format(
+        payload=payload,
+        notice=notice,
+        cards=cards,
+        evaluated=_text(assessment.get("evaluated_at")),
+        digest=_text(assessment.get("assessment_hash")),
+        coverage=coverage,
+        findings=findings,
+        controls=controls,
+    )
 
 
-_FALLBACK_TEMPLATE = """<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TrustOps Overview (offline export)</title>
-  <style>
-    body{{font-family:Inter,system-ui,sans-serif;margin:0;background:#0b1218;color:#f8fafc}}
-    main{{max-width:760px;margin:64px auto;padding:32px;background:#fff;color:#101623;border-radius:16px;box-shadow:0 24px 65px rgba(2,6,23,.22)}}
-    h1{{font-size:28px;margin:0 0 8px}}
-    .pill{{display:inline-block;padding:4px 10px;border-radius:999px;background:#dcfae6;color:#067647;font-weight:800;font-size:12px}}
-    code{{display:block;padding:14px;border-radius:10px;background:#f1f5f9;color:#0f172a;overflow:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px}}
-    .muted{{color:#5f6f85;font-size:14px;margin-top:24px}}
-  </style>
-</head>
-<body>
+_REPORT_TEMPLATE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TrustOps Overview — frozen evidence report</title>
+<style>
+:root{{color-scheme:light;font-family:system-ui,-apple-system,sans-serif;color:#182335;background:#edf2f7}}
+*{{box-sizing:border-box}}body{{margin:0}}main{{max-width:1120px;margin:auto;padding:40px 24px 64px}}
+header{{border-top:4px solid #3656d6;padding-top:22px;margin-bottom:24px}}
+.brand{{color:#3656d6;font-weight:750;letter-spacing:.02em}}h1{{font-size:36px;line-height:1.15;margin:16px 0 10px}}
+h2{{font-size:20px;margin:0 0 12px}}p{{line-height:1.65}}.muted,dt{{color:#526174}}
+.meta{{font-size:14px}}aside{{background:#e9f1ff;border-left:4px solid #3656d6;border-radius:6px;padding:16px;margin:20px 0;line-height:1.6}}
+.metrics{{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:24px 0}}
+.metric,section{{background:#fff;border:1px solid #d7e0eb;border-radius:12px;padding:20px}}
+dt{{font-size:14px}}dd{{font-size:23px;font-weight:650;line-height:1.3;margin:12px 0 0;overflow-wrap:anywhere}}
+section{{margin-top:18px}}.table-scroll{{overflow-x:auto;max-width:100%}}table{{border-collapse:collapse;width:100%;text-align:left;font-size:14px}}
+caption{{text-align:left;font-weight:650;padding:0 0 14px}}th{{background:#f3f6fa;color:#435268;font-weight:650}}
+th,td{{padding:12px;border-bottom:1px solid #e2e8f0;vertical-align:top;overflow-wrap:anywhere}}td{{max-width:340px}}
+summary{{cursor:pointer;font-weight:650;padding:4px 0 16px}}code{{font-family:ui-monospace,monospace;overflow-wrap:anywhere;font-size:12px}}
+footer{{margin-top:24px;border-top:1px solid #ccd6e3;padding-top:16px}}:focus-visible{{outline:3px solid #3656d6;outline-offset:3px}}
+@media(max-width:640px){{main{{padding:24px 14px 40px}}.metrics{{grid-template-columns:repeat(2,minmax(0,1fr))}}h1{{font-size:30px}}section{{padding:16px}}}}
+@media print{{:root{{background:#fff}}main{{max-width:none;padding:0}}section,.metric{{break-inside:avoid}}details{{display:block}}}}
+</style></head><body>
 <script id="app-data" type="application/json">{payload}</script>
-<main>
-  {notice}
-  <div class="pill">offline evidence packet</div>
-  <h1>Overview</h1>
-  <p>This file ships a frozen assessment payload for offline review. The full interactive workbench is available by running:</p>
-  <code>security-lakehouse serve --lake build/lakehouse</code>
-  <p>The packet below holds the posture, controls, evidence, and snapshots for the lake this export was built from.</p>
-  <p><b>Posture score:</b> {score}% &middot; <b>State:</b> {state}</p>
-  <p class="muted">Build the React bundle (<code>make web-build</code>) to ship the full single-file workbench.</p>
-</main>
-</body>
-</html>
+<main><header><div class="brand">TrustOps · Frozen evidence report</div><h1>Overview</h1>
+<p class="muted">Saved assessment and evidence for offline review. Values reflect the recorded evaluation; this file does not refresh evidence or connect to an API.</p>
+<p class="meta"><strong>Evaluated at:</strong> {evaluated}</p></header>
+{notice}<dl class="metrics">{cards}</dl>
+<section><h2>Coverage and results</h2><p class="muted">Scores require at least 50% evaluated coverage of each observed framework's catalog. Catalog counts reflect the installed catalog at export. Scores describe assessed controls and are not an audit opinion.</p>{coverage}</section>
+<section><h2>Findings</h2>{findings}</section>
+<section><details><summary>Control results</summary>{controls}</details></section>
+<footer><p class="meta"><strong>Recorded assessment digest:</strong> <code>{digest}</code></p>
+<p class="muted">The embedded JSON preserves the report data for further review. This HTML file is a presentation of that data; it does not authenticate the evidence or verify its history.</p></footer>
+</main></body></html>
 """

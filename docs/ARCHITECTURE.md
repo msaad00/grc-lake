@@ -101,6 +101,17 @@ at the warehouse threshold stop with the existing scale-policy error until a
 tenant-scoped export destination contract is implemented. This boundary does not
 qualify shared Snowflake or ClickHouse schemas for multi-tenant writes.
 
+## Offline reports
+
+`security-lakehouse dashboard --lake PATH --out REPORT.html` writes a frozen HTML report directly from the pinned lake
+assessment. It renders coverage, findings, and expandable control results without
+JavaScript, network access, or a console build. The embedded JSON preserves the
+recorded assessment for further review; markup-like evidence is escaped without
+changing its JSON values. Synthetic evidence remains labeled and sparse coverage
+suppresses numeric readiness. The file presents saved results and does not refresh
+freshness, authenticate evidence, or verify the ledger; use the verification tools
+for those checks. The API-backed console remains available through `serve`.
+
 ## Durable operations and live reads
 
 The API accepts bounded snapshot, evaluation, scheduler, and connector requests

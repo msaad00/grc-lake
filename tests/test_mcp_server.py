@@ -137,11 +137,15 @@ def _seeded_server(tmp_path: Path):
     return mcp_server.build_server(lake)
 
 
+def structured_result(result):
+    """Normalize FastMCP call results to the structured payload sent on the wire."""
+    if isinstance(result, tuple):
+        return result[1]
+    return getattr(result, "structuredContent", result)
+
+
 async def _call_async(server, name, arguments):
-    result = await server.call_tool(name, arguments)
-    # FastMCP returns (content_blocks, structured_result) for newer SDKs and a
-    # single value for older ones; normalize to the structured payload.
-    structured = result[1] if isinstance(result, tuple) else result
+    structured = structured_result(await server.call_tool(name, arguments))
     if isinstance(structured, dict) and "result" in structured:
         return structured["result"]
     return structured
@@ -156,8 +160,7 @@ def call_tool_payload(server, name: str, **arguments):
     """Return the full structured MCP tool payload (no result-key unwrap)."""
 
     async def _inner() -> object:
-        result = await server.call_tool(name, arguments)
-        return result[1] if isinstance(result, tuple) else result
+        return structured_result(await server.call_tool(name, arguments))
 
     return anyio.run(_inner)
 

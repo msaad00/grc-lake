@@ -36,6 +36,8 @@ export interface Violation {
 
 export interface PostureBlock {
   score: number;
+  scoring_version?: string;
+  score_scope?: string;
   state: "ready" | "attention_required" | "critical" | "not_evaluated";
   framework_count: number;
   control_count: number;

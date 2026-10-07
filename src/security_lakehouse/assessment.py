@@ -87,6 +87,10 @@ def build_current_posture(
             str(row["control_id"]): list(row.get("required_evidence_types") or []) for row in control_tests
         },
     )
+    evidenced_controls = {str(control_id) for row in evidence_freshness for control_id in row.get("control_ids", [])}
+    stale_controls.update(
+        str(row["control_id"]) for row in controls if str(row["control_id"]) not in evidenced_controls
+    )
     stale_evidence = [row for row in evidence_freshness if row["status"] in {"stale", "expired", "missing"}]
     framework_scores = (
         _framework_scores_from_controls(controls, stale_controls)
@@ -114,6 +118,8 @@ def build_current_posture(
         "freshness_days": freshness_days,
         "posture": {
             "score": posture_score,
+            "scoring_version": "trustops.assessment_scoring.v2",
+            "score_scope": "observed_controls",
             "state": (
                 _posture_state(posture_score, critical_for_state, stale_controls | unevaluated)
                 if controls
@@ -792,8 +798,9 @@ def _framework_scores(
     for framework, members in grouped.items():
         total = len(members)
         failing = [row for row in members if row["status"] == "fail"]
-        stale = sum(row["control_id"] in stale_controls for row in members)
-        unknown = sum(row.get("status") == "not_evaluated" for row in members)
+        stale = sum(row["control_id"] in stale_controls or row.get("status") == "stale" for row in members)
+        unknown = sum(row.get("status") not in {"pass", "fail", "stale"} for row in members)
+        passing = sum(row.get("status") == "pass" and row["control_id"] not in stale_controls for row in members)
         if violations is None:
             scores = [min(int(row.get("risk_score") or 0), 100) for row in failing]
             count = sum(int(row.get("open_event_count") or 0) for row in members)
@@ -804,19 +811,18 @@ def _framework_scores(
             count = len(detail)
             critical = sum(row["severity"] == "critical" for row in detail)
             high = sum(row["severity"] == "high" for row in detail)
-        penalty = sum(min(int(row.get("risk_score") or 0), 100) for row in failing) + unknown * 100
-        score = max(0, round(100 - penalty / max(1, total * 100) * 100 - stale * 5, 2))
+        # Equal credit only for explicit current passes. Severity remains a risk
+        # metric; adding a failure cannot improve the assessed-scope percentage.
+        score = round(100 * passing / total, 2) if total else 0.0
         rows.append(
             {
                 "framework": framework,
                 "score": score,
-                "state": "ready" if not failing and not stale and not unknown else "attention_required",
+                "state": "ready" if passing == total else "attention_required",
                 "not_evaluated_control_count": unknown,
                 "control_count": total,
                 "failing_control_count": len(failing),
-                "passing_control_count": sum(
-                    row.get("status") == "pass" and row["control_id"] not in stale_controls for row in members
-                ),
+                "passing_control_count": passing,
                 "violation_count": count,
                 "stale_control_count": stale,
                 "critical_violation_count": critical,
@@ -831,14 +837,14 @@ def _weighted_posture_score(frameworks: list[dict[str, Any]]) -> float:
     controls = sum(int(row["control_count"]) for row in frameworks)
     if controls <= 0:
         return 0.0
-    total = sum(float(row["score"]) * int(row["control_count"]) for row in frameworks)
-    return round(total / controls, 2)
+    passing = sum(int(row["passing_control_count"]) for row in frameworks)
+    return round(100 * passing / controls, 2)
 
 
 def _posture_state(score: float, critical_violations: bool | list[dict[str, Any]], stale_controls: set[str]) -> str:
     if critical_violations if isinstance(critical_violations, bool) else critical_violations:
         return "critical"
-    if score < 75 or stale_controls:
+    if score < 100 or stale_controls:
         return "attention_required"
     return "ready"
 

@@ -160,11 +160,21 @@ def _passing_control(control_id: str, framework: str) -> dict[str, object]:
 
 
 def test_framework_with_one_assessed_control_is_not_ready(tmp_path: Path) -> None:
+    from datetime import UTC, datetime
+
+    from security_lakehouse.io import read_jsonl
+
     _seed_lake(tmp_path)
+    # Keep the positive score explicit: this test isolates insufficient catalog
+    # coverage, not stale evidence whose legacy penalty happened to be small.
+    events = read_jsonl(tmp_path / "silver/normalized_events.jsonl")
+    for event in events:
+        event["event_time"] = datetime.now(UTC).isoformat()
+    _write_jsonl(tmp_path / "silver/normalized_events.jsonl", events)
     data = _readiness(tmp_path, "coverage-floor")
 
     ai_rmf = next(row for row in data["frameworks"] if row["framework"] == "NIST AI RMF")
-    assert ai_rmf["score"] >= 85
+    assert ai_rmf["score"] == 100
     assert ai_rmf["assessed_controls"] == 1
     assert ai_rmf["total_controls"] > 50
     assert ai_rmf["coverage_pct"] < 50
@@ -177,6 +187,24 @@ def test_framework_ready_when_score_and_coverage_meet_floor(tmp_path: Path) -> N
     _write_jsonl(
         tmp_path / "gold" / "control_posture.jsonl",
         [_passing_control(f"HIPAA-SR-{idx}", "HIPAA Security Rule") for idx in range(3)],
+    )
+    from datetime import UTC, datetime
+
+    _write_jsonl(
+        tmp_path / "silver/normalized_events.jsonl",
+        [
+            {
+                "event_id": f"hipaa-{idx}",
+                "control_ids": [f"HIPAA-SR-{idx}"],
+                "event_time": datetime.now(UTC).isoformat(),
+                "status": "pass",
+                "severity": "info",
+                "evidence_ref": f"fixture://hipaa-{idx}",
+                "asset_id": f"asset-{idx}",
+                "source": "fixture",
+            }
+            for idx in range(3)
+        ],
     )
     data = _readiness(tmp_path, "coverage-ready")
 

@@ -14,6 +14,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Make assessment scores a versioned percentage of fresh passing controls, so new failures cannot improve them and passing severity cannot increase control risk.
+
 - Share rule-aware verdict evaluation between controls and CCF safeguards, preserve source-tenant freshness boundaries, and reject bronze pointers as proof of available source evidence.
 
 - Resolve catalogs from the active user-installed wheel and add explicit, resumable quarantine of interrupted snapshot files without rewriting committed history.

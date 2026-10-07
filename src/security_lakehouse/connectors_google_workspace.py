@@ -382,13 +382,16 @@ def _mfa_event(
     collected_at: datetime,
     tenant_id: str,
 ) -> dict[str, Any]:
-    enrolled = bool(user.get("isEnrolledIn2Sv"))
+    enrolled = user.get("isEnrolledIn2Sv")
     enforced = bool(user.get("isEnforcedIn2Sv"))
-    suspended = bool(user.get("suspended"))
-    archived = bool(user.get("archived"))
+    suspended = user.get("suspended") is True
+    archived = user.get("archived") is True
     active = not suspended and not archived
+    known = isinstance(user.get("suspended"), bool) and isinstance(user.get("archived", False), bool)
+    applicable = False if suspended or archived else (True if known else None)
+    complete = isinstance(enrolled, bool)
     # An active account without 2-step verification is the finding to raise.
-    needs_mfa = active and not enrolled
+    needs_mfa = active and known and complete and not enrolled
     evidence_ref = f"{DIRECTORY_API_BASE}/users/{user_id}"
     return _event(
         org=org,
@@ -399,12 +402,21 @@ def _mfa_event(
         asset_id=f"google_workspace:user:{user_id}",
         asset_type="identity_account",
         controls=MFA_CONTROLS,
-        status="open" if needs_mfa else "pass",
+        status=(
+            "observed"
+            if applicable is False
+            else "not_evaluated"
+            if applicable is None or not complete
+            else "open"
+            if needs_mfa
+            else "pass"
+        ),
         severity="high" if needs_mfa else "info",
         evidence_ref=evidence_ref,
         attributes={
             "user_id": user_id,
-            "mfa_enrolled": enrolled,
+            "mfa_enrolled": enrolled if complete else None,
+            "mfa_applicable": applicable,
             "mfa_enforced": enforced,
             "can_authenticate": active,
             "needs_mfa": needs_mfa,

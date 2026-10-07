@@ -17,6 +17,7 @@ Python package, Helm chart, and bundled web console.
 - Make assessment scores a versioned percentage of fresh passing controls, so new failures cannot improve them and passing severity cannot increase control risk.
 
 - Share rule-aware verdict evaluation between controls and CCF safeguards, preserve source-tenant freshness boundaries, and reject bronze pointers as proof of available source evidence.
+- Keep excluded or unknown MFA populations out of passing coverage, and classify GCP organization policies by their relevant constraint and explicit unconditional enforcement.
 
 - Resolve catalogs from the active user-installed wheel and add explicit, resumable quarantine of interrupted snapshot files without rewriting committed history.
 

@@ -483,7 +483,7 @@ def test_mfa_finding_only_applies_to_console_users(tmp_path: Path) -> None:
     assert mfa["human-admin"]["attributes"]["identity_type"] == "human"
 
     # Service identity (no console login) -> not a finding; MFA marked N/A.
-    assert mfa["svc-scanner"]["status"] == "pass"
+    assert mfa["svc-scanner"]["status"] == "observed"
     assert mfa["svc-scanner"]["severity"] == "info"
     assert mfa["svc-scanner"]["attributes"]["needs_mfa"] is False
     assert mfa["svc-scanner"]["attributes"]["console_access"] is False
@@ -541,9 +541,9 @@ def test_access_key_hygiene_flags_stale_service_account_keys(tmp_path: Path) -> 
     assert ev["attributes"]["stale_key"] is True
     assert ev["attributes"]["oldest_active_key_age_days"] > 90
 
-    # The missing-MFA event is NOT a finding for this service identity.
+    # The missing-MFA event is not a finding or passing evidence for this service identity.
     mfa = next(r for r in rows if r["event_type"] == "aws.iam.mfa_enrollment")
-    assert mfa["status"] == "pass"
+    assert mfa["status"] == "observed"
 
 
 def test_access_key_hygiene_passes_on_fresh_single_key(tmp_path: Path) -> None:

@@ -58,7 +58,7 @@ def test_collect_okta_evidence_is_schema_valid_and_mapped() -> None:
     assert missing["attributes"]["needs_mfa"] is True
 
     deprovisioned = mfa["okta:user:00u3deprovision03"]
-    assert deprovisioned["status"] == "pass"
+    assert deprovisioned["status"] == "observed"
     assert deprovisioned["attributes"]["needs_mfa"] is False
 
     # Asset + evidence shapes are Okta-scoped and point at the read-only API.

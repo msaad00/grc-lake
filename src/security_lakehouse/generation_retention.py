@@ -105,10 +105,23 @@ def archive_generations(
                 if archive_to is None:
                     continue
                 destination = archive_to / path.name
-                if destination.exists():
-                    raise ValueError("archive destination already contains this generation; reconcile before retry")
-                shutil.copytree(path, destination, symlinks=True)
-                verify_generation(destination)
+                if destination.exists() or destination.is_symlink():
+                    # Resume an interrupted run only from a complete, verified copy of
+                    # this exact generation (same manifest, so same artifact hashes).
+                    try:
+                        if (
+                            destination.is_symlink()
+                            or (destination / "generation.json").read_bytes() != (path / "generation.json").read_bytes()
+                        ):
+                            raise ValueError("archived manifest differs")
+                        verify_generation(destination)
+                    except (OSError, ValueError) as exc:
+                        raise ValueError(
+                            "archive destination already contains this generation; reconcile before retry"
+                        ) from exc
+                else:
+                    shutil.copytree(path, destination, symlinks=True)
+                    verify_generation(destination)
                 for copied in destination.rglob("*"):
                     if copied.is_file():
                         with copied.open("rb") as stream:

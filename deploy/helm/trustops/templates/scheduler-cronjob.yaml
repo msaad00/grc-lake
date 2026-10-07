@@ -57,6 +57,20 @@ spec:
               env:
                 - name: TRUSTOPS_LAKE
                   value: {{ .Values.lake.mountPath | quote }}
+                {{- with .Values.scheduler.retention }}
+                {{- if .schedule }}
+                - name: TRUSTOPS_RETENTION_SCHEDULE
+                  value: {{ .schedule | quote }}
+                - name: TRUSTOPS_RETENTION_OLDER_THAN_DAYS
+                  value: {{ .olderThanDays | toString | quote }}
+                - name: TRUSTOPS_RETENTION_KEEP_LATEST
+                  value: {{ .keepLatest | toString | quote }}
+                {{- if .archiveDir }}
+                - name: TRUSTOPS_RETENTION_ARCHIVE_DIR
+                  value: {{ .archiveDir | quote }}
+                {{- end }}
+                {{- end }}
+                {{- end }}
                 {{- with .Values.env }}
                 {{- toYaml . | nindent 16 }}
                 {{- end }}

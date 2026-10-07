@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trustops-security-data-lake"
-version = "0.2.21"
+version = "0.2.22"
 description = "Open-source, self-hosted trust operations — SOC 2, NIST AI RMF, FedRAMP, ISO, HIPAA, PCI DSS. Read-only evidence collection, deterministic control tests, and audit-ready proof with an API-first, MCP-native design."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -45,6 +45,7 @@ server = [
     "uvicorn>=0.30",
     "sqlalchemy>=2.0",
     "alembic>=1.13",
+    "mako>=1.4.3",  # Alembic templates: patched Windows path confinement
     "psycopg[binary]>=3.1",
     "authlib>=1.3",
     "itsdangerous>=2.2",
@@ -67,6 +68,7 @@ dev = [
     "httpx>=0.28.1",
     "sqlalchemy>=2.0",
     "alembic>=1.13",
+    "mako>=1.4.3",  # Alembic templates: patched Windows path confinement
     "authlib>=1.3",
     "itsdangerous>=2.2",
     "python3-saml>=1.16",
@@ -133,7 +135,7 @@ agents = [
 # validate every commit message format.
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.2.21"
+version = "0.2.22"
 version_files = ["pyproject.toml:version"]
 tag_format = "v$version"
 

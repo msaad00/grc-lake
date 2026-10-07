@@ -14,6 +14,8 @@ Python package, Helm chart, and bundled web console.
 
 ### Fixed
 
+- Share rule-aware verdict evaluation between controls and CCF safeguards, preserve source-tenant freshness boundaries, and reject bronze pointers as proof of available source evidence.
+
 - Resolve catalogs from the active user-installed wheel and add explicit, resumable quarantine of interrupted snapshot files without rewriting committed history.
 
 - Accept normalized passing evidence in workpapers, preserve open POA&M items when evidence is unknown, reopen completed items on regression, and suppress readiness scores when framework coverage is insufficient.

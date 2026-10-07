@@ -7,7 +7,7 @@ presence/coverage predicates. Aggregate event and evidence counts still include
 observations. Observation-only controls remain unevaluated; explicit unknown
 and unevaluated outcomes still prevent a pass. An empty dataset has a zero
 control pass rate. These changes affect newly evaluated generations; historical
-evidence is retained. Manifests record `trustops.control_evaluation.v3`; the
+evidence is retained. Manifests record `trustops.control_evaluation.v5`; the
 incremental dependency fingerprint forces re-evaluation of older generations even
 when raw inputs have not changed, while retaining the earlier generation.
 
@@ -16,6 +16,19 @@ low-severity finding does not fail a high-severity-only rule, while an open
 violation rule does fail it. Unknown evidence and missing/future/stale collection
 evidence can still prevent a pass. Downstream control-test results retain this
 rule outcome rather than applying a second unconditional open-finding rule.
+
+Catalog controls and explicitly bound CCF safeguards use the same rule-aware
+verdict function. Observation rows cannot supply verdict evidence or override a
+passing verdict; a bronze pointer is not proof that source evidence was supplied.
+Freshness uses the latest observation per source tenant, connector, source, asset,
+and evidence type. A fresh observation cannot mask another population's stale
+evidence. CCF applicability, unobserved assets, and mapping-review requirements
+remain additional gates; agreement is expected for identical rules and scope,
+not for differently scoped requirements.
+
+Program control tests can require more evidence types than a catalog control.
+The current assessment retains those broader freshness requirements. A passing
+catalog predicate alone does not clear a program's missing-evidence requirement.
 
 Workpapers include declared assets with valid, explicitly bound safeguard
 observations by the assessment cutoff, even if those observations fall outside

@@ -180,10 +180,11 @@ def _observation_time(row: dict[str, Any]) -> datetime:
 
 
 def _current_observations(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    latest: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+    latest: dict[tuple[str, str, str, str, str], dict[str, Any]] = {}
     for row in records:
         for evidence_type in _record_evidence_types(row) or [""]:
             key = (
+                str(row.get("tenant_id") or ""),
                 str(row.get("connector_id") or ""),
                 str(row.get("source") or ""),
                 str(row.get("asset_id") or ""),
@@ -215,13 +216,18 @@ def stale_control_ids(records: list[dict[str, Any]], *, required_types: dict[str
             grouped[str(control)].append(record)
     stale: set[str] = set()
     for control, rows in grouped.items():
-        required = set((required_types or {}).get(control, []))
-        current = _current_observations(rows)
-        relevant = [row for row in current if not required or required.intersection(_record_evidence_types(row))]
-        observed = {kind for row in relevant for kind in _record_evidence_types(row)}
-        if required - observed or any(row["status"] in STALE_STATUSES for row in relevant):
+        if current_evidence_is_stale(rows, required_types=(required_types or {}).get(control, [])):
             stale.add(control)
     return stale
+
+
+def current_evidence_is_stale(records: list[dict[str, Any]], *, required_types: list[str] | None = None) -> bool:
+    """Check only the latest observation in each tenant/source/asset/type population."""
+    required = set(required_types or [])
+    current = _current_observations(records)
+    relevant = [row for row in current if not required or required.intersection(_record_evidence_types(row))]
+    observed = {kind for row in relevant for kind in _record_evidence_types(row)}
+    return bool(required - observed) or any(row["status"] in STALE_STATUSES for row in relevant)
 
 
 def _freshness_record(
@@ -236,7 +242,7 @@ def _freshness_record(
     connector = connectors.get(connector_id, {})
     slo_minutes = int(connector.get("freshness_slo_minutes") or default_slo_minutes)
     collected_at_raw = str(row.get("evidence_collected_at") or row.get("event_time") or "")
-    has_evidence = bool(str(row.get("evidence_ref") or ""))
+    has_evidence = bool(str(row.get("evidence_ref") or "")) and row.get("evidence_available", True)
 
     if not collected_at_raw or not has_evidence:
         return {
@@ -245,7 +251,7 @@ def _freshness_record(
             "score": STATUS_SCORES["missing"],
             "age_minutes": None,
             "expires_at": None,
-            "reason": "evidence_ref or evidence_collected_at is missing",
+            "reason": "source evidence or its collection timestamp is missing",
             "next_action": _next_action("missing", source),
         }
 
@@ -287,6 +293,7 @@ def _base_record(
 ) -> dict[str, Any]:
     return {
         "event_id": str(row.get("event_id") or ""),
+        "tenant_id": str(row.get("tenant_id") or ""),
         "evidence_id": str(row.get("evidence_id") or row.get("event_id") or ""),
         "evidence_ref": str(row.get("evidence_ref") or ""),
         "source": str(row.get("source") or "unknown"),

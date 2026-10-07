@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.asset_names import asset_names_from_raw, entity_asset_id
+from security_lakehouse.control_verdict import evaluate_evidence_verdict
 from security_lakehouse.controls import expand_controls, load_control_map
 from security_lakehouse.event_identity import event_identity
 from security_lakehouse.event_status import FAIL_STATUSES, normalize_event_status
@@ -32,14 +33,14 @@ from security_lakehouse.generations import (
 from security_lakehouse.io import canonical_sha256 as _canonical_sha256
 from security_lakehouse.io import file_sha256, iter_jsonl, read_json, read_jsonl, write_json, write_jsonl
 from security_lakehouse.models import SEVERITY_SCORE, PipelineResult, parse_event_time, utc_iso
-from security_lakehouse.policy import ControlContext, RuleResult, evaluate_control
+from security_lakehouse.policy import RuleResult
 from security_lakehouse.programs import build_control_tests
 from security_lakehouse.validation import validate_raw_event, validate_raw_events
 
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
 NORMALIZATION_TRANSFORM_VERSION = "trustops.normalization.v4"
-CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v4"
+CONTROL_EVALUATION_VERSION = "trustops.control_evaluation.v5"
 
 
 @serialized_publication
@@ -617,45 +618,13 @@ def _build_control_rows(
     for control_id, rows in grouped.items():
         control = rows[0]["_control"]
         failing_rows = [row for row in rows if row["status"] in FAIL_STATUSES]
-        # Presence-only activity retains provenance but neither establishes nor
-        # overrides a verdict, including evidence-presence/coverage predicates.
-        verdict_rows = [row for row in rows if normalize_event_status(row["status"]) != "observed"]
-        unknown_rows = [row for row in verdict_rows if normalize_event_status(row["status"]) == "not_evaluated"]
-        verdict_evidence = [row for row in verdict_rows if row["evidence_ref"] and row.get("evidence_available", True)]
         evidence_rows = [row for row in rows if row["evidence_ref"]]
         max_score = max((row["severity_score"] for row in rows), default=0)
-        top_open = max(failing_rows, key=lambda r: r["severity_score"], default=None)
-        context = ControlContext(
-            control_id=control_id,
-            open_violation_count=len(failing_rows),
-            event_count=len(verdict_rows),
-            evidence_count=len(verdict_evidence),
-            max_severity=str(top_open["severity"]) if top_open else "info",
-            evidence_status="stale" if control_id in stale else "fresh",
-        )
         result = (
-            evaluate_control(context, control.get("evaluation_rule"))
+            evaluate_evidence_verdict(control_id, rows, control.get("evaluation_rule"), stale=control_id in stale)
             if control_id in control_map
             else RuleResult("not_evaluated", "unmapped", ["No active control definition is available."])
         )
-        # An open violation takes precedence only when the declared rule fails.
-        # Preserve the distinct unknown/stale states for evidence quality gaps.
-        is_stale = control_id in stale or len(verdict_evidence) == 0
-        if control_id not in control_map:
-            status = "not_evaluated"
-        elif result.status == "fail" and (failing_rows or not verdict_evidence):
-            status = "fail"
-        elif unknown_rows or not verdict_rows:
-            status = "not_evaluated"
-            result.reasons.append(
-                "Source evidence has an unknown or unevaluated outcome."
-                if unknown_rows
-                else "Source evidence contains only observations, without an evaluated outcome."
-            )
-        elif is_stale:
-            status = "stale"
-        else:
-            status = result.status
         coverage = round(len(evidence_rows) / len(rows), 4) if rows else 0
         control_rows.append(
             {
@@ -664,7 +633,7 @@ def _build_control_rows(
                 "title": str(control.get("title", "")),
                 "risk_domain": str(control.get("risk_domain", "unknown")),
                 "owner": str(control.get("owner", "security")),
-                "status": status,
+                "status": result.status,
                 "evaluation_rule": result.rule,
                 "evaluation_version": CONTROL_EVALUATION_VERSION,
                 "input_event_set_sha256": _canonical_sha256(

@@ -18,6 +18,7 @@ from security_lakehouse.db import remediation
 from security_lakehouse.db import vendor_assessments as vendor_assessment_db
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.readiness_coverage import FRAMEWORK_READY_MIN_COVERAGE_PCT, readiness_coverage
 from security_lakehouse.services import access_reviews as access_review_services
 
 
@@ -120,7 +121,6 @@ def _workflow_checklist(*, posture_score: int, framework_total: int) -> list[dic
 IDENTITY_CONNECTOR_IDS = frozenset({"okta-identity", "okta-system-log"})
 
 FRAMEWORK_READY_SCORE = 100
-FRAMEWORK_READY_MIN_COVERAGE_PCT = 50.0
 
 
 def _framework_readiness(frameworks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -138,7 +138,7 @@ def _framework_readiness(frameworks: list[dict[str, Any]]) -> list[dict[str, Any
         catalog_total = catalog_totals.get(name, 0)
         # Outside the catalog the denominator is unknown; never infer full coverage.
         total = max(catalog_total, assessed) if catalog_total else None
-        coverage_pct = round(100 * assessed / total, 1) if total else None
+        coverage_pct, sufficient = readiness_coverage(assessed, total)
         out.append(
             {
                 "framework": name,
@@ -149,7 +149,7 @@ def _framework_readiness(frameworks: list[dict[str, Any]]) -> list[dict[str, Any
                 "ready": coverage_pct is not None
                 and score >= FRAMEWORK_READY_SCORE
                 and row.get("state", "ready") == "ready"
-                and coverage_pct >= FRAMEWORK_READY_MIN_COVERAGE_PCT,
+                and sufficient,
             }
         )
     return out

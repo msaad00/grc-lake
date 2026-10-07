@@ -17,9 +17,11 @@ from security_lakehouse.asset_names import load_asset_names, with_asset_names
 from security_lakehouse.catalog import load_control_catalog
 from security_lakehouse.evidence_freshness import build_evidence_freshness, stale_control_ids
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.mapping_review import effective_safeguards
 from security_lakehouse.models import instant_sort_key
 from security_lakehouse.programs import with_program_requirements
-from security_lakehouse.safeguards import coverage_by_framework
+from security_lakehouse.readiness_coverage import FRAMEWORK_READY_MIN_COVERAGE_PCT, readiness_coverage
+from security_lakehouse.safeguards import framework_mapping_coverage
 
 INVENTORY_EVENT_TYPES = frozenset(
     {
@@ -95,6 +97,7 @@ def _framework_rows(
     *,
     controls: list[dict[str, Any]],
     events: list[dict[str, Any]],
+    mapping_coverage: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Per-pack AI posture.
 
@@ -102,7 +105,8 @@ def _framework_rows(
     Frameworks page reads. The score is the pass rate over controls with a
     verdict or evidence in this lake, and ``None`` when there are none.
     """
-    coverage = coverage_by_framework()["frameworks"]
+    mapping_coverage = mapping_coverage if mapping_coverage is not None else framework_mapping_coverage()
+    coverage = mapping_coverage["frameworks"]
     catalog = with_program_requirements(load_control_catalog())
     freshness = build_evidence_freshness(events)
     stale = stale_control_ids(
@@ -112,6 +116,9 @@ def _framework_rows(
     rows: list[dict[str, Any]] = []
     for framework_id, label, prefix in AI_FRAMEWORKS:
         pack = coverage.get(framework_id, {})
+        catalog_ids = {
+            control_id for control_id, control in catalog.items() if control.get("framework_id") == framework_id
+        }
         verdict_ids = _framework_control_ids(controls, prefix)
         event_ids = _event_control_ids(events, prefix)
         with_evidence = verdict_ids | event_ids
@@ -120,15 +127,22 @@ def _framework_rows(
             for row in controls
             if str(row.get("control_id", "")).startswith(prefix)
             and str(row.get("status", "")).lower() in {"pass", "passed", "ready"}
+            and str(row["control_id"]) in catalog_ids
             and str(row["control_id"]) not in stale
             and str(row["control_id"]) in evidenced
         }
-        failing = sum(
-            1
+        failing_ids = {
+            str(row["control_id"])
             for row in controls
-            if str(row.get("control_id", "")).startswith(prefix)
+            if str(row.get("control_id", "")) in catalog_ids
             and str(row.get("status", "")).lower() in {"fail", "failed", "open"}
-        )
+        }
+        failing = len(failing_ids)
+        # Missing, stale, unknown, or non-catalog records cannot fill the gate's
+        # numerator. Their observed population remains visible separately.
+        evaluated = len(((passing | failing_ids) & evidenced) - stale)
+        catalog_count = int(pack.get("controls") or 0)
+        coverage_pct, sufficient = readiness_coverage(evaluated, catalog_count)
         # Evidence availability, not a successful control verdict.
         evidence_pct = round(100 * len(passing | event_ids) / max(len(with_evidence), 1), 1)
         score = round(100 * len(passing) / len(with_evidence)) if with_evidence else None
@@ -139,7 +153,18 @@ def _framework_rows(
                 "requirements": int(pack.get("controls") or 0),
                 "mapped_requirements": int(pack.get("covered") or 0),
                 "mapped_pct": float(pack.get("coverage_pct") or 0.0),
+                "reviewed_requirements": int(pack.get("reviewed") or 0),
+                "reviewed_pct": float(pack.get("reviewed_pct") or 0.0),
+                "maintainer_reviewed_requirements": int(pack.get("maintainer_reviewed") or 0),
+                "org_reviewed_requirements": int(pack.get("org_reviewed") or 0),
+                "contextual_mapping_count": int(pack.get("contextual_mappings") or 0),
+                "review_log_verified": bool(mapping_coverage["review_log_verified"]),
                 "controls_with_evidence": len(with_evidence),
+                "evaluated_control_count": evaluated,
+                "catalog_control_count": catalog_count,
+                "coverage_pct": coverage_pct,
+                "coverage_sufficient": sufficient,
+                "unknown_control_count": len(with_evidence - catalog_ids),
                 "evidence_pct": evidence_pct,
                 "failing_controls": failing,
                 "passing_controls": len(passing),
@@ -247,7 +272,8 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
     with_lineage = sum(1 for row in inventory if row["lineage_complete"] or "model.lineage" in row["event_types"])
 
     model_cards = with_model_card + len(repo_artifacts)
-    frameworks = _framework_rows(controls=controls, events=events)
+    mapping_coverage = framework_mapping_coverage(effective_safeguards(lake))
+    frameworks = _framework_rows(controls=controls, events=events, mapping_coverage=mapping_coverage)
 
     gaps: list[dict[str, str]] = []
     if not inventory_events and not inventory:
@@ -283,15 +309,9 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
             }
         )
 
-    from security_lakehouse.audit_readiness import FRAMEWORK_READY_MIN_COVERAGE_PCT
-
-    framework_ready = sum(
-        1
-        for row in frameworks
-        if row["score"] == 100
-        and row["requirements"] > 0
-        and 100 * row["controls_with_evidence"] / row["requirements"] >= FRAMEWORK_READY_MIN_COVERAGE_PCT
-    )
+    framework_ready = sum(1 for row in frameworks if row["score"] == 100 and row["coverage_sufficient"])
+    observed_frameworks = [row for row in frameworks if row["controls_with_evidence"] > 0]
+    sufficient_coverage = bool(observed_frameworks) and all(row["coverage_sufficient"] for row in observed_frameworks)
     inventory_score = round(
         100
         * (
@@ -305,11 +325,22 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
     framework_score = _framework_score(frameworks)
     governance_score = round(inventory_score * 0.55 + framework_score * 0.45)
     state = (
-        "governed" if governance_score >= 85 and not gaps else ("on_track" if governance_score >= 60 else "needs_work")
+        "governed"
+        if governance_score >= 85 and not gaps and sufficient_coverage
+        else ("on_track" if governance_score >= 60 else "needs_work")
     )
 
     return {
         "state": state,
+        "state_reason": (
+            "Framework coverage meets the threshold; the state also reflects inventory signals and the composite score."
+            if sufficient_coverage
+            else f"Insufficient framework coverage: current evaluated evidence must cover at least {FRAMEWORK_READY_MIN_COVERAGE_PCT:g}% of each observed AI framework's catalog."
+        ),
+        "coverage_sufficient": sufficient_coverage,
+        "coverage_scope": "observed_ai_frameworks",
+        "coverage_min_pct": FRAMEWORK_READY_MIN_COVERAGE_PCT,
+        "frameworks_observed": len(observed_frameworks),
         "governance_score": governance_score,
         "evaluated_at": datetime.now(UTC).isoformat(),
         "inventory": {
@@ -330,6 +361,7 @@ def build_ai_governance_status(*, lake: Path) -> dict[str, Any]:
             "repo_audit_signals": len(repo_artifacts),
         },
         "frameworks": frameworks,
+        "review_log_verified": mapping_coverage["review_log_verified"],
         "frameworks_ready": framework_ready,
         "frameworks_total": len(frameworks),
         "gaps": gaps,

@@ -21,11 +21,8 @@ from security_lakehouse.catalog import (
 from security_lakehouse.framework_provenance import build_framework_view, framework_pack_counts, framework_pack_state
 from security_lakehouse.mappings import DEFAULT_MAPPINGS, article_mapping_reviewed, load_control_article_mappings
 from security_lakehouse.safeguards import (
-    ATTESTABLE_STATES,
-    contributes_to_coverage,
-    effective_review_state,
+    framework_mapping_coverage,
     load_safeguards,
-    safeguards_by_requirement,
 )
 
 JsonObject = dict[str, Any]
@@ -81,46 +78,14 @@ def build_framework_coverage(
     # control catalog so the counts are relative to seeded requirements. This is
     # the honest number — distinct from source-citation coverage above, which is
     # always 100% because every seeded control carries an official source link.
-    control_framework = {cid: str(control.get("framework_id") or "") for cid, control in controls.items()}
     if lake_dir is not None:
         from security_lakehouse.mapping_review import effective_safeguards
 
         safeguards = effective_safeguards(lake_dir)
     else:
         safeguards = load_safeguards()
-    review_log_verified = bool(safeguards.get("review_log_verified", True))
-    evaluatable_by_framework: Counter[str] = Counter()
-    attestable_by_framework: Counter[str] = Counter()
-    for control_id in safeguards_by_requirement(safeguards):
-        control_fw = control_framework.get(str(control_id))
-        if control_fw:
-            evaluatable_by_framework[control_fw] += 1
-    for control_id in safeguards_by_requirement(safeguards, reviewed_only=True):
-        control_fw = control_framework.get(str(control_id))
-        if control_fw:
-            attestable_by_framework[control_fw] += 1
-    # Split attestable requirements by who confirmed them (disjoint: a
-    # requirement with any maintainer-reviewed mapping counts as maintainer),
-    # and count org decisions per mapping so they are never blended.
-    states_by_control: dict[str, set[str]] = defaultdict(set)
-    mapping_states: dict[str, Counter[str]] = defaultdict(Counter)
-    for entry in safeguards["safeguards"]:
-        for member in entry.get("satisfies", []):
-            control_id = str(member.get("control_id"))
-            state = effective_review_state(member)
-            if contributes_to_coverage(member):
-                states_by_control[control_id].add(state)
-            mapping_states[control_framework.get(control_id) or str(member.get("framework_id") or "")][state] += 1
-    maintainer_by_framework: Counter[str] = Counter()
-    org_by_framework: Counter[str] = Counter()
-    for control_id, states in states_by_control.items():
-        control_fw = control_framework.get(control_id)
-        if not control_fw or not states & ATTESTABLE_STATES:
-            continue
-        if "maintainer_reviewed" in states:
-            maintainer_by_framework[control_fw] += 1
-        else:
-            org_by_framework[control_fw] += 1
+    coverage = framework_mapping_coverage(safeguards, catalog=controls)
+    review_log_verified = coverage["review_log_verified"]
 
     rows: list[JsonObject] = []
     for framework_id, framework in registry.items():
@@ -135,6 +100,7 @@ def build_framework_coverage(
             if str(control.get("control_id") or "") not in mappings
         )
         source = provenance.get(framework_id, {})
+        shared = coverage["frameworks"].get(framework_id, {})
         rows.append(
             {
                 "framework_id": framework_id,
@@ -155,24 +121,19 @@ def build_framework_coverage(
                 "missing_mapping_control_ids": missing,
                 "seeded_mapping_coverage_pct": round(mapped_count / seeded_count * 100, 1) if seeded_count else 0.0,
                 # Attestable coverage: the auditor-defensible number.
-                "evaluatable_requirement_count": evaluatable_by_framework.get(framework_id, 0),
-                "attestable_requirement_count": attestable_by_framework.get(framework_id, 0),
-                "maintainer_reviewed_requirement_count": maintainer_by_framework.get(framework_id, 0),
-                "org_reviewed_requirement_count": org_by_framework.get(framework_id, 0),
-                "org_reviewed_mapping_count": mapping_states[framework_id]["org_reviewed"],
-                "needs_changes_mapping_count": mapping_states[framework_id]["needs_changes"],
-                "rejected_mapping_count": mapping_states[framework_id]["rejected"],
+                "evaluatable_requirement_count": shared.get("covered", 0),
+                "attestable_requirement_count": shared.get("reviewed", 0),
+                "maintainer_reviewed_requirement_count": shared.get("maintainer_reviewed", 0),
+                "org_reviewed_requirement_count": shared.get("org_reviewed", 0),
+                "org_reviewed_mapping_count": shared.get("org_reviewed_mappings", 0),
+                "needs_changes_mapping_count": shared.get("needs_changes_mappings", 0),
+                "rejected_mapping_count": shared.get("rejected_mappings", 0),
                 # False when the org decision log failed verification; the org
                 # counts above then fall back to the shipped review states.
                 "review_log_verified": review_log_verified,
-                "evaluatable_coverage_pct": (
-                    round(evaluatable_by_framework.get(framework_id, 0) / seeded_count * 100, 1)
-                    if seeded_count
-                    else 0.0
-                ),
-                "attestable_coverage_pct": (
-                    round(attestable_by_framework.get(framework_id, 0) / seeded_count * 100, 1) if seeded_count else 0.0
-                ),
+                "contextual_mapping_count": shared.get("contextual_mappings", 0),
+                "evaluatable_coverage_pct": shared.get("coverage_pct", 0.0),
+                "attestable_coverage_pct": shared.get("reviewed_pct", 0.0),
                 "implementation_status": framework.get("implementation_status"),
                 "source_policy": _source_policy(framework),
                 "asset_policy": "neutral label; no official logo or certification seal bundled",
@@ -219,6 +180,7 @@ def framework_coverage_summary(
         "needs_changes_mapping_count": sum(int(row.get("needs_changes_mapping_count", 0)) for row in rows),
         "rejected_mapping_count": sum(int(row.get("rejected_mapping_count", 0)) for row in rows),
         "review_log_verified": all(bool(row.get("review_log_verified", True)) for row in rows),
+        "contextual_mapping_count": sum(int(row.get("contextual_mapping_count", 0)) for row in rows),
         "evaluatable_coverage_pct": round(evaluatable / seeded * 100, 1) if seeded else 0.0,
         "attestable_coverage_pct": round(attestable / seeded * 100, 1) if seeded else 0.0,
         "asset_type_count": len(applicability),

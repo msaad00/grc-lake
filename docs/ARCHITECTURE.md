@@ -116,8 +116,10 @@ for those checks. The API-backed console remains available through `serve`.
 
 The API accepts bounded snapshot, evaluation, scheduler, and connector requests
 into tenant-scoped durable operation rows. Acceptance supports an Idempotency-Key;
-a conflicting request with the same key is rejected. The single writable deployment
-rotates claims between tenants instead of draining one tenant's backlog. Admission
+a conflicting request with the same key is rejected. Each server process runs a
+bounded pool of workers (TRUSTOPS_OPERATION_WORKERS, default 2, at most 16) that
+rotates claims between tenants and runs at most one job per tenant at a time, so a
+long job does not block other tenants. Admission
 serializes each tenant's count-and-insert and caps pending work at 100 operations.
 
 Background execution uses a spawned process with an independent hard deadline

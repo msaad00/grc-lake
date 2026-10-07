@@ -1,6 +1,6 @@
 # TrustOps Roadmap
 
-Source status for v0.2.22 release preparation. Remaining gaps come first; the
+Source status for v0.2.23 release preparation. Remaining gaps come first; the
 shipped priority lists below are kept as the delivery record. Track work in GitHub issues.
 
 ## Remaining gaps
@@ -15,7 +15,13 @@ The linked epics are closed on GitHub; each row names what is still left.
 | [#610](https://github.com/msaad00/trustops-security-data-lake/issues/610) | Platform       | P5 billing/SCIM shipped; live Stripe + IdP verification pending                                                                                                       |
 | —                                                                         | Mapping review | 1,348 proposed safeguard mappings (including all NIST RMF, ISO 27701, NIST 800-171 Rev 3, NIS2, and DORA mappings) await human review before they are attestable      |
 
-## Prepared for 0.2.22
+## Prepared for 0.2.23
+
+- Bound braces recursion in console build tooling and check dependency regressions in CI.
+- Keep legacy trust shares revocable after tenant-directory migration without crossing tenant boundaries.
+- Cover snapshot payload/ledger predecessor checks with mutation-verified regression tests.
+
+## Shipped for 0.2.22
 
 - Correct Helm scheduler startup and validate signing configuration against the server.
 - Guard explicit no-auth configuration and document staged EKS bootstrap prerequisites.

@@ -21,7 +21,7 @@ export const BRAND = {
   packageName: "trustops-security-data-lake",
   /** CLI command (operator surface, not product rename). */
   cliCommand: "security-lakehouse",
-  version: "0.2.22",
+  version: "0.2.23",
   colors: {
     blue: "#4f7cff",
     cyan: "#30c7d2",

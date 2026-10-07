@@ -1,12 +1,15 @@
 # Release readiness
 
-TrustOps **0.2.22** prepares the deployment fixes listed in the
-[changelog](../CHANGELOG.md): runnable Helm scheduler commands, required signing
-configuration, explicit no-auth guards, and staged EKS bootstrap guidance.
-The deployment tests use synthetic secrets and mocked infrastructure plans.
+TrustOps **0.2.23** prepares the fixes listed in the
+[changelog](../CHANGELOG.md): bounded braces recursion in console build tooling,
+legacy share revocation after tenant-directory migration, and regression coverage
+for snapshot payload/ledger predecessor mismatches. CLI-issued public links remain
+usable before tenants are provisioned. These are self-hosted software changes;
+release checks do not provision a managed service.
+
 Source and CI qualification do not establish publication, live-provider accuracy,
-or a working customer deployment. The open build-tool advisory is documented in
-[dependency security scope](DEPENDENCY_SECURITY.md).
+or a working customer deployment. The pinned build-tool replacement and its
+verification limits are documented in [dependency security scope](DEPENDENCY_SECURITY.md).
 
 ## Release gates
 

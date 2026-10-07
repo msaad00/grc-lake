@@ -3,7 +3,7 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.2.23 - 2026-10-07
 
 - Keep legacy flat-lake shares visible and revocable by their original tenant after a scoped tenant directory is created. Reject public access to ambiguous tenant-managed flat-root shares without an established owner, and add mutation-verified coverage for snapshot payload/ledger predecessor mismatches.
 

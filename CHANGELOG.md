@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Keep legacy flat-lake shares visible and revocable by their original tenant after a scoped tenant directory is created. Reject public access to flat-root shares without an established owner, and add mutation-verified coverage for snapshot payload/ledger predecessor mismatches.
+
 - Prevent braces stack exhaustion in console build tooling with an exact, provenance-verified depth-guard replacement. Check transitive parser behavior in CI and block high-severity development dependency advisories alongside production advisories.
 
 ## 0.2.22 - 2026-10-07

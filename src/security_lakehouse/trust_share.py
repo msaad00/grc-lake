@@ -181,10 +181,15 @@ def _latest_shares(lake_dir: str | Path) -> tuple[list[dict[str, Any]], dict[str
     return records, by_token
 
 
-def list_shares(lake_dir: str | Path, *, include_revoked: bool = False) -> list[dict[str, Any]]:
-    """Return current shares (latest record per share_id), optionally including revoked."""
+def list_shares(
+    lake_dir: str | Path, *, include_revoked: bool = False, additional_lakes: tuple[Path, ...] = ()
+) -> list[dict[str, Any]]:
+    """Return current shares from the lake and caller-authorized additional lakes."""
     records, _by_token = _latest_shares(lake_dir)
     rows = [dict(r) for r in records]
+    for other in additional_lakes:
+        if other.resolve() != Path(lake_dir).resolve():
+            rows.extend(list_shares(other, include_revoked=include_revoked))
     if not include_revoked:
         rows = [r for r in rows if not r.get("revoked_at")]
     now = _utc_now()
@@ -217,7 +222,7 @@ def lake_search_paths(
         _add(tenancy.tenant_lake(root_path, bound_tenant, bound_tenant=bound_tenant))
     for tenant_id in sorted(tenant_ids or [], reverse=True):
         _add(tenancy.tenant_lake(root_path, tenant_id, bound_tenant=bound_tenant))
-    if tenancy.is_flat_lake(root_path):
+    if bound_tenant is not None and tenancy.is_flat_lake(root_path):
         _add(root_path)
     return paths
 
@@ -260,12 +265,20 @@ def resolve_share(lake_dir: str | Path, token: str) -> dict[str, Any] | None:
     return {**record, "expired": False}
 
 
-def revoke_share(lake_dir: str | Path, share_id: str, *, actor: str = "console") -> dict[str, Any] | None:
-    """Append a revocation record so the share can no longer be presented."""
+def revoke_share(
+    lake_dir: str | Path, share_id: str, *, actor: str = "console", additional_lakes: tuple[Path, ...] = ()
+) -> dict[str, Any] | None:
+    """Revoke in every caller-authorized lake so no copied record remains live."""
+    additional_match = None
+    for other in additional_lakes:
+        if other.resolve() != Path(lake_dir).resolve():
+            result = revoke_share(other, share_id, actor=actor)
+            if result is not None:
+                additional_match = result
     shares = list_shares(lake_dir, include_revoked=True)
     match = next((s for s in shares if s.get("share_id") == share_id), None)
     if match is None or match.get("revoked_at"):
-        return match
+        return match or additional_match
     revoked = {
         **match,
         "revoked_at": _iso(_utc_now()),

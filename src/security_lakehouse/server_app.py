@@ -27,7 +27,7 @@ import time
 import uuid
 import weakref
 from collections import OrderedDict
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from functools import partial
@@ -53,7 +53,7 @@ from security_lakehouse.assessment import (
     write_assessment_snapshot,
 )
 from security_lakehouse.auth.api_key_session import ApiKeySessionError, exchange_api_key_for_browser_session
-from security_lakehouse.auth.dependencies import get_session, require_human, require_scope
+from security_lakehouse.auth.dependencies import auditor_view_requested, get_session, require_human, require_scope
 from security_lakehouse.auth.json_body import StrictJSONMiddleware
 from security_lakehouse.auth.oidc import OIDCLoginError, build_oauth, complete_oidc_login, load_oidc_config
 from security_lakehouse.auth.presentation import build_auth_methods_payload
@@ -1152,12 +1152,15 @@ async def platform_event_stream(
     sessionmaker=None,
     interval: float = 10.0,
     role: str = "read_only",
+    authority_check: Callable[[], bool] | None = None,
 ) -> AsyncIterator[str]:
     """Share collection across tabs; redact each subscriber's view independently."""
     last: dict[str, str] = {}
     while not await request.is_disconnected():
         emitted = False
         payloads = await run_in_threadpool(_stream_payloads, lake, tenant_id, sessionmaker, interval)
+        if authority_check is not None and not await run_in_threadpool(authority_check):
+            return
         for event, data in payloads.items():
             payload = json.dumps(redact_payload(data, role=role), default=str, sort_keys=True)
             if payload != last.get(event):
@@ -1257,44 +1260,17 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     app.state.operation_queue = JobQueue(app.state.sessionmaker, lake)
 
     def execute_operation(row) -> tuple[int, dict[str, Any]]:
-        from security_lakehouse.auth.dependencies import _INSECURE_IDENTITY, _apply_billing_state
-        from security_lakehouse.db.models import ApiKey, User, UserSession
+        from security_lakehouse.auth.authority import AuthorityError, CredentialReference, resolve_authority
 
         with app.state.sessionmaker() as session:
-            if row.auth_method == "insecure" and not app.state.require_auth:
-                identity = _INSECURE_IDENTITY
-            else:
-                user = session.get(User, row.user_id)
-                if user is None or user.tenant_id != row.tenant_id or not user.is_active:
-                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                if row.auth_method.startswith("session:"):
-                    login = session.get(UserSession, row.session_id) if row.session_id else None
-                    if (
-                        login is None
-                        or not login.is_active()
-                        or login.user_id != user.id
-                        or login.tenant_id != row.tenant_id
-                        or row.auth_method != f"session:{login.idp}"
-                    ):
-                        return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                elif row.auth_method != "api_key" or not row.api_key_id:
-                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                key = session.get(ApiKey, row.api_key_id) if row.api_key_id else None
-                if row.api_key_id and (
-                    key is None or key.user_id != user.id or key.tenant_id != row.tenant_id or not key.is_active()
-                ):
-                    return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-                identity = Identity(
-                    tenant_id=user.tenant_id,
-                    user_id=user.id,
-                    email=user.email,
-                    role=user.role,
-                    scopes=scopes_for_role(user.role),
-                    api_key_id=row.api_key_id,
-                    session_id=row.session_id,
-                    auth_method=row.auth_method,
+            try:
+                identity = resolve_authority(
+                    session,
+                    CredentialReference(row.user_id, row.tenant_id, row.auth_method, row.api_key_id, row.session_id),
+                    allow_insecure=not app.state.require_auth,
                 )
-                identity = _apply_billing_state(session, identity)
+            except AuthorityError:
+                return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
             if identity.tenant_id != row.tenant_id or not identity.has_scope(api_v1.required_post_scope(row.path)):
                 return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
             with server_execution(identity.tenant_id):
@@ -1553,6 +1529,25 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     # console audit room stays live without polling.
     @app.get("/api/v1/stream")
     async def stream(request: Request, identity: Identity = Depends(_require_read)) -> StreamingResponse:
+        from security_lakehouse.auth.authority import AuthorityError, CredentialReference, resolve_authority
+
+        reference = CredentialReference.from_identity(identity)
+        auditor_view = auditor_view_requested(request)
+
+        def authority_current() -> bool:
+            try:
+                with app.state.sessionmaker() as session:
+                    current = resolve_authority(
+                        session,
+                        reference,
+                        allow_insecure=not app.state.require_auth,
+                        auditor_view=auditor_view,
+                    )
+                # Reconnection authenticates again using the new permissions.
+                return current.has_scope("read") and (current.role, current.scopes) == (identity.role, identity.scopes)
+            except AuthorityError:
+                return False
+
         return StreamingResponse(
             platform_event_stream(
                 lake_for(identity),
@@ -1560,6 +1555,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 tenant_id=identity.tenant_id,
                 sessionmaker=app.state.sessionmaker,
                 role=identity.role,
+                authority_check=authority_current,
             ),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},

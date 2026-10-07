@@ -68,9 +68,13 @@ def _persist_archive(directory: Path, content: bytes, suffix: str, *, durable_di
     return digest
 
 
-def _request_history(path: Path, cutoff: datetime, archive: Path | None, *, durable_dirs: set[Path]) -> tuple[int, int]:
-    if path.is_symlink():
+def _reject_request_symlinks(path: Path) -> None:
+    if any(component.is_symlink() for component in (path, *path.parents)):
         raise ValueError("request audit symlinks are not allowed")
+
+
+def _request_history(path: Path, cutoff: datetime, archive: Path | None, *, durable_dirs: set[Path]) -> tuple[int, int]:
+    _reject_request_symlinks(path)
     if not path.exists():
         return 0, 0
     # Bound memory even for long-lived logs. Temporary files stay private and
@@ -147,6 +151,14 @@ def archive_operational_history(
         if archive_to == lake or lake in archive_to.parents:
             raise ValueError("archive must be outside the lake")
         archive_to = archive_to / root_key(lake)
+    # Validate the whole source set before acquiring retention/source locks or
+    # compacting jobs. An in-lake alias must not redirect another tenant's log.
+    sources = [lake / "gold/request_audit.jsonl", lake / "server/security_audit/gold/request_audit.jsonl"]
+    sources.extend(lake.glob("tenants/*/gold/request_audit.jsonl"))
+    for path in sources:
+        _reject_request_symlinks(path)
+        if not path.resolve().is_relative_to(lake):
+            raise ValueError("request audit must remain inside the lake")
     cutoff = datetime.now(UTC) - timedelta(days=older_than_days)
     report = dict(
         eligible_jobs=0,
@@ -213,11 +225,7 @@ def archive_operational_history(
                         report["archived_jobs"] += int(result.scalar_one_or_none() is not None)
             finally:
                 engine.dispose()
-        sources = [lake / "gold/request_audit.jsonl", lake / "server/security_audit/gold/request_audit.jsonl"]
-        sources.extend(lake.glob("tenants/*/gold/request_audit.jsonl"))
         for path in sources:
-            if not path.resolve().is_relative_to(lake):
-                raise ValueError("request audit must remain inside the lake")
             namespace = hashlib.sha256(str(path.relative_to(lake)).encode()).hexdigest()
             eligible, archived = _request_history(
                 path, cutoff, archive_to / "requests" / namespace if archive_to else None, durable_dirs=durable_dirs

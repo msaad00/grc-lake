@@ -2,6 +2,7 @@
 
 import time
 
+import pytest
 from sqlalchemy import update
 
 from security_lakehouse.auth.dependencies import _INSECURE_IDENTITY
@@ -212,3 +213,35 @@ def test_archive_ancestors_are_durable_before_compacting_originals(tmp_path, mon
     monkeypatch.setattr(retention, "update", update)
     monkeypatch.setattr(retention.os, "replace", replace)
     retention.archive_operational_history(lake, archive_to=archive)
+
+
+@pytest.mark.parametrize("component", ["tenant", "gold", "file"])
+def test_symlinked_source_ancestor_is_rejected_before_request_lock_or_compaction(tmp_path, component):
+    from security_lakehouse import operational_retention as retention
+
+    lake, archive = tmp_path / "lake", tmp_path / "archive"
+    queue, job = _completed(lake)
+    alias_tenant = lake / "tenants" / "a"
+    target_tenant = lake / "tenants" / "b"
+    target = target_tenant / "gold"
+    target.mkdir(parents=True)
+    source = target / "request_audit.jsonl"
+    original = b'{"occurred_at":"2020-01-01T00:00:00Z","tenant_id":"b"}\n'
+    source.write_bytes(original)
+    if component == "tenant":
+        alias_tenant.symlink_to(target_tenant, target_is_directory=True)
+    elif component == "gold":
+        alias_tenant.mkdir()
+        (alias_tenant / "gold").symlink_to(target, target_is_directory=True)
+    else:
+        (alias_tenant / "gold").mkdir(parents=True)
+        (alias_tenant / "gold/request_audit.jsonl").symlink_to(source)
+
+    with pytest.raises(ValueError, match="symlink"):
+        retention.archive_operational_history(lake, archive_to=archive)
+
+    assert source.read_bytes() == original
+    assert list(target.iterdir()) == [source]
+    assert queue.get("insecure", job["id"])["response"]["data"]["receipt"] == "original-result"
+    assert not (lake / "server/operational-retention.lock").exists()
+    assert not archive.exists()

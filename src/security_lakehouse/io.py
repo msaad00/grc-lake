@@ -7,8 +7,10 @@ import hashlib
 import json
 import os
 import tempfile
-from collections import Counter
-from collections.abc import Callable, Iterable, Iterator
+import threading
+from collections import Counter, OrderedDict
+from collections.abc import Callable, Generator, Iterable, Iterator
+from itertools import islice
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -70,7 +72,7 @@ def _iter_jsonl_lines(
     *,
     missing_ok: bool = False,
     base_dir: str | Path | None = None,
-) -> Iterator[tuple[int, str]]:
+) -> Generator[tuple[int, str], None, None]:
     """Yield ``(line_no, stripped_line)`` from a JSONL file without loading it whole."""
     from security_lakehouse.generations import pinned_path
 
@@ -107,6 +109,25 @@ def iter_jsonl(
         yield _parse_jsonl_line(path, line_no, stripped)
 
 
+def iter_jsonl_slice(
+    path: str | Path,
+    start: int,
+    stop: int,
+    *,
+    missing_ok: bool = False,
+    base_dir: str | Path | None = None,
+) -> Iterator[dict[str, Any]]:
+    """Stream rows ``[start, stop)`` of a JSONL file.
+
+    Rows before ``start`` are skipped without being parsed, and the file is not
+    read past row ``stop``. Row numbers count non-empty lines, matching
+    :func:`count_jsonl`.
+    """
+    with contextlib.closing(_iter_jsonl_lines(path, missing_ok=missing_ok, base_dir=base_dir)) as lines:
+        for line_no, stripped in islice(lines, start, stop):
+            yield _parse_jsonl_line(path, line_no, stripped)
+
+
 def read_jsonl(
     path: str | Path,
     *,
@@ -124,6 +145,56 @@ def count_jsonl(
 ) -> int:
     """Count non-empty JSONL rows without parsing each object."""
     return sum(1 for _line_no, _line in _iter_jsonl_lines(path, missing_ok=missing_ok, base_dir=base_dir))
+
+
+_VALIDATED_COUNTS: OrderedDict[tuple[str, bytes], int] = OrderedDict()
+_VALIDATED_COUNTS_LOCK = threading.Lock()
+_VALIDATED_COUNTS_MAX = 256
+
+
+def validated_jsonl_count(
+    path: str | Path,
+    *,
+    missing_ok: bool = False,
+    base_dir: str | Path | None = None,
+) -> int:
+    """Count rows after checking that every row parses, without keeping any.
+
+    The full parse runs once per file content: the result is cached under the
+    SHA-256 of the current bytes, which are re-read and re-hashed on every call
+    (no stat-only trust). A repeat call on unchanged bytes parses nothing, so a
+    paged reader can stay fail-closed on rows outside its page while parsing
+    only the rows it serves. Raises ``ValueError`` on the first invalid row.
+    """
+    from security_lakehouse.generations import pinned_path
+
+    target = resolve_path(pinned_path(Path(path)), base_dir=base_dir)
+    digest = hashlib.sha256()
+    try:
+        with target.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    except FileNotFoundError:
+        if missing_ok:
+            return 0
+        raise
+    key = (str(target), digest.digest())
+    with _VALIDATED_COUNTS_LOCK:
+        cached = _VALIDATED_COUNTS.get(key)
+        if cached is not None:
+            _VALIDATED_COUNTS.move_to_end(key)
+            return cached
+    count = 0
+    for line_no, stripped in _iter_jsonl_lines(path, base_dir=base_dir):
+        _parse_jsonl_line(path, line_no, stripped)
+        count += 1
+    with _VALIDATED_COUNTS_LOCK:
+        for previous in [k for k in _VALIDATED_COUNTS if k[0] == key[0]]:
+            del _VALIDATED_COUNTS[previous]
+        _VALIDATED_COUNTS[key] = count
+        while len(_VALIDATED_COUNTS) > _VALIDATED_COUNTS_MAX:
+            _VALIDATED_COUNTS.popitem(last=False)
+    return count
 
 
 T = TypeVar("T")

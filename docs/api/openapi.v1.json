@@ -1535,8 +1535,17 @@
               "limit": {
                 "type": "integer"
               },
+              "next_cursor": {
+                "description": "Opaque cursor for the next page; null on the last page.",
+                "nullable": true,
+                "type": "string"
+              },
               "offset": {
                 "type": "integer"
+              },
+              "parts": {
+                "description": "Per-list count and returned rows when an object payload is paged.",
+                "type": "object"
               },
               "resource": {
                 "type": "string"
@@ -2441,6 +2450,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -3284,6 +3301,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -3344,6 +3369,14 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -3663,6 +3696,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -3704,6 +3745,14 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -3893,6 +3942,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -3934,6 +3991,14 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -4115,6 +4180,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -4141,6 +4214,62 @@
     "/api/v1/frameworks/coverage": {
       "get": {
         "operationId": "v1_framework_coverage_api_v1_frameworks_coverage_get",
+        "parameters": [
+          {
+            "description": "1-1000; pages `frameworks`, default 100 when paging",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "1-1000; pages `frameworks`, default 100 when paging",
+              "title": "Limit"
+            }
+          },
+          {
+            "description": ">= 0",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": ">= 0",
+              "title": "Offset"
+            }
+          },
+          {
+            "description": "meta.next_cursor from the previous page",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "meta.next_cursor from the previous page",
+              "title": "Cursor"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4151,6 +4280,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -4418,6 +4557,32 @@
     "/api/v1/graph": {
       "get": {
         "operationId": "get_graph",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4437,6 +4602,32 @@
     "/api/v1/graph/coverage": {
       "get": {
         "operationId": "get_graph_coverage",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4553,6 +4744,14 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -5034,6 +5233,14 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -6037,6 +6244,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -6547,6 +6762,32 @@
     "/api/v1/repo-graph": {
       "get": {
         "operationId": "get_repo_graph",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -7360,6 +7601,14 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -8229,6 +8478,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -8576,6 +8833,14 @@
           },
           {
             "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {
@@ -8634,6 +8899,14 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {

@@ -165,7 +165,7 @@ def build_compliance_graph(lake_dir: str | Path) -> dict[str, Any]:
                 "event_count": count,
             }
         )
-        for cid in type_to_controls.get(event_type, set()):
+        for cid in sorted(type_to_controls.get(event_type, set())):
             if f"control:{cid}" not in existing_ids:
                 continue
             edges.append(
@@ -181,7 +181,7 @@ def build_compliance_graph(lake_dir: str | Path) -> dict[str, Any]:
     asset_rows = {str(row.get("asset_id") or ""): row for row in assets}
     seen_assets: set[str] = set()
     for event_type, asset_ids in type_to_assets.items():
-        for asset_id in asset_ids:
+        for asset_id in sorted(asset_ids):
             if not asset_id:
                 continue
             asset_node_id = f"asset:{_escape_id_segment(asset_id)}"
@@ -267,7 +267,12 @@ def _coverage_graph(lake_dir: str | Path) -> dict[str, Any]:
 
 
 @generation_reader
-def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) -> dict[str, Any]:
+def analyze_coverage(
+    lake_dir: str | Path,
+    graph: dict[str, Any] | None = None,
+    *,
+    detail_limit: int | None = 200,
+) -> dict[str, Any]:
     """Compute compliance coverage and gaps over the directed compliance graph.
 
     This is the honest, data-backed version of "reachability" for *this* graph:
@@ -279,6 +284,8 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
 
     Reuses :func:`build_compliance_graph` (pass ``graph`` to avoid rebuilding).
     Returns a JSON-able dict with ``summary``, ``assets``, and ``orphans``.
+    ``detail_limit`` caps the asset and orphan lists (the summary always counts
+    everything); ``None`` returns every row so a caller can page them.
     """
     if graph is None:
         graph = _coverage_graph(lake_dir)
@@ -360,7 +367,7 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
         is_covered = bool(controls_for)
         if is_covered:
             covered_assets += 1
-        if len(assets_report) >= 200:
+        if detail_limit is not None and len(assets_report) >= detail_limit:
             continue
         node = nodes_by_id.get(asset_id, {})
         assets_report.append(
@@ -407,18 +414,19 @@ def analyze_coverage(lake_dir: str | Path, graph: dict[str, Any] | None = None) 
         "coverage_pct": coverage_pct,
     }
 
+    cap = detail_limit
     return {
         "summary": summary,
-        "assets": assets_report[:200],
-        "details_truncated": total_assets > 200
-        or len(orphan_controls) > 200
-        or len(orphan_assets) > 200
+        "assets": assets_report[:cap],
+        "details_truncated": (
+            cap is not None and (total_assets > cap or len(orphan_controls) > cap or len(orphan_assets) > cap)
+        )
         or any(r["controls_truncated"] for r in assets_report),
-        "detail_limit": 200,
+        "detail_limit": cap,
         "orphans": {
-            "controls": [_node_brief(cid) for cid in orphan_controls[:200]],
+            "controls": [_node_brief(cid) for cid in orphan_controls[:cap]],
             "frameworks": [_node_brief(fid) for fid in orphan_frameworks],
-            "assets": [_node_brief(aid) for aid in orphan_assets[:200]],
+            "assets": [_node_brief(aid) for aid in orphan_assets[:cap]],
         },
     }
 

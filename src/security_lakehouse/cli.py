@@ -220,6 +220,15 @@ def _parser() -> argparse.ArgumentParser:
     retention.add_argument("--keep-latest", type=int, default=3)
     retention.add_argument("--archive-to", default=None, help="external archive destination; omitted means report only")
     retention.set_defaults(func=_lake_retention)
+    operational_retention = lake_sub.add_parser(
+        "operational-retention", help="preview or archive old job payloads and request-audit rows"
+    )
+    operational_retention.add_argument("--lake", required=True)
+    operational_retention.add_argument("--older-than-days", type=int, default=90)
+    operational_retention.add_argument(
+        "--archive-to", default=None, help="external archive destination; omitted means preview"
+    )
+    operational_retention.set_defaults(func=_operational_retention)
     lake_map = lake_sub.add_parser(
         "map",
         help="validate a lake mapping and preview mapped rows (--dry-run; writes nothing)",
@@ -2576,6 +2585,18 @@ def _evidence_recovery(args: argparse.Namespace) -> int:
         result = verify_checkpoint(Path(args.lake), read_json(Path(args.checkpoint)))
     print(json.dumps(result, indent=2))
     return 0 if result.get("ok", True) else 1
+
+
+def _operational_retention(args: argparse.Namespace) -> int:
+    from security_lakehouse.operational_retention import archive_operational_history
+
+    result = archive_operational_history(
+        Path(args.lake),
+        older_than_days=args.older_than_days,
+        archive_to=Path(args.archive_to) if args.archive_to else None,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
 
 
 def _lake_retention(args: argparse.Namespace) -> int:

@@ -50,7 +50,10 @@ def serialize(row: OperationJob, *, include_result: bool = True) -> dict[str, An
     def stamp(value: float | None) -> str | None:
         return datetime.fromtimestamp(value, UTC).isoformat() if value is not None else None
 
+    result = json.loads(row.result_json) if row.result_json else None
+    archived = isinstance(result, dict) and result.get("schema_version") == "trustops.operation_archive.v1"
     return {
+        "result_archived": archived,
         "id": row.id,
         "kind": "operation",
         "label": {
@@ -64,7 +67,7 @@ def serialize(row: OperationJob, *, include_result: bool = True) -> dict[str, An
         "finished_at": stamp(row.finished_at),
         "status_url": f"/api/v1/operations/{row.id}",
         "http_status": row.http_status,
-        **({"response": json.loads(row.result_json) if row.result_json else None} if include_result else {}),
+        **({"response": None if archived else result} if include_result else {}),
     }
 
 

@@ -194,14 +194,14 @@ local history replacement. See [evidence recovery](docs/EVIDENCE_RECOVERY.md) an
 
 ## Documentation
 
-| Need                             | Start here                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------- |
-| Try a complete workflow          | [5-minute tutorial](docs/TUTORIAL_5_MIN.md)                                                 |
-| Deploy and authenticate          | [Deployment](deploy/README.md) · [Server auth](docs/SERVER_AUTH.md)                         |
-| Understand storage and retention | [Data flow](docs/DATA_FLOW.md) · [Operations](docs/OPERATIONS_CONTRACTS.md)                 |
-| Integrate an agent               | [Headless GRC](docs/HEADLESS_GRC.md) · [Agent skills](docs/api/AGENT_SKILLS.md)             |
-| Evaluate audit evidence          | [Audit readiness](docs/AUDIT_READINESS.md) · [Evidence recovery](docs/EVIDENCE_RECOVERY.md) |
-| Contribute                       | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)                                   |
+| Need                             | Start here                                                                                           |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Try a complete workflow          | [5-minute tutorial](docs/TUTORIAL_5_MIN.md)                                                          |
+| Deploy and authenticate          | [Deployment](deploy/README.md) · [Server auth](docs/SERVER_AUTH.md)                                  |
+| Understand storage and retention | [Data flow](docs/DATA_FLOW.md) · [Operations](docs/OPERATIONS_CONTRACTS.md)                          |
+| Integrate an agent               | [Headless GRC](docs/HEADLESS_GRC.md) · [Agent skills](docs/api/AGENT_SKILLS.md)                      |
+| Evaluate audit evidence          | [Audit readiness](docs/AUDIT_READINESS.md) · [Evidence recovery](docs/EVIDENCE_RECOVERY.md)          |
+| Contribute                       | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Trust boundaries](docs/THREAT_MODEL.md) |
 
 ## Develop
 

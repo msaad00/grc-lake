@@ -1739,7 +1739,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -1768,7 +1770,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -1799,7 +1803,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -1841,7 +1847,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -1883,7 +1891,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -1933,7 +1943,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -1975,7 +1987,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2025,7 +2039,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2067,7 +2083,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2098,7 +2116,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2128,7 +2148,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2171,7 +2193,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2240,7 +2264,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2302,7 +2328,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2364,7 +2392,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2441,7 +2471,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2717,7 +2749,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2733,7 +2767,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2762,7 +2798,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2804,7 +2842,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2835,7 +2875,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2851,7 +2893,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2867,7 +2911,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2883,7 +2929,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2899,7 +2947,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2915,7 +2965,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2942,7 +2994,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -2968,7 +3022,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3010,7 +3066,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3041,7 +3099,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3062,7 +3122,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3084,7 +3146,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3106,7 +3170,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3128,7 +3194,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3330,7 +3398,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3347,7 +3417,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3364,7 +3436,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3509,25 +3583,6 @@
         "description": "Requires scope: connector_manage.",
         "operationId": "post_connector_sync",
         "parameters": [
-          {
-            "in": "header",
-            "name": "Prefer",
-            "required": false,
-            "schema": {
-              "enum": ["respond-async"],
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": false,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "type": "string"
-            }
-          },
           {
             "in": "header",
             "name": "Prefer",
@@ -3752,7 +3807,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3921,7 +3978,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3963,7 +4022,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -3995,7 +4056,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4082,7 +4145,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4154,7 +4219,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4186,7 +4253,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4216,7 +4285,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4248,7 +4319,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4291,7 +4364,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4323,7 +4398,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4383,7 +4460,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4398,25 +4477,6 @@
         "description": "Requires scope: connector_manage.",
         "operationId": "post_ingestion_eval",
         "parameters": [
-          {
-            "in": "header",
-            "name": "Prefer",
-            "required": false,
-            "schema": {
-              "enum": ["respond-async"],
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": false,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "type": "string"
-            }
-          },
           {
             "in": "header",
             "name": "Prefer",
@@ -4546,7 +4606,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4567,7 +4629,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4588,7 +4652,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4609,7 +4675,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4630,7 +4698,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4651,7 +4721,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4681,7 +4753,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4723,7 +4797,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -4761,7 +4837,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5034,7 +5112,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5077,7 +5157,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5099,6 +5181,51 @@
           }
         ],
         "summary": "Operation Status",
+        "tags": ["platform"]
+      }
+    },
+    "/api/v1/operations/{job_id}/cancel": {
+      "post": {
+        "operationId": "operation_cancel_api_v1_operations__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Operation Cancel",
         "tags": ["platform"]
       }
     },
@@ -5157,7 +5284,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5179,7 +5308,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5201,7 +5332,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5223,7 +5356,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5245,7 +5380,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5266,7 +5403,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5283,7 +5422,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5305,7 +5446,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5325,7 +5468,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5358,7 +5503,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5390,7 +5537,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5412,7 +5561,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5441,7 +5592,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5472,7 +5625,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5493,7 +5648,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5525,7 +5682,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5575,7 +5734,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5617,7 +5778,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5667,7 +5830,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5709,7 +5874,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5740,7 +5907,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5772,7 +5941,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5896,7 +6067,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5925,7 +6098,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -5977,7 +6152,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6008,7 +6185,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6037,7 +6216,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6079,7 +6260,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6121,7 +6304,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6152,7 +6337,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6181,7 +6368,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6223,7 +6412,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6273,7 +6464,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6325,7 +6518,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6375,7 +6570,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6404,7 +6601,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6446,7 +6645,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6496,7 +6697,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6527,7 +6730,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6556,7 +6761,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6598,7 +6805,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6627,25 +6836,6 @@
         "description": "Requires scope: connector_manage.",
         "operationId": "post_scheduler_tick",
         "parameters": [
-          {
-            "in": "header",
-            "name": "Prefer",
-            "required": false,
-            "schema": {
-              "enum": ["respond-async"],
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": false,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "type": "string"
-            }
-          },
           {
             "in": "header",
             "name": "Prefer",
@@ -6721,7 +6911,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6736,7 +6928,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6764,7 +6958,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6800,7 +6996,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6836,7 +7034,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6872,7 +7072,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6899,7 +7101,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6916,7 +7120,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6931,7 +7137,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6959,7 +7167,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -6995,7 +7205,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7031,7 +7243,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7067,7 +7281,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7104,7 +7320,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7171,25 +7389,6 @@
       "post": {
         "operationId": "post_snapshots",
         "parameters": [
-          {
-            "in": "header",
-            "name": "Prefer",
-            "required": false,
-            "schema": {
-              "enum": ["respond-async"],
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": false,
-            "schema": {
-              "maxLength": 200,
-              "minLength": 1,
-              "type": "string"
-            }
-          },
           {
             "in": "header",
             "name": "Prefer",
@@ -7285,7 +7484,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7331,7 +7532,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7366,7 +7569,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7387,7 +7592,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7416,7 +7623,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7457,7 +7666,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7498,7 +7709,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7529,7 +7742,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7550,7 +7765,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7582,7 +7799,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7724,7 +7943,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7753,7 +7974,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7795,7 +8018,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7845,7 +8070,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7887,7 +8114,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7918,7 +8147,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -7950,7 +8181,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -8076,7 +8309,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -8106,7 +8341,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -8149,7 +8386,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -8190,7 +8429,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -8241,7 +8482,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"
@@ -8284,7 +8527,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
               }
             },
             "description": "Successful Response"

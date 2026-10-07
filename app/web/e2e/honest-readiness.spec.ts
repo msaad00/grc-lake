@@ -182,7 +182,7 @@ test.describe("dashboard honesty", () => {
     await expect(page.getByText(/^Evaluated /)).toBeVisible();
     await expect(
       page
-        .getByRole("region", { name: "Current assessment" })
+        .getByRole("region", { name: "Latest lake assessment" })
         .getByText("/ 100", { exact: true }),
     ).toBeVisible();
   });

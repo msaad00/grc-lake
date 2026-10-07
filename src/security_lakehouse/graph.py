@@ -21,6 +21,7 @@ from security_lakehouse.catalog import load_control_catalog, load_framework_regi
 from security_lakehouse.framework_provenance import framework_pack_state
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.projected_reads import read_projection
 
 
 def _escape_id_segment(value: str) -> str:
@@ -38,12 +39,22 @@ def _escape_id_segment(value: str) -> str:
 
 def _gold_asset_rows(lake_dir: Path) -> list[dict[str, Any]]:
     path = lake_dir / "gold" / "asset_risk.jsonl"
-    return read_jsonl(path) if path.is_file() else []
+    return read_projection(
+        path,
+        ("asset_id", "asset_name", "asset_type", "asset_owner", "environment", "risk_score"),
+        missing_ok=True,
+        base_dir=lake_dir,
+    )
 
 
 def _silver_event_rows(lake_dir: Path) -> list[dict[str, Any]]:
     path = lake_dir / "silver" / "normalized_events.jsonl"
-    return read_jsonl(path) if path.is_file() else []
+    return read_projection(
+        path,
+        ("asset_id", "asset_name", "asset_type", "asset_owner", "environment", "event_type", "control_ids"),
+        missing_ok=True,
+        base_dir=lake_dir,
+    )
 
 
 def _bronze_raw_rows(lake_dir: Path) -> list[dict[str, Any]]:

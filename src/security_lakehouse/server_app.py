@@ -1094,7 +1094,7 @@ def _legacy_post_response(
         return JSONResponse(_legacy_error_payload(HTTPStatus.INTERNAL_SERVER_ERROR), status_code=500)
     if status_code >= HTTPStatus.BAD_REQUEST:
         return JSONResponse(_legacy_error_payload(status_code), status_code=int(status_code))
-    return JSONResponse(payload, status_code=int(status_code))
+    return JSONResponse(_redact_payload(payload, identity), status_code=int(status_code))
 
 
 _STREAM_CACHE: OrderedDict[tuple, tuple[float, dict[str, object]]] = OrderedDict()

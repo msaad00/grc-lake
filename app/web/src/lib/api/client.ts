@@ -180,9 +180,15 @@ async function post<T>(path: string, body: unknown): Promise<T> {
         data: {
           status: string;
           http_status: number | null;
+          result_archived?: boolean;
           response: T | null;
         };
       }>(`/v1/operations/${encodeURIComponent(id)}`);
+      if (job.result_archived)
+        throw new ApiError(
+          410,
+          "Operation result was archived. Ask your operator for the retained receipt; this job will not be replayed.",
+        );
       if (job.status === "succeeded" && job.response) return job.response;
       if (["failed", "interrupted", "cancelled"].includes(job.status)) {
         const reason = (

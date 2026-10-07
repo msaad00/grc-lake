@@ -64,3 +64,7 @@ The `runtime-gateway` connector tags every tool-call, policy-decision and runtim
 ## Evaluation boundary
 
 The executable rule rejects missing or stale evidence and open findings. It does not establish semantic completeness of uploaded documents. A reviewer must check the stated evidence requirement and system scope before promoting a proposed mapping. Agents may submit observations or draft responses; recorded approval remains separate from deterministic evaluation.
+
+Annex A.6.1.3 is distinct from management clause 6.1.3. The restored
+`ISO42001-A.6.1.3` requirement remains unmapped pending independent review;
+existing risk-treatment mappings do not attest responsible development processes.

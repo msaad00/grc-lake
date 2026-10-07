@@ -29,6 +29,7 @@ from security_lakehouse.evidence_freshness import (
     stale_control_ids,
     summarize_source_freshness,
 )
+from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_identity, generation_reader
 from security_lakehouse.io import append_jsonl, iter_jsonl, read_json, read_jsonl, write_json
 from security_lakehouse.ledger import chain_lock
@@ -114,6 +115,7 @@ def build_current_posture(
     assessment = {
         "schema_version": "trustops.assessment.v1",
         "assessment_type": "current_posture",
+        "synthetic_fixture": contains_synthetic_evidence(lake, events),
         "evaluated_at": utc_iso(evaluated_at),
         "freshness_days": freshness_days,
         "posture": {

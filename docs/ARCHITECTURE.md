@@ -19,6 +19,8 @@ flowchart TB
     Seal["Verify artifact hashes · atomic current pointer"]
     API["Authenticated API · pinned generation reads"]
     Ops["Operational DB and audit/review ledgers"]
+    Jobs["Durable queue · tenant fairness · bounded child processes"]
+    Stream["SSE · tenant/generation coalescing · role redaction"]
   end
   subgraph Storage["Customer-owned storage"]
     Raw["Raw observations"]
@@ -32,6 +34,9 @@ flowchart TB
   Rules --> Eval --> Stage --> Seal --> Generations
   Generations --> API --> Clients
   API --> Ops
+  API --> Jobs --> Ingest
+  Jobs --> Eval
+  API --> Stream --> Clients
   Generations --> Snapshots
   Generations -->|export after local commit| Sinks
 ```
@@ -124,3 +129,10 @@ claiming that a synthetic benchmark establishes production capacity.
 Anonymous request audit belongs to the operator's server/security_audit directory;
 authenticated records remain tenant-scoped. Recorded route templates omit path
 parameters, including share tokens.
+
+Successful JSON v1 responses declare the shared `data`, `meta`, and `errors`
+envelope in OpenAPI, including endpoints that return JSONResponse directly.
+Where a resource-specific model is absent, `data` remains generic: the envelope
+schema is not a claim that every domain record is fully typed. Schema generation
+is idempotent and preserves its input; binary and HTML routes retain their own
+media types.

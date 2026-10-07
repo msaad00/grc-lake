@@ -139,7 +139,7 @@ pod and scheduler CronJob through Helm values:
 ```yaml
 env:
   - name: SNOWFLAKE_ACCOUNT
-    value: MJFAYEE-YS65534
+    value: YOUR_ORG-YOUR_ACCOUNT
   - name: SNOWFLAKE_USER
     value: TRUSTOPS_INGEST_SVC
   - name: SNOWFLAKE_AUTHENTICATOR
@@ -241,3 +241,65 @@ is selected or hosted mode is enabled. The Helm scheduler defaults to
 scheduling for explicitly configured insecure demos. Disable this value when
 an external scheduler already invokes each tenant lake separately. A one-shot
 CLI tick returns a nonzero exit status when an attempted target reports an error.
+
+## Retaining operational history
+
+Generation and operational retention are separate, explicit operator actions:
+
+```bash
+security-lakehouse lake retention --lake ./lake
+security-lakehouse lake operational-retention --lake ./lake --older-than-days 90
+```
+
+These commands preview eligible data. Supply `--archive-to /separate/archive`
+to copy eligible history durably before reclaiming active storage. Choose an
+archive on separately controlled storage and a window that covers your evidence
+obligations. Run preview first, then schedule the explicit archive invocation in
+your deployment's maintenance scheduler. There is no silent deletion policy.
+
+Generation retention protects the active generation and references discoverable
+from snapshots, workpapers, and verification receipts. Operational retention
+archives completed job payloads/results and old request-audit rows. Audit lines
+retain their exact bytes; archive filenames are SHA-256 content addresses. A
+shared append lock prevents request records being lost during compaction.
+Interrupted compaction can be rerun: existing archive bytes must match before
+active data changes. Invalid timestamps and symlinks stop retention.
+
+Job identity, request hashes, status, and ownership remain in SQL to preserve
+idempotency. Reusing a retained key returns the same archived job and cannot run
+it again. Full results move out of the active database; the console reports that
+an operator must retrieve the receipt. Receipt metadata and archive storage still
+grow with history, so monitor both and apply your archive storage policy. This
+is active-storage compaction, not a claim of constant total storage or an
+independently signed audit archive.
+
+## Repeated evidence and graph reads
+
+Evidence lists and graph coverage reuse validated JSONL projections in a
+process-local cache. Asset-name and graph reads retain only the fields they use;
+evidence lists retain complete rows so existing filtering and sorting continue
+to work. Each request still reads and hashes the current source bytes. Changed
+bytes, a different tenant path, or a newly selected generation require a fresh
+strict parse, including fields outside the returned page. File timestamps alone
+do not establish a cache hit, and callers receive separate result objects.
+Concurrent cacheable misses for the same path, fields, and byte identity share one parse;
+other tenants build independently, and unused build locks are released.
+
+The cache retains at most 32 MiB of serialized data across 32 entries per
+process. The cache reads at most 128 MiB of source data per call; larger inputs use the
+uncached streaming reader. These limits cover retained cache storage and individual source reads,
+not the total memory of a decoded response or concurrent requests. Cold parsing,
+source-byte reads, in-memory filtering, and graph construction still scale with
+input size. This optimization does not turn those endpoints into indexed queries
+or replace snapshot and generation integrity verification. Measure your own
+request sizes, concurrent readers, worker count, and latency budget before
+setting deployment capacity.
+
+## Reassessing imported evidence
+
+`security-lakehouse pipeline eval --lake ./lake` also works after an initial
+`pipeline run` from an external JSONL file. When no connector landing file exists,
+evaluation verifies the retained sealed generation and reconstructs temporary
+input from its original bronze records under the publication lock. It does not
+rewrite the old generation or fabricate a connector collection. Missing or
+tampered retained evidence fails evaluation; an empty lake does not pass.

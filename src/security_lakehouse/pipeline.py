@@ -98,7 +98,7 @@ def run_pipeline_incremental(
     mapping_path: str | Path | None = None,
     tenant_id: str | None = None,
 ) -> PipelineResult:
-    """Materialize only raw evidence that changed since the last manifest."""
+    """Detect changed raw evidence, then publish a complete replacement generation."""
     tenant_id = evaluation_tenant_id(out_dir, tenant_id)
     # Validate the catalog even when no raw rows changed.
     current_controls = with_program_requirements(load_control_map(mapping_path))

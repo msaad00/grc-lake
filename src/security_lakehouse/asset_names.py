@@ -13,7 +13,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.io import read_jsonl
+from security_lakehouse.projected_reads import read_projection
 
 
 def entity_asset_id(entity: dict[str, Any]) -> str:
@@ -37,7 +37,9 @@ def asset_names_from_raw(raw_rows: Iterable[dict[str, Any]]) -> dict[str, str]:
 def load_asset_names(lake_dir: str | Path) -> dict[str, str]:
     """Asset ID to name, from the gold asset rows of a lake."""
     lake = Path(lake_dir)
-    rows = read_jsonl(lake / "gold" / "asset_risk.jsonl", missing_ok=True, base_dir=lake)
+    rows = read_projection(
+        lake / "gold" / "asset_risk.jsonl", ("asset_id", "asset_name"), missing_ok=True, base_dir=lake
+    )
     return {
         str(row["asset_id"]): str(row["asset_name"]) for row in rows if row.get("asset_id") and row.get("asset_name")
     }

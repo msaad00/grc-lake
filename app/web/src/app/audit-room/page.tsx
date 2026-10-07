@@ -76,7 +76,9 @@ export default function AuditRoomPage() {
                     {STATE_COPY[audit.data.state]?.label ??
                       displayLabel(audit.data.state)}
                   </Badge>
-                  {connected ? <Badge tone="ready">Live</Badge> : null}
+                  {connected ? (
+                    <Badge tone="info">Updates connected</Badge>
+                  ) : null}
                   <span className="text-xs font-semibold text-muted">
                     {formatDateTime(audit.data.evaluated_at)}
                   </span>

@@ -5,6 +5,12 @@ tiers, self-serve signup, usage limits, tenant email invites, outbound mail
 adapters, SCIM 2.0 provisioning, and Stripe billing. All of it stays off unless
 `TRUSTOPS_COMMERCIAL_HOSTED=1`.
 
+These application features do not establish managed-service availability or
+multi-writer support. The supported lake topology has one writable application
+replica; shared storage alone does not make concurrent application writers safe.
+See [architecture](ARCHITECTURE.md) and [read replicas](runbooks/HA_READ_REPLICAS.md)
+for the deployment boundary.
+
 ## Enable hosted mode
 
 ```bash
@@ -28,7 +34,7 @@ SAML SSO for hosted tenants is configured as in
 [Server auth](SERVER_AUTH.md#saml). Only SP-initiated logins are accepted by
 default; set `TRUSTOPS_SAML_ALLOW_IDP_INITIATED=true` to accept IdP-initiated
 logins. Consumed assertion IDs are stored in the shared application database,
-so a replay is rejected whichever replica receives it.
+so a replay is rejected on subsequent requests and after application restarts.
 
 Optional SCIM 2.0 provisioning (Enterprise tier). Enable it, then have a tenant
 admin issue a SCIM token (see [SCIM](#scim)):

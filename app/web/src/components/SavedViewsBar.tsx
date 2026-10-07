@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Bookmark, BookmarkCheck, X } from "lucide-react";
 import { notify } from "@/lib/toast";
 import {
+  useAuthWhoami,
   useCreateSavedViewMutation,
   useDeleteSavedViewMutation,
   useSavedViews,
@@ -20,6 +21,7 @@ export function SavedViewsBar({
   filters,
   onApply,
 }: SavedViewsBarProps) {
+  const canWrite = useAuthWhoami().data?.scopes.includes("write") === true;
   const savedViewsQuery = useSavedViews(surface);
   const createView = useCreateSavedViewMutation();
   const deleteView = useDeleteSavedViewMutation();
@@ -29,7 +31,7 @@ export function SavedViewsBar({
   const savedViews = savedViewsQuery.data ?? [];
 
   function handleSaveView() {
-    if (!saveViewName.trim()) return;
+    if (!canWrite || !saveViewName.trim()) return;
     createView.mutate(
       {
         surface,
@@ -48,6 +50,13 @@ export function SavedViewsBar({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {[createView.error, deleteView.error]
+        .filter(Boolean)
+        .map((error, index) => (
+          <p key={index} role="alert" className="text-sm text-danger">
+            {error?.message}
+          </p>
+        ))}
       <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
         <Bookmark className="h-3 w-3" />
         Saved views
@@ -63,12 +72,14 @@ export function SavedViewsBar({
           </button>
           <button
             type="button"
-            onClick={() =>
+            disabled={!canWrite || deleteView.isPending}
+            onClick={() => {
+              if (!window.confirm(`Delete saved view “${view.name}”?`)) return;
               deleteView.mutate(
                 { viewId: view.id, surface },
                 { onSuccess: () => notify.success("View deleted") },
-              )
-            }
+              );
+            }}
             className="rounded p-0.5 text-muted hover:text-ink"
             aria-label="Delete saved view"
           >
@@ -78,6 +89,8 @@ export function SavedViewsBar({
       ))}
       <button
         type="button"
+        disabled={!canWrite}
+        title={!canWrite ? "Saving views requires write permission" : undefined}
         onClick={() => setShowSavePanel(!showSavePanel)}
         className="flex items-center gap-1 rounded-md border border-line bg-surface px-2 py-0.5 text-[11px] font-medium text-muted hover:text-ink"
       >
@@ -95,6 +108,7 @@ export function SavedViewsBar({
           />
           <button
             type="button"
+            disabled={!canWrite || createView.isPending}
             onClick={handleSaveView}
             className="rounded bg-info-bg px-2 py-0.5 text-[11px] font-medium text-info-fg hover:bg-info"
           >

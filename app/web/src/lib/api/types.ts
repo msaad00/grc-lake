@@ -64,6 +64,8 @@ export interface AssetRisk {
 
 export interface Assessment {
   schema_version: string;
+  /** True when any retained evidence is explicitly marked synthetic. Absence is not origin verification. */
+  synthetic_fixture?: boolean;
   assessment_type: string;
   evaluated_at: string;
   freshness_days: number;

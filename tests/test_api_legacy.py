@@ -84,8 +84,8 @@ def test_legacy_requires_auth_in_server_mode(tmp_path: Path) -> None:
     _seed_lake(tmp_path)
     client = TestClient(create_app(tmp_path))  # auth required
     assert client.get("/api/controls").status_code == HTTPStatus.UNAUTHORIZED
-    entries = build_audit_log(tmp_path, category="request")
-    assert entries[0]["payload"]["route"] == "/api/controls"
+    entries = build_audit_log(tmp_path / "server/security_audit", category="request")
+    assert entries[0]["payload"]["route"] == "/api/{rest:path}"
     assert entries[0]["result"] == "deny"
 
 

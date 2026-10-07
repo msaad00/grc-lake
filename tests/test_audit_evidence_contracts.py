@@ -339,3 +339,23 @@ def test_jira_premature_empty_page_is_incomplete(monkeypatch, kind):
     monkeypatch.setattr(client, "_json", lambda url: {"issues": [], "values": [], "total": 2, "isLast": False})
     with pytest.raises(ValueError, match="incomplete"):
         getattr(client, kind)()
+
+
+def test_independent_checkpoint_detects_deleted_review_log_and_tip(tmp_path, monkeypatch):
+    from security_lakehouse import evidence_migration
+    from security_lakehouse.io import write_jsonl
+    from security_lakehouse.pipeline import run_pipeline
+    from test_assurance_truth import event
+
+    lake = tmp_path / "lake"
+    raw = tmp_path / "raw.jsonl"
+    write_jsonl(raw, [event()])
+    run_pipeline(raw, lake)
+    monkeypatch.setattr(mapping_review, "_tip_key", lambda: b"test-key")
+    _decide(lake, "approve", _item("SG-A", "ISO27001-A.5.15", "iso-27001-2022"))
+    checkpoint = evidence_migration.integrity_checkpoint(lake)
+    mapping_review.review_log_path(lake).unlink()
+    mapping_review.review_tip_path(lake).unlink()
+    # Absence alone cannot prove there used to be history. The independently
+    # retained pre-deletion checkpoint supplies that missing fact.
+    assert evidence_migration.verify_checkpoint(lake, checkpoint)["ok"] is False

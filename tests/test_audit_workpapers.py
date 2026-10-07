@@ -296,3 +296,21 @@ def test_export_verification_rejects_unrecognized_manifest_claims(workpaper_env,
     manifest = json.loads((out / "manifest.json").read_text())
     (out / "manifest.json").write_text(json.dumps({**manifest, **extra}))
     assert verify_workpaper_export(out)["ok"] is False
+
+
+def test_golden_metadata_labels_export_as_synthetic(workpaper_env, tmp_path):
+    from security_lakehouse import audit_workpapers
+    from security_lakehouse.io import read_jsonl, write_jsonl
+    from security_lakehouse.pipeline import run_pipeline
+
+    _, _, _, lake, body = workpaper_env
+    raw = [row["raw"] for row in read_jsonl(lake / "bronze/raw_events.jsonl")]
+    for row in raw:
+        row["source"] = "github"
+        row["attributes"] = {"demo": True, "fixture": "golden"}
+    source = tmp_path / "golden-shaped.jsonl"
+    write_jsonl(source, raw)
+    run_pipeline(source, lake, tenant_id=body["plan"]["tenant_id"])
+    content = audit_workpapers.build_workpaper(lake, **body)
+    assert content["synthetic_fixture"] is True
+    assert "Synthetic demonstration" in audit_workpapers.render_workpaper(content)

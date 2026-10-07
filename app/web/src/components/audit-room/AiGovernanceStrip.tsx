@@ -10,6 +10,7 @@ import { useAiGovernance, useAiInventory } from "@/lib/api/hooks";
 import type { AiInventoryItem } from "@/lib/api/types";
 import { assetLabel, plural } from "@/lib/format";
 import { displayLabel } from "@/lib/display";
+import { readinessCoverage } from "@/lib/readiness-coverage";
 
 const STATE_COPY: Record<
   string,
@@ -93,9 +94,9 @@ export function AiGovernanceStrip() {
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <KpiTile
-                label="Governance score"
-                value={`${governance.data.governance_score}%`}
-                detail={`${governance.data.frameworks_ready}/${governance.data.frameworks_total} frameworks ready`}
+                label="Governance indicator"
+                value={`${governance.data.governance_score}/100`}
+                detail="55% inventory signals + 45% fresh pass rate over observed controls"
                 tone={
                   governance.data.governance_score >= 85
                     ? "ready"
@@ -150,7 +151,12 @@ export function AiGovernanceStrip() {
                     <span className="text-xs font-semibold text-ink">
                       {framework.label}
                     </span>
-                    {framework.score === null ? (
+                    {!readinessCoverage(
+                      framework.controls_with_evidence,
+                      framework.requirements,
+                    ).sufficient ? (
+                      <Badge tone="default">Insufficient coverage</Badge>
+                    ) : framework.score === null ? (
                       <Badge tone="default">Not evaluated</Badge>
                     ) : (
                       <Badge
@@ -160,6 +166,15 @@ export function AiGovernanceStrip() {
                       </Badge>
                     )}
                   </div>
+                  <p className="mt-1 text-xs text-muted">
+                    {framework.passing_controls}/
+                    {framework.controls_with_evidence} passing ·{" "}
+                    {framework.controls_with_evidence}/
+                    {framework.requirements > 0
+                      ? framework.requirements
+                      : "unknown"}{" "}
+                    observed / catalogued
+                  </p>
                   <p className="mt-1 text-xs text-muted">
                     {framework.mapped_requirements}/{framework.requirements}{" "}
                     requirements mapped ·{" "}

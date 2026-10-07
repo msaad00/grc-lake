@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.control_assurance import assess_control_plan, evidence_reference
+from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import canonical_sha256, file_sha256, read_json, read_jsonl
 from security_lakehouse.population_reconciliation import assess_population
@@ -54,7 +55,7 @@ def build_workpaper(
     counts = Counter(row["operating"]["status"] for row in assurance["controls"])
     content = {
         "schema_version": "trustops.audit_workpaper.v1",
-        "synthetic_fixture": any(row["source"] == "synthetic-audit-fixture" for row in events),
+        "synthetic_fixture": contains_synthetic_evidence(lake, events),
         "tenant_id": plan["tenant_id"],
         "plan": plan,
         "baseline": baseline,

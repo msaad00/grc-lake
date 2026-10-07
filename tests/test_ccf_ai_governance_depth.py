@@ -54,7 +54,8 @@ AI_RMF_INTENTIONALLY_UNMAPPED = {
 }
 # A.2.3 (alignment with other organizational policies) and A.10.4 (customers)
 # are policy-level obligations with no AI-system evidence of their own.
-ISO_42001_INTENTIONALLY_UNMAPPED = {"ISO42001-2.3", "ISO42001-10.4"}
+# The restored Annex obligation has no independently reviewed safeguard mapping.
+ISO_42001_INTENTIONALLY_UNMAPPED = {"ISO42001-2.3", "ISO42001-10.4", "ISO42001-A.6.1.3"}
 
 AI_RMF_SOURCE = {
     "name": "NIST AI 100-1, Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
@@ -212,4 +213,5 @@ def test_ai_context_doc_lists_every_ai_safeguard_and_every_documented_gap() -> N
         function, number = control_id.removeprefix("NIST-AI-RMF-").split("-", 1)
         assert f"{function} {number}" in doc, control_id
     for control_id in ISO_42001_INTENTIONALLY_UNMAPPED:
-        assert "A." + control_id.removeprefix("ISO42001-") in doc, control_id
+        ref = control_id.removeprefix("ISO42001-")
+        assert (ref if ref.startswith("A.") else "A." + ref) in doc, control_id

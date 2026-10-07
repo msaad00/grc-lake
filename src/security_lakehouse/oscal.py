@@ -48,6 +48,7 @@ from urllib.parse import quote
 
 from security_lakehouse.assessment import _assessment_hash, load_snapshot
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
+from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_identity, generation_reader, pin_generation, verify_generation
 from security_lakehouse.io import file_sha256, read_json, read_jsonl, resolve_path
 from security_lakehouse.models import utc_iso
@@ -343,6 +344,11 @@ def build_assessment_results(
     # Resolve input lineage from the same verified generation as the controls.
     # Legacy embedded snapshots have no retained input population to assert.
     source_lake = (lake / "generations" / generation_id) if snapshot_id and isinstance(generation, dict) else lake
+    synthetic_fixture = (
+        contains_synthetic_evidence(source_lake)
+        if not snapshot_id or isinstance(generation, dict)
+        else posture_payload.get("synthetic_fixture") is True
+    )
     inputs: dict[str, list[JsonObject]] = {}
     if not snapshot_id or isinstance(generation, dict):
         for event in read_jsonl(source_lake / "silver/normalized_events.jsonl", missing_ok=True, base_dir=source_lake):
@@ -425,6 +431,9 @@ def build_assessment_results(
             "control-selections": [control_selection],
         },
     }
+    if synthetic_fixture:
+        result["props"] = [_prop("trustops-synthetic-evidence", "true")]
+        result["description"] += " Contains synthetic demonstration evidence; synthetic rows are not production proof."
     # Both arrays require minItems:1 when present, but neither is required --
     # a lake with no evaluated controls yet omits them rather than emitting an
     # invalid empty array.

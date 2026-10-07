@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.assessment import build_current_posture
+from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import read_json, read_jsonl
 from security_lakehouse.web import web_dist_dir, web_dist_index
@@ -80,13 +81,15 @@ def _load_app_data(lake: Path) -> dict[str, Any]:
             "stale_controls": [],
             "assessment_hash": "",
         }
+    events = read_jsonl(silver_path) if silver_path.is_file() else []
     return {
+        "synthetic_fixture": contains_synthetic_evidence(lake, events),
         "generated_at": dashboard.get("generated_at"),
         "metrics": dashboard.get("metrics", {}),
         "controls": dashboard.get("control_posture", []),
         "control_tests": dashboard.get("control_tests", []),
         "assets": dashboard.get("asset_risk", []),
-        "events": read_jsonl(silver_path) if silver_path.is_file() else [],
+        "events": events,
         "posture": posture,
         "sources": dashboard.get("source_mix", []),
         "routes": dashboard.get("backend_routes", []),
@@ -109,7 +112,20 @@ def _inline_react_dashboard(app_data: dict[str, Any]) -> str:
         html_text = _INLINE_DATA_RE.sub(lambda _match: replacement, html_text)
     else:
         html_text = html_text.replace("</body>", f"{replacement}</body>")
+    notice = _synthetic_notice(app_data)
+    if notice:
+        html_text = re.sub(
+            r"(<body\b[^>]*>)", lambda match: match.group(0) + notice, html_text, count=1, flags=re.IGNORECASE
+        )
     return html_text
+
+
+def _synthetic_notice(app_data: dict[str, Any]) -> str:
+    if app_data.get("synthetic_fixture") is not True:
+        return ""
+    return (
+        '<aside role="note">Contains synthetic demonstration evidence; synthetic rows are not production proof.</aside>'
+    )
 
 
 def _inline_assets(html_text: str, dist: Path) -> str:
@@ -152,7 +168,7 @@ def _fallback_html(app_data: dict[str, Any]) -> str:
     posture = app_data.get("posture", {}).get("posture", {})
     score = posture.get("score", "—")
     state = posture.get("state", "—")
-    return _FALLBACK_TEMPLATE.format(payload=payload, score=score, state=state)
+    return _FALLBACK_TEMPLATE.format(payload=payload, score=score, state=state, notice=_synthetic_notice(app_data))
 
 
 _FALLBACK_TEMPLATE = """<!doctype html>
@@ -173,6 +189,7 @@ _FALLBACK_TEMPLATE = """<!doctype html>
 <body>
 <script id="app-data" type="application/json">{payload}</script>
 <main>
+  {notice}
   <div class="pill">offline evidence packet</div>
   <h1>Overview</h1>
   <p>This file ships a frozen assessment payload for offline review. The full interactive workbench is available by running:</p>

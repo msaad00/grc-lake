@@ -770,6 +770,7 @@ def _public_trust_summary(lake: Path, share: dict[str, object]) -> dict[str, obj
         posture_summary["state"] = "partial_evidence"
     return {
         "schema_version": "trustops.public_trust.v1",
+        "synthetic_fixture": redacted.get("synthetic_fixture") is True,
         "sensitivity": "public",
         "visibility": "external_reviewer",
         "redaction_policy": "trustops.public_summary.v1",

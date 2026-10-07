@@ -22,6 +22,7 @@ type FrameworkRow = {
 // shares; the server omits them for customer-facing public summaries.
 type PublicTrust = {
   schema_version: string;
+  synthetic_fixture?: boolean;
   data_residency: string;
   issued_by: string | null;
   scope: string | null;
@@ -172,6 +173,15 @@ export default function PublicTrustView() {
 
         {status === "ok" && data && (
           <div className="grid gap-4">
+            {data.synthetic_fixture === true && (
+              <aside
+                role="note"
+                className="rounded-xl border border-info/40 bg-info-bg p-4 text-sm text-info-fg"
+              >
+                Contains synthetic demonstration evidence; synthetic rows are
+                not production proof.
+              </aside>
+            )}
             <div
               data-testid="trust-posture-card"
               className="rounded-xl border border-line bg-surface p-6 text-ink shadow-sm"

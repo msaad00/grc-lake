@@ -1607,11 +1607,14 @@ def _auth_create_user(args: argparse.Namespace) -> int:
     return 0
 
 
-def _store_new_api_key(session, lake: str, key_id: str, token: str) -> str:
+def _credential_delivery_path(lake: str, key_id: str) -> Path:
+    return Path(lake).resolve() / "server" / "credentials" / f"{key_id}.token"
+
+
+def _store_new_api_key(session, lake: str, key_id: str, token: str) -> None:
     """Deliver a new credential privately; never overwrite or log its bytes."""
-    directory = Path(lake).resolve() / "server" / "credentials"
-    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-    path = directory / f"{key_id}.token"
+    path = _credential_delivery_path(lake, key_id)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
@@ -1622,7 +1625,6 @@ def _store_new_api_key(session, lake: str, key_id: str, token: str) -> str:
     except BaseException:
         path.unlink(missing_ok=True)
         raise
-    return str(path)
 
 
 def _auth_issue_key(args: argparse.Namespace) -> int:
@@ -1641,13 +1643,14 @@ def _auth_issue_key(args: argparse.Namespace) -> int:
         key, token = repository.create_api_key(
             session, tenant_id=tenant.id, user_id=user.id, name=args.name, expires_at=expires_at
         )
+        _store_new_api_key(session, args.lake, key.id, token)
         result = {
             "tenant": tenant.slug,
             "user_email": user.email,
             "api_key_id": key.id,
             "prefix": key.prefix,
             "status": key.status,
-            "token_file": _store_new_api_key(session, args.lake, key.id, token),
+            "token_file": str(_credential_delivery_path(args.lake, key.id)),
         }
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
@@ -1708,6 +1711,7 @@ def _platform_seed_dev(args: argparse.Namespace) -> int:
                 role="admin",
             )
         key, token = repository.create_api_key(session, tenant_id=tenant.id, user_id=user.id, name="local-dev")
+        _store_new_api_key(session, args.lake, key.id, token)
         result = {
             "tenant_id": tenant.id,
             "tenant_slug": tenant.slug,
@@ -1716,7 +1720,7 @@ def _platform_seed_dev(args: argparse.Namespace) -> int:
             "role": user.role,
             "api_key_id": key.id,
             "api_key_prefix": key.prefix,
-            "token_file": _store_new_api_key(session, args.lake, key.id, token),
+            "token_file": str(_credential_delivery_path(args.lake, key.id)),
         }
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

@@ -233,9 +233,11 @@ function EvidencePageContent() {
     helper.accessor("control_ids", {
       header: "Controls",
       cell: (info) => (
-        <div className="grid min-w-[130px] max-w-[190px] gap-0.5 font-mono text-xs text-ink">
+        <div className="grid min-w-[130px] gap-0.5 font-mono text-xs text-ink">
           {(info.getValue() as string[]).map((c) => (
-            <span key={c}>{c}</span>
+            <span key={c} className="whitespace-nowrap">
+              {c}
+            </span>
           ))}
         </div>
       ),

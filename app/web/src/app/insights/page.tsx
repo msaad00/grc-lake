@@ -235,12 +235,12 @@ export default function InsightsPage() {
             </div>
           </Card>
 
-          {/* open violations chart */}
+          {/* open findings chart */}
           <Card className="overflow-hidden">
             <CardHeader>
-              <CardTitle>Open violations over time</CardTitle>
+              <CardTitle>Open findings over time</CardTitle>
               <CardDescription>
-                Count of open violations at each captured snapshot.
+                Count of open findings at each captured snapshot.
               </CardDescription>
             </CardHeader>
             <div
@@ -290,7 +290,7 @@ export default function InsightsPage() {
                     <Area
                       type="monotone"
                       dataKey="open"
-                      name="Open violations"
+                      name="Open findings"
                       stroke="#ef4444"
                       strokeWidth={2}
                       fill="url(#violGrad)"

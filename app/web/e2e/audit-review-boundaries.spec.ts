@@ -195,10 +195,15 @@ test("AI governance reports observed denominators and weighted score meaning", a
   await mockAi(page);
   await page.goto("/console/ai-governance/");
   const strip = page.getByTestId("ai-governance-strip");
-  await expect(strip.getByText(/55% inventory.*45%/)).toBeVisible();
   await expect(
-    strip.getByText(/passing.*observed.*catalogued/).first(),
+    strip.getByText("AI governance indicator", { exact: true }),
   ).toBeVisible();
+  await expect(
+    strip.getByRole("button", {
+      name: /About AI governance indicator: .*55% AI evidence signals.*45%/,
+    }),
+  ).toBeVisible();
+  await expect(strip.getByText(/controls assessed/).first()).toBeVisible();
 });
 
 test("assessment wording distinguishes lake evaluation from live provider proof", async ({
@@ -224,7 +229,8 @@ for (const [observed, catalogued] of [
     const strip = page.getByTestId("ai-governance-strip");
     await expect(
       strip.getByText(
-        `${observed}/${observed} passing · ${observed}/${catalogued || "unknown"} observed / catalogued`,
+        `${observed} of ${catalogued || "unknown"} controls assessed · ${observed} passing`,
+        { exact: true },
       ),
     ).toBeVisible();
     if (!catalogued || observed / catalogued < 0.5) {

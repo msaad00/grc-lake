@@ -95,6 +95,8 @@ export interface ControlTest {
   status: string;
   owner: string;
   confidence_score: number;
+  /** 0-100 inputs the pipeline weights into confidence_score. */
+  confidence_inputs?: Record<string, number>;
   agent_skill: string;
   freshness_status: string;
   next_action: string;

@@ -15,6 +15,7 @@ import { frameworkDetailHref } from "@/lib/framework-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { SCORE_COPY } from "@/lib/console-copy";
 import { splitFrameworkPacks, stubCountLabel } from "@/lib/framework-packs";
 
 const FRAMEWORK_IDS: Record<string, string> = {
@@ -142,10 +143,16 @@ function FrameworkRow({
         </div>
       </div>
       {framework && showScore ? (
-        <span className="shrink-0 text-sm tabular-nums text-ink">
+        <span
+          className="shrink-0 text-sm tabular-nums text-ink"
+          title={`${label} ${SCORE_COPY.framework.label.toLowerCase()}: ${SCORE_COPY.framework.definition}`}
+        >
           {Math.round(framework.score)}
           <span className="text-xs text-muted">/100</span>
-          <span className="sr-only"> assessment score</span>
+          <span className="sr-only">
+            {" "}
+            {label} {SCORE_COPY.framework.label.toLowerCase()}
+          </span>
         </span>
       ) : null}
       <Badge tone={status.tone} className="shrink-0">

@@ -25,7 +25,14 @@ test.describe("framework coverage workflow", () => {
       portfolio.getByText("Proposed mappings awaiting review"),
     ).toHaveCount(0);
     await expect(
-      portfolio.getByText("Review backlog", { exact: true }),
+      portfolio.getByText("Requirements awaiting review", { exact: true }),
+    ).toBeVisible();
+    // Requirements here, mappings on Mapping review: the unit is spelled out.
+    await expect(
+      portfolio.getByText(/Mapping review counts individual mappings/),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/^\d+ of \d+ framework packs ready$/),
     ).toBeVisible();
 
     await expect(

@@ -29,6 +29,25 @@ const helper = createColumnHelper<typeof sortableTableFeatures, ControlTest>();
 const toneFor = (result: string) =>
   result === "pass" ? "ready" : result === "fail" ? "critical" : "attention";
 
+const CONFIDENCE_INPUT_LABELS: Record<string, string> = {
+  evidence_coverage: "evidence coverage",
+  evidence_type_coverage: "evidence type coverage",
+  freshness: "freshness",
+  source_health: "source health",
+  mapping_quality: "mapping quality",
+  hash_integrity: "hash integrity",
+};
+
+/** Per-row score from the pipeline; the hover text shows what it is made of. */
+export function confidenceTitle(test: ControlTest): string {
+  const inputs = Object.entries(test.confidence_inputs ?? {});
+  if (inputs.length === 0)
+    return "Evidence confidence computed by the assessment pipeline for this control.";
+  return `Evidence confidence, weighted from: ${inputs
+    .map(([key, value]) => `${CONFIDENCE_INPUT_LABELS[key] ?? key} ${value}`)
+    .join(", ")}.`;
+}
+
 export function ControlTestTable({
   rows,
   onSelect,
@@ -85,8 +104,11 @@ export function ControlTestTable({
             <Badge tone={toneFor(v) as "ready" | "critical" | "attention"}>
               {displayLabel(v)}
             </Badge>
-            <div className="mt-1 text-xs text-muted">
-              {info.row.original.confidence_score}% confidence
+            <div
+              className="mt-1 whitespace-nowrap text-xs text-muted"
+              title={confidenceTitle(info.row.original)}
+            >
+              {info.row.original.confidence_score}% evidence confidence
             </div>
           </div>
         );
@@ -99,9 +121,11 @@ export function ControlTestTable({
       ),
     }),
     helper.accessor("agent_skill", {
-      header: "Skill",
+      header: "Review skill",
       cell: (info) => (
-        <code className="text-xs text-ink">{info.getValue()}</code>
+        <code className="whitespace-nowrap text-xs text-ink">
+          {info.getValue()}
+        </code>
       ),
     }),
   ];

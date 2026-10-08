@@ -75,17 +75,34 @@ export const MAPPING_REVIEW_GLOSSARY = {
 
 export type MappingReviewGlossaryKey = keyof typeof MAPPING_REVIEW_GLOSSARY;
 
-/** Two scores, two names: keep them apart on every page. */
+/** One headline score, everything else a named sub-indicator. Each name
+ * says what it measures and over which scope; keep them apart on every page. */
 export const SCORE_COPY = {
   assessment: {
     label: "Assessment score",
+    scope: "Headline score for the whole workspace",
     definition:
-      "Percentage of observed controls with fresh passing evidence. Missing, unknown, stale, and failing controls receive no credit; catalog coverage is shown separately.",
+      "Percentage of observed controls with fresh passing evidence, across every evaluated framework. Missing, unknown, stale, and failing controls receive no credit; catalog coverage is shown separately.",
+  },
+  framework: {
+    label: "Framework score",
+    definition:
+      "The assessment score computed over one framework's observed controls only.",
   },
   auditReadiness: {
-    label: "Audit readiness",
+    label: "Audit readiness index",
     definition:
-      "Assessment score, control test pass rate, and frameworks ready, combined.",
+      "Audit-prep sub-indicator, not a second assessment score: a weighted blend of the assessment score (4 parts), control test pass rate (3 parts), and the share of evaluated frameworks that are ready (2 parts).",
+  },
+  frameworksReady: {
+    label: "Evaluated frameworks ready",
+    definition:
+      "Frameworks in the current evaluation that score 100 with enough of their catalog assessed. Framework packs that have no evaluated controls are not counted here.",
+  },
+  aiGovernance: {
+    label: "AI governance indicator",
+    definition:
+      "AI-only sub-indicator: 55% AI evidence signals (model inventory, lineage, model cards, agent activity) plus 45% fresh pass rate over observed AI framework controls. Not the assessment score.",
   },
 } as const;
 

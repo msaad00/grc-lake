@@ -2091,6 +2091,7 @@ def _frameworks_sync(args: argparse.Namespace) -> int:
             "new_sha": r.new_sha,
             "pulled_at": r.pulled_at,
             "reason": r.reason,
+            "transient": r.transient,
         }
         for r in results
     ]

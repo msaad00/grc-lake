@@ -513,7 +513,10 @@ export interface AuditReadiness {
 export interface AuditReadinessFramework {
   framework: string;
   score: number;
+  /** Controls with a verdict; observed controls without one are excluded. */
   assessed_controls: number;
+  /** Controls with any evidence, including ones not yet evaluated. */
+  observed_controls?: number;
   /** null when the framework is not in the control catalog (coverage unknown). */
   total_controls: number | null;
   coverage_pct: number | null;

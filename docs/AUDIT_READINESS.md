@@ -71,9 +71,12 @@ audit_score = (
 ) / 0.9
 ```
 
-A framework counts as ready only when its score is ≥ 85 **and** at least 50% of
+A framework counts as ready only when its score is 100 **and** at least 50% of
 its catalog controls have been assessed. Each framework's `assessed_controls`,
-`total_controls`, and `coverage_pct` are returned under `frameworks`.
+`observed_controls`, `total_controls`, and `coverage_pct` are returned under
+`frameworks`. A control with evidence but no verdict is observed, not
+assessed, and does not count toward coverage; the console's framework rows use
+the same rule.
 
 The score reflects only the organization's own evidence, control tests, and
 frameworks. `workflow_coverage` lists product capabilities for reference; it is

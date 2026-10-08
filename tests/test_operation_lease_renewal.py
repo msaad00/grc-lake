@@ -5,6 +5,7 @@ import threading
 import time
 from pathlib import Path
 
+import pytest
 from sqlalchemy import select, update
 from sqlalchemy.exc import OperationalError
 
@@ -139,3 +140,90 @@ def test_in_process_heartbeat_retries_lock_errors_within_one_lease(tmp_path, mon
     assert calls["renewed"], "no renewal succeeded before the job finished"
     assert calls["renewed"][0] - claimed_at < 3
     assert queue.get("insecure", job["id"])["status"] == "succeeded"
+
+
+def _flaky_begin(queue, monkeypatch, failures: int | None):
+    """Raise a lock error from the first ``failures`` write transactions (all, when None)."""
+    real = queue.factory.begin
+    calls = {"failed": 0}
+
+    def begin(*args, **kwargs):
+        if failures is None or calls["failed"] < failures:
+            calls["failed"] += 1
+            raise _locked()
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(queue.factory, "begin", begin)
+    return calls
+
+
+def test_finish_retries_lock_errors_and_records_the_result(tmp_path, monkeypatch):
+    app = create_app(tmp_path, require_auth=False)
+    queue = app.state.operation_queue
+    job = queue.enqueue(_INSECURE_IDENTITY, "/api/v1/ingestion/eval", {}, "flaky-finish")
+    row = queue.claim()
+    calls = _flaky_begin(queue, monkeypatch, failures=2)
+
+    queue.finish(row, 200, {"data": {"done": True}, "meta": {}, "errors": []})
+
+    assert calls["failed"] == 2
+    result = queue.get("insecure", job["id"])
+    assert result["status"] == "succeeded"
+    assert result["response"]["data"] == {"done": True}
+
+
+def test_finish_still_raises_after_the_retry_budget(tmp_path, monkeypatch):
+    monkeypatch.setattr(operation_jobs, "_WRITE_RETRY_SECONDS", 0.5)
+    app = create_app(tmp_path, require_auth=False)
+    queue = app.state.operation_queue
+    job = queue.enqueue(_INSECURE_IDENTITY, "/api/v1/ingestion/eval", {}, "locked-finish")
+    row = queue.claim()
+    calls = _flaky_begin(queue, monkeypatch, failures=None)
+
+    started = time.monotonic()
+    with pytest.raises(OperationalError):
+        queue.finish(row, 200, {"data": {"done": True}, "meta": {}, "errors": []})
+
+    assert calls["failed"] > 1
+    assert time.monotonic() - started < 3
+    assert queue.get("insecure", job["id"])["status"] == "running"
+
+
+def test_finish_retry_never_overwrites_a_job_another_worker_holds(tmp_path, monkeypatch):
+    app = create_app(tmp_path, require_auth=False)
+    queue = app.state.operation_queue
+    job = queue.enqueue(_INSECURE_IDENTITY, "/api/v1/ingestion/eval", {}, "stolen-finish")
+    row = queue.claim()
+    real = queue.factory.begin
+    calls = {"failed": 0}
+
+    def begin(*args, **kwargs):
+        if not calls["failed"]:
+            calls["failed"] += 1
+            with real() as session:
+                session.execute(update(OperationJob).where(OperationJob.id == row.id).values(worker_token="other"))
+            raise _locked()
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(queue.factory, "begin", begin)
+
+    queue.finish(row, 200, {"data": {"done": True}, "meta": {}, "errors": []})
+
+    stolen = _job_row(queue, job["id"])
+    assert stolen.status == "running" and stolen.worker_token == "other"
+    assert stolen.result_json is None
+
+
+def test_interrupted_status_update_retries_lock_errors(tmp_path, monkeypatch):
+    app = create_app(tmp_path, require_auth=False)
+    queue = app.state.operation_queue
+    job = queue.enqueue(_INSECURE_IDENTITY, "/api/v1/ingestion/eval", {}, "flaky-interrupt")
+    calls = _flaky_begin(queue, monkeypatch, failures=2)
+    worker = JobWorker(queue, lambda row: (200, {}), subprocess_execute=long_job, timeout_seconds=0.5)
+
+    assert worker.run_once(isolated=True)
+
+    assert calls["failed"] == 2
+    result = queue.get("insecure", job["id"])
+    assert result["status"] == "interrupted"
+    assert result["response"]["errors"][0]["code"] == "execution_timeout"

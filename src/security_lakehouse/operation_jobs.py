@@ -24,7 +24,7 @@ from typing import Any
 
 from sqlalchemy import case, func, select, update
 from sqlalchemy.exc import IntegrityError, OperationalError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from security_lakehouse.auth.rbac import Identity
 from security_lakehouse.db.models import OperationJob
@@ -38,6 +38,28 @@ DEFAULT_WORKERS = 2
 MAX_WORKERS = 16
 _RENEW_RETRY_MIN_SECONDS = 0.05
 _RENEW_RETRY_MAX_SECONDS = 2.0
+_WRITE_RETRY_SECONDS = 10.0
+
+
+def _write_with_retry(factory: sessionmaker, write: Callable[[Session], object], *, job_id: str) -> None:
+    """Run one fenced write transaction, retrying transient database errors briefly.
+
+    After the budget the error propagates unchanged, so recovery still marks
+    the job once its lease expires.
+    """
+    deadline = time.monotonic() + _WRITE_RETRY_SECONDS
+    delay = _RENEW_RETRY_MIN_SECONDS
+    while True:
+        try:
+            with factory.begin() as session:
+                write(session)
+            return
+        except OperationalError as exc:
+            if time.monotonic() + delay >= deadline:
+                raise
+            _LOG.warning("operation %s state write deferred: %s", job_id, exc.orig or exc)
+            time.sleep(delay)
+            delay = min(delay * 2, _RENEW_RETRY_MAX_SECONDS)
 
 
 def supported(path: str) -> bool:
@@ -351,7 +373,9 @@ class JobQueue:
         if len(raw.encode()) > RESULT_LIMIT:
             raw = "null"
             state = "interrupted"  # Work completed; inspect its domain history rather than replaying it.
-        with self.factory.begin() as session:
+        finished_at = time.time()
+
+        def write(session: Session) -> None:
             session.execute(
                 update(OperationJob)
                 .where(
@@ -359,7 +383,7 @@ class JobQueue:
                     OperationJob.status == "running",
                     OperationJob.worker_token == row.worker_token,
                 )
-                .values(status=state, http_status=code, result_json=raw, finished_at=time.time())
+                .values(status=state, http_status=code, result_json=raw, finished_at=finished_at)
             )
             session.execute(
                 update(OperationJob)
@@ -370,7 +394,7 @@ class JobQueue:
                 )
                 .values(
                     status="interrupted",
-                    finished_at=time.time(),
+                    finished_at=finished_at,
                     result_json=json.dumps(
                         {
                             "data": None,
@@ -385,6 +409,8 @@ class JobQueue:
                     ),
                 )
             )
+
+        _write_with_retry(self.factory, write, job_id=row.id)
 
 
 def _subprocess_entry(root: Path, row: OperationJob, execute, connection, timeout_seconds: float) -> None:
@@ -522,31 +548,31 @@ class JobWorker:
         else:
             if process.exitcode == -signal.SIGALRM:
                 reason = "execution_timeout"
-            with self.queue.factory.begin() as session:
-                session.execute(
-                    update(OperationJob)
-                    .where(
-                        OperationJob.id == row.id,
-                        OperationJob.status.in_(["running", "cancelling"]),
-                        OperationJob.worker_token == row.worker_token,
-                    )
-                    .values(
-                        status="interrupted",
-                        finished_at=time.time(),
-                        result_json=json.dumps(
-                            {
-                                "data": None,
-                                "errors": [
-                                    {
-                                        "code": reason,
-                                        "detail": "Execution stopped; inspect domain history before starting new work.",
-                                    }
-                                ],
-                                "meta": {},
-                            }
-                        ),
-                    )
+            interrupted = (
+                update(OperationJob)
+                .where(
+                    OperationJob.id == row.id,
+                    OperationJob.status.in_(["running", "cancelling"]),
+                    OperationJob.worker_token == row.worker_token,
                 )
+                .values(
+                    status="interrupted",
+                    finished_at=time.time(),
+                    result_json=json.dumps(
+                        {
+                            "data": None,
+                            "errors": [
+                                {
+                                    "code": reason,
+                                    "detail": "Execution stopped; inspect domain history before starting new work.",
+                                }
+                            ],
+                            "meta": {},
+                        }
+                    ),
+                )
+            )
+            _write_with_retry(self.queue.factory, lambda session: session.execute(interrupted), job_id=row.id)
 
     def _claim(self) -> OperationJob | None:
         with self._claim_lock:

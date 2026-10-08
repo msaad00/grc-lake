@@ -106,8 +106,7 @@ export function IngestionLoopStrip() {
                 </div>
                 <p className="mt-1 text-xs leading-5 text-muted">
                   Connector syncs land raw evidence; control eval materializes
-                  posture on a separate schedule — same split loop as managed
-                  GRC platforms.
+                  posture on its own schedule.
                   {coverage
                     ? ` ${coverage.implemented}/${coverage.total} integrations implemented · ${coverage.enabled} enabled.`
                     : ""}

@@ -128,8 +128,7 @@ export function DemoShareKit({ kit }: { kit: DemoKit }) {
             Shareable demo links
           </CardTitle>
           <CardDescription>
-            Copy invite, sign-in, and connect URLs for evaluators — similar to
-            hosted GRC demo workspaces. Set{" "}
+            Copy invite, sign-in, and connect URLs for evaluators. Set{" "}
             <code className="text-ink">TRUSTOPS_PUBLIC_URL</code> on the server
             to generate absolute links.
           </CardDescription>

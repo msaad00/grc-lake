@@ -51,12 +51,17 @@ Keep `limit`, `sort`, and filters the same while following a cursor.
 `GET /api/v1/evidence` streams the stored events in file order: an unsorted page
 reads only up to one row past the page, while `sort` reads every event first.
 
-Graph and coverage routes return one object, not a list. Without paging
-parameters they return the whole object, as before. With `limit`, `offset`, or
-`cursor` they page each of the object's lists by the same window and repeat
-the other fields on every page. Concatenate each list across pages, following
-`next_cursor` until it is `null`, to rebuild it. `meta.count` is the longest
-list; `meta.parts` gives each list's own `count` and `returned`.
+Graph and coverage routes return one object, not a list. They page each of
+the object's lists by the same window and repeat the other fields on every
+page. Concatenate each list across pages, following `next_cursor` until it is
+`null`, to rebuild it. `meta.count` is the longest list; `meta.parts` gives each
+list's own `count` and `returned`.
+
+`graph` and `repo-graph` are always paged. Without `limit`, `offset`, or
+`cursor` they serve the first page with the collection default of 100 rows per
+list and set `meta.default_page: true`. Send `limit` (up to 1000) to read
+fewer pages. The two coverage routes page only when a paging parameter is sent;
+without one they return the whole object.
 
 | Route                             | Lists paged together                                                 |
 | --------------------------------- | -------------------------------------------------------------------- |

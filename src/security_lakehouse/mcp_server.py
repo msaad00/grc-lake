@@ -115,14 +115,19 @@ def _get(path: str, lake: Path, **params: str) -> Any:
     through to :func:`security_lakehouse.api_v1.handle_get`, so pagination and
     filtering behave exactly as they do over HTTP.
     """
+    return _get_envelope(path, lake, **params)["data"]
+
+
+def _get_envelope(path: str, lake: Path, **params: str) -> JsonObject:
+    """Run a v1 GET locally or remotely and return the whole envelope."""
     if _remote_api_configured():
-        return _server_api_request("GET", path, None, **params)["data"]
+        return _server_api_request("GET", path, None, **params)
     query = {key: [value] for key, value in params.items() if value is not None}
     status, body = api_v1.handle_get(path, query, lake)
     if status != HTTPStatus.OK:
         errors = body.get("errors") or [{"detail": "request failed"}]
         raise ValueError(errors[0].get("detail", "request failed"))
-    return body["data"]
+    return body
 
 
 def _api_error_detail(payload: bytes) -> str:
@@ -1076,13 +1081,28 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         return _get("/api/v1/evidence/freshness", lake, limit=str(limit), offset=str(offset))
 
     @trustops_tool(title="Repository Governance Graph")
-    def get_repository_graph() -> JsonObject:
-        """Return repository topology and governance evidence as nodes and edges for agents."""
-        if _remote_api_configured():
-            return _get("/api/v1/repo-graph", lake)
-        from security_lakehouse.graph import build_repository_graph
+    def get_repository_graph(limit: int = 100, offset: int = 0) -> JsonObject:
+        """Return one page of repository topology and governance evidence as nodes and edges.
 
-        return build_repository_graph(lake)
+        Nodes and edges are paged together by the same window. Follow
+        pagination.next_offset until it is null to read the whole graph; an edge
+        can arrive on a different page from its nodes.
+        """
+        if not 1 <= limit <= 100 or offset < 0:
+            raise ValueError("limit must be 1-100 and offset must be nonnegative")
+        body = _get_envelope("/api/v1/repo-graph", lake, limit=str(limit), offset=str(offset))
+        meta = body.get("meta") or {}
+        has_more = meta.get("next_cursor") is not None
+        return {
+            **body["data"],
+            "pagination": {
+                "limit": limit,
+                "offset": offset,
+                "counts": {part: info["count"] for part, info in (meta.get("parts") or {}).items()},
+                "has_more": has_more,
+                "next_offset": offset + limit if has_more else None,
+            },
+        }
 
     @trustops_tool(title="List Platform Jobs", remote_only=True)
     def list_platform_jobs(limit: int = 25, kind: str = "", status: str = "") -> JsonObject:

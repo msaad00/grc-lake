@@ -1116,6 +1116,69 @@ def test_get_repository_graph_reads_lake(tmp_path):
     assert isinstance(graph, dict)
     assert "nodes" in graph and "edges" in graph
     assert isinstance(graph["nodes"], list)
+    assert graph["pagination"]["limit"] == 100
+
+
+def test_get_repository_graph_pages_walk_the_full_graph(tmp_path):
+    from security_lakehouse.graph import build_repository_graph
+    from test_api_paging import _large_repo_graph_lake
+
+    lake = _large_repo_graph_lake(tmp_path)
+    full = build_repository_graph(lake)
+    server = mcp_server.build_server(lake)
+
+    nodes, edges, offset, pages = [], [], 0, 0
+    while offset is not None:
+        page = call_tool(server, "get_repository_graph", limit=40, offset=offset)
+        pages += 1
+        assert len(page["nodes"]) <= 40 and len(page["edges"]) <= 40
+        assert page["counts"] == full["counts"]
+        assert page["pagination"]["counts"] == {"nodes": len(full["nodes"]), "edges": len(full["edges"])}
+        nodes += page["nodes"]
+        edges += page["edges"]
+        offset = page["pagination"]["next_offset"]
+        assert page["pagination"]["has_more"] is (offset is not None)
+    assert pages > 1
+    assert nodes == full["nodes"]
+    assert edges == full["edges"]
+
+
+@pytest.mark.parametrize("args", [{"limit": 0}, {"limit": 101}, {"offset": -1}])
+def test_get_repository_graph_rejects_invalid_page(tmp_path, args):
+    server = _seeded_server(tmp_path)
+    with pytest.raises(Exception, match="limit must be 1-100"):
+        call_tool(server, "get_repository_graph", **args)
+
+
+def test_get_repository_graph_remote_sends_page_params(tmp_path, monkeypatch):
+    monkeypatch.setenv("TRUSTOPS_API_URL", "https://remote.example.test")
+    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-token")
+    calls = []
+
+    def remote(method, path, body=None, **params):
+        calls.append((method, path, params))
+        return {
+            "data": {"nodes": [{"id": "n1"}], "edges": [], "counts": {}},
+            "meta": {
+                "limit": 1,
+                "offset": 2,
+                "next_cursor": "opaque",
+                "parts": {"nodes": {"count": 5, "returned": 1}, "edges": {"count": 0, "returned": 0}},
+            },
+            "errors": [],
+        }
+
+    monkeypatch.setattr(mcp_server, "_server_api_request", remote)
+    server = mcp_server.build_server(tmp_path)
+    page = call_tool(server, "get_repository_graph", limit=1, offset=2)
+    assert calls == [("GET", "/api/v1/repo-graph", {"limit": "1", "offset": "2"})]
+    assert page["pagination"] == {
+        "limit": 1,
+        "offset": 2,
+        "counts": {"nodes": 5, "edges": 0},
+        "has_more": True,
+        "next_offset": 3,
+    }
 
 
 def test_create_poam_item_calls_api(tmp_path, monkeypatch):

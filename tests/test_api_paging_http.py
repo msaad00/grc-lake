@@ -56,3 +56,26 @@ def test_streamed_evidence_over_http_matches_handle_get(tmp_path: Path) -> None:
     assert [row["event_id"] for row in body["data"]] == ["evt-008", "evt-009", "evt-010", "evt-011"]
     assert body["meta"]["count"] == 30
     assert body["meta"]["next_cursor"] == api_v1.encode_cursor(12)
+
+
+def test_unparameterized_graph_over_http_is_a_labeled_default_page(tmp_path: Path) -> None:
+    from test_api_paging import _graph_lake
+
+    _graph_lake(tmp_path)
+    client = TestClient(create_app(tmp_path, require_auth=False))
+    body = client.get("/api/v1/graph").json()
+    assert body["meta"]["default_page"] is True
+    assert body["meta"]["limit"] == 100
+    assert len(body["data"]["nodes"]) <= 100
+    assert len(body["data"]["edges"]) <= 100
+    assert body["meta"]["next_cursor"] == api_v1.encode_cursor(100)
+
+    nodes, edges = list(body["data"]["nodes"]), list(body["data"]["edges"])
+    cursor = body["meta"]["next_cursor"]
+    while cursor:
+        page = client.get(f"/api/v1/graph?cursor={cursor}").json()
+        nodes += page["data"]["nodes"]
+        edges += page["data"]["edges"]
+        cursor = page["meta"]["next_cursor"]
+    assert len(nodes) == body["meta"]["parts"]["nodes"]["count"]
+    assert len(edges) == body["meta"]["parts"]["edges"]["count"]

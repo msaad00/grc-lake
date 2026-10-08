@@ -235,7 +235,8 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
 
 # Singletons whose list members page together when a caller sends limit, offset,
 # or cursor: route -> (paged parts, loader returning the uncapped payload).
-# Without those params the singleton payload is served unchanged.
+# Without those params a DEFAULT_PAGED route serves its first default-size page
+# (meta.default_page); any other route serves the singleton payload unchanged.
 PAGED_SINGLETONS: dict[str, tuple[tuple[str, ...], Callable[[Path], JsonObject]]] = {
     "/api/v1/graph": (("nodes", "edges"), build_compliance_graph),
     "/api/v1/repo-graph": (("nodes", "edges"), build_repository_graph),
@@ -244,6 +245,7 @@ PAGED_SINGLETONS: dict[str, tuple[tuple[str, ...], Callable[[Path], JsonObject]]
         lambda lake: analyze_coverage(lake, detail_limit=None),
     ),
 }
+DEFAULT_PAGED: frozenset[str] = frozenset({"/api/v1/graph", "/api/v1/repo-graph"})
 
 
 # Route -> (resource name, loader) for endpoints returning a row collection.
@@ -1217,6 +1219,8 @@ def resource_catalog() -> list[JsonObject]:
         if path in PAGED_SINGLETONS:
             entry["query"] = ["limit", "offset", "cursor"]
             entry["paged_parts"] = list(PAGED_SINGLETONS[path][0])
+            if path in DEFAULT_PAGED:
+                entry["default_paged"] = True
         catalog.append(entry)
     for path, (name, _loader) in COLLECTION_LOADERS.items():
         catalog.append(
@@ -1264,6 +1268,13 @@ _ENVELOPE_SCHEMA: JsonObject = {
                 "parts": {
                     "type": "object",
                     "description": "Per-list count and returned rows when an object payload is paged.",
+                },
+                "default_page": {
+                    "type": "boolean",
+                    "description": (
+                        "True when the caller sent no limit, offset, or cursor and the route served "
+                        "its first default-size page; follow next_cursor for the rest."
+                    ),
                 },
             },
         },
@@ -1332,6 +1343,12 @@ def openapi_paths() -> JsonObject:
                 operation["parameters"] = parameters
             if scopes := row.get("scopes"):
                 operation["description"] = f"Requires scope: {', '.join(scopes)}."
+            if row.get("default_paged") and method == "GET":
+                note = (
+                    f"Pages {' and '.join(row['paged_parts'])} together. Without limit, offset, or cursor it "
+                    "serves the first page of 100 (meta.default_page); follow meta.next_cursor until null."
+                )
+                operation["description"] = f"{operation['description']} {note}" if "description" in operation else note
             item[method.lower()] = operation
         paths[path] = item
     return paths
@@ -1903,7 +1920,8 @@ def _handle_get(
                 "bad_request", "invalid request parameters", resource="ccf.asset-results"
             )
     paged = PAGED_SINGLETONS.get(path)
-    if paged is not None and wants_page(params):
+    requested_page = wants_page(params)
+    if paged is not None and (requested_page or path in DEFAULT_PAGED):
         resource = SINGLETON_LOADERS[path][0]
         parts, full_loader = paged
         try:
@@ -1912,7 +1930,10 @@ def _handle_get(
             return HTTPStatus.BAD_REQUEST, error_envelope(
                 "bad_request", "invalid request parameters", resource=resource
             )
-        return HTTPStatus.OK, paged_object_response(resource, full_loader(lake), parts, params)
+        body = paged_object_response(resource, full_loader(lake), parts, params)
+        if not requested_page:
+            body["meta"]["default_page"] = True
+        return HTTPStatus.OK, body
     singleton = SINGLETON_LOADERS.get(path)
     if singleton is not None:
         resource, loader = singleton

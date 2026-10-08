@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Shorten the PyPI package description to what the package does: read-only evidence collection, deterministic control tests, and reproducible assessment exports via API, CLI, and MCP. It no longer lists framework names or claims audit-ready proof.
+
 - Wrap MCP tool error text in the same untrusted-content envelope as results, since errors can echo API details or caller arguments. Errors still return `isError: true`.
 
 - Validate an unchanged evidence file with one `stat` instead of re-reading and hashing it on every unfiltered `/api/v1/evidence` page. Files changed in the last two seconds are still hashed, so same-size rewrites are detected.

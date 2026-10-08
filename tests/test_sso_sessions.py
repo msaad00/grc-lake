@@ -45,6 +45,7 @@ def _config(*, tenant_slug: str = "acme", auto_provision: bool = False) -> OIDCC
         client_secret="sec",
         tenant_slug=tenant_slug,
         auto_provision=auto_provision,
+        allowed_domains=frozenset({"acme.test"}),
     )
 
 
@@ -148,6 +149,7 @@ def test_complete_oidc_login_maps_idp_groups_to_role(tmp_path: Path, monkeypatch
         auto_provision=True,
         default_role="read_only",
         role_map={"TrustOps-Admins": "admin"},
+        allowed_domains=frozenset({"acme.test"}),
     )
     with session_scope(app.state.sessionmaker) as session:
         create_tenant(session, slug="acme", name="Acme")

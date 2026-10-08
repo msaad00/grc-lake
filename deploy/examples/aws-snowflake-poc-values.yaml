@@ -81,6 +81,8 @@ env:
     value: poc
   - name: TRUSTOPS_OIDC_AUTO_PROVISION
     value: "true"
+  - name: TRUSTOPS_OIDC_ALLOWED_DOMAINS
+    value: example.com
 
   # Snowflake service-user key-pair auth. TrustOps receives a mounted key file,
   # not a password or browser user credential.

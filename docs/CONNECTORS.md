@@ -839,6 +839,25 @@ of Secret-backed variables, image references, and binding subjects are kept.
 `GET /v1/users?status=active`, `GET /v1/training/enrollments?exclude_archived_users=true`,
 and `GET /v1/phishing/security_tests`, paged 500 rows at a time.
 
+**Paging.** KnowBe4 deprecates the `page` parameter in November 2026. After that, requests
+must use `per_page` or `cursor`, and the first request starts pagination with `cursor=0`
+([Reporting API reference, Pagination](https://developer.knowbe4.com/rest/reporting);
+[API Change Log, 2026-02-03](https://support.knowbe4.com/hc/en-us/articles/37449905326995-API-Change-Log)).
+As of 2026-10-07, KnowBe4 does not document where the next cursor appears in the
+response. The connector therefore works as follows:
+
+- It requests `cursor=0&per_page=500`.
+- If a `Link: rel="next"` header includes a `cursor` value, the connector follows that
+  cursor. It uses only the cursor value and always sends the next request to the
+  configured regional host.
+- A short or empty page with no next cursor ends the collection.
+- A full page with no next cursor makes the connector restart from page 1 with `page`
+  paging, which KnowBe4 still accepts until the deprecation date.
+- If KnowBe4 ignores `page` and returns the same rows again, or repeats a cursor, the
+  sync fails with an explicit error instead of storing duplicates. Accounts with more
+  than 500 users or enrollments need a connector update once KnowBe4 publishes the
+  cursor response format.
+
 | Event                      | Pass when                                                             | Controls                                                                                                                                |
 | -------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `knowbe4.user.training`    | Every enrollment is `Completed` or `Passed`                           | FEDRAMP-AT-2, FEDRAMP-AT-4, CMMC-3.2.1, CMMC-3.2.2, ISO27001-A.6.3, NIST-CSF-PR.AT-01, CIS-CONTROLS-14, SOC2-CC1.4, HIPAA-164.308(a)(5) |
@@ -852,7 +871,12 @@ enrollment is open medium (`not_enrolled`). The enrollment schema has no due dat
 benchmark.
 
 **Least privilege.** A Reporting API key from the KnowBe4 Reporting API console
-(Platinum, Diamond, SAT Foundation, or SAT Advanced subscription). The key is read-only
+(Platinum, Diamond, SAT Foundations, or SAT Advanced subscription). A console user who can
+open **Account Settings → Account Integrations → API** generates it there: they turn on
+**Enable Report API Access**, then select **Reporting API → Create New API Token**
+([Reporting API Overview](https://support.knowbe4.com/hc/en-us/articles/115016090908-Reporting-API-Overview)).
+KnowBe4 does not name a narrower admin role for this, so treat it as an account-admin task.
+Tokens expire after at most five years. The key is read-only
 reporting for the whole account — KnowBe4 offers no finer scope — and is not the User
 Event API key. Store it as a secret and reference it with `credential_ref` (default
 `KNOWBE4_API_TOKEN`); only the region is stored in TrustOps. Anonymized consoles return
@@ -860,7 +884,9 @@ no per-user data.
 
 **Rate limits.** KnowBe4 allows 4 requests/second, a 50/minute burst, and 2,000 plus
 licensed users per day. The client paces requests at least 1.25 s apart and retries
-429/5xx honoring `Retry-After`.
+429/5xx honoring `Retry-After`. KnowBe4's burst lockout lasts about five minutes, which is
+longer than the shared retry budget. When 429 responses outlast that budget, the run fails
+with "rate limit reached ... retry the sync later" instead of a generic error.
 
 **Data minimization.** Only user ID, primary email (the join key to identity-provider
 and HRIS records), employee number, enrollment status counts, last completion date,

@@ -9,7 +9,9 @@ Python package, Helm chart, and bundled web console.
 
 - Validate an unchanged evidence file with one `stat` instead of re-reading and hashing it on every unfiltered `/api/v1/evidence` page. Files changed in the last two seconds are still hashed, so same-size rewrites are detected.
 
-- Retry operation lease renewal on transient database errors such as SQLite `database is locked`, with short backoff, instead of stopping the job. A job is interrupted with `lease_renewal_failed` only when renewal can no longer succeed before its lease expires.
+- Retry operation lease renewal on transient database errors such as SQLite `database is locked`, with short backoff, instead of stopping the job. A job is interrupted with `lease_renewal_failed` only when renewal can no longer succeed before its lease expires. Recording a job's result or interruption also retries such errors for up to 10 seconds before leaving the job to lease-expiry recovery.
+
+- KnowBe4 (`knowbe4-training`, preview) now uses cursor pagination (`cursor=0`, `per_page=500`) because KnowBe4 deprecates the `page` parameter in November 2026. KnowBe4's spec does not yet say where the next cursor is returned. The client follows a `cursor` carried in a `Link: rel="next"` header and always sends requests to the configured regional host. If a full page arrives with no next cursor, it falls back to `page` paging from page 1. If KnowBe4 ignores `page` or repeats a cursor, the sync fails with a clear error and stores no duplicate rows. A 429 that outlasts the backoff budget now fails as "rate limit reached, retry the sync later" instead of a generic error.
 
 ## 0.2.24 - 2026-10-07
 

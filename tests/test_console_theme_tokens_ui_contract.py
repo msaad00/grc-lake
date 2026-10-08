@@ -113,3 +113,51 @@ def test_touched_surfaces_use_tokens_not_palette_classes() -> None:
         assert not palette.search(source), rel
         # Tokens swap per theme, so no per-class dark: overrides remain.
         assert not re.search(r"(?<![\w-])dark:[a-z]", source), rel
+
+
+CHART_SLOTS = tuple(f"chart-{n}" for n in range(1, 8))
+
+
+@pytest.mark.parametrize("theme", ["light", "dark"])
+def test_chart_series_slots_are_theme_tokens_visible_on_the_card(theme: str) -> None:
+    t = _themes()[theme]
+    for slot in CHART_SLOTS:
+        assert slot in t, (theme, slot)
+    # A data mark needs a 2:1 floor against the card; labels carry the rest.
+    for slot in CHART_SLOTS:
+        assert _contrast(t[slot], t["surface"]) >= 2.0, (theme, slot)
+    css = CSS.read_text(encoding="utf-8")
+    dark = _block(css, ".dark")
+    assert all(slot in dark for slot in CHART_SLOTS), "dark mode steps every chart slot"
+
+
+def test_charts_graph_workflow_login_and_tags_use_tokens_not_hex() -> None:
+    hex_colour = re.compile(r"#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b")
+    palette = re.compile(r"\b(?:bg|text|border|ring|fill|stroke)-(?:slate|gray|cyan|amber|white)(?:-\d{2,3})?\b")
+    files = [
+        "app/insights/page.tsx",
+        "components/insights/EvidenceFreshnessTrendChart.tsx",
+        "components/insights/FrameworkReadinessTrendChart.tsx",
+        "components/insights/chart-utils.ts",
+        "app/graph/page.tsx",
+        "components/graph/GraphCanvas.tsx",
+        "lib/graph-palette.ts",
+        "app/automation/page.tsx",
+        "components/workflow/WorkflowCanvas.tsx",
+        "app/login/page.tsx",
+        "components/TagChip.tsx",
+    ]
+    for rel in files:
+        source = (WEB / "src" / rel).read_text(encoding="utf-8")
+        assert not hex_colour.search(source), (rel, hex_colour.search(source))
+        assert not palette.search(source), (rel, palette.search(source))
+        assert not re.search(r"(?<![\w-])dark:[a-z]", source), rel
+
+
+def test_chart_tooltips_are_themed_surfaces_not_the_library_default() -> None:
+    utils = (WEB / "src/components/insights/chart-utils.ts").read_text(encoding="utf-8")
+    style = utils[utils.index("TOOLTIP_STYLE") :]
+    for token in ("var(--color-surface)", "var(--color-line)", "var(--color-ink)"):
+        assert token in style, token
+    insights = (WEB / "src/app/insights/page.tsx").read_text(encoding="utf-8")
+    assert "contentStyle={TOOLTIP_STYLE}" in insights

@@ -52,6 +52,9 @@ def test_readme_hero_names_only_shipped_capabilities() -> None:
     assert f"{coverage['safeguards']:,} safeguards · {coverage['controls']:,} catalogued requirements" in copy
     assert f"{len(coverage['frameworks'])} framework packs" in copy
     assert "Console · API · CLI · MCP · CI" in copy
+    desc = "".join(root.find(f"{SVG}desc").itertext())
+    assert "immutable" not in desc
+    assert "hash-chained, verifiable audit records" in desc
     source_ids = {
         "AWS": "aws-posture",
         "Azure": "azure-posture",
@@ -161,8 +164,21 @@ def test_readme_hero_counts_the_read_only_sources_it_leaves_out() -> None:
         and entry.get("release_stage") == "preview"
         and entry["collection_mode"] in {"direct_api_read", "existing_lake_read"}
     ]
-    assert "GENERALLY AVAILABLE READ-ONLY SOURCES" in copy
-    assert f"+{len(generally_available) - 8} more · +{len(preview)} in preview" in copy
+    assert "STANDARD READ-ONLY SOURCES" in copy
+    assert "GENERALLY AVAILABLE" not in copy, "the ga label does not prove a live run"
+    total = len(generally_available) + len(preview)
+    assert f"{total} read-only source adapters ({len(preview)} preview)" in copy
+    tiled = {
+        "aws-posture",
+        "azure-posture",
+        "gcp-posture",
+        "github-security",
+        "gitlab-security",
+        "okta-identity",
+        "snowflake-evidence-lake",
+        "clickhouse-telemetry-lake",
+    }
+    assert tiled.isdisjoint(entry["connector_id"] for entry in preview)
     # GA + preview is the executable count the README states once.
     executable = [entry for entry in connectors if entry.get("is_implemented") is True]
     assert len(generally_available) + len(preview) == len(executable)

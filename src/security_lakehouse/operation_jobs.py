@@ -29,6 +29,7 @@ from sqlalchemy.orm import sessionmaker
 from security_lakehouse.auth.rbac import Identity
 from security_lakehouse.db.models import OperationJob
 from security_lakehouse.ledger import chain_lock
+from security_lakehouse.tenancy import root_key
 
 _LOG = logging.getLogger(__name__)
 LEASE_SECONDS = 90
@@ -41,10 +42,6 @@ def supported(path: str) -> bool:
     return path in {"/api/v1/ingestion/eval", "/api/v1/scheduler/tick", "/api/v1/snapshots"} or bool(
         re.fullmatch(r"/api/v1/connectors/[A-Za-z0-9_-]+/sync", path)
     )
-
-
-def root_key(root: Path) -> str:
-    return hashlib.sha256(str(root.resolve()).encode()).hexdigest()
 
 
 def serialize(row: OperationJob, *, include_result: bool = True) -> dict[str, Any]:

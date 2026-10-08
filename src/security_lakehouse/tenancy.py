@@ -14,6 +14,7 @@ bound tenant's data.
 
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
 
@@ -21,6 +22,11 @@ from security_lakehouse.io import read_json, write_json
 from security_lakehouse.ledger import chain_lock
 
 TENANTS_DIRNAME = "tenants"
+
+
+def root_key(root: Path) -> str:
+    """Stable key for a deployment or lake root, shared by jobs and retention."""
+    return hashlib.sha256(str(root.resolve()).encode()).hexdigest()
 
 
 def is_flat_lake(root: Path) -> bool:

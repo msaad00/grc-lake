@@ -54,8 +54,10 @@ then switches to the new generation.
 Published artifacts reject writes through TrustOps shared JSON IO. Local
 administrators can still edit files directly; integrity verification detects
 such changes. This is not object-lock/WORM storage or cryptographic signing.
-Historical and interrupted staging directories are retained. Automatic generation
-retention and garbage collection are not implemented; account for disk growth.
+Historical and interrupted staging directories are retained. Old unreferenced
+generations are archived only by the retention command or by
+[scheduled retention](OPERATIONS_CONTRACTS.md#automatic-retention), which is off by
+default; account for disk growth.
 
 ## Reading and exporting
 

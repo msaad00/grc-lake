@@ -5,6 +5,12 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Wrap MCP tool error text in the same untrusted-content envelope as results, since errors can echo API details or caller arguments. Errors still return `isError: true`.
+
+- Validate an unchanged evidence file with one `stat` instead of re-reading and hashing it on every unfiltered `/api/v1/evidence` page. Files changed in the last two seconds are still hashed, so same-size rewrites are detected.
+
+- Retry operation lease renewal on transient database errors such as SQLite `database is locked`, with short backoff, instead of stopping the job. A job is interrupted with `lease_renewal_failed` only when renewal can no longer succeed before its lease expires. Recording a job's result or interruption also retries such errors for up to 10 seconds before leaving the job to lease-expiry recovery.
+
 - Bound unparameterized `/api/v1/graph` and `/api/v1/repo-graph` responses. Without `limit`, `offset`, or `cursor` they now serve the first page of 100 nodes and 100 edges, marked `meta.default_page: true`, with `meta.next_cursor` for the rest. The console graph page follows the cursor at 1000 rows per page, and the MCP `get_repository_graph` tool takes `limit` (1-100, default 100) and `offset` and reports `pagination.next_offset`.
 
 - KnowBe4 (`knowbe4-training`, preview) now uses cursor pagination (`cursor=0`, `per_page=500`) because KnowBe4 deprecates the `page` parameter in November 2026. KnowBe4's spec does not yet say where the next cursor is returned. The client follows a `cursor` carried in a `Link: rel="next"` header and always sends requests to the configured regional host. If a full page arrives with no next cursor, it falls back to `page` paging from page 1. If KnowBe4 ignores `page` or repeats a cursor, the sync fails with a clear error and stores no duplicate rows. A 429 that outlasts the backoff budget now fails as "rate limit reached, retry the sync later" instead of a generic error.

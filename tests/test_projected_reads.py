@@ -161,6 +161,73 @@ def test_evidence_page_refreshes_changed_rows_and_rejects_invalid_unpaged_rows(t
     assert body["errors"][0]["code"] == "bad_request"
 
 
+def _settled_clock(monkeypatch):
+    """Make every file look older than the racy-timestamp window."""
+    import time
+
+    real = time.time_ns
+    monkeypatch.setattr(time, "time_ns", lambda: real() + 60 * 10**9)
+
+
+def _count_opens(monkeypatch, target):
+    import builtins
+    import pathlib
+
+    opened = []
+    path_open, builtin_open = pathlib.Path.open, builtins.open
+
+    def counted_path_open(self, *args, **kwargs):
+        if os.path.realpath(self) == os.path.realpath(target):
+            opened.append(str(self))
+        return path_open(self, *args, **kwargs)
+
+    def counted_builtin_open(file, *args, **kwargs):
+        if isinstance(file, str | os.PathLike) and os.path.realpath(file) == os.path.realpath(target):
+            opened.append(str(file))
+        return builtin_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(pathlib.Path, "open", counted_path_open)
+    monkeypatch.setattr(builtins, "open", counted_builtin_open)
+    return opened
+
+
+def test_unchanged_settled_file_is_validated_with_a_stat_not_a_read(tmp_path, monkeypatch):
+    path = tmp_path / "silver/normalized_events.jsonl"
+    io.write_jsonl(path, [{"event_id": "first"}, {"event_id": "second"}])
+    _settled_clock(monkeypatch)
+    assert io.validated_jsonl_count(path) == 2
+    opened = _count_opens(monkeypatch, path)
+
+    assert io.validated_jsonl_count(path) == 2
+    assert io.validated_jsonl_count(path) == 2
+    assert opened == []
+
+
+def test_settled_same_size_rewrite_with_restored_mtime_is_revalidated(tmp_path, monkeypatch):
+    path = tmp_path / "rows.jsonl"
+    path.write_text('{"event_id":"one1"}\n')
+    stamp = path.stat()
+    _settled_clock(monkeypatch)
+    assert io.validated_jsonl_count(path) == 1
+    path.write_text('{"event_id":NaN   }\n')
+    os.utime(path, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+    after = path.stat()
+    assert (after.st_ino, after.st_size, after.st_mtime_ns) == (stamp.st_ino, stamp.st_size, stamp.st_mtime_ns)
+    with pytest.raises(ValueError):
+        io.validated_jsonl_count(path)
+
+
+def test_fresh_same_size_in_place_rewrite_falls_back_to_content_hash(tmp_path):
+    path = tmp_path / "rows.jsonl"
+    path.write_text('{"event_id":"one1"}\n')
+    stamp = path.stat()
+    assert io.validated_jsonl_count(path) == 1
+    path.write_text('{"event_id":NaN   }\n')
+    os.utime(path, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+    with pytest.raises(ValueError):
+        io.validated_jsonl_count(path)
+
+
 def test_same_source_misses_coalesce_without_blocking_other_tenants(tmp_path, monkeypatch):
     from concurrent.futures import ThreadPoolExecutor
     from threading import Event, Lock

@@ -437,6 +437,11 @@ def render_untrusted_text(tool_name: str, structured: dict[str, Any]) -> str:
     )
 
 
+def render_untrusted_error(tool_name: str, message: str) -> str:
+    """Render a tool error inside the same envelope; error text can echo API details or caller input."""
+    return render_untrusted_text(tool_name, bound_tool_output({"error": message}))
+
+
 def build_server(lake_dir: Path | None = None) -> FastMCP:
     """Construct the FastMCP server with the read tools bound to a lake directory.
 
@@ -444,6 +449,7 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     the optional dependency installed.
     """
     from mcp.server.fastmcp import FastMCP
+    from mcp.shared.exceptions import UrlElicitationRequiredError
     from mcp.types import CallToolResult, TextContent, ToolAnnotations
     from mcp.types import Tool as MCPTool
     from pydantic_core import to_jsonable_python
@@ -467,6 +473,22 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     from security_lakehouse import __version__
 
     mcp._mcp_server.version = __version__
+
+    async def call_tool_enveloping_errors(name: str, arguments: dict[str, Any]) -> Any:
+        # FastMCP.call_tool raises on failure and the low-level handler would
+        # send str(exc) raw; envelope it here so only the wire result changes.
+        try:
+            return await mcp.call_tool(name, arguments)
+        except UrlElicitationRequiredError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - every tool failure becomes an isError result
+            tool_name = name if mcp._tool_manager.get_tool(name) is not None else "unknown"
+            return CallToolResult(
+                content=[TextContent(type="text", text=render_untrusted_error(tool_name, str(exc)))],
+                isError=True,
+            )
+
+    mcp._mcp_server.call_tool(validate_input=False)(call_tool_enveloping_errors)
 
     # Write tools: name -> (destructiveHint, idempotentHint, openWorldHint).
     # Every other tool is a closed-world, idempotent read. "Destructive" means

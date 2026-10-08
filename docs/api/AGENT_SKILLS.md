@@ -48,6 +48,11 @@ Every tool result carries two renderings of the same data:
   Inside it, each free-text string is shown as `{"untrusted_text": "..."}`. Only
   identifier, enum, timestamp, and hash values under structural keys (`id`,
   `*_id`, `*_at`, `status`, `*sha256`, ...) stay bare.
+- A failed call returns `isError: true` with no `structuredContent`. Its text
+  block uses the same envelope, with the message as
+  `{"error": {"untrusted_text": "..."}}`, because error text can echo API error
+  details or the caller's own arguments. An unknown tool name is shown as
+  `tool="unknown"`.
 
 The envelope helps a model tell data from instructions. It is not a
 prompt-injection defense on its own; keep host-side tool permissions and

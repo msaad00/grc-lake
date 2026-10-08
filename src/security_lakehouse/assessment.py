@@ -380,7 +380,7 @@ def write_assessment_snapshot(
         )
         try:
             new_violations, newly_failing_controls = _diff_violations(prior_payload, assessment)
-        except Exception:  # noqa: BLE001 - the diff is a defensive best-effort add-on, never allowed to break a snapshot write
+        except Exception:  # the diff is a defensive best-effort add-on, never allowed to break a snapshot write
             logger.exception("violations diff failed for %s; webhook finding/control events will not fire", output_path)
             new_violations, newly_failing_controls = [], []
     # Lock released above -- the hook (and any outbound webhook delivery it
@@ -388,7 +388,7 @@ def write_assessment_snapshot(
     if on_snapshot_written is not None:
         try:
             on_snapshot_written(output_path, assessment, new_violations, newly_failing_controls)
-        except Exception:  # noqa: BLE001 - a hook failure must never fail a successful snapshot write
+        except Exception:  # a hook failure must never fail a successful snapshot write
             logger.exception("on_snapshot_written hook failed for %s", output_path)
     return output_path
 

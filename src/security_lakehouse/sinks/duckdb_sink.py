@@ -229,7 +229,7 @@ class DuckDBSink:
     def _connect(self) -> Any:
         if self._connection is not None:
             return self._connection
-        import duckdb  # noqa: PLC0415
+        import duckdb
 
         if self.config.database not in {":memory:", ""}:
             Path(self.config.database).parent.mkdir(parents=True, exist_ok=True)

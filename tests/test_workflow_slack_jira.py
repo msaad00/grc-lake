@@ -42,7 +42,7 @@ class _FakeResponse:
 
 
 def _capturing_urlopen(captured: list[urllib.request.Request], status: int = 200, body: bytes = b"ok"):
-    def _urlopen(request, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _urlopen(request, timeout=None, validate=None):
         captured.append(request)
         return _FakeResponse(status, body)
 
@@ -59,7 +59,7 @@ def _no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
 def _public_dns(monkeypatch: pytest.MonkeyPatch) -> None:
     """Default: every host resolves to a public IP unless a test overrides it."""
 
-    def _getaddrinfo(host, port, *args, **kwargs):  # noqa: ANN001, ARG001
+    def _getaddrinfo(host, port, *args, **kwargs):
         return [(2, 1, 6, "", ("93.184.216.34", 0))]
 
     monkeypatch.setattr(netguard.socket, "getaddrinfo", _getaddrinfo)

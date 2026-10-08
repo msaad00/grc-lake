@@ -8,9 +8,9 @@ import pytest
 
 pytest.importorskip("fastapi")
 
-from security_lakehouse.auth.oidc import OIDCConfig  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.auth.oidc import OIDCConfig
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def test_insecure_no_auth_blocked_in_production(tmp_path: Path, monkeypatch) -> None:

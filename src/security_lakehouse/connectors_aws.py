@@ -119,7 +119,7 @@ class AWSClient:
     ) -> None:
         require_aws_delegation(role_arn, external_id, label="aws-posture")
         try:
-            import boto3  # noqa: PLC0415
+            import boto3
         except ImportError as exc:  # pragma: no cover - exercised only with live AWS
             raise ConnectorConfigError(
                 "aws-posture live collection requires boto3; install the cloud extra or use --fixture-dir"
@@ -170,7 +170,7 @@ class AWSClient:
     def password_policy(self) -> dict[str, Any]:
         try:
             return self._iam.get_account_password_policy().get("PasswordPolicy", {})
-        except Exception as exc:  # noqa: BLE001 - narrowed below
+        except Exception as exc:  # narrowed below
             # NoSuchEntity means no policy is set (a real "empty" answer). Any
             # other error must surface rather than read as "no policy", which
             # would be a false pass on the password-policy control.
@@ -195,7 +195,7 @@ class AWSClient:
         try:
             self._iam.get_login_profile(UserName=user_name)
             return True
-        except Exception as exc:  # noqa: BLE001 - narrowed below
+        except Exception as exc:  # narrowed below
             # NoSuchEntity => no console password => programmatic-only identity.
             # Any other error must surface: silently returning False would drop a
             # human account's missing-MFA finding.

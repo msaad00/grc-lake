@@ -108,7 +108,7 @@ class IcebergCatalogReader(_WindowMixin):
         self._now = now
 
     def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
-        from pyiceberg.expressions import (  # noqa: PLC0415
+        from pyiceberg.expressions import (
             AlwaysTrue,
             And,
             BooleanExpression,
@@ -172,7 +172,7 @@ class ParquetDatasetReader(_WindowMixin):
         self._now = now
 
     def fetch_mapping_rows(self, spec: MappingSpec, *, since: str | None, limit: int) -> list[dict[str, Any]]:
-        import pyarrow.dataset as ds  # noqa: PLC0415
+        import pyarrow.dataset as ds
 
         location = self.locations.get(spec.source_table) or self.locations.get("*")
         if location is None:
@@ -200,7 +200,7 @@ class ParquetDatasetReader(_WindowMixin):
         return _ordered_rows(arrow, observed, limit)
 
     def _s3(self) -> Any:
-        from pyarrow import fs  # noqa: PLC0415
+        from pyarrow import fs
 
         kwargs: dict[str, Any] = {}
         if self.region:
@@ -264,7 +264,7 @@ def build_reader(
         if not uri.startswith("https://"):
             raise ValueError("iceberg-parquet-lake REST catalog uri must use https")
         netguard.assert_url_is_public(uri, label="iceberg rest catalog")
-        from security_lakehouse.iceberg_export import IcebergPublicationError, rest_catalog  # noqa: PLC0415
+        from security_lakehouse.iceberg_export import IcebergPublicationError, rest_catalog
 
         try:
             catalog = rest_catalog(uri, warehouse=warehouse, token_env=token_env)
@@ -297,8 +297,8 @@ def glue_catalog(
     """A pyiceberg Glue catalog whose FileIO is pinned to catalog-level settings."""
     require_aws_delegation(role_arn, external_id, label="iceberg-parquet-lake")
     try:
-        import boto3  # noqa: PLC0415
-        from pyiceberg.catalog.glue import GlueCatalog  # noqa: PLC0415
+        import boto3
+        from pyiceberg.catalog.glue import GlueCatalog
     except ImportError as exc:  # pragma: no cover - optional extra
         raise RuntimeError(
             "iceberg-parquet-lake Glue reads need the 'iceberg' and 'cloud' extras (pyiceberg, pyarrow, boto3)"
@@ -329,7 +329,7 @@ def glue_catalog(
             # Table metadata must not redirect storage reads (endpoint, proxy,
             # signer), choose the FileIO implementation, or point a metadata,
             # manifest, or data location at the local disk or an HTTP host.
-            from security_lakehouse.iceberg_export import guarded_file_io  # noqa: PLC0415
+            from security_lakehouse.iceberg_export import guarded_file_io
 
             return guarded_file_io(dict(self.properties))
 
@@ -412,7 +412,7 @@ def _typed_bound(spec: MappingSpec, bound: datetime) -> Any:
 
 
 def _arrow_filter(field: Any, arrow_type: Any, op: str, value: Any) -> Any:
-    import pyarrow.types as pt  # noqa: PLC0415
+    import pyarrow.types as pt
 
     if op == "is_null":
         return field.is_null()
@@ -439,8 +439,8 @@ def _arrow_filter(field: Any, arrow_type: Any, op: str, value: Any) -> Any:
 
 
 def _arrow_bound(field: Any, arrow_type: Any, spec: MappingSpec, bound: datetime) -> Any:
-    import pyarrow as pa  # noqa: PLC0415
-    import pyarrow.types as pt  # noqa: PLC0415
+    import pyarrow as pa
+    import pyarrow.types as pt
 
     if pt.is_timestamp(arrow_type):
         value = bound if arrow_type.tz else bound.astimezone(UTC).replace(tzinfo=None)
@@ -501,7 +501,7 @@ def _parquet_paths(credentials: dict[str, Any], options: dict[str, Any]) -> dict
 
 def _assume_role(role_arn: str, external_id: str | None, region: str | None) -> dict[str, str]:
     try:
-        import boto3  # noqa: PLC0415
+        import boto3
     except ImportError as exc:  # pragma: no cover - optional extra
         raise RuntimeError("assuming an AWS role needs boto3 (the 'cloud' extra)") from exc
     require_aws_delegation(role_arn, external_id, label="iceberg-parquet-lake")

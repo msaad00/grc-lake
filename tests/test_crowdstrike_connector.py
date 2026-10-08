@@ -446,7 +446,7 @@ def test_non_retryable_api_error_raises(monkeypatch: pytest.MonkeyPatch) -> None
 def test_cloud_selects_the_regional_api_host(cloud: str, host: str) -> None:
     client = CrowdStrikeClient(cloud, client_id="c", client_secret="s")
     assert client.host == host
-    assert client._token.token_url == f"https://{host}/oauth2/token"  # noqa: SLF001
+    assert client._token.token_url == f"https://{host}/oauth2/token"
 
 
 # --- runner wiring (depends on connector_runner registering "crowdstrike-falcon") -------

@@ -384,12 +384,11 @@ def test_console_hosted_validation_mirrors_the_server_rules() -> None:
     assert _ts_string_array(validation, "SERVER_SECRET_PREFIXES") == list(secret_refs.DENIED_PREFIXES)
     assert set(_ts_string_array(validation, "SERVER_SECRET_NAMES")) == set(secret_refs.DENIED_NAMES)
     assert _ts_regex(validation, "ENV_NAME_RE") == f"^{secret_refs.ENV_NAME_RE.pattern}$"
-    assert _ts_regex(validation, "AZURE_TENANT_RE") == delegation._AZURE_TENANT_ID.pattern  # noqa: SLF001
-    assert _ts_regex(validation, "AZURE_CLIENT_RE") == delegation._AZURE_CLIENT_ID.pattern  # noqa: SLF001
-    assert (
-        _ts_regex(validation, "GCP_SERVICE_ACCOUNT_RE").replace("\\.", ".")
-        == delegation._SERVICE_ACCOUNT_EMAIL.pattern.replace("\\.", ".")  # noqa: SLF001
-    )
+    assert _ts_regex(validation, "AZURE_TENANT_RE") == delegation._AZURE_TENANT_ID.pattern
+    assert _ts_regex(validation, "AZURE_CLIENT_RE") == delegation._AZURE_CLIENT_ID.pattern
+    assert _ts_regex(validation, "GCP_SERVICE_ACCOUNT_RE").replace(
+        "\\.", "."
+    ) == delegation._SERVICE_ACCOUNT_EMAIL.pattern.replace("\\.", ".")
     assert secret_refs.TENANT_PREFIX_ROOT + "<ID>__" in validation
 
 

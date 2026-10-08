@@ -427,7 +427,7 @@ def _subprocess_entry(root: Path, row: OperationJob, execute, connection, timeou
             if not queue.owns_claim(row):
                 return
             connection.send(execute(root, row))
-    except Exception:
+    except Exception:  # noqa: BLE001 - isolated job boundary; logged and returned as 500
         _LOG.exception("isolated operation %s failed", row.id)
         connection.send(
             (500, {"data": None, "errors": [{"detail": "operation failed; inspect operator logs"}], "meta": {}})
@@ -606,7 +606,7 @@ class JobWorker:
                 attempted_at = time.monotonic()
                 try:
                     renewed = self._try_renew(row)
-                except Exception:
+                except Exception:  # noqa: BLE001 - heartbeat thread must survive transient failures; logged
                     _LOG.exception("operation heartbeat failed")
                     renewed = None
                 if renewed is False:
@@ -632,7 +632,7 @@ class JobWorker:
                     return
                 try:
                     code, response = self.execute(row)
-                except Exception:
+                except Exception:  # noqa: BLE001 - job execution boundary; logged and recorded as 500
                     _LOG.exception("operation %s failed", row.id)
                     code, response = (
                         500,
@@ -647,7 +647,7 @@ class JobWorker:
         while not self.stop_event.is_set():
             try:
                 worked = self.run_once(isolated=True)
-            except Exception:
+            except Exception:  # noqa: BLE001 - worker loop must survive any job failure; logged
                 _LOG.exception("operation worker failed")
                 worked = False
             if not worked:

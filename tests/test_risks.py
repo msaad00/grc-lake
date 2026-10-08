@@ -12,14 +12,14 @@ pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import inspect  # noqa: E402
+from fastapi.testclient import TestClient
+from sqlalchemy import inspect
 
-from security_lakehouse.db import migrate, risks  # noqa: E402
-from security_lakehouse.db.base import create_engine_for, session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.db import migrate, risks
+from security_lakehouse.db.base import create_engine_for, session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def _bearer(token: str) -> dict[str, str]:

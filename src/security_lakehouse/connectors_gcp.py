@@ -168,7 +168,7 @@ class GCPClient:
     def __init__(self, project_id: str, *, credentials: Any = None) -> None:
         self.project_id = project_id
         try:
-            from google.cloud import (  # noqa: PLC0415
+            from google.cloud import (
                 asset_v1,
                 resourcemanager_v3,
             )
@@ -184,7 +184,7 @@ class GCPClient:
         # is reported as a coverage gap so the incomplete scope stays visible.
         self._org_policies: Any | None = None
         try:
-            from google.cloud import orgpolicy_v2  # noqa: PLC0415
+            from google.cloud import orgpolicy_v2
 
             self._org_policies = orgpolicy_v2.OrgPolicyClient(credentials=credentials)
         except ImportError:  # pragma: no cover - optional dependency

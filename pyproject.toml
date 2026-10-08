@@ -251,8 +251,13 @@ line-length = 120
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "I", "UP", "B", "SIM", "BLE", "RUF100"]
 ignore = ["E501"]
+# Lazy imports are the deliberate convention (optional SDK extras, cycle
+# breaking, CLI start-up cost), so PLC0415 is not selected. S310/S608 are not
+# enforced, but their noqa comments record reviewed URL-open and SQL-identifier
+# sites, so RUF100 keeps them.
+external = ["S310", "S608"]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's dependency-injection markers are evaluated once and used as defaults

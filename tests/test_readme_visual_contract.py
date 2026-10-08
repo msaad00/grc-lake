@@ -10,6 +10,7 @@ from tools.render_readme_header import (
     estimate_text_width,
     render_logo,
     render_open_graph,
+    render_readme_glance,
     render_readme_summary,
     render_social_preview,
 )
@@ -256,3 +257,30 @@ def test_readme_ccf_summary_matches_the_generator_and_names_every_family() -> No
         assert f"**{category['label']}:** {members}" in block
     coverage = coverage_by_framework()
     assert f"{coverage['controls']:,} catalogued requirements" in block
+
+
+def test_readme_glance_matches_the_generator_and_the_catalogs() -> None:
+    readme = README.read_text(encoding="utf-8")
+    header = readme.split("## Quick start", maxsplit=1)[0]
+    block = header.split("<!-- BEGIN README AT A GLANCE -->", maxsplit=1)[1].split(
+        "<!-- END README AT A GLANCE -->", maxsplit=1
+    )[0]
+    assert block == f"\n\n{render_readme_glance()}\n\n"
+
+    coverage = coverage_by_framework()
+    connectors = json.loads((ROOT / "connectors" / "catalog.json").read_text(encoding="utf-8"))["connectors"]
+    runnable = [
+        entry
+        for entry in connectors
+        if entry.get("is_implemented") is True and entry["collection_mode"] in {"direct_api_read", "existing_lake_read"}
+    ]
+    preview = [entry for entry in runnable if entry.get("release_stage") == "preview"]
+    assert f"{len(coverage['frameworks'])} framework packs" in block
+    assert f"{coverage['controls']:,} catalogued requirements" in block
+    assert f"{coverage['safeguards']} common safeguards" in block
+    assert f"{coverage['covered']:,} requirements have safeguard mappings" in block
+    assert (
+        f"{coverage['reviewed']:,} have reviewed mappings and the other {coverage['proposed']:,} are proposed" in block
+    )
+    assert coverage["reviewed"] + coverage["proposed"] == coverage["covered"]
+    assert f"{len(runnable)} read-only source adapters ({len(preview)} in preview)" in block

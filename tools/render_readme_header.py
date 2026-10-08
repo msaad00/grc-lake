@@ -268,16 +268,37 @@ def render_readme_summary() -> str:
     )
 
 
-def update_readme_summary() -> None:
-    summary = render_readme_summary()
-    readme = ROOT / "README.md"
-    text = readme.read_text(encoding="utf-8")
-    text = re.sub(
-        r"<!-- BEGIN README CCF SUMMARY -->.*?<!-- END README CCF SUMMARY -->",
-        lambda _match: f"<!-- BEGIN README CCF SUMMARY -->\n\n{summary}\n\n<!-- END README CCF SUMMARY -->",
+def render_readme_glance() -> str:
+    coverage = coverage_by_framework()
+    safeguard_count, requirement_count, framework_count = _coverage_summary()
+    standard_sources, preview_sources = _read_only_source_counts()
+    return (
+        f"- **{framework_count} framework packs, {requirement_count:,} catalogued requirements,** linked through "
+        f"{safeguard_count} common safeguards. {coverage['covered']:,} requirements have safeguard mappings; "
+        f"{coverage['reviewed']:,} have reviewed mappings and the other {coverage['proposed']:,} are proposed.\n"
+        f"- **{standard_sources + preview_sources} read-only source adapters ({preview_sources} in preview)**, "
+        "plus OCSF presets for existing security lakes.\n"
+        "- **Fails closed:** missing, stale, or partial evidence never produces a pass, and proposed mappings "
+        "are not attestable.\n"
+        "- **One engine, four surfaces:** console, REST API, CLI, and MCP server. Agents propose; humans approve."
+    )
+
+
+def _replace_block(text: str, name: str, body: str) -> str:
+    begin, end = f"<!-- BEGIN README {name} -->", f"<!-- END README {name} -->"
+    return re.sub(
+        f"{re.escape(begin)}.*?{re.escape(end)}",
+        lambda _match: f"{begin}\n\n{body}\n\n{end}",
         text,
         flags=re.DOTALL,
     )
+
+
+def update_readme_summary() -> None:
+    readme = ROOT / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    text = _replace_block(text, "AT A GLANCE", render_readme_glance())
+    text = _replace_block(text, "CCF SUMMARY", render_readme_summary())
     readme.write_text(text, encoding="utf-8")
 
 

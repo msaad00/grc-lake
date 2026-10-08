@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import dagre from "@dagrejs/dagre";
 import { MarkerType, type Edge } from "@xyflow/react";
 import {
   LayoutTemplate,
@@ -26,6 +27,8 @@ import { NodeConfigPanel } from "@/components/workflow/NodeConfigPanel";
 import { RunInspectorDrawer } from "@/components/workflow/RunInspectorDrawer";
 import { TemplateGallery } from "@/components/workflow/TemplateGallery";
 import {
+  WORKFLOW_NODE_HEIGHT,
+  WORKFLOW_NODE_WIDTH,
   WorkflowCanvas,
   toFlowNode,
   type FlowNode,
@@ -95,9 +98,9 @@ function firstNodeId(editor: Editor): string | null {
 }
 
 function edgeTone(condition: WorkflowCondition) {
-  if (condition === "passed") return "#16b364";
-  if (condition === "failed") return "#d92d20";
-  return "#64748b";
+  if (condition === "passed") return "var(--color-success)";
+  if (condition === "failed") return "var(--color-danger)";
+  return "var(--color-line-strong)";
 }
 
 function toFlowEdge(
@@ -111,63 +114,56 @@ function toFlowEdge(
     id: `${source}-${target}-${index}`,
     source,
     target,
-    animated: true,
+    type: "smoothstep",
     label: condition === "always" ? undefined : condition,
+    labelStyle: { fill: tone, fontSize: 11, fontWeight: 600 },
+    labelBgStyle: { fill: "var(--color-surface)" },
+    labelBgPadding: [6, 3],
+    labelBgBorderRadius: 4,
     data: { condition },
     markerEnd: { type: MarkerType.ArrowClosed, color: tone },
     style: { stroke: tone, strokeWidth: 2 },
   };
 }
 
+/**
+ * Left-to-right dagre layout that matches the canvas handles (in on the left,
+ * out on the right). Edge labels get their own space so a "failed" branch
+ * label never sits on another edge.
+ */
 function arrangeNodes(nodes: FlowNode[], edges: Edge[]): FlowNode[] {
   if (nodes.length === 0) return nodes;
-  const inbound = new Map(nodes.map((n) => [n.id, 0]));
-  const outgoing = new Map(nodes.map((n) => [n.id, [] as string[]]));
+  const g = new dagre.graphlib.Graph();
+  g.setDefaultEdgeLabel(() => ({}));
+  g.setGraph({
+    rankdir: "LR",
+    nodesep: 48,
+    ranksep: 96,
+    marginx: 24,
+    marginy: 24,
+  });
+  for (const node of nodes)
+    g.setNode(node.id, {
+      width: WORKFLOW_NODE_WIDTH,
+      height: WORKFLOW_NODE_HEIGHT,
+    });
   for (const edge of edges) {
-    inbound.set(
+    if (!g.hasNode(String(edge.source)) || !g.hasNode(String(edge.target)))
+      continue;
+    g.setEdge(
+      String(edge.source),
       String(edge.target),
-      (inbound.get(String(edge.target)) ?? 0) + 1,
+      edge.label ? { width: 56, height: 20, labelpos: "c" } : {},
     );
-    outgoing.get(String(edge.source))?.push(String(edge.target));
   }
-
-  const depth = new Map<string, number>();
-  const queue = nodes
-    .filter((n) => (inbound.get(n.id) ?? 0) === 0)
-    .map((n) => n.id);
-  for (const id of queue) depth.set(id, 0);
-
-  while (queue.length > 0) {
-    const id = queue.shift()!;
-    const nextDepth = (depth.get(id) ?? 0) + 1;
-    for (const target of outgoing.get(id) ?? []) {
-      if ((depth.get(target) ?? -1) < nextDepth) {
-        depth.set(target, nextDepth);
-        queue.push(target);
-      }
-    }
-  }
-
-  const byDepth = new Map<number, FlowNode[]>();
-  for (const node of nodes) {
-    const fallback =
-      node.data.kind === "trigger" ? 0 : node.data.kind === "check" ? 1 : 2;
-    const d = depth.get(node.id) ?? fallback;
-    byDepth.set(d, [...(byDepth.get(d) ?? []), node]);
-  }
-
+  dagre.layout(g);
   return nodes.map((node) => {
-    const fallback =
-      node.data.kind === "trigger" ? 0 : node.data.kind === "check" ? 1 : 2;
-    const d = depth.get(node.id) ?? fallback;
-    const column = byDepth.get(d) ?? [node];
-    const row = column.findIndex((n) => n.id === node.id);
-    const offset = ((column.length - 1) * 78) / 2;
+    const pos = g.node(node.id);
     return {
       ...node,
       position: {
-        x: 110 + d * 270,
-        y: 170 + row * 156 - offset,
+        x: pos.x - WORKFLOW_NODE_WIDTH / 2,
+        y: pos.y - WORKFLOW_NODE_HEIGHT / 2,
       },
     };
   });

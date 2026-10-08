@@ -19,6 +19,12 @@ serviceAccount:
   create: true
   name: ""
   annotations: {}
+  # The server refuses in-cluster Kubernetes credentials, so pods get no API
+  # token. Set true only when a CLI run in these pods uses the Kubernetes
+  # connector with `in_cluster: true`, and bind the service account to the
+  # read-only ClusterRole in docs/CONNECTORS.md. IRSA and workload identity
+  # tokens are projected by their own webhooks and do not need this.
+  automountToken: false
 
 podAnnotations: {}
 podLabels: {}

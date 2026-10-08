@@ -12,6 +12,7 @@ pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
+from fastapi import FastAPI  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from security_lakehouse.commercial.pricing import get_tier, list_pricing_tiers  # noqa: E402
@@ -176,3 +177,53 @@ def test_usage_summary_is_501_without_commercial_hosting(tmp_path: Path, monkeyp
         _key, token = create_api_key(session, tenant_id=tenant.id, user_id=user.id)
     resp = client.get("/api/v1/platform/usage", headers=_bearer(token))
     assert resp.status_code == HTTPStatus.NOT_IMPLEMENTED
+
+
+def _member_token(app: FastAPI, slug: str, role: str = "read_only") -> str:
+    with session_scope(app.state.sessionmaker) as session:
+        tenant = create_tenant(session, slug=slug, name=slug.title())
+        user = create_user(session, tenant_id=tenant.id, email=f"{role}@{slug}.test", role=role)
+        _key, token = create_api_key(session, tenant_id=tenant.id, user_id=user.id)
+    return token
+
+
+def test_platform_features_reports_every_commercial_surface_off_in_oss(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for name in ("TRUSTOPS_COMMERCIAL_HOSTED", "TRUSTOPS_BILLING_ENABLED", "TRUSTOPS_SCIM_ENABLED"):
+        monkeypatch.delenv(name, raising=False)
+    _seed_lake(tmp_path)
+    app = create_app(tmp_path)
+    client = TestClient(app)
+    resp = client.get("/api/v1/platform/features", headers=_bearer(_member_token(app, "ossfeat")))
+    assert resp.status_code == HTTPStatus.OK
+    assert resp.json()["data"] == {
+        "commercial_hosted": False,
+        "plan_usage": False,
+        "billing": False,
+        "scim": False,
+    }
+
+
+def test_platform_features_track_the_same_switches_as_the_gated_routes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("TRUSTOPS_SCIM_ENABLED", "1")
+    monkeypatch.delenv("TRUSTOPS_BILLING_ENABLED", raising=False)
+    _seed_lake(tmp_path)
+    app = create_app(tmp_path)
+    client = TestClient(app)
+    token = _member_token(app, "hostedfeat", role="admin")
+    data = client.get("/api/v1/platform/features", headers=_bearer(token)).json()["data"]
+    assert data == {"commercial_hosted": True, "plan_usage": True, "billing": False, "scim": True}
+    # Each flag agrees with the route it gates: on is served, off is 501.
+    assert client.get("/api/v1/platform/usage", headers=_bearer(token)).status_code == HTTPStatus.OK
+    assert client.get("/api/v1/platform/scim/tokens", headers=_bearer(token)).status_code == HTTPStatus.OK
+    assert client.get("/api/v1/billing", headers=_bearer(token)).status_code == HTTPStatus.NOT_IMPLEMENTED
+
+
+def test_platform_features_requires_a_signed_in_principal(tmp_path: Path) -> None:
+    _seed_lake(tmp_path)
+    client = TestClient(create_app(tmp_path))
+    assert client.get("/api/v1/platform/features").status_code == HTTPStatus.UNAUTHORIZED

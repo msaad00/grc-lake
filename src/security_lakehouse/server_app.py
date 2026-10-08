@@ -95,7 +95,7 @@ from security_lakehouse.execution_mode import run_in_server_mode, server_executi
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import resolve_path
 from security_lakehouse.operation_execution import execute_operation, execute_stored_operation
-from security_lakehouse.operation_jobs import JobConflict, JobQueue, JobWorker
+from security_lakehouse.operation_jobs import DEFAULT_WORKERS, MAX_WORKERS, JobConflict, JobQueue, JobWorker
 from security_lakehouse.public_url import normalize_public_url
 from security_lakehouse.server_routes.schemas.base import StrictModel as _StrictModel
 from security_lakehouse.services import NotFound, ValidationError
@@ -1134,6 +1134,17 @@ async def posture_event_stream(lake: Path, request: Request, *, interval: float 
             yield frame
 
 
+def _operation_worker_count() -> int:
+    raw = os.environ.get("TRUSTOPS_OPERATION_WORKERS", "").strip() or str(DEFAULT_WORKERS)
+    try:
+        count = int(raw)
+    except ValueError:
+        count = 0
+    if not 1 <= count <= MAX_WORKERS:
+        raise ValueError(f"TRUSTOPS_OPERATION_WORKERS must be an integer from 1 to {MAX_WORKERS}")
+    return count
+
+
 def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     """Build the server-mode ASGI app bound to a security data lake directory."""
     _assert_insecure_allowed(require_auth=require_auth)
@@ -1151,6 +1162,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             previous.execute,
             subprocess_execute=previous.subprocess_execute,
             timeout_seconds=previous.timeout_seconds,
+            concurrency=previous.concurrency,
         )
         application.state.operation_worker = worker
         enabled = getattr(application.state, "job_worker_enabled", True)
@@ -1235,6 +1247,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         partial(execute_operation, lake, factory=app.state.sessionmaker, require_auth=app.state.require_auth),
         subprocess_execute=partial(execute_stored_operation, require_auth=require_auth),
         timeout_seconds=float(os.environ.get("TRUSTOPS_OPERATION_TIMEOUT_SECONDS", "900")),
+        concurrency=_operation_worker_count(),
     )
 
     # OIDC SSO is optional; the OAuth client + signed session middleware are only

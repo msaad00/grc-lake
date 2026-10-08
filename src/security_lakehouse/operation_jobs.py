@@ -16,7 +16,7 @@ import signal
 import threading
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
@@ -34,6 +34,8 @@ from security_lakehouse.tenancy import root_key
 _LOG = logging.getLogger(__name__)
 LEASE_SECONDS = 90
 RESULT_LIMIT = 1024 * 1024
+DEFAULT_WORKERS = 2
+MAX_WORKERS = 16
 
 
 def supported(path: str) -> bool:
@@ -280,7 +282,12 @@ class JobQueue:
                     # bounds its lifetime; never fence a live writer mid-action.
                     continue
 
-    def claim(self) -> OperationJob | None:
+    def claim(self, *, exclude_tenants: Collection[str] = ()) -> OperationJob | None:
+        """Claim the oldest queued job of the least recently started tenant.
+
+        ``exclude_tenants`` skips tenants that already have work in flight on
+        the calling replica. The conditional UPDATE is the cross-replica fence.
+        """
         self.recover()
         with self.factory() as session:
             turns = (
@@ -289,15 +296,20 @@ class JobQueue:
                 .group_by(OperationJob.tenant_id)
                 .subquery()
             )
-            job_id = session.scalar(
+            candidates = (
                 select(OperationJob.id)
                 .join(turns, turns.c.tenant_id == OperationJob.tenant_id)
                 .where(
                     OperationJob.root_key == self.root_key,
                     OperationJob.status == "queued",
                 )
-                .order_by(func.coalesce(turns.c.last_started, 0), OperationJob.created_at, OperationJob.id)
-                .limit(1)
+            )
+            if exclude_tenants:
+                candidates = candidates.where(OperationJob.tenant_id.not_in(sorted(exclude_tenants)))
+            job_id = session.scalar(
+                candidates.order_by(
+                    func.coalesce(turns.c.last_started, 0), OperationJob.created_at, OperationJob.id
+                ).limit(1)
             )
             if job_id is None:
                 return None
@@ -406,15 +418,26 @@ class JobWorker:
         *,
         subprocess_execute: Callable[[Path, OperationJob], tuple[int, dict[str, Any]]] | None = None,
         timeout_seconds: float = 900,
+        concurrency: int = 1,
     ):
         if not math.isfinite(timeout_seconds) or not 0 < timeout_seconds <= 3600:
             raise ValueError("operation timeout must be between 0 and 3600 seconds")
+        if isinstance(concurrency, bool) or not isinstance(concurrency, int) or not 1 <= concurrency <= MAX_WORKERS:
+            raise ValueError(f"operation worker count must be an integer between 1 and {MAX_WORKERS}")
         self.queue = queue
         self.execute = execute
         self.subprocess_execute = subprocess_execute
         self.timeout_seconds = timeout_seconds
+        self.concurrency = concurrency
         self.stop_event = threading.Event()
-        self.thread = threading.Thread(target=self.run, name="trustops-operations", daemon=True)
+        # Claims within one replica are serialized so the in-flight tenant set
+        # is current when the next claim excludes it.
+        self._claim_lock = threading.Lock()
+        self._in_flight: set[str] = set()
+        self.threads = [
+            threading.Thread(target=self.run, name=f"trustops-operations-{index}", daemon=True)
+            for index in range(concurrency)
+        ]
 
     def _isolated(self, row: OperationJob) -> None:
         context = multiprocessing.get_context("spawn")
@@ -489,13 +512,28 @@ class JobWorker:
                     )
                 )
 
+    def _claim(self) -> OperationJob | None:
+        with self._claim_lock:
+            row = self.queue.claim(exclude_tenants=frozenset(self._in_flight))
+            if row is not None:
+                self._in_flight.add(row.tenant_id)
+            return row
+
     def run_once(self, *, isolated: bool = False) -> bool:
-        row = self.queue.claim()
+        row = self._claim()
         if row is None:
             return False
+        try:
+            self._execute(row, isolated=isolated)
+        finally:
+            with self._claim_lock:
+                self._in_flight.discard(row.tenant_id)
+        return True
+
+    def _execute(self, row: OperationJob, *, isolated: bool) -> None:
         if isolated and self.subprocess_execute is not None:
             self._isolated(row)
-            return True
+            return
         done = threading.Event()
 
         def heartbeat() -> None:
@@ -510,7 +548,7 @@ class JobWorker:
         try:
             with self.queue.execution_lock(row):
                 if not self.queue.owns_claim(row):
-                    return True
+                    return
                 try:
                     code, response = self.execute(row)
                 except Exception:
@@ -523,7 +561,6 @@ class JobWorker:
         finally:
             done.set()
             pulse.join()
-        return True
 
     def run(self) -> None:
         while not self.stop_event.is_set():
@@ -536,8 +573,13 @@ class JobWorker:
                 self.stop_event.wait(1)
 
     def start(self) -> None:
-        self.thread.start()
+        for thread in self.threads:
+            thread.start()
 
     def stop(self) -> None:
+        """Signal every worker and wait up to 30 seconds in total for them."""
         self.stop_event.set()
-        self.thread.join(timeout=30)
+        deadline = time.monotonic() + 30
+        for thread in self.threads:
+            if thread.is_alive():
+                thread.join(timeout=max(0.0, deadline - time.monotonic()))

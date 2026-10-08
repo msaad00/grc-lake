@@ -3562,17 +3562,39 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         return JSONResponse(_redact_payload(body, identity), status_code=int(_status))
 
     @app.get("/api/v1/frameworks/coverage", tags=["data"])
-    def v1_framework_coverage(identity: Identity = Depends(_require_read)) -> JSONResponse:
+    def v1_framework_coverage(
+        identity: Identity = Depends(_require_read),
+        limit: int | None = Query(default=None, description="1-1000; pages `frameworks`, default 100 when paging"),
+        offset: int | None = Query(default=None, description=">= 0"),
+        cursor: str | None = Query(default=None, description="meta.next_cursor from the previous page"),
+    ) -> JSONResponse:
         from security_lakehouse.framework_coverage import (
             build_framework_coverage,
             framework_coverage_summary,
         )
 
+        page_params = {
+            key: [str(value)]
+            for key, value in (("limit", limit), ("offset", offset), ("cursor", cursor))
+            if value is not None
+        }
+        if page_params:
+            try:
+                api_v1.paginate_collection([], page_params)
+            except ValueError:
+                return JSONResponse(
+                    api_v1.error_envelope("bad_request", "invalid request parameters", resource="frameworks.coverage"),
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
         rows = build_framework_coverage(lake_dir=lake_for(identity))
         data = {
             "summary": framework_coverage_summary(rows),
             "frameworks": rows,
         }
+        if page_params:
+            body = api_v1.paged_object_response("frameworks.coverage", data, ("frameworks",), page_params)
+            body["data"] = _redact_payload(body["data"], identity)
+            return JSONResponse(body)
         return JSONResponse(
             api_v1.envelope(
                 "frameworks.coverage",

@@ -30,7 +30,8 @@ Use `/api/v1/*` for external automation. Versioned responses always use:
     "limit": 100,
     "offset": 0,
     "sort": null,
-    "filters": {}
+    "filters": {},
+    "next_cursor": null
   },
   "errors": []
 }
@@ -38,11 +39,35 @@ Use `/api/v1/*` for external automation. Versioned responses always use:
 
 List routes support:
 
-- `limit`: 1-1000, default 100
+- `limit`: 1-1000, default 100; a value outside that range is a 400, not clamped
+- `cursor`: the opaque `meta.next_cursor` from the previous page; it takes
+  precedence over `offset`, and `next_cursor` is `null` on the last page
 - `offset`: zero-based row offset
 - `sort`: field name, or `-field` for descending
 - field filters: exact scalar match, list membership match, comma-separated OR
   values
+
+Keep `limit`, `sort`, and filters the same while following a cursor.
+`GET /api/v1/evidence` streams the stored events in file order: an unsorted page
+reads only up to one row past the page, while `sort` reads every event first.
+
+Graph and coverage routes return one object, not a list. Without paging
+parameters they return the whole object, as before. With `limit`, `offset`, or
+`cursor` they page each of the object's lists by the same window and repeat
+the other fields on every page. Concatenate each list across pages, following
+`next_cursor` until it is `null`, to rebuild it. `meta.count` is the longest
+list; `meta.parts` gives each list's own `count` and `returned`.
+
+| Route                             | Lists paged together                                                 |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `GET /api/v1/graph`               | `nodes`, `edges`                                                     |
+| `GET /api/v1/repo-graph`          | `nodes`, `edges`                                                     |
+| `GET /api/v1/graph/coverage`      | `assets`, `orphans.controls`, `orphans.frameworks`, `orphans.assets` |
+| `GET /api/v1/frameworks/coverage` | `frameworks`                                                         |
+
+An unpaged `graph/coverage` response caps its asset and orphan lists at 200 rows
+(`detail_limit`, `details_truncated`). A paged walk has no cap, so
+`detail_limit` is `null`. An edge can arrive on a different page from its nodes.
 
 ## End-To-End Flow
 

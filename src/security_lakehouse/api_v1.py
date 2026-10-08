@@ -59,7 +59,14 @@ from security_lakehouse.graph import (
     build_repository_graph,
 )
 from security_lakehouse.ingestion_status import build_ingestion_status
-from security_lakehouse.io import read_json, read_jsonl, resolve_path
+from security_lakehouse.io import (
+    iter_jsonl,
+    iter_jsonl_slice,
+    read_json,
+    read_jsonl,
+    resolve_path,
+    validated_jsonl_count,
+)
 from security_lakehouse.lake_eval import list_eval_runs, run_lake_eval
 from security_lakehouse.lake_scale import connector_materialize_on_sync
 from security_lakehouse.mapping_review import (
@@ -223,6 +230,18 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
     "/api/v1/oscal/component-definition": (
         "oscal.component-definition",
         lambda lake: build_component_definition(lake_dir=lake),
+    ),
+}
+
+# Singletons whose list members page together when a caller sends limit, offset,
+# or cursor: route -> (paged parts, loader returning the uncapped payload).
+# Without those params the singleton payload is served unchanged.
+PAGED_SINGLETONS: dict[str, tuple[tuple[str, ...], Callable[[Path], JsonObject]]] = {
+    "/api/v1/graph": (("nodes", "edges"), build_compliance_graph),
+    "/api/v1/repo-graph": (("nodes", "edges"), build_repository_graph),
+    "/api/v1/graph/coverage": (
+        ("assets", "orphans.controls", "orphans.frameworks", "orphans.assets"),
+        lambda lake: analyze_coverage(lake, detail_limit=None),
     ),
 }
 
@@ -1194,7 +1213,11 @@ def resource_catalog() -> list[JsonObject]:
         }
     )
     for path, (name, _loader) in SINGLETON_LOADERS.items():
-        catalog.append({"resource": name, "path": path, "kind": "singleton", "methods": ["GET"]})
+        entry: JsonObject = {"resource": name, "path": path, "kind": "singleton", "methods": ["GET"]}
+        if path in PAGED_SINGLETONS:
+            entry["query"] = ["limit", "offset", "cursor"]
+            entry["paged_parts"] = list(PAGED_SINGLETONS[path][0])
+        catalog.append(entry)
     for path, (name, _loader) in COLLECTION_LOADERS.items():
         catalog.append(
             {
@@ -1202,7 +1225,7 @@ def resource_catalog() -> list[JsonObject]:
                 "path": path,
                 "kind": "collection",
                 "methods": ["GET", *_WRITABLE.get(path, [])],
-                "query": ["limit", "offset", "sort", "<field>=<value>"],
+                "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
             }
         )
     catalog.extend(dict(entry) for entry in EXTENDED_RESOURCES)
@@ -1233,6 +1256,15 @@ _ENVELOPE_SCHEMA: JsonObject = {
                 "returned": {"type": "integer"},
                 "limit": {"type": "integer"},
                 "offset": {"type": "integer"},
+                "next_cursor": {
+                    "type": "string",
+                    "nullable": True,
+                    "description": "Opaque cursor for the next page; null on the last page.",
+                },
+                "parts": {
+                    "type": "object",
+                    "description": "Per-list count and returned rows when an object payload is paged.",
+                },
             },
         },
         "errors": {
@@ -1366,6 +1398,7 @@ def index_payload() -> JsonObject:
         "collection_controls": {
             "limit": "1-1000 (default 100)",
             "offset": ">= 0",
+            "cursor": "opaque meta.next_cursor from the previous page; takes precedence over offset",
             "sort": "field, or -field for descending",
             "filters": "any field=value (comma-separated values = OR)",
         },
@@ -1382,34 +1415,43 @@ def index_payload() -> JsonObject:
 
 def filter_collection(rows: list[JsonObject], params: Params) -> tuple[list[JsonObject], dict[str, list[str]]]:
     """Apply ``field=value`` query filters (comma-separated, list-field aware)."""
-    reserved = {"limit", "offset", "sort", "cursor"}
-    filters = {
-        key: [value for raw in values for value in raw.split(",") if value]
-        for key, values in params.items()
-        if key not in reserved
-    }
+    filters = _collection_filters(params)
     if not filters:
         return rows, {}
     if rows:
-        fields = {key for row in rows for key in row}
-        unknown = set(filters) - fields
-        if unknown:
-            raise ValueError("unknown filter field: " + ", ".join(sorted(unknown)))
+        _reject_unknown_filters(filters, {key for row in rows for key in row})
+    return [row for row in rows if _row_matches(row, filters)], filters
 
-    def matches(row: JsonObject) -> bool:
-        for field, expected_values in filters.items():
-            actual = row.get(field)
-            if actual is None:
-                return False
-            if isinstance(actual, list):
-                actual_values = {str(item) for item in actual}
-                if not any(expected in actual_values for expected in expected_values):
-                    return False
-            elif str(actual) not in expected_values:
-                return False
-        return True
 
-    return [row for row in rows if matches(row)], filters
+_PAGE_PARAMS = frozenset({"limit", "offset", "cursor"})
+
+
+def _collection_filters(params: Params) -> dict[str, list[str]]:
+    return {
+        key: [value for raw in values for value in raw.split(",") if value]
+        for key, values in params.items()
+        if key not in _PAGE_PARAMS | {"sort"}
+    }
+
+
+def _reject_unknown_filters(filters: Mapping[str, list[str]], fields: set[str]) -> None:
+    unknown = set(filters) - fields
+    if unknown:
+        raise ValueError("unknown filter field: " + ", ".join(sorted(unknown)))
+
+
+def _row_matches(row: JsonObject, filters: Mapping[str, list[str]]) -> bool:
+    for field, expected_values in filters.items():
+        actual = row.get(field)
+        if actual is None:
+            return False
+        if isinstance(actual, list):
+            actual_values = {str(item) for item in actual}
+            if not any(expected in actual_values for expected in expected_values):
+                return False
+        elif str(actual) not in expected_values:
+            return False
+    return True
 
 
 def sort_collection(rows: list[JsonObject], params: Params) -> tuple[list[JsonObject], str | None]:
@@ -1515,15 +1557,21 @@ def collection_response(resource: str, rows: list[JsonObject], params: Params) -
 
 def collection_page_response(
     resource: str,
-    page_rows: list[JsonObject],
+    page_rows: list[JsonObject] | JsonObject,
     *,
     count: int,
     limit: int,
     offset: int,
     sort: str | None,
     filters: dict[str, list[str]],
+    returned: int | None = None,
+    extra_meta: JsonObject | None = None,
 ) -> JsonObject:
-    """Shared envelope for materialized and indexed collection pages."""
+    """Shared envelope for materialized, streamed, indexed, and object pages.
+
+    ``page_rows`` is the page payload: a row list for collections, or an object
+    whose list members were paged together (pass ``returned`` for those).
+    """
     next_offset = offset + limit
     next_cursor = encode_cursor(next_offset) if next_offset < count else None
     return envelope(
@@ -1531,13 +1579,105 @@ def collection_page_response(
         page_rows,
         meta={
             "count": count,
-            "returned": len(page_rows),
+            "returned": len(page_rows) if returned is None else returned,
             "limit": limit,
             "offset": offset,
             "sort": sort,
             "filters": filters,
             "next_cursor": next_cursor,
+            **(extra_meta or {}),
         },
+    )
+
+
+def wants_page(params: Params) -> bool:
+    """True when a caller sent any of ``limit``, ``offset``, or ``cursor``."""
+    return any(params.get(key) for key in _PAGE_PARAMS)
+
+
+def paged_object_response(resource: str, data: JsonObject, parts: tuple[str, ...], params: Params) -> JsonObject:
+    """Page the list members ``parts`` of an object payload with one cursor.
+
+    Each part is sliced to the same ``[offset, offset + limit)`` window, so a
+    caller that follows ``next_cursor`` until it is ``None`` and concatenates
+    each part rebuilds the full lists in order. Every other member (summaries,
+    counts) is repeated unchanged on each page. ``meta.count`` is the longest
+    part, and ``meta.parts`` gives each part's own count and returned rows. A
+    dotted part name (``orphans.assets``) addresses a list one level down.
+    """
+    _, limit, offset = paginate_collection([], params)
+    page = {key: dict(value) if isinstance(value, dict) else value for key, value in data.items()}
+    part_meta: JsonObject = {}
+    for part in parts:
+        parent_key, _, child_key = part.rpartition(".")
+        target = page[parent_key] if parent_key else page
+        rows = target[child_key]
+        target[child_key] = rows[offset : offset + limit]
+        part_meta[part] = {"count": len(rows), "returned": len(target[child_key])}
+    return collection_page_response(
+        resource,
+        page,
+        count=max((meta["count"] for meta in part_meta.values()), default=0),
+        limit=limit,
+        offset=offset,
+        sort=None,
+        filters={},
+        returned=sum(meta["returned"] for meta in part_meta.values()),
+        extra_meta={"parts": part_meta},
+    )
+
+
+EVIDENCE_PATH = Path("silver") / "normalized_events.jsonl"
+
+
+def evidence_page_response(lake: Path, params: Params) -> JsonObject:
+    """Page ``/api/v1/evidence`` by streaming the pinned silver file.
+
+    Without filters, rows before the page are skipped unparsed and reading
+    stops at the end of the page, so a page parses at most ``limit`` events.
+    ``count`` comes from :func:`validated_jsonl_count`, which parses the whole
+    file once per content version, keeping nothing, so an invalid row anywhere
+    still fails the request as the materialized path did. With filters, one
+    streaming pass counts matches and keeps only the page. A ``sort`` needs
+    every row, so it falls back to the materialized collection path. Rows come
+    in file order either way, matching the materialized path.
+    """
+    if first_param(params, "sort"):
+        rows = with_asset_names(
+            read_projection(lake / EVIDENCE_PATH, None, missing_ok=True, base_dir=lake), load_asset_names(lake)
+        )
+        return collection_response("evidence", rows, params)
+    _, limit, offset = paginate_collection([], params)
+    filters = _collection_filters(params)
+    names = load_asset_names(lake)
+    path = lake / EVIDENCE_PATH
+    if not filters:
+        count = validated_jsonl_count(path, missing_ok=True, base_dir=lake)
+        window = list(iter_jsonl_slice(path, offset, offset + limit, missing_ok=True, base_dir=lake))
+        return collection_page_response(
+            "evidence",
+            with_asset_names(window, names),
+            count=count,
+            limit=limit,
+            offset=offset,
+            sort=None,
+            filters={},
+        )
+    page: list[JsonObject] = []
+    fields: set[str] = set()
+    count = 0
+    for raw in iter_jsonl(path, missing_ok=True, base_dir=lake):
+        (row,) = with_asset_names([raw], names)
+        fields.update(row)
+        if not _row_matches(row, filters):
+            continue
+        if offset <= count < offset + limit:
+            page.append(row)
+        count += 1
+    if fields:
+        _reject_unknown_filters(filters, fields)
+    return collection_page_response(
+        "evidence", page, count=count, limit=limit, offset=offset, sort=None, filters=filters
     )
 
 
@@ -1762,10 +1902,28 @@ def _handle_get(
             return HTTPStatus.BAD_REQUEST, error_envelope(
                 "bad_request", "invalid request parameters", resource="ccf.asset-results"
             )
+    paged = PAGED_SINGLETONS.get(path)
+    if paged is not None and wants_page(params):
+        resource = SINGLETON_LOADERS[path][0]
+        parts, full_loader = paged
+        try:
+            paginate_collection([], params)
+        except ValueError:
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", "invalid request parameters", resource=resource
+            )
+        return HTTPStatus.OK, paged_object_response(resource, full_loader(lake), parts, params)
     singleton = SINGLETON_LOADERS.get(path)
     if singleton is not None:
         resource, loader = singleton
         return HTTPStatus.OK, envelope(resource, loader(lake))
+    if path == "/api/v1/evidence":
+        try:
+            return HTTPStatus.OK, evidence_page_response(lake, params)
+        except ValueError:
+            return HTTPStatus.BAD_REQUEST, error_envelope(
+                "bad_request", "invalid request parameters", resource="evidence"
+            )
     collection = COLLECTION_LOADERS.get(path)
     if collection is not None:
         resource, loader = collection

@@ -82,7 +82,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/assets",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "assets"
     },
     {
@@ -110,7 +110,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/ccf/asset-results",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "ccf.asset-results"
     },
     {
@@ -123,7 +123,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/connector-runs",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "connector-runs"
     },
     {
@@ -193,14 +193,14 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/control-tests",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "control-tests"
     },
     {
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/controls",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "controls"
     },
     {
@@ -241,14 +241,14 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/evidence",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "evidence"
     },
     {
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/evidence/freshness",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "evidence.freshness"
     },
     {
@@ -284,7 +284,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/frameworks",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "frameworks"
     },
     {
@@ -326,13 +326,22 @@
     {
       "kind": "singleton",
       "methods": ["GET"],
+      "paged_parts": ["nodes", "edges"],
       "path": "/api/v1/graph",
+      "query": ["limit", "offset", "cursor"],
       "resource": "graph"
     },
     {
       "kind": "singleton",
       "methods": ["GET"],
+      "paged_parts": [
+        "assets",
+        "orphans.controls",
+        "orphans.frameworks",
+        "orphans.assets"
+      ],
       "path": "/api/v1/graph/coverage",
+      "query": ["limit", "offset", "cursor"],
       "resource": "graph.coverage"
     },
     {
@@ -352,7 +361,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/ingestion/eval/runs",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "ingestion.eval.runs"
     },
     {
@@ -452,7 +461,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/mappings",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "mappings"
     },
     {
@@ -587,7 +596,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/readiness",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "readiness"
     },
     {
@@ -638,7 +647,9 @@
     {
       "kind": "singleton",
       "methods": ["GET"],
+      "paged_parts": ["nodes", "edges"],
       "path": "/api/v1/repo-graph",
+      "query": ["limit", "offset", "cursor"],
       "resource": "repo-graph"
     },
     {
@@ -682,7 +693,7 @@
       "kind": "collection",
       "methods": ["GET", "POST"],
       "path": "/api/v1/snapshots",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "snapshots"
     },
     {
@@ -816,7 +827,7 @@
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/violations",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "violations"
     },
     {
@@ -863,14 +874,14 @@
       "kind": "collection",
       "methods": ["GET", "POST"],
       "path": "/api/v1/workflows",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "workflows"
     },
     {
       "kind": "collection",
       "methods": ["GET"],
       "path": "/api/v1/workflows/actions",
-      "query": ["limit", "offset", "sort", "<field>=<value>"],
+      "query": ["limit", "offset", "cursor", "sort", "<field>=<value>"],
       "resource": "workflows.actions"
     },
     {

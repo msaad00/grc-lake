@@ -3,13 +3,27 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.2.24 - 2026-10-07
+
+- Run retention automatically from the scheduler when `TRUSTOPS_RETENTION_SCHEDULE` is set. It is off by default, and only previews candidates until `TRUSTOPS_RETENTION_ARCHIVE_DIR` names an archive outside the lake root. Scheduled runs use the CLI's protections, record each run in `gold/retention_runs.jsonl`, and expose the settings under Helm `scheduler.retention`.
+
+- Run background operations on a bounded worker pool (`TRUSTOPS_OPERATION_WORKERS`, default 2, range 1-16) with at most one in-flight job per tenant per replica, so one tenant's long job no longer blocks others.
+
+- Cap every MCP tool output, including write tools, with an explicit `mcp_truncation` marker instead of an error. Tool annotations now report read-only, destructive, idempotent, and open-world behavior per tool. Text shown to the model wraps free-text values in an untrusted-content envelope; `structuredContent` keeps exact values.
+
+- Page `/api/v1/graph`, `/api/v1/repo-graph`, `/api/v1/graph/coverage`, and `/api/v1/frameworks/coverage` with the standard `limit`/`offset`/`cursor` contract when paging parameters are sent. Evidence pages stream instead of loading every row, and graph ordering no longer depends on the Python hash seed.
 
 - Keep a revoked trust share revoked when a copy of its record still sits in another lake the owner can reach, such as a flat root copied into a scoped tenant directory. List copied shares once.
+
+- Report duplicate control IDs during catalog validation, and guard ISO 42001 Annex A controls against colliding with management clause IDs.
 
 ### Upgrade notes
 
 - Since 0.2.23, trust shares stored in a flat root lake resolve publicly only while no server tenant exists or after one tenant owns that lake. In a deployment with several tenants and no recorded flat-lake owner, CLI-issued links stored in the flat root return 404. Reissue them from the tenant that should own them.
+
+- After scheduled retention runs, releases before 0.2.24 reject the new `retention` rows in `gold/scheduler_state.jsonl` and stop scheduling. Do not downgrade below 0.2.24 once retention is enabled.
+
+- In-process callers of the MCP server's `FastMCP.call_tool` now receive a `CallToolResult`; read `structuredContent` for the previous dict. Remote MCP clients are unaffected.
 
 ## 0.2.23 - 2026-10-07
 

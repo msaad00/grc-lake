@@ -267,7 +267,7 @@ def build_reader(
         from security_lakehouse.iceberg_export import IcebergPublicationError, rest_catalog  # noqa: PLC0415
 
         try:
-            catalog = rest_catalog(uri, warehouse=warehouse, token_env=token_env)
+            catalog = rest_catalog(uri, warehouse=warehouse, token_env=token_env, pin_public=True)
         except IcebergPublicationError as exc:
             raise ValueError(f"Iceberg REST catalog: {exc}") from None
         return IcebergCatalogReader(catalog, initial_window_days=window)

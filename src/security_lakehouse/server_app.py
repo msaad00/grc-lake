@@ -33,6 +33,7 @@ from functools import partial
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.concurrency import run_in_threadpool
@@ -176,6 +177,45 @@ def _rate_limit_key(request: Request, known: _KnownCredentials) -> str:
         return "k:" + digest
     client = request.client.host if request.client else "unknown"
     return "h:" + client
+
+
+_STATE_CHANGING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+_COOKIELESS_CSRF_PATHS = frozenset({"/api/v1/auth/session-from-key"})
+_CSRF_EXEMPT_PATHS = frozenset({"/api/v1/auth/saml/acs"})
+
+
+def _origin_of(url: str | None) -> str | None:
+    if not url:
+        return None
+    parts = urlsplit(url)
+    return f"{parts.scheme}://{parts.netloc}".lower() if parts.scheme and parts.netloc else None
+
+
+def _cookie_csrf_rejection(request: Request, trusted_origin: str | None) -> tuple[int, str] | None:
+    """Refuse a browser-credentialed mutation a cross-site page could forge.
+
+    Bearer requests carry no ambient credential and are not checked.
+    """
+    path = request.url.path
+    if request.method not in _STATE_CHANGING_METHODS or not path.startswith("/api/") or path in _CSRF_EXEMPT_PATHS:
+        return None
+    if request.headers.get("authorization"):
+        return None
+    if SESSION_COOKIE not in request.cookies and path not in _COOKIELESS_CSRF_PATHS:
+        return None
+    origin = request.headers.get("origin")
+    if origin is not None:
+        presented = origin.strip().lower()
+        host = request.headers.get("host", "").strip().lower()
+        same_host = (
+            bool(host) and presented.split("://", 1)[-1] == host and presented.startswith(("https://", "http://"))
+        )
+        if not same_host and presented != trusted_origin:
+            return 403, "cross-origin request refused"
+    media_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if media_type != "application/json":
+        return 415, "Content-Type must be application/json"
+    return None
 
 
 async def _json_object_body(request: Request) -> dict[str, Any]:
@@ -1267,6 +1307,23 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         app.state.oauth = build_oauth(app.state.oidc_config)
 
     app.add_middleware(StrictJSONMiddleware)
+
+    trusted_origin = _origin_of(
+        normalize_public_url(
+            os.environ.get("TRUSTOPS_PUBLIC_URL")
+            or os.environ.get("TRUSTOPS_BASE_URL")
+            or os.environ.get("TRUSTOPS_APP_URL")
+        )
+    )
+
+    @app.middleware("http")
+    async def _cookie_csrf_guard(request: Request, call_next):
+        rejection = _cookie_csrf_rejection(request, trusted_origin)
+        if rejection is not None:
+            status_code, detail = rejection
+            code = "unsupported_media_type" if status_code == 415 else "forbidden"
+            return JSONResponse(api_v1.error_envelope(code, detail), status_code=status_code)
+        return await call_next(request)
 
     @app.middleware("http")
     async def _server_execution_mode(request: Request, call_next):

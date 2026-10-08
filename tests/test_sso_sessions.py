@@ -202,7 +202,7 @@ def test_logout_revokes_session(app_env) -> None:
         _row, token = create_user_session(session, tenant_id=tenant.id, user_id=user.id)
     signed = encode_session_cookie(token)
     client.cookies.set(SESSION_COOKIE, signed)
-    assert client.post("/api/v1/auth/logout").status_code == HTTPStatus.OK
+    assert client.post("/api/v1/auth/logout", json={}).status_code == HTTPStatus.OK
     client.cookies.set(SESSION_COOKIE, signed)  # re-present the now-revoked token
     assert client.get("/api/v1/controls").status_code == HTTPStatus.UNAUTHORIZED
 

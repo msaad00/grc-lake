@@ -97,6 +97,7 @@ from security_lakehouse.io import resolve_path
 from security_lakehouse.operation_execution import execute_operation, execute_stored_operation
 from security_lakehouse.operation_jobs import DEFAULT_WORKERS, MAX_WORKERS, JobConflict, JobQueue, JobWorker
 from security_lakehouse.public_url import normalize_public_url
+from security_lakehouse.server_routes.deps import parse_dt as _parse_dt
 from security_lakehouse.server_routes.schemas.base import StrictModel as _StrictModel
 from security_lakehouse.services import NotFound, ValidationError
 from security_lakehouse.services import access_reviews as access_review_services
@@ -464,15 +465,6 @@ class MappingReviewDecisionRequest(_StrictModel):
     rationale: str = Field(max_length=4000)
     items: list[MappingRef] = Field(min_length=1, max_length=500)
     evidence_ref: str | None = Field(default=None, max_length=1000)
-
-
-def _parse_dt(value: str | None) -> datetime | None:
-    if value is None or value == "":
-        return None
-    try:
-        return datetime.fromisoformat(value)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"invalid datetime: {value!r}") from exc
 
 
 def _params(request: Request) -> dict[str, list[str]]:

@@ -27,20 +27,13 @@ from security_lakehouse import strict_json, tenancy
 from security_lakehouse.data_policy import SENSITIVITY_LEVELS, normalize_sensitivity
 from security_lakehouse.io import append_jsonl
 from security_lakehouse.models import instant_sort_key
+from security_lakehouse.timeutil import utc_iso_z, utc_now
 
 ALLOWED_ROLES = {"auditor"}
 ALLOWED_SCOPES = {"posture_full", "posture_framework"}
 ALLOWED_SENSITIVITY_CEILINGS = set(SENSITIVITY_LEVELS)
 
 SHARES_FILE = "trust_shares.jsonl"
-
-
-def _utc_now() -> datetime:
-    return datetime.now(UTC)
-
-
-def _iso(dt: datetime) -> str:
-    return dt.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _gold(lake_dir: str | Path) -> Path:
@@ -82,7 +75,7 @@ def create_share(
         existing = _share_by_idempotency_key(lake_dir, idempotency_key)
         if existing is not None:
             return {**existing, "idempotent_replay": True}
-    now = _utc_now()
+    now = utc_now()
     expires_at = now + timedelta(hours=expires_in_hours)
     token = "trust_" + secrets.token_urlsafe(24)
     share_id = secrets.token_urlsafe(8)
@@ -92,9 +85,9 @@ def create_share(
         "scope": scope,
         "framework_id": framework_id,
         "sensitivity_ceiling": sensitivity_ceiling,
-        "expires_at": _iso(expires_at),
+        "expires_at": utc_iso_z(expires_at),
         "created_by": created_by,
-        "created_at": _iso(now),
+        "created_at": utc_iso_z(now),
         "revoked_at": None,
         "token_sha256": _hash_token(token),
     }
@@ -199,7 +192,7 @@ def list_shares(
     rows = [dict(r) for r in merged.values()]
     if not include_revoked:
         rows = [r for r in rows if not r.get("revoked_at")]
-    now = _utc_now()
+    now = utc_now()
     for row in rows:
         row["expired"] = _is_expired(row.get("expires_at"), now)
     rows.sort(key=lambda r: instant_sort_key(r.get("created_at")), reverse=True)
@@ -285,7 +278,7 @@ def resolve_share(lake_dir: str | Path, token: str) -> dict[str, Any] | None:
     record = by_token.get(_hash_token(token))
     if record is None or record.get("revoked_at"):
         return None
-    if _is_expired(record.get("expires_at"), _utc_now()):
+    if _is_expired(record.get("expires_at"), utc_now()):
         return None
     return {**record, "expired": False}
 
@@ -306,7 +299,7 @@ def revoke_share(
         return match or additional_match
     revoked = {
         **match,
-        "revoked_at": _iso(_utc_now()),
+        "revoked_at": utc_iso_z(utc_now()),
         "revoked_by": actor,
     }
     append_jsonl(_gold(lake_dir) / SHARES_FILE, revoked)

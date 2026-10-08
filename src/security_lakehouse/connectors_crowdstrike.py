@@ -42,7 +42,8 @@ from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.oauth import ClientCredentialsToken
 from security_lakehouse.ingestion.paginate import paginate
 from security_lakehouse.io import read_json
-from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.models import utc_iso
+from security_lakehouse.timeutil import parse_iso
 
 SOURCE = "crowdstrike"
 DEFAULT_TIMEOUT = 30
@@ -314,7 +315,7 @@ def _host_attributes(host: dict[str, Any]) -> dict[str, Any]:
 def _sensor_event(
     client: Any, device_id: str, attributes: dict[str, Any], now: datetime, tenant_id: str
 ) -> dict[str, Any]:
-    last_seen = _parse_time(attributes["last_seen"])
+    last_seen = parse_iso(attributes["last_seen"], lenient=True)
     if attributes["reduced_functionality_mode"]:
         status, severity, reason = "open", "high", "reduced_functionality_mode"
     elif last_seen is None:
@@ -497,15 +498,6 @@ def _resources(page: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _pick(item: dict[str, Any], fields: tuple[str, ...]) -> dict[str, Any]:
     return {field: item[field] for field in fields if field in item}
-
-
-def _parse_time(value: Any) -> datetime | None:
-    if not value:
-        return None
-    try:
-        return parse_event_time(str(value))
-    except Exception:  # noqa: BLE001
-        return None
 
 
 __all__ = [

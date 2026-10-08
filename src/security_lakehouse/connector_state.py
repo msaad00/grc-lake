@@ -53,6 +53,7 @@ from security_lakehouse.io import read_jsonl
 from security_lakehouse.lake_scale import apply_split_schedule_defaults
 from security_lakehouse.models import instant_sort_key, parse_event_time, utc_iso
 from security_lakehouse.secret_refs import ref_payload_error
+from security_lakehouse.timeutil import utc_now_iso_z as _utc_now_iso
 
 CONFIG_FILE = "connector_config.jsonl"
 RUNS_FILE = "connector_runs.jsonl"
@@ -189,10 +190,6 @@ def _access_fingerprint(
         100_000,
         dklen=16,
     ).hex()[:16]
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _append_jsonl(path: Path, record: dict[str, Any]) -> None:

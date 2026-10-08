@@ -65,7 +65,6 @@ import urllib.request
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -77,6 +76,7 @@ from security_lakehouse.io import append_jsonl, canonical_sha256, read_jsonl
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import instant_sort_key
 from security_lakehouse.secret_refs import tenant_secret_prefix
+from security_lakehouse.timeutil import utc_now_iso_z
 from security_lakehouse.tracking import append_event as append_triage_event
 
 WORKFLOWS_FILE = "workflows.jsonl"
@@ -873,10 +873,6 @@ def run_action(
 # ---------------------------------------------------------------------------
 
 
-def _utc_now_iso() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
-
-
 def _gold(lake_dir: str | Path) -> Path:
     return Path(lake_dir) / "gold"
 
@@ -983,7 +979,7 @@ def save_workflow(
         "nodes": nodes,
         "edges": edges,
         "actor": actor,
-        "occurred_at": _utc_now_iso(),
+        "occurred_at": utc_now_iso_z(),
         "hash": hashlib.sha256(
             json.dumps({"nodes": nodes, "edges": edges}, sort_keys=True).encode("utf-8")
         ).hexdigest()[:16],
@@ -1418,7 +1414,7 @@ def run_workflow(
     workflow = get_workflow(lake_dir, workflow_id)
     if workflow is None:
         raise ValueError(f"unknown workflow_id {workflow_id!r}")
-    started_at = _utc_now_iso()
+    started_at = utc_now_iso_z()
     execution = _execute_workflow_nodes(lake_dir, workflow, dry_run=dry_run, on_snapshot_written=on_snapshot_written)
     node_results = execution["node_results"]
     if execution["awaiting_approval"]:
@@ -1437,7 +1433,7 @@ def run_workflow(
         "status": result,
         "result": result,
         "started_at": started_at,
-        "finished_at": _utc_now_iso(),
+        "finished_at": utc_now_iso_z(),
         "node_results": node_results,
     }
     if execution["pending_node_id"]:
@@ -1532,7 +1528,7 @@ def reconcile_workflow_run(lake_dir: str | Path, *, run_id: str, actor: str, not
             "failure_code": "outcome_unknown",
             "reconciled_by": actor,
             "reconciliation_note": note,
-            "finished_at": _utc_now_iso(),
+            "finished_at": utc_now_iso_z(),
         }
         _append_run_record(lake_dir, result)
         return result
@@ -1569,7 +1565,7 @@ def _claim_workflow_decision(lake_dir: str | Path, run_id: str, actor: str, deci
                 "status": decision + "_claimed",
                 "result": decision + "_claimed",
                 "decision_actor": actor,
-                "decision_at": _utc_now_iso(),
+                "decision_at": utc_now_iso_z(),
             },
         )
         return prior, workflow
@@ -1608,7 +1604,7 @@ def _approve_workflow_run(
             continue
         else:
             prior_results.append(entry)
-    started_at = _utc_now_iso()
+    started_at = utc_now_iso_z()
     execution = _execute_workflow_nodes(
         lake_dir,
         workflow,
@@ -1635,7 +1631,7 @@ def _approve_workflow_run(
         "status": result,
         "result": result,
         "started_at": started_at,
-        "finished_at": _utc_now_iso(),
+        "finished_at": utc_now_iso_z(),
         "node_results": node_results,
         "resumed_from_run_id": run_id,
         "approval_note": note,
@@ -1650,7 +1646,7 @@ def _approve_workflow_run(
             "status": "approved",
             "result": "approved",
             "decision_actor": actor,
-            "decision_at": _utc_now_iso(),
+            "decision_at": utc_now_iso_z(),
             "decision_run_id": run["run_id"],
         },
     )
@@ -1673,8 +1669,8 @@ def _reject_workflow_run(
         "dry_run": False,
         "status": "rejected",
         "result": "rejected",
-        "started_at": _utc_now_iso(),
-        "finished_at": _utc_now_iso(),
+        "started_at": utc_now_iso_z(),
+        "finished_at": utc_now_iso_z(),
         "node_results": list(prior.get("node_results") or []),
         "rejected_from_run_id": run_id,
         "rejection_note": note,
@@ -1687,7 +1683,7 @@ def _reject_workflow_run(
             "status": "rejected",
             "result": "rejected",
             "decision_actor": actor,
-            "decision_at": _utc_now_iso(),
+            "decision_at": utc_now_iso_z(),
             "decision_run_id": run["run_id"],
         },
     )

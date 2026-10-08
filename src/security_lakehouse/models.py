@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from security_lakehouse.timeutil import parse_iso, utc_iso_z
+
 SEVERITY_SCORE = {
     "critical": 100,
     "high": 80,
@@ -29,17 +31,10 @@ class PipelineResult:
 
 
 def parse_event_time(value: str) -> datetime:
-    text = value.strip()
-    if text.endswith(("Z", "z")):
-        text = text[:-1] + "+00:00"
-    parsed = datetime.fromisoformat(text)
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
-    return parsed.astimezone(UTC)
+    return parse_iso(value)
 
 
-def utc_iso(value: datetime) -> str:
-    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+utc_iso = utc_iso_z
 
 
 def instant_sort_key(value: object) -> datetime:

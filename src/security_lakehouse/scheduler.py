@@ -62,19 +62,12 @@ from security_lakehouse.scheduled_retention import (
     run_retention,
 )
 from security_lakehouse.strict_json import InvalidJSON
+from security_lakehouse.timeutil import utc_iso_z, utc_now
 from security_lakehouse.workflows import list_workflows, run_workflow
 
 STATE_FILE = "scheduler_state.jsonl"
 LOCK_FILE = ".scheduler.lock"
 DEFAULT_TICK_SECONDS = 60
-
-
-def _utc_now() -> datetime:
-    return datetime.now(UTC)
-
-
-def _utc_iso(dt: datetime) -> str:
-    return dt.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _gold(lake_dir: str | Path) -> Path:
@@ -147,17 +140,17 @@ def eval_schedule_status(lake_dir: str | Path, *, now: datetime | None = None) -
         }
     state = _read_state(lake_dir)
     last_fired = state.get(_state_key("lake_eval", "default"))
-    moment = now or _utc_now()
+    moment = now or utc_now()
     if last_fired is None:
         return {
             "last_fired_at": None,
-            "next_eval_at": _utc_iso(moment),
+            "next_eval_at": utc_iso_z(moment),
             "eval_overdue": True,
         }
     next_due = last_fired + lake_eval.period
     return {
-        "last_fired_at": _utc_iso(last_fired),
-        "next_eval_at": _utc_iso(next_due),
+        "last_fired_at": utc_iso_z(last_fired),
+        "next_eval_at": utc_iso_z(next_due),
         "eval_overdue": moment >= next_due,
     }
 
@@ -229,7 +222,7 @@ def _write_state(lake_dir: str | Path, *, target_kind: str, target_id: str, fire
     record = {
         "target_kind": target_kind,
         "target_id": target_id,
-        "last_fired_at": _utc_iso(fired_at),
+        "last_fired_at": utc_iso_z(fired_at),
         "result": result,
     }
     if target_kind == "workflow":
@@ -312,7 +305,7 @@ def _tick_root_retention(root: Path, *, now: datetime | None) -> list[dict[str, 
                 return [{"target_kind": "retention", "target_id": OPERATIONAL, "skipped_locked": True, "fired": []}]
             if (_gold(root) / "scheduler_recovery_pending.json").exists():
                 raise InvalidJSON("scheduler recovery is incomplete; run scheduler repair-history")
-            moment = (now or _utc_now()).astimezone(UTC)
+            moment = (now or utc_now()).astimezone(UTC)
             return _fire_retention(root, _read_state(root), moment, (OPERATIONAL,))
     except Exception:  # noqa: BLE001 - scheduler results must not expose exception details
         return [{"target_kind": "retention", "target_id": OPERATIONAL, "result": "error", "error": "internal error"}]
@@ -456,7 +449,7 @@ def _tick_locked(
 ) -> list[dict[str, Any]]:
     if (_gold(lake_dir) / "scheduler_recovery_pending.json").exists():
         raise InvalidJSON("scheduler recovery is incomplete; run scheduler repair-history")
-    moment = (now or _utc_now()).astimezone(UTC)
+    moment = (now or utc_now()).astimezone(UTC)
     scheduled = _scheduled_from_workflows(list_workflows(lake_dir))
     state = _read_state(lake_dir)
     results: list[dict[str, Any]] = []
@@ -479,7 +472,7 @@ def _tick_locked(
                     "target_kind": "workflow",
                     "workflow_id": entry.workflow_id,
                     "schedule": entry.schedule,
-                    "fired_at": _utc_iso(moment),
+                    "fired_at": utc_iso_z(moment),
                     "result": outcome,
                     "error": None,
                 }
@@ -490,7 +483,7 @@ def _tick_locked(
                     "target_kind": "workflow",
                     "workflow_id": entry.workflow_id,
                     "schedule": entry.schedule,
-                    "fired_at": _utc_iso(moment),
+                    "fired_at": utc_iso_z(moment),
                     "result": "error",
                     "error": "internal error",
                 }
@@ -532,7 +525,7 @@ def _tick_locked(
                     "target_kind": "connector",
                     "connector_id": connector_entry.connector_id,
                     "schedule": connector_entry.schedule,
-                    "fired_at": _utc_iso(moment),
+                    "fired_at": utc_iso_z(moment),
                     "result": outcome,
                     "evidence_count": evidence_count,
                     "error": None,
@@ -544,7 +537,7 @@ def _tick_locked(
                     "target_kind": "connector",
                     "connector_id": connector_entry.connector_id,
                     "schedule": connector_entry.schedule,
-                    "fired_at": _utc_iso(moment),
+                    "fired_at": utc_iso_z(moment),
                     "result": "error",
                     "evidence_count": None,
                     "error": "internal error",
@@ -569,7 +562,7 @@ def _tick_locked(
                     {
                         "target_kind": "lake_eval",
                         "schedule": lake_eval.schedule,
-                        "fired_at": _utc_iso(moment),
+                        "fired_at": utc_iso_z(moment),
                         "result": eval_result.result,
                         "mode": eval_result.mode,
                         "local_result": eval_result.local_result,
@@ -582,7 +575,7 @@ def _tick_locked(
                     {
                         "target_kind": "lake_eval",
                         "schedule": lake_eval.schedule,
-                        "fired_at": _utc_iso(moment),
+                        "fired_at": utc_iso_z(moment),
                         "result": "error",
                         "error": "internal error",
                     }
@@ -707,7 +700,7 @@ def repair_history(lake_dir: str | Path, *, now: datetime | None = None) -> dict
                     targets += [("retention", kind) for kind in _retention_kinds(lake_dir)]
             except ValueError:
                 pass  # an invalid policy never runs, so there is no attempt to defer
-            moment = now or _utc_now()
+            moment = now or utc_now()
             for kind, target in targets:
                 _write_state(lake_dir, target_kind=kind, target_id=target, fired_at=moment, result="recovery_deferred")
             marker.unlink()

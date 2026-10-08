@@ -4,7 +4,8 @@
 
 Each successful publication is an immutable generation. Failed staged generations
 are removed; previous published evidence remains readable during collection.
-Retention is explicit and reports candidates without changing data by default:
+Retention reports candidates without changing data by default, and runs only when
+invoked or explicitly scheduled (see [automatic retention](#automatic-retention)):
 
 ```bash
 security-lakehouse lake retention --lake ./lake --older-than-days 90 --keep-latest 3
@@ -14,8 +15,45 @@ security-lakehouse lake retention --lake ./lake --older-than-days 90 --keep-late
 Archival copies and verifies a generation, flushes the copy to disk, then removes
 the local copy. Active generations, active readers, retained snapshots,
 workpapers, and verification receipts are protected. An existing archive target
-fails closed for operator reconciliation. Back up the lake and application
+fails closed for operator reconciliation unless it is a complete, verified copy
+of the same generation left by an interrupted run. Back up the lake and application
 database together before changing retention.
+
+### Automatic retention
+
+Retention can also run on a schedule. It is **off by default**: nothing runs
+until an operator sets `TRUSTOPS_RETENTION_SCHEDULE`, because external exports
+and checkpoints cannot be discovered (below) and only the operator can choose a
+window and an archive on separately controlled storage.
+
+| Variable                             | Default     | Meaning                                                        |
+| ------------------------------------ | ----------- | -------------------------------------------------------------- |
+| `TRUSTOPS_RETENTION_SCHEDULE`        | unset (off) | Scheduler grammar: `@hourly`, `@daily`, `every Nh`, `every Nm` |
+| `TRUSTOPS_RETENTION_ARCHIVE_DIR`     | unset       | Absolute path outside the lake root; unset means preview only  |
+| `TRUSTOPS_RETENTION_OLDER_THAN_DAYS` | `90`        | Same as `--older-than-days`                                    |
+| `TRUSTOPS_RETENTION_KEEP_LATEST`     | `3`         | Same as `--keep-latest` (generations)                          |
+
+The scheduler (`security-lakehouse scheduler tick`, the Helm CronJob, or
+`scheduler run`) fires retention at most once per period, under the same
+per-lake scheduler lock and attempt-before-run state as other scheduled targets.
+It calls the same functions as the CLI, so every protection above applies
+unchanged. Without an archive directory a run only reports candidates, like the
+CLI without `--archive-to`. Generation retention runs per tenant lake, archived
+under `<archive>/generations/<lake key>/`. Operational retention (job payloads
+and request-audit rows) runs once per deployment root under
+`<archive>/operational/`; a tenant-scoped API tick never compacts it. Every run
+appends its report to `gold/retention_runs.jsonl` and its outcome to the
+scheduler state; the tick result carries the same report. An invalid setting
+reports an error on every tick and runs nothing. In Helm, set
+`scheduler.retention.*` and mount the archive with `extraVolumes`.
+
+An interrupted archival resumes when the archived copy is complete: its manifest
+matches the local generation and every artifact hash verifies, and only then is
+the local copy removed. Any other existing archive target still fails closed for
+operator reconciliation and the scheduled run reports an error until resolved.
+After automatic retention has run, a release without it rejects the `retention`
+rows in `gold/scheduler_state.jsonl` and stops scheduling (fail closed); remove
+those rows before downgrading.
 
 External exports and independent checkpoints cannot be discovered automatically.
 Select a window covering the full evidence period and retain the archive for

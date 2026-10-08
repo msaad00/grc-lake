@@ -244,7 +244,8 @@ CLI tick returns a nonzero exit status when an attempted target reports an error
 
 ## Retaining operational history
 
-Generation and operational retention are separate, explicit operator actions:
+Generation and operational retention are separate operator actions, run by hand
+or on a configured schedule:
 
 ```bash
 security-lakehouse lake retention --lake ./lake
@@ -254,8 +255,12 @@ security-lakehouse lake operational-retention --lake ./lake --older-than-days 90
 These commands preview eligible data. Supply `--archive-to /separate/archive`
 to copy eligible history durably before reclaiming active storage. Choose an
 archive on separately controlled storage and a window that covers your evidence
-obligations. Run preview first, then schedule the explicit archive invocation in
-your deployment's maintenance scheduler. There is no silent deletion policy.
+obligations. Run preview first, then either schedule the explicit archive
+invocation yourself or set `TRUSTOPS_RETENTION_SCHEDULE` and
+`TRUSTOPS_RETENTION_ARCHIVE_DIR` (Helm: `scheduler.retention.*`) so the
+scheduler runs it; see [automatic retention](OPERATIONS_CONTRACTS.md#automatic-retention).
+Automatic retention is off by default and previews only until an archive is
+configured. There is no silent deletion policy.
 
 Generation retention protects the active generation and references discoverable
 from snapshots, workpapers, and verification receipts. Operational retention

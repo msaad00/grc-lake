@@ -62,8 +62,9 @@ execution. Killing a worker cannot roll back a provider API operation.
 SSE coalesces a tenant's generation reads and refreshes unchanged-generation
 payloads within 60 seconds. Read caches are process-local. Full evaluations retain
 complete generations; incremental evaluation still has full-generation write
-cost. Schedule and monitor the explicit retention commands described in
-[continuous ingestion](CONTINUOUS_INGESTION.md). Archived history and retained job
+cost. Schedule and monitor retention, either the explicit commands described in
+[continuous ingestion](CONTINUOUS_INGESTION.md) or the opt-in
+[automatic retention](OPERATIONS_CONTRACTS.md#automatic-retention). Archived history and retained job
 receipts still consume storage. Synthetic tests do not establish production
 capacity, latency objectives, or live-provider correctness.
 

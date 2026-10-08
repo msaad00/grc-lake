@@ -1,9 +1,9 @@
 """Cursor/limit paging for evidence, graph, and coverage v1 routes.
 
 Evidence pages stream the pinned silver file and parse at most ``limit + 1``
-rows when no sort is requested. Graph and coverage routes keep their full
-object payload by default and page their list members in lockstep when a
-caller sends ``limit``, ``offset``, or ``cursor``.
+rows when no sort is requested. Graph and repo-graph serve a labeled
+default page without paging params; coverage keeps its full object payload by
+default. List members page in lockstep under one cursor.
 """
 
 from __future__ import annotations
@@ -231,19 +231,85 @@ def _graph_lake(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _large_repo_graph_lake(tmp_path: Path) -> Path:
+    """The repo-graph fixture repeated across enough repositories to need a second page."""
+    source = (REPO_GRAPH_LAKE / "bronze" / "raw_events.jsonl").read_text(encoding="utf-8").splitlines()
+    lines = [
+        line.replace("acme/model-service", f"acme/service-{index:02d}").replace(
+            '"event_id": "repo-', f'"event_id": "repo-{index:02d}-'
+        )
+        for index in range(40)
+        for line in source
+    ]
+    target = tmp_path / "bronze" / "raw_events.jsonl"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return tmp_path
+
+
 @pytest.mark.parametrize(
     ("path", "builder", "lake_factory"),
     [
         ("/api/v1/graph", build_compliance_graph, _graph_lake),
-        ("/api/v1/repo-graph", build_repository_graph, lambda _tmp: REPO_GRAPH_LAKE),
+        ("/api/v1/repo-graph", build_repository_graph, _large_repo_graph_lake),
     ],
 )
-def test_graph_without_page_params_keeps_the_full_payload(path, builder, lake_factory, tmp_path: Path) -> None:
+def test_graph_without_page_params_serves_a_labeled_default_page(path, builder, lake_factory, tmp_path: Path) -> None:
     lake = lake_factory(tmp_path)
+    full = builder(lake)
+    assert max(len(full["nodes"]), len(full["edges"])) > 100, "fixture too small to need a second page"
+
     status, body = _get(path, {}, lake)
+
     assert status == HTTPStatus.OK
-    assert body["data"] == builder(lake)
-    assert "next_cursor" not in body["meta"]
+    meta = body["meta"]
+    assert meta["default_page"] is True
+    assert meta["limit"] == 100
+    assert meta["offset"] == 0
+    assert meta["next_cursor"] == api_v1.encode_cursor(100)
+    assert meta["parts"]["nodes"]["count"] == len(full["nodes"])
+    assert meta["parts"]["edges"]["count"] == len(full["edges"])
+    assert body["data"]["nodes"] == full["nodes"][:100]
+    assert body["data"]["edges"] == full["edges"][:100]
+    assert body["data"]["counts"] == full["counts"]
+
+    nodes, edges = list(body["data"]["nodes"]), list(body["data"]["edges"])
+    cursor = meta["next_cursor"]
+    while cursor is not None:
+        status, page = _get(path, {"cursor": [cursor]}, lake)
+        assert status == HTTPStatus.OK
+        assert "default_page" not in page["meta"]
+        nodes += page["data"]["nodes"]
+        edges += page["data"]["edges"]
+        cursor = page["meta"]["next_cursor"]
+    assert nodes == full["nodes"]
+    assert edges == full["edges"]
+
+
+def test_small_graph_default_page_is_the_whole_graph(tmp_path: Path) -> None:
+    full = build_repository_graph(REPO_GRAPH_LAKE)
+    assert max(len(full["nodes"]), len(full["edges"])) <= 100
+
+    status, body = _get("/api/v1/repo-graph", {}, REPO_GRAPH_LAKE)
+
+    assert status == HTTPStatus.OK
+    assert body["data"] == full
+    assert body["meta"]["default_page"] is True
+    assert body["meta"]["next_cursor"] is None
+
+
+def test_requested_graph_page_is_not_labeled_default(tmp_path: Path) -> None:
+    _graph_lake(tmp_path)
+    status, body = _get("/api/v1/graph", {"limit": ["100"]}, tmp_path)
+    assert status == HTTPStatus.OK
+    assert "default_page" not in body["meta"]
+
+
+def test_resource_catalog_marks_graph_routes_paged_by_default() -> None:
+    by_path = {row["path"]: row for row in api_v1.resource_catalog()}
+    assert by_path["/api/v1/graph"]["default_paged"] is True
+    assert by_path["/api/v1/repo-graph"]["default_paged"] is True
+    assert "default_paged" not in by_path["/api/v1/graph/coverage"]
 
 
 @pytest.mark.parametrize(

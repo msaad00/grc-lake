@@ -5,7 +5,15 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Bound unparameterized `/api/v1/graph` and `/api/v1/repo-graph` responses. Without `limit`, `offset`, or `cursor` they now serve the first page of 100 nodes and 100 edges, marked `meta.default_page: true`, with `meta.next_cursor` for the rest. The console graph page follows the cursor at 1000 rows per page, and the MCP `get_repository_graph` tool takes `limit` (1-100, default 100) and `offset` and reports `pagination.next_offset`.
+
 - KnowBe4 (`knowbe4-training`, preview) now uses cursor pagination (`cursor=0`, `per_page=500`) because KnowBe4 deprecates the `page` parameter in November 2026. KnowBe4's spec does not yet say where the next cursor is returned. The client follows a `cursor` carried in a `Link: rel="next"` header and always sends requests to the configured regional host. If a full page arrives with no next cursor, it falls back to `page` paging from page 1. If KnowBe4 ignores `page` or repeats a cursor, the sync fails with a clear error and stores no duplicate rows. A 429 that outlasts the backoff budget now fails as "rate limit reached, retry the sync later" instead of a generic error.
+
+### Upgrade notes
+
+- API clients that read `/api/v1/graph` or `/api/v1/repo-graph` without paging parameters receive at most 100 nodes and 100 edges per response. Follow `meta.next_cursor` until it is `null` and concatenate `nodes` and `edges`, or check `meta.parts.nodes.count` and `meta.parts.edges.count` for the totals. The legacy `/api/graph` and `/api/repo-graph` routes are unchanged.
+
+- MCP agents calling `get_repository_graph` get one page; read `pagination.has_more` and pass `pagination.next_offset` as `offset` to continue.
 
 ## 0.2.24 - 2026-10-07
 

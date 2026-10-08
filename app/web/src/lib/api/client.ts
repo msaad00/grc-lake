@@ -1,4 +1,5 @@
 import { isAuditorMode } from "@/lib/state/auditor";
+import { readAllGraphPages, type GraphPage } from "./graph-pages";
 import type {
   BillingStatus,
   CreatedScimToken,
@@ -728,9 +729,14 @@ export const api = {
       `/v1/trust-shares/${encodeURIComponent(share_id)}/revoke`,
       {},
     ).then((b) => ({ share: b.data })),
-  graph: () => get<{ data: ComplianceGraph }>("/v1/graph").then((b) => b.data),
+  graph: () =>
+    readAllGraphPages((query) =>
+      get<GraphPage<ComplianceGraph>>(`/v1/graph${query}`),
+    ),
   repoGraph: () =>
-    get<{ data: ComplianceGraph }>("/v1/repo-graph").then((b) => b.data),
+    readAllGraphPages((query) =>
+      get<GraphPage<ComplianceGraph>>(`/v1/repo-graph${query}`),
+    ),
   readiness: () =>
     getAllV1<FrameworkReadiness>("/v1/readiness").then(({ items, count }) => ({
       count,

@@ -3,6 +3,14 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Wrap MCP tool error text in the same untrusted-content envelope as results, since errors can echo API details or caller arguments. Errors still return `isError: true`.
+
+- Validate an unchanged evidence file with one `stat` instead of re-reading and hashing it on every unfiltered `/api/v1/evidence` page. Files changed in the last two seconds are still hashed, so same-size rewrites are detected.
+
+- Retry operation lease renewal on transient database errors such as SQLite `database is locked`, with short backoff, instead of stopping the job. A job is interrupted with `lease_renewal_failed` only when renewal can no longer succeed before its lease expires.
+
 ## 0.2.24 - 2026-10-07
 
 - Run retention automatically from the scheduler when `TRUSTOPS_RETENTION_SCHEDULE` is set. It is off by default, and only previews candidates until `TRUSTOPS_RETENTION_ARCHIVE_DIR` names an archive outside the lake root. Scheduled runs use the CLI's protections, record each run in `gold/retention_runs.jsonl`, and expose the settings under Helm `scheduler.retention`.

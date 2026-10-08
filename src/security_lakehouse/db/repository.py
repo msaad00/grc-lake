@@ -7,13 +7,28 @@ application-state database.
 
 from __future__ import annotations
 
+import hmac
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from security_lakehouse.auth.sessions import DEFAULT_SESSION_TTL_HOURS, generate_session_token, hash_session_token
-from security_lakehouse.auth.tokens import generate_token, hash_token
+from security_lakehouse.auth.sessions import (
+    DEFAULT_SESSION_TTL_HOURS,
+    generate_session_token,
+    hash_session_token,
+    is_well_formed_session_token,
+    legacy_hash_session_token,
+)
+from security_lakehouse.auth.tokens import (
+    LEGACY_TOKEN_HASH_VERSION,
+    TOKEN_HASH_VERSION,
+    display_prefix,
+    generate_token,
+    hash_token,
+    is_well_formed_token,
+    legacy_hash_token,
+)
 from security_lakehouse.db.models import USER_ROLES, ApiKey, Tenant, User, UserSession
 
 
@@ -87,6 +102,7 @@ def create_api_key(
         status="active",
         name=name,
         key_hash=key_hash,
+        hash_version=TOKEN_HASH_VERSION,
         prefix=prefix,
         expires_at=expires_at,
     )
@@ -96,8 +112,32 @@ def create_api_key(
 
 
 def resolve_api_key(session: Session, token: str) -> ApiKey | None:
-    """Resolve a presented token to its API key by hash (active or not)."""
-    return resolve_api_key_by_hash(session, hash_token(token))
+    """Resolve a presented token to its API key by hash (active or not).
+
+    A legacy PBKDF2 row is only tried when an unupgraded key shares the
+    token's display prefix, so an unknown token never pays for the KDF.
+    """
+    if not is_well_formed_token(token):
+        return None
+    key = resolve_api_key_by_hash(session, hash_token(token))
+    if key is not None:
+        return key
+    legacy = session.scalars(
+        select(ApiKey).where(
+            ApiKey.prefix == display_prefix(token),
+            ApiKey.hash_version == LEGACY_TOKEN_HASH_VERSION,
+        )
+    ).all()
+    if not legacy:
+        return None
+    digest = legacy_hash_token(token)
+    for candidate in legacy:
+        if hmac.compare_digest(candidate.key_hash, digest):
+            candidate.key_hash = hash_token(token)
+            candidate.hash_version = TOKEN_HASH_VERSION
+            session.flush()
+            return candidate
+    return None
 
 
 def resolve_api_key_by_hash(session: Session, key_hash: str) -> ApiKey | None:
@@ -176,9 +216,22 @@ def create_user_session(
 
 
 def resolve_user_session(session: Session, token: str) -> UserSession | None:
-    """Resolve a session cookie token to its row by hash (active or not)."""
+    """Resolve a session cookie token to its row by hash (active or not).
+
+    Callers only reach this with a signature-verified cookie, which bounds the
+    legacy PBKDF2 fallback to sessions this server actually issued.
+    """
+    if not is_well_formed_session_token(token):
+        return None
     stmt = select(UserSession).where(UserSession.token_hash == hash_session_token(token))
-    return session.scalars(stmt).one_or_none()
+    row = session.scalars(stmt).one_or_none()
+    if row is not None:
+        return row
+    legacy = select(UserSession).where(UserSession.token_hash == legacy_hash_session_token(token))
+    row = session.scalars(legacy).one_or_none()
+    if row is not None:
+        row.token_hash = hash_session_token(token)
+    return row
 
 
 def revoke_user_session(session: Session, token: str, *, now: datetime) -> bool:

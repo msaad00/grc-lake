@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from sqlalchemy import case, func, select, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
 from security_lakehouse.auth.rbac import Identity
@@ -36,6 +36,8 @@ LEASE_SECONDS = 90
 RESULT_LIMIT = 1024 * 1024
 DEFAULT_WORKERS = 2
 MAX_WORKERS = 16
+_RENEW_RETRY_MIN_SECONDS = 0.05
+_RENEW_RETRY_MAX_SECONDS = 2.0
 
 
 def supported(path: str) -> bool:
@@ -410,6 +412,15 @@ def _subprocess_entry(root: Path, row: OperationJob, execute, connection, timeou
         engine.dispose()
 
 
+def _renewal_deadline(renewed_at: float) -> float:
+    """Monotonic time after which a failed renewal can no longer keep the lease.
+
+    The margin leaves room for one more database round trip before another
+    replica's recovery may treat the lease as expired.
+    """
+    return renewed_at + LEASE_SECONDS - LEASE_SECONDS / 9
+
+
 class JobWorker:
     def __init__(
         self,
@@ -439,6 +450,18 @@ class JobWorker:
             for index in range(concurrency)
         ]
 
+    def _try_renew(self, row: OperationJob) -> bool | None:
+        """Renew the lease: True renewed, False claim lost, None transient database error.
+
+        Renewal is a conditional UPDATE fenced on this worker's token, so a
+        retry can never extend a lease another worker now holds.
+        """
+        try:
+            return self.queue.renew(row)
+        except OperationalError as exc:
+            _LOG.warning("operation %s lease renewal deferred: %s", row.id, exc.orig or exc)
+            return None
+
     def _isolated(self, row: OperationJob) -> None:
         context = multiprocessing.get_context("spawn")
         receiver, sender = context.Pipe(duplex=False)
@@ -450,7 +473,9 @@ class JobWorker:
         process.start()
         sender.close()
         deadline = time.monotonic() + self.timeout_seconds
-        heartbeat_at = time.monotonic()
+        renewed_at = time.monotonic()
+        next_renewal = renewed_at + min(LEASE_SECONDS / 3, 1)
+        retry_delay = _RENEW_RETRY_MIN_SECONDS
         response = None
         reason = "outcome_unknown"
         try:
@@ -465,11 +490,22 @@ class JobWorker:
                 if time.monotonic() >= deadline:
                     reason = "execution_timeout"
                     break
-                if time.monotonic() - heartbeat_at >= min(LEASE_SECONDS / 3, 1):
-                    if not self.queue.renew(row):
+                if time.monotonic() >= next_renewal:
+                    attempted_at = time.monotonic()
+                    renewed = self._try_renew(row)
+                    if renewed is False:
                         reason = "claim_lost"
                         break
-                    heartbeat_at = time.monotonic()
+                    if renewed:
+                        renewed_at = attempted_at
+                        next_renewal = attempted_at + min(LEASE_SECONDS / 3, 1)
+                        retry_delay = _RENEW_RETRY_MIN_SECONDS
+                    elif time.monotonic() + retry_delay >= _renewal_deadline(renewed_at):
+                        reason = "lease_renewal_failed"
+                        break
+                    else:
+                        next_renewal = time.monotonic() + retry_delay
+                        retry_delay = min(retry_delay * 2, _RENEW_RETRY_MAX_SECONDS)
             if response is None and receiver.poll():
                 with suppress(EOFError):
                     response = receiver.recv()
@@ -537,11 +573,30 @@ class JobWorker:
         done = threading.Event()
 
         def heartbeat() -> None:
-            while not done.wait(LEASE_SECONDS / 3):
+            renewed_at = time.monotonic()
+            wait = LEASE_SECONDS / 3
+            retry_delay = _RENEW_RETRY_MIN_SECONDS
+            while not done.wait(wait):
+                attempted_at = time.monotonic()
                 try:
-                    self.queue.renew(row)
+                    renewed = self._try_renew(row)
                 except Exception:
                     _LOG.exception("operation heartbeat failed")
+                    renewed = None
+                if renewed is False:
+                    return
+                if renewed:
+                    renewed_at = attempted_at
+                    wait = LEASE_SECONDS / 3
+                    retry_delay = _RENEW_RETRY_MIN_SECONDS
+                    continue
+                if time.monotonic() + retry_delay >= _renewal_deadline(renewed_at):
+                    # An in-process job cannot be stopped; stop renewing and let
+                    # recovery fence it once its execution lock is released.
+                    _LOG.error("operation %s lease renewal failed until the lease deadline", row.id)
+                    return
+                wait = retry_delay
+                retry_delay = min(retry_delay * 2, _RENEW_RETRY_MAX_SECONDS)
 
         pulse = threading.Thread(target=heartbeat, daemon=True)
         pulse.start()

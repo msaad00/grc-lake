@@ -7,6 +7,7 @@
   <a href="https://pypi.org/project/trustops-security-data-lake/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"></a>
   <a href="https://github.com/msaad00/trustops-security-data-lake/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/msaad00/trustops-security-data-lake/ci.yml?branch=main&amp;label=CI" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License: Apache 2.0"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/msaad00/trustops-security-data-lake"><img src="https://api.scorecard.dev/projects/github.com/msaad00/trustops-security-data-lake/badge" alt="OpenSSF Scorecard"></a>
 </p>
 
 **Open-source trust operations, on your evidence lake.** Self-hosted GRC

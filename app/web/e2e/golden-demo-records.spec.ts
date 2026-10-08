@@ -126,3 +126,24 @@ test("control results label confidence as evidence confidence", async ({
     /Evidence confidence, weighted from: evidence coverage \d+/,
   );
 });
+
+test("evidence table fits 1440px without splitting control IDs", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/console/evidence/");
+  const table = page.locator("table").first();
+  const id = table.getByText("NIST-AI-RMF-MANAGE-2.3", { exact: true }).first();
+  await expect(id).toBeVisible({ timeout: 20_000 });
+  const overflow = await table.evaluate((node) => {
+    const scroller = node.parentElement!;
+    return scroller.scrollWidth - scroller.clientWidth;
+  });
+  expect(overflow).toBeLessThanOrEqual(0);
+  // A wrapped ID would be taller than one line of its own text.
+  const lineHeight = await id.evaluate((node) =>
+    parseFloat(getComputedStyle(node).lineHeight),
+  );
+  const box = await id.boundingBox();
+  expect(box!.height).toBeLessThanOrEqual(lineHeight + 1);
+});

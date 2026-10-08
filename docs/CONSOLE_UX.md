@@ -66,4 +66,4 @@ Open `/console/audit-room/` with the golden fixture and forward port 8787 to ver
 - Prefer `/api/v1/*` for new hooks; legacy `/api/*` remains for graph and crosswalk.
 - Add new routes to `Sidebar`, `CommandPalette`, and `Breadcrumbs` together.
 - Run `npm run lint` in `app/web` before opening console PRs.
-- See [PRODUCT_SHAPE.md](./PRODUCT_SHAPE.md) for shipped vs roadmap parity.
+- See [ROADMAP.md](../ROADMAP.md) for shipped work and remaining gaps.

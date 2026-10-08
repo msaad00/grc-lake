@@ -126,7 +126,6 @@ def test_source_connector_guidance_avoids_password_and_pat_paths() -> None:
         REPO_ROOT / "README.md",
         REPO_ROOT / "docs" / "CONNECTORS.md",
         REPO_ROOT / "docs" / "LIVE_CLOUD_POC.md",
-        REPO_ROOT / "docs" / "REPO_AUDIT.md",
         REPO_ROOT / "docs" / "REPO_GOVERNANCE_CONNECTOR.md",
         REPO_ROOT / "app" / "web" / "src" / "components" / "drawers" / "ConnectorDrawer.tsx",
     ]

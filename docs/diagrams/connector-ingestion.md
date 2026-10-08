@@ -39,33 +39,6 @@ flowchart LR
   GLD --> TC
 ```
 
-## Managed GRC SaaS vs TrustOps (same connect, different storage)
-
-```mermaid
-flowchart TB
-  subgraph Sources["Sources (read-only)"]
-    S1["AWS cross-account role"]
-    S2["Azure Reader / app reg"]
-    S3["GitHub App OAuth"]
-    S4["IdP API token"]
-  end
-
-  subgraph SaaS["Typical GRC SaaS"]
-    PULL1["Vendor-managed pull"]
-    DB1["Vendor tenant DB"]
-    TEST1["Automated tests"]
-  end
-
-  subgraph TO["TrustOps"]
-    PULL2["Your scheduler / sync"]
-    LAKE["Your /lake + warehouse"]
-    TEST2["Deterministic tests"]
-  end
-
-  Sources --> PULL1 --> DB1 --> TEST1
-  Sources --> PULL2 --> LAKE --> TEST2
-```
-
 ## Connection matrix
 
 | Source           | Connection mechanism                                      | Permissions style                       |

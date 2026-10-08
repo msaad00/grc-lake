@@ -99,7 +99,7 @@ gated commercial features (invites, usage limits, SCIM 2.0, Stripe billing).
 
 Evaluator flow: [Shareable Demo](SHAREABLE_DEMO.md).
 
-## Feature parity lens (honest)
+## Capabilities in 0.2.x
 
 | Capability                                      | TrustOps 0.2.x                            |
 | ----------------------------------------------- | ----------------------------------------- |

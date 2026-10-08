@@ -45,3 +45,6 @@ deploy/eks-terraform/*.tfvars
 deploy/eks-terraform/crash.log
 deploy/eks-terraform/crash.*.log
 grc-review-standalone/
+.coverage
+.coverage.*
+coverage.xml

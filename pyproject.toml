@@ -56,6 +56,7 @@ server = [
 dev = [
     "jsonschema>=4.23",
     "pytest>=8.0",
+    "pytest-cov>=7.1",
     "ruff>=0.8.0",
     "mypy>=2.3",
     # supply-chain scan + pre-commit driver
@@ -213,6 +214,11 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["security_lakehouse"]
+branch = true
+relative_files = true
 
 [tool.mypy]
 files = ["src/security_lakehouse"]

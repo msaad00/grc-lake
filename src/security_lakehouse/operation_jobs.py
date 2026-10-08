@@ -194,7 +194,7 @@ class JobQueue:
 
     @staticmethod
     def can_manage(row: OperationJob, identity: Identity) -> bool:
-        from security_lakehouse.api_v1 import required_post_scope
+        from security_lakehouse.api_contract import required_post_scope
 
         return (
             row.tenant_id == identity.tenant_id

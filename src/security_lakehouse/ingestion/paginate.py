@@ -28,6 +28,19 @@ class IncompleteCollectionError(RuntimeError):
         self.pages_fetched = pages_fetched
 
 
+def next_link_url(link_header: str) -> str | None:
+    """Extract the ``rel="next"`` URL from an RFC 8288 ``Link`` response header."""
+    for part in link_header.split(","):
+        segments = part.split(";")
+        if len(segments) < 2:
+            continue
+        url = segments[0].strip().lstrip("<").rstrip(">").strip()
+        rels = "".join(segments[1:]).replace(" ", "").replace('"', "")
+        if "rel=next" in rels and url:
+            return url
+    return None
+
+
 def paginate(
     fetch_page: Callable[[Any | None], Page],
     extract_items: Callable[[Page], Iterable[Item]],

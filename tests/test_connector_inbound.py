@@ -9,6 +9,7 @@ import pytest
 from security_lakehouse import netguard
 from security_lakehouse.connectors_jira import JiraClient
 from security_lakehouse.connectors_okta import OktaClient, _next_link
+from security_lakehouse.ingestion.paginate import next_link_url
 
 
 class _FakeResp:
@@ -55,6 +56,13 @@ def test_next_link_parses_rel_next() -> None:
     header = '<https://org.okta.com/api/v1/users?after=abc&limit=200>; rel="next", <...>; rel="self"'
     assert _next_link(header) == "https://org.okta.com/api/v1/users?after=abc&limit=200"
     assert _next_link('<...>; rel="self"') is None
+
+
+def test_shared_next_link_url_is_the_one_okta_uses() -> None:
+    header = '<https://h.example/a?x=1>; rel="prev", <https://h.example/a?cursor=2>; rel="next"'
+    assert next_link_url(header) == "https://h.example/a?cursor=2"
+    assert next_link_url("") is None
+    assert _next_link is next_link_url
 
 
 def test_okta_users_follows_link_to_completion(monkeypatch: pytest.MonkeyPatch) -> None:

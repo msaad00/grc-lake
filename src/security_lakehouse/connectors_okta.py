@@ -32,6 +32,7 @@ from typing import Any
 from security_lakehouse import netguard
 from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.ingestion import backoff
+from security_lakehouse.ingestion.paginate import next_link_url
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
 
@@ -54,17 +55,7 @@ USER_PAGE_LIMIT = 200
 MAX_PAGES = 1000
 
 
-def _next_link(link_header: str) -> str | None:
-    """Extract the ``rel="next"`` URL from an Okta ``Link`` response header."""
-    for part in link_header.split(","):
-        segments = part.split(";")
-        if len(segments) < 2:
-            continue
-        url = segments[0].strip().lstrip("<").rstrip(">").strip()
-        rels = "".join(segments[1:]).replace(" ", "").replace('"', "")
-        if "rel=next" in rels and url:
-            return url
-    return None
+_next_link = next_link_url
 
 
 class OktaClient:

@@ -15,11 +15,24 @@ https://developer.knowbe4.com/rest/reporting, retrieved 2026-09-27):
   ``status`` and delivery/click counts.
 
 Per the spec: base URL is regional (``https://{us,eu,ca,uk,de}.api.knowbe4.com``),
-auth is ``Authorization: Bearer <Reporting API key>``, list endpoints page with
-``page`` (default 1) and ``per_page`` (default 100, max 500), and usage is
-limited to 4 requests/second, a burst of 50 requests/minute, and 2,000 requests
-per day plus the licensed-user count. The client paces requests to stay under
-the burst limit and retries 429/5xx through ``backoff.http_retry``.
+auth is ``Authorization: Bearer <Reporting API key>``, and usage is limited to
+4 requests/second, a burst of 50 requests/minute, and 2,000 requests per day
+plus the licensed-user count. The client paces requests to stay under the burst
+limit and retries 429/5xx through ``backoff.http_retry``; a 429 that outlasts
+that budget raises :class:`KnowBe4RateLimitedError` ("retry later").
+
+Paging (spec re-checked 2026-10-07): ``page`` is deprecated from November 2026
+in favour of ``per_page`` (max 500) and ``cursor``; "set cursor=0 or
+cursor=true in your first request to begin pagination". The spec does not say
+where the next cursor comes back, so the client:
+
+1. starts with ``cursor=0&per_page=500`` and, while a ``Link: rel="next"``
+   header carries a ``cursor``, follows it (cursor value only, host pinned);
+2. treats a short or empty page without a next cursor as the last page;
+3. on a full page without a next cursor, restarts with legacy ``page`` paging,
+   which works until the deprecation; once the server ignores ``page`` and
+   repeats rows, raises :class:`KnowBe4PaginationError` instead of storing
+   duplicates. A repeated cursor raises the same error.
 
 Every request goes through ``netguard.open_public`` to the configured regional
 host only; the key is never sent anywhere else.
@@ -43,10 +56,11 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse import netguard
+from security_lakehouse.connector_errors import ConnectorAccessError
 from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.oauth import CredentialRejectedError
-from security_lakehouse.ingestion.paginate import paginate
+from security_lakehouse.ingestion.paginate import next_link_url, paginate
 from security_lakehouse.io import read_json
 from security_lakehouse.models import instant_sort_key, utc_iso
 
@@ -59,6 +73,8 @@ KNOWBE4_REGIONS: dict[str, str] = {
 }
 DEFAULT_TIMEOUT = 30
 PER_PAGE = 500
+# The spec: "Set cursor=0 or cursor=true in your first request to begin pagination."
+START_CURSOR = "0"
 # 50 requests/minute burst limit -> at most one request every 1.2 seconds.
 MIN_REQUEST_INTERVAL_SECONDS = 1.25
 
@@ -85,6 +101,33 @@ TRAINING_CONTROLS = [
     "HIPAA-164.308(a)(5)",
 ]
 PHISHING_CONTROLS = ["FEDRAMP-AT-2", "CMMC-3.2.1", "ISO27001-A.6.3", "NIST-CSF-PR.AT-01", "CIS-CONTROLS-14"]
+
+
+class KnowBe4RateLimitedError(ConnectorAccessError):
+    """KnowBe4 kept answering 429 past the shared backoff budget; retry the sync later."""
+
+
+class KnowBe4PaginationError(ConnectorAccessError):
+    """The Reporting API's paging cannot be completed safely; nothing partial is returned."""
+
+
+class _NoNextCursorError(Exception):
+    """A full cursor-mode page carried no next cursor."""
+
+
+def _link_cursor(headers: Any) -> str | None:
+    """The ``cursor`` query value of a ``Link: rel="next"`` target, if the response sends one.
+
+    Only the cursor value is taken; the next request is rebuilt against the
+    configured regional host and path, so a ``Link`` target cannot redirect the key.
+    """
+    link = str(headers.get("Link") or "") if headers is not None else ""
+    url = next_link_url(link)
+    if not url:
+        return None
+    values = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query).get("cursor") or []
+    cursor = values[0].strip() if values else ""
+    return cursor or None
 
 
 def region_host(region: str) -> str:
@@ -130,24 +173,81 @@ class KnowBe4Client:
         return self._list("/v1/phishing/security_tests", {})
 
     def _list(self, path: str, params: dict[str, str]) -> list[dict[str, Any]]:
+        try:
+            return self._list_by_cursor(path, params)
+        except _NoNextCursorError:
+            # A full page came back without a next cursor, so cursor mode cannot
+            # continue. Restart from page 1 rather than splice two orderings.
+            return self._list_by_page(path, params)
+
+    def _list_by_cursor(self, path: str, params: dict[str, str]) -> list[dict[str, Any]]:
+        seen: set[str] = set()
+
+        def fetch_page(cursor: str | None) -> tuple[list[Any], str | None]:
+            current = cursor or START_CURSOR
+            seen.add(current)
+            payload, headers = self._fetch(path, {**params, "per_page": PER_PAGE, "cursor": current})
+            return payload, _link_cursor(headers)
+
+        def extract_items(page: tuple[list[Any], str | None]) -> list[dict[str, Any]]:
+            return [item for item in page[0] if isinstance(item, dict)]
+
+        def next_cursor(page: tuple[list[Any], str | None]) -> str | None:
+            rows, cursor = page
+            if cursor is None:
+                if len(rows) >= PER_PAGE:
+                    raise _NoNextCursorError
+                return None
+            if cursor in seen:
+                raise KnowBe4PaginationError(
+                    "KnowBe4 Reporting API repeated a pagination cursor; stopped to avoid a loop. "
+                    "Retry the sync, and report it to KnowBe4 support if it persists."
+                )
+            return cursor
+
+        return list(paginate(fetch_page, extract_items, next_cursor))
+
+    def _list_by_page(self, path: str, params: dict[str, str]) -> list[dict[str, Any]]:
         def fetch_page(page: int | None) -> tuple[int, list[Any]]:
             number = page or 1
-            query = urllib.parse.urlencode({**params, "page": number, "per_page": PER_PAGE})
-            url = f"https://{self.host}{path}?{query}"
-            payload = backoff.http_retry(lambda: self._get_json(url))
-            if not isinstance(payload, list):
-                raise ValueError(f"KnowBe4 returned non-list JSON for {path}")
+            payload, _headers = self._fetch(path, {**params, "page": number, "per_page": PER_PAGE})
             return number, payload
 
         def extract_items(page: tuple[int, list[Any]]) -> list[dict[str, Any]]:
             return [item for item in page[1] if isinstance(item, dict)]
 
+        previous: list[list[Any]] = []
+
         def next_cursor(page: tuple[int, list[Any]]) -> int | None:
-            # The response carries no cursor: a short or empty page is the last one.
             number, rows = page
+            if previous and rows and rows == previous[0]:
+                # Once ``page`` is retired the server can ignore it and repeat the
+                # first rows; collecting them again would duplicate evidence.
+                raise KnowBe4PaginationError(
+                    "KnowBe4 Reporting API ignored page-based paging and returned no next cursor, "
+                    "so the collection cannot be completed. The connector needs an update for "
+                    "KnowBe4's cursor pagination response."
+                )
+            previous[:] = [rows]
             return number + 1 if len(rows) >= PER_PAGE else None
 
         return list(paginate(fetch_page, extract_items, next_cursor))
+
+    def _fetch(self, path: str, query: dict[str, Any]) -> tuple[list[Any], Any]:
+        url = f"https://{self.host}{path}?{urllib.parse.urlencode(query)}"
+        try:
+            payload, headers = backoff.http_retry(lambda: self._get_json(url))
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429:
+                raise KnowBe4RateLimitedError(
+                    "KnowBe4 Reporting API rate limit reached (HTTP 429) and retries were exhausted. "
+                    "KnowBe4 burst lockouts last about five minutes and the daily quota resets about "
+                    "24 hours after the first request; retry the sync later."
+                ) from None
+            raise
+        if not isinstance(payload, list):
+            raise ValueError(f"KnowBe4 returned non-list JSON for {path}")
+        return payload, headers
 
     def _pace(self) -> None:
         now = self._clock()
@@ -158,7 +258,7 @@ class KnowBe4Client:
                 now = self._clock()
         self._last_request = now
 
-    def _get_json(self, url: str) -> Any:
+    def _get_json(self, url: str) -> tuple[Any, Any]:
         self._pace()
         request = urllib.request.Request(
             url,
@@ -170,7 +270,7 @@ class KnowBe4Client:
         )
         try:
             with netguard.open_public(request, timeout=self.timeout, label="knowbe4 reporting api") as resp:
-                return json.loads(resp.read().decode("utf-8"))
+                return json.loads(resp.read().decode("utf-8")), getattr(resp, "headers", None)
         except urllib.error.HTTPError as exc:
             if exc.code in {401, 403}:
                 raise CredentialRejectedError(

@@ -4,7 +4,8 @@ Fixture shapes follow the User, Enrollment, and PST schemas of the KnowBe4
 Reporting API OpenAPI 3.0.1 spec (https://developer.knowbe4.com/elvis-swagger.yml,
 retrieved 2026-09-27): enrollment ``status`` values ``Not Started``,
 ``In Progress``, ``Completed``, ``Passed``, ``Past Due``; PST
-``phish_prone_percentage`` as a decimal; ``page``/``per_page`` (max 500) paging.
+``phish_prone_percentage`` as a decimal; ``per_page`` (max 500) with ``cursor=0``
+to begin cursor pagination (``page`` is deprecated from November 2026).
 """
 
 from __future__ import annotations
@@ -23,12 +24,15 @@ import pytest
 import security_lakehouse.connector_runner as connector_runner
 from security_lakehouse import connectors_knowbe4, netguard
 from security_lakehouse.catalog import load_control_catalog
-from security_lakehouse.connector_state import append_config_event, latest_run
+from security_lakehouse.connector_errors import ConnectorOperatorError
+from security_lakehouse.connector_state import _safe_run_error, append_config_event, latest_run
 from security_lakehouse.connectors_knowbe4 import (
     KNOWBE4_REGIONS,
     PER_PAGE,
     KnowBe4Client,
     KnowBe4FixtureClient,
+    KnowBe4PaginationError,
+    KnowBe4RateLimitedError,
     collect_knowbe4_evidence,
 )
 from security_lakehouse.ingestion.oauth import CredentialRejectedError
@@ -188,6 +192,12 @@ def test_unknown_region_is_rejected() -> None:
 
 
 class _FakeResponse(io.BytesIO):
+    def __init__(self, body: bytes, headers: dict[str, str] | None = None) -> None:
+        super().__init__(body)
+        self.headers = email.message.Message()
+        for key, value in (headers or {}).items():
+            self.headers[key] = value
+
     def __enter__(self) -> _FakeResponse:
         return self
 
@@ -203,6 +213,7 @@ def _http_error(url: str, code: int, headers: dict[str, str] | None = None) -> u
 
 
 def _fake_api(monkeypatch: pytest.MonkeyPatch, responder: Any) -> list[Any]:
+    """Patch the guarded opener; ``responder`` returns a body, ``(body, headers)``, or an exception."""
     seen: list[Any] = []
 
     def fake_open_public(request: Any, *, timeout: float, label: str) -> _FakeResponse:
@@ -210,7 +221,8 @@ def _fake_api(monkeypatch: pytest.MonkeyPatch, responder: Any) -> list[Any]:
         result = responder(request)
         if isinstance(result, Exception):
             raise result
-        return _FakeResponse(json.dumps(result).encode())
+        body, headers = result if isinstance(result, tuple) else (result, None)
+        return _FakeResponse(json.dumps(body).encode(), headers)
 
     monkeypatch.setattr(netguard, "open_public", fake_open_public)
     return seen
@@ -224,31 +236,127 @@ def _query(request: Any) -> dict[str, list[str]]:
     return urllib.parse.parse_qs(urllib.parse.urlparse(request.full_url).query)
 
 
-def test_live_client_pages_until_a_short_page(monkeypatch: pytest.MonkeyPatch) -> None:
-    users = [{"id": i, "email": f"u{i}@example.com", "status": "active"} for i in range(PER_PAGE * 2 + 3)]
+def _next_link(cursor: str, host: str = "eu.api.knowbe4.com", path: str = "/v1/users") -> dict[str, str]:
+    return {"Link": f'<https://{host}{path}?status=active&per_page={PER_PAGE}&cursor={cursor}>; rel="next"'}
 
-    def responder(request: Any) -> list[dict[str, Any]]:
-        page = int(_query(request)["page"][0])
-        return users[(page - 1) * PER_PAGE : page * PER_PAGE]
+
+def _users(count: int) -> list[dict[str, Any]]:
+    return [{"id": i, "email": f"u{i}@example.com", "status": "active"} for i in range(count)]
+
+
+def test_live_client_starts_cursor_pagination_without_the_deprecated_page_param(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    users = _users(3)
+    seen = _fake_api(monkeypatch, lambda request: users)
+
+    assert _client().users() == users
+    assert len(seen) == 1
+    parsed = urllib.parse.urlparse(seen[0].full_url)
+    assert (parsed.scheme, parsed.hostname, parsed.path) == ("https", "eu.api.knowbe4.com", "/v1/users")
+    assert _query(seen[0]) == {"status": ["active"], "per_page": [str(PER_PAGE)], "cursor": ["0"]}
+    assert seen[0].get_header("Authorization") == f"Bearer {TOKEN}"
+
+
+def test_live_client_walks_cursor_pages_until_no_next_cursor(monkeypatch: pytest.MonkeyPatch) -> None:
+    users = _users(PER_PAGE * 2 + 3)
+    pages = {
+        "0": (users[:PER_PAGE], "c1"),
+        "c1": (users[PER_PAGE : PER_PAGE * 2], "c2"),
+        "c2": (users[PER_PAGE * 2 :], None),
+    }
+
+    def responder(request: Any) -> Any:
+        rows, nxt = pages[_query(request)["cursor"][0]]
+        return (rows, _next_link(nxt)) if nxt else rows
 
     seen = _fake_api(monkeypatch, responder)
 
     assert [u["id"] for u in _client().users()] == [u["id"] for u in users]
-    assert len(seen) == 3
-    for index, request in enumerate(seen, start=1):
-        parsed = urllib.parse.urlparse(request.full_url)
-        assert (parsed.scheme, parsed.hostname, parsed.path) == ("https", "eu.api.knowbe4.com", "/v1/users")
-        assert _query(request) == {"status": ["active"], "page": [str(index)], "per_page": [str(PER_PAGE)]}
-        assert request.get_header("Authorization") == f"Bearer {TOKEN}"
+    assert [_query(r)["cursor"] for r in seen] == [["0"], ["c1"], ["c2"]]
+    for request in seen:
+        assert "page" not in _query(request)
+        assert _query(request)["status"] == ["active"]
+        assert urllib.parse.urlparse(request.full_url).hostname == "eu.api.knowbe4.com"
 
 
-def test_live_client_stops_on_an_empty_page(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_live_client_detects_last_cursor_page_when_a_full_page_is_followed_by_an_empty_one(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     full_page = [{"enrollment_id": i, "status": "Passed", "user": {"id": 1}} for i in range(PER_PAGE)]
-    seen = _fake_api(monkeypatch, lambda request: full_page if _query(request)["page"] == ["1"] else [])
+
+    def responder(request: Any) -> Any:
+        if _query(request)["cursor"] == ["0"]:
+            return full_page, _next_link("c1", path="/v1/training/enrollments")
+        return []
+
+    seen = _fake_api(monkeypatch, responder)
 
     assert len(_client().training_enrollments()) == PER_PAGE
     assert len(seen) == 2
     assert _query(seen[0])["exclude_archived_users"] == ["true"]
+
+
+def test_live_client_returns_nothing_for_an_empty_collection(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen = _fake_api(monkeypatch, lambda request: [])
+
+    assert _client().phishing_tests() == []
+    assert len(seen) == 1
+
+
+def test_live_client_pins_the_regional_host_whatever_the_next_link_says(monkeypatch: pytest.MonkeyPatch) -> None:
+    def responder(request: Any) -> Any:
+        if _query(request)["cursor"] == ["0"]:
+            return _users(PER_PAGE), _next_link("c1", host="attacker.example")
+        return []
+
+    seen = _fake_api(monkeypatch, responder)
+
+    _client().users()
+    assert {urllib.parse.urlparse(r.full_url).hostname for r in seen} == {"eu.api.knowbe4.com"}
+    assert _query(seen[1])["cursor"] == ["c1"]
+
+
+def test_live_client_falls_back_to_page_paging_when_no_next_cursor_is_returned(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    users = _users(PER_PAGE + 2)
+
+    def responder(request: Any) -> Any:
+        query = _query(request)
+        if "cursor" in query:
+            return users[:PER_PAGE]
+        page = int(query["page"][0])
+        return users[(page - 1) * PER_PAGE : page * PER_PAGE]
+
+    seen = _fake_api(monkeypatch, responder)
+
+    # The cursor-mode first page is discarded and the walk restarts at page 1,
+    # so nothing is duplicated or skipped.
+    assert [u["id"] for u in _client().users()] == [u["id"] for u in users]
+    assert [_query(r).get("cursor") for r in seen] == [["0"], None, None]
+    assert [_query(r).get("page") for r in seen] == [None, ["1"], ["2"]]
+
+
+def test_live_client_fails_closed_once_page_paging_is_ignored(monkeypatch: pytest.MonkeyPatch) -> None:
+    # After the deprecation the server may ignore ``page`` and keep returning the
+    # first rows; that must be an explicit error, never duplicated evidence.
+    first_rows = _users(PER_PAGE)
+    seen = _fake_api(monkeypatch, lambda request: first_rows)
+
+    with pytest.raises(KnowBe4PaginationError, match="cursor") as excinfo:
+        _client().users()
+    assert isinstance(excinfo.value, ConnectorOperatorError)
+    assert "/" not in str(excinfo.value)
+    assert len(seen) == 3
+
+
+def test_live_client_fails_closed_on_a_repeated_cursor(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen = _fake_api(monkeypatch, lambda request: (_users(PER_PAGE), _next_link("same")))
+
+    with pytest.raises(KnowBe4PaginationError, match="repeated"):
+        _client().users()
+    assert len(seen) == 2
 
 
 def test_live_client_retries_429_honoring_retry_after(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -262,10 +370,25 @@ def test_live_client_retries_429_honoring_retry_after(monkeypatch: pytest.Monkey
             return _http_error(request.full_url, 429, {"Retry-After": "3"})
         return [{"pst_id": 1, "status": "Closed"}]
 
-    _fake_api(monkeypatch, responder)
+    seen = _fake_api(monkeypatch, responder)
 
     assert _client().phishing_tests() == [{"pst_id": 1, "status": "Closed"}]
     assert sleeps == [3.0]
+    assert [_query(r)["cursor"] for r in seen] == [["0"], ["0"]]
+
+
+def test_live_client_reports_a_rate_limit_lockout_as_retry_later(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("time.sleep", lambda _seconds: None)
+    seen = _fake_api(monkeypatch, lambda request: _http_error(request.full_url, 429, {"Retry-After": "300"}))
+
+    with pytest.raises(KnowBe4RateLimitedError) as excinfo:
+        _client().users()
+    message = str(excinfo.value)
+    assert "rate limit" in message and "retry" in message.lower()
+    assert isinstance(excinfo.value, ConnectorOperatorError)
+    assert _safe_run_error(excinfo.value) == " ".join(message.split())
+    assert TOKEN not in message
+    assert len(seen) == 5  # first try + the shared backoff's 4 retries
 
 
 def test_live_client_paces_requests_under_the_burst_limit(monkeypatch: pytest.MonkeyPatch) -> None:

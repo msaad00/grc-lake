@@ -1,40 +1,50 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-// Rules this console satisfies and must keep satisfying. `svg-img-alt` stays
-// off: it fails inside recharts-rendered sectors and needs a design decision.
-const RULES = [
-  "color-contrast",
-  "select-name",
-  "label",
-  "button-name",
-  "link-name",
-  "scrollable-region-focusable",
-  "aria-required-attr",
-  "aria-valid-attr-value",
-  "duplicate-id-aria",
-  "image-alt",
-];
+// Every console route, including the public ones outside the app shell, runs
+// the full WCAG 2.1 AA and best-practice set: landmarks (one <main>, unique
+// labels), one <h1>, contrast, names. `svg-img-alt` stays off: it fails inside
+// recharts-rendered sectors and needs a design decision.
+const TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "best-practice"];
+const DISABLED = ["svg-img-alt"];
 
 const ROUTES = [
   "dashboard",
-  "violations",
-  "evidence",
+  "insights",
+  "frameworks",
   "controls",
+  "evidence",
+  "violations",
   "remediation",
   "risks",
-  "graph",
+  "policies",
   "crosswalk",
   "mapping-review",
+  "graph",
   "automation",
-  "trust-center",
+  "connectors",
+  "vendor-risk",
+  "access-reviews",
+  "ai-governance",
   "agents",
-  "frameworks",
+  "audit-room",
+  "audit-log",
+  "trust-center",
+  "onboarding",
   "auth",
+  "deploy",
+  "demo",
+  "poc",
+  "pricing",
+  // Public routes render without the app shell.
+  "login",
+  "signup",
+  "invite",
+  "trust/share",
 ];
 
 for (const route of ROUTES) {
-  test(`${route} has no form controls or regions the keyboard cannot reach`, async ({
+  test(`${route} passes axe WCAG 2.1 AA and best-practice checks`, async ({
     page,
   }) => {
     await page.goto(`/console/${route}/`);
@@ -43,7 +53,8 @@ for (const route of ROUTES) {
     await page.waitForTimeout(2500);
 
     const { violations } = await new AxeBuilder({ page })
-      .withRules(RULES)
+      .withTags(TAGS)
+      .disableRules(DISABLED)
       .analyze();
 
     const summary = violations.map(

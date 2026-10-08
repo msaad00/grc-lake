@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BookText, ExternalLink, MessageCircleQuestion } from "lucide-react";
+import { BookText, MessageCircleQuestion } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 
 const VERSION = BRAND.version;
@@ -16,40 +16,35 @@ interface Props {
 
 export function SidebarFooter({ collapsed, toggle }: Props) {
   return (
-    <div className="mt-auto grid gap-1 border-t border-rail-line p-3 text-[11px] text-muted">
+    <div className="mt-auto grid gap-1 border-t border-rail-line px-3 py-1.5 text-[11px] text-muted">
       {!collapsed ? (
-        <>
+        // One row keeps the footer short enough for the whole rail to fit at
+        // 900px tall.
+        <div className="flex min-h-7 items-center gap-0.5">
           <a
             href={BRAND.repoUrl}
             target="_blank"
             rel="noreferrer"
-            className={`inline-flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-rail-hover ${LINK_FOCUS}`}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 hover:bg-rail-hover ${LINK_FOCUS}`}
           >
-            <span className="inline-flex items-center gap-2">
-              <BookText aria-hidden="true" className="h-3.5 w-3.5" /> Docs
-            </span>
-            <ExternalLink aria-hidden="true" className="h-3 w-3 opacity-60" />
+            <BookText aria-hidden="true" className="h-3.5 w-3.5" /> Docs
+            <span className="sr-only">(opens in a new tab)</span>
           </a>
           <a
             href={`${BRAND.repoUrl}/issues`}
             target="_blank"
             rel="noreferrer"
-            className={`inline-flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-rail-hover ${LINK_FOCUS}`}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 hover:bg-rail-hover ${LINK_FOCUS}`}
           >
-            <span className="inline-flex items-center gap-2">
-              <MessageCircleQuestion
-                aria-hidden="true"
-                className="h-3.5 w-3.5"
-              />{" "}
-              Feedback
-            </span>
-            <ExternalLink aria-hidden="true" className="h-3 w-3 opacity-60" />
+            <MessageCircleQuestion aria-hidden="true" className="h-3.5 w-3.5" />
+            Feedback
+            <span className="sr-only">(opens in a new tab)</span>
           </a>
-          <div className="mt-1 flex min-h-7 items-center justify-between pl-2 text-[10px] text-muted">
-            <span>v{VERSION}</span>
-            {toggle}
-          </div>
-        </>
+          <span className="ml-auto pl-1 text-[10px] text-muted">
+            v{VERSION}
+          </span>
+          {toggle}
+        </div>
       ) : (
         <div className="flex flex-col items-center gap-1">
           <a

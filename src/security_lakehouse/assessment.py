@@ -34,6 +34,7 @@ from security_lakehouse.generations import generation_identity, generation_reade
 from security_lakehouse.io import append_jsonl, iter_jsonl, read_json, read_jsonl, write_json
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import SEVERITY_SCORE, utc_iso
+from security_lakehouse.vocabulary import ControlVerdict
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ def build_current_posture(
     warning_control_tests = [item for item in control_tests if str(item.get("result", "")).lower() == "warn"]
     posture_score = _weighted_posture_score(framework_scores)
     critical_for_state = critical_violation_count > 0
-    unevaluated = {str(row["control_id"]) for row in controls if row.get("status") == "not_evaluated"}
+    unevaluated = {str(row["control_id"]) for row in controls if row.get("status") == ControlVerdict.NOT_EVALUATED}
     assessment = {
         "schema_version": "trustops.assessment.v1",
         "assessment_type": "current_posture",

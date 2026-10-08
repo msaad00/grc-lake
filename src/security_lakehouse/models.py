@@ -6,14 +6,15 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from security_lakehouse.timeutil import parse_iso, utc_iso_z
+from security_lakehouse.vocabulary import Severity
 
-SEVERITY_SCORE = {
-    "critical": 100,
-    "high": 80,
-    "medium": 50,
-    "low": 20,
-    "info": 5,
-    "none": 0,
+SEVERITY_SCORE: dict[str, int] = {
+    Severity.CRITICAL.value: 100,
+    Severity.HIGH.value: 80,
+    Severity.MEDIUM.value: 50,
+    Severity.LOW.value: 20,
+    Severity.INFO.value: 5,
+    Severity.NONE.value: 0,
 }
 
 

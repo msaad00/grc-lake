@@ -10,10 +10,9 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db import poam as poam_db
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.services import NotFound, ValidationError
 from security_lakehouse.sprs import CMMC_FRAMEWORK_ID, evaluate_cmmc_posture, requirement_id_from_control
-
-JsonObject = dict[str, Any]
 
 
 def list_poam_items(

@@ -41,13 +41,13 @@ from security_lakehouse.brand_assets import (
     human_tool_title,
     mcp_icons,
 )
+from security_lakehouse.jsontypes import JsonObject
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from mcp.server.fastmcp import FastMCP
 
 DEFAULT_LAKE = "./lake"
 MAX_API_RESPONSE_BYTES = 8 * 1024 * 1024
-JsonObject = dict[str, Any]
 
 
 def resolve_lake_dir() -> Path:

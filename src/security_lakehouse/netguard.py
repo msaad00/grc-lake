@@ -234,7 +234,7 @@ class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
         return self.do_open(
             functools.partial(PinnedHTTPSConnection, label=self._label, proxied=_is_proxied(req)),
             req,
-            context=self._context,
+            context=self._context,  # type: ignore[attr-defined]
         )
 
 

@@ -51,6 +51,7 @@ from security_lakehouse.catalog import load_control_catalog, load_framework_regi
 from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_identity, generation_reader, pin_generation, verify_generation
 from security_lakehouse.io import file_sha256, read_json, read_jsonl, resolve_path
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.models import utc_iso
 from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
@@ -65,7 +66,6 @@ from security_lakehouse.safeguards import (
 # against (controls/oscal/*.json). Bump together with the vendored schemas.
 OSCAL_VERSION = "1.2.3"
 
-JsonObject = dict[str, Any]
 
 # Fixed namespace so every emitted uuid is a deterministic function of its
 # inputs (uuid5) rather than random (uuid4) -- re-exporting the same safeguard

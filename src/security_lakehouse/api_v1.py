@@ -67,6 +67,7 @@ from security_lakehouse.io import (
     resolve_path,
     validated_jsonl_count,
 )
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.lake_eval import list_eval_runs, run_lake_eval
 from security_lakehouse.lake_scale import connector_materialize_on_sync
 from security_lakehouse.mapping_review import (
@@ -118,7 +119,6 @@ from security_lakehouse.workflows import (
 API_VERSION = "v1"
 
 Params = Mapping[str, list[str]]
-JsonObject = dict[str, Any]
 
 
 def first_param(params: Params, key: str) -> str | None:

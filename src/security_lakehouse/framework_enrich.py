@@ -36,6 +36,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from security_lakehouse.jsontypes import JsonObject
+
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CATALOG = ROOT / "controls" / "catalog.json"
 
@@ -54,8 +56,6 @@ PUBLIC_DOMAIN_SOURCES: dict[str, dict[str, str]] = {
 
 # Titles that are only an identifier plus a stock phrase.
 PLACEHOLDER = re.compile(r"—\s*assessed from .*evidence\s*$", re.IGNORECASE)
-
-JsonObject = dict[str, Any]
 
 
 def is_placeholder(title: str) -> bool:

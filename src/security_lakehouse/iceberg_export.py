@@ -180,7 +180,7 @@ def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_ht
                     kwargs["allow_redirects"] = False
                     return request(method, url, **kwargs)
 
-                session.request = bounded_request
+                session.request = bounded_request  # type: ignore[method-assign,assignment]
                 return session
 
             def _refresh_token(self):

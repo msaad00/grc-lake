@@ -1532,6 +1532,10 @@
               "count": {
                 "type": "integer"
               },
+              "default_page": {
+                "description": "True when the caller sent no limit, offset, or cursor and the route served its first default-size page; follow next_cursor for the rest.",
+                "type": "boolean"
+              },
               "limit": {
                 "type": "integer"
               },
@@ -4556,6 +4560,7 @@
     },
     "/api/v1/graph": {
       "get": {
+        "description": "Pages nodes and edges together. Without limit, offset, or cursor it serves the first page of 100 (meta.default_page); follow meta.next_cursor until null.",
         "operationId": "get_graph",
         "parameters": [
           {
@@ -6761,6 +6766,7 @@
     },
     "/api/v1/repo-graph": {
       "get": {
+        "description": "Pages nodes and edges together. Without limit, offset, or cursor it serves the first page of 100 (meta.default_page); follow meta.next_cursor until null.",
         "operationId": "get_repo_graph",
         "parameters": [
           {

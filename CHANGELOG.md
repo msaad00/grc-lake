@@ -3,6 +3,16 @@
 All notable TrustOps changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Bound unparameterized `/api/v1/graph` and `/api/v1/repo-graph` responses. Without `limit`, `offset`, or `cursor` they now serve the first page of 100 nodes and 100 edges, marked `meta.default_page: true`, with `meta.next_cursor` for the rest. The console graph page follows the cursor at 1000 rows per page, and the MCP `get_repository_graph` tool takes `limit` (1-100, default 100) and `offset` and reports `pagination.next_offset`.
+
+### Upgrade notes
+
+- API clients that read `/api/v1/graph` or `/api/v1/repo-graph` without paging parameters receive at most 100 nodes and 100 edges per response. Follow `meta.next_cursor` until it is `null` and concatenate `nodes` and `edges`, or check `meta.parts.nodes.count` and `meta.parts.edges.count` for the totals. The legacy `/api/graph` and `/api/repo-graph` routes are unchanged.
+
+- MCP agents calling `get_repository_graph` get one page; read `pagination.has_more` and pass `pagination.next_offset` as `offset` to continue.
+
 ## 0.2.24 - 2026-10-07
 
 - Run retention automatically from the scheduler when `TRUSTOPS_RETENTION_SCHEDULE` is set. It is off by default, and only previews candidates until `TRUSTOPS_RETENTION_ARCHIVE_DIR` names an archive outside the lake root. Scheduled runs use the CLI's protections, record each run in `gold/retention_runs.jsonl`, and expose the settings under Helm `scheduler.retention`.

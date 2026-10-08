@@ -33,12 +33,18 @@ test("evidence lists assets by name and the drawer keeps the ID", async ({
 });
 
 test("graph labels asset nodes with their names", async ({ page }) => {
-  const response = await page.request.get("/api/v1/graph");
-  expect(response.ok()).toBeTruthy();
-  const body = await response.json();
-  const assets = (body.data?.nodes ?? []).filter(
-    (node: { kind: string }) => node.kind === "asset",
-  );
+  const nodes: { kind: string; label: string; asset_id?: string }[] = [];
+  let query = "?limit=1000";
+  for (;;) {
+    const response = await page.request.get(`/api/v1/graph${query}`);
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json();
+    nodes.push(...(body.data?.nodes ?? []));
+    const cursor = body.meta?.next_cursor;
+    if (!cursor) break;
+    query = `?limit=1000&cursor=${encodeURIComponent(cursor)}`;
+  }
+  const assets = nodes.filter((node) => node.kind === "asset");
   expect(assets.length).toBeGreaterThan(0);
   for (const node of assets) {
     expect(node.label).not.toMatch(/^golden:/);

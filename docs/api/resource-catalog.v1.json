@@ -324,6 +324,7 @@
       "scopes": ["read"]
     },
     {
+      "default_paged": true,
       "kind": "singleton",
       "methods": ["GET"],
       "paged_parts": ["nodes", "edges"],
@@ -645,6 +646,7 @@
       "scopes": ["read", "write"]
     },
     {
+      "default_paged": true,
       "kind": "singleton",
       "methods": ["GET"],
       "paged_parts": ["nodes", "edges"],

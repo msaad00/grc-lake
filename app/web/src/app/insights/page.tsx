@@ -9,6 +9,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -27,6 +28,15 @@ import { EvidenceFreshnessTrendChart } from "@/components/insights/EvidenceFresh
 import { FrameworkReadinessTrendChart } from "@/components/insights/FrameworkReadinessTrendChart";
 import { SlaHeatmapPanel } from "@/components/insights/SlaHeatmapPanel";
 import { QueryState } from "@/components/QueryState";
+import { KpiTile, type KpiTone } from "@/components/ui/KpiTile";
+import {
+  AXIS_PROPS,
+  CHART_SERIES,
+  GRID_STROKE,
+  TOOLTIP_CURSOR,
+  TOOLTIP_LABEL_STYLE,
+  TOOLTIP_STYLE,
+} from "@/components/insights/chart-utils";
 import { docsUrl } from "@/lib/format";
 import { ROUTE_LABELS } from "@/lib/console-copy";
 
@@ -42,39 +52,13 @@ function fmt(v: number | null | undefined, digits = 1, suffix = ""): string {
 
 const NO_RESOLVED_TASKS_HINT = "Appears after the first task is resolved.";
 
-function StatCard({
-  label,
-  value,
-  tone,
-  hint,
-}: {
-  label: string;
-  value: string;
-  tone?: "ok" | "warn" | "bad";
-  hint?: string;
-}) {
-  const bg =
-    tone === "bad"
-      ? "bg-danger-bg border-danger/40"
-      : tone === "warn"
-        ? "bg-warning-bg border-warning/40"
-        : "bg-surface border-line";
-  const text =
-    tone === "bad"
-      ? "text-danger-fg"
-      : tone === "warn"
-        ? "text-warning-fg"
-        : "text-ink";
-  return (
-    <div className={`rounded-2xl border p-5 ${bg}`}>
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-        {label}
-      </div>
-      <div className={`mt-1 text-3xl font-semibold ${text}`}>{value}</div>
-      {hint && <p className="mt-1 text-xs leading-5 text-muted">{hint}</p>}
-    </div>
-  );
-}
+type Tone = "ok" | "warn" | "bad";
+
+const KPI_TONE: Record<Tone, KpiTone> = {
+  ok: "default",
+  warn: "attention",
+  bad: "critical",
+};
 
 export default function InsightsPage() {
   const timeseries = useInsightsTimeseries(90);
@@ -128,42 +112,46 @@ export default function InsightsPage() {
       <QueryState queries={[timeseries, remediation]} label="insights metrics">
         <>
           {/* remediation KPIs */}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <StatCard
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <KpiTile
               label="Open tasks"
               value={ins ? String(ins.open) : "—"}
-              tone={ins && ins.open > 10 ? "warn" : "ok"}
+              tone={KPI_TONE[ins && ins.open > 10 ? "warn" : "ok"]}
             />
-            <StatCard
+            <KpiTile
               label="Overdue tasks"
               value={ins ? String(ins.overdue) : "—"}
-              tone={ins && ins.overdue > 0 ? "bad" : "ok"}
+              tone={KPI_TONE[ins && ins.overdue > 0 ? "bad" : "ok"]}
             />
-            <StatCard
+            <KpiTile
               label="MTTR"
               value={fmt(ins?.mttr_hours, 1, " h")}
-              hint={
+              detail={
                 ins?.mttr_hours == null ? NO_RESOLVED_TASKS_HINT : undefined
               }
               tone={
-                ins?.mttr_hours != null && ins.mttr_hours > 72 ? "warn" : "ok"
+                KPI_TONE[
+                  ins?.mttr_hours != null && ins.mttr_hours > 72 ? "warn" : "ok"
+                ]
               }
             />
-            <StatCard
+            <KpiTile
               label="SLA attainment"
               value={fmt(ins?.sla_attainment_pct, 0, " %")}
-              hint={
+              detail={
                 ins?.sla_attainment_pct == null
                   ? NO_RESOLVED_TASKS_HINT
                   : undefined
               }
               tone={
-                ins?.sla_attainment_pct != null && ins.sla_attainment_pct < 80
-                  ? "bad"
-                  : ins?.sla_attainment_pct != null &&
-                      ins.sla_attainment_pct < 95
-                    ? "warn"
-                    : "ok"
+                KPI_TONE[
+                  ins?.sla_attainment_pct != null && ins.sla_attainment_pct < 80
+                    ? "bad"
+                    : ins?.sla_attainment_pct != null &&
+                        ins.sla_attainment_pct < 95
+                      ? "warn"
+                      : "ok"
+                ]
               }
             />
           </div>
@@ -191,32 +179,25 @@ export default function InsightsPage() {
                     data={chartData}
                     margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="var(--color-line)"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 11 }}
-                      stroke="#94a3b8"
-                    />
-                    <YAxis
-                      domain={[0, 100]}
-                      tick={{ fontSize: 11 }}
-                      stroke="#94a3b8"
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="date" {...AXIS_PROPS} />
+                    <YAxis domain={[0, 100]} {...AXIS_PROPS} />
                     <Tooltip
-                      contentStyle={{
-                        fontSize: 12,
-                        borderRadius: 8,
-                        border: "1px solid #e2e8f0",
+                      contentStyle={TOOLTIP_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      cursor={TOOLTIP_CURSOR}
+                    />
+                    <Legend
+                      wrapperStyle={{
+                        fontSize: 11,
+                        color: "var(--color-muted)",
                       }}
                     />
                     <Line
                       type="monotone"
                       dataKey="posture"
                       name="Posture score"
-                      stroke="#4f7cff"
+                      stroke={CHART_SERIES[0]}
                       strokeWidth={2}
                       dot={false}
                     />
@@ -224,7 +205,7 @@ export default function InsightsPage() {
                       type="monotone"
                       dataKey="pass_rate"
                       name="Control pass rate"
-                      stroke="#22c55e"
+                      stroke={CHART_SERIES[1]}
                       strokeWidth={2}
                       dot={false}
                       strokeDasharray="4 2"
@@ -260,38 +241,29 @@ export default function InsightsPage() {
                       <linearGradient id="violGrad" x1="0" x2="0" y1="0" y2="1">
                         <stop
                           offset="0%"
-                          stopColor="#f87171"
+                          stopColor="var(--color-danger)"
                           stopOpacity={0.35}
                         />
                         <stop
                           offset="100%"
-                          stopColor="#f87171"
+                          stopColor="var(--color-danger)"
                           stopOpacity={0.02}
                         />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="var(--color-line)"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 11 }}
-                      stroke="#94a3b8"
-                    />
-                    <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                    <XAxis dataKey="date" {...AXIS_PROPS} />
+                    <YAxis {...AXIS_PROPS} />
                     <Tooltip
-                      contentStyle={{
-                        fontSize: 12,
-                        borderRadius: 8,
-                        border: "1px solid #e2e8f0",
-                      }}
+                      contentStyle={TOOLTIP_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      cursor={TOOLTIP_CURSOR}
                     />
                     <Area
                       type="monotone"
                       dataKey="open"
                       name="Open violations"
-                      stroke="#ef4444"
+                      stroke="var(--color-danger)"
                       strokeWidth={2}
                       fill="url(#violGrad)"
                     />

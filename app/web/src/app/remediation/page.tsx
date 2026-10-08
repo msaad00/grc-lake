@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ListChecks } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/PageHeader";
 import { QueryState } from "@/components/QueryState";
@@ -376,13 +378,45 @@ function TasksSection() {
       )}
       <QueryState queries={tasks} label="remediation tasks">
         <div className="max-h-[520px] divide-y divide-line overflow-y-auto border-t border-line">
-          {rows.length === 0 && (
-            <div className="px-5 py-6 text-sm text-muted">
-              {selectedOwner || controlFilter
-                ? "No tasks match these filters."
-                : "No tasks yet."}
-            </div>
-          )}
+          {rows.length === 0 &&
+            (selectedOwner || controlFilter ? (
+              <EmptyState
+                icon={ListChecks}
+                className="m-5"
+                action={
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const params = new URLSearchParams(
+                        searchParams.toString(),
+                      );
+                      params.delete("owner");
+                      params.delete("control");
+                      router.replace(`/remediation/?${params}`, {
+                        scroll: false,
+                      });
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                }
+              >
+                No tasks match these filters.
+              </EmptyState>
+            ) : (
+              <EmptyState
+                icon={ListChecks}
+                className="m-5"
+                action={
+                  <Button asChild size="sm">
+                    <Link href="/violations">Open findings</Link>
+                  </Button>
+                }
+              >
+                No remediation tasks yet. Add one above, or create one from a
+                finding.
+              </EmptyState>
+            ))}
           {rows.map((task: RemediationTask) => (
             <div
               key={task.id}

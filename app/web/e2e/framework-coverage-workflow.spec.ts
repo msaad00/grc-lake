@@ -88,11 +88,16 @@ test("shows observed-asset safeguard results without implying complete coverage"
   page,
 }) => {
   await page.goto("/console/frameworks/");
-  const summary = page.getByText("Safeguard assessment · observed assets", {
-    exact: true,
+  const toggle = page.getByRole("button", {
+    name: "Safeguard assessment · observed assets",
   });
-  await summary.click();
-  const assessment = page.locator("details").filter({ has: summary });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const assessment = page
+    .locator("div.rounded-lg")
+    .filter({ has: toggle })
+    .last();
   await expect(assessment).toContainText(
     "Complete asset inventory is not established.",
   );

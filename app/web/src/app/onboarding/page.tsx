@@ -30,7 +30,7 @@ export default function OnboardingPage() {
   const current = data?.next_step ?? null;
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl min-w-0 gap-2 px-3 py-2 sm:px-4">
+    <div className="page-shell grid gap-3">
       <PageHeader
         title={ROUTE_LABELS["/onboarding"]}
         description="Connect sources, prove sync, reach a shareable workspace."

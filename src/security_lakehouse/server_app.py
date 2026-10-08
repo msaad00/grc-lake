@@ -179,6 +179,22 @@ def _rate_limit_key(request: Request, known: _KnownCredentials) -> str:
     return "h:" + client
 
 
+# Next's static export inlines its flight data in bare <script> tags and
+# animation styles in style attributes, so both need 'unsafe-inline'.
+_CONSOLE_CSP = "; ".join(
+    (
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob:",
+        "font-src 'self' data:",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    )
+)
 _STATE_CHANGING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 _COOKIELESS_CSRF_PATHS = frozenset({"/api/v1/auth/session-from-key"})
 _CSRF_EXEMPT_PATHS = frozenset({"/api/v1/auth/saml/acs"})
@@ -1340,6 +1356,15 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("X-XSS-Protection", "0")
+        path = request.url.path
+        if path == "/" or path == "/console" or path.startswith("/console/"):
+            response.headers.setdefault("Content-Security-Policy", _CONSOLE_CSP)
+        elif (
+            path.startswith("/api/")
+            and getattr(request.state, "identity", None) is not None
+            and response.headers.get("content-type", "").startswith("application/json")
+        ):
+            response.headers.setdefault("Cache-Control", "no-store")
         if _COOKIE_SECURE:
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response

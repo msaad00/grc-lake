@@ -1636,7 +1636,7 @@ def evidence_page_response(lake: Path, params: Params) -> JsonObject:
     Without filters, rows before the page are skipped unparsed and reading
     stops at the end of the page, so a page parses at most ``limit`` events.
     ``count`` comes from :func:`validated_jsonl_count`, which parses the whole
-    file once per content version, keeping nothing, so an invalid row anywhere
+    file once per file version, keeping nothing, so an invalid row anywhere
     still fails the request as the materialized path did. With filters, one
     streaming pass counts matches and keeps only the page. A ``sort`` needs
     every row, so it falls back to the materialized collection path. Rows come

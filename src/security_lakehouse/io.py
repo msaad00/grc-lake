@@ -8,6 +8,7 @@ import json
 import os
 import tempfile
 import threading
+import time
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Generator, Iterable, Iterator
 from itertools import islice
@@ -147,9 +148,18 @@ def count_jsonl(
     return sum(1 for _line_no, _line in _iter_jsonl_lines(path, missing_ok=missing_ok, base_dir=base_dir))
 
 
-_VALIDATED_COUNTS: OrderedDict[tuple[str, bytes], int] = OrderedDict()
+_VALIDATED_COUNTS: OrderedDict[tuple[str, tuple[int, ...] | bytes], int] = OrderedDict()
 _VALIDATED_COUNTS_LOCK = threading.Lock()
 _VALIDATED_COUNTS_MAX = 256
+# Timestamps can be as coarse as a scheduler tick (or 2 s on some network and
+# FAT mounts), so a write in the same tick as an earlier one may leave
+# mtime/ctime unchanged. Only files whose timestamps are older than this are
+# trusted by stat alone.
+_RACY_TIMESTAMP_WINDOW_NS = 2 * 10**9
+
+
+def _stat_version(info: os.stat_result) -> tuple[int, ...]:
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
 
 
 def validated_jsonl_count(
@@ -160,25 +170,46 @@ def validated_jsonl_count(
 ) -> int:
     """Count rows after checking that every row parses, without keeping any.
 
-    The full parse runs once per file content: the result is cached under the
-    SHA-256 of the current bytes, which are re-read and re-hashed on every call
-    (no stat-only trust). A repeat call on unchanged bytes parses nothing, so a
-    paged reader can stay fail-closed on rows outside its page while parsing
-    only the rows it serves. Raises ``ValueError`` on the first invalid row.
+    The full parse runs once per file version, so a paged reader can stay
+    fail-closed on rows outside its page while parsing only the rows it
+    serves. Raises ``ValueError`` on the first invalid row.
+
+    A settled file (mtime and ctime older than two seconds) is identified by
+    device, inode, size, mtime, and ctime, so an unchanged file costs one
+    ``stat``. POSIX ctime cannot be set from user space, so an in-place
+    same-size rewrite that restores mtime (``cp -p``, ``touch -d``) still
+    changes the key. A file changed within the window is re-read and keyed by
+    the SHA-256 of its bytes, which covers writes in the same timestamp tick.
+    The remaining gap is a filesystem without a real change time (on Windows
+    ``st_ctime`` is creation time), or a wall-clock step backwards of more
+    than the window between two writes.
     """
     from security_lakehouse.generations import pinned_path
 
     target = resolve_path(pinned_path(Path(path)), base_dir=base_dir)
-    digest = hashlib.sha256()
     try:
-        with target.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(chunk)
+        before = target.stat()
     except FileNotFoundError:
         if missing_ok:
             return 0
         raise
-    key = (str(target), digest.digest())
+    newest_change = max(before.st_mtime_ns, before.st_ctime_ns)
+    settled = time.time_ns() - newest_change > _RACY_TIMESTAMP_WINDOW_NS
+    version: tuple[int, ...] | bytes
+    if settled:
+        version = _stat_version(before)
+    else:
+        digest = hashlib.sha256()
+        try:
+            with target.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+        except FileNotFoundError:
+            if missing_ok:
+                return 0
+            raise
+        version = digest.digest()
+    key = (str(target), version)
     with _VALIDATED_COUNTS_LOCK:
         cached = _VALIDATED_COUNTS.get(key)
         if cached is not None:
@@ -188,6 +219,13 @@ def validated_jsonl_count(
     for line_no, stripped in _iter_jsonl_lines(path, base_dir=base_dir):
         _parse_jsonl_line(path, line_no, stripped)
         count += 1
+    try:
+        after = target.stat()
+    except FileNotFoundError:
+        return count
+    if _stat_version(after) != _stat_version(before):
+        # Changed while being read: the count belongs to unknown bytes.
+        return count
     with _VALIDATED_COUNTS_LOCK:
         for previous in [k for k in _VALIDATED_COUNTS if k[0] == key[0]]:
             del _VALIDATED_COUNTS[previous]

@@ -15,7 +15,7 @@ export function ControlMonitoringSummary({ rows }: { rows: ControlTest[] }) {
   const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       <KpiTile
         label="Tests passing"
         value={`${passRate}%`}

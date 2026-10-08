@@ -27,7 +27,7 @@ name: trustops
 
 services:
   trustops:
-    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.23}
+    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.24}
     ports:
       - "127.0.0.1:8787:8787"
     volumes:
@@ -54,7 +54,7 @@ services:
 
   trustops-server:
     profiles: ["server"]
-    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.23}
+    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.24}
     # The image's default command serves with authentication required.
     env_file:
       - trustops.env

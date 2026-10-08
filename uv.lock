@@ -4464,7 +4464,7 @@ wheels = [
 
 [[package]]
 name = "trustops-security-data-lake"
-version = "0.2.23"
+version = "0.2.24"
 source = { editable = "." }
 
 [package.optional-dependencies]

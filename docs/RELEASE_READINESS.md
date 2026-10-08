@@ -1,11 +1,13 @@
 # Release readiness
 
-TrustOps **0.2.23** prepares the fixes listed in the
-[changelog](../CHANGELOG.md): bounded braces recursion in console build tooling,
-legacy share revocation after tenant-directory migration, and regression coverage
-for snapshot payload/ledger predecessor mismatches. CLI-issued public links remain
-usable before tenants are provisioned. These are self-hosted software changes;
-release checks do not provision a managed service.
+TrustOps **0.2.24** prepares the fixes listed in the
+[changelog](../CHANGELOG.md): opt-in scheduled retention, bounded per-tenant
+background job workers, capped and annotated MCP tool output with an
+untrusted-content envelope, cursor paging for graph and coverage routes, streamed
+evidence pages, copied trust-share revocation, and catalog control-ID collision
+checks. Scheduled retention is off by default and previews until an archive is
+configured. These are self-hosted software changes; release checks do not
+provision a managed service.
 
 Source and CI qualification do not establish publication, live-provider accuracy,
 or a working customer deployment. The pinned build-tool replacement and its

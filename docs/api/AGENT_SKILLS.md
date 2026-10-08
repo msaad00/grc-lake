@@ -252,7 +252,7 @@ Console: `/console/agents/` — same routes with curl builder.
 **GitHub Action:**
 
 ```yaml
-- uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.23
+- uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.24
   with:
     trustops-url: ${{ secrets.TRUSTOPS_URL }}
     api-token: ${{ secrets.TRUSTOPS_API_TOKEN }}

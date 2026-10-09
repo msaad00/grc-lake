@@ -188,3 +188,23 @@ def test_rate_limit_sheds_requests_before_distributed_database_lookup(replicas, 
 
     monkeypatch.setattr(DistributedMiddleware, "_tenant", forbidden)
     assert TestClient(apps[0]).get("/api/v1/operations").status_code == 429
+
+
+def test_shared_audit_uses_database_time_even_when_a_replica_clock_is_wrong(replicas, monkeypatch):
+    import json
+    from datetime import datetime
+
+    from sqlalchemy import select
+
+    from security_lakehouse.auth import request_audit
+    from security_lakehouse.db.models import DistributedRequestAudit
+
+    apps, credentials = replicas
+    tenant, headers = credentials[0]
+    monkeypatch.setattr(request_audit, "_now", lambda: "1900-01-01T00:00:00+00:00")
+    assert TestClient(apps[0]).get("/api/v1/operations", headers=headers).status_code == 200
+    with apps[0].state.sessionmaker() as session:
+        row = session.scalar(select(DistributedRequestAudit).where(DistributedRequestAudit.tenant_id == tenant))
+        event = json.loads(row.event_json)
+        assert not event["occurred_at"].startswith("1900")
+        assert datetime.fromisoformat(event["occurred_at"]) == row.occurred_at

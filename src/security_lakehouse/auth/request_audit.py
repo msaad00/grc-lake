@@ -108,15 +108,20 @@ def append_request_audit(
     if factory is not None and cluster_id is not None:
         import json
 
+        from sqlalchemy import func, select
+
         from security_lakehouse.db.models import DistributedRequestAudit
 
         with factory.begin() as session:
+            recorded_at = session.scalar(select(func.clock_timestamp()))
+            event["occurred_at"] = recorded_at.isoformat()
             session.add(
                 DistributedRequestAudit(
                     event_id=event["event_id"],
                     cluster_id=cluster_id,
                     tenant_id=event["tenant_id"],
                     event_json=json.dumps(event, sort_keys=True),
+                    occurred_at=recorded_at,
                 )
             )
         return event

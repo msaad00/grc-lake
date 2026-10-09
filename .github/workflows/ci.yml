@@ -372,7 +372,7 @@ jobs:
       - name: Distributed PostgreSQL and S3 protocol contracts
         env:
           TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable%40pass%25word@localhost:5432/postgres
-        run: uv run --extra cloud --extra parquet --with 'moto[server,s3]==5.2.3' pytest -q tests/test_distributed_*.py
+        run: uv run --extra server --extra dev --extra cloud --extra parquet --extra analytics --with 'moto[server,s3]==5.2.3' pytest -q tests/test_distributed_*.py
 
   iceberg-interop:
     runs-on: ubuntu-latest

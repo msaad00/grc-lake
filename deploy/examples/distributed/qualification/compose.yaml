@@ -1,0 +1,98 @@
+# Disposable qualification only. No host ports or production credentials.
+x-runtime: &runtime
+  image: ${GRC_QUAL_IMAGE:?qualification image required}
+  environment: &environment
+    GRC_LAKE_DEPLOYMENT_MODE: distributed
+    GRC_LAKE_CLUSTER_ID: qualification
+    GRC_LAKE_DATABASE_URL: postgresql+psycopg://grc:${GRC_QUAL_PASSWORD:?password required}@postgres/grc
+    GRC_LAKE_OBJECT_BUCKET: qualification-evidence
+    GRC_LAKE_OBJECT_ENDPOINT: http://s3:8333
+    GRC_LAKE_OBJECT_ALLOW_HTTP: "1"
+    GRC_LAKE_OBJECT_REGION: us-east-1
+    GRC_LAKE_COOKIE_SIGNING_KEY: ${GRC_QUAL_SIGNING_KEY:?signing key required}
+    GRC_LAKE_API_RATE_LIMIT_RPS: "0"
+    GRC_LAKE_WORKSPACE_BYTES: "536870912"
+    AWS_ACCESS_KEY_ID: qualification
+    AWS_SECRET_ACCESS_KEY: ${GRC_QUAL_S3_SECRET:?S3 secret required}
+    AWS_EC2_METADATA_DISABLED: "true"
+  networks: [qualification]
+  mem_limit: 1g
+
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    environment:
+      POSTGRES_USER: grc
+      POSTGRES_DB: grc
+      POSTGRES_PASSWORD: ${GRC_QUAL_PASSWORD:?password required}
+    volumes: [postgres:/var/lib/postgresql/data]
+    networks: [qualification]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U grc -d grc]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    mem_limit: 512m
+  s3:
+    image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+    command: [server, -dir=/data, -ip=s3, -s3, -s3.config=/etc/qualification-s3.json, -volume.max=4, -master.volumeSizeLimitMB=64, -master.telemetry=false]
+    volumes:
+      - objects:/data
+      - ${GRC_QUAL_WORK:?work directory required}/s3.json:/etc/qualification-s3.json:ro
+    networks: [qualification]
+    mem_limit: 768m
+  api-a:
+    <<: *runtime
+    command: [grc-lake, serve, --server, --lake, /lake, --host, 0.0.0.0, --port, "8787"]
+    volumes: [api-a:/lake]
+  api-b:
+    <<: *runtime
+    command: [grc-lake, serve, --server, --lake, /lake, --host, 0.0.0.0, --port, "8787"]
+    volumes: [api-b:/lake]
+  reader:
+    <<: *runtime
+    environment:
+      <<: *environment
+      GRC_LAKE_REPLICA_ROLE: reader
+    command: [grc-lake, serve, --server, --lake, /lake, --host, 0.0.0.0, --port, "8787"]
+    volumes: [reader:/lake]
+  worker-a:
+    <<: *runtime
+    healthcheck: {disable: true}
+    environment:
+      <<: *environment
+      GRC_LAKE_REPLICA_ROLE: worker
+    command: [grc-lake, cluster, worker, --lake, /lake, --concurrency, "1", --shards, "${GRC_QUAL_SHARDS_A:-all}"]
+    volumes: [worker-a:/lake]
+  worker-b:
+    <<: *runtime
+    healthcheck: {disable: true}
+    environment:
+      <<: *environment
+      GRC_LAKE_REPLICA_ROLE: worker
+    command: [grc-lake, cluster, worker, --lake, /lake, --concurrency, "1", --shards, "${GRC_QUAL_SHARDS_B:-all}"]
+    volumes: [worker-b:/lake]
+  probe: &probe
+    <<: *runtime
+    healthcheck: {disable: true}
+    user: ${GRC_QUAL_UID:-1100}:${GRC_QUAL_GID:-1100}
+    entrypoint: [python, /qualification/distributed_qualification_probe.py]
+    volumes:
+      - ${GRC_QUAL_WORK:?work directory required}:/work
+      - ../../../../tools:/qualification:ro
+      - ../../../../data/raw/security_events.jsonl:/fixtures/events.jsonl:ro
+  crash-writer:
+    <<: *probe
+    command: [hold-writer]
+
+networks:
+  qualification:
+    internal: true
+volumes:
+  postgres:
+  objects:
+  api-a:
+  api-b:
+  reader:
+  worker-a:
+  worker-b:

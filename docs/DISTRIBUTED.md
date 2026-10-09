@@ -220,3 +220,46 @@ This creates and removes its own test database and S3 emulator. The report
 separates publication, cold/warm materialization and selected partition download,
 and records process peak RSS and workload bounds. It does not measure networked
 storage replicas or database failover.
+
+## Container deployment qualification
+
+Build the application image, then run the disposable qualification stack:
+
+```bash
+docker build -t grc-lake:qualification .
+python3 tools/qualify_distributed.py --image grc-lake:qualification \
+  --out /tmp/grc-qualification
+```
+
+The output directory must be new. The driver requires Docker Compose and Python
+on the host; application dependencies run inside the built image. PostgreSQL 16
+and SeaweedFS 4.48 images are pinned by digest. This is a real S3 implementation,
+not the Moto emulator used by the smaller protocol tests. All services use a
+private Docker network without published host ports, synthetic identities and
+fresh disposable volumes. The driver generates temporary credentials and removes
+them during cleanup; do not supply production credentials or data.
+
+The run verifies conditional-create races, conditional multipart writes, two
+shard-assigned workers, concurrent tenant jobs submitted through two API replicas,
+a separate reader, cross-tenant job isolation and verified partition downloads.
+It deletes one API replica's scratch volume, restarts dependencies, and kills a
+writer before publication. It checks that SQL rolls back, unpublished files stay
+invisible, an unexpired lease rejects a competing writer, and a new owner can
+publish after the normal 90-second lease expires. It then restarts a worker and
+runs another batch. Successful reads must agree on evidence hashes.
+
+The required Docker CI job runs this qualification against its built image and
+retains a sanitized report. The report identifies the application image digest.
+This single-host stack qualifies application processes and the tested S3 protocol
+behavior. It does not certify PostgreSQL primary failover, replicated SeaweedFS
+storage, network partitions between physical machines, backup restoration or
+production capacity. Operators must exercise those properties in their target
+infrastructure before rollout.
+
+The driver removes only its uniquely named project and volumes, including after
+an assertion fails. If the driver is forcibly killed, use its recorded project
+marker for bounded cleanup:
+
+```bash
+python3 tools/qualify_distributed.py --cleanup --out /tmp/grc-qualification
+```

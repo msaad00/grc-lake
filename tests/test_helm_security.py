@@ -208,3 +208,31 @@ def test_env_cannot_bypass_explicit_no_auth_guard():
     )
     assert result.returncode != 0
     assert "security.allowInsecureNoAuth" in result.stderr
+
+
+def _pod_specs(manifest: str) -> list[dict]:
+    import yaml
+
+    specs = []
+    for doc in yaml.safe_load_all(manifest):
+        if not doc:
+            continue
+        if doc["kind"] == "Deployment":
+            specs.append(doc["spec"]["template"]["spec"])
+        elif doc["kind"] == "CronJob":
+            specs.append(doc["spec"]["jobTemplate"]["spec"]["template"]["spec"])
+    return specs
+
+
+def test_pods_do_not_mount_the_service_account_token_by_default() -> None:
+    result = _helm_template()
+    assert result.returncode == 0, result.stderr
+    specs = _pod_specs(result.stdout)
+    assert specs
+    assert all(spec.get("automountServiceAccountToken") is False for spec in specs)
+
+
+def test_in_cluster_kubernetes_connector_can_opt_in_to_the_token() -> None:
+    result = _helm_template(["serviceAccount.automountToken=true"])
+    assert result.returncode == 0, result.stderr
+    assert all(spec.get("automountServiceAccountToken") is True for spec in _pod_specs(result.stdout))

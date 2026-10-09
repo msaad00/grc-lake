@@ -8,7 +8,7 @@ from pathlib import Path
 
 from security_lakehouse.assessment import load_snapshot, resolve_snapshot_path, write_assessment_snapshot
 from security_lakehouse.reporting.executive_pdf import render_executive_pdf
-from test_api_v1 import _request, _spin
+from test_api_v1 import _request, _seed_lake, _spin
 from test_pipeline import RAW, run_pipeline
 
 
@@ -75,6 +75,49 @@ def test_v1_catalog_advertises_snapshot_pdf_export(tmp_path: Path) -> None:
         assert export["methods"] == ["GET"]
     finally:
         server.shutdown()
+
+
+def _hostile_assessment() -> dict:
+    return {
+        "evaluated_at": "<b>2026",
+        "snapshot_reason": "<img src='/etc/passwd' width='1' height='1'/>",
+        "assessment_hash": "</font><a href='javascript:app.alert(1)'>x</a>",
+        "catalog_bundle": {"bundle_id": "<a href='javascript:app.alert(2)'>bundle</a>"},
+        "posture": {},
+        "evidence_freshness": {"count": "<b>", "stale_count": "<i>"},
+    }
+
+
+def test_render_executive_pdf_escapes_untrusted_markup(monkeypatch) -> None:
+    import reportlab.platypus.paraparser as paraparser
+
+    opened: list[object] = []
+    real_start_img = paraparser.ParaParser.start_img
+
+    def spy(self, attributes):
+        opened.append(attributes)
+        return real_start_img(self, attributes)
+
+    monkeypatch.setattr(paraparser.ParaParser, "start_img", spy)
+    pdf = render_executive_pdf(_hostile_assessment(), org_name="<a href='javascript:app.alert(3)'>Org</a>")
+    assert pdf.startswith(b"%PDF")
+    assert b"javascript:" not in pdf
+    assert opened == []
+
+
+def test_v1_snapshot_pdf_export_survives_markup_in_reason(tmp_path: Path) -> None:
+    from fastapi.testclient import TestClient
+
+    from security_lakehouse.server_app import create_app
+
+    _seed_lake(tmp_path)
+    client = TestClient(create_app(tmp_path, require_auth=False), raise_server_exceptions=False)
+    for reason in ("<b>q3", "<img src='/etc/passwd' width='1' height='1'/>", "<a href='javascript:app.alert(1)'>r</a>"):
+        assert client.post("/api/v1/snapshots", json={"reason": reason}).status_code == 201
+        sid = client.get("/api/v1/snapshots").json()["data"][0]["snapshot_id"]
+        resp = client.get(f"/api/v1/snapshots/{sid}/export.pdf")
+        assert resp.status_code == 200, reason
+        assert b"javascript:" not in resp.content
 
 
 def _request_raw(server, method: str, path: str):

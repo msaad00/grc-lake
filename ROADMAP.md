@@ -1,6 +1,6 @@
 # GRC Lake Roadmap
 
-Source targets v0.3.0; publication is verified separately. Remaining gaps come first. Track work in GitHub issues.
+Status as of v0.3.0 source preparation; publication is verified separately. Remaining gaps come first. Track work in GitHub issues.
 
 ## Remaining gaps
 

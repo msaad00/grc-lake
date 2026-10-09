@@ -126,13 +126,19 @@ test.describe("console smoke", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Audit room" }),
     ).toBeVisible();
-    // Distinct names: each is defined once, then labels its tile.
+    // Each metric has a definition term and a separately labelled tile.
     await expect(
       page.getByText("Audit readiness index", { exact: true }),
-    ).toHaveCount(2);
+    ).toHaveCount(1);
+    await expect(
+      page.locator("dt").filter({ hasText: "Audit readiness index:" }),
+    ).toHaveCount(1);
     await expect(
       page.getByText("Evaluated frameworks ready", { exact: true }),
-    ).toHaveCount(2);
+    ).toHaveCount(1);
+    await expect(
+      page.locator("dt").filter({ hasText: "Evaluated frameworks ready:" }),
+    ).toHaveCount(1);
     await expect(page.getByText(/^Assessment score \d+\/100$/)).toBeVisible();
     await expect(page.getByText("Audit score", { exact: true })).toHaveCount(0);
     await expect(page.getByText("Fresh rate", { exact: true })).toHaveCount(0);

@@ -1090,11 +1090,174 @@ def _evidence_freshness_sql_row(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _insert_duckdb_rows(connection, statement, rows):
-    # DuckDB rejects an empty executemany batch; an empty assessment still has
-    # valid typed tables and must remain exportable.
-    if rows:
-        connection.executemany(statement, rows)
+_DUCKDB_TABLES: dict[str, tuple[tuple[str, str], ...]] = {
+    "normalized_events": (
+        ("event_id", "VARCHAR"),
+        ("tenant_id", "VARCHAR"),
+        ("event_time", "TIMESTAMP"),
+        ("source", "VARCHAR"),
+        ("event_type", "VARCHAR"),
+        ("asset_id", "VARCHAR"),
+        ("asset_type", "VARCHAR"),
+        ("asset_owner", "VARCHAR"),
+        ("environment", "VARCHAR"),
+        ("severity", "VARCHAR"),
+        ("severity_score", "INTEGER"),
+        ("status", "VARCHAR"),
+        ("control_ids_json", "VARCHAR"),
+        ("evidence_id", "VARCHAR"),
+        ("evidence_ref", "VARCHAR"),
+        ("evidence_collected_at", "TIMESTAMP"),
+        ("raw_sha256", "VARCHAR"),
+    ),
+    "control_posture": (
+        ("tenant_id", "VARCHAR"),
+        ("control_id", "VARCHAR"),
+        ("framework", "VARCHAR"),
+        ("title", "VARCHAR"),
+        ("risk_domain", "VARCHAR"),
+        ("owner", "VARCHAR"),
+        ("status", "VARCHAR"),
+        ("risk_score", "INTEGER"),
+        ("event_count", "INTEGER"),
+        ("open_event_count", "INTEGER"),
+        ("evidence_count", "INTEGER"),
+        ("evidence_coverage", "DOUBLE"),
+        ("latest_event_time", "TIMESTAMP"),
+    ),
+    "asset_risk": (
+        ("tenant_id", "VARCHAR"),
+        ("asset_id", "VARCHAR"),
+        ("asset_type", "VARCHAR"),
+        ("asset_owner", "VARCHAR"),
+        ("environment", "VARCHAR"),
+        ("risk_score", "INTEGER"),
+        ("critical_open", "INTEGER"),
+        ("high_open", "INTEGER"),
+        ("event_count", "INTEGER"),
+        ("latest_event_time", "TIMESTAMP"),
+    ),
+    "control_tests": (
+        ("tenant_id", "VARCHAR"),
+        ("test_id", "VARCHAR"),
+        ("program_id", "VARCHAR"),
+        ("control_id", "VARCHAR"),
+        ("framework", "VARCHAR"),
+        ("name", "VARCHAR"),
+        ("owner", "VARCHAR"),
+        ("cadence", "VARCHAR"),
+        ("automation_level", "VARCHAR"),
+        ("agent_skill", "VARCHAR"),
+        ("status", "VARCHAR"),
+        ("result", "VARCHAR"),
+        ("confidence_score", "INTEGER"),
+        ("confidence_inputs_json", "VARCHAR"),
+        ("required_evidence_types_json", "VARCHAR"),
+        ("observed_evidence_types_json", "VARCHAR"),
+        ("missing_evidence_types_json", "VARCHAR"),
+        ("evidence_count", "INTEGER"),
+        ("failing_evidence_count", "INTEGER"),
+        ("open_violation_count", "INTEGER"),
+        ("latest_evidence_at", "TIMESTAMP"),
+        ("freshness_status", "VARCHAR"),
+        ("stale_evidence_types_json", "VARCHAR"),
+        ("expired_evidence_types_json", "VARCHAR"),
+        ("evidence_freshness_json", "VARCHAR"),
+        ("remediation_sla_hours", "INTEGER"),
+        ("next_action", "VARCHAR"),
+        ("api_refs_json", "VARCHAR"),
+        ("evaluated_at", "TIMESTAMP"),
+    ),
+    "evidence_freshness": (
+        ("event_id", "VARCHAR"),
+        ("evidence_id", "VARCHAR"),
+        ("evidence_ref", "VARCHAR"),
+        ("source", "VARCHAR"),
+        ("connector_id", "VARCHAR"),
+        ("event_type", "VARCHAR"),
+        ("asset_id", "VARCHAR"),
+        ("control_ids_json", "VARCHAR"),
+        ("evidence_collected_at", "TIMESTAMP"),
+        ("evaluated_at", "TIMESTAMP"),
+        ("freshness_slo_minutes", "INTEGER"),
+        ("status", "VARCHAR"),
+        ("score", "INTEGER"),
+        ("age_minutes", "INTEGER"),
+        ("expires_at", "TIMESTAMP"),
+        ("reason", "VARCHAR"),
+    ),
+    "metrics": (("metric", "VARCHAR"), ("value", "VARCHAR")),
+}
+
+
+def _create_duckdb_tables(connection: Any) -> None:
+    for table, columns in _DUCKDB_TABLES.items():
+        connection.execute(f"CREATE TABLE {table} ({', '.join(f'{name} {kind}' for name, kind in columns)})")
+
+
+def _json_default(value: Any) -> str:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    raise TypeError(f"unsupported mart value {type(value).__name__}")
+
+
+def _duckdb_load_json(connection: Any, table: str, rows: list[tuple[Any, ...]]) -> None:
+    """Stage rows as NDJSON and let DuckDB parse them with the declared column types."""
+    if not rows:
+        return
+    import tempfile
+
+    columns = _DUCKDB_TABLES[table]
+    names = [name for name, _ in columns]
+    spec = ", ".join(f"'{name}': '{kind}'" for name, kind in columns)
+    with tempfile.TemporaryDirectory(prefix="trustops-mart-") as staging:
+        path = Path(staging) / f"{table}.jsonl"
+        with path.open("w", encoding="utf-8") as handle:
+            for row in rows:
+                handle.write(json.dumps(dict(zip(names, row, strict=True)), default=_json_default))
+                handle.write("\n")
+        connection.execute(
+            f"INSERT INTO {table} SELECT * FROM read_json(?, format='newline_delimited', "
+            f"columns={{{spec}}}, maximum_object_size=1073741824)",
+            [str(path)],
+        )
+
+
+def _duckdb_load_arrow(connection: Any, table: str, rows: list[tuple[Any, ...]]) -> None:
+    """Hand DuckDB a typed Arrow table when the optional pyarrow extra is installed."""
+    if not rows:
+        return
+    import pyarrow as pa
+
+    arrow_types = {
+        "VARCHAR": pa.string(),
+        "INTEGER": pa.int64(),
+        "DOUBLE": pa.float64(),
+        "TIMESTAMP": pa.timestamp("us"),
+    }
+    columns = _DUCKDB_TABLES[table]
+    try:
+        source = pa.table(
+            {
+                name: pa.array(values, type=arrow_types[kind])
+                for (name, kind), values in zip(columns, zip(*rows, strict=True), strict=True)
+            }
+        )
+    except (pa.ArrowInvalid, pa.ArrowTypeError):
+        _duckdb_load_json(connection, table, rows)
+        return
+    view = f"_bulk_{table}"
+    connection.register(view, source)
+    try:
+        connection.execute(f"INSERT INTO {table} SELECT * FROM {view}")
+    finally:
+        connection.unregister(view)
+
+
+def _duckdb_loader() -> Any:
+    if importlib.util.find_spec("pyarrow") is not None:
+        return _duckdb_load_arrow
+    return _duckdb_load_json
 
 
 def _write_duckdb_mart_if_available(
@@ -1118,132 +1281,14 @@ def _write_duckdb_mart_if_available(
     def utc_timestamp(value):
         return _coerce_datetime(value) if value else None
 
+    load = _duckdb_loader()
     if mart_path.exists():
         mart_path.unlink()
     with duckdb.connect(str(mart_path)) as conn:
-        conn.execute(
-            """
-            CREATE TABLE normalized_events (
-                event_id VARCHAR,
-                tenant_id VARCHAR,
-                event_time TIMESTAMP,
-                source VARCHAR,
-                event_type VARCHAR,
-                asset_id VARCHAR,
-                asset_type VARCHAR,
-                asset_owner VARCHAR,
-                environment VARCHAR,
-                severity VARCHAR,
-                severity_score INTEGER,
-                status VARCHAR,
-                control_ids_json VARCHAR,
-                evidence_id VARCHAR,
-                evidence_ref VARCHAR,
-                evidence_collected_at TIMESTAMP,
-                raw_sha256 VARCHAR
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE control_posture (
-                tenant_id VARCHAR,
-                control_id VARCHAR,
-                framework VARCHAR,
-                title VARCHAR,
-                risk_domain VARCHAR,
-                owner VARCHAR,
-                status VARCHAR,
-                risk_score INTEGER,
-                event_count INTEGER,
-                open_event_count INTEGER,
-                evidence_count INTEGER,
-                evidence_coverage DOUBLE,
-                latest_event_time TIMESTAMP
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE asset_risk (
-                tenant_id VARCHAR,
-                asset_id VARCHAR,
-                asset_type VARCHAR,
-                asset_owner VARCHAR,
-                environment VARCHAR,
-                risk_score INTEGER,
-                critical_open INTEGER,
-                high_open INTEGER,
-                event_count INTEGER,
-                latest_event_time TIMESTAMP
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE control_tests (
-                tenant_id VARCHAR,
-                test_id VARCHAR,
-                program_id VARCHAR,
-                control_id VARCHAR,
-                framework VARCHAR,
-                name VARCHAR,
-                owner VARCHAR,
-                cadence VARCHAR,
-                automation_level VARCHAR,
-                agent_skill VARCHAR,
-                status VARCHAR,
-                result VARCHAR,
-                confidence_score INTEGER,
-                confidence_inputs_json VARCHAR,
-                required_evidence_types_json VARCHAR,
-                observed_evidence_types_json VARCHAR,
-                missing_evidence_types_json VARCHAR,
-                evidence_count INTEGER,
-                failing_evidence_count INTEGER,
-                open_violation_count INTEGER,
-                latest_evidence_at TIMESTAMP,
-                freshness_status VARCHAR,
-                stale_evidence_types_json VARCHAR,
-                expired_evidence_types_json VARCHAR,
-                evidence_freshness_json VARCHAR,
-                remediation_sla_hours INTEGER,
-                next_action VARCHAR,
-                api_refs_json VARCHAR,
-                evaluated_at TIMESTAMP
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE evidence_freshness (
-                event_id VARCHAR,
-                evidence_id VARCHAR,
-                evidence_ref VARCHAR,
-                source VARCHAR,
-                connector_id VARCHAR,
-                event_type VARCHAR,
-                asset_id VARCHAR,
-                control_ids_json VARCHAR,
-                evidence_collected_at TIMESTAMP,
-                evaluated_at TIMESTAMP,
-                freshness_slo_minutes INTEGER,
-                status VARCHAR,
-                score INTEGER,
-                age_minutes INTEGER,
-                expires_at TIMESTAMP,
-                reason VARCHAR
-            )
-            """
-        )
-        conn.execute("CREATE TABLE metrics (metric VARCHAR, value VARCHAR)")
-        _insert_duckdb_rows(
+        _create_duckdb_tables(conn)
+        load(
             conn,
-            """
-            INSERT INTO normalized_events VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-            )
-            """,
+            "normalized_events",
             [
                 (
                     row["event_id"],
@@ -1267,9 +1312,9 @@ def _write_duckdb_mart_if_available(
                 for row in silver_rows
             ],
         )
-        _insert_duckdb_rows(
+        load(
             conn,
-            "INSERT INTO control_posture VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "control_posture",
             [
                 (
                     tenant_id,
@@ -1289,9 +1334,9 @@ def _write_duckdb_mart_if_available(
                 for row in control_rows
             ],
         )
-        _insert_duckdb_rows(
+        load(
             conn,
-            "INSERT INTO asset_risk VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "asset_risk",
             [
                 (
                     tenant_id,
@@ -1308,9 +1353,9 @@ def _write_duckdb_mart_if_available(
                 for row in asset_rows
             ],
         )
-        _insert_duckdb_rows(
+        load(
             conn,
-            "INSERT INTO control_tests VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "control_tests",
             [
                 (
                     tenant_id,
@@ -1346,9 +1391,9 @@ def _write_duckdb_mart_if_available(
                 for row in control_test_rows
             ],
         )
-        _insert_duckdb_rows(
+        load(
             conn,
-            "INSERT INTO evidence_freshness VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "evidence_freshness",
             [
                 (
                     row["event_id"],
@@ -1371,9 +1416,7 @@ def _write_duckdb_mart_if_available(
                 for row in evidence_freshness_rows
             ],
         )
-        _insert_duckdb_rows(
-            conn, "INSERT INTO metrics VALUES (?, ?)", [(key, str(value)) for key, value in metrics.items()]
-        )
+        load(conn, "metrics", [(key, str(value)) for key, value in metrics.items()])
         conn.execute(
             """
             CREATE VIEW daily_control_results AS

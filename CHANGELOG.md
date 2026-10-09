@@ -3,6 +3,10 @@
 All notable GRC Lake changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Bulk-load the DuckDB mart through typed Arrow tables when available, with a staged NDJSON fallback. Preserve table schemas, views, row contents, and order. Strict JSON decoding avoids unnecessary depth and Unicode scans while retaining duplicate-key, finite-number, Unicode, and nesting checks.
+
 ## 0.3.0 - 2026-10-09
 
 - Rebrand the product, CLI, SDK, console, logo, repository links and deployment examples to GRC Lake. Legacy CLI commands, Python imports and runtime environment variables remain supported. See [upgrade instructions](docs/REBRANDING.md) before changing package or deployment names. The release targets the new `grc-lake` distribution and image; existing TrustOps releases remain under their original registry names.

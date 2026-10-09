@@ -1,9 +1,9 @@
 # Framework Packs
 
-TrustOps ships **framework packs** — complete criterion/subcategory catalogs with
-reviewed mappings, evidence requirements, and evaluation rules. Packs are the
-fastest path to managed GRC-style **100% framework ID coverage** while other
-frameworks stay seed-and-expand.
+TrustOps ships **framework packs**: criterion and subcategory catalogs with
+safeguard mappings, evidence requirements, and evaluation rules. Full packs
+cover every identifier in the official source; limited-mapping packs seed an
+honest, cited subset.
 
 ## Full packs (100% ID coverage)
 
@@ -259,12 +259,22 @@ Other rows reuse `cloud.config`, `identity.access_review`, `detection.alert`,
 `vulnerability.finding`, `remediation.ticket`, `audit.chain` and
 `compliance.evidence_bundle`. Hints are keyed per NIS2 row and per DORA article.
 
-## Other frameworks (add as you go)
+## Not seeded yet
 
-SOC 1 remains **planned** in the registry. Expand additional
-frameworks incrementally using the same control schema. SOC 1 has no official
-control catalog to seed from (see
-[Framework expansion plan](FRAMEWORK_EXPANSION_PLAN.md#soc-1-why-it-stays-planned)).
+Packs reproduce official identifiers and short titles only, never paywalled
+standard text, and never invent a control that lacks an official identifier.
+That rule leaves these gaps open:
+
+- **SOC 1** stays `planned` with zero controls. SOC 1 (SSAE 18 / AT-C 320)
+  reports test control objectives the service organization writes for its own
+  services; AICPA publishes no numbered SOC 1 catalog. The general controls it
+  would test (control environment, logical access, change management) are
+  covered through SOC 2 CC1–CC8.
+- **ISO/IEC 27001 clauses 4–10** (the ISMS requirements) are not seeded; the
+  pack holds the 93 Annex A controls. The clause list is only in the licensed
+  standard.
+- **CIS Azure and GCP Foundations Benchmarks** are not catalogued. Like CIS
+  AWS, their recommendation IDs come from registration-gated PDFs.
 
 ## Custom frameworks
 
@@ -294,7 +304,6 @@ Tune per control after sync by editing `evaluation_rule` in the catalog.
 ## Roadmap
 
 - FedRAMP **Rev 5 overlay** controls beyond NIST Moderate (323-selected set)
-- SOC 2 **Availability / Confidentiality / Processing Integrity / Privacy** TSC
 - Pack-specific evidence requirement templates linked to connector catalogs
 
 See [ROADMAP.md](../ROADMAP.md).

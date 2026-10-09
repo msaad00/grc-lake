@@ -3,7 +3,7 @@
 TrustOps runs on infrastructure you operate: your laptop, a single host, or your
 Kubernetes cluster. There is no managed service. This page gets the demo running
 and maps each console page to the job it does. What is shipped versus planned
-lives in [product status](PRODUCT_SHAPE.md) and the [roadmap](../ROADMAP.md).
+lives in the [roadmap](../ROADMAP.md).
 
 ## First run
 

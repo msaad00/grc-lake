@@ -7,39 +7,25 @@
   <a href="https://pypi.org/project/trustops-security-data-lake/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"></a>
   <a href="https://github.com/msaad00/trustops-security-data-lake/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/msaad00/trustops-security-data-lake/ci.yml?branch=main&amp;label=CI" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License: Apache 2.0"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/msaad00/trustops-security-data-lake"><img src="https://api.scorecard.dev/projects/github.com/msaad00/trustops-security-data-lake/badge" alt="OpenSSF Scorecard"></a>
 </p>
 
-**Open-source trust operations, on your evidence lake.** Assess logs and data
-already in your lake, or collect evidence from your stack. Evaluate controls,
-track remediation, and export reproducible workpapers.
-Run the console, API, CLI, and MCP server in infrastructure you control.
+**Open-source trust operations, on your evidence lake.** Self-hosted GRC
+engineering: collect read-only evidence from cloud, identity, code, and existing
+security lakes; evaluate it with deterministic, version-pinned control tests;
+export snapshots, workpapers, and OSCAL.
 
-[Evidence modes](#evidence-modes) · [Quick start](#quick-start) · [Product tour](#product-tour) · [Self-host](#self-host) ·
-[Frameworks](#frameworks) · [Documentation](#documentation)
+<!-- BEGIN README AT A GLANCE -->
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-dashboard-dark.png">
-  <img src="docs/images/trustops-demo-dashboard.png" alt="TrustOps overview with framework coverage, priority actions, and evidence freshness" width="100%">
-</picture>
+- **20 framework packs, 2,252 catalogued requirements,** linked through 94 common safeguards. 1,415 requirements have safeguard mappings; 340 have reviewed mappings and the other 1,075 are proposed.
+- **25 read-only source adapters (7 in preview)**, plus OCSF presets for existing security lakes.
+- **Fails closed:** missing, stale, or partial evidence never produces a pass, and proposed mappings are not attestable.
+- **One engine, four surfaces:** console, REST API, CLI, and MCP server. Agents propose; humans approve.
 
-_Screens show the bundled synthetic company. They demonstrate workflows, not a
-customer deployment or an audit opinion._
+<!-- END README AT A GLANCE -->
 
-## Evidence modes
-
-Both modes feed the same evaluation engine, assessments, and review workflows.
-
-| Mode              | Start with                                                                        | How it works                                                                                                                                                                                                                                                                                                 |
-| ----------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Existing lake** | Logs, security events, and evidence already ingested into your lake or warehouse. | Read-only readers query existing tables; [lake mappings](docs/BRING_YOUR_OWN_LAKE.md) translate their fields into evidence. Snowflake, ClickHouse, Databricks, BigQuery, and Iceberg/Parquet readers include OCSF presets for Amazon Security Lake. S3 evidence and SIEM exports are also supported sources. |
-| **Ingest**        | Cloud, identity, code, endpoint, and SaaS systems; no existing lake required.     | Read-only connectors collect evidence into storage you own. Sources include AWS, Azure, GCP, GitHub, GitLab, Okta, Google Workspace, Jira, Intune, and HR systems.                                                                                                                                           |
-
-**Already have a lake?** Start with [bring your own lake](docs/BRING_YOUR_OWN_LAKE.md).
-**Collecting new evidence?** Start with [connector setup](docs/CONNECTOR_CREDENTIALS.md).
-Lake mappings are experimental; preview and live-provider qualification vary by
-reader. See the [connector catalog](docs/CONNECTORS.md) for status. Existing-lake
-readers preserve the source system and materialize assessment evidence into the
-TrustOps lake; they do not move the TrustOps application into your warehouse.
+[Quick start](#quick-start) · [Architecture](#architecture) · [Evidence modes](#evidence-modes) ·
+[Product tour](#product-tour) · [Self-host](#self-host) · [Frameworks](#frameworks) · [Documentation](#documentation)
 
 ## Quick start
 
@@ -84,6 +70,61 @@ TRUSTOPS_LAKE=./lake trustops-mcp
 Read [headless GRC](docs/HEADLESS_GRC.md) for agent credentials and authority.
 
 </details>
+
+The PyPI package is `trustops-security-data-lake`, the CLI is
+`security-lakehouse`, and the MCP server is `trustops-mcp`.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-dashboard-dark.png">
+  <img src="docs/images/trustops-demo-dashboard.png" alt="TrustOps overview with framework coverage, priority actions, and evidence freshness" width="100%">
+</picture>
+
+_Screens show the bundled synthetic company. They demonstrate workflows, not a
+customer deployment or an audit opinion._
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Sources["Sources<br/>cloud · identity · code · existing lakes"]
+  Collect["Collect<br/>read-only · normalize · hash"]
+  Evaluate["Evaluate<br/>deterministic, version-pinned control tests"]
+  Generations["Assessment generations<br/>hash-verified, published atomically"]
+  Snapshots["Snapshots<br/>hash-chained ledger"]
+  API["REST API"]
+  Console["Console"]
+  MCP["MCP server"]
+  CLI["CLI"]
+  Sources --> Collect --> Evaluate --> Generations --> Snapshots
+  Generations --> API
+  API --> Console
+  API --> MCP
+  Generations -. local lake .-> CLI
+  Generations -. local lake .-> MCP
+```
+
+Connectors only read from source systems. Deterministic rules own every result;
+agents can propose changes but do not decide them. Each run publishes a new
+generation whose artifact hashes are verified before it becomes current, and
+each snapshot records its predecessor's hash. The CLI works on a local lake; the
+MCP server reads a local lake or calls the authenticated API. See
+[architecture](docs/ARCHITECTURE.md).
+
+## Evidence modes
+
+Both modes feed the same evaluation engine, assessments, and review workflows.
+
+| Mode              | Start with                                                                        | How it works                                                                                                                                                                                                                                                                                                 |
+| ----------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Existing lake** | Logs, security events, and evidence already ingested into your lake or warehouse. | Read-only readers query existing tables; [lake mappings](docs/BRING_YOUR_OWN_LAKE.md) translate their fields into evidence. Snowflake, ClickHouse, Databricks, BigQuery, and Iceberg/Parquet readers include OCSF presets for Amazon Security Lake. S3 evidence and SIEM exports are also supported sources. |
+| **Ingest**        | Cloud, identity, code, endpoint, and SaaS systems; no existing lake required.     | Read-only connectors collect evidence into storage you own. Sources include AWS, Azure, GCP, GitHub, GitLab, Okta, Google Workspace, Jira, Intune, and HR systems.                                                                                                                                           |
+
+**Already have a lake?** Start with [bring your own lake](docs/BRING_YOUR_OWN_LAKE.md).
+**Collecting new evidence?** Start with [connector setup](docs/CONNECTOR_CREDENTIALS.md).
+Lake mappings are experimental; preview and live-provider qualification vary by
+reader. See the [connector catalog](docs/CONNECTORS.md) for status. Existing-lake
+readers preserve the source system and materialize assessment evidence into the
+TrustOps lake; they do not move the TrustOps application into your warehouse.
 
 ## Product tour
 
@@ -142,6 +183,16 @@ and model integrations you configure.
 See the [connector catalog](connectors/catalog.json) for implementation and preview
 status, and [credential setup](docs/CONNECTOR_CREDENTIALS.md) for each source.
 
+### Verify a release
+
+Wheels and sdists carry SLSA build provenance, and each GitHub release attaches
+a CycloneDX SBOM of the locked runtime dependencies:
+
+```bash
+gh release download v0.2.24 -R msaad00/trustops-security-data-lake -p '*.whl'
+gh attestation verify trustops_security_data_lake-0.2.24-py3-none-any.whl -R msaad00/trustops-security-data-lake
+```
+
 ## Frameworks
 
 Common safeguards connect source evidence to framework requirements. Proposed
@@ -197,6 +248,7 @@ local history replacement. See [evidence recovery](docs/EVIDENCE_RECOVERY.md) an
 | Need                             | Start here                                                                                           |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | Try a complete workflow          | [5-minute tutorial](docs/TUTORIAL_5_MIN.md)                                                          |
+| Understand the design            | [Architecture](docs/ARCHITECTURE.md) · [All docs](docs/README.md)                                    |
 | Deploy and authenticate          | [Deployment](deploy/README.md) · [Server auth](docs/SERVER_AUTH.md)                                  |
 | Understand storage and retention | [Data flow](docs/DATA_FLOW.md) · [Operations](docs/OPERATIONS_CONTRACTS.md)                          |
 | Integrate an agent               | [Headless GRC](docs/HEADLESS_GRC.md) · [Agent skills](docs/api/AGENT_SKILLS.md)                      |

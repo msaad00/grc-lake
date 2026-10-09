@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail CI when tracked copy uses forbidden or retired product names.
 
-Policy: docs/BRAND.md — use "managed GRC SaaS" instead of vendor product names.
+Policy: public copy never names other vendors' GRC products.
 """
 
 from __future__ import annotations

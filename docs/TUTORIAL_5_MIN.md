@@ -54,8 +54,7 @@ security-lakehouse assessment status --lake ./lake | jq '.posture'
 security-lakehouse assessment violations --lake ./lake
 ```
 
-Version 0.2.21 adds a concise terminal summary and the installed package
-version (these flags are unavailable in 0.2.20 and earlier):
+For a concise terminal summary and the installed package version:
 
 ```bash
 security-lakehouse --version
@@ -84,7 +83,7 @@ pull request. From a checkout of this repository, with the server still running:
 
 ```bash
 TRUSTOPS_URL=http://127.0.0.1:8787 MIN_SCORE=70 ./tools/ci/posture-gate.sh
-# exits 1: score 6.58 is below 70, 4 critical violations, 19 failing controls
+# exits 1: posture score is below 70, with 4 critical violations and 19 failing control tests
 ```
 
 ## 4. Connect one real cloud account, read-only
@@ -132,7 +131,7 @@ security-lakehouse frameworks safeguards --lake ./lake --format table | head -3
 The decision is appended to a hash-chained log in the lake. In server mode
 only a signed-in `admin` or `compliance_reviewer` can decide, in the console
 under **Evaluate → Mapping review**. [Mapping review](MAPPING_REVIEW.md) has
-the full model. This step needs TrustOps 0.2.19 or later.
+the full model.
 
 ## 6. Export for an auditor
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import sys
 import tempfile
 import uuid
 
@@ -158,63 +159,69 @@ class DistributedMiddleware:
             await send(message)
 
         try:
-            if not mutation:
-                manager = self.runtime.metadata_read(tenant) if queue_only else self.runtime.read_transaction(tenant)
+            try:
+                if not mutation:
+                    manager = (
+                        self.runtime.metadata_read(tenant) if queue_only else self.runtime.read_transaction(tenant)
+                    )
+                    workspace = await run_in_threadpool(manager.__enter__)
+                    token = binding.set(workspace)
+                    await self.app(scope, receive, forward)
+                    active, manager = manager, None
+                    await run_in_threadpool(active.__exit__, None, None, None)
+                    return
+                manager = (
+                    self.runtime.metadata_transaction(tenant)
+                    if queue_only or async_admission
+                    else self.runtime.transaction(tenant)
+                )
                 workspace = await run_in_threadpool(manager.__enter__)
                 token = binding.set(workspace)
-                await self.app(scope, receive, forward)
-                active, manager = manager, None
-                await run_in_threadpool(active.__exit__, None, None, None)
-                return
-            manager = (
-                self.runtime.metadata_transaction(tenant)
-                if queue_only or async_admission
-                else self.runtime.transaction(tenant)
-            )
-            workspace = await run_in_threadpool(manager.__enter__)
-            token = binding.set(workspace)
-            # Do not acknowledge a write until both SQL and the lake pointer
-            # commit. Spooled response bodies bound memory and total output.
-            start = None
-            size = 0
-            with tempfile.SpooledTemporaryFile(max_size=1024**2) as body:
+                # Do not acknowledge a write until both SQL and the lake pointer
+                # commit. Spooled response bodies bound memory and total output.
+                start = None
+                size = 0
+                with tempfile.SpooledTemporaryFile(max_size=1024**2) as body:
 
-                async def capture(message):
-                    nonlocal start, size
-                    if message["type"] == "http.response.start":
-                        start = message
-                    elif message["type"] == "http.response.body":
-                        data = message.get("body", b"")
-                        size += len(data)
-                        if size > 64 * 1024**2:
-                            raise ValueError("distributed mutation response exceeds 64 MiB")
-                        body.write(data)
+                    async def capture(message):
+                        nonlocal start, size
+                        if message["type"] == "http.response.start":
+                            start = message
+                        elif message["type"] == "http.response.body":
+                            data = message.get("body", b"")
+                            size += len(data)
+                            if size > 64 * 1024**2:
+                                raise ValueError("distributed mutation response exceeds 64 MiB")
+                            body.write(data)
 
-                await self.app(scope, receive, capture)
-                if start is None:
-                    raise RuntimeError("application returned no response")
-                if start["status"] < 400:
-                    await run_in_threadpool(self._audit, scope, start["status"], independent=False)
-                active, manager = manager, None
-                if start["status"] >= 400:
-                    failure = RejectedResponse()
-                    await run_in_threadpool(active.__exit__, type(failure), failure, None)
-                    await run_in_threadpool(self._audit, scope, start["status"], independent=True)
-                else:
-                    await run_in_threadpool(active.__exit__, None, None, None)
-                manager = None
-                await forward(start)
-                body.seek(0)
-                while chunk := body.read(64 * 1024):
-                    await send({"type": "http.response.body", "body": chunk, "more_body": True})
-                await send({"type": "http.response.body", "body": b"", "more_body": False})
-        except BaseException as exc:
-            if manager is not None:
-                import anyio
+                    await self.app(scope, receive, capture)
+                    if start is None:
+                        raise RuntimeError("application returned no response")
+                    if start["status"] < 400:
+                        await run_in_threadpool(self._audit, scope, start["status"], independent=False)
+                    active, manager = manager, None
+                    if start["status"] >= 400:
+                        failure = RejectedResponse()
+                        await run_in_threadpool(active.__exit__, type(failure), failure, None)
+                        await run_in_threadpool(self._audit, scope, start["status"], independent=True)
+                    else:
+                        await run_in_threadpool(active.__exit__, None, None, None)
+                    manager = None
+                    await forward(start)
+                    body.seek(0)
+                    while chunk := body.read(64 * 1024):
+                        await send({"type": "http.response.body", "body": chunk, "more_body": True})
+                    await send({"type": "http.response.body", "body": b"", "more_body": False})
+            finally:
+                if manager is not None:
+                    import anyio
 
-                with anyio.CancelScope(shield=True):
-                    await run_in_threadpool(manager.__exit__, type(exc), exc, exc.__traceback__)
-            if response_started or not isinstance(exc, Exception):
+                    # Roll back on cancellation as well as ordinary exceptions,
+                    # while letting cancellation propagate to the ASGI server.
+                    with anyio.CancelScope(shield=True):
+                        await run_in_threadpool(manager.__exit__, *sys.exc_info())
+        except Exception as exc:
+            if response_started:
                 raise
             code = 409 if isinstance(exc, Conflict) else 503
             await run_in_threadpool(self._audit, scope, code, independent=True)

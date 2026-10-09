@@ -99,9 +99,14 @@ def test_scheduler_attempt_survives_worker_failure_without_publishing_partial_la
     runtime = apps[0].state.distributed_runtime
     tenant, _ = credentials[0]
     now = datetime.now(UTC)
-    with pytest.raises(RuntimeError, match="lost worker"), runtime.write(tenant) as lake:
-        _write_state(lake, target_kind="workflow", target_id="example", fired_at=now, result="started")
-        raise RuntimeError("lost worker")
+
+    def failed_worker():
+        with runtime.write(tenant) as lake:
+            _write_state(lake, target_kind="workflow", target_id="example", fired_at=now, result="started")
+            raise RuntimeError("lost worker")
+
+    with pytest.raises(RuntimeError, match="lost worker"):
+        failed_worker()
     assert runtime.catalog.head(tenant).version == 0
     with apps[1].state.distributed_runtime.read(tenant) as lake:
         assert _read_state(lake)["workflow:example"] == now
@@ -208,3 +213,51 @@ def test_shared_audit_uses_database_time_even_when_a_replica_clock_is_wrong(repl
         event = json.loads(row.event_json)
         assert not event["occurred_at"].startswith("1900")
         assert datetime.fromisoformat(event["occurred_at"]) == row.occurred_at
+
+
+def test_cancelled_mutation_rolls_back_and_propagates_cancellation(replicas):
+    import asyncio
+
+    from security_lakehouse.db.models import Tenant
+    from security_lakehouse.distributed.context import binding
+    from security_lakehouse.distributed.http import DistributedMiddleware
+
+    apps, credentials = replicas
+    app = apps[0]
+    tenant, _ = credentials[0]
+    runtime = app.state.distributed_runtime
+    with app.state.sessionmaker() as session:
+        original = session.get(Tenant, tenant).name
+
+    async def cancelled(scope, receive, send):
+        (binding.get().path / "unpublished").write_text("cancelled request")
+        with app.state.sessionmaker() as session:
+            session.get(Tenant, tenant).name = "must roll back"
+            session.commit()
+        raise asyncio.CancelledError()
+
+    async def unexpected_message(*args):
+        pytest.fail("cancelled mutation must not send an HTTP response")
+
+    middleware = DistributedMiddleware(cancelled, runtime=runtime, factory=app.state.sessionmaker)
+    scope = {"type": "http", "method": "POST", "path": "/api/v1/ingestion/eval", "headers": []}
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(middleware._dispatch(tenant, scope, unexpected_message, unexpected_message))
+    assert runtime.catalog.head(tenant).version == 0
+    with app.state.sessionmaker() as session:
+        assert session.get(Tenant, tenant).name == original
+    with runtime.write(tenant) as lake:
+        assert not (lake / "unpublished").exists()
+    assert binding.get() is None
+
+
+def test_cluster_scheduler_dispatches_each_registered_tenant(replicas, tmp_path):
+    from datetime import UTC, datetime
+
+    from security_lakehouse.scheduler import tick
+
+    apps, credentials = replicas
+    rows = tick(tmp_path / "scheduler-node", now=datetime(2026, 10, 9, tzinfo=UTC), all_tenants=True)
+    assert not any(row.get("result") == "error" for row in rows), rows
+    for tenant, _ in credentials:
+        assert apps[0].state.distributed_runtime.catalog.head(tenant).version == 1

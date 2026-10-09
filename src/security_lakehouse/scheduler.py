@@ -350,7 +350,7 @@ def tick(
     if ClusterConfig.from_env() is not None and binding.get() is None:
         from security_lakehouse.distributed.schedules import tick_cluster
 
-        return tick_cluster(Path(lake_dir), now=now)
+        return tick_cluster(Path(lake_dir), tick_tenant=tick, snapshot_hook_factory=_hosted_snapshot_hook, now=now)
     if all_tenants and server_tenant_id(lake_dir) is not None:
         raise ValueError("all-tenants scheduling requires an unbound lake root")
     if all_tenants or (in_server_mode() and server_tenant_id(lake_dir) is None):

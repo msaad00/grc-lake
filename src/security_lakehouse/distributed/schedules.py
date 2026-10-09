@@ -82,7 +82,7 @@ def record_attempt(kind: str, target: str, fired_at) -> None:
         )
 
 
-def tick_cluster(root, *, now=None, shards=None) -> list[dict]:
+def tick_cluster(root, *, tick_tenant, snapshot_hook_factory, now=None, shards=None) -> list[dict]:
     from sqlalchemy import select
 
     from security_lakehouse.db.base import create_engine_for, session_factory
@@ -91,7 +91,6 @@ def tick_cluster(root, *, now=None, shards=None) -> list[dict]:
     from security_lakehouse.distributed.objects import ObjectStore
     from security_lakehouse.distributed.workspace import Runtime
     from security_lakehouse.execution_mode import server_execution
-    from security_lakehouse.scheduler import _hosted_snapshot_hook, tick
 
     config = ClusterConfig.from_env()
     if config is None:
@@ -113,7 +112,7 @@ def tick_cluster(root, *, now=None, shards=None) -> list[dict]:
                     continue
                 try:
                     with runtime.write(tenant) as lake, server_execution(tenant):
-                        rows = tick(lake, now=now, on_snapshot_written=_hosted_snapshot_hook(factory, tenant))
+                        rows = tick_tenant(lake, now=now, on_snapshot_written=snapshot_hook_factory(factory, tenant))
                     results.extend({**row, "tenant_id": tenant} for row in rows)
                 except Conflict:
                     results.append({"tenant_id": tenant, "skipped_locked": True})

@@ -37,7 +37,7 @@ def _create_distributed_catalog():
 
 def _create_distributed_replicas(catalog, tmp_path, monkeypatch):
     from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
-    from security_lakehouse.distributed.objects import ObjectStore
+    from security_lakehouse.distributed import objects as module
     from security_lakehouse.server_app import create_app
     from test_distributed_objects import MemoryObjects
 
@@ -48,9 +48,9 @@ def _create_distributed_replicas(catalog, tmp_path, monkeypatch):
     monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "distributed-test-signing-key")
     monkeypatch.setenv("GRC_LAKE_API_RATE_LIMIT_RPS", "0")
     objects = MemoryObjects()
-    import security_lakehouse.distributed.objects as module
+    object_store = module.ObjectStore
 
-    monkeypatch.setattr(module, "ObjectStore", lambda config: ObjectStore(config, client=objects))
+    monkeypatch.setattr(module, "ObjectStore", lambda config: object_store(config, client=objects))
     apps = [create_app(tmp_path / str(i)) for i in range(2)]
     credentials = []
     with apps[0].state.sessionmaker.begin() as session:

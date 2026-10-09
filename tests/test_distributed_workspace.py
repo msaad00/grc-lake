@@ -30,12 +30,17 @@ def test_failure_rolls_back_domain_database_writes_and_never_publishes(catalog, 
     factory = session_factory(catalog.engine)
     with catalog.engine.begin() as conn:
         conn.execute(text("CREATE TABLE atomic_proof (id integer primary key)"))
-    with pytest.raises(RuntimeError, match="lost worker"), runtime.write("tenant-a") as lake:
-        with factory() as session:
-            session.execute(text("INSERT INTO atomic_proof VALUES (1)"))
-            session.commit()
-        (lake / "facts").write_text("must remain private")
-        raise RuntimeError("lost worker")
+
+    def failed_worker():
+        with runtime.write("tenant-a") as lake:
+            with factory() as session:
+                session.execute(text("INSERT INTO atomic_proof VALUES (1)"))
+                session.commit()
+            (lake / "facts").write_text("must remain private")
+            raise RuntimeError("lost worker")
+
+    with pytest.raises(RuntimeError, match="lost worker"):
+        failed_worker()
     with catalog.engine.connect() as conn:
         assert conn.scalar(text("SELECT count(*) FROM atomic_proof")) == 0
     assert catalog.head("tenant-a").version == 0

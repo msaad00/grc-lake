@@ -95,9 +95,9 @@ export default function AuditRoomPage() {
                   ).map((entry) => (
                     <div key={entry.label}>
                       <dt className="inline font-semibold text-ink">
-                        {entry.label}
-                      </dt>
-                      : <dd className="inline">{entry.definition}</dd>
+                        {entry.label}:
+                      </dt>{" "}
+                      <dd className="inline">{entry.definition}</dd>
                     </div>
                   ))}
                 </dl>

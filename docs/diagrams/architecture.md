@@ -1,18 +1,16 @@
 # Architecture — Local (file-backed) mode
 
-GRC Lake runs in two modes that share one assessment engine:
+This diagram shows the file-backed assessment pipeline. The same engine can run
+from the CLI or behind the authenticated API and bundled console.
 
-- **Local mode** (this diagram): zero-dependency, file-backed Bronze/Silver/Gold
-  zones with a SQLite analytics mart and a static dashboard. No cloud account or
-  database required; `pip install` and run.
-- **Server / warehouse mode**: the same engine behind a FastAPI server with an
-  application-state database, RBAC, SSO, the Next.js console, and governed
-  evidence in Snowflake or ClickHouse. See
-  [`grc-lake-assessment-architecture.svg`](../images/grc-lake-assessment-architecture.svg)
-  and [`dual-lakehouse.md`](dual-lakehouse.md).
-
-The two are not alternatives to reconcile: local mode is the embedded
-single-file path; server mode is the multi-tenant deployment path.
+- **Local mode:** JSONL Bronze/Silver/Gold zones, a SQLite analytics mart, and an
+  optional DuckDB mart. One writable application replica owns each lake.
+- **Distributed mode:** multiple API replicas and tenant workers use private
+  scratch storage, PostgreSQL coordination, and S3-compatible evidence objects.
+  See [deployment models](deployment-models.md) and [distributed mode](../DISTRIBUTED.md).
+- **Warehouse adapters:** Snowflake and ClickHouse are optional evidence sources
+  or export destinations. They are separate from the application topology; see
+  [dual lakehouse](dual-lakehouse.md).
 
 ```mermaid
 flowchart LR
@@ -33,7 +31,7 @@ flowchart LR
   end
 
   subgraph Mart["Analytics Mart"]
-    SQLite["SQLite<br/>normalized_events<br/>control_posture<br/>asset_risk<br/>metrics"]
+    SQLite["SQLite + optional DuckDB<br/>normalized_events<br/>control_posture<br/>asset_risk<br/>metrics"]
   end
 
   subgraph Consumption["Consumption"]

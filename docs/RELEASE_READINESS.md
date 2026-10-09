@@ -1,11 +1,12 @@
 # Release readiness
 
-GRC Lake **0.3.0** prepares the product rebrand, opt-in PostgreSQL/S3 distributed
-mode, parallel tenant workers, physical history partitions, console improvements,
-and security fixes listed in the [changelog](../CHANGELOG.md). Local deployment
-remains supported. Distributed mode requires explicit configuration and the
-[migration and recovery procedures](DISTRIBUTED.md); it is not enabled by a
-package upgrade. These are self-hosted software changes, not a managed service.
+GRC Lake **0.3.1** prepares generation-aware read caching, seek-based collection
+pages, bulk mart loading, and refreshed documentation listed in the
+[changelog](../CHANGELOG.md). The rebrand and opt-in PostgreSQL/S3 runtime shipped
+in 0.3.0. Local deployment remains supported. Distributed mode requires explicit
+configuration and the [migration and recovery procedures](DISTRIBUTED.md); it is
+not enabled by a package upgrade. Cache reuse across distributed request scratch
+directories remains limited; local timings do not establish distributed capacity.
 
 The source version is a release candidate until the publication gates below
 succeed. Existing `trustops-security-data-lake` releases remain available under

@@ -17,7 +17,7 @@ to preserve volumes, release names, secrets and compatibility aliases.
 | **Hosted mode** | An operator you choose        | Teams that want a live URL without running Kubernetes themselves |
 
 Evidence stays in **your boundary** in every model: local files, customer-owned
-Snowflake/ClickHouse/DuckDB, or a tenant-scoped `/lake` volume on your cluster.
+Snowflake/ClickHouse/DuckDB, a tenant-scoped `/lake` volume, or PostgreSQL/S3 in distributed mode.
 GRC Lake is not a hosted evidence warehouse that copies your cloud posture into
 an opaque SaaS database.
 
@@ -104,9 +104,9 @@ gated commercial features (invites, usage limits, SCIM 2.0, Stripe billing).
 
 Evaluator flow: [Shareable Demo](SHAREABLE_DEMO.md).
 
-## Capabilities in 0.2.x
+## Shipped capabilities
 
-| Capability                                      | GRC Lake 0.2.x                            |
+| Capability                                      | GRC Lake                                  |
 | ----------------------------------------------- | ----------------------------------------- |
 | Continuous control tests from live integrations | Yes (connectors + scheduler)              |
 | Executive dashboard + framework readiness       | Yes                                       |

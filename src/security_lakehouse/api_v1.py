@@ -33,9 +33,6 @@ from security_lakehouse.api_contract import (
     envelope,
     error_envelope,
 )
-from security_lakehouse.api_contract import (
-    required_post_scope as required_post_scope,
-)
 from security_lakehouse.assessment import (
     SnapshotIntegrityError,
     SnapshotWrittenHook,

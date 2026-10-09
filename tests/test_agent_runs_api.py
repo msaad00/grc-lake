@@ -40,7 +40,7 @@ def _human(app, token):
     with session_scope(app.state.sessionmaker) as session:
         key = resolve_api_key(session, token)
         _, value = create_user_session(session, tenant_id=key.tenant_id, user_id=key.user_id, idp="oidc")
-    return {"Cookie": f"{SESSION_COOKIE}={encode_session_cookie(value)}"}
+    return {"Cookie": f"{SESSION_COOKIE}={encode_session_cookie(value)}", "Content-Type": "application/json"}
 
 
 def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:

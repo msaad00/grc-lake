@@ -52,6 +52,7 @@ def get_identity(
         )
     reference = None
     key = None
+    upgraded_session = False
     failure_detail = "missing credentials"
     if credentials is not None and credentials.credentials:
         failure_detail = "invalid or inactive token"
@@ -64,6 +65,7 @@ def get_identity(
             failure_detail = "invalid or expired session"
         token = decode_session_cookie(cookie_raw) if cookie_raw else None
         login = repository.resolve_user_session(session, token) if token else None
+        upgraded_session = login is not None and login in session.dirty
         if login is not None:
             reference = CredentialReference(
                 login.user_id,
@@ -84,6 +86,8 @@ def get_identity(
         ) from None
     if key is not None:
         key.last_used_at = datetime.now(UTC)
+        session.commit()
+    elif upgraded_session:
         session.commit()
     return _request_identity(request, identity)
 

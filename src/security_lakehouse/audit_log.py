@@ -121,9 +121,21 @@ def _triage_entries(lake: Path) -> list[dict[str, Any]]:
     return out
 
 
+def _mask_credential_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: _mask_credential_value(val) for key, val in value.items()}
+    if value in (None, ""):
+        return None
+    if isinstance(value, str) and value.startswith("***"):
+        return value
+    return "***"
+
+
 def _connector_entries(lake: Path) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for row in _read_log(_gold(lake) / CONNECTOR_CONFIG_FILE):
+        if isinstance(row.get("credentials"), dict):
+            row = {**row, "credentials": _mask_credential_value(row["credentials"])}
         out.append(
             _entry(
                 category="connector",

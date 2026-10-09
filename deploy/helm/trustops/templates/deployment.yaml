@@ -45,6 +45,7 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ include "trustops.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

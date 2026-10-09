@@ -72,9 +72,18 @@ export TRUSTOPS_OIDC_CLIENT_ID="trustops"
 export TRUSTOPS_OIDC_CLIENT_SECRET="..."
 export TRUSTOPS_OIDC_TENANT_SLUG="acme"
 export TRUSTOPS_OIDC_AUTO_PROVISION="false"
+# Required when auto-provisioning is on: only these email domains may join.
+export TRUSTOPS_OIDC_ALLOWED_DOMAINS="acme.com"
 export TRUSTOPS_SESSION_SECRET="replace-with-32-byte-random-secret"
 export TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)"
 ```
+
+With `TRUSTOPS_OIDC_AUTO_PROVISION=true`, a first-time SSO user is created only
+when their verified email's domain exactly matches an entry in the
+comma-separated `TRUSTOPS_OIDC_ALLOWED_DOMAINS` (subdomains are not implied).
+Auto-provisioning fails closed: with the list unset, no new user is provisioned
+and the server logs an error at startup. Users that already exist sign in
+regardless of the list.
 
 Endpoints:
 

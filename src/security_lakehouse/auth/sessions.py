@@ -1,15 +1,19 @@
 """Browser session tokens and cookie helpers.
 
 Sessions are opaque tokens (``tops_sess_<hex>``) delivered to the browser in an
-httpOnly cookie. Only a PBKDF2 lookup digest is persisted (matching API key
-strength), so a database leak never exposes a live session. Cookie values are
+httpOnly cookie. Only a keyed SHA-256 lookup digest is persisted, so a database
+leak never exposes a live session; the 256-bit random token makes a slow KDF
+unnecessary. Rows minted before that change hold a PBKDF2 digest and are
+upgraded on first use. Cookie values are
 always signed with ``TRUSTOPS_COOKIE_SIGNING_KEY`` when authentication is enabled.
 """
 
 from __future__ import annotations
 
 import hashlib
+import hmac
 import os
+import re
 import secrets
 
 from itsdangerous import BadData, URLSafeTimedSerializer
@@ -20,8 +24,10 @@ DEFAULT_SESSION_TTL_HOURS = 12
 _COOKIE_SIGNING_SALT = "trustops-session-cookie"
 
 
-_SESSION_HASH_SALT = b"trustops-session-token-v2"
-_SESSION_HASH_ITERATIONS = 210_000
+_SESSION_HASH_KEY = b"trustops-session-token-v3"
+_LEGACY_SESSION_HASH_SALT = b"trustops-session-token-v2"
+_LEGACY_SESSION_HASH_ITERATIONS = 210_000
+_SESSION_TOKEN_PATTERN = re.compile(r"tops_sess_[0-9a-f]{64}")
 
 
 def generate_session_token() -> tuple[str, str]:
@@ -30,13 +36,22 @@ def generate_session_token() -> tuple[str, str]:
     return token, hash_session_token(token)
 
 
+def is_well_formed_session_token(token: str) -> bool:
+    return _SESSION_TOKEN_PATTERN.fullmatch(token) is not None
+
+
 def hash_session_token(token: str) -> str:
-    """PBKDF2 lookup digest of a session token (the only form persisted)."""
+    """Keyed SHA-256 lookup digest of a session token (the only form persisted)."""
+    return hmac.new(_SESSION_HASH_KEY, token.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def legacy_hash_session_token(token: str) -> str:
+    """PBKDF2 digest stored for sessions minted before the keyed digest."""
     return hashlib.pbkdf2_hmac(
         "sha256",
         token.encode("utf-8"),
-        _SESSION_HASH_SALT,
-        _SESSION_HASH_ITERATIONS,
+        _LEGACY_SESSION_HASH_SALT,
+        _LEGACY_SESSION_HASH_ITERATIONS,
     ).hex()
 
 

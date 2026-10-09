@@ -29,7 +29,31 @@ Python package, Helm chart, and bundled web console.
 
 - KnowBe4 (`knowbe4-training`, preview) now uses cursor pagination (`cursor=0`, `per_page=500`) because KnowBe4 deprecates the `page` parameter in November 2026. KnowBe4's spec does not yet say where the next cursor is returned. The client follows a `cursor` carried in a `Link: rel="next"` header and always sends requests to the configured regional host. If a full page arrives with no next cursor, it falls back to `page` paging from page 1. If KnowBe4 ignores `page` or repeats a cursor, the sync fails with a clear error and stores no duplicate rows. A 429 that outlasts the backoff budget now fails as "rate limit reached, retry the sync later" instead of a generic error.
 
+- Security: the audit log no longer returns connector credential values to any role. Each credentials field keeps its name with a `***` marker. `apikey`, `authorization`, and `passphrase` fields are now redacted at rest like `token` and `password`. Connector configuration rejects URLs that embed `user:password@` with a 400.
+
+- Security: escape snapshot reason, organization name, timestamps, bundle ID, and hash in the executive PDF. Markup in a snapshot reason could fail the export, make the renderer open a local file, or embed a `javascript:` link.
+
+- Security: look up API keys and browser sessions by a keyed SHA-256 digest instead of 210,000 PBKDF2 iterations per request. Unknown or malformed tokens are rejected without the KDF, which removes an unauthenticated CPU exhaustion path. The tokens carry 192 or more random bits.
+
+- Security: for state-changing `/api` requests authenticated by the session cookie, and for `POST /api/v1/auth/session-from-key`, require `Content-Type: application/json`. Refuse an `Origin` that matches neither the request host nor `TRUSTOPS_PUBLIC_URL`. Bearer-token requests and the SAML ACS post are unaffected.
+
+- Security: OIDC auto-provisioning admits only verified emails whose domain is listed in the new `TRUSTOPS_OIDC_ALLOWED_DOMAINS` (comma-separated, exact match).
+
+- Security: SSRF validation rejects percent-encoded hostnames. The tenant-facing Iceberg REST catalog connects only to an address validated as public for each connection, which closes a DNS-rebinding window. The operator CLI export is unchanged.
+
+- Security: console and public trust pages send a Content-Security-Policy. Authenticated API JSON responses send `Cache-Control: no-store`.
+
+- Helm pods no longer mount a Kubernetes API token. Set `serviceAccount.automountToken: true` only for CLI runs of the Kubernetes connector with `in_cluster: true`. The framework-sync workflow no longer persists its checkout token.
+
 ### Upgrade notes
+
+- Migration `0027_api_key_hash_version` adds `api_keys.hash_version`. Existing keys keep working: each one is rehashed to the new digest on its first successful use, and existing browser sessions are upgraded the same way. Once a key has been rehashed, downgrading below this release orphans it. The downgrade refuses while any rehashed key exists, so reissue keys if you must roll back.
+
+- If `TRUSTOPS_OIDC_AUTO_PROVISION=true`, set `TRUSTOPS_OIDC_ALLOWED_DOMAINS`, for example `example.com`. If it is unset, no new SSO user is provisioned and the server logs an error at startup. Users who already exist still sign in. The documented POC values and compose example now set it.
+
+- Custom browser or script clients that mutate the API with the session cookie must send `Content-Type: application/json`, including for empty bodies such as `POST /api/v1/auth/logout`. They must also run from the same origin as the server or from `TRUSTOPS_PUBLIC_URL`; other requests receive 415 or 403. The console already does both. API-key clients are unaffected.
+
+- A saved connector configuration whose URL embeds credentials must be re-saved without them. Supply the secret through a credential field or a secret reference.
 
 - API clients that read `/api/v1/graph` or `/api/v1/repo-graph` without paging parameters receive at most 100 nodes and 100 edges per response. Follow `meta.next_cursor` until it is `null` and concatenate `nodes` and `edges`, or check `meta.parts.nodes.count` and `meta.parts.edges.count` for the totals. The legacy `/api/graph` and `/api/repo-graph` routes are unchanged.
 

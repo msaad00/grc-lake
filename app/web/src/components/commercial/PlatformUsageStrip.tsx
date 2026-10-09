@@ -6,15 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QueryState } from "@/components/QueryState";
 import { KpiTile } from "@/components/ui/KpiTile";
-import { usePlatformUsage } from "@/lib/api/hooks";
+import { useCommercialFeature, usePlatformUsage } from "@/lib/api/hooks";
 
 function usageTone(ok: boolean): "ready" | "attention" | "critical" {
   return ok ? "ready" : "critical";
 }
 
 export function PlatformUsageStrip() {
-  const usage = usePlatformUsage();
+  const feature = useCommercialFeature("plan_usage");
+  const usage = usePlatformUsage(feature.enabled);
 
+  if (!feature.enabled) return null;
   if (usage.isError && String(usage.error?.message).includes("501")) {
     return null;
   }

@@ -1989,6 +1989,22 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         session.commit()
         return JSONResponse(api_v1.envelope("signup", data), status_code=status.HTTP_201_CREATED)
 
+    @app.get("/api/v1/platform/features", tags=["commercial"])
+    def platform_features(identity: Identity = Depends(_require_read)) -> JSONResponse:
+        """Which commercial surfaces this server serves, so clients probe once instead of collecting 501s."""
+        from security_lakehouse.commercial.billing import billing_enabled
+        from security_lakehouse.commercial.email import commercial_hosted_enabled
+        from security_lakehouse.commercial.scim import scim_enabled
+
+        hosted = commercial_hosted_enabled()
+        data = {
+            "commercial_hosted": hosted,
+            "plan_usage": hosted,
+            "billing": billing_enabled(),
+            "scim": scim_enabled(),
+        }
+        return JSONResponse(api_v1.envelope("platform.features", data))
+
     @app.get("/api/v1/platform/usage", tags=["commercial"])
     def platform_usage(
         identity: Identity = Depends(_require_admin),

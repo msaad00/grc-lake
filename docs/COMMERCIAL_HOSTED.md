@@ -80,6 +80,10 @@ When `TRUSTOPS_COMMERCIAL_HOSTED` is unset, invite routes return **501 Not Imple
 | `GET`  | `/api/v1/platform/usage`   | `auth_admin`                        | Plan tier, usage vs limits |
 
 These routes return **501 Not Implemented** unless `TRUSTOPS_COMMERCIAL_HOSTED=1`.
+`GET /api/v1/platform/features` (`read`) always answers 200 with which commercial
+surfaces are on (`commercial_hosted`, `plan_usage`, `billing`, `scim`), so a client
+can probe once and skip calls that would return 501. The console uses it to hide
+off features without logging failed requests.
 Tier definitions and dollar amounts are operator-managed and not published in the
 OSS repository or console.
 

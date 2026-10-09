@@ -25,7 +25,14 @@ test.describe("framework coverage workflow", () => {
       portfolio.getByText("Proposed mappings awaiting review"),
     ).toHaveCount(0);
     await expect(
-      portfolio.getByText("Review backlog", { exact: true }),
+      portfolio.getByText("Requirements awaiting review", { exact: true }),
+    ).toBeVisible();
+    // Requirements here, mappings on Mapping review: the unit is spelled out.
+    await expect(
+      portfolio.getByText(/Mapping review counts individual mappings/),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/^\d+ of \d+ framework packs ready$/),
     ).toBeVisible();
 
     await expect(
@@ -88,11 +95,16 @@ test("shows observed-asset safeguard results without implying complete coverage"
   page,
 }) => {
   await page.goto("/console/frameworks/");
-  const summary = page.getByText("Safeguard assessment · observed assets", {
-    exact: true,
+  const toggle = page.getByRole("button", {
+    name: "Safeguard assessment · observed assets",
   });
-  await summary.click();
-  const assessment = page.locator("details").filter({ has: summary });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const assessment = page
+    .locator("div.rounded-lg")
+    .filter({ has: toggle })
+    .last();
   await expect(assessment).toContainText(
     "Complete asset inventory is not established.",
   );

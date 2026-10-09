@@ -58,7 +58,9 @@ test("crosswalk counts only reviewed mappings and badges proposed rows", async (
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/console/crosswalk/");
 
-  await expect(page.getByText("Links: 1 reviewed · 2 proposed")).toBeVisible({
+  await expect(
+    page.getByText("Control-to-article links: 1 reviewed · 2 proposed"),
+  ).toBeVisible({
     timeout: 20_000,
   });
   await expect(page.getByText(/\d+ reviewed mappings/)).toHaveCount(0);
@@ -135,6 +137,15 @@ test.describe("dashboard honesty", () => {
   test("low-coverage frameworks show coverage, not a score", async ({
     page,
   }) => {
+    // Live posture events write straight into the query cache; keep the
+    // stream quiet so the mocked posture below is what renders.
+    await page.route("**/api/v1/stream", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: "",
+      }),
+    );
     await page.route("**/api/v1/posture/current", async (route) => {
       const response = await route.fetch();
       const body = await response.json();

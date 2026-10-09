@@ -5561,6 +5561,31 @@
         "tags": ["platform"]
       }
     },
+    "/api/v1/platform/features": {
+      "get": {
+        "description": "Which commercial surfaces this server serves, so clients probe once instead of collecting 501s.",
+        "operationId": "platform_features_api_v1_platform_features_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Platform Features",
+        "tags": ["commercial"]
+      }
+    },
     "/api/v1/platform/jobs": {
       "get": {
         "operationId": "platform_jobs_route_api_v1_platform_jobs_get",

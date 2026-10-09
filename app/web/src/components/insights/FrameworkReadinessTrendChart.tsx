@@ -18,8 +18,12 @@ import {
 } from "@/components/ui/card";
 import { useInsightsFrameworkTrends } from "@/lib/api/hooks";
 import {
+  AXIS_PROPS,
   fmtChartDate,
   FRAMEWORK_LINE_COLORS,
+  GRID_STROKE,
+  TOOLTIP_CURSOR,
+  TOOLTIP_LABEL_STYLE,
   TOOLTIP_STYLE,
 } from "./chart-utils";
 
@@ -65,15 +69,17 @@ export function FrameworkReadinessTrendChart() {
               data={chartData}
               margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fontSize: 11 }}
-                stroke="#94a3b8"
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+              <XAxis dataKey="date" {...AXIS_PROPS} />
+              <YAxis domain={[0, 100]} {...AXIS_PROPS} />
+              <Tooltip
+                contentStyle={TOOLTIP_STYLE}
+                labelStyle={TOOLTIP_LABEL_STYLE}
+                cursor={TOOLTIP_CURSOR}
               />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend
+                wrapperStyle={{ fontSize: 11, color: "var(--color-muted)" }}
+              />
               {frameworks.map((fw, index) => (
                 <Line
                   key={fw}

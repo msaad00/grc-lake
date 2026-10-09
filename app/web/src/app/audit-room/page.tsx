@@ -85,16 +85,22 @@ export default function AuditRoomPage() {
                 </div>
               </CardHeader>
               <CardContent className="grid gap-3">
-                <p className="text-xs text-muted">
-                  <b className="font-semibold text-ink">
-                    {SCORE_COPY.auditReadiness.label}
-                  </b>
-                  : {SCORE_COPY.auditReadiness.definition}{" "}
-                  <b className="font-semibold text-ink">
-                    {SCORE_COPY.assessment.label}
-                  </b>
-                  : {SCORE_COPY.assessment.definition}
-                </p>
+                <dl className="grid gap-1 text-xs text-muted">
+                  {(
+                    [
+                      SCORE_COPY.auditReadiness,
+                      SCORE_COPY.assessment,
+                      SCORE_COPY.frameworksReady,
+                    ] as const
+                  ).map((entry) => (
+                    <div key={entry.label}>
+                      <dt className="inline font-semibold text-ink">
+                        {entry.label}:
+                      </dt>{" "}
+                      <dd className="inline">{entry.definition}</dd>
+                    </div>
+                  ))}
+                </dl>
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                   <KpiTile
                     label={SCORE_COPY.auditReadiness.label}
@@ -102,14 +108,20 @@ export default function AuditRoomPage() {
                     detail={`${SCORE_COPY.assessment.label} ${audit.data.posture.score}/100`}
                   />
                   <KpiTile
-                    label="Control tests"
+                    label="Control tests passing"
                     value={`${audit.data.control_tests.passing}/${audit.data.control_tests.total}`}
                     detail={`${audit.data.control_tests.failing} failing`}
                   />
                   <KpiTile
-                    label="Frameworks ready"
-                    value={`${audit.data.posture.frameworks_ready}/${audit.data.posture.frameworks_total}`}
-                    detail="of assessed framework packs"
+                    label={SCORE_COPY.frameworksReady.label}
+                    value={`${audit.data.posture.frameworks_ready} of ${audit.data.posture.frameworks_total}`}
+                    detail={
+                      audit.data.frameworks?.length
+                        ? audit.data.frameworks
+                            .map((row) => row.framework)
+                            .join(", ")
+                        : "No frameworks evaluated yet"
+                    }
                   />
                   <KpiTile
                     label="Evidence fresh rate"

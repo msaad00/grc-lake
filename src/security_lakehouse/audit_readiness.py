@@ -134,16 +134,20 @@ def _framework_readiness(frameworks: list[dict[str, Any]]) -> list[dict[str, Any
     for row in frameworks:
         name = str(row.get("framework") or "")
         score = float(row.get("score") or 0)
-        assessed = int(row.get("control_count") or 0)
+        observed = int(row.get("control_count") or 0)
+        # A control with evidence but no verdict was observed, not assessed;
+        # it must not count toward coverage (same rule as the console).
+        assessed = max(0, observed - int(row.get("not_evaluated_control_count") or 0))
         catalog_total = catalog_totals.get(name, 0)
         # Outside the catalog the denominator is unknown; never infer full coverage.
-        total = max(catalog_total, assessed) if catalog_total else None
+        total = max(catalog_total, observed) if catalog_total else None
         coverage_pct, sufficient = readiness_coverage(assessed, total)
         out.append(
             {
                 "framework": name,
                 "score": score,
                 "assessed_controls": assessed,
+                "observed_controls": observed,
                 "total_controls": total,
                 "coverage_pct": coverage_pct,
                 "ready": coverage_pct is not None

@@ -77,12 +77,12 @@ export default function DemoLandingPage() {
       />
 
       <Card className="overflow-hidden">
-        <CardContent className="grid gap-0 p-0 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="border-b border-line p-6 lg:border-b-0 lg:border-r">
+        <CardContent className="grid gap-0 p-0">
+          <div className="border-b border-line p-6">
             <div className="flex items-center gap-2 text-brand">
               <ShieldCheck className="h-5 w-5" />
               <span className="text-sm font-semibold uppercase tracking-wide">
-                Enterprise GRC-style flow
+                Read-only evidence flow
               </span>
             </div>
             <h2 className="mt-3 text-2xl font-semibold text-ink">
@@ -123,7 +123,7 @@ export default function DemoLandingPage() {
               </Button>
             </div>
           </div>
-          <div className="grid gap-3 bg-panel p-6">
+          <div className="grid gap-3 bg-panel p-4 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
             {STEPS.map(({ title, detail, icon: Icon, href }) => (
               <Link
                 key={title}

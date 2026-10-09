@@ -17,7 +17,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useInsightsTimeseries } from "@/lib/api/hooks";
-import { fmtChartDate, TOOLTIP_STYLE } from "./chart-utils";
+import {
+  AXIS_PROPS,
+  fmtChartDate,
+  GRID_STROKE,
+  TOOLTIP_CURSOR,
+  TOOLTIP_LABEL_STYLE,
+  TOOLTIP_STYLE,
+} from "./chart-utils";
 
 export function EvidenceFreshnessTrendChart({
   limit = 90,
@@ -62,31 +69,33 @@ export function EvidenceFreshnessTrendChart({
             >
               <defs>
                 <linearGradient id="freshGrad" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#22c55e" stopOpacity={0.02} />
+                  <stop
+                    offset="0%"
+                    stopColor="var(--color-success)"
+                    stopOpacity={0.35}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--color-success)"
+                    stopOpacity={0.02}
+                  />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-              <YAxis
-                yAxisId="left"
-                domain={[0, 100]}
-                tick={{ fontSize: 11 }}
-                stroke="#94a3b8"
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+              <XAxis dataKey="date" {...AXIS_PROPS} />
+              <YAxis yAxisId="left" domain={[0, 100]} {...AXIS_PROPS} />
+              <YAxis yAxisId="right" orientation="right" {...AXIS_PROPS} />
+              <Tooltip
+                contentStyle={TOOLTIP_STYLE}
+                labelStyle={TOOLTIP_LABEL_STYLE}
+                cursor={TOOLTIP_CURSOR}
               />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                tick={{ fontSize: 11 }}
-                stroke="#94a3b8"
-              />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Area
                 yAxisId="left"
                 type="monotone"
                 dataKey="fresh_pct"
                 name="Fresh evidence %"
-                stroke="#22c55e"
+                stroke="var(--color-success)"
                 strokeWidth={2}
                 fill="url(#freshGrad)"
               />
@@ -95,7 +104,7 @@ export function EvidenceFreshnessTrendChart({
                 type="monotone"
                 dataKey="stale_controls"
                 name="Stale controls"
-                stroke="#f59e0b"
+                stroke="var(--color-warning)"
                 strokeWidth={2}
                 dot={false}
               />

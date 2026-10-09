@@ -55,10 +55,10 @@ export function Shell({ children }: { children: ReactNode }) {
 
   if (isLoginRoute || isPublicTrustRoute) {
     return (
-      <div className="min-h-screen bg-panel">
+      <main id="main-content" className="min-h-screen bg-panel">
         <title>{pageTitle}</title>
         {children}
-      </div>
+      </main>
     );
   }
 

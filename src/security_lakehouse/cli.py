@@ -507,6 +507,11 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="shift fixture timestamps so the newest event is three hours old (demo posture stays stable for about a day)",
     )
+    fixtures_load.add_argument(
+        "--no-demo-records",
+        action="store_true",
+        help="golden only: skip seeding synthetic remediation, risk, policy, vendor, and metrics records",
+    )
     fixtures_load.set_defaults(func=_fixtures_load)
     fixtures_write_golden = fixtures_sub.add_parser(
         "write-golden",
@@ -1977,12 +1982,18 @@ def _fixtures_load(args: argparse.Namespace) -> int:
             encoding="utf-8",
         )
     result = run_pipeline(raw_path, args.out, tenant_id=getattr(args, "tenant_id", "default"))
+    demo_records = None
+    if fixture.company == "golden" and not getattr(args, "no_demo_records", False):
+        from security_lakehouse.demo_seed import seed_golden_demo
+
+        demo_records = seed_golden_demo(args.out)
     print(
         json.dumps(
             {
                 "company": fixture.company,
                 "loaded_from": str(fixture.raw_path),
                 **result.__dict__,
+                **({"demo_records": demo_records} if demo_records is not None else {}),
             },
             indent=2,
             sort_keys=True,

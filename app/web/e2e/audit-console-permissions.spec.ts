@@ -33,7 +33,7 @@ test("read-only risk actions are disabled with an inline explanation", async ({
     }),
   );
   await page.goto("/console/risks/");
-  await page.getByPlaceholder("Risk title").fill("Cannot write");
+  await page.getByRole("textbox", { name: "Title" }).fill("Cannot write");
   await expect(
     page.getByRole("button", { name: "Add risk", exact: true }),
   ).toBeDisabled();

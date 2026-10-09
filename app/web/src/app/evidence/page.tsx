@@ -222,7 +222,7 @@ function EvidencePageContent() {
         const [name, scope] = splitRef(info.getValue());
         const displayName = info.row.original.asset_name?.trim();
         return (
-          <div className="min-w-[140px] max-w-[220px]" title={info.getValue()}>
+          <div className="min-w-[120px] max-w-[220px]" title={info.getValue()}>
             {displayName ? (
               <div className="truncate text-xs font-semibold text-ink">
                 {displayName}
@@ -291,7 +291,7 @@ function EvidencePageContent() {
       cell: (info) => {
         const [file, location] = splitRef(info.getValue());
         return (
-          <div className="min-w-[120px] max-w-[180px]" title={info.getValue()}>
+          <div className="min-w-[100px] max-w-[180px]" title={info.getValue()}>
             <code className="block truncate text-xs text-ink">{file}</code>
             {location ? (
               <div className="truncate text-[11px] text-muted">{location}</div>

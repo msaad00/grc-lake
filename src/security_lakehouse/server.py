@@ -60,7 +60,7 @@ class _Handler(BaseHTTPRequestHandler):
         """Return a header-safe value by removing CR/LF characters."""
         return str(value).replace("\r", "").replace("\n", "")
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if not self._host_allowed():
             self._send_guard_error(parsed.path, HTTPStatus.FORBIDDEN, "forbidden", "unrecognized Host header")
@@ -97,7 +97,7 @@ class _Handler(BaseHTTPRequestHandler):
         status, body = api_legacy.handle_get(parsed.path, parse_qs(parsed.query), self.lake_dir)
         self._send_json(body, status=status)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         parsed = urlparse(self.path)
         request_body = self._guarded_json_body(parsed.path)
         if request_body is None:

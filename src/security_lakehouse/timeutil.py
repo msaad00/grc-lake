@@ -44,11 +44,13 @@ def iso_offset(value: datetime | None, *, tz: IsoOffsetTz = "keep") -> str | Non
 
 
 @overload
-def parse_iso(value: str, *, lenient: Literal[False] = False) -> datetime: ...
+def parse_iso(value: str, *, lenient: Literal[False] = False) -> datetime:
+    """Parse strictly, raising when the timestamp is invalid."""
 
 
 @overload
-def parse_iso(value: Any, *, lenient: Literal[True]) -> datetime | None: ...
+def parse_iso(value: Any, *, lenient: Literal[True]) -> datetime | None:
+    """Parse leniently, returning None when the timestamp is invalid."""
 
 
 def parse_iso(value: Any, *, lenient: bool = False) -> datetime | None:

@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("mcp")
 
-from security_lakehouse import mcp_server  # noqa: E402
+from security_lakehouse import mcp_server
 
 CASES = [
     ("get_posture", {}, "GET", "/api/v1/posture/current"),

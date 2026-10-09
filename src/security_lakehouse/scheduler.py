@@ -605,7 +605,7 @@ def run_forever(
     while iterations is None or count < iterations:
         try:
             tick(lake_dir, all_tenants=all_tenants)
-        except Exception:
+        except Exception:  # noqa: BLE001 - daemon loop must survive any tick failure; logged
             # No exception text: connector errors may contain credentials or identifiers.
             logging.getLogger(__name__).error("scheduler tick failed; inspect runtime state before reconciliation")
         sleep(tick_seconds)

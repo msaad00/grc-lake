@@ -6,14 +6,12 @@ asset evidence cannot become passes. Inventory completeness is a separate claim.
 
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import Any
 
 from security_lakehouse.control_verdict import evaluate_evidence_verdict
 from security_lakehouse.evidence_freshness import build_evidence_freshness, current_evidence_is_stale
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.safeguards import ATTESTABLE_STATES, contributes_to_coverage, effective_review_state
 from security_lakehouse.vocabulary import ControlVerdict
-
-JsonObject = dict[str, Any]
 
 
 def _combine(states: list[str]) -> str:

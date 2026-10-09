@@ -41,13 +41,13 @@ from security_lakehouse.brand_assets import (
     human_tool_title,
     mcp_icons,
 )
+from security_lakehouse.jsontypes import JsonObject
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from mcp.server.fastmcp import FastMCP
 
 DEFAULT_LAKE = "./lake"
 MAX_API_RESPONSE_BYTES = 8 * 1024 * 1024
-JsonObject = dict[str, Any]
 
 
 def resolve_lake_dir() -> Path:
@@ -148,7 +148,7 @@ def _allow_private_api() -> bool:
 
 
 class _NoAPIRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
         raise ValueError("TrustOps API redirects are not allowed")
 
 
@@ -538,14 +538,14 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
         "acknowledge_policy": (False, True, False),
     }
 
-    def trustops_tool(**kwargs):  # noqa: ANN003
+    def trustops_tool(**kwargs):
         """Register an MCP tool with TrustOps display title and brand icon."""
         title = kwargs.pop("title", None)
         icons = kwargs.pop("icons", None)
         remote_only = kwargs.pop("remote_only", False)
         human_only = kwargs.pop("human_only", False)
 
-        def decorator(fn):  # noqa: ANN001
+        def decorator(fn):
             if human_only:
                 return fn
             if remote_only:

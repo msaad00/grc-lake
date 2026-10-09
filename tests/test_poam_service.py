@@ -9,11 +9,11 @@ import pytest
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_tenant  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from security_lakehouse.services import poam as poam_services  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_tenant
+from security_lakehouse.server_app import create_app
+from security_lakehouse.services import poam as poam_services
+from test_api_v1 import _seed_lake
 
 
 def _app(tmp_path: Path):

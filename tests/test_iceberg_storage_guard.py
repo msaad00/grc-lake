@@ -14,11 +14,11 @@ import pytest
 
 pytest.importorskip("pyiceberg")
 
-from pyiceberg.io.pyarrow import PyArrowFileIO  # noqa: E402
+from pyiceberg.io.pyarrow import PyArrowFileIO
 
-from security_lakehouse import connectors_iceberg as ice  # noqa: E402
-from security_lakehouse import iceberg_export  # noqa: E402
-from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, server_execution  # noqa: E402
+from security_lakehouse import connectors_iceberg as ice
+from security_lakehouse import iceberg_export
+from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, server_execution
 
 HOSTILE_PROPERTIES = {
     "s3.endpoint": "http://169.254.169.254",

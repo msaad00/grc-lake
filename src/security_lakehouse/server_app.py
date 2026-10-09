@@ -3845,7 +3845,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.get("/console/trust/{token}", response_class=HTMLResponse)
     @app.get("/console/trust/{token}/", response_class=HTMLResponse, include_in_schema=False)
-    def public_trust_page(token: str) -> HTMLResponse:  # noqa: ARG001 - token read client-side
+    def public_trust_page(token: str) -> HTMLResponse:  # token read client-side
         if trust_page is None or not trust_page.is_file():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
         return HTMLResponse(trust_page.read_text(encoding="utf-8"))

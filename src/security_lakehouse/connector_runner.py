@@ -506,7 +506,7 @@ def _fire_evidence_changed(lake: Path, connector_id: str) -> None:
     next cron tick. Best-effort — an automation failure never fails collection.
     """
     try:
-        from security_lakehouse.workflows import run_evidence_changed_workflows  # noqa: PLC0415
+        from security_lakehouse.workflows import run_evidence_changed_workflows
 
         runs = run_evidence_changed_workflows(lake, connector_id=connector_id)
     except Exception as exc:  # noqa: BLE001 - automations are optional; never fatal to a sync
@@ -836,13 +836,13 @@ def _load_entry_point_connectors() -> dict[str, ConnectorBuilder]:
     discovered: dict[str, ConnectorBuilder] = {}
     try:
         entry_points = importlib.metadata.entry_points(group=CONNECTOR_ENTRY_POINT_GROUP)
-    except Exception:
+    except Exception:  # noqa: BLE001 - broken plugin metadata must not stop startup; logged
         logger.warning("failed to enumerate %s entry points", CONNECTOR_ENTRY_POINT_GROUP, exc_info=True)
         return discovered
     for entry_point in entry_points:
         try:
             builder = entry_point.load()
-        except Exception:
+        except Exception:  # noqa: BLE001 - a broken third-party connector is logged and excluded
             logger.warning(
                 "connector entry point %r (%s) failed to load; excluding it",
                 entry_point.name,

@@ -27,6 +27,7 @@ from security_lakehouse.catalog_versions import (
     DEFAULT_BUNDLE_LOCK_PATH,
     write_bundle_lock,
 )
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.mappings import DEFAULT_MAPPINGS
 from security_lakehouse.pack_data import (
     CIS_AWS_SOURCE,
@@ -48,8 +49,6 @@ from security_lakehouse.pack_data import (
 )
 from security_lakehouse.pack_manifest import PackManifestRow, pack_from_manifest
 from security_lakehouse.pack_spec import PackControlSpec
-
-JsonObject = dict[str, Any]
 
 DEFAULT_VERIFIED_ARTICLE_IDS = ROOT / "frameworks" / "verified_article_ids.json"
 

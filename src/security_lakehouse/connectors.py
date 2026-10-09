@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.catalog import _data_root  # noqa: PLC2701 (reused root lookup)
+from security_lakehouse.catalog import _data_root  # reused root lookup
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ def installed_connector_rows(builtin_ids: frozenset[str]) -> dict[str, dict[str,
     for connector_id, (value, loaded) in rows.items():
         try:
             row = loaded() if callable(loaded) else loaded
-        except Exception:
+        except Exception:  # noqa: BLE001 - a plugin row builder may raise anything; logged and excluded
             logger.warning(
                 "connector catalog entry point %r (%s) raised building its row; excluding it",
                 connector_id,
@@ -111,14 +111,14 @@ def _reject_reason(connector_id: str, row: Any, builtin_ids: frozenset[str], bui
 def _load_entry_points(group: str) -> dict[str, tuple[str, Any]]:
     try:
         entry_points = importlib.metadata.entry_points(group=group)
-    except Exception:
+    except Exception:  # noqa: BLE001 - broken plugin metadata must not stop startup; logged
         logger.warning("failed to enumerate %s entry points", group, exc_info=True)
         return {}
     loaded: dict[str, tuple[str, Any]] = {}
     for entry_point in entry_points:
         try:
             loaded[entry_point.name] = (entry_point.value, entry_point.load())
-        except Exception:
+        except Exception:  # noqa: BLE001 - a broken plugin is logged and excluded
             logger.warning(
                 "%s entry point %r (%s) failed to load; excluding it",
                 group,

@@ -39,7 +39,7 @@ class S3Client:
     ) -> None:
         require_aws_delegation(role_arn, external_id, label="object-storage-evidence")
         try:
-            import boto3  # noqa: PLC0415
+            import boto3
         except ImportError as exc:  # pragma: no cover - live S3 only
             raise RuntimeError(
                 "object-storage-evidence live collection requires boto3; install it or use --fixture-dir"

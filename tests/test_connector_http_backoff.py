@@ -51,7 +51,7 @@ def _http_error(code: int, *, retry_after: int | None = None) -> urllib.error.HT
 def _flaky_opener(fail_times: int, code: int, body: str):
     calls = {"n": 0}
 
-    def _open(_request, timeout=None, **_kwargs):  # noqa: ANN001, ARG001
+    def _open(_request, timeout=None, **_kwargs):
         n = calls["n"]
         calls["n"] += 1
         if n < fail_times:
@@ -84,7 +84,7 @@ def test_jira_retries_then_succeeds_on_429(monkeypatch: pytest.MonkeyPatch) -> N
     opener, calls = _flaky_opener(2, 429, json.dumps({"values": [], "isLast": True}))
     monkeypatch.setattr(netguard, "open_public", opener)
     client = JiraClient("https://acme.atlassian.net", email="a@b.c", token="t")
-    out = client._json("https://acme.atlassian.net/rest/api/3/search")  # noqa: SLF001
+    out = client._json("https://acme.atlassian.net/rest/api/3/search")
     assert isinstance(out, dict)
     assert calls["n"] == 3  # two 429s then success
 
@@ -95,7 +95,7 @@ def test_jira_does_not_retry_on_404(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(netguard, "open_public", opener)
     client = JiraClient("https://acme.atlassian.net", email="a@b.c", token="t")
     with pytest.raises(urllib.error.HTTPError):
-        client._json("https://acme.atlassian.net/rest/api/3/search")  # noqa: SLF001
+        client._json("https://acme.atlassian.net/rest/api/3/search")
     assert calls["n"] == 1  # no retry on a permanent error
 
 
@@ -107,6 +107,6 @@ def test_google_workspace_retries_then_succeeds_on_503(monkeypatch: pytest.Monke
     opener, calls = _flaky_opener(1, 503, json.dumps({"users": [{"id": "u1"}]}))
     monkeypatch.setattr(netguard, "open_public", opener)
     client = GoogleWorkspaceClient("C00acme", access_token="t")
-    out = client._json_collection("https://admin.googleapis.com/users", key="users")  # noqa: SLF001
+    out = client._json_collection("https://admin.googleapis.com/users", key="users")
     assert out == [{"id": "u1"}]
     assert calls["n"] == 2  # one 503 then success

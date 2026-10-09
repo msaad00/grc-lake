@@ -81,7 +81,7 @@ def _sequenced_dns(monkeypatch: pytest.MonkeyPatch, answers: dict[str, list[str]
     """Answer the n-th lookup of a host with the n-th address in its list (the last one repeats)."""
     calls: dict[str, int] = {}
 
-    def fake_getaddrinfo(host, port, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ARG001
+    def fake_getaddrinfo(host, port, *args, **kwargs):
         index = calls.get(host, 0)
         calls[host] = index + 1
         seq = answers[host]
@@ -111,7 +111,7 @@ def _patch_connect(monkeypatch: pytest.MonkeyPatch, responses: list[bytes]) -> l
     queue = list(responses)
     peers: list[socket.socket] = []
 
-    def fake_create_connection(address, timeout=None, source_address=None, **kwargs):  # noqa: ANN001, ANN003, ARG001
+    def fake_create_connection(address, timeout=None, source_address=None, **kwargs):
         addresses.append((address[0], address[1]))
         ours, theirs = socket.socketpair()
         theirs.sendall(queue.pop(0))
@@ -155,7 +155,7 @@ def test_pinned_connection_resolves_once_and_keeps_host_header(monkeypatch: pyte
         def close(self) -> None:
             return None
 
-    def fake_create_connection(address, timeout=None, source_address=None, **kwargs):  # noqa: ANN001, ANN003, ARG001
+    def fake_create_connection(address, timeout=None, source_address=None, **kwargs):
         addresses.append(address)
         return _Sock()
 
@@ -180,11 +180,11 @@ def test_pinned_https_keeps_sni_and_cert_hostname(monkeypatch: pytest.MonkeyPatc
         check_hostname = True
         verify_mode = ssl.CERT_REQUIRED
 
-        def wrap_socket(self, sock, server_hostname=None, **kwargs):  # noqa: ANN001, ANN003, ARG002
+        def wrap_socket(self, sock, server_hostname=None, **kwargs):
             wrapped["server_hostname"] = server_hostname
             return sock
 
-    def fake_create_connection(address, timeout=None, source_address=None, **kwargs):  # noqa: ANN001, ANN003, ARG001
+    def fake_create_connection(address, timeout=None, source_address=None, **kwargs):
         addresses.append(address)
         return _Sock()
 

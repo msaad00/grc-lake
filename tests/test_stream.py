@@ -11,10 +11,10 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.server_app import create_app, platform_event_stream, posture_event_stream  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.server_app import create_app, platform_event_stream, posture_event_stream
+from test_api_v1 import _seed_lake
 
 
 class _FakeRequest:

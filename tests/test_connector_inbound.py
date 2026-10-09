@@ -72,7 +72,7 @@ def test_okta_users_follows_link_to_completion(monkeypatch: pytest.MonkeyPatch) 
     ]
     calls = {"n": 0}
 
-    def fake_urlopen(_request, timeout=0, **_kwargs):  # noqa: ANN001, ARG001
+    def fake_urlopen(_request, timeout=0, **_kwargs):
         resp = pages[calls["n"]]
         calls["n"] += 1
         return resp
@@ -94,7 +94,7 @@ def test_jira_issues_follows_start_at_to_total(monkeypatch: pytest.MonkeyPatch) 
     ]
     calls = {"n": 0}
 
-    def fake_urlopen(_request, timeout=0, **_kwargs):  # noqa: ANN001, ARG001
+    def fake_urlopen(_request, timeout=0, **_kwargs):
         resp = pages[calls["n"]]
         calls["n"] += 1
         return resp

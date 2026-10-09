@@ -3,7 +3,7 @@
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from security_lakehouse import api_v1
+from security_lakehouse import api_contract as api_v1
 from security_lakehouse.strict_json import InvalidJSON, loads
 
 MAX_BODY_BYTES = 5 * 1024 * 1024

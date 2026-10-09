@@ -200,7 +200,7 @@ def dispatch_event(
                 event_type=event_type,
                 envelope=envelope,
             )
-        except Exception as exc:  # noqa: BLE001 - a delivery failure must never break the caller
+        except Exception as exc:  # a delivery failure must never break the caller
             logger.exception(
                 "webhook dispatch: delivery raised for subscription=%s event=%s", subscription.id, event_type
             )

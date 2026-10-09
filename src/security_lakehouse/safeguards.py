@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.catalog import ROOT, load_control_catalog
+from security_lakehouse.jsontypes import JsonObject
 
 DEFAULT_SAFEGUARDS = ROOT / "controls" / "safeguards.json"
 
@@ -63,9 +64,6 @@ PENDING_STATES = frozenset({"proposed", "needs_changes"})
 # framework names. Keep the ids stable so the CLI, API, and console can join on
 # the same family even when a safeguard title changes.
 DEFAULT_FAMILIES = ROOT / "controls" / "families.json"
-
-
-JsonObject = dict[str, Any]
 
 
 def _families_payload(path: str | Path | None = None) -> JsonObject:

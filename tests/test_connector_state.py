@@ -798,7 +798,7 @@ def test_connector_configure_requires_matching_ok_probe(tmp_path: Path) -> None:
 
 def test_scoped_user_contract_requires_token_not_password() -> None:
     # Pins the public fallback used for future scoped-user catalog entries.
-    missing = _missing_required_config(  # noqa: SLF001
+    missing = _missing_required_config(
         "future-scoped-source",
         "scoped_user",
         {},

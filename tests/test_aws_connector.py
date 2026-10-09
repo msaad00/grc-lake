@@ -308,12 +308,12 @@ class _FakeBoto3:
         self.session_creds: dict | None = None
         self.session_services: list[tuple[str, str | None]] = []
 
-    def client(self, service: str, region_name=None):  # noqa: ANN001
+    def client(self, service: str, region_name=None):
         if service == "sts":
             outer = self
 
             class _STS:
-                def assume_role(self, **kwargs):  # noqa: ANN003
+                def assume_role(self, **kwargs):
                     outer.assume_calls.append(kwargs)
                     return {
                         "Credentials": {
@@ -329,12 +329,12 @@ class _FakeBoto3:
             return SimpleNamespace(get_paginator=lambda *_a, **_k: None)
         raise AssertionError(f"unexpected client {service}")
 
-    def Session(self, **creds):  # noqa: N802, ANN003
+    def Session(self, **creds):
         self.session_creds = creds
         outer = self
 
         class _Session:
-            def client(self, service: str, region_name=None):  # noqa: ANN001
+            def client(self, service: str, region_name=None):
                 outer.session_services.append((service, region_name))
                 if service == "iam":
                     outer.iam_from = "session"
@@ -494,7 +494,7 @@ def test_mfa_finding_only_applies_to_console_users(tmp_path: Path) -> None:
 def test_aws_client_console_access_reads_login_profile(monkeypatch: pytest.MonkeyPatch) -> None:
     # GetLoginProfile success => console user; NoSuchEntity (raises) => programmatic.
     class _IAM:
-        def get_login_profile(self, *, UserName: str):  # noqa: N803
+        def get_login_profile(self, *, UserName: str):
             if UserName == "human":
                 return {"LoginProfile": {"UserName": "human"}}
             # Model botocore's ClientError shape so the client's code-based
@@ -591,16 +591,16 @@ class _RaisingIam:
     def __init__(self, code: str) -> None:
         self._code = code
 
-    def get_account_password_policy(self):  # noqa: ANN201
+    def get_account_password_policy(self):
         raise _FakeClientError(self._code)
 
-    def get_login_profile(self, **_kwargs):  # noqa: ANN003, ANN201
+    def get_login_profile(self, **_kwargs):
         raise _FakeClientError(self._code)
 
 
 def _client_with_iam(code: str) -> AWSClient:
     client = AWSClient.__new__(AWSClient)  # bypass boto3 in __init__
-    client._iam = _RaisingIam(code)  # type: ignore[attr-defined]  # noqa: SLF001
+    client._iam = _RaisingIam(code)  # type: ignore[attr-defined]
     return client
 
 

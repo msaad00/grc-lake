@@ -12,7 +12,7 @@ from typing import Any
 
 from sqlalchemy.orm import sessionmaker
 
-from security_lakehouse import api_v1, tenancy
+from security_lakehouse import api_contract, api_v1, tenancy
 from security_lakehouse.auth.authority import AuthorityError, CredentialReference, resolve_authority
 from security_lakehouse.auth.server_mode import assert_insecure_allowed, insecure_requested
 from security_lakehouse.db import repository
@@ -33,9 +33,9 @@ def execute_operation(
                 allow_insecure=not require_auth,
             )
         except AuthorityError:
-            return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
-        if identity.tenant_id != row.tenant_id or not identity.has_scope(api_v1.required_post_scope(row.path)):
-            return 403, api_v1.error_envelope("forbidden", "operation authority is no longer active")
+            return 403, api_contract.error_envelope("forbidden", "operation authority is no longer active")
+        if identity.tenant_id != row.tenant_id or not identity.has_scope(api_contract.required_post_scope(row.path)):
+            return 403, api_contract.error_envelope("forbidden", "operation authority is no longer active")
         tenant_ids = repository.list_tenant_ids(session) if require_auth else []
         bound = tenancy.resolve_bound_tenant(root, require_auth=require_auth, tenant_ids=tenant_ids)
         lake = tenancy.tenant_lake(root, identity.tenant_id, bound_tenant=bound)

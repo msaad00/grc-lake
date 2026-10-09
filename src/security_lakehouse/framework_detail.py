@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog
 from security_lakehouse.connectors import load_connector_catalog
@@ -17,9 +16,8 @@ from security_lakehouse.evidence_hints import enabled_connector_ids, resolve_con
 from security_lakehouse.framework_provenance import build_framework_view
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.mappings import load_control_article_mappings
-
-JsonObject = dict[str, Any]
 
 
 def _latest(values: list[str | None]) -> str | None:

@@ -95,7 +95,7 @@ def build_billing_router() -> APIRouter:
         except billing.BillingError:
             session.rollback()
             return _error(status.HTTP_400_BAD_REQUEST, "invalid Stripe webhook")
-        except Exception:  # noqa: BLE001 - answer 5xx so Stripe retries; details stay in logs
+        except Exception:  # answer 5xx so Stripe retries; details stay in logs
             session.rollback()
             logger.exception("stripe webhook processing failed")
             return _error(status.HTTP_500_INTERNAL_SERVER_ERROR, "webhook processing failed; Stripe will retry")

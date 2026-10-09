@@ -78,4 +78,4 @@ list_evidence_freshness?status=stale
 
 BambooHR, Rippling, and Workday connectors and the HR ↔ IdP offboarding check (Okta, Google Workspace) ship. Offboarding coverage is only as complete as the connected identity providers — do not claim it for systems TrustOps does not read.
 
-See also [AUDIT_READINESS.md](../AUDIT_READINESS.md) and [PRODUCT_SHAPE.md](../PRODUCT_SHAPE.md).
+See also [AUDIT_READINESS.md](../AUDIT_READINESS.md).

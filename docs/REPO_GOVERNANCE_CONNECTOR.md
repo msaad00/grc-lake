@@ -95,6 +95,24 @@ Use `security-lakehouse repo audit` first for fast public inventory and code
 graph evidence. Use `security-lakehouse repo governance-sync` when a control
 depends on private or organization-scoped GitHub settings.
 
-Public audit emits `repository.authenticated_signal_gap` when it reaches a
-signal that needs authenticated access. Governance sync closes that gap with
+```bash
+security-lakehouse repo audit https://github.com/OWNER/REPO --out build/repo-audit.jsonl
+security-lakehouse validate --raw build/repo-audit.jsonl
+```
+
+Public audit needs no token and collects only what GitHub exposes without
+credentials: repository metadata, `CODEOWNERS` and `SECURITY.md` locations, CI
+workflow files, dependency manifests and lockfiles, container and IaC
+indicators, AI artifacts (model cards, eval and prompt files), and a
+repository code graph. Each record carries a stable `event_id`, `evidence_id`,
+`evidence_ref`, `evidence_collected_at`, and SHA-256 hash. Source text is read
+only to hash samples and is never retained (`sample_excerpt` is always null).
+The tree response must report `truncated: false`; a truncated or malformed
+tree fails before the output is replaced, so very large repositories need a
+scoped collector.
+
+Public audit emits `repository.authenticated_signal_gap` with
+`status=requires_authenticated_connector` when it reaches a signal that needs
+authenticated access, such as branch protection, rulesets, secret scanning,
+Dependabot, or code scanning alerts. Governance sync closes that gap with
 provable evidence instead of guessing.

@@ -22,8 +22,8 @@ FedRAMP, CIS AWS, etc.) without shipping official certification logos. See
 `app/web/src/lib/framework-visuals.ts`, `FrameworkMark`, and `FrameworkBadge`.
 
 Shared KPI tiles use `KpiTile` with tone accents (default / ready / attention /
-critical / brand). Compliance rings and bar scoreboards mirror managed GRC-style
-program dashboards on the **Trust Command Center** (`/dashboard`) and
+critical / brand). Compliance rings and bar scoreboards summarize each
+program on the **Trust Command Center** (`/dashboard`) and
 **Continuous control monitoring** summary (`/controls`).
 
 ## Out-Of-Box Views
@@ -37,7 +37,7 @@ program dashboards on the **Trust Command Center** (`/dashboard`) and
 | Data model        | assets, evidence, controls, tests, violations, snapshots      |
 | Lake routing      | Snowflake governed evidence, ClickHouse telemetry analytics   |
 | Agent console     | API routes, skills, allowed actions, snapshot controls        |
-| Connectors        | vendor marks, ingestion pipeline, managed GRC compare strip   |
+| Connectors        | vendor marks, ingestion pipeline, connection flow diagram     |
 | Audit room        | score, gaps, freshness SLA, workflow checklist                |
 | Access / auth     | API keys, users & roles, invites, IdP marks                   |
 | Deploy            | OSS / self-hosted / hosted models + go-live flow              |

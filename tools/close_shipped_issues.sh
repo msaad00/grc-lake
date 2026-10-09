@@ -30,7 +30,7 @@ run_batch2() {
   close_issue 476 "Shipped in #481 — AGENT_SKILLS.md, openapi.v1.json, resource-catalog.v1.json, agents page."
 
   echo ""
-  echo "Wave 1 backlog drain (shipped on main; see docs/ISSUE_CONSOLIDATION.md)"
+  echo "Wave 1 backlog drain (shipped on main)"
   close_issue 449 "Wave 1 complete. Tracker superseded by #474 (Wave 2)."
   close_issue 417 "Duplicate scope — track org-level work in #22 and repo graph in #23 (shipped #452)."
   close_issue 416 "Shipped in #450 — ESLint runs in CI for app/web."

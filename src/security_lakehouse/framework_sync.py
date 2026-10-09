@@ -14,6 +14,11 @@ drift before merging.
 
 Network access is opt-in (``--allow-network``). Offline runs only mark every
 framework as "skipped — network disabled" so unit tests don't make HTTP calls.
+
+A source that is temporarily unavailable (HTTP 403, 429, or 5xx, or a network
+failure) is ``transient``: ``report`` emits a warning annotation and exits 0. Any
+other fetch error, such as a 404 or an invalid URL, means the registry entry
+itself is wrong, so ``report`` emits an error annotation and exits 1.
 """
 
 from __future__ import annotations
@@ -74,6 +79,19 @@ class SyncResult:
     new_sha: str | None
     pulled_at: str | None
     reason: str | None
+    # True only for an "error" caused by the upstream being unavailable.
+    transient: bool = False
+
+
+def is_transient_fetch_error(exc: BaseException) -> bool:
+    """Whether a fetch failure is the upstream being unavailable rather than a broken source entry."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in (403, 429) or exc.code >= 500
+    if isinstance(exc, urllib.error.URLError):
+        # urllib wraps socket, DNS, and TLS failures as an OSError reason; a str
+        # reason such as "unknown url type" is a malformed registry URL.
+        return isinstance(exc.reason, OSError)
+    return isinstance(exc, (TimeoutError, ConnectionError, http.client.IncompleteRead))
 
 
 def _utc_iso() -> str:
@@ -182,6 +200,7 @@ def sync_frameworks(
                     new_sha=None,
                     pulled_at=framework.get("pulled_at"),
                     reason=f"fetch failed: {exc.__class__.__name__}: {exc}",
+                    transient=is_transient_fetch_error(exc),
                 )
             )
             continue
@@ -261,6 +280,30 @@ def format_sync_report(payload: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _escape_annotation(text: str) -> str:
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def report_annotations(payload: Mapping[str, Any]) -> tuple[list[str], bool]:
+    """GitHub Actions annotations for source errors, and whether any error is a real failure.
+
+    An error row without ``transient: true`` fails closed: only a classified
+    upstream outage is downgraded to a warning.
+    """
+    rows: Sequence[Mapping[str, Any]] = payload.get("results") or []
+    lines: list[str] = []
+    failed = False
+    for row in rows:
+        if row.get("state") != "error":
+            continue
+        transient = row.get("transient") is True
+        failed = failed or not transient
+        level = "warning" if transient else "error"
+        message = _escape_annotation(f"{row.get('framework_id')}: {row.get('reason') or 'unknown error'}")
+        lines.append(f"::{level} title=Framework sync::{message}")
+    return lines, failed
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if len(args) != 2 or args[0] != "report":
@@ -268,7 +311,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     payload = json.loads(Path(args[1]).read_text(encoding="utf-8"))
     sys.stdout.write(format_sync_report(payload))
-    return 0
+    # stdout is the Markdown report the workflow redirects to a file; the
+    # runner reads workflow commands from stderr as well.
+    annotations, failed = report_annotations(payload)
+    for line in annotations:
+        print(line, file=sys.stderr)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

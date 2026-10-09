@@ -28,7 +28,7 @@ def _command(service: dict[str, Any]) -> str:
 
 
 def test_demo_service_is_localhost_only_seeds_the_golden_fixture_and_says_auth_is_off() -> None:
-    demo = _compose()["services"]["trustops"]
+    demo = _compose()["services"]["grc-lake"]
     command = _command(demo)
 
     assert "profiles" not in demo, "the demo must start with a bare `docker compose up`"
@@ -41,7 +41,7 @@ def test_demo_service_is_localhost_only_seeds_the_golden_fixture_and_says_auth_i
 
 def test_server_profile_requires_auth_secrets_and_ships_no_demo_data() -> None:
     compose = _compose()
-    server = compose["services"]["trustops-server"]
+    server = compose["services"]["grc-lake-server"]
     command = _command(server)
 
     assert server["profiles"] == ["server"]
@@ -49,8 +49,8 @@ def test_server_profile_requires_auth_secrets_and_ships_no_demo_data() -> None:
     assert "fixtures" not in command
     assert server["environment"]["GRC_LAKE_ENV"] == "production"
     assert "GRC_LAKE_ALLOW_INSECURE_NO_AUTH" not in server["environment"]
-    assert server["env_file"] == ["trustops.env"]
-    demo_volumes = set(compose["services"]["trustops"]["volumes"])
+    assert server["env_file"] == ["grc-lake.env"]
+    demo_volumes = set(compose["services"]["grc-lake"]["volumes"])
     assert not demo_volumes & set(server["volumes"]), "real lake must never share the demo volume"
 
 
@@ -178,7 +178,7 @@ def test_built_image_is_exercised_by_compose_before_ci_passes() -> None:
     steps = job["steps"]
     runtime = next((step for step in steps if "tools/compose_smoke.py" in step.get("run", "")), None)
     assert runtime is not None, "the built PR image must pass the documented Compose startup and restart checks"
-    assert "--image trustops:ci" in runtime["run"]
+    assert "--image grc-lake:ci" in runtime["run"]
     assert not runtime.get("continue-on-error", False)
     assert job["timeout-minutes"] <= 30
     cleanup = next(step for step in steps if "down --volumes" in step.get("run", ""))

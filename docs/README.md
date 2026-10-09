@@ -19,6 +19,8 @@ Every guide in `docs/`, grouped by task. New here? Start with the
 
 ## Operate
 
+[Upgrade from TrustOps to GRC Lake](REBRANDING.md) covers preserved data and integration identities.
+
 | Guide                                                                    | Covers                                                  |
 | ------------------------------------------------------------------------ | ------------------------------------------------------- |
 | [Deployment](DEPLOYMENT.md)                                              | Self-hosted, hosted, and existing-lake deployment paths |

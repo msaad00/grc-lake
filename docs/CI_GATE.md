@@ -77,6 +77,8 @@ The runner must reach `GRC_LAKE_URL`; for a private deployment, use a
 self-hosted runner inside that network. For supply-chain safety, pin the
 `uses:` line to the commit SHA of the release tag instead of the tag name.
 
+The legacy `trustops-url` input remains accepted; `grc-lake-url` takes precedence when both are supplied.
+
 ## Inputs
 
 | Input                       | Default         | Meaning                                                                      |

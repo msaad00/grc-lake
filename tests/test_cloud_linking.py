@@ -57,7 +57,7 @@ def test_aws_template_url_rejects_non_https_override(monkeypatch: pytest.MonkeyP
 
 def test_gcp_template_bytes_is_packaged() -> None:
     body = gcp_template_bytes()
-    assert b"trustops-posture-reader" in body
+    assert b"grc-lake-posture-reader" in body
     assert b"workload_identity_member" in body
 
 
@@ -374,7 +374,7 @@ def test_gcp_template_endpoint_serves_tf(tmp_path: Path) -> None:
         raw = resp.read()
         conn.close()
         assert resp.status == HTTPStatus.OK
-        assert b"trustops-posture-reader" in raw
+        assert b"grc-lake-posture-reader" in raw
     finally:
         server.shutdown()
 

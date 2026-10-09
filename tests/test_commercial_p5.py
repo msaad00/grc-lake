@@ -86,7 +86,8 @@ def test_signup_creates_tenant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
         assert tenant.plan_tier == "team"
 
 
-def test_signup_secret_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("header", ["X-GRC-Lake-Signup-Secret", "X-TrustOps-Signup-Secret"])
+def test_signup_secret_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, header: str) -> None:
     monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     monkeypatch.setenv("GRC_LAKE_SELF_SERVE_SIGNUP", "1")
     monkeypatch.setenv("GRC_LAKE_SIGNUP_SECRET", "test-signup-secret")
@@ -97,9 +98,15 @@ def test_signup_secret_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     ok = client.post(
         "/api/v1/signup",
         json=body,
-        headers={"X-GRC Lake-Signup-Secret": "test-signup-secret"},
+        headers={header: "test-signup-secret"},
     )
     assert ok.status_code == HTTPStatus.CREATED
+    rejected = client.post(
+        "/api/v1/signup",
+        json={**body, "org_slug": "rejected"},
+        headers={"X-GRC-Lake-Signup-Secret": "", "X-TrustOps-Signup-Secret": "test-signup-secret"},
+    )
+    assert rejected.status_code == HTTPStatus.FORBIDDEN
 
 
 def test_signup_without_secret_is_closed_unless_explicitly_opened(
@@ -114,7 +121,7 @@ def test_signup_without_secret_is_closed_unless_explicitly_opened(
     body = {"org_slug": "closed", "org_name": "Closed", "admin_email": "a@closed.test"}
     assert client.post("/api/v1/signup", json=body).status_code == HTTPStatus.FORBIDDEN
     assert (
-        client.post("/api/v1/signup", json=body, headers={"X-GRC Lake-Signup-Secret": ""}).status_code
+        client.post("/api/v1/signup", json=body, headers={"X-GRC-Lake-Signup-Secret": ""}).status_code
         == HTTPStatus.FORBIDDEN
     )
 

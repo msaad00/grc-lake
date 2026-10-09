@@ -6,9 +6,10 @@
 -- grants. It does not create service principals, tokens, warehouses, external
 -- locations, or network access.
 --
+-- The existing catalog identity is preserved for upgrades; GRC Lake is the product name.
 -- Default objects:
---   catalog: grc-lake
---   schema:  grc-lake.evidence
+--   catalog: trustops
+--   schema:  trustops.evidence
 --   reader:  a service principal, referenced by its application id
 --
 -- On SQL warehouses, Unity Catalog evaluates the view owner's permissions on
@@ -16,10 +17,10 @@
 -- system.access.audit itself. Row-level views keep the latest 10,000 events so
 -- a single read stays under the Statement Execution API INLINE limit (25 MiB).
 
-CREATE CATALOG IF NOT EXISTS grc-lake COMMENT 'GRC Lake governed evidence lake POC';
-CREATE SCHEMA IF NOT EXISTS grc-lake.evidence COMMENT 'Curated read-only evidence views for GRC Lake';
+CREATE CATALOG IF NOT EXISTS trustops COMMENT 'GRC Lake governed evidence lake POC';
+CREATE SCHEMA IF NOT EXISTS trustops.evidence COMMENT 'Curated read-only evidence views for GRC Lake';
 
-CREATE OR REPLACE VIEW grc-lake.evidence.GRC_LAKE_AUDIT_EVENTS AS
+CREATE OR REPLACE VIEW trustops.evidence.GRC_LAKE_AUDIT_EVENTS AS
 SELECT
   event_id AS audit_id,
   user_identity.email AS actor,
@@ -38,7 +39,7 @@ WHERE event_date >= date_sub(current_date(), 7)
 ORDER BY event_time DESC
 LIMIT 10000;
 
-CREATE OR REPLACE VIEW grc-lake.evidence.GRC_LAKE_CONTROL_POSTURE AS
+CREATE OR REPLACE VIEW trustops.evidence.GRC_LAKE_CONTROL_POSTURE AS
 SELECT
   'DATABRICKS-AUDIT-LOGGING' AS control_id,
   CASE WHEN count(*) > 0 THEN 'passed' ELSE 'open' END AS status,
@@ -61,7 +62,7 @@ SELECT
 FROM system.access.audit
 WHERE event_date >= date_sub(current_date(), 7);
 
-CREATE OR REPLACE VIEW grc-lake.evidence.GRC_LAKE_ASSET_RISK AS
+CREATE OR REPLACE VIEW trustops.evidence.GRC_LAKE_ASSET_RISK AS
 SELECT
   concat('databricks:workspace:', workspace_id) AS asset_id,
   'workspace' AS asset_type,
@@ -75,7 +76,7 @@ FROM system.access.audit
 WHERE event_date >= date_sub(current_date(), 7)
 GROUP BY workspace_id;
 
-CREATE OR REPLACE VIEW grc-lake.evidence.GRC_LAKE_EVIDENCE_BUNDLES AS
+CREATE OR REPLACE VIEW trustops.evidence.GRC_LAKE_EVIDENCE_BUNDLES AS
 SELECT
   event_id AS bundle_id,
   event_id AS evidence_ref,
@@ -88,18 +89,18 @@ WHERE event_date >= date_sub(current_date(), 7)
 ORDER BY event_time DESC
 LIMIT 10000;
 
--- Replace <grc-lake-sp-application-id> with the service principal's
+-- Replace <trustops-sp-application-id> with the service principal's
 -- application id. The schema holds only GRC Lake views, so a schema-level
 -- SELECT grant is no broader than granting each view.
-GRANT USE CATALOG ON CATALOG grc-lake TO `<grc-lake-sp-application-id>`;
-GRANT USE SCHEMA ON SCHEMA grc-lake.evidence TO `<grc-lake-sp-application-id>`;
-GRANT SELECT ON SCHEMA grc-lake.evidence TO `<grc-lake-sp-application-id>`;
+GRANT USE CATALOG ON CATALOG trustops TO `<trustops-sp-application-id>`;
+GRANT USE SCHEMA ON SCHEMA trustops.evidence TO `<trustops-sp-application-id>`;
+GRANT SELECT ON SCHEMA trustops.evidence TO `<trustops-sp-application-id>`;
 -- Also grant the service principal CAN USE on one SQL warehouse in the
 -- workspace UI or Permissions API; GRC Lake needs no other warehouse right.
 
 -- Validation (run as the service principal, or with its grants): every query
 -- should succeed.
-SELECT count(*) AS audit_events FROM grc-lake.evidence.GRC_LAKE_AUDIT_EVENTS;
-SELECT count(*) AS control_posture FROM grc-lake.evidence.GRC_LAKE_CONTROL_POSTURE;
-SELECT count(*) AS asset_risk FROM grc-lake.evidence.GRC_LAKE_ASSET_RISK;
-SELECT count(*) AS evidence_bundles FROM grc-lake.evidence.GRC_LAKE_EVIDENCE_BUNDLES;
+SELECT count(*) AS audit_events FROM trustops.evidence.GRC_LAKE_AUDIT_EVENTS;
+SELECT count(*) AS control_posture FROM trustops.evidence.GRC_LAKE_CONTROL_POSTURE;
+SELECT count(*) AS asset_risk FROM trustops.evidence.GRC_LAKE_ASSET_RISK;
+SELECT count(*) AS evidence_bundles FROM trustops.evidence.GRC_LAKE_EVIDENCE_BUNDLES;

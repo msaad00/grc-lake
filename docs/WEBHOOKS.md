@@ -159,9 +159,9 @@ Every delivery carries:
 
 | Header                 | Value                                              |
 | ---------------------- | -------------------------------------------------- |
-| `X-GRC Lake-Signature` | `sha256=<hex hmac-sha256 of the raw request body>` |
-| `X-GRC Lake-Event`     | the event type, e.g. `finding.created`             |
-| `X-GRC Lake-Delivery`  | the delivery's `event_id`                          |
+| `X-GRC-Lake-Signature` | `sha256=<hex hmac-sha256 of the raw request body>` |
+| `X-GRC-Lake-Event`     | the event type, e.g. `finding.created`             |
+| `X-GRC-Lake-Delivery`  | the delivery's `event_id`                          |
 
 Recompute the HMAC over the **raw bytes** of the body (before any JSON
 re-parsing/re-serialization, which can reorder keys or change whitespace) and
@@ -246,3 +246,5 @@ operator-authored, and gated by `GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST`. The
 subscriptions on this page are the opposite direction of the same idea —
 event-driven, receiver-registered, and always-on for whichever event types the
 subscriber picked — closer to a GitHub/Stripe webhook than a workflow step.
+
+The legacy `X-TrustOps-Signature`, `X-TrustOps-Event` and `X-TrustOps-Delivery` headers are also sent with identical values for existing receivers.

@@ -107,6 +107,7 @@ export interface CredentialPolicy {
 // pins these lists to the server's.
 export const SERVER_SECRET_PREFIXES = [
   "GRC_LAKE_",
+  "TRUSTOPS_",
   "AWS_",
   "AMAZON_",
   "ECS_CONTAINER_",

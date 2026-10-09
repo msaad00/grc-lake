@@ -9,7 +9,7 @@ path in this codebase uses (:mod:`security_lakehouse.netguard`).
 
 Signing follows the GitHub/Stripe convention: the raw JSON body is HMAC-SHA256
 signed with the subscriber's registered secret, and the hex digest travels in
-an ``X-GRC Lake-Signature: sha256=<hex>`` header so a receiver can verify the
+an ``X-GRC-Lake-Signature: sha256=<hex>`` header so a receiver can verify the
 delivery actually came from this GRC Lake instance and was not tampered with
 in transit. See ``docs/WEBHOOKS.md`` for the receiver-side verification code.
 
@@ -43,9 +43,9 @@ DEFAULT_TIMEOUT_SECONDS = 10
 DEFAULT_MAX_RETRIES = 1
 DEFAULT_BACKOFF_SECONDS = 0.5
 
-SIGNATURE_HEADER = "X-GRC Lake-Signature"
-EVENT_HEADER = "X-GRC Lake-Event"
-DELIVERY_HEADER = "X-GRC Lake-Delivery"
+SIGNATURE_HEADER = "X-GRC-Lake-Signature"
+EVENT_HEADER = "X-GRC-Lake-Event"
+DELIVERY_HEADER = "X-GRC-Lake-Delivery"
 
 # Optional, opt-in destination allowlist for webhook subscription deliveries.
 #
@@ -176,6 +176,10 @@ def deliver_webhook(
         SIGNATURE_HEADER: sign_payload(secret, body),
         EVENT_HEADER: event_type,
         DELIVERY_HEADER: envelope.get("event_id", ""),
+        # Existing receivers keep their wire contract across the product rename.
+        "X-TrustOps-Signature": sign_payload(secret, body),
+        "X-TrustOps-Event": event_type,
+        "X-TrustOps-Delivery": envelope.get("event_id", ""),
     }
 
     try:

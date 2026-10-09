@@ -283,7 +283,7 @@ def test_unverifiable_partial_archive_still_fails_closed(tmp_path):
 @pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
 def test_helm_scheduler_retention_values_reach_only_the_cronjob():
     def render(*overrides: str) -> dict:
-        args = ["helm", "template", "trustops", str(ROOT / "deploy/helm/trustops")]
+        args = ["helm", "template", "trustops", str(ROOT / "deploy/helm/grc-lake")]
         for item in overrides:
             args += ["--set", item]
         output = subprocess.run(args, capture_output=True, text=True, check=True).stdout

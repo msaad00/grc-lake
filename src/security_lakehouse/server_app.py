@@ -1969,7 +1969,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
                 detail="self-serve signup requires GRC_LAKE_COMMERCIAL_HOSTED=1 and GRC_LAKE_SELF_SERVE_SIGNUP=1",
             )
-        secret = request.headers.get("X-GRC Lake-Signup-Secret")
+        secret = request.headers.get("X-GRC-Lake-Signup-Secret")
+        if secret is None:
+            secret = request.headers.get("X-TrustOps-Signup-Secret")
         if not signup_services.verify_signup_secret(secret):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="invalid signup secret")
         try:

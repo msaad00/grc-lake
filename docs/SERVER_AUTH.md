@@ -147,7 +147,7 @@ export GRC_LAKE_SCIM_TENANT_SLUG="acme"
 SCIM requests authenticate with the SCIM bearer token, not a user API key.
 
 <p align="center">
-  <img src="images/trustops-identity-boundary.svg" alt="GRC Lake identity boundary: OIDC, SAML, and API keys to tenant RBAC and audit" width="100%">
+  <img src="images/grc-lake-identity-boundary.svg" alt="GRC Lake identity boundary: OIDC, SAML, and API keys to tenant RBAC and audit" width="100%">
 </p>
 
 Mermaid diagrams: [auth-identity.md](diagrams/auth-identity.md)

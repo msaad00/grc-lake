@@ -23,7 +23,7 @@ Self-serve workspace creation:
 
 ```bash
 export GRC_LAKE_SELF_SERVE_SIGNUP=1
-export GRC_LAKE_SIGNUP_SECRET=<long-random-secret>   # callers send it as X-GRC Lake-Signup-Secret
+export GRC_LAKE_SIGNUP_SECRET=<long-random-secret>   # callers send it as X-GRC-Lake-Signup-Secret
 ```
 
 Signup fails closed: with no `GRC_LAKE_SIGNUP_SECRET`, `POST /api/v1/signup`
@@ -76,7 +76,7 @@ When `GRC_LAKE_COMMERCIAL_HOSTED` is unset, invite routes return **501 Not Imple
 | Method | Path                       | Auth                                | Description                |
 | ------ | -------------------------- | ----------------------------------- | -------------------------- |
 | `GET`  | `/api/v1/platform/pricing` | none                                | Tier list + limits (gated) |
-| `POST` | `/api/v1/signup`           | optional `X-GRC Lake-Signup-Secret` | Create tenant + admin user |
+| `POST` | `/api/v1/signup`           | optional `X-GRC-Lake-Signup-Secret` | Create tenant + admin user |
 | `GET`  | `/api/v1/platform/usage`   | `auth_admin`                        | Plan tier, usage vs limits |
 
 These routes return **501 Not Implemented** unless `GRC_LAKE_COMMERCIAL_HOSTED=1`.

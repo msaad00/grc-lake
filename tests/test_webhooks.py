@@ -227,6 +227,8 @@ def test_deliver_webhook_success_signs_and_posts(monkeypatch: pytest.MonkeyPatch
     sent = captured[0]
     signature = sent.get_header("X-trustops-signature")
     assert signature is not None
+    assert sent.get_header("X-grc-lake-signature") == signature
+    assert all(" " not in name for name, _ in sent.header_items())
     assert webhook_delivery.verify_signature("s3cr3t", sent.data, signature)
     assert sent.get_header("X-trustops-event") == "assessment.completed"
 

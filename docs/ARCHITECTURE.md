@@ -4,7 +4,7 @@ The system is intentionally modular. Ingestion, evidence modeling, control
 evaluation, snapshots, lake adapters, API, and UI are separate capabilities with
 clear contracts.
 
-## Component Map
+## Local deployment
 
 ```mermaid
 flowchart TB
@@ -66,6 +66,30 @@ make one evaluation distributed. Local mode enforces one writable replica.
 [Distributed mode](DISTRIBUTED.md) adds PostgreSQL-fenced publication, immutable
 S3 objects, virtual tenant shards and source/date Parquet partitions; it scales
 work across tenants while preserving same-tenant publication ordering.
+
+## Distributed deployment
+
+The same evaluation engine runs behind multiple API replicas and tenant workers.
+PostgreSQL coordinates jobs and publication; S3 holds committed evidence objects.
+Each replica uses private, disposable scratch storage.
+
+```mermaid
+flowchart LR
+  Clients["Console · remote MCP · API clients"] --> API["API replicas · private scratch"]
+  Sources["Read-only evidence sources"] --> Workers["Tenant workers · private scratch"]
+  API --> PG["PostgreSQL primary · jobs, records, writer fences, manifests"]
+  Workers --> PG
+  Workers -->|upload content-addressed artifacts| S3["S3-compatible object storage"]
+  API -->|read committed, hash-verified artifacts| S3
+  PG -->|committed manifest| API
+```
+
+Workers upload artifacts before committing the manifest in PostgreSQL. A stale
+writer fence cannot publish; failed publication leaves the previous generation
+visible. Different tenants can run concurrently, while each tenant retains one
+publication order. Object-store replication and database failover are operator
+responsibilities. See [distributed deployment](DISTRIBUTED.md) for qualification
+boundaries and recovery procedures.
 
 ## Module Boundaries
 

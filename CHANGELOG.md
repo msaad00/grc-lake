@@ -3,11 +3,13 @@
 All notable GRC Lake changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.3.1 - 2026-10-09
 
 - Bulk-load the DuckDB mart through typed Arrow tables when available, with a staged NDJSON fallback. Preserve table schemas, views, row contents, and order. Strict JSON decoding avoids unnecessary depth and Unicode scans while retaining duplicate-key, finite-number, Unicode, and nesting checks.
 
 - Cache posture, violations, graph, coverage, and file-derived ingestion status per tenant lake and input version. Posture refreshes at evidence freshness boundaries. JSONL collection pages validate each file version and then seek directly to the requested rows. Callers receive independent results. Distributed request scratch directories remain isolated; reuse across those requests is limited.
+
+- Refresh the README screenshots from the golden demo, correct the hero markup, and document local versus distributed deployment topology. Update the upgrade guide to reflect the published GRC Lake package and image.
 
 ## 0.3.0 - 2026-10-09
 

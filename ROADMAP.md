@@ -1,6 +1,6 @@
 # GRC Lake Roadmap
 
-Status as of v0.3.0 source preparation; publication is verified separately. Remaining gaps come first. Track work in GitHub issues.
+Status as of v0.3.1 source preparation; publication is verified separately. Remaining gaps come first. Track work in GitHub issues.
 
 ## Remaining gaps
 
@@ -17,7 +17,7 @@ The linked epics are closed on GitHub; each row names what is still left.
 Mapping counts are effective review states: a mapping marked reviewed against an
 older control version counts as proposed until it is re-reviewed.
 
-## Prepared for v0.3.0
+## Published in v0.3.0
 
 - GRC Lake branding, commands and registry targets, with legacy command aliases.
 - Opt-in PostgreSQL/S3 distributed mode with independent API/reader replicas.
@@ -29,6 +29,15 @@ older control version counts as proposed until it is re-reviewed.
 Cross-database sharding, automated shard placement, provider HA/failover testing,
 and production capacity qualification remain future work. Storage replication,
 erasure coding and RAID belong to the selected infrastructure.
+
+## Prepared for v0.3.1
+
+- Generation-aware read caches and seek-based JSONL collection pages.
+- Bulk DuckDB mart loading and faster strict JSON decoding, preserving validation.
+- Refreshed README visuals and deployment guidance.
+
+Cache reuse across distributed request scratch directories remains limited.
+These changes do not establish a production capacity claim.
 
 ## Recently shipped
 

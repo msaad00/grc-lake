@@ -5,11 +5,11 @@ platform. The repository, console, CLI, Python distribution, MCP server, chart,
 images, and documentation use `grc-lake`. This change does not add a hosted
 service or change the evidence boundary.
 
-The renamed package and container are release targets. A merged rebrand or a
-repository rename does not publish them. Until a GRC Lake release is published,
-use a source build of this revision; existing TrustOps releases retain their old
-package and image names. Do not assume that an old version number exists under
-the new registry name.
+[GRC Lake 0.3.0](https://github.com/msaad00/grc-lake/releases/tag/v0.3.0)
+is the first release published as `grc-lake` on PyPI and
+`ghcr.io/msaad00/grc-lake` for containers. Existing TrustOps releases retain
+their old package and image names; historical versions are not republished
+under the new registry name. A later branch merge does not publish a release.
 
 ## Compatibility
 

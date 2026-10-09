@@ -1,7 +1,7 @@
 {
   "name": "grc-lake-console",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "GRC Lake Console — open-source, headless-first trust operations served by the grc-lake Python package.",
   "engines": {
     "node": ">=22"

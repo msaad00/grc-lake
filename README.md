@@ -1,7 +1,7 @@
-<p align="center">
-
 > Renamed from TrustOps. See the [upgrade guide](docs/REBRANDING.md) for command aliases, existing volumes and release availability.
-> <img src="docs/images/grc-lake-capability-header.svg" alt="GRC Lake — collect, evaluate, resolve, and export: read-only evidence from cloud, identity, code, and data sources, evaluated through a common control framework and framework packs." width="100%">
+
+<p align="center">
+  <img src="docs/images/grc-lake-capability-header.svg" alt="GRC Lake — collect, evaluate, resolve, and export: read-only evidence from cloud, identity, code, and data sources, evaluated through a common control framework and framework packs." width="100%">
 
 </p>
 
@@ -175,8 +175,14 @@ and choose the [storage and writer topology](docs/runbooks/HA_READ_REPLICAS.md).
 Evidence stays in storage you operate; data leaves through the connectors, sinks,
 and model integrations you configure.
 
-- **JSONL is the local evidence authority.** Warehouse paths have separate setup
-  and qualification requirements. See [data flow](docs/DATA_FLOW.md).
+- **Local mode:** one writable replica with a local JSONL lake and SQLite or PostgreSQL.
+- **Distributed mode:** multiple API replicas and tenant workers share PostgreSQL
+  and S3-compatible object storage, with private scratch space and fenced publication.
+  Enable it explicitly using the [distributed deployment guide](docs/DISTRIBUTED.md).
+  A single tenant evaluation still runs on one worker; production capacity and
+  provider failover require deployment-specific qualification.
+- **Warehouse exports** have separate setup and qualification requirements.
+  See [data flow](docs/DATA_FLOW.md).
 - **Authentication is required for production.** The loopback demo is a separate
   setup. Human approval, tenant isolation, and read-only auditor access are
   enforced at the API boundary.
@@ -192,8 +198,8 @@ Wheels and sdists carry SLSA build provenance, and each GitHub release attaches
 a CycloneDX SBOM of the locked runtime dependencies:
 
 ```bash
-gh release download v0.3.0 -R msaad00/grc-lake -p '*.whl'
-gh attestation verify grc_lake-0.3.0-py3-none-any.whl -R msaad00/grc-lake
+gh release download v0.3.1 -R msaad00/grc-lake -p '*.whl'
+gh attestation verify grc_lake-0.3.1-py3-none-any.whl -R msaad00/grc-lake
 ```
 
 ## Frameworks

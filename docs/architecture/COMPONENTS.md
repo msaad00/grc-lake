@@ -59,7 +59,8 @@ and board reporting.
 
 Storage is an adapter boundary:
 
-- local files and SQLite for developer/internal demo mode
+- local evidence files with SQLite or PostgreSQL for one writable replica
+- PostgreSQL coordination and S3-compatible evidence objects for distributed mode
 - Snowflake for governed evidence
 - ClickHouse for telemetry analytics
 

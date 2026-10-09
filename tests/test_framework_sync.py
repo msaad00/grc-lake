@@ -177,11 +177,144 @@ def test_format_sync_report_escapes_pipes_in_reasons() -> None:
     assert "a\\|b" in report
 
 
-def test_report_cli_reads_sync_json(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def _write_sync_json(tmp_path: Path, rows: list[dict[str, Any]]) -> Path:
     sync_json = tmp_path / "sync.json"
-    sync_json.write_text(
-        json.dumps({"count": 1, "results": [{"framework_id": "z", "state": "error", "reason": "boom"}]}),
-        encoding="utf-8",
+    sync_json.write_text(json.dumps({"count": len(rows), "results": rows}), encoding="utf-8")
+    return sync_json
+
+
+def test_report_cli_reads_sync_json(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    sync_json = _write_sync_json(
+        tmp_path, [{"framework_id": "z", "state": "error", "reason": "boom", "transient": True}]
     )
     assert framework_sync.main(["report", str(sync_json)]) == 0
     assert "`z`" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        _http_error(403),
+        _http_error(429),
+        _http_error(500),
+        _http_error(503),
+        urllib.error.URLError(ConnectionRefusedError(61, "Connection refused")),
+        urllib.error.URLError(OSError(8, "nodename nor servname provided")),
+        TimeoutError("slow"),
+        ConnectionResetError("reset"),
+        http.client.IncompleteRead(b"par"),
+    ],
+)
+def test_upstream_unavailability_is_transient(tmp_path: Path, exc: BaseException) -> None:
+    path = _registry(tmp_path, "upstream")
+
+    def fetcher(url: str) -> bytes:
+        raise exc
+
+    (result,) = sync_frameworks(path, fetcher=fetcher)
+    assert result.state == "error"
+    assert result.transient is True
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        _http_error(404),
+        _http_error(401),
+        _http_error(410),
+        ValueError("unknown url type"),
+        urllib.error.URLError("unknown url type: ftp"),
+    ],
+)
+def test_broken_source_is_not_transient(tmp_path: Path, exc: BaseException) -> None:
+    path = _registry(tmp_path, "broken")
+
+    def fetcher(url: str) -> bytes:
+        raise exc
+
+    (result,) = sync_frameworks(path, fetcher=fetcher)
+    assert result.state == "error"
+    assert result.transient is False
+
+
+def test_registry_entry_without_a_source_is_not_transient(tmp_path: Path) -> None:
+    path = tmp_path / "registry.json"
+    path.write_text(json.dumps({"frameworks": [{"framework_id": "nosrc"}]}), encoding="utf-8")
+    (result,) = sync_frameworks(path, fetcher=lambda _url: b"x")
+    assert result.state == "error"
+    assert result.transient is False
+
+
+def test_report_warns_and_passes_when_only_upstream_is_unavailable(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    sync_json = _write_sync_json(
+        tmp_path,
+        [
+            {"framework_id": "soc2", "state": "updated", "reason": None, "transient": False},
+            {
+                "framework_id": "iso-27001-2022",
+                "state": "error",
+                "reason": "fetch failed: HTTPError: HTTP Error 403: Forbidden",
+                "transient": True,
+            },
+        ],
+    )
+    assert framework_sync.main(["report", str(sync_json)]) == 0
+    captured = capsys.readouterr()
+    assert "`iso-27001-2022`" in captured.out
+    assert "::warning" not in captured.out, "annotations must not leak into the Markdown report"
+    warnings = [line for line in captured.err.splitlines() if line.startswith("::warning")]
+    assert len(warnings) == 1
+    assert "iso-27001-2022" in warnings[0] and "403" in warnings[0]
+    assert "::error" not in captured.err
+
+
+def test_report_fails_on_a_broken_source(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    sync_json = _write_sync_json(
+        tmp_path,
+        [
+            {"framework_id": "a", "state": "error", "reason": "fetch failed: HTTP Error 403", "transient": True},
+            {"framework_id": "b", "state": "error", "reason": "fetch failed: HTTP Error 404", "transient": False},
+        ],
+    )
+    assert framework_sync.main(["report", str(sync_json)]) == 1
+    err = capsys.readouterr().err
+    assert any(line.startswith("::warning") and "a:" in line for line in err.splitlines())
+    assert any(line.startswith("::error") and "b:" in line and "404" in line for line in err.splitlines())
+
+
+def test_report_treats_an_unclassified_error_as_a_failure(tmp_path: Path) -> None:
+    sync_json = _write_sync_json(tmp_path, [{"framework_id": "old", "state": "error", "reason": "boom"}])
+    assert framework_sync.main(["report", str(sync_json)]) == 1
+
+
+def test_report_escapes_annotation_text(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    sync_json = _write_sync_json(
+        tmp_path,
+        [{"framework_id": "x", "state": "error", "reason": "50% down\r\nnext", "transient": True}],
+    )
+    assert framework_sync.main(["report", str(sync_json)]) == 0
+    (line,) = [line for line in capsys.readouterr().err.splitlines() if line.startswith("::warning")]
+    assert "50%25 down%0D%0Anext" in line
+
+
+def test_report_rejects_malformed_sync_json(tmp_path: Path) -> None:
+    sync_json = tmp_path / "sync.json"
+    sync_json.write_text("{not json", encoding="utf-8")
+    with pytest.raises(json.JSONDecodeError):
+        framework_sync.main(["report", str(sync_json)])
+
+
+def test_sync_cli_reports_transient_flag(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from security_lakehouse import cli
+
+    def fake_sync(**_kwargs: Any) -> list[framework_sync.SyncResult]:
+        return [framework_sync.SyncResult("a", "error", None, None, None, "fetch failed: 503", transient=True)]
+
+    monkeypatch.setattr(framework_sync, "sync_frameworks", fake_sync)
+    assert cli.main(["frameworks", "sync"]) == 0
+    (row,) = json.loads(capsys.readouterr().out)["results"]
+    assert row["transient"] is True

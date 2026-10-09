@@ -17,10 +17,10 @@ See [HEADLESS_GRC.md](HEADLESS_GRC.md) for the overall architecture.
 | Access reviews                | Access-review campaigns with certify/revoke/flag           |
 | Policy management             | Template library + employee acknowledgment on publish      |
 | Point-in-time audit           | Assessment snapshots + hash chain                          |
-| Personnel / HRIS              | Gap — use IdP + access reviews                             |
+| Personnel / HRIS              | BambooHR, Rippling, Workday connectors + offboarding check |
 | Vendor risk                   | MVP vendor risk module + audit-room diligence rollups      |
 | Workflow automation           | Native workflow canvas with approvals                      |
-| Self-host / data residency    | **Yes** — core differentiator                              |
+| Self-host / data residency    | **Yes**                                                    |
 | Headless / agent API          | **Yes** — MCP, OpenAPI, agent harness, CI gates            |
 
 ## Workflow checklist
@@ -41,23 +41,12 @@ See [HEADLESS_GRC.md](HEADLESS_GRC.md) for the overall architecture.
 
 ### Known gaps
 
-| Gap                    | Workaround today                  |
-| ---------------------- | --------------------------------- |
-| Personnel tracking     | IdP connector + access reviews    |
-| Auditor marketplace    | Export trust share + PDF snapshot |
-| Pen test coordination  | External process                  |
-| Device/agent inventory | Connector evidence only           |
-| Native billing/signup  | Commercial hosted mode (P5)       |
-
-## UI/UX targets (Epic #96)
-
-| Surface              | Target                                                |
-| -------------------- | ----------------------------------------------------- |
-| Trust Home dashboard | Executive KPIs + audit strip + live posture           |
-| Audit room           | Single pane for audit score, gaps, evidence freshness |
-| Framework drill-down | Control → rule → evidence → datasource (#91)          |
-| Dark mode            | CSS-variable theming across shell + review pages      |
-| Workflow canvas      | Inspector + approvals (#90)                           |
+| Gap                    | Workaround today                               |
+| ---------------------- | ---------------------------------------------- |
+| Auditor marketplace    | Export trust share + PDF snapshot              |
+| Pen test coordination  | External process                               |
+| Device/agent inventory | Connector evidence only                        |
+| Native billing/signup  | [Commercial hosted mode](COMMERCIAL_HOSTED.md) |
 
 ## Audit score formula
 
@@ -110,8 +99,6 @@ security-lakehouse assessment snapshot --lake build/lakehouse --reason vendor_du
 
 ## Related
 
-- [PRODUCT_SHAPE.md](PRODUCT_SHAPE.md) — parity map, open issues, execution order
 - [HEADLESS_GRC.md](HEADLESS_GRC.md)
 - [RELEASE_READINESS.md](RELEASE_READINESS.md)
 - [DEPLOYMENT.md](DEPLOYMENT.md)
-- Epic [#96](https://github.com/msaad00/trustops-security-data-lake/issues/96)

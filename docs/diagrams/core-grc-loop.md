@@ -3,7 +3,7 @@
 How TrustOps moves from connector sync to auditor-ready proof — the same path
 in the console, `/api/v1`, and MCP.
 
-See also: [PRODUCT_SHAPE.md](../PRODUCT_SHAPE.md) · [AUDIT_READINESS.md](../AUDIT_READINESS.md)
+See also: [AUDIT_READINESS.md](../AUDIT_READINESS.md)
 
 ## Loop
 

@@ -90,7 +90,6 @@ Do not stretch, rotate, shadow, or recolor the mark. Framework and connector log
 - Explain the evidence boundary before the feature list.
 - Say what is deterministic, what is model-assisted, and what requires approval.
 - Prefer concrete verbs: collect, evaluate, resolve, export.
-- Use “managed GRC SaaS” instead of competitor names.
 
 Brand constants live in `app/web/src/lib/brand.ts`. Layout and component guidance lives in [VISUAL_SYSTEM.md](VISUAL_SYSTEM.md).
 

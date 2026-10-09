@@ -10,6 +10,7 @@ from tools.render_readme_header import (
     estimate_text_width,
     render_logo,
     render_open_graph,
+    render_readme_glance,
     render_readme_summary,
     render_social_preview,
 )
@@ -52,6 +53,9 @@ def test_readme_hero_names_only_shipped_capabilities() -> None:
     assert f"{coverage['safeguards']:,} safeguards · {coverage['controls']:,} catalogued requirements" in copy
     assert f"{len(coverage['frameworks'])} framework packs" in copy
     assert "Console · API · CLI · MCP · CI" in copy
+    desc = "".join(root.find(f"{SVG}desc").itertext())
+    assert "immutable" not in desc
+    assert "hash-chained, verifiable audit records" in desc
     source_ids = {
         "AWS": "aws-posture",
         "Azure": "azure-posture",
@@ -161,8 +165,21 @@ def test_readme_hero_counts_the_read_only_sources_it_leaves_out() -> None:
         and entry.get("release_stage") == "preview"
         and entry["collection_mode"] in {"direct_api_read", "existing_lake_read"}
     ]
-    assert "GENERALLY AVAILABLE READ-ONLY SOURCES" in copy
-    assert f"+{len(generally_available) - 8} more · +{len(preview)} in preview" in copy
+    assert "STANDARD READ-ONLY SOURCES" in copy
+    assert "GENERALLY AVAILABLE" not in copy, "the ga label does not prove a live run"
+    total = len(generally_available) + len(preview)
+    assert f"{total} read-only source adapters ({len(preview)} preview)" in copy
+    tiled = {
+        "aws-posture",
+        "azure-posture",
+        "gcp-posture",
+        "github-security",
+        "gitlab-security",
+        "okta-identity",
+        "snowflake-evidence-lake",
+        "clickhouse-telemetry-lake",
+    }
+    assert tiled.isdisjoint(entry["connector_id"] for entry in preview)
     # GA + preview is the executable count the README states once.
     executable = [entry for entry in connectors if entry.get("is_implemented") is True]
     assert len(generally_available) + len(preview) == len(executable)
@@ -240,3 +257,30 @@ def test_readme_ccf_summary_matches_the_generator_and_names_every_family() -> No
         assert f"**{category['label']}:** {members}" in block
     coverage = coverage_by_framework()
     assert f"{coverage['controls']:,} catalogued requirements" in block
+
+
+def test_readme_glance_matches_the_generator_and_the_catalogs() -> None:
+    readme = README.read_text(encoding="utf-8")
+    header = readme.split("## Quick start", maxsplit=1)[0]
+    block = header.split("<!-- BEGIN README AT A GLANCE -->", maxsplit=1)[1].split(
+        "<!-- END README AT A GLANCE -->", maxsplit=1
+    )[0]
+    assert block == f"\n\n{render_readme_glance()}\n\n"
+
+    coverage = coverage_by_framework()
+    connectors = json.loads((ROOT / "connectors" / "catalog.json").read_text(encoding="utf-8"))["connectors"]
+    runnable = [
+        entry
+        for entry in connectors
+        if entry.get("is_implemented") is True and entry["collection_mode"] in {"direct_api_read", "existing_lake_read"}
+    ]
+    preview = [entry for entry in runnable if entry.get("release_stage") == "preview"]
+    assert f"{len(coverage['frameworks'])} framework packs" in block
+    assert f"{coverage['controls']:,} catalogued requirements" in block
+    assert f"{coverage['safeguards']} common safeguards" in block
+    assert f"{coverage['covered']:,} requirements have safeguard mappings" in block
+    assert (
+        f"{coverage['reviewed']:,} have reviewed mappings and the other {coverage['proposed']:,} are proposed" in block
+    )
+    assert coverage["reviewed"] + coverage["proposed"] == coverage["covered"]
+    assert f"{len(runnable)} read-only source adapters ({len(preview)} in preview)" in block

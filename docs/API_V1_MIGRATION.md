@@ -58,5 +58,5 @@ Do **not** add routes here. Existing legacy paths remain until the checklist bel
 ## Related
 
 - #413 (this plan)
-- #415 `server_app.py` router split (gov-compliance wave 1 merged in #464)
+- #415 `server_app.py` router split (gov-compliance routes merged in #464)
 - `docs/api/AGENT_API.md` — canonical v1 contract for agents

@@ -28,6 +28,7 @@ from datetime import UTC, datetime, timedelta
 from functools import wraps
 from pathlib import Path
 from typing import Any, ParamSpec, TypeVar
+from urllib.parse import urlsplit
 
 from security_lakehouse import strict_json
 from security_lakehouse.connector_errors import ConnectorOperatorError
@@ -286,6 +287,20 @@ def _build_disk_config_record(
     }
 
 
+def _has_url_userinfo(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(_has_url_userinfo(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_has_url_userinfo(item) for item in value)
+    if not isinstance(value, str) or "://" not in value:
+        return False
+    try:
+        parts = urlsplit(value.strip())
+    except ValueError:
+        return False
+    return parts.username is not None or parts.password is not None
+
+
 def configure_payload_error(
     *,
     connector_id: str,
@@ -303,6 +318,8 @@ def configure_payload_error(
     against the secret-reference policy (see :mod:`secret_refs`), whatever the
     state, so a server secret can never be stored as a tenant's reference.
     """
+    if _has_url_userinfo(credentials) or _has_url_userinfo(options):
+        return "connector URLs must not embed credentials (user:password@host); use the credential fields or a secret reference"
     ref_error = ref_payload_error(credentials or {}, options or {})
     if ref_error:
         return ref_error

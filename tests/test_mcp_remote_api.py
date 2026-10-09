@@ -110,7 +110,7 @@ def test_get_lake_or_remote_uses_server_when_configured(monkeypatch: pytest.Monk
     assert calls == [("GET", "/api/v1/platform/ai-governance")]
 
 
-def test_session_hash_uses_pbkdf2_not_sha256() -> None:
+def test_session_hash_is_keyed_not_bare_sha256() -> None:
     from security_lakehouse.auth.sessions import hash_session_token
 
     token = "tops_sess_" + "a" * 64

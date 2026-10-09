@@ -10,7 +10,6 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
-from security_lakehouse.auth.tokens import hash_token
 from security_lakehouse.db import repository
 from security_lakehouse.db.models import User
 
@@ -30,8 +29,7 @@ def exchange_api_key_for_browser_session(
     presented = raw_token.strip()
     if not presented:
         raise ApiKeySessionError("missing API key")
-    key_hash = hash_token(presented)
-    key = repository.resolve_api_key_by_hash(session, key_hash)
+    key = repository.resolve_api_key(session, presented)
     if key is None or not key.is_active(now=moment):
         raise ApiKeySessionError("invalid or inactive API key")
     if not key.user.is_active:

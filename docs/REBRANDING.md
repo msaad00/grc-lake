@@ -13,13 +13,13 @@ the new registry name.
 
 ## Compatibility
 
-| Surface | GRC Lake name | Existing integrations |
-| --- | --- | --- |
-| CLI | `grc-lake` | `security-lakehouse` remains an alias |
-| MCP command | `grc-lake-mcp` | `trustops-mcp` remains an alias |
-| Python SDK | `grc_lake.sdk.GrcLakeClient` | `security_lakehouse.sdk.TrustOpsClient` remains an alias |
-| Environment | `GRC_LAKE_*` | `TRUSTOPS_*` remains accepted by the Python runtime |
-| Mark URL | `/brand/grc-lake-mark.svg` | `/brand/trustops-mark.svg` still serves the current mark |
+| Surface     | GRC Lake name                | Existing integrations                                    |
+| ----------- | ---------------------------- | -------------------------------------------------------- |
+| CLI         | `grc-lake`                   | `security-lakehouse` remains an alias                    |
+| MCP command | `grc-lake-mcp`               | `trustops-mcp` remains an alias                          |
+| Python SDK  | `grc_lake.sdk.GrcLakeClient` | `security_lakehouse.sdk.TrustOpsClient` remains an alias |
+| Environment | `GRC_LAKE_*`                 | `TRUSTOPS_*` remains accepted by the Python runtime      |
+| Mark URL    | `/brand/grc-lake-mark.svg`   | `/brand/trustops-mark.svg` still serves the current mark |
 
 When both environment names exist, `GRC_LAKE_*` wins, including an explicitly
 empty value. Existing secret values and tenant suffixes remain valid. Rename

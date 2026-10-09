@@ -213,8 +213,9 @@ class StripeEvent(Base):
 class ApiKey(Base):
     """A bearer credential that acts as a specific user (and inherits its role).
 
-    Only the SHA-256 hash of the token is stored; the plaintext is shown once at
+    Only a digest of the token is stored; the plaintext is shown once at
     creation. ``prefix`` is a non-secret display handle (e.g. ``tops_ab12cd34``).
+    ``hash_version`` 1 marks a legacy PBKDF2 digest awaiting upgrade on use.
     """
 
     __tablename__ = "api_keys"
@@ -232,6 +233,7 @@ class ApiKey(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     key_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    hash_version: Mapped[int] = mapped_column(Integer, nullable=False, default=2, server_default="1")
     prefix: Mapped[str] = mapped_column(String(20), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow, server_default=func.now()

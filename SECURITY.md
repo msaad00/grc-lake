@@ -59,5 +59,5 @@ Out of scope:
 For how authentication, tenancy, and credentials are designed, see
 [server auth](docs/SERVER_AUTH.md) and [architecture](docs/ARCHITECTURE.md).
 
-The current dependency audit scope and open build-tool advisory are documented in
+The current dependency audit scope and the build-tool advisory mitigations are documented in
 [dependency security](docs/DEPENDENCY_SECURITY.md).

@@ -20,6 +20,7 @@ spec:
         spec:
           restartPolicy: Never
           serviceAccountName: {{ include "grc-lake.serviceAccountName" . }}
+          automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
           {{- if and .Values.lake.persistence.enabled (not .Values.lake.readOnly) (eq .Values.lake.persistence.accessMode "ReadWriteOnce") }}
           # A ReadWriteOnce lake volume is mountable read-write from a single
           # node only. Pin the scheduler to the API pod's node so both can mount
@@ -83,7 +84,7 @@ spec:
                 - name: tmp
                   mountPath: /tmp
                 - name: home
-                  mountPath: /home/grc-lake
+                  mountPath: /home/trustops
                 {{- with .Values.extraVolumeMounts }}
                 {{- toYaml . | nindent 16 }}
                 {{- end }}

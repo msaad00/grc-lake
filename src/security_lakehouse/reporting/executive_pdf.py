@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 from typing import Any
+from xml.sax.saxutils import escape
 
 _PDF_UNAVAILABLE = "Executive PDF export requires reportlab. Install with: pip install 'grc-lake[server]'"
 
@@ -58,14 +59,14 @@ def render_executive_pdf(assessment: dict[str, Any], *, org_name: str = "GRC Lak
     )
 
     posture = assessment.get("posture") or {}
-    evaluated_at = assessment.get("evaluated_at") or "—"
-    reason = assessment.get("snapshot_reason") or "manual"
-    assessment_hash = assessment.get("assessment_hash") or "—"
+    evaluated_at = escape(str(assessment.get("evaluated_at") or "—"))
+    reason = escape(str(assessment.get("snapshot_reason") or "manual"))
+    assessment_hash = escape(str(assessment.get("assessment_hash") or "—"))
     catalog = assessment.get("catalog_bundle") or {}
-    bundle_id = catalog.get("bundle_id") or catalog.get("id") or "—"
+    bundle_id = escape(str(catalog.get("bundle_id") or catalog.get("id") or "—"))
 
     story: list[Any] = [
-        Paragraph(f"{org_name} — Executive Compliance Report", title_style),
+        Paragraph(f"{escape(org_name)} — Executive Compliance Report", title_style),
         Paragraph(
             f"Point-in-time snapshot · {evaluated_at} · reason: {reason.replace('_', ' ')}",
             subtitle_style,
@@ -142,7 +143,7 @@ def render_executive_pdf(assessment: dict[str, Any], *, org_name: str = "GRC Lak
         [
             Paragraph("Evidence freshness", heading_style),
             Paragraph(
-                f"Tracked sources: {freshness.get('count', 0)} · stale/expired: {stale_count}",
+                f"Tracked sources: {escape(str(freshness.get('count', 0)))} · stale/expired: {escape(str(stale_count))}",
                 body_style,
             ),
             Spacer(1, 8),

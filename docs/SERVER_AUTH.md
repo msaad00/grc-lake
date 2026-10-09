@@ -68,13 +68,22 @@ supports it.
 
 ```bash
 export GRC_LAKE_OIDC_ISSUER="https://idp.example.com"
-export GRC_LAKE_OIDC_CLIENT_ID="grc-lake"
+export GRC_LAKE_OIDC_CLIENT_ID="trustops"
 export GRC_LAKE_OIDC_CLIENT_SECRET="..."
 export GRC_LAKE_OIDC_TENANT_SLUG="acme"
 export GRC_LAKE_OIDC_AUTO_PROVISION="false"
+# Required when auto-provisioning is on: only these email domains may join.
+export GRC_LAKE_OIDC_ALLOWED_DOMAINS="acme.com"
 export GRC_LAKE_SESSION_SECRET="replace-with-32-byte-random-secret"
 export GRC_LAKE_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)"
 ```
+
+With `GRC_LAKE_OIDC_AUTO_PROVISION=true`, a first-time SSO user is created only
+when their verified email's domain exactly matches an entry in the
+comma-separated `GRC_LAKE_OIDC_ALLOWED_DOMAINS` (subdomains are not implied).
+Auto-provisioning fails closed: with the list unset, no new user is provisioned
+and the server logs an error at startup. Users that already exist sign in
+regardless of the list.
 
 Endpoints:
 
@@ -138,7 +147,7 @@ export GRC_LAKE_SCIM_TENANT_SLUG="acme"
 SCIM requests authenticate with the SCIM bearer token, not a user API key.
 
 <p align="center">
-  <img src="images/grc-lake-identity-boundary.svg" alt="GRC Lake identity boundary: OIDC, SAML, and API keys to tenant RBAC and audit" width="100%">
+  <img src="images/trustops-identity-boundary.svg" alt="GRC Lake identity boundary: OIDC, SAML, and API keys to tenant RBAC and audit" width="100%">
 </p>
 
 Mermaid diagrams: [auth-identity.md](diagrams/auth-identity.md)
@@ -150,8 +159,8 @@ to the GRC Lake deployment. It resolves into the same browser session and RBAC
 context as OIDC.
 
 ```bash
-export GRC_LAKE_SAML_SP_ENTITY_ID="https://grc-lake.example.com/api/v1/auth/saml/metadata"
-export GRC_LAKE_SAML_ACS_URL="https://grc-lake.example.com/api/v1/auth/saml/acs"
+export GRC_LAKE_SAML_SP_ENTITY_ID="https://trustops.example.com/api/v1/auth/saml/metadata"
+export GRC_LAKE_SAML_ACS_URL="https://trustops.example.com/api/v1/auth/saml/acs"
 export GRC_LAKE_SAML_IDP_ENTITY_ID="https://idp.example.com/saml"
 export GRC_LAKE_SAML_IDP_SSO_URL="https://idp.example.com/saml/sso"
 export GRC_LAKE_SAML_IDP_X509_CERT="-----BEGIN CERTIFICATE-----..."

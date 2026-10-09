@@ -8,6 +8,7 @@ so it is unit-testable without a live identity provider.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -18,7 +19,10 @@ from security_lakehouse.db import repository
 from security_lakehouse.db.models import User
 from security_lakehouse.runtime_environment import runtime_env
 
+logger = logging.getLogger(__name__)
+
 _TRUTHY = {"1", "true", "yes", "on"}
+ALLOWED_DOMAINS_ENV = "GRC_LAKE_OIDC_ALLOWED_DOMAINS"
 
 
 @dataclass(frozen=True)
@@ -34,6 +38,7 @@ class OIDCConfig:
     scopes: str = "openid email profile"
     role_claim: str = "groups"
     role_map: dict[str, str] | None = None
+    allowed_domains: frozenset[str] = frozenset()
 
     @property
     def metadata_url(self) -> str:
@@ -54,7 +59,7 @@ def load_oidc_config() -> OIDCConfig | None:
         role_map = load_role_map("GRC_LAKE_OIDC_ROLE_MAP")
     except ValueError:
         role_map = {}
-    return OIDCConfig(
+    config = OIDCConfig(
         issuer=issuer,
         client_id=client_id,
         client_secret=client_secret,
@@ -63,7 +68,25 @@ def load_oidc_config() -> OIDCConfig | None:
         default_role=runtime_env().get("GRC_LAKE_OIDC_DEFAULT_ROLE", "read_only"),
         role_claim=runtime_env().get("GRC_LAKE_OIDC_ROLE_CLAIM", "groups"),
         role_map=role_map,
+        allowed_domains=parse_allowed_domains(runtime_env().get(ALLOWED_DOMAINS_ENV, "")),
     )
+    if auto_provision_misconfigured(config):
+        logger.error(
+            "GRC_LAKE_OIDC_AUTO_PROVISION is on but %s is empty; no new SSO user will be "
+            "provisioned until it lists the email domains allowed to join",
+            ALLOWED_DOMAINS_ENV,
+        )
+    return config
+
+
+def parse_allowed_domains(raw: str) -> frozenset[str]:
+    """Parse a comma-separated domain list (``@`` prefixes and case ignored)."""
+    return frozenset(domain for domain in (item.strip().lstrip("@").lower() for item in raw.split(",")) if domain)
+
+
+def auto_provision_misconfigured(config: OIDCConfig) -> bool:
+    """Auto-provisioning is on but no domain may be provisioned."""
+    return config.auto_provision and not config.allowed_domains
 
 
 def build_oauth(config: OIDCConfig):
@@ -98,8 +121,9 @@ def complete_oidc_login(
     """Map a verified SSO email to a local user + browser session token.
 
     Raises :class:`OIDCLoginError` when the tenant is unknown, the email is not
-    verified by the identity provider, or the user is not provisioned (and
-    auto-provisioning is disabled).
+    verified by the identity provider, or the user is not provisioned and may
+    not be auto-provisioned. Auto-provisioning only admits emails whose domain
+    is in ``allowed_domains``; an empty list provisions nobody.
     """
     from security_lakehouse.auth.idp_roles import resolve_role_from_claims, sync_role_on_login_enabled
 
@@ -117,18 +141,24 @@ def complete_oidc_login(
             role_map=config.role_map,
             default_role=config.default_role,
         )
+    domain = email.rsplit("@", 1)[-1].strip().lower() if "@" in email else ""
+    may_provision = config.auto_provision and domain in config.allowed_domains
     try:
         user = repository.find_or_provision_user(
             session,
             tenant_id=tenant.id,
             email=email,
-            auto_provision=config.auto_provision,
+            auto_provision=may_provision,
             default_role=mapped_role,
         )
     except IntegrityError:
         session.rollback()
         user = repository.get_user_by_email(session, tenant_id=tenant.id, email=email)
     if user is None:
+        if auto_provision_misconfigured(config):
+            raise OIDCLoginError(f"auto-provisioning is disabled until {ALLOWED_DOMAINS_ENV} is set")
+        if config.auto_provision:
+            raise OIDCLoginError(f"email domain of {email!r} is not allowed for auto-provisioning")
         raise OIDCLoginError(f"no provisioned user for {email!r} and auto-provisioning is disabled")
     if (
         user is not None

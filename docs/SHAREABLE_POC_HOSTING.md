@@ -225,7 +225,13 @@ env:
     value: poc
   - name: GRC_LAKE_OIDC_AUTO_PROVISION
     value: "true"
+  - name: TRUSTOPS_OIDC_ALLOWED_DOMAINS
+    value: example.com
 ```
+
+Auto-provisioning admits only verified emails whose domain is listed in
+`TRUSTOPS_OIDC_ALLOWED_DOMAINS` (comma-separated, exact match). Without it no
+new user is provisioned; see [SERVER_AUTH.md](SERVER_AUTH.md#oidc).
 
 Use API keys for headless clients and agents. API keys are stored hashed in the
 server database and should be scoped to the minimum role needed.

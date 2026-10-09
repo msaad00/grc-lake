@@ -21,6 +21,7 @@ dist/
 
 # Docker Compose server secrets (template: deploy/compose/grc-lake.env.example)
 /grc-lake.env
+/trustops.env
 
 # Root-level safety net; per-package node_modules entries below stay too.
 node_modules/

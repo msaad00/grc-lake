@@ -322,17 +322,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: always()
-    needs: [pipeline-smoke, python-tests, pre-commit, security]
+    needs: [pipeline-smoke, python-tests, pre-commit, security, e2e]
     steps:
-      - name: Require smoke, all Python shards, hooks, and security
+      - name: Require smoke, all Python shards, hooks, security, and browser tests
         env:
           PIPELINE_RESULT: ${{ needs.pipeline-smoke.result }}
           TEST_RESULT: ${{ needs.python-tests.result }}
           HOOK_RESULT: ${{ needs.pre-commit.result }}
           SECURITY_RESULT: ${{ needs.security.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
         run: |
           test "$PIPELINE_RESULT" = success && test "$TEST_RESULT" = success && \
-            test "$HOOK_RESULT" = success && test "$SECURITY_RESULT" = success
+            test "$HOOK_RESULT" = success && test "$SECURITY_RESULT" = success && \
+            test "$E2E_RESULT" = success
 
   postgres-migrations:
     runs-on: ubuntu-latest

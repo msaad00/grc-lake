@@ -1,13 +1,17 @@
 # Release readiness
 
-GRC Lake **0.2.24** prepares the fixes listed in the
-[changelog](../CHANGELOG.md): opt-in scheduled retention, bounded per-tenant
-background job workers, capped and annotated MCP tool output with an
-untrusted-content envelope, cursor paging for graph and coverage routes, streamed
-evidence pages, copied trust-share revocation, and catalog control-ID collision
-checks. Scheduled retention is off by default and previews until an archive is
-configured. These are self-hosted software changes; release checks do not
-provision a managed service.
+GRC Lake **0.3.0** prepares the product rebrand, opt-in PostgreSQL/S3 distributed
+mode, parallel tenant workers, physical history partitions, console improvements,
+and security fixes listed in the [changelog](../CHANGELOG.md). Local deployment
+remains supported. Distributed mode requires explicit configuration and the
+[migration and recovery procedures](DISTRIBUTED.md); it is not enabled by a
+package upgrade. These are self-hosted software changes, not a managed service.
+
+The source version is a release candidate until the publication gates below
+succeed. Existing `trustops-security-data-lake` releases remain available under
+their original PyPI name. New releases target `grc-lake`; use a fresh Python
+environment when moving between distributions because they own overlapping
+module files. Legacy CLI aliases and Python imports remain supported.
 
 Source and CI qualification do not establish publication, live-provider accuracy,
 or a working customer deployment. The pinned build-tool replacement and its
@@ -73,6 +77,25 @@ All workflow actions are pinned to a full commit SHA with the release tag in a
 comment, and the Dockerfile pins its base images by digest. Dependabot's
 `github-actions` and `docker` ecosystems propose updates to both.
 
+## First publication under the GRC Lake name
+
+Before tagging the first `grc-lake` release, configure a GitHub Actions pending
+publisher under [PyPI account publishing](https://pypi.org/manage/account/publishing/):
+
+| Field             | Value         |
+| ----------------- | ------------- |
+| PyPI project name | `grc-lake`    |
+| GitHub owner      | `msaad00`     |
+| Repository        | `grc-lake`    |
+| Workflow filename | `release.yml` |
+| Environment       | `release`     |
+
+A [pending publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)
+creates the project on its first successful upload; it does not reserve the name.
+Keep the old project's releases intact. The old project's publisher does not
+authorize publication of the new distribution. Do not treat a repository rename
+or a successful dry run as proof that PyPI publishing authorization is configured.
+
 ## What the overview means
 
 - **Assessment score** is the percentage of observed controls with fresh passing evidence; catalog coverage is reported separately.
@@ -104,8 +127,10 @@ commercial information to this public repository.
 ## Deployment probes
 
 `GET /api/healthz` reports process liveness. `GET /api/readyz` returns 200 only
-when the application-state database has the tenant table and the lake root
-accepts a temporary write and fsync; otherwise it returns a sanitized 503. Both
+when local mode has the tenant table and its lake root accepts a temporary write
+and fsync. Distributed mode additionally checks access to its S3 bucket while
+using PostgreSQL for the tenant-table check and private scratch for the write
+probe; otherwise it returns a sanitized 503. Both
 are unauthenticated. Readiness is excluded from request audit and rate limiting,
 returns `Cache-Control: no-store`, and never enumerates tenants or hashes all
 assessment artifacts. An empty, initialized deployment can be ready.

@@ -110,15 +110,17 @@ class ObjectStore:
         key = self.key(tenant_id, entry.get("sha256", ""))
         result = self.client.get_object(Bucket=self.config.bucket, Key=key)
         body = result["Body"]
-        target.parent.mkdir(parents=True, exist_ok=True)
-        temporary = target.with_name(target.name + ".download")
+        temporary = None
         digest = hashlib.sha256()
         count = 0
         try:
+            target.parent.mkdir(parents=True, exist_ok=True)
             if result.get("ContentLength") != size:
                 raise IntegrityError("object length differs from publication")
-            with temporary.open("xb") as output:
-                os.chmod(temporary, 0o600)
+            # The manifest may itself contain <target>.download. Own a unique
+            # temporary file so cleanup can never remove another artifact.
+            with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".grc-download-", delete=False) as output:
+                temporary = Path(output.name)
                 for chunk in iter(lambda: body.read(1024**2), b""):
                     count += len(chunk)
                     if count > size:
@@ -130,7 +132,8 @@ class ObjectStore:
             os.replace(temporary, target)
         finally:
             body.close()
-            temporary.unlink(missing_ok=True)
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
     def snapshot(self, tenant_id: str, root: Path, *, previous: dict | None = None) -> dict:
         root = root.resolve()

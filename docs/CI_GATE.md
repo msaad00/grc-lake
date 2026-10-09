@@ -56,7 +56,7 @@ jobs:
     steps:
       - name: Evaluate GRC Lake posture
         id: gate
-        uses: msaad00/grc-lake/.github/actions/posture-gate@v0.2.24
+        uses: msaad00/grc-lake/.github/actions/posture-gate@v0.3.0
         with:
           grc-lake-url: ${{ secrets.GRC_LAKE_URL }}
           api-token: ${{ secrets.GRC_LAKE_API_TOKEN }}

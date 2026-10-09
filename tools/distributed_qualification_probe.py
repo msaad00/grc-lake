@@ -42,11 +42,11 @@ def runtime():
     return Runtime(catalog, ObjectStore(config), ROOT / "scratch"), session_factory(engine)
 
 
-def request(service, method, path, credential=None, **kwargs):
+def request(service, method, path, credential=None, *, timeout=90, **kwargs):
     headers = kwargs.pop("headers", {})
     if credential:
         headers["Authorization"] = "Bearer " + credential["token"]
-    return httpx.request(method, f"http://{service}:8787{path}", headers=headers, timeout=90, **kwargs)
+    return httpx.request(method, f"http://{service}:8787{path}", headers=headers, timeout=timeout, **kwargs)
 
 
 def ready(services=("api-a", "api-b", "reader")):
@@ -244,14 +244,35 @@ def stable(phase):
     ready()
     rt, _ = runtime()
     baseline = load("baseline")
-    for credential in load("credentials"):
-        assert rt.catalog.head(credential["tenant"]).version == baseline["versions"][credential["tenant"]]
-        response = request("api-b", "GET", "/api/v1/evidence?limit=100", credential)
-        assert response.status_code == 200
-        actual = hashlib.sha256(json.dumps(response.json()["data"], sort_keys=True).encode()).hexdigest()
-        assert actual == baseline["evidence_sha256"][credential["tenant"]]
-    save(phase, {"committed_versions_preserved": True, "evidence_sha256_preserved": True})
-    rt.catalog.engine.dispose()
+    deadline = time.monotonic() + 90
+    retries = 0
+    try:
+        for credential in load("credentials"):
+            while True:
+                assert rt.catalog.head(credential["tenant"]).version == baseline["versions"][credential["tenant"]]
+                remaining = deadline - time.monotonic()
+                assert remaining > 0, "evidence recovery deadline exceeded"
+                try:
+                    response = request(
+                        "api-b", "GET", "/api/v1/evidence?limit=100", credential, timeout=min(10, remaining)
+                    )
+                except httpx.TransportError:
+                    # A restarted service can accept connections before its
+                    # data plane is available. The same bounded deadline applies.
+                    response = None
+                if response is not None and response.status_code != 503:
+                    assert response.status_code == 200
+                    actual = hashlib.sha256(json.dumps(response.json()["data"], sort_keys=True).encode()).hexdigest()
+                    assert actual == baseline["evidence_sha256"][credential["tenant"]]
+                    break
+                retries += 1
+                time.sleep(min(0.5, max(0, deadline - time.monotonic())))
+        save(
+            phase,
+            {"committed_versions_preserved": True, "evidence_sha256_preserved": True, "recovery_retries": retries},
+        )
+    finally:
+        rt.catalog.engine.dispose()
 
 
 def outage(kind):

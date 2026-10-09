@@ -290,7 +290,7 @@ across independent databases.
 Schedule a maintenance window, quiesce writers, back up PostgreSQL, and reserve
 space for a second copy of retained history before this migration. It holds an
 exclusive history-table lock while copying. Nonstandard row-security policies,
-triggers, indexes or foreign-key/unique constraints on that table cause a
+triggers, indexes or foreign-key/unique constraints on that table or its partitions cause a
 transactional refusal so they are not silently discarded; reconcile those custom
 schema extensions with the partition layout before retrying. Application-role
 grants should be verified after an operator-managed schema upgrade.

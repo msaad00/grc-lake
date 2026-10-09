@@ -1,6 +1,6 @@
 # GRC Lake Roadmap
 
-Status as of v0.2.24. Remaining gaps come first. Track work in GitHub issues.
+Status as of v0.3.0 source preparation; publication is verified separately. Remaining gaps come first. Track work in GitHub issues.
 
 ## Remaining gaps
 
@@ -16,6 +16,19 @@ The linked epics are closed on GitHub; each row names what is still left.
 
 Mapping counts are effective review states: a mapping marked reviewed against an
 older control version counts as proposed until it is re-reviewed.
+
+## Prepared for v0.3.0
+
+- GRC Lake branding, commands and registry targets, with legacy command aliases.
+- Opt-in PostgreSQL/S3 distributed mode with independent API/reader replicas.
+- Stable virtual worker shards, tenant/source/date Parquet partitions and 32
+  physical PostgreSQL history partitions within one database cluster.
+- Parallel tenant admission, database-clock recovery and real S3 qualification.
+- Console/demo improvements and the security fixes in the changelog.
+
+Cross-database sharding, automated shard placement, provider HA/failover testing,
+and production capacity qualification remain future work. Storage replication,
+erasure coding and RAID belong to the selected infrastructure.
 
 ## Recently shipped
 

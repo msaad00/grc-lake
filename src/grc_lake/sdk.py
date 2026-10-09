@@ -6,6 +6,3 @@ from security_lakehouse.sdk import (
 from security_lakehouse.sdk import (
     GrcLakeClient as GrcLakeClient,
 )
-from security_lakehouse.sdk import (
-    GrcLakeError as GrcLakeError,
-)

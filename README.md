@@ -192,8 +192,8 @@ Wheels and sdists carry SLSA build provenance, and each GitHub release attaches
 a CycloneDX SBOM of the locked runtime dependencies:
 
 ```bash
-gh release download v0.2.24 -R msaad00/grc-lake -p '*.whl'
-gh attestation verify grc_lake-0.2.24-py3-none-any.whl -R msaad00/grc-lake
+gh release download v0.3.0 -R msaad00/grc-lake -p '*.whl'
+gh attestation verify grc_lake-0.3.0-py3-none-any.whl -R msaad00/grc-lake
 ```
 
 ## Frameworks

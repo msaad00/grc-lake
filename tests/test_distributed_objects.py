@@ -95,3 +95,31 @@ def test_publishing_identical_bytes_never_overwrites_existing_objects(objects, t
     second = objects.snapshot("tenant-a", tmp_path)
     assert first == second
     assert len(objects.client.data) == 1
+
+
+def test_restore_preserves_artifacts_whose_names_match_download_temporaries(objects, tmp_path):
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "evidence.download").write_bytes(b"independent evidence")
+    (source / "evidence").write_bytes(b"primary evidence")
+    manifest = objects.snapshot("tenant-a", source)
+    manifest["files"] = {name: manifest["files"][name] for name in ("evidence.download", "evidence")}
+    target = tmp_path / "restored"
+    objects.restore("tenant-a", manifest, target)
+    assert (target / "evidence").read_bytes() == b"primary evidence"
+    assert (target / "evidence.download").read_bytes() == b"independent evidence"
+
+
+def test_failed_download_preserves_adjacent_artifacts(objects, tmp_path):
+    source = tmp_path / "source"
+    source.write_bytes(b"right")
+    entry = objects.put("tenant-a", source)
+    objects.client.data[objects.key("tenant-a", entry["sha256"])] = b"wrong"
+    target = tmp_path / "evidence"
+    adjacent = tmp_path / "evidence.download"
+    adjacent.write_bytes(b"must survive failed download")
+    with pytest.raises(IntegrityError):
+        objects.get("tenant-a", entry, target)
+    assert adjacent.read_bytes() == b"must survive failed download"
+    assert not target.exists()
+    assert not list(tmp_path.glob(".grc-download-*"))

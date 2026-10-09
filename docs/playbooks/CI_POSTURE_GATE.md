@@ -35,7 +35,7 @@ Example step:
 
 ```yaml
 - name: GRC Lake posture gate
-  uses: msaad00/grc-lake/.github/actions/posture-gate@v0.2.24
+  uses: msaad00/grc-lake/.github/actions/posture-gate@v0.3.0
   with:
     trustops-url: ${{ secrets.GRC_LAKE_URL }}
     api-token: ${{ secrets.GRC_LAKE_API_TOKEN }}

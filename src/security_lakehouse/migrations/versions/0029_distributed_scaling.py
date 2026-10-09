@@ -20,13 +20,15 @@ def _rebuild_history(partitioned):
     # and custom triggers need an operator-planned migration, not silent removal.
     custom = connection.scalar(
         sa.text("""
-        SELECT relrowsecurity OR relforcerowsecurity OR EXISTS (SELECT 1 FROM pg_policy WHERE polrelid=c.oid) OR EXISTS (
+        SELECT bool_or(relrowsecurity OR relforcerowsecurity OR EXISTS (SELECT 1 FROM pg_policy WHERE polrelid=c.oid) OR EXISTS (
             SELECT 1 FROM pg_trigger WHERE tgrelid=c.oid AND NOT tgisinternal
         ) OR EXISTS (
             SELECT 1 FROM pg_index WHERE indrelid=c.oid AND NOT indisprimary
         ) OR EXISTS (
             SELECT 1 FROM pg_constraint WHERE conrelid=c.oid AND contype IN ('f', 'u', 'x')
-        ) FROM pg_class c WHERE c.oid='distributed_revisions'::regclass
+        )) FROM pg_class c WHERE c.oid='distributed_revisions'::regclass OR c.oid IN (
+            SELECT relid FROM pg_partition_tree('distributed_revisions'::regclass)
+        )
     """)
     )
     if custom:

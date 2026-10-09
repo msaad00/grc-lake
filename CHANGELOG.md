@@ -3,9 +3,19 @@
 All notable GRC Lake changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.3.0 - 2026-10-09
 
-- Rebrand the product, CLI, SDK, console, logo, repository links and deployment examples to GRC Lake. Legacy CLI commands, Python imports and runtime environment variables remain supported. See [upgrade instructions](docs/REBRANDING.md) before changing package or deployment names. New registry names require a separate release.
+- Rebrand the product, CLI, SDK, console, logo, repository links and deployment examples to GRC Lake. Legacy CLI commands, Python imports and runtime environment variables remain supported. See [upgrade instructions](docs/REBRANDING.md) before changing package or deployment names. The release targets the new `grc-lake` distribution and image; existing TrustOps releases remain under their original registry names.
+
+- Add opt-in distributed mode backed by PostgreSQL and S3-compatible object storage. API replicas use independent scratch storage, concurrent tenants publish through database-clock writer fences, and readers see only committed, hash-verified evidence. PostgreSQL holds operational state; the existing local deployment mode remains supported.
+
+- Add stable virtual worker shards, tenant/source/UTC-date Parquet partitions, 32 physical PostgreSQL history partitions, bounded tenant job dispatch, and query indexes. Workers claim independently across tenants, respect cancellation races, and use database time for lease renewal and recovery. These partitions remain within one PostgreSQL cluster; storage replication and RAID are deployment-infrastructure responsibilities.
+
+- Qualify concurrent replicas and worker recovery against a real S3-compatible service in CI, including conditional and multipart writes, replica scratch loss, PostgreSQL/S3 outages, and killed-writer fencing. This is a single-host synthetic qualification, not a production capacity or storage-replication certification.
+
+- Preserve neighboring artifacts during failed downloads by using uniquely owned temporary files. Migration rollback refuses custom security policies on child partitions instead of silently discarding them.
+
+- Let the distributed qualification wait up to 90 seconds for evidence reads after a storage restart. Bucket readiness can precede data availability; unavailable reads are retried within that bound, while changed publication versions or evidence hashes fail immediately.
 
 - `frameworks sync` marks each fetch error `transient` when the upstream is temporarily unavailable (HTTP 403, 429, or 5xx, or a network failure). `python -m security_lakehouse.framework_sync report` emits a GitHub `::warning::` for those and exits 0, but emits `::error::` and exits 1 for any other fetch error, such as a 404, an invalid URL, or a registry entry with no source, so a broken source entry no longer passes silently.
 
@@ -48,6 +58,8 @@ Python package, Helm chart, and bundled web console.
 - Helm pods no longer mount a Kubernetes API token. Set `serviceAccount.automountToken: true` only for CLI runs of the Kubernetes connector with `in_cluster: true`. The framework-sync workflow no longer persists its checkout token.
 
 ### Upgrade notes
+
+- For distributed mode, configure PostgreSQL and an S3-compatible bucket explicitly; local mode does not migrate itself. Follow [distributed deployment](docs/DISTRIBUTED.md) for import, shard placement, provider preflight, and recovery. Back up PostgreSQL and quiesce writers before migration `0029_distributed_scaling`, which takes an exclusive lock and temporarily requires a second copy of retained manifest history.
 
 - Migration `0027_api_key_hash_version` adds `api_keys.hash_version`. Existing keys keep working: each one is rehashed to the new digest on its first successful use, and existing browser sessions are upgraded the same way. Once a key has been rehashed, downgrading below this release orphans it. The downgrade refuses while any rehashed key exists, so reissue keys if you must roll back.
 

@@ -6,8 +6,9 @@ adapters, SCIM 2.0 provisioning, and Stripe billing. All of it stays off unless
 `GRC_LAKE_COMMERCIAL_HOSTED=1`.
 
 These application features do not establish managed-service availability or
-multi-writer support. The supported lake topology has one writable application
-replica; shared storage alone does not make concurrent application writers safe.
+multi-writer support. Local mode has one writable application replica;
+[distributed mode](DISTRIBUTED.md) explicitly coordinates multiple replicas using
+PostgreSQL and immutable S3 objects.
 See [architecture](ARCHITECTURE.md) and [read replicas](runbooks/HA_READ_REPLICAS.md)
 for the deployment boundary.
 
@@ -206,5 +207,5 @@ grc-lake db upgrade --lake build/lakehouse
 ## Related docs
 
 - [Deployment](DEPLOYMENT.md) — OSS vs self-hosted positioning
-- [Deployment topology](runbooks/HA_READ_REPLICAS.md) — one writable replica; read replicas unsupported
+- [Deployment topology](runbooks/HA_READ_REPLICAS.md) — local and distributed replicas
 - [Helm security guards](../deploy/README.md) — auth + replica guards

@@ -1,3 +1,4 @@
+{{- if not (and .Values.distributed.enabled (eq .Values.distributed.role "worker")) }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -17,3 +18,5 @@ spec:
       name: http
   selector:
     {{- include "grc-lake.selectorLabels" . | nindent 4 }}
+
+{{- end }}

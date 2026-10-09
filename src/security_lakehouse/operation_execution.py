@@ -25,6 +25,28 @@ from security_lakehouse.services.snapshot_events import snapshot_written_hook
 def execute_operation(
     root: Path, row: OperationJob, *, factory: sessionmaker, require_auth: bool
 ) -> tuple[int, dict[str, Any]]:
+    from security_lakehouse.distributed.config import ClusterConfig
+    from security_lakehouse.distributed.context import binding
+
+    cluster = ClusterConfig.from_env()
+    if cluster is not None and binding.get() is None:
+        from security_lakehouse.distributed.catalog import Catalog
+        from security_lakehouse.distributed.objects import ObjectStore
+        from security_lakehouse.distributed.workspace import Runtime
+
+        runtime = Runtime(Catalog(factory.kw["bind"], cluster), ObjectStore(cluster), root / "distributed-scratch")
+
+        class RejectedOperation(Exception):
+            pass
+
+        try:
+            with runtime.write(row.tenant_id, wait_seconds=95):
+                result = execute_operation(root, row, factory=factory, require_auth=require_auth)
+                if result[0] >= 400:
+                    raise RejectedOperation()
+            return result
+        except RejectedOperation:
+            return result
     with factory() as session:
         try:
             identity = resolve_authority(

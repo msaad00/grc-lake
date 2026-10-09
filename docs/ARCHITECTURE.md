@@ -62,7 +62,10 @@ The warehouse sink runs after local publication. API/CLI results expose local an
 export outcomes independently so a sink failure does not conceal the new local
 assessment. No cross-store transaction is claimed. Evaluation still holds rows in
 memory; streaming source reads, indexed joins, and capped response detail do not
-establish horizontal scalability. The Helm chart enforces one writable replica.
+make one evaluation distributed. Local mode enforces one writable replica.
+[Distributed mode](DISTRIBUTED.md) adds PostgreSQL-fenced publication, immutable
+S3 objects, virtual tenant shards and source/date Parquet partitions; it scales
+work across tenants while preserving same-tenant publication ordering.
 
 ## Module Boundaries
 

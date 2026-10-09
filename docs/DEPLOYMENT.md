@@ -71,7 +71,7 @@ service.
 ### Self-hosted
 
 Self-hosted shape: Helm chart on EKS/AKS/GKE (or Docker Compose for small pilots),
-**one writable application replica**, OIDC/SAML for humans, API keys for agents,
+**one writable application replica in local mode**, OIDC/SAML for humans, API keys for agents,
 persistent `/lake`, scheduler-driven
 connector syncs, and token-scoped trust-center links.
 
@@ -82,8 +82,10 @@ connector syncs, and token-scoped trust-center links.
 | State     | Encrypted PVC at `/lake`           | Backup/restore, per-tenant prefixes                |
 | Evidence  | Read-only cloud/service identities | Customer IaC owns roles, grants, rotation          |
 
-The chart rejects read-only lakes and multiple application replicas, even with
-RWX storage or PostgreSQL. Updates have downtime. See the
+Local mode rejects read-only lakes and multiple application replicas, even with
+RWX storage or PostgreSQL. Local updates have downtime. Opt-in
+[distributed PostgreSQL/S3 mode](DISTRIBUTED.md) supports multiple API, worker and
+reader replicas with private scratch storage. See the
 [topology boundary](runbooks/HA_READ_REPLICAS.md). EKS has reference Terraform;
 AKS/GKE use the same chart with operator-provisioned infrastructure.
 
@@ -148,16 +150,16 @@ repository.
 
 ## Partitioning, sharding, replicas and disks
 
-| Capability                | Current support                                       | Deployment responsibility                                                          |
-| ------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Local evidence lake       | One writable application and scheduler owner per lake | Operator supplies persistent storage and coordinated backups                       |
-| ClickHouse partitions     | Reference tables partition by month and tenant        | Operator provisions and operates ClickHouse                                        |
-| Parquet partitions        | Readers accept Hive-style partitioned datasets        | Export layout and analytical engine determine pruning                              |
-| Iceberg export            | Unpartitioned format-v2 target tables                 | Partitioned target tables are rejected by the exporter                             |
-| Application shards        | No distributed sharding protocol                      | Separate installations can isolate workloads; they do not form one sharded cluster |
-| Application replicas      | Helm supports exactly one writable replica            | PostgreSQL, Redis or an RWX volume do not enable app replicas                      |
-| Database/storage replicas | Backend-specific infrastructure capability            | Operator configures replication, failover and restore testing                      |
-| RAID                      | No application-managed RAID                           | Host, NAS/SAN or cloud storage layer; redundancy does not replace backups          |
+| Capability                | Current support                                         | Deployment responsibility                                                 |
+| ------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Local evidence lake       | One writable application and scheduler owner per lake   | Operator supplies persistent storage and coordinated backups              |
+| ClickHouse partitions     | Reference tables partition by month and tenant          | Operator provisions and operates ClickHouse                               |
+| Parquet partitions        | Distributed exports partition by tenant/source/UTC date | Export layout and analytical engine determine pruning                     |
+| Iceberg export            | Unpartitioned format-v2 target tables                   | Partitioned target tables are rejected by the exporter                    |
+| Application shards        | Stable tenant virtual shards in distributed mode        | Operator assigns worker shard ranges; no automatic placement              |
+| Application replicas      | Local: one writer; distributed: multiple replicas       | Distributed mode requires configured PostgreSQL and S3; see its runbook   |
+| Database/storage replicas | Backend-specific infrastructure capability              | Operator configures replication, failover and restore testing             |
+| RAID                      | No application-managed RAID                             | Host, NAS/SAN or cloud storage layer; redundancy does not replace backups |
 
 OSS local, self-hosted and operator-hosted deployments use the same application
 constraints. Hosted mode is an operating model, not a distributed storage mode.

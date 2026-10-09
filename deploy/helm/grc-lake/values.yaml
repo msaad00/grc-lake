@@ -7,9 +7,8 @@ image:
   pullPolicy: IfNotPresent
   pullSecrets: []
 
-# Replica count — GRC Lake is currently single-writer for the lake. Run
-# one application replica with a writable lake. Read replicas require
-# separate startup and audit-write paths and are not supported.
+# Local mode requires one application replica. Distributed mode uses
+# PostgreSQL and S3 with private scratch space on every replica.
 replicaCount: 1
 
 serviceAccount:
@@ -153,3 +152,19 @@ extraVolumes: []
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Opt-in PostgreSQL/S3 mode. Use a distinct release for reader or worker pods.
+distributed:
+  enabled: false
+  clusterId: ""
+  bucket: ""
+  endpoint: "" # empty selects AWS S3; otherwise HTTPS S3-compatible endpoint
+  region: us-east-1
+  virtualShards: 64
+  role: api # api | reader | worker
+  databaseSecretName: "" # must contain a PostgreSQL primary URL
+  databaseSecretKey: database-url
+  scratchSize: 20Gi
+  workspaceBytes: "536870912" # per-tenant hard bound, not a measured capacity claim
+  workerConcurrency: 2
+  workerShards: all # e.g. "0,1,2,3"; shard count is independent of replica count

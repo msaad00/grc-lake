@@ -1,0 +1,169 @@
+"""Private writes become visible only with a database-fenced atomic publication."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+import shutil
+import tempfile
+import threading
+import time
+import uuid
+from contextlib import contextmanager
+from pathlib import Path
+
+from security_lakehouse.distributed.catalog import Catalog, Conflict
+from security_lakehouse.distributed.context import WorkspaceBinding, binding
+from security_lakehouse.distributed.objects import ObjectStore
+from security_lakehouse.ledger import chain_lock
+
+
+class Runtime:
+    def __init__(self, catalog: Catalog, objects: ObjectStore, scratch: Path):
+        self.catalog = catalog
+        self.objects = objects
+        self.scratch = scratch.resolve()
+        self.scratch.mkdir(parents=True, exist_ok=True, mode=0o700)
+
+    def read_path(self, tenant_id: str, *, version: int | None = None) -> Path:
+        """Internal cache access; callers needing a stable lifetime use read()."""
+        with chain_lock(self.scratch / "cache"):
+            return self._read_path(tenant_id, version=version)
+
+    def _read_path(self, tenant_id: str, *, version: int | None = None) -> Path:
+        head = self.catalog.head(tenant_id) if version is None else self.catalog.revision(tenant_id, version)
+        digest = hashlib.sha256(json.dumps(head.manifest, sort_keys=True).encode()).hexdigest()
+        parent = self.scratch / "read-cache" / tenant_id
+        target = parent / f"{head.version}-{digest}"
+        if (target / ".distributed-ready").exists():
+            return target
+        # The cache owns at most one full tenant revision. Readers get private
+        # copies under the same lock, so eviction cannot remove an in-use view.
+        cache = self.scratch / "read-cache"
+        if cache.exists():
+            shutil.rmtree(cache)
+        parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        temporary = Path(tempfile.mkdtemp(prefix="download-", dir=parent))
+        try:
+            self._headroom(head.manifest)
+            self.objects.restore(tenant_id, head.manifest, temporary)
+            (temporary / ".distributed-ready").touch()
+            temporary.rename(target)
+        finally:
+            if temporary.exists():
+                shutil.rmtree(temporary)
+        return target
+
+    @contextmanager
+    def read_transaction(self, tenant_id: str):
+        # Compatibility readers may create locks or projections. Their local
+        # writes must never poison the immutable revision cache or other readers.
+        with tempfile.TemporaryDirectory(prefix="reader-", dir=self.scratch) as folder:
+            private = Path(folder) / "lake"
+            with chain_lock(self.scratch / "cache"):
+                path = self._read_path(tenant_id)
+                needed = sum(p.stat().st_size for p in path.rglob("*") if p.is_file() and not p.is_symlink())
+                if shutil.disk_usage(self.scratch).free < needed + 256 * 1024**2:
+                    raise OSError("insufficient scratch space for private reader")
+                shutil.copytree(path, private, symlinks=True)
+            yield WorkspaceBinding(tenant_id, private)
+
+    def _headroom(self, manifest):
+        needed = sum(entry["size"] for entry in manifest.get("files", {}).values())
+        if shutil.disk_usage(self.scratch).free < needed + 256 * 1024**2:
+            raise OSError("insufficient scratch space to materialize tenant revision")
+
+    @contextmanager
+    def read(self, tenant_id: str):
+        with self.read_transaction(tenant_id) as workspace:
+            token = binding.set(workspace)
+            try:
+                yield workspace.path
+            finally:
+                binding.reset(token)
+
+    @contextmanager
+    def transaction(self, tenant_id: str, *, wait_seconds: float = 0):
+        if binding.get() is not None:
+            raise RuntimeError("distributed tenant writes cannot be nested")
+        deadline = time.monotonic() + wait_seconds
+        while True:
+            try:
+                lease = self.catalog.acquire(tenant_id, owner=uuid.uuid4().hex)
+                break
+            except Conflict:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(min(0.1, max(0, deadline - time.monotonic())))
+        stop = threading.Event()
+        lost = threading.Event()
+
+        def renew():
+            while not stop.wait(10):
+                try:
+                    if not self.catalog.renew(lease):
+                        lost.set()
+                        return
+                except Exception:  # noqa: BLE001 - fail closed at a distributed ownership boundary
+                    # No commit is possible unless the database itself confirms
+                    # the unexpired fence. A failed heartbeat never authorizes work.
+                    lost.set()
+                    return
+
+        heartbeat = threading.Thread(target=renew, name="grc-lake-writer-lease", daemon=True)
+        heartbeat.start()
+        try:
+            head = self.catalog.head(tenant_id)
+            self._headroom(head.manifest)
+            with tempfile.TemporaryDirectory(prefix="writer-", dir=self.scratch) as folder:
+                path = Path(folder)
+                self.objects.restore(tenant_id, head.manifest, path)
+                with self.catalog.engine.begin() as connection:
+                    yield WorkspaceBinding(tenant_id, path, connection, lease.owner, lease.fence)
+                    if lost.is_set():
+                        raise Conflict("writer lease renewal failed")
+                    from security_lakehouse.distributed.partitioning import prepare
+
+                    partitions = prepare(path, tenant_id)
+                    manifest = self.objects.snapshot(tenant_id, path, previous=head.manifest)
+                    if partitions is not None:
+                        manifest["partitions"] = partitions
+                    self.catalog.publish(
+                        tenant_id, expected=head.version, manifest=manifest, lease=lease, connection=connection
+                    )
+        finally:
+            stop.set()
+            heartbeat.join(timeout=15)
+            try:
+                self.catalog.release(lease)
+            except Exception:  # noqa: BLE001 - fail closed at a distributed ownership boundary
+                # A cleanup failure cannot undo a committed publication; the
+                # database-clock lease expires without granting another writer.
+                logging.getLogger(__name__).warning("writer lease cleanup failed; awaiting expiry")
+
+    @contextmanager
+    def write(self, tenant_id: str, *, wait_seconds: float = 0):
+        with self.transaction(tenant_id, wait_seconds=wait_seconds) as workspace:
+            token = binding.set(workspace)
+            try:
+                yield workspace.path
+            finally:
+                binding.reset(token)
+
+    @contextmanager
+    def metadata_transaction(self, tenant_id: str):
+        """Queue admission/cancellation never downloads or republishes tenant data."""
+        self.catalog.ensure_tenant(tenant_id)
+        with (
+            tempfile.TemporaryDirectory(prefix="metadata-", dir=self.scratch) as folder,
+            self.catalog.engine.begin() as connection,
+        ):
+            yield WorkspaceBinding(tenant_id, Path(folder), connection)
+            if any(Path(folder).iterdir()):
+                raise RuntimeError("metadata-only operation attempted a filesystem write")
+
+    @contextmanager
+    def metadata_read(self, tenant_id: str):
+        with tempfile.TemporaryDirectory(prefix="metadata-read-", dir=self.scratch) as folder:
+            yield WorkspaceBinding(tenant_id, Path(folder))

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import create_engine, pool
+from sqlalchemy import create_engine, pool, text
 
 from security_lakehouse.db.models import Tenant
 
@@ -42,7 +42,11 @@ def run_migrations_online() -> None:
         raise RuntimeError("alembic sqlalchemy.url is not configured")
     _ensure_sqlite_parent(url)
     connectable = create_engine(url, poolclass=pool.NullPool, future=True)
-    with connectable.connect() as connection:
+    with connectable.begin() as connection:
+        if connection.dialect.name == "postgresql":
+            # All replicas use the same transaction lock before inspecting the
+            # Alembic version. Concurrent fresh starts cannot race DDL.
+            connection.execute(text("SELECT pg_advisory_xact_lock(7147289521360321)"))
         context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
         with context.begin_transaction():
             context.run_migrations()

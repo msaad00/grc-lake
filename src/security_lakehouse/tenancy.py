@@ -26,6 +26,11 @@ TENANTS_DIRNAME = "tenants"
 
 def root_key(root: Path) -> str:
     """Stable key for a deployment or lake root, shared by jobs and retention."""
+    from security_lakehouse.distributed.config import ClusterConfig
+
+    config = ClusterConfig.from_env()
+    if config is not None:
+        return config.root_key
     return hashlib.sha256(str(root.resolve()).encode()).hexdigest()
 
 
@@ -48,6 +53,14 @@ def tenant_lake(root: str | Path, tenant_id: str, *, bound_tenant: str | None) -
     """
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", tenant_id):
         raise ValueError("invalid tenant identifier")
+    from security_lakehouse.distributed.config import ClusterConfig
+    from security_lakehouse.distributed.context import binding
+
+    if ClusterConfig.from_env() is not None:
+        workspace = binding.get()
+        if workspace is None or workspace.tenant_id != tenant_id:
+            raise ValueError("distributed tenant access requires its verified workspace")
+        return workspace.path
     root_path = Path(root).resolve()
     scoped = root_path / TENANTS_DIRNAME / tenant_id
     if scoped.is_symlink() or scoped.resolve().parent != (root_path / TENANTS_DIRNAME).resolve():
@@ -70,6 +83,10 @@ def resolve_bound_tenant(root: str | Path, *, require_auth: bool, tenant_ids: li
       Adding tenants cannot revoke that ownership or transfer it to a new tenant.
       An unbound multi-tenant root remains inaccessible until explicitly migrated.
     """
+    from security_lakehouse.distributed.config import ClusterConfig
+
+    if ClusterConfig.from_env() is not None:
+        return None
     if not require_auth:
         return "insecure"
     root = Path(root)

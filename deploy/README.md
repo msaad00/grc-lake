@@ -29,9 +29,10 @@ For production operations, see the
 PVC at `/lake` and the application-state database (`server/app.db` or
 `GRC_LAKE_DATABASE_URL`).
 
-The supported topology is **one writable application replica**, with one
-scheduler owner per lake. Read replicas and distributed writers are unsupported;
-updates use `Recreate` and have downtime. See the
+Local mode uses **one writable application replica**, with one scheduler owner
+per lake; updates use `Recreate` and have downtime. Opt-in
+[distributed mode](../docs/DISTRIBUTED.md) runs multiple API, reader and worker
+replicas using PostgreSQL and S3 with private scratch volumes. See the
 [topology and recovery boundary](../docs/runbooks/HA_READ_REPLICAS.md).
 
 Commercial hosted invites, SCIM, and billing are documented in

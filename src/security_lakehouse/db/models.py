@@ -11,7 +11,19 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from security_lakehouse.db.base import Base
@@ -891,3 +903,67 @@ class OperationJob(Base):
     finished_at: Mapped[float | None] = mapped_column(Float, nullable=True)
     result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     http_status: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class DistributedCluster(Base):
+    """Persistent virtual-shard and object-location identity; never inferred from a pod."""
+
+    __tablename__ = "distributed_clusters"
+    id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    config_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class DistributedTenantHead(Base):
+    """Atomic publication pointer and monotonically fenced tenant ownership."""
+
+    __tablename__ = "distributed_tenant_heads"
+    cluster_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    shard_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    version: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    manifest_json: Mapped[str] = mapped_column(Text, nullable=False, default='{"files":{}}')
+    fence: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    owner: Mapped[str | None] = mapped_column(String(128))
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class DistributedRevision(Base):
+    """Retained immutable publication manifests for pinned historical readers."""
+
+    __tablename__ = "distributed_revisions"
+    cluster_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    version: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    manifest_json: Mapped[str] = mapped_column(Text, nullable=False)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DistributedRequestAudit(Base):
+    """Shared audit sink: read replicas never append into a local lake."""
+
+    __tablename__ = "distributed_request_audit"
+    event_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    cluster_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    tenant_id: Mapped[str | None] = mapped_column(String(128), index=True)
+    event_json: Mapped[str] = mapped_column(Text, nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class DistributedShareIndex(Base):
+    """Only token hashes are indexed; the tenant's published ledger authorizes reads."""
+
+    __tablename__ = "distributed_share_index"
+    cluster_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    token_sha256: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False)
+
+
+class DistributedScheduleState(Base):
+    """Durable attempt cadence survives an abandoned workspace publication."""
+
+    __tablename__ = "distributed_schedule_state"
+    cluster_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    target_kind: Mapped[str] = mapped_column(String(32), primary_key=True)
+    target_id: Mapped[str] = mapped_column(String(256), primary_key=True)
+    last_fired_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

@@ -171,6 +171,8 @@ def _latest_shares(lake_dir: str | Path) -> tuple[list[dict[str, Any]], dict[str
     by_token = {str(r["token_sha256"]): r for r in records if r.get("token_sha256")}
     with _SHARE_CACHE_LOCK:
         _SHARE_CACHE[key] = (version, records, by_token)
+        while len(_SHARE_CACHE) > 256:
+            _SHARE_CACHE.pop(next(iter(_SHARE_CACHE)))
     return records, by_token
 
 
@@ -249,6 +251,15 @@ def resolve_share_from_root(
     """
     if not token:
         return None
+    from security_lakehouse.distributed.config import ClusterConfig
+    from security_lakehouse.distributed.context import binding
+
+    if ClusterConfig.from_env() is not None:
+        workspace = binding.get()
+        if workspace is None:
+            return None
+        share = resolve_share(workspace.path, token)
+        return (share, workspace.path) if share else None
     token_hash = _hash_token(token)
     found: tuple[dict[str, Any], Path] | None = None
     for lake_dir in lake_search_paths(root, tenant_ids=tenant_ids, bound_tenant=bound_tenant):

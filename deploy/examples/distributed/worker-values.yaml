@@ -1,0 +1,12 @@
+# Overlay api-values.yaml; multiple workers share the queue and tenant fences.
+distributed:
+  role: worker
+  workerConcurrency: 1
+  workerShards: all
+resources:
+  requests:
+    cpu: "2"
+    memory: 4Gi
+  limits:
+    cpu: "4"
+    memory: 8Gi

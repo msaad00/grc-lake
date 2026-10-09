@@ -383,6 +383,10 @@ def run_connector_sync(
             credentials=credentials,
             options=options,
         )
+        if effective_fixture:
+            # Persist origin before hashing/materialization so snapshots and
+            # portable exports retain it, including fixtures from saved config.
+            rows = [{**row, "attributes": {**(row.get("attributes") or {}), "synthetic": True}} for row in rows]
         rows = bind_safeguard_evidence(rows, options.get("safeguard_bindings") or {})
         raw_path = lake / CONNECTOR_RAW_FILE
         _upsert_raw_events(raw_path, rows, connector_id=connector_id, write_mode=write_mode)

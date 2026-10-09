@@ -9,6 +9,7 @@ import os
 import tempfile
 import threading
 import time
+from array import array
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Generator, Iterable, Iterator
 from itertools import islice
@@ -148,9 +149,7 @@ def count_jsonl(
     return sum(1 for _line_no, _line in _iter_jsonl_lines(path, missing_ok=missing_ok, base_dir=base_dir))
 
 
-_VALIDATED_COUNTS: OrderedDict[tuple[str, tuple[int, ...] | bytes], int] = OrderedDict()
-_VALIDATED_COUNTS_LOCK = threading.Lock()
-_VALIDATED_COUNTS_MAX = 256
+_ROW_INDEXES_LOCK = threading.Lock()
 # Timestamps can be as coarse as a scheduler tick (or 2 s on some network and
 # FAT mounts), so a write in the same tick as an earlier one may leave
 # mtime/ctime unchanged. Only files whose timestamps are older than this are
@@ -160,6 +159,36 @@ _RACY_TIMESTAMP_WINDOW_NS = 2 * 10**9
 
 def _stat_version(info: os.stat_result) -> tuple[int, ...]:
     return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+
+FileVersion = tuple[int, ...] | bytes
+
+
+def _content_version(target: Path, info: os.stat_result) -> FileVersion:
+    """Identify file bytes: by ``stat`` once settled, by SHA-256 inside the racy window."""
+    if time.time_ns() - max(info.st_mtime_ns, info.st_ctime_ns) > _RACY_TIMESTAMP_WINDOW_NS:
+        return _stat_version(info)
+    digest = hashlib.sha256()
+    with target.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.digest()
+
+
+def file_version(path: str | Path, *, base_dir: str | Path | None = None) -> tuple[str, FileVersion | None]:
+    """Return ``(resolved pinned path, version)``; the version is ``None`` when the file is missing.
+
+    Uses the same identity as :func:`validated_jsonl_count`: a settled file is
+    identified by ``stat`` alone, a file changed within the racy-timestamp
+    window by the SHA-256 of its bytes.
+    """
+    from security_lakehouse.generations import pinned_path
+
+    target = resolve_path(pinned_path(Path(path)), base_dir=base_dir)
+    try:
+        return str(target), _content_version(target, target.stat())
+    except FileNotFoundError:
+        return str(target), None
 
 
 def validated_jsonl_count(
@@ -188,51 +217,111 @@ def validated_jsonl_count(
 
     target = resolve_path(pinned_path(Path(path)), base_dir=base_dir)
     try:
-        before = target.stat()
+        index = _row_index(target, path)
     except FileNotFoundError:
         if missing_ok:
             return 0
         raise
-    newest_change = max(before.st_mtime_ns, before.st_ctime_ns)
-    settled = time.time_ns() - newest_change > _RACY_TIMESTAMP_WINDOW_NS
-    version: tuple[int, ...] | bytes
-    if settled:
-        version = _stat_version(before)
-    else:
-        digest = hashlib.sha256()
-        try:
-            with target.open("rb") as handle:
-                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                    digest.update(chunk)
-        except FileNotFoundError:
-            if missing_ok:
-                return 0
-            raise
-        version = digest.digest()
-    key = (str(target), version)
-    with _VALIDATED_COUNTS_LOCK:
-        cached = _VALIDATED_COUNTS.get(key)
+    return len(index.offsets)
+
+
+class _RowIndex:
+    __slots__ = ("offsets", "stat")
+
+    def __init__(self, offsets: array, stat: tuple[int, ...]) -> None:
+        self.offsets = offsets
+        self.stat = stat
+
+
+_ROW_INDEXES: OrderedDict[tuple[str, FileVersion], _RowIndex] = OrderedDict()
+_ROW_INDEXES_MAX = 64
+
+
+def _row_index(target: Path, label: str | Path) -> _RowIndex:
+    """Validate every row once per file version and keep only their byte offsets.
+
+    Raises ``ValueError`` on the first invalid row, as the materialized read
+    would. A line holding a bare carriage return is split differently by text
+    mode, so such a file is indexed from text-mode rows instead.
+    """
+    before = target.stat()
+    key = (str(target), _content_version(target, before))
+    with _ROW_INDEXES_LOCK:
+        cached = _ROW_INDEXES.get(key)
         if cached is not None:
-            _VALIDATED_COUNTS.move_to_end(key)
+            _ROW_INDEXES.move_to_end(key)
             return cached
-    count = 0
-    for line_no, stripped in _iter_jsonl_lines(path, base_dir=base_dir):
-        _parse_jsonl_line(path, line_no, stripped)
-        count += 1
+    offsets = array("q")
+    position = 0
+    text_mode_only = False
+    with target.open("rb") as handle:
+        for line_no, raw in enumerate(handle, start=1):
+            stripped = raw.decode("utf-8").strip()
+            if stripped:
+                if "\r" in stripped:
+                    text_mode_only = True
+                    break
+                offsets.append(position)
+                _parse_jsonl_line(label, line_no, stripped)
+            position += len(raw)
+    if text_mode_only:
+        offsets = array("q")
+        for line_no, stripped in _iter_jsonl_lines(target):
+            _parse_jsonl_line(label, line_no, stripped)
+            offsets.append(-1)
+    index = _RowIndex(offsets, _stat_version(before))
     try:
         after = target.stat()
     except FileNotFoundError:
-        return count
-    if _stat_version(after) != _stat_version(before):
-        # Changed while being read: the count belongs to unknown bytes.
-        return count
-    with _VALIDATED_COUNTS_LOCK:
-        for previous in [k for k in _VALIDATED_COUNTS if k[0] == key[0]]:
-            del _VALIDATED_COUNTS[previous]
-        _VALIDATED_COUNTS[key] = count
-        while len(_VALIDATED_COUNTS) > _VALIDATED_COUNTS_MAX:
-            _VALIDATED_COUNTS.popitem(last=False)
-    return count
+        return index
+    if _stat_version(after) != index.stat:
+        # Changed while being read: the index belongs to unknown bytes.
+        return index
+    with _ROW_INDEXES_LOCK:
+        for previous in [k for k in _ROW_INDEXES if k[0] == key[0]]:
+            del _ROW_INDEXES[previous]
+        _ROW_INDEXES[key] = index
+        while len(_ROW_INDEXES) > _ROW_INDEXES_MAX:
+            _ROW_INDEXES.popitem(last=False)
+    return index
+
+
+def jsonl_page(
+    path: str | Path,
+    start: int,
+    stop: int,
+    *,
+    missing_ok: bool = False,
+    base_dir: str | Path | None = None,
+) -> tuple[int, list[dict[str, Any]]]:
+    """Return ``(row count, rows[start:stop])`` from a fully validated JSONL file.
+
+    Every row is validated once per file version (see
+    :func:`validated_jsonl_count`), which also records each row's byte offset,
+    so a page seeks straight to its first row and parses only its own rows.
+    """
+    from security_lakehouse.generations import pinned_path
+
+    target = resolve_path(pinned_path(Path(path)), base_dir=base_dir)
+    try:
+        index = _row_index(target, path)
+        if start >= len(index.offsets) or stop <= start:
+            return len(index.offsets), []
+        with target.open("rb") as handle:
+            seekable = index.offsets[0] >= 0 and _stat_version(os.fstat(handle.fileno())) == index.stat
+            if not seekable:
+                rows = list(iter_jsonl_slice(target, start, stop))
+                return len(index.offsets), rows
+            rows = []
+            for row_no in range(start, min(stop, len(index.offsets))):
+                handle.seek(index.offsets[row_no])
+                stripped = handle.readline().decode("utf-8").strip()
+                rows.append(_parse_jsonl_line(path, row_no + 1, stripped))
+            return len(index.offsets), rows
+    except FileNotFoundError:
+        if missing_ok:
+            return 0, []
+        raise
 
 
 T = TypeVar("T")

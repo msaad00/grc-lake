@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from security_lakehouse.connector_health import build_connector_health
 from security_lakehouse.connector_state import build_catalog_view, connector_state_reader, list_runs
 from security_lakehouse.generations import generation_reader
-from security_lakehouse.ingestion_metrics import build_catalog_coverage, build_eval_accuracy
-from security_lakehouse.io import count_jsonl, jsonl_field_counts, read_json, read_jsonl
+from security_lakehouse.ingestion_metrics import build_catalog_coverage, build_eval_accuracy, silver_source_counts
+from security_lakehouse.io import count_jsonl, iter_jsonl, read_json
 from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.lake_scale import (
     DEFAULT_EVAL_SCHEDULE,
@@ -19,7 +21,10 @@ from security_lakehouse.lake_scale import (
     lake_eval_schedule,
     resolve_materialize_strategy,
 )
+from security_lakehouse.read_cache import DerivedCache, input_versions, json_copy
 from security_lakehouse.scheduler import eval_schedule_status
+
+_DERIVED: DerivedCache[Any] = DerivedCache(max_entries=512, per_root=32)
 
 
 @generation_reader
@@ -33,7 +38,7 @@ def build_ingestion_status(lake_dir: str | Path) -> JsonObject:
     evidence_count = _silver_evidence_count(lake)
     source_counts = _silver_source_counts(lake)
     stale_count = _stale_evidence_count(lake)
-    current_posture = _read_optional_json(lake / "gold" / "current_posture.json", lake)
+    current_posture = _posture_headline(lake)
     integrity = _read_optional_json(lake / "gold" / "evidence_integrity.json", lake)
     proof = _latest_live_cloud_proof(lake)
     failed_connectors = [
@@ -112,8 +117,32 @@ def _latest_eval_run(lake: Path) -> JsonObject:
     return rows[0] if rows else {}
 
 
+def _derived(lake: Path, slot: str, relative_paths: tuple[str, ...], build: Callable[[], Any]) -> Any:
+    """Memoize a value derived only from these lake files; callers copy what they hand out."""
+    return _DERIVED.get(lake, slot, input_versions(lake, relative_paths), build)
+
+
+def _manifest_fields(lake: Path) -> JsonObject:
+    def build() -> JsonObject:
+        manifest = _read_optional_json(lake / "manifest.json", lake)
+        keys = ("materialize_mode", "delta_count", "removed_count", "row_counts")
+        return {key: manifest.get(key) for key in keys} if manifest else {}
+
+    return json_copy(_derived(lake, "manifest", ("manifest.json",), build))
+
+
+def _posture_headline(lake: Path) -> JsonObject:
+    """The ``posture`` member of the pipeline's current posture, the only part read here."""
+
+    def build() -> JsonObject:
+        payload = _read_optional_json(lake / "gold" / "current_posture.json", lake)
+        return {"posture": payload["posture"]} if "posture" in payload else {}
+
+    return json_copy(_derived(lake, "posture_headline", ("gold/current_posture.json",), build))
+
+
 def _manifest_summary(lake: Path) -> JsonObject:
-    manifest = _read_optional_json(lake / "manifest.json", lake)
+    manifest = _manifest_fields(lake)
     if not manifest:
         return {}
     return {
@@ -171,7 +200,7 @@ def _run_summary(row: JsonObject) -> JsonObject:
 
 
 def _manifest_row_counts(lake: Path) -> dict[str, int]:
-    manifest = _read_optional_json(lake / "manifest.json", lake)
+    manifest = _manifest_fields(lake)
     row_counts = manifest.get("row_counts")
     if isinstance(row_counts, dict):
         return {str(key): int(value) for key, value in row_counts.items() if isinstance(value, (int, float))}
@@ -186,20 +215,18 @@ def _silver_evidence_count(lake: Path) -> int:
 
 
 def _silver_source_counts(lake: Path) -> Counter[str]:
-    return jsonl_field_counts(
-        lake / "silver" / "normalized_events.jsonl",
-        "source",
-        missing_ok=True,
-        base_dir=lake,
-    )
+    return Counter(silver_source_counts(lake))
 
 
 def _stale_evidence_count(lake: Path) -> int:
-    return sum(
-        1
-        for row in read_jsonl(lake / "gold" / "evidence_freshness.jsonl", missing_ok=True, base_dir=lake)
-        if str(row.get("status") or "") in {"stale", "expired", "missing"}
-    )
+    def build() -> int:
+        return sum(
+            1
+            for row in iter_jsonl(lake / "gold" / "evidence_freshness.jsonl", missing_ok=True, base_dir=lake)
+            if str(row.get("status") or "") in {"stale", "expired", "missing"}
+        )
+
+    return int(_derived(lake, "stale_evidence_count", ("gold/evidence_freshness.jsonl",), build))
 
 
 def _pipeline_artifacts(lake: Path) -> list[JsonObject]:
@@ -231,9 +258,16 @@ def _pipeline_artifacts(lake: Path) -> list[JsonObject]:
             if manifest_key and manifest_key in manifest_counts:
                 count = manifest_counts[manifest_key]
             else:
-                count = count_jsonl(path, missing_ok=True, base_dir=lake)
+                count = _row_count(lake, path)
         out.append({"name": name, "path": str(path), "exists": path.is_file(), "row_count": count})
     return out
+
+
+def _row_count(lake: Path, path: Path) -> int:
+    relative = path.relative_to(lake).as_posix()
+    return int(
+        _derived(lake, f"row_count:{relative}", (relative,), lambda: count_jsonl(path, missing_ok=True, base_dir=lake))
+    )
 
 
 def _integrity_summary(payload: JsonObject) -> JsonObject:

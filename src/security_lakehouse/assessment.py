@@ -23,17 +23,22 @@ from threading import Lock
 from typing import Any
 
 from security_lakehouse import strict_json
+from security_lakehouse.connectors import DEFAULT_CONNECTOR_CATALOG, load_connector_catalog
 from security_lakehouse.event_status import FAIL_STATUSES
 from security_lakehouse.evidence_freshness import (
+    STALE_STATUSES,
     build_evidence_freshness,
+    freshness_records_with_sources,
+    freshness_status_interval,
     stale_control_ids,
     summarize_source_freshness,
 )
 from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_identity, generation_reader
-from security_lakehouse.io import append_jsonl, iter_jsonl, read_json, read_jsonl, write_json
+from security_lakehouse.io import append_jsonl, file_version, iter_jsonl, read_json, read_jsonl, write_json
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import SEVERITY_SCORE, utc_iso
+from security_lakehouse.read_cache import DerivedCache, copy_rows, input_versions, json_copy, rows_are_flat
 from security_lakehouse.vocabulary import ControlVerdict
 
 logger = logging.getLogger(__name__)
@@ -55,6 +60,21 @@ class SnapshotIntegrityError(ValueError):
     """Persisted snapshot history failed validation and needs reconciliation."""
 
 
+_POSTURE_INPUTS = (
+    "silver/normalized_events.jsonl",
+    "gold/control_posture.jsonl",
+    "gold/control_tests.jsonl",
+    "gold/asset_risk.jsonl",
+    "bronze/raw_events.jsonl",
+)
+_STALE_EVIDENCE_SAMPLE = 50
+_POSTURE_WINDOWS: DerivedCache[_PostureWindow] = DerivedCache(max_entries=8, per_root=2)
+
+
+def _utcnow() -> datetime:
+    return datetime.now(UTC)
+
+
 @generation_reader
 def build_current_posture(
     lake_dir: str | Path,
@@ -67,22 +87,156 @@ def build_current_posture(
 
     When ``max_violations`` is set, only the highest-severity violations are
     retained in the payload while aggregate counts still reflect the full lake.
+
+    A live read (no ``now``) reuses the posture computed from the same input
+    file versions while no evidence row changes freshness status; only the
+    evaluation time, the sampled stale evidence ages, and the hash are
+    recomputed. Every call returns its own copy.
     """
     lake = Path(lake_dir)
-    evaluated_at = now or datetime.now(UTC)
-    events = read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True)
-    controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True)
-    control_tests = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True)
-    assets = read_jsonl(lake / "gold" / "asset_risk.jsonl", missing_ok=True)
-    asset_names = {
-        str(row["asset_id"]): str(row["asset_name"]) for row in assets if row.get("asset_id") and row.get("asset_name")
-    }
-    violations, violation_summary = build_violations(events, max_violations=max_violations, asset_names=asset_names)
-    evidence_freshness = build_evidence_freshness(
-        events,
-        now=evaluated_at,
-        default_slo_minutes=freshness_days * 24 * 60,
+    if now is not None:
+        return _PostureWindow.build(lake, freshness_days, max_violations, now).render(now)
+    evaluated_at = _utcnow()
+    version = (
+        input_versions(lake, _POSTURE_INPUTS),
+        file_version(DEFAULT_CONNECTOR_CATALOG),
+        json.dumps(generation_identity(lake), sort_keys=True),
     )
+    window = _POSTURE_WINDOWS.get(
+        lake,
+        ("current_posture", freshness_days, max_violations),
+        version,
+        lambda: _PostureWindow.build(lake, freshness_days, max_violations, evaluated_at),
+        accept=lambda cached: cached.covers(evaluated_at),
+    )
+    return window.render(evaluated_at)
+
+
+class _PostureWindow:
+    """Posture for one input version over an interval with no freshness status change."""
+
+    def __init__(
+        self,
+        *,
+        head: dict[str, Any],
+        tail: dict[str, Any],
+        freshness: dict[str, Any],
+        stale_sources: list[dict[str, Any]],
+        connectors: dict[str, dict[str, Any]],
+        default_slo_minutes: int,
+        since: datetime | None,
+        until: datetime | None,
+    ) -> None:
+        self.head = head
+        self.tail = tail
+        self.freshness = freshness
+        self.stale_sources = stale_sources
+        self.connectors = connectors
+        self.default_slo_minutes = default_slo_minutes
+        self.since = since
+        self.until = until
+        self.segments = {key: _canonical_bytes(value) for key, value in {**head, **tail}.items()}
+        self.row_lists = {
+            key: rows_are_flat(value)
+            for key, value in tail.items()
+            if isinstance(value, list) and all(isinstance(row, dict) for row in value)
+        }
+
+    def covers(self, moment: datetime) -> bool:
+        return (self.since is None or self.since <= moment) and (self.until is None or moment < self.until)
+
+    @classmethod
+    def build(
+        cls, lake: Path, freshness_days: int, max_violations: int | None, evaluated_at: datetime
+    ) -> _PostureWindow:
+        default_slo_minutes = freshness_days * 24 * 60
+        connectors = load_connector_catalog()
+        events = read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True)
+        controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True)
+        control_tests = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True)
+        assets = read_jsonl(lake / "gold" / "asset_risk.jsonl", missing_ok=True)
+        asset_names = {
+            str(row["asset_id"]): str(row["asset_name"])
+            for row in assets
+            if row.get("asset_id") and row.get("asset_name")
+        }
+        violations, violation_summary = build_violations(events, max_violations=max_violations, asset_names=asset_names)
+        pairs = freshness_records_with_sources(
+            events, now=evaluated_at, default_slo_minutes=default_slo_minutes, connectors=connectors
+        )
+        evidence_freshness = [record for record, _row in pairs]
+        since, until = freshness_status_interval(evidence_freshness, evaluated_at)
+        assessment = _assess_posture(
+            lake,
+            events=events,
+            controls=controls,
+            control_tests=control_tests,
+            assets=assets,
+            violations=violations,
+            violation_summary=violation_summary,
+            evidence_freshness=evidence_freshness,
+            freshness_days=freshness_days,
+            evaluated_at=evaluated_at,
+        )
+        stale_sources = [row for record, row in pairs if record["status"] in STALE_STATUSES]
+        head_keys = ("schema_version", "assessment_type", "synthetic_fixture")
+        dynamic = {"evaluated_at", "evidence_freshness", "assessment_hash"}
+        return cls(
+            head={key: assessment[key] for key in head_keys},
+            tail={key: value for key, value in assessment.items() if key not in dynamic and key not in head_keys},
+            freshness={
+                key: value for key, value in assessment["evidence_freshness"].items() if key != "stale_evidence"
+            },
+            stale_sources=stale_sources[:_STALE_EVIDENCE_SAMPLE],
+            connectors=connectors,
+            default_slo_minutes=default_slo_minutes,
+            since=since,
+            until=until,
+        )
+
+    def render(self, evaluated_at: datetime) -> dict[str, Any]:
+        stale_evidence = build_evidence_freshness(
+            self.stale_sources,
+            now=evaluated_at,
+            default_slo_minutes=self.default_slo_minutes,
+            connectors=self.connectors,
+        )
+        assessment: dict[str, Any] = json_copy(self.head)
+        assessment["evaluated_at"] = utc_iso(evaluated_at)
+        for key, value in self.tail.items():
+            if key in self.row_lists:
+                assessment[key] = copy_rows(value, flat=self.row_lists[key])
+            else:
+                assessment[key] = json_copy(value)
+            if key == "stale_controls":
+                assessment["evidence_freshness"] = {**json_copy(self.freshness), "stale_evidence": stale_evidence}
+        digest = hashlib.sha256(b"{")
+        for position, key in enumerate(sorted(assessment)):
+            digest.update(b"," if position else b"")
+            digest.update(_canonical_bytes(key) + b":")
+            digest.update(self.segments.get(key) or _canonical_bytes(assessment[key]))
+        digest.update(b"}")
+        assessment["assessment_hash"] = digest.hexdigest()
+        return assessment
+
+
+def _canonical_bytes(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+
+
+def _assess_posture(
+    lake: Path,
+    *,
+    events: list[dict[str, Any]],
+    controls: list[dict[str, Any]],
+    control_tests: list[dict[str, Any]],
+    assets: list[dict[str, Any]],
+    violations: list[dict[str, Any]],
+    violation_summary: dict[str, Any],
+    evidence_freshness: list[dict[str, Any]],
+    freshness_days: int,
+    evaluated_at: datetime,
+) -> dict[str, Any]:
     stale_controls = stale_control_ids(
         evidence_freshness,
         required_types={
@@ -149,13 +303,12 @@ def build_current_posture(
             "count": len(evidence_freshness),
             "stale_count": len(stale_evidence),
             "sources": summarize_source_freshness(evidence_freshness),
-            "stale_evidence": stale_evidence[:50],
+            "stale_evidence": stale_evidence[:_STALE_EVIDENCE_SAMPLE],
         },
     }
     generation = generation_identity(lake)
     if generation is not None:
         assessment["generation"] = generation
-    assessment["assessment_hash"] = _assessment_hash(assessment)
     return assessment
 
 
@@ -170,7 +323,7 @@ def write_current_posture(lake_dir: str | Path, *, freshness_days: int = 7, max_
         silver_count = count_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True, base_dir=lake)
         if silver_count > 100_000:
             cap = 10_000
-    write_json(output, build_current_posture(lake, freshness_days=freshness_days, max_violations=cap))
+    write_json(output, build_current_posture(lake, freshness_days=freshness_days, now=_utcnow(), max_violations=cap))
     return output
 
 
@@ -681,7 +834,7 @@ def posture_as_of(lake_dir: str | Path, *, as_of: str | datetime) -> dict[str, A
 
 
 def build_violations(
-    events: list[dict[str, Any]] | None = None,
+    events: Iterable[dict[str, Any]] | None = None,
     *,
     events_path: str | Path | None = None,
     max_violations: int | None = None,
@@ -689,7 +842,7 @@ def build_violations(
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Build violation rows plus aggregate counts for audit-scale lakes.
 
-    Pass either an in-memory ``events`` list or an ``events_path`` JSONL file.
+    Pass either ``events`` (a list or a row iterator) or an ``events_path`` JSONL file.
     When ``max_violations`` is set, only the top-severity rows are returned but
     summary counts cover the full input.
     """

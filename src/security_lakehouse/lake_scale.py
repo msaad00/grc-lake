@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.io import read_json, write_json
+from security_lakehouse.read_cache import DerivedCache, input_versions
 from security_lakehouse.runtime_environment import runtime_env
 
 WAREHOUSE_ROW_THRESHOLD = 100_000
@@ -31,16 +32,23 @@ def warehouse_sink_configured(env: Mapping[str, str] | None = None) -> bool:
     )
 
 
+_ROW_COUNTS: DerivedCache[Any] = DerivedCache(max_entries=256, per_root=1)
+
+
 def silver_row_count(lake: Path) -> int:
     """Return silver cardinality from manifest when available, else stream-count."""
     from security_lakehouse.io import count_jsonl
 
     manifest_path = lake / "manifest.json"
     if manifest_path.is_file():
-        manifest = read_json(manifest_path, base_dir=lake)
-        counts = manifest.get("row_counts") or {}
-        if isinstance(counts.get("silver"), (int, float)):
-            return int(counts["silver"])
+        silver = _ROW_COUNTS.get(
+            lake,
+            "manifest_silver_rows",
+            input_versions(lake, ("manifest.json",)),
+            lambda: (read_json(manifest_path, base_dir=lake).get("row_counts") or {}).get("silver"),
+        )
+        if isinstance(silver, (int, float)):
+            return int(silver)
     return count_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True, base_dir=lake)
 
 

@@ -20,7 +20,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse import strict_json
+from security_lakehouse import api_contract, strict_json
 from security_lakehouse.ai_governance import build_ai_governance_status, list_ai_inventory
 from security_lakehouse.api_contract import (
     API_VERSION,
@@ -125,6 +125,11 @@ from security_lakehouse.workflows import (
 )
 
 Params = Mapping[str, list[str]]
+
+
+# Compatibility exports used by legacy routes and external v1 callers.
+required_post_scope = api_contract.required_post_scope
+_UNMAPPED_POST_SCOPE = api_contract._UNMAPPED_POST_SCOPE
 
 
 def first_param(params: Params, key: str) -> str | None:

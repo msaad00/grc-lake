@@ -13,21 +13,21 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from alembic import command  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
+from alembic import command
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
 
-from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie  # noqa: E402
-from security_lakehouse.auth.tokens import hash_token  # noqa: E402
-from security_lakehouse.db.migrate import _config  # noqa: E402
-from security_lakehouse.db.models import ApiKey, UserSession  # noqa: E402
-from security_lakehouse.db.repository import (  # noqa: E402
+from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie
+from security_lakehouse.auth.tokens import hash_token
+from security_lakehouse.db.migrate import _config
+from security_lakehouse.db.models import ApiKey, UserSession
+from security_lakehouse.db.repository import (
     create_api_key,
     create_tenant,
     create_user,
     create_user_session,
 )
-from security_lakehouse.server_app import create_app  # noqa: E402
+from security_lakehouse.server_app import create_app
 
 
 def _legacy_api_digest(token: str) -> str:

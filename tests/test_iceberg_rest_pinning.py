@@ -9,7 +9,7 @@ import pytest
 
 pytest.importorskip("pyiceberg")
 
-from security_lakehouse import iceberg_export, netguard  # noqa: E402
+from security_lakehouse import iceberg_export, netguard
 
 HOST = "rebind.evil.test"
 
@@ -70,7 +70,7 @@ def test_pinned_adapter_connects_to_the_validated_address_and_keeps_the_host(
     seen: list[str | None] = []
 
     class Handler(http.server.BaseHTTPRequestHandler):
-        def do_GET(self):  # noqa: N802
+        def do_GET(self):
             seen.append(self.headers.get("Host"))
             self.send_response(200)
             self.end_headers()

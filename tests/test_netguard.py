@@ -33,7 +33,7 @@ def test_percent_encoded_host_cannot_bypass_the_pinned_connection(monkeypatch) -
     hits: list[str] = []
 
     class Handler(http.server.BaseHTTPRequestHandler):
-        def do_GET(self):  # noqa: N802
+        def do_GET(self):
             hits.append(self.path)
             self.send_response(200)
             self.end_headers()

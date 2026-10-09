@@ -11,12 +11,12 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.audit_log import build_audit_log  # noqa: E402
-from security_lakehouse.connector_state import append_config_event, configure_payload_error  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
+from security_lakehouse.audit_log import build_audit_log
+from security_lakehouse.connector_state import append_config_event, configure_payload_error
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
 
 SECRETS = {
     "apikey": "SEKRET_APIKEY_123456",

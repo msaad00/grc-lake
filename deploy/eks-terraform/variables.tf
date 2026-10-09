@@ -7,7 +7,7 @@ variable "region" {
 variable "cluster_name" {
   description = "EKS cluster name."
   type        = string
-  default     = "trustops"
+  default     = "grc-lake"
 }
 
 variable "cluster_version" {
@@ -17,13 +17,13 @@ variable "cluster_version" {
 }
 
 variable "namespace" {
-  description = "Kubernetes namespace the TrustOps chart installs into."
+  description = "Kubernetes namespace the GRC Lake chart installs into."
   type        = string
-  default     = "trustops"
+  default     = "grc-lake"
 }
 
 variable "evidence_bucket_name" {
-  description = "S3 bucket TrustOps reads evidence from. Customer-owned."
+  description = "S3 bucket GRC Lake reads evidence from. Customer-owned."
   type        = string
 }
 
@@ -40,9 +40,9 @@ variable "ingress_host" {
 }
 
 variable "image_repository" {
-  description = "OCI image repo for the TrustOps workbench."
+  description = "OCI image repo for the GRC Lake workbench."
   type        = string
-  default     = "ghcr.io/msaad00/trustops"
+  default     = "ghcr.io/msaad00/grc-lake"
 }
 
 variable "image_tag" {
@@ -79,7 +79,7 @@ variable "tags" {
   description = "Extra AWS tags applied to every taggable resource."
   type        = map(string)
   default = {
-    "trustops:component" = "workbench"
+    "grc-lake:component" = "workbench"
   }
 }
 
@@ -90,9 +90,9 @@ variable "deploy_application" {
 }
 
 variable "server_secret_name" {
-  description = "Existing Kubernetes Secret in the TrustOps namespace containing TRUSTOPS_COOKIE_SIGNING_KEY. Create it outside Terraform so secret bytes stay out of state."
+  description = "Existing Kubernetes Secret in the GRC Lake namespace containing GRC_LAKE_COOKIE_SIGNING_KEY. Create it outside Terraform so secret bytes stay out of state."
   type        = string
-  default     = "trustops-server"
+  default     = "grc-lake-server"
 
   validation {
     condition     = length(trimspace(var.server_secret_name)) > 0

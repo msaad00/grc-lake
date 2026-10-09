@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { TrustOpsMark } from "@/components/brand/TrustOpsMark";
+import { GrcLakeMark } from "@/components/brand/GrcLakeMark";
 import { usePocReadiness } from "@/lib/api/hooks";
 import type { PocReadinessStep } from "@/lib/api/types";
 
@@ -62,7 +62,7 @@ export function OnboardingProgressHero({
       <div className="grid gap-5 p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <TrustOpsMark size="lg" gradientId="onboarding-mark-gradient" />
+            <GrcLakeMark size="lg" gradientId="onboarding-mark-gradient" />
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wide text-brand">
                 First-run setup

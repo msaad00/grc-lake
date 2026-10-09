@@ -21,7 +21,7 @@ override_module {
 override_module {
   target = module.eks
   outputs = {
-    cluster_name                       = "trustops-test"
+    cluster_name                       = "grc-lake-test"
     cluster_endpoint                   = "https://127.0.0.1"
     cluster_certificate_authority_data = "dGVzdA=="
     oidc_provider_arn                  = "arn:aws:iam::123456789012:oidc-provider/example.com"
@@ -29,7 +29,7 @@ override_module {
 }
 override_module {
   target  = module.trustops_irsa
-  outputs = { iam_role_arn = "arn:aws:iam::123456789012:role/trustops-test" }
+  outputs = { iam_role_arn = "arn:aws:iam::123456789012:role/grc-lake-test" }
 }
 
 variables {
@@ -67,7 +67,7 @@ run "operator_profile_with_enforced_auth" {
   command = plan
   variables { helm_values_files = ["tests/operator-values.yaml"] }
   assert {
-    condition     = yamldecode(helm_release.trustops[0].values[1]).ingress.hosts[0].host == "trustops.example.com"
+    condition     = yamldecode(helm_release.trustops[0].values[1]).ingress.hosts[0].host == "grc-lake.example.com"
     error_message = "Operator ingress/TLS settings must reach the chart."
   }
   assert {

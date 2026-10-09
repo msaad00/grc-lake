@@ -52,7 +52,7 @@ For an unterminated final line in one tenant's `scheduler_state.jsonl` or
 `connector_runs.jsonl`, run:
 
 ```bash
-security-lakehouse scheduler repair-history --lake /path/to/tenant-lake
+grc-lake scheduler repair-history --lake /path/to/tenant-lake
 ```
 
 This explicit recovery takes scheduler and connector-history locks, preserves

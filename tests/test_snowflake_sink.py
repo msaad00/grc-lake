@@ -31,14 +31,14 @@ def test_config_from_env_requires_account_user_and_key_path() -> None:
     cfg = SnowflakeSinkConfig.from_env(
         {
             "SNOWFLAKE_ACCOUNT": "ORG-ACCT",
-            "SNOWFLAKE_USER": "TRUSTOPS_INGEST_SVC",
+            "SNOWFLAKE_USER": "GRC_LAKE_INGEST_SVC",
             "SNOWFLAKE_PRIVATE_KEY_FILE": "/secrets/key.p8",
-            "SNOWFLAKE_ROLE": "TRUSTOPS_LOADER",
-            "SNOWFLAKE_WAREHOUSE": "TRUSTOPS_LOAD_WH",
+            "SNOWFLAKE_ROLE": "GRC_LAKE_LOADER",
+            "SNOWFLAKE_WAREHOUSE": "GRC_LAKE_LOAD_WH",
         }
     )
     assert cfg is not None
-    assert cfg.account == "ORG-ACCT" and cfg.role == "TRUSTOPS_LOADER"
+    assert cfg.account == "ORG-ACCT" and cfg.role == "GRC_LAKE_LOADER"
     assert cfg.database == "SECURITY_COMPLIANCE_LAKEHOUSE"  # default
 
 
@@ -176,18 +176,18 @@ def test_load_writes_staging_and_merges_each_table() -> None:
 
     cfg = SnowflakeSinkConfig(
         account="ORG-ACCT",
-        user="TRUSTOPS_INGEST_SVC",
+        user="GRC_LAKE_INGEST_SVC",
         private_key_file="/unused",
-        role="TRUSTOPS_LOADER",
-        warehouse="TRUSTOPS_LOAD_WH",
+        role="GRC_LAKE_LOADER",
+        warehouse="GRC_LAKE_LOAD_WH",
     )
     sink = SnowflakeSink(cfg, connector=connector, writer=fake_write_pandas, private_key_der=b"der")
 
     landed = sink.load(lake)
 
     # Connected with key-pair (no password) and the scoped role.
-    assert connector.connect_kwargs["user"] == "TRUSTOPS_INGEST_SVC"
-    assert connector.connect_kwargs["role"] == "TRUSTOPS_LOADER"
+    assert connector.connect_kwargs["user"] == "GRC_LAKE_INGEST_SVC"
+    assert connector.connect_kwargs["role"] == "GRC_LAKE_LOADER"
     assert "password" not in connector.connect_kwargs
     assert connector.connect_kwargs["private_key"] == b"der"
 
@@ -251,13 +251,13 @@ def test_snowflake_source_sync_does_not_infer_snowflake_sink(
 
     monkeypatch.setattr(connector_runner, "land_if_configured", fake_land)
     monkeypatch.setenv("SNOWFLAKE_ACCOUNT", "source-account")
-    monkeypatch.setenv("SNOWFLAKE_USER", "TRUSTOPS_INGEST_SVC")
+    monkeypatch.setenv("SNOWFLAKE_USER", "GRC_LAKE_INGEST_SVC")
     monkeypatch.setenv("SNOWFLAKE_PRIVATE_KEY_FILE", "/run/secrets/key.p8")
-    monkeypatch.setenv("TRUSTOPS_DUCKDB_PATH", "/tmp/trustops.duckdb")
+    monkeypatch.setenv("GRC_LAKE_DUCKDB_PATH", "/tmp/trustops.duckdb")
 
     connector_runner._land_to_sink(Path("/lake"), connector_id="snowflake-evidence-lake")
 
     assert "SNOWFLAKE_ACCOUNT" not in seen
     assert "SNOWFLAKE_USER" not in seen
     assert "SNOWFLAKE_PRIVATE_KEY_FILE" not in seen
-    assert seen["TRUSTOPS_DUCKDB_PATH"] == "/tmp/trustops.duckdb"
+    assert seen["GRC_LAKE_DUCKDB_PATH"] == "/tmp/trustops.duckdb"

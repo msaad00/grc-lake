@@ -333,7 +333,7 @@ def run_and_persist_agent(
     if orchestrator not in {"sequential", "langgraph"}:
         raise ValueError("orchestrator must be 'sequential' or 'langgraph'")
     if orchestrator == "langgraph" and importlib.util.find_spec("langgraph") is None:
-        raise ValueError("langgraph orchestrator requires trustops-security-data-lake[agents]")
+        raise ValueError("langgraph orchestrator requires grc-lake[agents]")
     safe_orchestrator: AgentOrchestrator = "langgraph" if orchestrator == "langgraph" else "sequential"
     checkpoint_thread_id = idempotency_key if safe_orchestrator == "langgraph" and idempotency_key else None
     if idempotency_key:

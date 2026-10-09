@@ -1,8 +1,8 @@
 {
-  "name": "trustops-console",
+  "name": "grc-lake-console",
   "private": true,
   "version": "0.2.24",
-  "description": "TrustOps Console — open-source, headless-first trust operations served by the security-lakehouse Python package.",
+  "description": "GRC Lake Console \u2014 open-source, headless-first trust operations served by the grc-lake Python package.",
   "engines": {
     "node": ">=22"
   },

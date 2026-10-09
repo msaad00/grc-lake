@@ -1,19 +1,19 @@
-"""TrustOps brand asset tests."""
+"""GRC Lake brand asset tests."""
 
 from __future__ import annotations
 
 from security_lakehouse.brand_assets import (
     MCP_SERVER_NAME,
+    grc_lake_mark_data_uri,
     human_tool_title,
     mcp_icons,
-    trustops_mark_data_uri,
 )
 
 
-def test_trustops_mark_data_uri_is_embedded_svg() -> None:
-    uri = trustops_mark_data_uri()
+def test_grc_lake_mark_data_uri_is_embedded_svg() -> None:
+    uri = grc_lake_mark_data_uri()
     assert uri.startswith("data:image/svg+xml;base64,")
-    assert "TrustOps" not in uri  # binary payload, not raw svg text
+    assert "GRC Lake" not in uri  # binary payload, not raw svg text
 
 
 def test_mcp_icons_include_embedded_fallback() -> None:
@@ -24,14 +24,14 @@ def test_mcp_icons_include_embedded_fallback() -> None:
 
 
 def test_mcp_icons_add_hosted_url_when_api_url_set(monkeypatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://trustops.example.com")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://grc-lake.example.com")
     icons = mcp_icons()
-    assert icons[0].src == "https://trustops.example.com/brand/trustops-mark.svg"
+    assert icons[0].src == "https://grc-lake.example.com/brand/grc-lake-mark.svg"
 
 
 def test_human_tool_title() -> None:
     assert human_tool_title("get_posture") == "Get Posture"
-    assert MCP_SERVER_NAME == "trustops"
+    assert MCP_SERVER_NAME == "grc-lake"
 
 
 def test_distributed_marks_match_the_approved_identity() -> None:
@@ -40,10 +40,11 @@ def test_distributed_marks_match_the_approved_identity() -> None:
     from xml.etree import ElementTree
 
     root = Path(__file__).resolve().parents[1]
-    approved = (root / "docs/images/trustops-mark.svg").read_text().strip()
-    embedded = base64.b64decode(trustops_mark_data_uri().split(",", 1)[1]).decode()
+    approved = (root / "docs/images/grc-lake-mark.svg").read_text().strip()
+    embedded = base64.b64decode(grc_lake_mark_data_uri().split(",", 1)[1]).decode()
     assert embedded == approved
-    for file in ("app/web/src/app/icon.svg", "src/security_lakehouse/static/trustops-mark.svg"):
+    for file in ("app/web/src/app/icon.svg", "src/security_lakehouse/static/grc-lake-mark.svg"):
         assert (root / file).read_text().strip() == approved
     nodes = ElementTree.fromstring(approved)
-    assert len(nodes.findall(".//{http://www.w3.org/2000/svg}g[@transform]")) == 4
+    assert nodes.find("{http://www.w3.org/2000/svg}title").text == "GRC Lake"
+    assert "evidence-lake waves" in nodes.find("{http://www.w3.org/2000/svg}desc").text

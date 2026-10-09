@@ -27,7 +27,6 @@ list/read operations (``roleAssignments/read``, ``policyStates/read``,
 from __future__ import annotations
 
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -46,6 +45,7 @@ from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.identity import classify_identity_type
 from security_lakehouse.io import read_json
 from security_lakehouse.models import utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 
 # Identity/config controls that exist in controls/catalog.json. Verified before
 # wiring (SOC2-CC6.1 logical access, ISO27001-A.5.15 access control,
@@ -113,7 +113,7 @@ def probe_azure_access(*, credentials: dict[str, Any], options: dict[str, Any]) 
     if not subscription_id:
         raise ConnectorConfigError("Azure probe requires subscription_id")
     try:
-        client = build_azure_client(subscription_id, credentials, dict(os.environ))
+        client = build_azure_client(subscription_id, credentials, dict(runtime_env()))
         subscription = client.subscription()
     except Exception as exc:
         mapped = _azure_access_error(exc, subscription_id)
@@ -137,6 +137,7 @@ def build_azure_client(
     server mode raises), the SDK's ``DefaultAzureCredential`` is tried first and
     the ``az`` CLI login is the fallback.
     """
+    env = runtime_env(env)
     delegated = azure_credential(credentials, env, label="azure-posture")
     if delegated is not None:
         return AzureClient(subscription_id, credential=delegated)

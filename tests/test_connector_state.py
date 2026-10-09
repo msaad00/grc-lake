@@ -159,7 +159,7 @@ def test_probe_validates_staged_payload_without_enabling(tmp_path: Path, monkeyp
         connector_id="clickhouse-telemetry-lake",
         credentials={
             "host": "https://cluster.example.clickhouse.cloud:8443",
-            "credential_ref": "TRUSTOPS_CLICKHOUSE_TOKEN",
+            "credential_ref": "GRC_LAKE_CLICKHOUSE_TOKEN",
         },
         options={},
     )
@@ -196,15 +196,15 @@ def test_runnable_probe_marks_config_only_mode(tmp_path: Path) -> None:
 def test_snowflake_probe_reads_selected_scope_before_enable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_probe_snowflake_access(*, credentials: dict, options: dict) -> dict:
         assert credentials["account"] == "org-account"
-        assert options["database"] == "TRUSTOPS_SECURITY_LAKE"
+        assert options["database"] == "GRC_LAKE_SECURITY_LAKE"
         return {
             "ok": True,
-            "context": {"role": "TRUSTOPS_READER", "warehouse": "TRUSTOPS_READ_WH"},
+            "context": {"role": "GRC_LAKE_READER", "warehouse": "GRC_LAKE_READ_WH"},
             "views": [
-                {"purpose": "audit_events", "view": "TRUSTOPS_AUDIT_EVENTS", "ok": True, "row_count": 2},
-                {"purpose": "control_posture", "view": "TRUSTOPS_CONTROL_POSTURE", "ok": True, "row_count": 1},
-                {"purpose": "asset_risk", "view": "TRUSTOPS_ASSET_RISK", "ok": True, "row_count": 1},
-                {"purpose": "evidence_bundles", "view": "TRUSTOPS_EVIDENCE_BUNDLES", "ok": True, "row_count": 2},
+                {"purpose": "audit_events", "view": "GRC_LAKE_AUDIT_EVENTS", "ok": True, "row_count": 2},
+                {"purpose": "control_posture", "view": "GRC_LAKE_CONTROL_POSTURE", "ok": True, "row_count": 1},
+                {"purpose": "asset_risk", "view": "GRC_LAKE_ASSET_RISK", "ok": True, "row_count": 1},
+                {"purpose": "evidence_bundles", "view": "GRC_LAKE_EVIDENCE_BUNDLES", "ok": True, "row_count": 2},
             ],
         }
 
@@ -215,20 +215,20 @@ def test_snowflake_probe_reads_selected_scope_before_enable(tmp_path: Path, monk
         connector_id="snowflake-evidence-lake",
         credentials={"account": "org-account", "user": "trustops_reader", "credential_ref": "externalbrowser"},
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
-            "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-            "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-            "asset_risk": "TRUSTOPS_ASSET_RISK",
-            "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+            "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+            "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+            "asset_risk": "GRC_LAKE_ASSET_RISK",
+            "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
         },
     )
 
     assert rec["result"] == "ok"
     assert rec["evidence_count"] == 4
     assert rec["metadata"]["probe_mode"] == "live"
-    assert rec["metadata"]["context"]["role"] == "TRUSTOPS_READER"
+    assert rec["metadata"]["context"]["role"] == "GRC_LAKE_READER"
     assert rec["metadata"]["views"][0]["row_count"] == 2
     assert rec["access_fingerprint"]
     assert latest_config(tmp_path, "snowflake-evidence-lake") is None
@@ -238,12 +238,12 @@ def test_snowflake_probe_blocks_missing_views(tmp_path: Path, monkeypatch: pytes
     def fake_probe_snowflake_access(*, credentials: dict, options: dict) -> dict:
         return {
             "ok": False,
-            "context": {"role": "TRUSTOPS_READER", "warehouse": "TRUSTOPS_READ_WH"},
+            "context": {"role": "GRC_LAKE_READER", "warehouse": "GRC_LAKE_READ_WH"},
             "views": [
-                {"purpose": "audit_events", "view": "TRUSTOPS_AUDIT_EVENTS", "ok": True, "row_count": 2},
+                {"purpose": "audit_events", "view": "GRC_LAKE_AUDIT_EVENTS", "ok": True, "row_count": 2},
                 {
                     "purpose": "control_posture",
-                    "view": "TRUSTOPS_CONTROL_POSTURE",
+                    "view": "GRC_LAKE_CONTROL_POSTURE",
                     "ok": False,
                     "row_count": None,
                     "error": "object not found or not granted to the active role",
@@ -258,18 +258,18 @@ def test_snowflake_probe_blocks_missing_views(tmp_path: Path, monkeypatch: pytes
         connector_id="snowflake-evidence-lake",
         credentials={"account": "org-account", "user": "trustops_reader", "credential_ref": "externalbrowser"},
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
-            "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-            "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-            "asset_risk": "TRUSTOPS_ASSET_RISK",
-            "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+            "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+            "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+            "asset_risk": "GRC_LAKE_ASSET_RISK",
+            "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
         },
     )
 
     assert rec["result"] == "error"
-    assert "TRUSTOPS_CONTROL_POSTURE" in rec["error"]
+    assert "GRC_LAKE_CONTROL_POSTURE" in rec["error"]
     assert rec["metadata"]["views"][1]["error"] == "object not found or not granted to the active role"
     assert latest_config(tmp_path, "snowflake-evidence-lake") is None
 
@@ -290,13 +290,13 @@ def test_snowflake_probe_records_sanitized_error_not_raw_exception(
         connector_id="snowflake-evidence-lake",
         credentials={"account": "org-account", "user": "trustops_reader", "credential_ref": "externalbrowser"},
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
-            "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-            "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-            "asset_risk": "TRUSTOPS_ASSET_RISK",
-            "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+            "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+            "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+            "asset_risk": "GRC_LAKE_ASSET_RISK",
+            "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
         },
     )
 
@@ -313,11 +313,11 @@ def test_discovery_returns_selectable_snowflake_scope_without_enable(tmp_path: P
         credentials={
             "account": "org-account",
             "user": "trustops_reader",
-            "credential_ref": "TRUSTOPS_SNOWFLAKE_OAUTH",
+            "credential_ref": "GRC_LAKE_SNOWFLAKE_OAUTH",
         },
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
         },
     )
@@ -328,8 +328,8 @@ def test_discovery_returns_selectable_snowflake_scope_without_enable(tmp_path: P
     assert rec["metadata"]["selection_mode"] == "curated_views"
     assert rec["metadata"]["requires_selection"] == []
     selectors = rec["metadata"]["selectors"]
-    assert {"kind": "database", "name": "TRUSTOPS_SECURITY_LAKE", "required": True, "selected": True} in selectors
-    assert {"kind": "view", "name": "TRUSTOPS_AUDIT_EVENTS", "required": True, "purpose": "audit_events"} in selectors
+    assert {"kind": "database", "name": "GRC_LAKE_SECURITY_LAKE", "required": True, "selected": True} in selectors
+    assert {"kind": "view", "name": "GRC_LAKE_AUDIT_EVENTS", "required": True, "purpose": "audit_events"} in selectors
     assert latest_config(tmp_path, "snowflake-evidence-lake") is None
     persisted = list_runs(tmp_path, "snowflake-evidence-lake", limit=1)[0]
     assert persisted["metadata"]["selection_mode"] == "curated_views"
@@ -341,33 +341,33 @@ def test_discovery_uses_live_snowflake_scope_when_credentials_resolve(
     def fake_discover_snowflake_scope(*, credentials: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
         assert credentials["account"] == "org-account"
         assert credentials["private_key_ref"] == "SNOWFLAKE_PRIVATE_KEY_FILE"
-        assert options == {"database": "TRUSTOPS_SECURITY_LAKE"}
+        assert options == {"database": "GRC_LAKE_SECURITY_LAKE"}
         return {
             "ok": True,
             "selection_mode": "live_snowflake_scope",
             "selectors": [
-                {"kind": "warehouse", "name": "TRUSTOPS_READ_WH", "required": True, "selected": True},
-                {"kind": "database", "name": "TRUSTOPS_SECURITY_LAKE", "required": True, "selected": True},
+                {"kind": "warehouse", "name": "GRC_LAKE_READ_WH", "required": True, "selected": True},
+                {"kind": "database", "name": "GRC_LAKE_SECURITY_LAKE", "required": True, "selected": True},
                 {"kind": "schema", "name": "EVIDENCE", "required": True, "selected": True},
                 {
                     "kind": "view",
-                    "name": "TRUSTOPS_AUDIT_EVENTS",
+                    "name": "GRC_LAKE_AUDIT_EVENTS",
                     "required": True,
                     "purpose": "audit_events",
                     "selected": True,
                 },
             ],
             "candidates": {
-                "warehouses": ["TRUSTOPS_READ_WH"],
-                "databases": ["TRUSTOPS_SECURITY_LAKE"],
+                "warehouses": ["GRC_LAKE_READ_WH"],
+                "databases": ["GRC_LAKE_SECURITY_LAKE"],
                 "schemas": ["EVIDENCE"],
-                "views": ["TRUSTOPS_AUDIT_EVENTS"],
+                "views": ["GRC_LAKE_AUDIT_EVENTS"],
             },
             "recommended_options": {
-                "warehouse": "TRUSTOPS_READ_WH",
-                "database": "TRUSTOPS_SECURITY_LAKE",
+                "warehouse": "GRC_LAKE_READ_WH",
+                "database": "GRC_LAKE_SECURITY_LAKE",
                 "schema": "EVIDENCE",
-                "audit_events": "TRUSTOPS_AUDIT_EVENTS",
+                "audit_events": "GRC_LAKE_AUDIT_EVENTS",
             },
         }
 
@@ -378,15 +378,15 @@ def test_discovery_uses_live_snowflake_scope_when_credentials_resolve(
         connector_id="snowflake-evidence-lake",
         credentials={
             "account": "org-account",
-            "user": "TRUSTOPS_INGEST_SVC",
+            "user": "GRC_LAKE_INGEST_SVC",
             "private_key_ref": "SNOWFLAKE_PRIVATE_KEY_FILE",
         },
-        options={"database": "TRUSTOPS_SECURITY_LAKE"},
+        options={"database": "GRC_LAKE_SECURITY_LAKE"},
     )
 
     assert rec["result"] == "ok"
     assert rec["metadata"]["selection_mode"] == "live_snowflake_scope"
-    assert rec["metadata"]["candidates"]["views"] == ["TRUSTOPS_AUDIT_EVENTS"]
+    assert rec["metadata"]["candidates"]["views"] == ["GRC_LAKE_AUDIT_EVENTS"]
     assert latest_config(tmp_path, "snowflake-evidence-lake") is None
 
 
@@ -397,7 +397,7 @@ def test_discovery_recommends_concrete_snowflake_scope_without_placeholders(tmp_
         credentials={
             "account": "org-account",
             "user": "trustops_reader",
-            "credential_ref": "TRUSTOPS_SNOWFLAKE_OAUTH",
+            "credential_ref": "GRC_LAKE_SNOWFLAKE_OAUTH",
         },
         options={},
     )
@@ -405,13 +405,13 @@ def test_discovery_recommends_concrete_snowflake_scope_without_placeholders(tmp_
     assert rec["result"] == "ok"
     assert rec["metadata"]["requires_selection"] == ["warehouse", "database", "schema"]
     assert rec["metadata"]["recommended_options"] == {
-        "warehouse": "TRUSTOPS_READ_WH",
-        "database": "TRUSTOPS_SECURITY_LAKE",
+        "warehouse": "GRC_LAKE_READ_WH",
+        "database": "GRC_LAKE_SECURITY_LAKE",
         "schema": "EVIDENCE",
-        "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-        "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-        "asset_risk": "TRUSTOPS_ASSET_RISK",
-        "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+        "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+        "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+        "asset_risk": "GRC_LAKE_ASSET_RISK",
+        "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
     }
     assert "<" not in json.dumps(rec["metadata"]["recommended_options"])
 
@@ -438,17 +438,17 @@ def test_snowflake_public_config_requires_secret_references() -> None:
         state="enabled",
         credentials={
             "account": "org-account",
-            "user": "TRUSTOPS_INGEST_SVC",
+            "user": "GRC_LAKE_INGEST_SVC",
             "private_key": "raw-key-material",
         },
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
-            "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-            "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-            "asset_risk": "TRUSTOPS_ASSET_RISK",
-            "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+            "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+            "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+            "asset_risk": "GRC_LAKE_ASSET_RISK",
+            "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
         },
     )
 
@@ -463,7 +463,7 @@ def test_snowflake_discovery_requires_secret_references(tmp_path: Path) -> None:
         connector_id="snowflake-evidence-lake",
         credentials={
             "account": "org-account",
-            "user": "TRUSTOPS_INGEST_SVC",
+            "user": "GRC_LAKE_INGEST_SVC",
             "oauth_token": "raw-oauth-token",
         },
         options={},
@@ -826,7 +826,7 @@ def test_object_storage_enable_requires_live_probe(tmp_path: Path, monkeypatch: 
             "POST",
             "/api/connectors/object-storage-evidence/probe",
             body={
-                "credentials": {"role_arn": "arn:aws:iam::123456789012:role/TrustOpsEvidenceRead"},
+                "credentials": {"role_arn": "arn:aws:iam::123456789012:role/GrcLakeEvidenceRead"},
                 "options": {"bucket": "trustops-evidence", "prefix": "bundles/"},
             },
         )
@@ -840,7 +840,7 @@ def test_object_storage_enable_requires_live_probe(tmp_path: Path, monkeypatch: 
             "/api/connectors/object-storage-evidence/configure",
             body={
                 "state": "enabled",
-                "credentials": {"role_arn": "arn:aws:iam::123456789012:role/TrustOpsEvidenceRead"},
+                "credentials": {"role_arn": "arn:aws:iam::123456789012:role/GrcLakeEvidenceRead"},
                 "options": {"bucket": "trustops-evidence", "prefix": "bundles/"},
             },
         )
@@ -865,7 +865,7 @@ def test_clickhouse_enable_requires_live_probe(tmp_path: Path, monkeypatch: pyte
             body={
                 "credentials": {
                     "host": "https://cluster.example.clickhouse.cloud:8443",
-                    "credential_ref": "TRUSTOPS_CLICKHOUSE_TOKEN",
+                    "credential_ref": "GRC_LAKE_CLICKHOUSE_TOKEN",
                 },
                 "options": {},
             },
@@ -882,7 +882,7 @@ def test_clickhouse_enable_requires_live_probe(tmp_path: Path, monkeypatch: pyte
                 "state": "enabled",
                 "credentials": {
                     "host": "https://cluster.example.clickhouse.cloud:8443",
-                    "credential_ref": "TRUSTOPS_CLICKHOUSE_TOKEN",
+                    "credential_ref": "GRC_LAKE_CLICKHOUSE_TOKEN",
                 },
                 "options": {},
             },
@@ -912,7 +912,7 @@ def test_connector_probe_accepts_staged_payload_without_enable(tmp_path: Path, m
             "POST",
             "/api/connectors/object-storage-evidence/probe",
             body={
-                "credentials": {"role_arn": "arn:aws:iam::123456789012:role/TrustOpsEvidenceRead"},
+                "credentials": {"role_arn": "arn:aws:iam::123456789012:role/GrcLakeEvidenceRead"},
                 "options": {"bucket": "trustops-evidence", "prefix": "bundles/"},
             },
         )

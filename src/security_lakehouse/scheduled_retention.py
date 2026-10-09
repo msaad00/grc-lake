@@ -1,7 +1,7 @@
 """Scheduled retention: the CLI archival functions, fired by the scheduler.
 
-Off unless ``TRUSTOPS_RETENTION_SCHEDULE`` is set. Without
-``TRUSTOPS_RETENTION_ARCHIVE_DIR`` a scheduled run only previews candidates,
+Off unless ``GRC_LAKE_RETENTION_SCHEDULE`` is set. Without
+``GRC_LAKE_RETENTION_ARCHIVE_DIR`` a scheduled run only previews candidates,
 exactly like the CLI without ``--archive-to``; nothing is ever deleted without
 first being copied, verified, and flushed to that archive. All protections
 (active generation, pinned readers, snapshot/workpaper/receipt references,
@@ -13,7 +13,6 @@ enforced inside :func:`archive_generations` and
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -23,13 +22,14 @@ from typing import Any
 from security_lakehouse.generation_retention import archive_generations
 from security_lakehouse.io import append_jsonl
 from security_lakehouse.operational_retention import archive_operational_history
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.schedule_expr import parse_schedule
 from security_lakehouse.tenancy import root_key
 
-SCHEDULE_ENV = "TRUSTOPS_RETENTION_SCHEDULE"
-ARCHIVE_ENV = "TRUSTOPS_RETENTION_ARCHIVE_DIR"
-OLDER_THAN_DAYS_ENV = "TRUSTOPS_RETENTION_OLDER_THAN_DAYS"
-KEEP_LATEST_ENV = "TRUSTOPS_RETENTION_KEEP_LATEST"
+SCHEDULE_ENV = "GRC_LAKE_RETENTION_SCHEDULE"
+ARCHIVE_ENV = "GRC_LAKE_RETENTION_ARCHIVE_DIR"
+OLDER_THAN_DAYS_ENV = "GRC_LAKE_RETENTION_OLDER_THAN_DAYS"
+KEEP_LATEST_ENV = "GRC_LAKE_RETENTION_KEEP_LATEST"
 DEFAULT_OLDER_THAN_DAYS = 90
 DEFAULT_KEEP_LATEST = 3
 RUNS_FILE = "retention_runs.jsonl"
@@ -63,7 +63,8 @@ def _positive_int(raw: str, name: str, default: int) -> int:
 
 def retention_policy(env: Mapping[str, str] | None = None) -> RetentionPolicy | None:
     """Return the configured policy, ``None`` when disabled; raise when misconfigured."""
-    source = os.environ if env is None else env
+    env = runtime_env(env)
+    source = runtime_env() if env is None else env
     schedule = source.get(SCHEDULE_ENV, "").strip()
     if not schedule:
         return None

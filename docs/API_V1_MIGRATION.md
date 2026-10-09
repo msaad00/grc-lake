@@ -1,6 +1,6 @@
 # Console → `/api/v1` migration plan (#413)
 
-The TrustOps console historically called legacy `/api/*` handlers in `api_legacy.py`. Headless automation, agents, and MCP use `/api/v1/*` via `api_v1.py`. This document freezes the legacy surface and phases console migration.
+The GRC Lake console historically called legacy `/api/*` handlers in `api_legacy.py`. Headless automation, agents, and MCP use `/api/v1/*` via `api_v1.py`. This document freezes the legacy surface and phases console migration.
 
 ## Principles
 

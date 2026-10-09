@@ -5,25 +5,25 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-PORT="${TRUSTOPS_SCREENSHOT_PORT:-8787}"
+PORT="${GRC_LAKE_SCREENSHOT_PORT:-8787}"
 BASE="http://127.0.0.1:${PORT}"
 # A dedicated throwaway lake: seeded remediation rows and app state from a
 # previous capture never leak into the next one.
-LAKE="${TRUSTOPS_SCREENSHOT_LAKE:-build/screenshot-lake}"
+LAKE="${GRC_LAKE_SCREENSHOT_LAKE:-build/screenshot-lake}"
 case "$LAKE" in
   build/*) rm -rf "$LAKE" ;;
-  *) echo "TRUSTOPS_SCREENSHOT_LAKE must live under build/ (got ${LAKE})" >&2; exit 1 ;;
+  *) echo "GRC_LAKE_SCREENSHOT_LAKE must live under build/ (got ${LAKE})" >&2; exit 1 ;;
 esac
 
 echo "==> Load golden fixture into ${LAKE}"
-uv run security-lakehouse fixtures load --company golden --out "$LAKE" --rebase-times
-uv run security-lakehouse db upgrade --lake "$LAKE"
+uv run grc-lake fixtures load --company golden --out "$LAKE" --rebase-times
+uv run grc-lake db upgrade --lake "$LAKE"
 
 echo "==> Build console static export"
 npm --prefix app/web run build
 
 echo "==> Start server on ${BASE}"
-uv run security-lakehouse serve \
+uv run grc-lake serve \
   --lake "$LAKE" \
   --server \
   --allow-insecure-no-auth \
@@ -46,10 +46,10 @@ until curl -sf "${BASE}/api/v1/healthz" >/dev/null 2>&1; do
 done
 
 echo "==> Capture screenshots to docs/images/ (light + dark, one frozen clock)"
-TRUSTOPS_SCREENSHOT_NOW="${TRUSTOPS_SCREENSHOT_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" \
-  TRUSTOPS_SCREENSHOT_URL="$BASE" npm --prefix app/web run demo-screenshots
+GRC_LAKE_SCREENSHOT_NOW="${GRC_LAKE_SCREENSHOT_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" \
+  GRC_LAKE_SCREENSHOT_URL="$BASE" npm --prefix app/web run demo-screenshots
 
 echo "==> Optimize PNGs"
 uv run python tools/optimize_screenshots.py
 
-echo "==> Done. PNGs in docs/images/trustops-demo-*.png"
+echo "==> Done. PNGs in docs/images/grc-lake-demo-*.png"

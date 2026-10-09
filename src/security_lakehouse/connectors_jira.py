@@ -143,7 +143,7 @@ class JiraClient:
             headers={
                 "accept": "application/json",
                 "authorization": f"Basic {basic}",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
 

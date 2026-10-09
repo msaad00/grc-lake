@@ -161,7 +161,7 @@ def run():
             )
             # Token values live only in this process. The adapter receives the
             # environment-variable name, never a token in argv or a config file.
-            token_name = "TRUSTOPS_POLARIS_SMOKE_TOKEN"
+            token_name = "GRC_LAKE_POLARIS_SMOKE_TOKEN"
             os.environ[token_name] = token(credentials["clientId"], credentials["clientSecret"])
             catalog = rest_catalog(
                 base + "/api/catalog", warehouse="tenant_a", token_env=token_name, allow_http_localhost=True
@@ -234,7 +234,7 @@ def run():
             return report
         finally:
             os.umask(previous_umask)
-            os.environ.pop("TRUSTOPS_POLARIS_SMOKE_TOKEN", None)
+            os.environ.pop("GRC_LAKE_POLARIS_SMOKE_TOKEN", None)
             subprocess.run(["docker", "rm", "-f", name], capture_output=True, timeout=30)
             session.close()
 

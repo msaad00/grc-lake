@@ -1,8 +1,8 @@
-# TrustOps Console (React workbench)
+# GRC Lake Console (React workbench)
 
 The assessment console ships as a Next.js 15 application (App Router, TypeScript)
 in `app/web/`. It is built to a static export that lands inside the Python
-package so `pip install trustops-security-data-lake` ships the UI — no Node
+package so `pip install grc-lake` ships the UI — no Node
 runtime is required in production.
 
 ```
@@ -43,18 +43,18 @@ make web-build                # populates src/security_lakehouse/web/dist/
 make web-typecheck            # tsc --noEmit
 ```
 
-After `web-build`, `pip install -e .` and `security-lakehouse serve` will
+After `web-build`, `pip install -e .` and `grc-lake serve` will
 serve the React workbench from the wheel; without the build, the legacy
 single-file dashboard (`dashboard.py`) renders as a graceful fallback so the
 existing `dashboard render` CI gate stays green.
 
 ## Offline / audit handoff
 
-`security-lakehouse dashboard` produces a single self-contained HTML
+`grc-lake dashboard` produces a single self-contained HTML
 that auditors can open offline:
 
 ```bash
-security-lakehouse dashboard --lake build/lakehouse --out build/dashboard/index.html
+grc-lake dashboard --lake build/lakehouse --out build/dashboard/index.html
 ```
 
 When the React bundle has been built (`make web-build`), the command

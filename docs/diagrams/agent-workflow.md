@@ -16,7 +16,7 @@ sequenceDiagram
   opt LangGraph orchestrator
     Harness->>Harness: load_posture → load_gaps → propose_actions
   end
-  opt TRUSTOPS_AGENT_USE_MODEL=1
+  opt GRC_LAKE_AGENT_USE_MODEL=1
     Harness->>Model: redacted context + tool manifest
     Model-->>Harness: summary + validated tool calls (no writes)
   end
@@ -31,8 +31,8 @@ should cite posture, control tests, evidence refs, or a stored `input_hash`.
 Legacy CLI-only flow (local demos):
 
 ```bash
-security-lakehouse agents posture-review --lake build/lakehouse --orchestrator langgraph
-security-lakehouse agents soc-triage --lake build/lakehouse --orchestrator langgraph
+grc-lake agents posture-review --lake build/lakehouse --orchestrator langgraph
+grc-lake agents soc-triage --lake build/lakehouse --orchestrator langgraph
 ```
 
 See [Agent Harness](../AGENT_HARNESS.md) and [Shareable Demo](../SHAREABLE_DEMO.md).

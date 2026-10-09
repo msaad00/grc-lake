@@ -1,4 +1,4 @@
-# TrustOps documentation
+# GRC Lake documentation
 
 Every guide in `docs/`, grouped by task. New here? Start with the
 [5-minute tutorial](TUTORIAL_5_MIN.md) and [architecture](ARCHITECTURE.md).
@@ -106,7 +106,7 @@ Several pages describe the architecture at different depths; start with
 | [Components](architecture/COMPONENTS.md)                 | Component reference                            |
 | [Data flow](DATA_FLOW.md)                                | Where evidence is stored and how it moves      |
 | [Data model](DATA_MODEL.md)                              | Evidence, controls, tests, and snapshots       |
-| [Product artifacts](PRODUCT_ARTIFACTS.md)                | Files and outputs TrustOps produces            |
+| [Product artifacts](PRODUCT_ARTIFACTS.md)                | Files and outputs GRC Lake produces            |
 | [Console UX](CONSOLE_UX.md)                              | Console operator and contributor guide         |
 | [Visual system](VISUAL_SYSTEM.md)                        | Console layout and components                  |
 | [Brand](BRAND.md)                                        | Name, voice, and brand constants               |

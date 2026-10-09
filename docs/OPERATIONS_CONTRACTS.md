@@ -8,8 +8,8 @@ Retention reports candidates without changing data by default, and runs only whe
 invoked or explicitly scheduled (see [automatic retention](#automatic-retention)):
 
 ```bash
-security-lakehouse lake retention --lake ./lake --older-than-days 90 --keep-latest 3
-security-lakehouse lake retention --lake ./lake --older-than-days 90 --keep-latest 3 --archive-to /mnt/evidence-archive
+grc-lake lake retention --lake ./lake --older-than-days 90 --keep-latest 3
+grc-lake lake retention --lake ./lake --older-than-days 90 --keep-latest 3 --archive-to /mnt/evidence-archive
 ```
 
 Archival copies and verifies a generation, flushes the copy to disk, then removes
@@ -22,18 +22,18 @@ database together before changing retention.
 ### Automatic retention
 
 Retention can also run on a schedule. It is **off by default**: nothing runs
-until an operator sets `TRUSTOPS_RETENTION_SCHEDULE`, because external exports
+until an operator sets `GRC_LAKE_RETENTION_SCHEDULE`, because external exports
 and checkpoints cannot be discovered (below) and only the operator can choose a
 window and an archive on separately controlled storage.
 
 | Variable                             | Default     | Meaning                                                        |
 | ------------------------------------ | ----------- | -------------------------------------------------------------- |
-| `TRUSTOPS_RETENTION_SCHEDULE`        | unset (off) | Scheduler grammar: `@hourly`, `@daily`, `every Nh`, `every Nm` |
-| `TRUSTOPS_RETENTION_ARCHIVE_DIR`     | unset       | Absolute path outside the lake root; unset means preview only  |
-| `TRUSTOPS_RETENTION_OLDER_THAN_DAYS` | `90`        | Same as `--older-than-days`                                    |
-| `TRUSTOPS_RETENTION_KEEP_LATEST`     | `3`         | Same as `--keep-latest` (generations)                          |
+| `GRC_LAKE_RETENTION_SCHEDULE`        | unset (off) | Scheduler grammar: `@hourly`, `@daily`, `every Nh`, `every Nm` |
+| `GRC_LAKE_RETENTION_ARCHIVE_DIR`     | unset       | Absolute path outside the lake root; unset means preview only  |
+| `GRC_LAKE_RETENTION_OLDER_THAN_DAYS` | `90`        | Same as `--older-than-days`                                    |
+| `GRC_LAKE_RETENTION_KEEP_LATEST`     | `3`         | Same as `--keep-latest` (generations)                          |
 
-The scheduler (`security-lakehouse scheduler tick`, the Helm CronJob, or
+The scheduler (`grc-lake scheduler tick`, the Helm CronJob, or
 `scheduler run`) fires retention at most once per period, under the same
 per-lake scheduler lock and attempt-before-run state as other scheduled targets.
 It calls the same functions as the CLI, so every protection above applies
@@ -100,7 +100,7 @@ revocation, and billing state. Queue payloads do not accept credentials or paths
 Existing HTTP clients without the preference retain synchronous responses;
 local CLI and local MCP also retain direct execution.
 
-The server lifespan starts `TRUSTOPS_OPERATION_WORKERS` worker threads per
+The server lifespan starts `GRC_LAKE_OPERATION_WORKERS` worker threads per
 process (default 2, integer 1–16; other values stop startup). Each running job
 uses its own spawned process, so size the count to available memory and CPU. A
 process runs at most one job per tenant at a time and gives the next free slot to
@@ -174,6 +174,6 @@ Use the [framework pack guide](FRAMEWORK_PACKS.md), then update the owning regis
 control catalog, provenance, safeguard mappings, and applicable evidence rules.
 A framework may also need navigation labels and assets. Generate derived
 coverage, catalog locks, packaged resources, and the README header with the
-repository scripts; run `security-lakehouse catalog verify` and the full relevant
+repository scripts; run `grc-lake catalog verify` and the full relevant
 checks. A new catalog entry alone is neither evaluated coverage nor provider
 qualification.

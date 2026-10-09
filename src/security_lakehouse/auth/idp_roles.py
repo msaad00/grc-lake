@@ -1,12 +1,12 @@
-"""Map IdP group/role claims to TrustOps product roles."""
+"""Map IdP group/role claims to GRC Lake product roles."""
 
 from __future__ import annotations
 
 import json
-import os
 from typing import Any
 
 from security_lakehouse.db.models import USER_ROLES
+from security_lakehouse.runtime_environment import runtime_env
 
 ROLE_RANK: dict[str, int] = {
     "auditor": 1,
@@ -19,8 +19,8 @@ ROLE_RANK: dict[str, int] = {
 
 
 def load_role_map(env_var: str) -> dict[str, str]:
-    """Parse ``TRUSTOPS_*_ROLE_MAP`` JSON: ``{\"IdP-Group\": \"admin\"}``."""
-    raw = os.environ.get(env_var, "").strip()
+    """Parse ``GRC_LAKE_*_ROLE_MAP`` JSON: ``{\"IdP-Group\": \"admin\"}``."""
+    raw = runtime_env().get(env_var, "").strip()
     if not raw:
         return {}
     try:
@@ -58,7 +58,7 @@ def resolve_role_from_claims(
     role_map: dict[str, str],
     default_role: str,
 ) -> str:
-    """Pick the highest-privilege TrustOps role matched by IdP groups."""
+    """Pick the highest-privilege GRC Lake role matched by IdP groups."""
     if default_role not in USER_ROLES:
         default_role = "read_only"
     best = default_role
@@ -75,4 +75,4 @@ def resolve_role_from_claims(
 
 
 def sync_role_on_login_enabled() -> bool:
-    return os.environ.get("TRUSTOPS_IDP_SYNC_ROLE_ON_LOGIN", "").lower() in {"1", "true", "yes"}
+    return runtime_env().get("GRC_LAKE_IDP_SYNC_ROLE_ON_LOGIN", "").lower() in {"1", "true", "yes"}

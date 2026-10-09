@@ -443,7 +443,7 @@ def build_audit_readiness(
         "gaps": gaps,
         "workflow_coverage": {
             "scored": False,
-            "description": "Product capabilities available in TrustOps; not part of the audit score.",
+            "description": "Product capabilities available in GRC Lake; not part of the audit score.",
             "score": coverage_score,
             "checklist": checklist,
         },

@@ -1,6 +1,6 @@
 """ClickHouse telemetry-lake collector.
 
-Read-only SELECT against TrustOps-shaped analytics tables (see
+Read-only SELECT against GRC Lake-shaped analytics tables (see
 ``deploy/clickhouse/schema.sql``). Uses the HTTP interface so the base package
 does not require ``clickhouse-connect``; CI runs from fixtures.
 """
@@ -28,6 +28,7 @@ from security_lakehouse.lake_mapping import (
     resolve_mappings,
 )
 from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_ref_or_default
 
 CONNECTOR_ID = "clickhouse-telemetry-lake"
@@ -167,7 +168,7 @@ class ClickHouseClient:
             method="POST",
             headers={
                 "content-type": "text/plain; charset=utf-8",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         if self.user:
@@ -288,6 +289,7 @@ def probe_clickhouse_access(
     options: dict[str, Any],
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    env = runtime_env(env)
     host, user, password, database, table = _connection_params(credentials, options, env=env)
     if not host:
         raise ValueError("clickhouse-telemetry-lake probe requires host")
@@ -312,6 +314,7 @@ def discover_clickhouse_scope(
     options: dict[str, Any],
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    env = runtime_env(env)
     host, user, password, database, _table = _connection_params(credentials, options, env=env)
     if not host:
         return {"ok": False, "error": "host is required", "selectors": []}
@@ -327,6 +330,7 @@ def _connection_params(
     *,
     env: dict[str, str] | None = None,
 ) -> tuple[str, str, str, str, str]:
+    env = runtime_env(env)
     environment = env or {}
     host = str(credentials.get("host") or environment.get("CLICKHOUSE_HOST") or "").strip()
     user = str(credentials.get("user") or environment.get("CLICKHOUSE_USER") or "default").strip() or "default"

@@ -80,7 +80,7 @@ MIN_REQUEST_INTERVAL_SECONDS = 1.25
 
 # Phishing tests that started within this window feed the account summary.
 PHISHING_LOOKBACK_DAYS = 90
-# TrustOps default, not a KnowBe4 benchmark: an aggregate phish-prone
+# GRC Lake default, not a KnowBe4 benchmark: an aggregate phish-prone
 # percentage at or above this is an open (low) finding.
 PHISH_PRONE_THRESHOLD = 20.0
 
@@ -265,7 +265,7 @@ class KnowBe4Client:
             headers={
                 "accept": "application/json",
                 "authorization": f"Bearer {self._token}",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         try:

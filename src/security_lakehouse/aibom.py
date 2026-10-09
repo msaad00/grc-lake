@@ -1,7 +1,7 @@
 """Bounded, local-first AI bill of materials import and export.
 
 The canonical store intentionally keeps only portable inventory fields. Source
-documents remain customer-controlled; TrustOps does not upload or enrich them.
+documents remain customer-controlled; GRC Lake does not upload or enrich them.
 """
 
 from __future__ import annotations
@@ -210,7 +210,7 @@ def export_aibom(*, lake: Path, output_path: Path, output_format: str) -> dict[s
         raise ValueError(f"format must be one of: {', '.join(SUPPORTED_EXPORTS)}")
     store_path = lake / STORE_RELATIVE_PATH
     if not store_path.exists():
-        raise ValueError("no AIBOM inventory found; run `security-lakehouse aibom import` first")
+        raise ValueError("no AIBOM inventory found; run `grc-lake aibom import` first")
     store = read_json(store_path)
     items = store.get("items", []) if isinstance(store, dict) else []
     document = _cyclonedx_export(items) if output_format == "cyclonedx-1.7" else _spdx_export(items)

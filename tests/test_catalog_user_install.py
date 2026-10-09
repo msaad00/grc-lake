@@ -16,7 +16,7 @@ def test_user_install_wins_over_unrelated_prefix_catalogs(tmp_path, monkeypatch)
             path = root / name / "catalog.json"
             path.parent.mkdir(parents=True)
             path.write_text("{}")
-    monkeypatch.delenv("TRUSTOPS_DATA_DIR", raising=False)
+    monkeypatch.delenv("GRC_LAKE_DATA_DIR", raising=False)
     monkeypatch.setattr(catalog, "__file__", str(userlib / "security_lakehouse/catalog.py"))
     monkeypatch.setattr(catalog.sys, "prefix", str(prefix))
     monkeypatch.setattr(catalog.sys, "base_prefix", str(prefix))
@@ -25,7 +25,7 @@ def test_user_install_wins_over_unrelated_prefix_catalogs(tmp_path, monkeypatch)
     # A damaged user install must not silently borrow another version's catalogs.
     (user / "controls/catalog.json").unlink()
     assert catalog._data_root() == user
-    monkeypatch.setenv("TRUSTOPS_DATA_DIR", str(tmp_path / "explicit"))
+    monkeypatch.setenv("GRC_LAKE_DATA_DIR", str(tmp_path / "explicit"))
     assert catalog._data_root() == tmp_path / "explicit"
 
 
@@ -35,7 +35,7 @@ def test_non_user_install_ignores_user_catalogs(tmp_path, monkeypatch):
         path = prefix / name / "catalog.json"
         path.parent.mkdir(parents=True)
         path.write_text("{}")
-    monkeypatch.delenv("TRUSTOPS_DATA_DIR", raising=False)
+    monkeypatch.delenv("GRC_LAKE_DATA_DIR", raising=False)
     monkeypatch.setattr(catalog, "__file__", str(_installed_module(prefix)))
     monkeypatch.setattr(catalog.sys, "prefix", str(prefix))
     monkeypatch.setattr(sysconfig, "get_path", lambda name, scheme=None: str(tmp_path / "unrelated-user"))
@@ -65,7 +65,7 @@ def test_catalogs_follow_imported_installation_not_available_other_prefix(tmp_pa
     own = prefixes[origin]
     if damaged:
         (own / "controls/catalog.json").unlink()
-    monkeypatch.delenv("TRUSTOPS_DATA_DIR", raising=False)
+    monkeypatch.delenv("GRC_LAKE_DATA_DIR", raising=False)
     monkeypatch.setattr(catalog, "__file__", str(_installed_module(own)))
     monkeypatch.setattr(catalog.sys, "prefix", str(prefixes["venv"]))
     monkeypatch.setattr(catalog.sys, "base_prefix", str(prefixes["base"]))
@@ -82,7 +82,7 @@ def test_editable_checkout_keeps_own_data_even_inside_prefix(tmp_path, monkeypat
     _catalogs(checkout)
     if damaged:
         (checkout / "controls/catalog.json").unlink()
-    monkeypatch.delenv("TRUSTOPS_DATA_DIR", raising=False)
+    monkeypatch.delenv("GRC_LAKE_DATA_DIR", raising=False)
     monkeypatch.setattr(catalog, "__file__", str(checkout / "src/security_lakehouse/catalog.py"))
     monkeypatch.setattr(catalog.sys, "prefix", str(prefix))
     assert catalog._data_root() == checkout

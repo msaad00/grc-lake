@@ -96,7 +96,7 @@ class BambooHRClient:
                 "accept": "application/json",
                 "content-type": "application/json",
                 "authorization": self._auth,
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         with netguard.open_public(request, timeout=self.timeout, label="bamboohr api") as resp:

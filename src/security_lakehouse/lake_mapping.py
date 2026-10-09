@@ -1,9 +1,9 @@
 """Declarative lake mapping (experimental, spec v1).
 
 A mapping spec describes how rows in a table the customer already owns become
-TrustOps raw evidence, so a lake reader can consume existing security tables
+GRC Lake raw evidence, so a lake reader can consume existing security tables
 (for example OCSF tables in AWS Security Lake) instead of requiring
-TrustOps-shaped views.
+GRC Lake-shaped views.
 
 Safety model:
 
@@ -587,7 +587,7 @@ def map_rows(
     tenant_id: str = "customer-managed",
     default_source: str = "lake",
 ) -> MapResult:
-    """Map fetched source rows to TrustOps raw events.
+    """Map fetched source rows to GRC Lake raw events.
 
     Rows that fail a filter or fall before the watermark bound are counted in
     ``filtered``. Rows that cannot be mapped (no id, unparseable time) are
@@ -929,7 +929,7 @@ def collect_mapped_evidence(
         if result.errors and not result.events:
             raise MappedRowsError(
                 f"mapping {spec.name!r}: none of {len(result.errors)} fetched rows could be mapped "
-                f"(first error: {result.errors[0]['error']}); run 'security-lakehouse lake map --dry-run'"
+                f"(first error: {result.errors[0]['error']}); run 'grc-lake lake map --dry-run'"
             )
         if result.errors:
             logger.warning("mapping %r skipped %d unmappable row(s)", spec.name, len(result.errors))

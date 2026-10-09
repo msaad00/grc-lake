@@ -130,7 +130,7 @@ The catalog validator **requires** all six, and CI fails a control merged
 without them. Inspect gaps any time:
 
 ```bash
-security-lakehouse controls provenance   # exit 1 if any control lacks provenance
+grc-lake controls provenance   # exit 1 if any control lacks provenance
 ```
 
 This is the answer to "how do you get the controls right?": every mapping is

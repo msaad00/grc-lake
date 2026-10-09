@@ -1,4 +1,4 @@
-"""Repeatable product scenarios over the TrustOps lake.
+"""Repeatable product scenarios over the GRC Lake lake.
 
 Scenarios are thin orchestration around shipped primitives. They are meant to
 prove end-to-end claims against fixtures, cloud shells, or live cloud accounts
@@ -126,7 +126,7 @@ def format_live_cloud_posture_summary(report: dict[str, Any]) -> str:
     connector_results = summary.get("connector_results") or []
 
     lines = [
-        f"TrustOps scenario: {report.get('scenario', LIVE_CLOUD_SCENARIO)}",
+        f"GRC Lake scenario: {report.get('scenario', LIVE_CLOUD_SCENARIO)}",
         f"Status: {'ok' if summary.get('ok') else 'needs attention'}",
         (f"Evidence: {summary.get('evidence_count', 0)} normalized rows from {_format_counts(source_counts)}"),
         (
@@ -436,7 +436,7 @@ def _format_proof_pack(report: dict[str, Any]) -> str:
     workflow_run = (report.get("workflow") or {}).get("run") or {}
     artifacts = report.get("artifacts") or {}
     lines = [
-        "# TrustOps Live Cloud Proof Pack",
+        "# GRC Lake Live Cloud Proof Pack",
         "",
         f"- Scenario: `{report.get('scenario', LIVE_CLOUD_SCENARIO)}`",
         f"- Status: `{'ok' if summary.get('ok') else 'needs_attention'}`",

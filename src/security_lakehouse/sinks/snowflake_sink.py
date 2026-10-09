@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.runtime_environment import runtime_env
 
 DEFAULT_DATABASE = "SECURITY_COMPLIANCE_LAKEHOUSE"
 DEFAULT_TENANT = "customer-managed"
@@ -55,6 +56,7 @@ class SnowflakeSinkConfig:
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> SnowflakeSinkConfig | None:
         """Build a config from env, or None when the sink is not configured."""
+        env = runtime_env(env)
         account = env.get("SNOWFLAKE_ACCOUNT")
         user = env.get("SNOWFLAKE_USER")
         key_file = env.get("SNOWFLAKE_PRIVATE_KEY_FILE")

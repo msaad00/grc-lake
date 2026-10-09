@@ -129,7 +129,7 @@ def test_okta_link_pivot_to_internal_is_blocked(monkeypatch: pytest.MonkeyPatch)
 
 def test_workflow_redirect_target_rechecks_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
     """_http_post's redirect validator is the egress allowlist + SSRF guard."""
-    monkeypatch.setenv("TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST", "hooks.example.com")
+    monkeypatch.setenv("GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST", "hooks.example.com")
     _private_dns(monkeypatch, {"hooks.example.com": "93.184.216.34"})
 
     handler = netguard._GuardedRedirectHandler(lambda u: wf._assert_egress_allowed(u, what="webhook"))
@@ -203,7 +203,7 @@ def test_workflow_action_webhook_redirect_to_internal_blocked(monkeypatch: pytes
     threading.Thread(target=internal.serve_forever, daemon=True).start()
 
     allow_port = allow.server_address[1]
-    monkeypatch.setenv("TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST", f"127.0.0.1:{allow_port}")
+    monkeypatch.setenv("GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST", f"127.0.0.1:{allow_port}")
     # Treat the allowlisted loopback host as public so the initial request is sent;
     # the redirect target (a different loopback port) is NOT allowlisted.
     monkeypatch.setattr(netguard, "assert_resolved_ip_is_public", lambda host, **k: [host])

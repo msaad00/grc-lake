@@ -6,7 +6,7 @@ surface local mode cannot provide: an application-state database, bearer-token
 authentication, and role-based access control.
 
 Authentication is required by default. Start with ``require_auth=False`` (or set
-``TRUSTOPS_ALLOW_INSECURE_NO_AUTH=1``) only for local development; every request
+``GRC_LAKE_ALLOW_INSECURE_NO_AUTH=1``) only for local development; every request
 then runs as a synthetic admin. Local mode (:mod:`security_lakehouse.server`)
 remains zero-dependency and unauthenticated by design.
 
@@ -19,7 +19,6 @@ import asyncio
 import hashlib
 import json
 import math
-import os
 import secrets
 import threading
 import time
@@ -97,6 +96,7 @@ from security_lakehouse.io import resolve_path
 from security_lakehouse.operation_execution import execute_operation, execute_stored_operation
 from security_lakehouse.operation_jobs import DEFAULT_WORKERS, MAX_WORKERS, JobConflict, JobQueue, JobWorker
 from security_lakehouse.public_url import normalize_public_url
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.server_routes.schemas.base import StrictModel as _StrictModel
 from security_lakehouse.services import NotFound, ValidationError
 from security_lakehouse.services import access_reviews as access_review_services
@@ -107,7 +107,7 @@ from security_lakehouse.services import webhooks as webhook_services
 from security_lakehouse.services.snapshot_events import snapshot_written_hook as _snapshot_written_hook
 from security_lakehouse.web import web_dist_dir, web_dist_index
 
-_COOKIE_SECURE = os.environ.get("TRUSTOPS_COOKIE_SECURE", "true").lower() in {"1", "true", "yes", "on"}
+_COOKIE_SECURE = runtime_env().get("GRC_LAKE_COOKIE_SECURE", "true").lower() in {"1", "true", "yes", "on"}
 
 _ERROR_CODES = {
     400: "bad_request",
@@ -576,7 +576,7 @@ def _execute_agent_decision(
     decision: dict[str, Any],
     note: str = "",
 ) -> dict[str, Any]:
-    """Execute an allowlisted agent decision through TrustOps-native writes only."""
+    """Execute an allowlisted agent decision through GRC Lake-native writes only."""
     action = str(decision.get("action") or "")
     payload = _decision_payload(decision)
     reason = _decision_reason(decision, note=note)
@@ -834,9 +834,9 @@ def _build_poc_readiness(
     """Return the tenant's readiness to host a shareable POC."""
     now = datetime.now(UTC)
     public_url = normalize_public_url(
-        os.environ.get("TRUSTOPS_PUBLIC_URL")
-        or os.environ.get("TRUSTOPS_BASE_URL")
-        or os.environ.get("TRUSTOPS_APP_URL")
+        runtime_env().get("GRC_LAKE_PUBLIC_URL")
+        or runtime_env().get("GRC_LAKE_BASE_URL")
+        or runtime_env().get("GRC_LAKE_APP_URL")
     )
     sso_configured = app.state.oauth is not None or app.state.saml_config is not None
     login_path = (
@@ -1135,13 +1135,13 @@ async def posture_event_stream(lake: Path, request: Request, *, interval: float 
 
 
 def _operation_worker_count() -> int:
-    raw = os.environ.get("TRUSTOPS_OPERATION_WORKERS", "").strip() or str(DEFAULT_WORKERS)
+    raw = runtime_env().get("GRC_LAKE_OPERATION_WORKERS", "").strip() or str(DEFAULT_WORKERS)
     try:
         count = int(raw)
     except ValueError:
         count = 0
     if not 1 <= count <= MAX_WORKERS:
-        raise ValueError(f"TRUSTOPS_OPERATION_WORKERS must be an integer from 1 to {MAX_WORKERS}")
+        raise ValueError(f"GRC_LAKE_OPERATION_WORKERS must be an integer from 1 to {MAX_WORKERS}")
     return count
 
 
@@ -1176,11 +1176,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     app = FastAPI(
         lifespan=lifespan,
-        title="TrustOps API",
+        title="GRC Lake API",
         version=api_v1.API_VERSION,
         description=(
             "Open-source, headless-first trust operations for customer-owned "
-            "evidence lakes. The same engine serves TrustOps Console and "
+            "evidence lakes. The same engine serves GRC Lake Console and "
             "`/api/v1` for agents, CI, and runbooks. Discover the contract at "
             "`GET /api/v1`; browse it at `/docs`."
         ),
@@ -1200,7 +1200,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     app.state.require_auth = require_auth and not _insecure_requested()
     if app.state.require_auth:
         ensure_cookie_signing_configured()
-    app.state.rate_limiter = build_rate_limiter(RateLimitConfig.from_env(dict(os.environ)), dict(os.environ))
+    app.state.rate_limiter = build_rate_limiter(RateLimitConfig.from_env(dict(runtime_env())), dict(runtime_env()))
     app.state.rate_limit_known_credentials = _KnownCredentials()
     app.state.anonymous_audit_sampler = AnonymousAuditSampler()
 
@@ -1246,7 +1246,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         app.state.operation_queue,
         partial(execute_operation, lake, factory=app.state.sessionmaker, require_auth=app.state.require_auth),
         subprocess_execute=partial(execute_stored_operation, require_auth=require_auth),
-        timeout_seconds=float(os.environ.get("TRUSTOPS_OPERATION_TIMEOUT_SECONDS", "900")),
+        timeout_seconds=float(runtime_env().get("GRC_LAKE_OPERATION_TIMEOUT_SECONDS", "900")),
         concurrency=_operation_worker_count(),
     )
 
@@ -1260,9 +1260,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     if app.state.oidc_config is not None:
         from starlette.middleware.sessions import SessionMiddleware
 
-        secret = os.environ.get("TRUSTOPS_SESSION_SECRET", "").strip()
+        secret = runtime_env().get("GRC_LAKE_SESSION_SECRET", "").strip()
         if not secret:
-            raise RuntimeError("TRUSTOPS_SESSION_SECRET is required when OIDC SSO is configured")
+            raise RuntimeError("GRC_LAKE_SESSION_SECRET is required when OIDC SSO is configured")
         app.add_middleware(SessionMiddleware, secret_key=secret, same_site="lax", https_only=_COOKIE_SECURE)
         app.state.oauth = build_oauth(app.state.oidc_config)
 
@@ -1526,7 +1526,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     async def sso_login(request: Request):
         if app.state.oauth is None:
             raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="OIDC SSO is not configured")
-        redirect_uri = os.environ.get("TRUSTOPS_OIDC_REDIRECT_URL") or str(request.url_for("sso_callback"))
+        redirect_uri = runtime_env().get("GRC_LAKE_OIDC_REDIRECT_URL") or str(request.url_for("sso_callback"))
         return await app.state.oauth.oidc.authorize_redirect(request, redirect_uri)
 
     @app.get("/api/v1/auth/callback", name="sso_callback")
@@ -1893,9 +1893,9 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if not signup_services.self_serve_signup_enabled():
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="self-serve signup requires TRUSTOPS_COMMERCIAL_HOSTED=1 and TRUSTOPS_SELF_SERVE_SIGNUP=1",
+                detail="self-serve signup requires GRC_LAKE_COMMERCIAL_HOSTED=1 and GRC_LAKE_SELF_SERVE_SIGNUP=1",
             )
-        secret = request.headers.get("X-TrustOps-Signup-Secret")
+        secret = request.headers.get("X-GRC Lake-Signup-Secret")
         if not signup_services.verify_signup_secret(secret):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="invalid signup secret")
         try:
@@ -1909,7 +1909,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             )
         except ValueError as exc:
             detail = str(exc)
-            if "TRUSTOPS_" in detail or "self-serve signup requires" in detail:
+            if "GRC_LAKE_" in detail or "self-serve signup requires" in detail:
                 raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=detail) from exc
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail) from exc
         session.commit()
@@ -1990,7 +1990,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             detail = str(exc)
             code = (
                 status.HTTP_501_NOT_IMPLEMENTED
-                if "TRUSTOPS_COMMERCIAL_HOSTED" in detail
+                if "GRC_LAKE_COMMERCIAL_HOSTED" in detail
                 else status.HTTP_400_BAD_REQUEST
             )
             raise HTTPException(status_code=code, detail=detail) from exc
@@ -2017,7 +2017,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
         except ValueError as exc:
             detail = str(exc)
-            if "TRUSTOPS_COMMERCIAL_HOSTED" in detail:
+            if "GRC_LAKE_COMMERCIAL_HOSTED" in detail:
                 raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=detail) from exc
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail) from exc
         session.commit()
@@ -3837,14 +3837,15 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if web_dist is not None:
             return RedirectResponse("/console/dashboard/", status_code=307)
         return HTMLResponse(
-            "<!doctype html><title>TrustOps</title><h1>TrustOps</h1><p>The console bundle is not installed. Build the web console or use the authenticated API.</p>"
+            "<!doctype html><title>GRC Lake</title><h1>GRC Lake</h1><p>The console bundle is not installed. Build the web console or use the authenticated API.</p>"
         )
 
-    brand_mark = Path(__file__).resolve().parent / "static" / "trustops-mark.svg"
+    brand_mark = Path(__file__).resolve().parent / "static" / "grc-lake-mark.svg"
 
-    @app.get("/brand/trustops-mark.svg", include_in_schema=False)
+    @app.get("/brand/grc-lake-mark.svg", include_in_schema=False)
+    @app.get("/brand/grc-lake-mark.svg", include_in_schema=False)
     def trustops_brand_mark() -> Response:
-        """Public TrustOps monogram for MCP clients and link previews."""
+        """Public GRC Lake monogram for MCP clients and link previews."""
         if not brand_mark.is_file():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
         return Response(
@@ -3855,7 +3856,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.get("/favicon.ico", include_in_schema=False)
     def favicon() -> RedirectResponse:
-        return RedirectResponse(url="/brand/trustops-mark.svg", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+        return RedirectResponse(url="/brand/grc-lake-mark.svg", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
     # The public trust page is a static export under a dynamic segment, so
     # only one placeholder is prebuilt. Keep the route in the OpenAPI contract

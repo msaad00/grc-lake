@@ -1,7 +1,7 @@
-# TrustOps validation and benchmark plan
+# GRC Lake validation and benchmark plan
 
 **Status: validation protocol.** This document defines reproducible
-methods for evaluating TrustOps. Existing unit tests,
+methods for evaluating GRC Lake. Existing unit tests,
 synthetic fixtures, connector availability, and configured warehouse sinks do
 not establish live accuracy, production capacity, or certification readiness.
 
@@ -58,7 +58,7 @@ scale claim. Use an independent holdout label set after rules are tuned.
 
 Use one applicable **asset × control × observation time** as the evaluation unit.
 A positive means a verified control failure. Label expected outcomes independently
-of TrustOps results using source configurations and reviewer adjudication; record
+of GRC Lake results using source configurations and reviewer adjudication; record
 uncertain labels separately. Do not derive ground truth from generated findings.
 
 | Measure                 | Definition and reporting requirement                                                                                                                                                                       |
@@ -128,7 +128,7 @@ warehouse execution or that local memory bottlenecks have been removed.
 | Optional open-table adapter | [Parquet](PARQUET_EXPORT.md) has fixture-based DuckDB parity tests. [Iceberg REST](ICEBERG_REST.md) has local Polaris publication and DuckDB historical-read checks. Injected commit failures and concurrency are unit-tested. Cloud storage and production scale remain unverified. |
 
 Record the versions and commands of independent readers. Reading an export back
-through TrustOps alone is insufficient evidence of interoperability. A dependency
+through GRC Lake alone is insufficient evidence of interoperability. A dependency
 vulnerability audit is one security check, not a complete security assessment.
 
 ## 6. Cost comparison and break-even
@@ -156,7 +156,7 @@ For a declared comparison horizon:
 
 ```text
 Total cost = one-time costs + recurring service/resource costs + labor costs
-Savings = comparable alternative total cost - TrustOps total cost
+Savings = comparable alternative total cost - GRC Lake total cost
 Savings % = savings / comparable alternative total cost × 100
 ```
 
@@ -190,7 +190,7 @@ missing evidence, explain a verdict, assign an owner, and verify an export.
 
 ## 8. Workflow value and publication
 
-Compare the same scoped task manually and with TrustOps: time to first evidence,
+Compare the same scoped task manually and with GRC Lake: time to first evidence,
 time to investigate a finding, reviewer effort per finding, time to prepare an
 assessment export, and repeated work avoided. Record participants, task definitions,
 sample counts, and the baseline. Assess remediation suggestions for correctness,

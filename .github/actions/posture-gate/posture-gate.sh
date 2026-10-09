@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# TrustOps posture gate — evaluate /api/v1/posture/current and control-tests against thresholds.
+# GRC Lake posture gate — evaluate /api/v1/posture/current and control-tests against thresholds.
 set -euo pipefail
 
-TRUSTOPS_URL="${TRUSTOPS_URL:-}"
-TRUSTOPS_API_TOKEN="${TRUSTOPS_API_TOKEN:-}"
+GRC_LAKE_URL="${GRC_LAKE_URL-${TRUSTOPS_URL:-}}"
+GRC_LAKE_API_TOKEN="${GRC_LAKE_API_TOKEN-${TRUSTOPS_API_TOKEN:-}}"
 CORRELATION_ID="${CORRELATION_ID:-}"
 MIN_SCORE="${MIN_SCORE:-0}"
 MAX_CRITICAL_VIOLATIONS="${MAX_CRITICAL_VIOLATIONS:-0}"
@@ -13,22 +13,22 @@ ALLOWED_FAILING_CONTROLS="${ALLOWED_FAILING_CONTROLS:-}"
 FRAMEWORK="${FRAMEWORK:-}"
 FAIL_ON_STALE_EVIDENCE="${FAIL_ON_STALE_EVIDENCE:-false}"
 
-if [[ -z "${TRUSTOPS_URL}" ]]; then
-  echo "::error title=TrustOps posture gate::TRUSTOPS_URL is required"
+if [[ -z "${GRC_LAKE_URL}" ]]; then
+  echo "::error title=GRC Lake posture gate::GRC_LAKE_URL is required"
   exit 1
 fi
 
 if ! command -v jq >/dev/null 2>&1; then
-  echo "::error title=TrustOps posture gate::jq is required on the runner"
+  echo "::error title=GRC Lake posture gate::jq is required on the runner"
   exit 1
 fi
 
-base="${TRUSTOPS_URL%/}"
+base="${GRC_LAKE_URL%/}"
 posture_endpoint="${base}/api/v1/posture/current"
 
 curl_args=(-fsS -H "Accept: application/json")
-if [[ -n "${TRUSTOPS_API_TOKEN}" ]]; then
-  curl_args+=(-H "Authorization: Bearer ${TRUSTOPS_API_TOKEN}")
+if [[ -n "${GRC_LAKE_API_TOKEN}" ]]; then
+  curl_args+=(-H "Authorization: Bearer ${GRC_LAKE_API_TOKEN}")
 fi
 if [[ -n "${CORRELATION_ID}" ]]; then
   curl_args+=(-H "X-Correlation-ID: ${CORRELATION_ID}")
@@ -36,13 +36,13 @@ fi
 
 response=""
 if ! response="$(curl "${curl_args[@]}" "${posture_endpoint}")"; then
-  echo "::error title=TrustOps posture gate::Failed to reach ${posture_endpoint}"
+  echo "::error title=GRC Lake posture gate::Failed to reach ${posture_endpoint}"
   exit 1
 fi
 
 if ! echo "${response}" | jq -e '.data.posture' >/dev/null 2>&1; then
   detail="$(echo "${response}" | jq -r '.errors[0].detail // "unexpected response"')"
-  echo "::error title=TrustOps posture gate::${detail}"
+  echo "::error title=GRC Lake posture gate::${detail}"
   exit 1
 fi
 
@@ -55,7 +55,7 @@ failed_tests="$(echo "${posture}" | jq -r '.failed_control_test_count // 0')"
 stale_count="$(echo "${response}" | jq -r '.data.posture.stale_evidence_count // .data.evidence_freshness.stale_count // 0')"
 
 if [[ -z "${score}" ]]; then
-  echo "::error title=TrustOps posture gate::Posture score missing from response"
+  echo "::error title=GRC Lake posture gate::Posture score missing from response"
   exit 1
 fi
 
@@ -70,11 +70,11 @@ if [[ "${MAX_FAILING_CONTROL_TESTS}" != "-1" || -n "${ALLOWED_FAILING_CONTROLS}"
   fi
   control_response=""
   if ! control_response="$(curl "${control_args[@]}")"; then
-    echo "::error title=TrustOps posture gate::Could not read failing control tests from ${base}/api/v1/control-tests"
+    echo "::error title=GRC Lake posture gate::Could not read failing control tests from ${base}/api/v1/control-tests"
     exit 1
   fi
   if ! echo "${control_response}" | jq -e '.data | type == "array"' >/dev/null 2>&1; then
-    echo "::error title=TrustOps posture gate::Unexpected response from ${base}/api/v1/control-tests"
+    echo "::error title=GRC Lake posture gate::Unexpected response from ${base}/api/v1/control-tests"
     exit 1
   fi
   while IFS= read -r control_id; do
@@ -123,7 +123,7 @@ if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   } >>"${GITHUB_OUTPUT}"
 fi
 
-echo "TrustOps posture gate"
+echo "GRC Lake posture gate"
 echo "  correlation: ${CORRELATION_ID:-<none>}"
 echo "  score: ${score}"
 echo "  state: ${state}"
@@ -184,7 +184,7 @@ fi
 
 if ((${#failures[@]} > 0)); then
   for reason in "${failures[@]}"; do
-    echo "::error title=TrustOps posture gate::${reason}"
+    echo "::error title=GRC Lake posture gate::${reason}"
   done
   exit 1
 fi

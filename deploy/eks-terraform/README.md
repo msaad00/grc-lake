@@ -12,7 +12,7 @@ backup storage and production monitoring are operator-managed. EKS, EC2, NAT,
 load balancers and storage incur charges when you apply this configuration.
 
 The application still supports only one writable replica. Multiple cluster
-nodes do not enable multiple TrustOps writers or automated application failover.
+nodes do not enable multiple GRC Lake writers or automated application failover.
 
 ## 1. Bootstrap infrastructure
 
@@ -34,7 +34,7 @@ aws eks update-kubeconfig --region "$(terraform output -raw region)" \
 `deploy_application` defaults to true to preserve existing installations.
 Use false only for initial bootstrap: changing an existing installation to
 false **uninstalls its Helm release**. The resource move to
-`helm_release.trustops[0]` preserves the existing release address during upgrade;
+`helm_release.grc-lake[0]` preserves the existing release address during upgrade;
 review every plan, including any node-group replacement when changing AMI type.
 For an existing cluster, pin its current `cluster_version` in `terraform.tfvars`
 and follow the supported EKS minor-version upgrade sequence before adopting the
@@ -53,16 +53,16 @@ Before enabling the application:
   with its own controller IAM role. Provide DNS and an ACM certificate in the
   cluster's region. ALB uses an ACM certificate ARN, not a Kubernetes TLS Secret.
 - Create the runtime signing Secret in the configured namespace (default
-  `trustops`). Keep its contents outside Terraform values/state:
+  `grc-lake`). Keep its contents outside Terraform values/state:
 
 ```bash
-kubectl -n trustops create secret generic trustops-server \
-  --from-literal=TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
-  --from-literal=TRUSTOPS_SESSION_SECRET="$(openssl rand -hex 32)"
+kubectl -n grc-lake create secret generic grc-lake-server \
+  --from-literal=GRC_LAKE_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
+  --from-literal=GRC_LAKE_SESSION_SECRET="$(openssl rand -hex 32)"
 ```
 
-`TRUSTOPS_COOKIE_SIGNING_KEY` is required for authenticated server startup.
-`TRUSTOPS_SESSION_SECRET` is additionally required for OIDC. Configure OIDC/SAML
+`GRC_LAKE_COOKIE_SIGNING_KEY` is required for authenticated server startup.
+`GRC_LAKE_SESSION_SECRET` is additionally required for OIDC. Configure OIDC/SAML
 and any connector Secret references according to [server auth](../../docs/SERVER_AUTH.md).
 Neither the evidence IRSA role nor the application chart installs storage or
 load-balancer controllers. Those controllers require separate infrastructure
@@ -74,14 +74,14 @@ permissions; do not add them to the evidence reader role.
 accepts ordered, non-secret configuration files for OIDC, TLS, storage and
 connector Secret references. Paths resolve from the Terraform working directory.
 Helm replaces `env` lists: when providing one, retain
-`TRUSTOPS_COOKIE_SIGNING_KEY`, `TRUSTOPS_ENV=production`, and, for OIDC,
-`TRUSTOPS_SESSION_SECRET`. EKS enforces authenticated chart rendering after
+`GRC_LAKE_COOKIE_SIGNING_KEY`, `GRC_LAKE_ENV=production`, and, for OIDC,
+`GRC_LAKE_SESSION_SECRET`. EKS enforces authenticated chart rendering after
 applying all operator overrides.
 
 For the AWS/Snowflake example, copy `../examples/aws-snowflake-poc-values.yaml`
 to an operator-owned path, replace every account/host/ARN placeholder, and add
 its path to `helm_values_files` in `terraform.tfvars`. Keep the Terraform-managed
-`trustops` ServiceAccount name and use `terraform output -raw trustops_role_arn`
+`grc-lake` ServiceAccount name and use `terraform output -raw grc-lake_role_arn`
 for its IRSA annotation unless you intentionally supply a separately managed role.
 The example needs additional OIDC and Snowflake Secrets described in the
 [AWS/Snowflake runbook](../../docs/AWS_SNOWFLAKE_DEMO.md).
@@ -93,8 +93,8 @@ not published as a separate Helm OCI artifact.
 ```bash
 terraform plan
 terraform apply
-kubectl -n trustops rollout status deployment/trustops
-kubectl -n trustops get pods,pvc,cronjobs
+kubectl -n grc-lake rollout status deployment/grc-lake
+kubectl -n grc-lake get pods,pvc,cronjobs
 ```
 
 Verify `/api/healthz`, `/api/readyz`, authenticated API access, human login,

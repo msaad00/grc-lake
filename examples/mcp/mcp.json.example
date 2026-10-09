@@ -1,12 +1,12 @@
 {
   "mcpServers": {
-    "trustops": {
-      "command": "trustops-mcp",
+    "grc-lake": {
+      "command": "grc-lake-mcp",
       "env": {
-        "TRUSTOPS_MCP_MODE": "remote",
-        "TRUSTOPS_API_ALLOW_PRIVATE": "1",
-        "TRUSTOPS_API_URL": "http://127.0.0.1:8787",
-        "TRUSTOPS_API_KEY": "tops_your_api_key_here"
+        "GRC_LAKE_MCP_MODE": "remote",
+        "GRC_LAKE_API_ALLOW_PRIVATE": "1",
+        "GRC_LAKE_API_URL": "http://127.0.0.1:8787",
+        "GRC_LAKE_API_KEY": "tops_your_api_key_here"
       }
     }
   }

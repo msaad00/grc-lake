@@ -1,4 +1,4 @@
-"""Typed TrustOps tools exposed to the optional agent harness."""
+"""Typed GRC Lake tools exposed to the optional agent harness."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def _readiness_next_steps(*, status: str, missing: list[str], harness: str) -> l
             {
                 "action": "run_harness",
                 "label": "Run the selected harness against the existing tenant lake.",
-                "command": f"security-lakehouse agents {_agent_cli_name(harness)} --lake <lake> --role read_only",
+                "command": f"grc-lake agents {_agent_cli_name(harness)} --lake <lake> --role read_only",
             }
         ]
 
@@ -43,20 +43,19 @@ def _readiness_next_steps(*, status: str, missing: list[str], harness: str) -> l
                 {
                     "action": "inspect_connectors",
                     "label": "List read-only connectors that can land normalized evidence.",
-                    "command": "security-lakehouse connectors list --lake <lake>",
+                    "command": "grc-lake connectors list --lake <lake>",
                 },
                 {
                     "action": "enable_connector",
                     "label": "Enable a configured read-only connector for this lake.",
                     "command": (
-                        "security-lakehouse connectors configure --lake <lake> "
-                        "--connector-id <connector_id> --state enabled"
+                        "grc-lake connectors configure --lake <lake> --connector-id <connector_id> --state enabled"
                     ),
                 },
                 {
                     "action": "sync_connector",
                     "label": "Sync the selected connector into bronze, silver, and gold artifacts.",
-                    "command": "security-lakehouse connectors sync --lake <lake> --connector-id <connector_id>",
+                    "command": "grc-lake connectors sync --lake <lake> --connector-id <connector_id>",
                 },
             ]
         )
@@ -66,7 +65,7 @@ def _readiness_next_steps(*, status: str, missing: list[str], harness: str) -> l
             {
                 "action": "materialize_control_evidence",
                 "label": "Run the deterministic pipeline to materialize control artifacts from raw evidence.",
-                "command": "security-lakehouse pipeline run --raw <raw_events.jsonl> --out <lake>",
+                "command": "grc-lake pipeline run --raw <raw_events.jsonl> --out <lake>",
             }
         )
 
@@ -75,7 +74,7 @@ def _readiness_next_steps(*, status: str, missing: list[str], harness: str) -> l
             {
                 "action": "load_demo_lake",
                 "label": "Load fixture data for demos only; do not use this as production evidence.",
-                "command": "security-lakehouse fixtures load --company fintech --out <lake>",
+                "command": "grc-lake fixtures load --company fintech --out <lake>",
                 "demo_only": True,
             }
         )

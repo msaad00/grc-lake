@@ -2,9 +2,9 @@
 
 The `/api/v1` contract is otherwise pull-only: a SIEM, ticketing system, or
 runbook has to poll for new findings or a completed assessment. Webhooks push
-instead — register an endpoint once and TrustOps calls it the moment one of a
+instead — register an endpoint once and GRC Lake calls it the moment one of a
 small set of events happens, signed so the receiver can verify it actually
-came from this TrustOps instance.
+came from this GRC Lake instance.
 
 This is server mode only (subscriptions live in the application-state
 database alongside tenants, users, and the rest of GRC operational state —
@@ -20,7 +20,7 @@ dispatch webhooks with and does not deliver them.
 | `finding.created`      | A violation present in a new snapshot was not present in the immediately prior snapshot — a real open/failed/blocked control result that is new since the last freeze. |
 | `control.failed`       | A control had zero open violations in the prior snapshot and at least one in the new one — a detected pass→fail transition.                                            |
 
-**How the transition is detected.** TrustOps snapshots are hash-chained
+**How the transition is detected.** GRC Lake snapshots are hash-chained
 point-in-time exports (`docs/ARCHITECTURE.md`, `assessment.py`). Each snapshot
 already carries its full list of currently-open violations. On every new
 snapshot write, the engine diffs that list against the immediately prior
@@ -53,7 +53,7 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8787/api/v1/webhooks \
   -H 'content-type: application/json' \
   --data '{
-    "url": "https://siem.example.com/ingest/trustops",
+    "url": "https://siem.example.com/ingest/grc-lake",
     "event_types": ["assessment.completed", "finding.created", "control.failed"],
     "description": "SOC SIEM ingest"
   }' | jq .
@@ -66,7 +66,7 @@ because a webhook is an outbound integration carrying a signing secret and a
 destination for compliance events. Reading the list or a single subscription
 only requires `read`, and never includes the secret.
 
-`secret` is optional on create; when omitted, TrustOps generates one. Either
+`secret` is optional on create; when omitted, GRC Lake generates one. Either
 way it is returned **in full exactly once**, in the create response — store it
 now. Every later `GET`/list omits it.
 
@@ -159,9 +159,9 @@ Every delivery carries:
 
 | Header                 | Value                                              |
 | ---------------------- | -------------------------------------------------- |
-| `X-TrustOps-Signature` | `sha256=<hex hmac-sha256 of the raw request body>` |
-| `X-TrustOps-Event`     | the event type, e.g. `finding.created`             |
-| `X-TrustOps-Delivery`  | the delivery's `event_id`                          |
+| `X-GRC Lake-Signature` | `sha256=<hex hmac-sha256 of the raw request body>` |
+| `X-GRC Lake-Event`     | the event type, e.g. `finding.created`             |
+| `X-GRC Lake-Delivery`  | the delivery's `event_id`                          |
 
 Recompute the HMAC over the **raw bytes** of the body (before any JSON
 re-parsing/re-serialization, which can reorder keys or change whitespace) and
@@ -171,7 +171,7 @@ compare with a constant-time equality check:
 import hashlib
 import hmac
 
-def verify_trustops_webhook(secret: str, raw_body: bytes, signature_header: str) -> bool:
+def verify_grc-lake_webhook(secret: str, raw_body: bytes, signature_header: str) -> bool:
     algo, _, digest = signature_header.partition("=")
     if algo != "sha256":
         return False
@@ -183,7 +183,7 @@ def verify_trustops_webhook(secret: str, raw_body: bytes, signature_header: str)
 // Node.js
 const crypto = require("crypto");
 
-function verifyTrustOpsWebhook(secret, rawBody, signatureHeader) {
+function verifyGrcLakeWebhook(secret, rawBody, signatureHeader) {
   const [algo, digest] = signatureHeader.split("=");
   if (algo !== "sha256") return false;
   const expected = crypto
@@ -201,7 +201,7 @@ function verifyTrustOpsWebhook(secret, rawBody, signatureHeader) {
   and the _resolved_ address must be public — a registered URL that resolves
   to a private/loopback/link-local address is refused before any request is
   attempted, including on a redirect hop.
-- **Optional destination allowlist.** Set `TRUSTOPS_WEBHOOK_EGRESS_ALLOWLIST`
+- **Optional destination allowlist.** Set `GRC_LAKE_WEBHOOK_EGRESS_ALLOWLIST`
   (comma-separated `host` or `host:port` entries) to additionally restrict
   webhook deliveries to specific approved destinations — e.g. a SIEM vendor's
   fixed IP/hostname. Unset (the default) means "any public address" is
@@ -209,7 +209,7 @@ function verifyTrustOpsWebhook(secret, rawBody, signatureHeader) {
   tenant registering _its own_ receiving endpoint for _its own_ events (the
   GitHub/Stripe self-service webhook model), not an admin-authored automation
   target, so this is deliberately **not** deny-by-default the way the
-  workflow engine's `TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST` is (see "Relationship
+  workflow engine's `GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST` is (see "Relationship
   to `action.webhook`" below) — turning that one on does not, and should not,
   make every tenant's webhook subscription stop delivering.
 - One retry on failure (non-2xx response, timeout, or connection error) with a
@@ -238,11 +238,11 @@ function verifyTrustOpsWebhook(secret, rawBody, signatureHeader) {
 
 ## Relationship to `action.webhook` (workflows)
 
-TrustOps already has an _outbound_ webhook primitive inside the workflow
+GRC Lake already has an _outbound_ webhook primitive inside the workflow
 engine — `action.webhook`, a DAG node an operator wires up explicitly to POST
 to an allowlisted URL as one step of a workflow (see the "Action library"
 section of `workflows.py`). That is a different mechanism: it is one-shot,
-operator-authored, and gated by `TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST`. The
+operator-authored, and gated by `GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST`. The
 subscriptions on this page are the opposite direction of the same idea —
 event-driven, receiver-registered, and always-on for whichever event types the
 subscriber picked — closer to a GitHub/Stripe webhook than a workflow step.

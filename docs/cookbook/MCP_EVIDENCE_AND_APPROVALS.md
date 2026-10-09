@@ -1,6 +1,6 @@
 # MCP Cookbook: Evidence Requests And Approvals
 
-This cookbook shows how a coding agent or MCP client uses TrustOps to review
+This cookbook shows how a coding agent or MCP client uses GRC Lake to review
 evidence gaps, propose evidence requests, and execute those writes only after
 independent human review in an authenticated console session.
 
@@ -13,13 +13,13 @@ redacted posture + gaps
   -> evidence request in app DB + audit event
 ```
 
-The MCP server is `trustops-mcp` (`security_lakehouse.mcp_server`). Its stdio
+The MCP server is `grc-lake-mcp` (`security_lakehouse.mcp_server`). Its stdio
 transport supports one data authority per configuration:
 
 | Mode           | Configuration                                                      | Authority                                                                                                                                 |
 | -------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Remote         | `TRUSTOPS_MCP_MODE=remote`, `TRUSTOPS_API_URL`, `TRUSTOPS_API_KEY` | All tenant-backed reads and writes use the authenticated API, including evidence, snapshots, shares, workflows, ingestion and scheduling. |
-| Local          | `TRUSTOPS_MCP_MODE=local`, `TRUSTOPS_LAKE` (default `./lake`)      | Lake-backed tools use the operator's filesystem and execution permissions. Server-only tools are omitted from discovery.                  |
+| Remote         | `GRC_LAKE_MCP_MODE=remote`, `GRC_LAKE_API_URL`, `GRC_LAKE_API_KEY` | All tenant-backed reads and writes use the authenticated API, including evidence, snapshots, shares, workflows, ingestion and scheduling. |
+| Local          | `GRC_LAKE_MCP_MODE=local`, `GRC_LAKE_LAKE` (default `./lake`)      | Lake-backed tools use the operator's filesystem and execution permissions. Server-only tools are omitted from discovery.                  |
 | Auto (default) | No mode override                                                   | Either API setting selects remote mode and requires both. With neither setting, lake-backed tools use local mode.                         |
 
 Missing or invalid remote configuration fails closed; it never falls back to a
@@ -33,7 +33,7 @@ an instruction to request a smaller page. This is a transfer bound, not a claim
 that every tool fits an agent's context window.
 
 Private API destinations require operator opt-in with
-`TRUSTOPS_API_ALLOW_PRIVATE=1`. This exception applies only to the configured
+`GRC_LAKE_API_ALLOW_PRIVATE=1`. This exception applies only to the configured
 MCP API destination. It does not change connector or workflow SSRF protections.
 Public API connections use the shared address-pinning guard. Redirects are
 rejected in both modes so bearer credentials never follow a redirect.
@@ -46,40 +46,40 @@ operators must also constrain the agent's credentials and tool permissions.
 ## 1. Install And Start MCP
 
 ```bash
-pip install 'trustops-security-data-lake[mcp]'
+pip install 'grc-lake[mcp]'
 ```
 
-Point at a deployed TrustOps server (not raw lake access):
+Point at a deployed GRC Lake server (not raw lake access):
 
 ```bash
-export TRUSTOPS_MCP_MODE=remote
-export TRUSTOPS_API_URL="https://trustops.example.com"
-export TRUSTOPS_API_KEY="tops_..."   # use a read-only key for inspection
-trustops-mcp
+export GRC_LAKE_MCP_MODE=remote
+export GRC_LAKE_API_URL="https://grc-lake.example.com"
+export GRC_LAKE_API_KEY="tops_..."   # use a read-only key for inspection
+grc-lake-mcp
 ```
 
 Optional timeout for slow harness runs:
 
 ```bash
-export TRUSTOPS_API_TIMEOUT_SECONDS=60
+export GRC_LAKE_API_TIMEOUT_SECONDS=60
 ```
 
 For explicit local operation, set the mode and lake path:
 
 ```bash
-export TRUSTOPS_MCP_MODE=local
-export TRUSTOPS_LAKE="/lake"   # Helm default; local demos often use build/lakehouse
-trustops-mcp
+export GRC_LAKE_MCP_MODE=local
+export GRC_LAKE_LAKE="/lake"   # Helm default; local demos often use build/lakehouse
+grc-lake-mcp
 ```
 
 Install the MCP server in Cursor, Claude Desktop, or another MCP host using
 stdio transport and the env vars above. Copy
 [`examples/mcp/mcp.json.example`](../../examples/mcp/mcp.json.example) as a starting point.
 
-The server advertises a **TrustOps icon** once on `serverInfo` (MCP SEP-973),
-and reports the installed TrustOps package version. Tools retain readable titles
-without repeating the embedded image in every discovery entry. Hosted deployments should set `TRUSTOPS_PUBLIC_URL` so clients can
-load `https://<host>/brand/trustops-mark.svg`. Stdio mode embeds the SVG as a
+The server advertises a **GRC Lake icon** once on `serverInfo` (MCP SEP-973),
+and reports the installed GRC Lake package version. Tools retain readable titles
+without repeating the embedded image in every discovery entry. Hosted deployments should set `GRC_LAKE_PUBLIC_URL` so clients can
+load `https://<host>/brand/grc-lake-mark.svg`. Stdio mode embeds the SVG as a
 data URI fallback.
 
 ## 2. Run A Posture Review Harness
@@ -157,7 +157,7 @@ On success the server:
 
 1. writes an evidence request row to the application-state DB
    (`evidence_requests` table under `<lake>/server/app.db` or
-   `TRUSTOPS_DATABASE_URL`);
+   `GRC_LAKE_DATABASE_URL`);
 2. marks the decision `executed` with `execution_result.type`:
    `evidence_request`;
 3. records the approver identity and note in audit.
@@ -176,11 +176,11 @@ approving it afterwards returns `409`, as does rejecting an executed decision.
 List requests through the API or MCP host's HTTP bridge:
 
 ```bash
-curl -s "$TRUSTOPS_API_URL/api/v1/remediation/evidence-requests" \
-  -H "authorization: Bearer $TRUSTOPS_API_KEY" | jq .
+curl -s "$GRC_LAKE_API_URL/api/v1/remediation/evidence-requests" \
+  -H "authorization: Bearer $GRC_LAKE_API_KEY" | jq .
 ```
 
-Or open `/console/remediation/` in the TrustOps console.
+Or open `/console/remediation/` in the GRC Lake console.
 
 ## RBAC And Scopes
 
@@ -224,7 +224,7 @@ Remote MCP tools do not bypass:
 - idempotency on runs and decisions
 - audit logging
 
-The model (if enabled server-side via `TRUSTOPS_AGENT_USE_MODEL=1`) may
+The model (if enabled server-side via `GRC_LAKE_AGENT_USE_MODEL=1`) may
 summarize or rank proposals. It cannot mark controls passing, mutate evidence,
 or execute writes without approval.
 

@@ -54,10 +54,10 @@ test("system dark theme and route titles are respected", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/console/dashboard/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page).toHaveTitle("Overview · TrustOps");
+  await expect(page).toHaveTitle("Overview · GRC Lake");
   await page
     .getByRole("link", { name: "Controls", exact: true })
     .first()
     .click();
-  await expect(page).toHaveTitle("Controls · TrustOps");
+  await expect(page).toHaveTitle("Controls · GRC Lake");
 });

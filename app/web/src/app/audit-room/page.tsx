@@ -95,9 +95,9 @@ export default function AuditRoomPage() {
                   ).map((entry) => (
                     <div key={entry.label}>
                       <dt className="inline font-semibold text-ink">
-                        {entry.label}
-                      </dt>
-                      : <dd className="inline">{entry.definition}</dd>
+                        {entry.label}:
+                      </dt>{" "}
+                      <dd className="inline">{entry.definition}</dd>
                     </div>
                   ))}
                 </dl>
@@ -153,7 +153,7 @@ export default function AuditRoomPage() {
                   </Button>
                   <Button asChild size="sm" variant="default">
                     <a
-                      href="https://github.com/msaad00/trustops-security-data-lake/blob/main/docs/AUDIT_READINESS.md"
+                      href="https://github.com/msaad00/grc-lake/blob/main/docs/AUDIT_READINESS.md"
                       target="_blank"
                       rel="noreferrer"
                     >

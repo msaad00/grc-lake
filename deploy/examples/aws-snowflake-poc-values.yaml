@@ -1,11 +1,11 @@
-# AWS-hosted TrustOps POC with Snowflake as the governed evidence lake.
+# AWS-hosted GRC Lake POC with Snowflake as the governed evidence lake.
 #
 # This file is intentionally renderable as-is for `helm template`, but the
 # hostname, certificate ARN, Snowflake account, and IRSA role ARN must be changed for a real cluster.
-# Snowflake object names match the TrustOps bootstrap scripts.
+# Snowflake object names match the GRC Lake bootstrap scripts.
 
 image:
-  repository: ghcr.io/msaad00/trustops
+  repository: ghcr.io/msaad00/grc-lake
   tag: "" # inherit the checked-out release chart appVersion
   pullPolicy: IfNotPresent
 
@@ -16,11 +16,11 @@ replicaCount: 1
 
 serviceAccount:
   create: true
-  name: trustops
+  name: grc-lake
   annotations:
     # Replace with the EKS runtime role that can assume customer read-only
     # cloud-posture roles. Do not attach write/remediation permissions.
-    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/trustops-runtime-readonly
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/grc-lake-runtime-readonly
 
 ingress:
   enabled: true
@@ -33,7 +33,7 @@ ingress:
     # ALB terminates TLS using ACM, not a Kubernetes TLS Secret.
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000
   hosts:
-    - host: trustops-poc.example.com
+    - host: grc-lake-poc.example.com
       paths:
         - path: /
           pathType: Prefix
@@ -51,65 +51,65 @@ scheduler:
   concurrencyPolicy: Forbid
 
 env:
-  - name: TRUSTOPS_ENV
+  - name: GRC_LAKE_ENV
     value: production
-  - name: TRUSTOPS_COOKIE_SIGNING_KEY
+  - name: GRC_LAKE_COOKIE_SIGNING_KEY
     valueFrom:
       secretKeyRef:
-        name: trustops-server
-        key: TRUSTOPS_COOKIE_SIGNING_KEY
-  - name: TRUSTOPS_PUBLIC_URL
-    value: https://trustops-poc.example.com
-  - name: TRUSTOPS_SESSION_SECRET
+        name: grc-lake-server
+        key: GRC_LAKE_COOKIE_SIGNING_KEY
+  - name: GRC_LAKE_PUBLIC_URL
+    value: https://grc-lake-poc.example.com
+  - name: GRC_LAKE_SESSION_SECRET
     valueFrom:
       secretKeyRef:
-        name: trustops-server
-        key: TRUSTOPS_SESSION_SECRET
+        name: grc-lake-server
+        key: GRC_LAKE_SESSION_SECRET
 
   # Human auth. Point these at Auth0, Okta, Entra ID, Cognito, or another OIDC
   # provider before sharing a public URL.
-  - name: TRUSTOPS_OIDC_ISSUER
+  - name: GRC_LAKE_OIDC_ISSUER
     value: https://idp.example.com
-  - name: TRUSTOPS_OIDC_CLIENT_ID
-    value: trustops-poc
-  - name: TRUSTOPS_OIDC_CLIENT_SECRET
+  - name: GRC_LAKE_OIDC_CLIENT_ID
+    value: grc-lake-poc
+  - name: GRC_LAKE_OIDC_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: trustops-oidc
+        name: grc-lake-oidc
         key: client_secret
-  - name: TRUSTOPS_OIDC_TENANT_SLUG
+  - name: GRC_LAKE_OIDC_TENANT_SLUG
     value: poc
-  - name: TRUSTOPS_OIDC_AUTO_PROVISION
+  - name: GRC_LAKE_OIDC_AUTO_PROVISION
     value: "true"
 
-  # Snowflake service-user key-pair auth. TrustOps receives a mounted key file,
+  # Snowflake service-user key-pair auth. GRC Lake receives a mounted key file,
   # not a password or browser user credential.
   - name: SNOWFLAKE_ACCOUNT
     value: YOUR_ORG-YOUR_ACCOUNT
   - name: SNOWFLAKE_USER
-    value: TRUSTOPS_INGEST_SVC
+    value: GRC_LAKE_INGEST_SVC
   - name: SNOWFLAKE_AUTHENTICATOR
     value: SNOWFLAKE_JWT
   - name: SNOWFLAKE_PRIVATE_KEY_FILE
-    value: /var/run/secrets/trustops/snowflake_key.p8
+    value: /var/run/secrets/grc-lake/snowflake_key.p8
   - name: SNOWFLAKE_ROLE
-    value: TRUSTOPS_READER
+    value: GRC_LAKE_READER
   - name: SNOWFLAKE_WAREHOUSE
-    value: TRUSTOPS_READ_WH
+    value: GRC_LAKE_READ_WH
   - name: SNOWFLAKE_DATABASE
-    value: TRUSTOPS_SECURITY_LAKE
+    value: GRC_LAKE_SECURITY_LAKE
   - name: SNOWFLAKE_SCHEMA
     value: EVIDENCE
 
 extraVolumeMounts:
   - name: snowflake-key
-    mountPath: /var/run/secrets/trustops
+    mountPath: /var/run/secrets/grc-lake
     readOnly: true
 
 extraVolumes:
   - name: snowflake-key
     secret:
-      secretName: trustops-snowflake-key
+      secretName: grc-lake-snowflake-key
 
 resources:
   requests:

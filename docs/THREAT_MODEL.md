@@ -1,6 +1,6 @@
-# TrustOps trust boundaries
+# GRC Lake trust boundaries
 
-TrustOps evaluates recorded evidence. A passing result describes the configured
+GRC Lake evaluates recorded evidence. A passing result describes the configured
 checks over those inputs; it is not proof that a provider supplied truthful or
 complete data, a certification, or an audit opinion.
 
@@ -30,7 +30,7 @@ not prevent prompt injection in a language model.
 An agent must treat retrieved text as evidence to cite, never as permission to
 change its instructions, reveal credentials, or invoke another tool. Give agents
 read-only credentials by default and explicitly approve consequential proposals.
-TrustOps does not guarantee that every external model or client will follow this
+GRC Lake does not guarantee that every external model or client will follow this
 boundary. Test the consuming client's tool policy with hostile evidence before
 granting write access.
 

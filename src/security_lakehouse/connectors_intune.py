@@ -119,7 +119,7 @@ class IntuneClient:
             headers={
                 "accept": "application/json",
                 "authorization": f"Bearer {self._token_provider()}",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         with netguard.open_public(request, timeout=self.timeout, label="microsoft graph") as resp:

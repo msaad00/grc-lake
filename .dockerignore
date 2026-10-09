@@ -25,7 +25,7 @@ data/
 tools/
 
 # Compose server secrets — never bake them into the image.
-trustops.env
+grc-lake.env
 
 # Local lakes — never bake customer evidence into the image.
 build/lakehouse/

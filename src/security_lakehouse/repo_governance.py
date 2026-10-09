@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import urllib.error
 import urllib.parse
@@ -25,6 +24,7 @@ from security_lakehouse import netguard
 from security_lakehouse.ingestion import backoff
 from security_lakehouse.io import read_json, write_jsonl
 from security_lakehouse.models import utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_ref_or_default
 
 # Runaway guard for page-number pagination, matched to the shared paginator so a
@@ -209,7 +209,7 @@ class GitHubGovernanceClient:
             headers={
                 "accept": "application/vnd.github+json",
                 "authorization": f"Bearer {self.token}",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         return _guarded_request(request, timeout=20, label="github api")
@@ -219,7 +219,9 @@ class GitLabGovernanceClient:
     def __init__(self, spec: GovernanceRepoSpec, *, token: str, base_url: str | None = None) -> None:
         self.spec = spec
         self.token = token
-        self.api_base = (base_url or os.environ.get("TRUSTOPS_GITLAB_API_URL", "https://gitlab.com/api/v4")).rstrip("/")
+        self.api_base = (base_url or runtime_env().get("GRC_LAKE_GITLAB_API_URL", "https://gitlab.com/api/v4")).rstrip(
+            "/"
+        )
         self.project_id = urllib.parse.quote(self.spec.slug, safe="")
 
     def repo(self) -> dict[str, Any]:
@@ -307,7 +309,7 @@ class GitLabGovernanceClient:
             headers={
                 "accept": "application/json",
                 "private-token": self.token,
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         return _guarded_request(request, timeout=20, label="gitlab api")
@@ -382,12 +384,12 @@ def sync_repo_governance(
 ) -> list[dict[str, Any]]:
     spec = parse_governance_repo_spec(repo, provider=provider)
     default_env = (
-        "TRUSTOPS_GITLAB_ACCESS_TOKEN" if spec.provider == "gitlab" else "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"
+        "GRC_LAKE_GITLAB_ACCESS_TOKEN" if spec.provider == "gitlab" else "GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"
     )
     secret = token
     if not secret:
         secret = resolve_ref_or_default(
-            token_env, default_env, dict(os.environ), field="credential_ref", file_first=False
+            token_env, default_env, dict(runtime_env()), field="credential_ref", file_first=False
         )
     client: GovernanceClient
     if fixture_dir:

@@ -1,0 +1,149 @@
+# Default values for the GRC Lake Helm chart.
+# Override per-environment via `helm install --values prod.yaml` or `--set`.
+
+image:
+  repository: ghcr.io/msaad00/grc-lake
+  tag: "" # defaults to .Chart.appVersion when empty
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# Replica count — GRC Lake is currently single-writer for the lake. Run
+# one application replica with a writable lake. Read replicas require
+# separate startup and audit-write paths and are not supported.
+replicaCount: 1
+
+serviceAccount:
+  # Set to false to use the namespace default. With OIDC + IRSA on EKS,
+  # leave this true and set `annotations` to bind the IAM role that has
+  # read-only access to your evidence bucket.
+  create: true
+  name: ""
+  annotations: {}
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  fsGroup: 1100
+  runAsNonRoot: true
+  runAsUser: 1100
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1100
+
+service:
+  type: ClusterIP
+  port: 8787
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: grc-lake.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Lake mount. Evidence stays in customer storage; the container mounts a
+# writable lake for startup, operational state, and assessment publication.
+lake:
+  # When `persistence.enabled` is true a PVC is created; otherwise an
+  # emptyDir is used (intended only for `helm test` runs).
+  persistence:
+    enabled: true
+    size: 20Gi
+    accessMode: ReadWriteOnce
+    storageClassName: "" # cluster default
+  # Container path mirrored from the Dockerfile.
+  mountPath: /lake
+  # Reserved for a future read-only service; true is currently rejected.
+  readOnly: false
+
+# X-Trust-Role default applied to in-cluster requests (set to auditor on the
+# Trust Center deployment so it serves the redacted projection by default).
+defaultTrustRole: ""
+
+# Resources — GRC Lake is mostly I/O bound on lake reads; CPU only spikes
+# when re-evaluating posture across many controls.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# Liveness targets /api/healthz; readiness checks DB/storage at /api/readyz.
+probes:
+  liveness:
+    enabled: true
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+  readiness:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+# Cron scheduler for trigger.cron workflows. Runs `grc-lake
+# scheduler tick` every interval; backed by a CronJob so the API pod can
+# stay single-replica without owning the scheduler too.
+scheduler:
+  enabled: true
+  # Authenticated deployments schedule registered tenant lakes.
+  allTenants: true
+  schedule: "*/5 * * * *" # every 5 minutes
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  # Automatic retention (off by default). With a schedule set, each tick runs
+  # the same archival as `lake retention` / `lake operational-retention` once
+  # per period per tenant lake. Without archiveDir it only previews candidates;
+  # with archiveDir it copies, verifies, and flushes eligible history there
+  # before reclaiming lake storage. Mount archiveDir from separately controlled
+  # storage via extraVolumes/extraVolumeMounts. See docs/OPERATIONS_CONTRACTS.md.
+  retention:
+    schedule: "" # e.g. "@daily" or "every 12h"; empty disables
+    archiveDir: "" # absolute path outside the lake mount; empty = preview only
+    olderThanDays: 90
+    keepLatest: 3
+
+# Runtime environment and Kubernetes Secret references (auth, OIDC/SAML, SCIM).
+env: []
+
+# API rate limits. Optional Redis shares the rate-limit budget; it does not
+# enable multiple application replicas or distributed lake writers.
+rateLimit:
+  rps: 50
+  burst: 100
+  redisUrl: ""
+
+# Production guard: never enable insecure no-auth on a shareable hosted URL.
+# Override only for local `helm template` experiments with an explicit token.
+security:
+  # Set true for shareable/hosted installs. Requires GRC_LAKE_COOKIE_SIGNING_KEY;
+  # OIDC also needs GRC_LAKE_SESSION_SECRET (direct values or required Secret refs).
+  requireAuthentication: false
+  allowInsecureNoAuth: false
+  allowInsecureOverride: ""
+
+# Optional: extra volume mounts and volumes for customer-managed secrets such as
+# a Snowflake service-user private key. Keep secret contents in Kubernetes or an
+# external secret operator; GRC Lake receives only the mounted file path.
+extraVolumeMounts: []
+extraVolumes: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

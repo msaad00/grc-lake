@@ -103,7 +103,7 @@ qualify shared Snowflake or ClickHouse schemas for multi-tenant writes.
 
 ## Offline reports
 
-`security-lakehouse dashboard --lake PATH --out REPORT.html` writes a frozen HTML report directly from the pinned lake
+`grc-lake dashboard --lake PATH --out REPORT.html` writes a frozen HTML report directly from the pinned lake
 assessment. It renders coverage, findings, and expandable control results without
 JavaScript, network access, or a console build. The embedded JSON preserves the
 recorded assessment for further review; markup-like evidence is escaped without
@@ -117,13 +117,13 @@ for those checks. The API-backed console remains available through `serve`.
 The API accepts bounded snapshot, evaluation, scheduler, and connector requests
 into tenant-scoped durable operation rows. Acceptance supports an Idempotency-Key;
 a conflicting request with the same key is rejected. Each server process runs a
-bounded pool of workers (TRUSTOPS_OPERATION_WORKERS, default 2, at most 16) that
+bounded pool of workers (GRC_LAKE_OPERATION_WORKERS, default 2, at most 16) that
 rotates claims between tenants and runs at most one job per tenant at a time, so a
 long job does not block other tenants. Admission
 serializes each tenant's count-and-insert and caps pending work at 100 operations.
 
 Background execution uses a spawned process with an independent hard deadline
-(default 900 seconds; TRUSTOPS_OPERATION_TIMEOUT_SECONDS must be positive and at
+(default 900 seconds; GRC_LAKE_OPERATION_TIMEOUT_SECONDS must be positive and at
 most 3600). The parent renews the claim and stops the child on shutdown, cancellation
 or claim loss. A filesystem execution lock prevents stale-claim recovery while a
 writer is still active. Interrupted work is not replayed: external or committed

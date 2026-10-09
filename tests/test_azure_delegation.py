@@ -129,7 +129,7 @@ def test_server_mode_builds_a_workload_identity_credential(credential_log, tmp_p
     ]
 
 
-@pytest.mark.parametrize("ref", ["AZURE_CLIENT_SECRET", "TRUSTOPS_COOKIE_SIGNING_KEY"])
+@pytest.mark.parametrize("ref", ["AZURE_CLIENT_SECRET", "GRC_LAKE_COOKIE_SIGNING_KEY"])
 def test_server_secrets_are_refused_as_the_client_secret(ref: str, credential_log) -> None:
     env = {ref: "server-value"}
     with server_execution(TENANT), pytest.raises(SecretRefPolicyError):

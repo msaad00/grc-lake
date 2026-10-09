@@ -1,6 +1,6 @@
 # Risk prioritization and ongoing monitoring
 
-These safeguards are proposed TrustOps curations of the cited NIST outcomes. They are not NIST-published crosswalks, human-reviewed equivalence, certification, or proof of automated discovery. Existing collector coverage remains unchanged.
+These safeguards are proposed GRC Lake curations of the cited NIST outcomes. They are not NIST-published crosswalks, human-reviewed equivalence, certification, or proof of automated discovery. Existing collector coverage remains unchanged.
 
 ## SG-RISKPRIORITY-001 — Threat likelihood and impact prioritization
 

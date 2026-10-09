@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from security_lakehouse.execution_mode import in_server_mode
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.sinks.clickhouse_sink import ClickHouseSink, ClickHouseSinkConfig
 from security_lakehouse.sinks.duckdb_sink import DuckDBSink, DuckDBSinkConfig
 from security_lakehouse.sinks.snowflake_sink import SnowflakeSink, SnowflakeSinkConfig
@@ -35,8 +36,9 @@ def land_if_configured(lake_dir: str | Path, env: Mapping[str, str]) -> dict[str
     ``{sink_name: {table: rows}}`` for each configured sink, or ``None`` when none
     is configured (the common case — the local lake stays the source of truth).
     Lazy config means callers pay nothing unless ``SNOWFLAKE_*`` / ``CLICKHOUSE_*``
-    / ``TRUSTOPS_DUCKDB_PATH`` is set.
+    / ``GRC_LAKE_DUCKDB_PATH`` is set.
     """
+    env = runtime_env(env)
     if in_server_mode():
         raise ValueError("warehouse export requires tenant-scoped destination support; use an operator-owned local run")
     landed: dict[str, dict[str, int]] = {}

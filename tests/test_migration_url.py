@@ -29,7 +29,7 @@ def test_config_preserves_encoded_query_parameters():
 
 
 def test_upgrade_and_current_with_percent_in_lake_path(tmp_path, monkeypatch):
-    monkeypatch.delenv("TRUSTOPS_DATABASE_URL", raising=False)
+    monkeypatch.delenv("GRC_LAKE_DATABASE_URL", raising=False)
     lake = tmp_path / "tenant%40example"
     migrated = migrate.upgrade(lake)
     revision = migrate.current(lake)
@@ -42,7 +42,7 @@ def test_server_starts_with_percent_in_lake_path(tmp_path, monkeypatch):
 
     from security_lakehouse.server_app import create_app
 
-    monkeypatch.delenv("TRUSTOPS_DATABASE_URL", raising=False)
+    monkeypatch.delenv("GRC_LAKE_DATABASE_URL", raising=False)
     app = create_app(tmp_path / "tenant%example", require_auth=False)
     with TestClient(app) as client:
         response = client.get("/api/healthz")

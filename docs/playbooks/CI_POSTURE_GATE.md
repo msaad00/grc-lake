@@ -1,6 +1,6 @@
 # CI posture gate playbook
 
-Block merges and deployments when TrustOps posture regresses. Platform engineers should
+Block merges and deployments when GRC Lake posture regresses. Platform engineers should
 wire this **before** the human console — same `/api/v1` routes agents and MCP use.
 
 Start with [CI gate](../CI_GATE.md) for the inputs, outputs, and a sample-data demo.
@@ -23,22 +23,22 @@ Every request sends **`X-Correlation-ID`** so CI runs appear in the audit trail.
 
 ## GitHub Actions (recommended)
 
-Copy [examples/github-actions/trustops-posture-gate.yml](../../examples/github-actions/trustops-posture-gate.yml)
+Copy [examples/github-actions/grc-lake-posture-gate.yml](../../examples/github-actions/grc-lake-posture-gate.yml)
 into `.github/workflows/` and set repository secrets:
 
 | Secret               | Value                                              |
 | -------------------- | -------------------------------------------------- |
-| `TRUSTOPS_URL`       | `https://trustops.example.com` (no trailing slash) |
-| `TRUSTOPS_API_TOKEN` | Read-scoped API key (`tops_…`)                     |
+| `GRC_LAKE_URL`       | `https://grc-lake.example.com` (no trailing slash) |
+| `GRC_LAKE_API_TOKEN` | Read-scoped API key (`tops_…`)                     |
 
 Example step:
 
 ```yaml
-- name: TrustOps posture gate
-  uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.24
+- name: GRC Lake posture gate
+  uses: msaad00/grc-lake/.github/actions/posture-gate@v0.2.24
   with:
-    trustops-url: ${{ secrets.TRUSTOPS_URL }}
-    api-token: ${{ secrets.TRUSTOPS_API_TOKEN }}
+    trustops-url: ${{ secrets.GRC_LAKE_URL }}
+    api-token: ${{ secrets.GRC_LAKE_API_TOKEN }}
     correlation-id: pr-${{ github.event.pull_request.number }}-${{ github.run_id }}
     min-score: "70"
     max-critical-violations: "0"
@@ -57,8 +57,8 @@ Only controls **not** in the allowlist fail the gate.
 ## Shell script (GitLab, Jenkins, local)
 
 ```bash
-export TRUSTOPS_URL="http://127.0.0.1:8787"
-export TRUSTOPS_API_TOKEN=""   # empty when --allow-insecure-no-auth
+export GRC_LAKE_URL="http://127.0.0.1:8787"
+export GRC_LAKE_API_TOKEN=""   # empty when --allow-insecure-no-auth
 export CORRELATION_ID="local-$(date +%s)"
 export MIN_SCORE=70
 export MAX_FAILING_CONTROL_TESTS=0
@@ -70,9 +70,9 @@ export MAX_FAILING_CONTROL_TESTS=0
 
 ```bash
 make pipeline
-uv run security-lakehouse serve --lake build/lakehouse --server --allow-insecure-no-auth --port 8787
+uv run grc-lake serve --lake build/lakehouse --server --allow-insecure-no-auth --port 8787
 
-TRUSTOPS_URL=http://127.0.0.1:8787 MAX_FAILING_CONTROL_TESTS=0 ./tools/ci/posture-gate.sh
+GRC_LAKE_URL=http://127.0.0.1:8787 MAX_FAILING_CONTROL_TESTS=0 ./tools/ci/posture-gate.sh
 # Expect exit 1 when golden fixture has failing control tests
 ```
 
@@ -81,8 +81,8 @@ TRUSTOPS_URL=http://127.0.0.1:8787 MAX_FAILING_CONTROL_TESTS=0 ./tools/ci/postur
 After the gate passes, create a release snapshot with an idempotency key:
 
 ```bash
-curl -sS -X POST "$TRUSTOPS_URL/api/v1/snapshots" \
-  -H "Authorization: Bearer $TRUSTOPS_API_TOKEN" \
+curl -sS -X POST "$GRC_LAKE_URL/api/v1/snapshots" \
+  -H "Authorization: Bearer $GRC_LAKE_API_TOKEN" \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: $CORRELATION_ID" \
   -H "Idempotency-Key: release-${GITHUB_SHA}" \
@@ -102,8 +102,8 @@ Requires a write-scoped API key — keep read-only keys for the gate step itself
 
 | Symptom                                    | Fix                                                                    |
 | ------------------------------------------ | ---------------------------------------------------------------------- |
-| `Failed to reach …/posture/current`        | Check URL, TLS, and that `security-lakehouse serve` is running         |
+| `Failed to reach …/posture/current`        | Check URL, TLS, and that `grc-lake serve` is running                   |
 | `failing control tests 1 exceed maximum 0` | Fix regression or add to `allowed-failing-controls` temporarily        |
-| 401 with empty token                       | Set `TRUSTOPS_API_TOKEN` or run server with `--allow-insecure-no-auth` |
+| 401 with empty token                       | Set `GRC_LAKE_API_TOKEN` or run server with `--allow-insecure-no-auth` |
 
 Tests: `pytest tests/test_posture_gate_action.py -q`

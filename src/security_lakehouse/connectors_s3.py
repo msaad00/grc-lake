@@ -17,6 +17,7 @@ from security_lakehouse.connector_ids import stable_id_slug
 from security_lakehouse.delegation import require_aws_delegation, server_env_override
 from security_lakehouse.io import read_json
 from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 
 CONNECTOR_ID = "object-storage-evidence"
 SOURCE = "s3"
@@ -203,6 +204,7 @@ def probe_s3_access(
     options: dict[str, Any],
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    env = runtime_env(env)
     bucket, prefix, region, role_arn, external_id = _connection_params(credentials, options, env=env)
     if not bucket:
         raise ValueError("object-storage-evidence probe requires bucket")
@@ -221,6 +223,7 @@ def discover_s3_scope(
     options: dict[str, Any],
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    env = runtime_env(env)
     bucket, prefix, region, role_arn, external_id = _connection_params(credentials, options, env=env)
     if not bucket:
         return {"ok": False, "error": "bucket is required", "selectors": []}
@@ -243,6 +246,7 @@ def _connection_params(
     *,
     env: dict[str, str] | None = None,
 ) -> tuple[str, str, str | None, str | None, str | None]:
+    env = runtime_env(env)
     environment = env or {}
     bucket = str(options.get("bucket") or credentials.get("bucket") or "").strip()
     prefix = _normalize_prefix(str(options.get("prefix") or credentials.get("prefix") or ""))

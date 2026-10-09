@@ -32,7 +32,7 @@ def hosted(tmp_path, monkeypatch):
         actor="test",
         options={"sync_schedule": "every 23h"},
     )
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     monkeypatch.setattr(scheduler, "_scheduled_lake_eval", lambda lake: None)
     return ids
 
@@ -143,7 +143,7 @@ def test_single_registered_tenant_keeps_flat_lake_binding(tmp_path, monkeypatch)
     append_config_event(
         tmp_path, connector_id="github-security", state="enabled", actor="test", options={"sync_schedule": "every 23h"}
     )
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     monkeypatch.setattr(scheduler, "_scheduled_lake_eval", lambda lake: None)
     calls = []
     rows = scheduler.tick(
@@ -154,7 +154,7 @@ def test_single_registered_tenant_keeps_flat_lake_binding(tmp_path, monkeypatch)
 
 
 def test_local_root_tick_does_not_enumerate_hosted_tenants(tmp_path, hosted, monkeypatch):
-    monkeypatch.delenv("TRUSTOPS_COMMERCIAL_HOSTED")
+    monkeypatch.delenv("GRC_LAKE_COMMERCIAL_HOSTED")
     assert scheduler.tick(tmp_path, connector_runner=lambda *a, **kw: pytest.fail("local mode crossed tenants")) == []
 
 
@@ -163,7 +163,7 @@ def test_cli_all_tenants_is_explicit_without_hosted_environment(tmp_path, hosted
 
     from security_lakehouse.cli import main
 
-    monkeypatch.delenv("TRUSTOPS_COMMERCIAL_HOSTED")
+    monkeypatch.delenv("GRC_LAKE_COMMERCIAL_HOSTED")
     calls = []
     monkeypatch.setattr(
         scheduler, "run_connector_sync", lambda lake, **kw: calls.append(server_tenant_id()) or {"result": "ok"}

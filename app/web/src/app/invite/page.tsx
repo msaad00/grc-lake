@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, MailCheck } from "lucide-react";
-import { TrustOpsLogo } from "@/components/brand/TrustOpsLogo";
+import { GrcLakeLogo } from "@/components/brand/GrcLakeLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { api } from "@/lib/api/client";
@@ -38,7 +38,7 @@ function InviteAcceptForm() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <TrustOpsLogo className="mb-3 h-8 w-auto" />
+        <GrcLakeLogo className="mb-3 h-8 w-auto" />
         <h1 className="flex items-center gap-2 text-lg font-semibold leading-tight text-ink">
           <MailCheck aria-hidden="true" className="h-5 w-5 text-brand" />
           Accept invite

@@ -3,7 +3,7 @@
 ```mermaid
 flowchart LR
   subgraph Dev["Developer Laptop"]
-    CLI["security-lakehouse CLI"]
+    CLI["grc-lake CLI"]
     Files["build/lakehouse<br/>JSON + SQLite"]
     Static["build/dashboard/index.html"]
   end

@@ -1,6 +1,6 @@
 """Shareable demo and account-linking URLs for hosted POC workspaces.
 
-Operators set ``TRUSTOPS_PUBLIC_URL``; this module turns that base URL plus live
+Operators set ``GRC_LAKE_PUBLIC_URL``; this module turns that base URL plus live
 connector state into copyable links similar to managed GRC invite and connect flows.
 """
 
@@ -164,7 +164,7 @@ def build_share_links(
             {
                 "kind": "workspace",
                 "label": "Local workspace",
-                "description": "Set TRUSTOPS_PUBLIC_URL to generate invite links for a hosted demo.",
+                "description": "Set GRC_LAKE_PUBLIC_URL to generate invite links for a hosted demo.",
                 "url": "/dashboard/",
                 "audience": "operator",
             }

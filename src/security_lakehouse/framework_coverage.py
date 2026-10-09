@@ -2,7 +2,7 @@
 
 Coverage is intentionally computed from the registry, control catalog, and
 reviewed source mappings instead of hand-written README numbers. The ledger is
-about seeded-control coverage, not a claim that TrustOps fully implements a
+about seeded-control coverage, not a claim that GRC Lake fully implements a
 licensed or certification framework.
 """
 

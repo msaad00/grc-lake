@@ -328,8 +328,8 @@ function DecisionForm({
         signed-in console session. API keys and agents can read but never
         decide. Headless equivalent:{" "}
         <code>
-          security-lakehouse frameworks review approve --lake … --safeguard …
-          --framework … --control … --rationale … --reviewer …
+          grc-lake frameworks review approve --lake … --safeguard … --framework
+          … --control … --rationale … --reviewer …
         </code>
       </p>
     );

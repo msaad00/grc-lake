@@ -1,5 +1,5 @@
 {
-  "schema_version": "trustops.population_baseline.v1",
+  "schema_version": "grc-lake.population_baseline.v1",
   "tenant_id": "default",
   "as_of": "2026-01-04T00:00:00Z",
   "max_age_days": 7,

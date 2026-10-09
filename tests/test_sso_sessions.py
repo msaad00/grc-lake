@@ -137,7 +137,7 @@ def test_complete_oidc_login_auto_provisions(tmp_path: Path) -> None:
 
 
 def test_complete_oidc_login_maps_idp_groups_to_role(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_IDP_SYNC_ROLE_ON_LOGIN", "1")
+    monkeypatch.setenv("GRC_LAKE_IDP_SYNC_ROLE_ON_LOGIN", "1")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     cfg = OIDCConfig(
@@ -147,7 +147,7 @@ def test_complete_oidc_login_maps_idp_groups_to_role(tmp_path: Path, monkeypatch
         tenant_slug="acme",
         auto_provision=True,
         default_role="read_only",
-        role_map={"TrustOps-Admins": "admin"},
+        role_map={"GRC Lake-Admins": "admin"},
     )
     with session_scope(app.state.sessionmaker) as session:
         create_tenant(session, slug="acme", name="Acme")
@@ -156,7 +156,7 @@ def test_complete_oidc_login_maps_idp_groups_to_role(tmp_path: Path, monkeypatch
             config=cfg,
             email="mapped@acme.test",
             email_verified=True,
-            idp_claim_values=["TrustOps-Admins"],
+            idp_claim_values=["GRC Lake-Admins"],
         )
         assert user.role == "admin"
         user2, _token2 = complete_oidc_login(
@@ -234,7 +234,7 @@ def test_auth_methods_reports_configured_login_surfaces(app_env) -> None:
 
 
 def test_load_saml_config_rejects_partial_environment(monkeypatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_SAML_SP_ENTITY_ID", "https://trustops.test/saml/metadata")
+    monkeypatch.setenv("GRC_LAKE_SAML_SP_ENTITY_ID", "https://trustops.test/saml/metadata")
     with pytest.raises(SAMLConfigError):
         load_saml_config()
 
@@ -354,13 +354,13 @@ class _FakeSamlAuth:
 
 
 def _set_saml_env(monkeypatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_SAML_SP_ENTITY_ID", "https://trustops.test/saml/metadata")
-    monkeypatch.setenv("TRUSTOPS_SAML_ACS_URL", "https://trustops.test/api/v1/auth/saml/acs")
-    monkeypatch.setenv("TRUSTOPS_SAML_IDP_ENTITY_ID", "https://idp.test")
-    monkeypatch.setenv("TRUSTOPS_SAML_IDP_SSO_URL", "https://idp.test/sso")
-    monkeypatch.setenv("TRUSTOPS_SAML_IDP_X509_CERT", "cert")
-    monkeypatch.setenv("TRUSTOPS_SAML_TENANT_SLUG", "acme")
-    monkeypatch.setenv("TRUSTOPS_SAML_AUTO_PROVISION", "true")
+    monkeypatch.setenv("GRC_LAKE_SAML_SP_ENTITY_ID", "https://trustops.test/saml/metadata")
+    monkeypatch.setenv("GRC_LAKE_SAML_ACS_URL", "https://trustops.test/api/v1/auth/saml/acs")
+    monkeypatch.setenv("GRC_LAKE_SAML_IDP_ENTITY_ID", "https://idp.test")
+    monkeypatch.setenv("GRC_LAKE_SAML_IDP_SSO_URL", "https://idp.test/sso")
+    monkeypatch.setenv("GRC_LAKE_SAML_IDP_X509_CERT", "cert")
+    monkeypatch.setenv("GRC_LAKE_SAML_TENANT_SLUG", "acme")
+    monkeypatch.setenv("GRC_LAKE_SAML_AUTO_PROVISION", "true")
 
 
 def _saml_app(tmp_path: Path, monkeypatch, **fake_kwargs):
@@ -467,7 +467,7 @@ def test_saml_acs_rejects_response_to_a_different_request(tmp_path: Path, monkey
 
 
 def test_saml_idp_initiated_login_is_opt_in_and_still_replay_protected(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_SAML_ALLOW_IDP_INITIATED", "true")
+    monkeypatch.setenv("GRC_LAKE_SAML_ALLOW_IDP_INITIATED", "true")
     app, seen = _saml_app(tmp_path, monkeypatch, in_response_to=None)
     client = TestClient(app)
 

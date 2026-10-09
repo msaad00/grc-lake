@@ -1,6 +1,6 @@
 # Architecture — Local (file-backed) mode
 
-TrustOps runs in two modes that share one assessment engine:
+GRC Lake runs in two modes that share one assessment engine:
 
 - **Local mode** (this diagram): zero-dependency, file-backed Bronze/Silver/Gold
   zones with a SQLite analytics mart and a static dashboard. No cloud account or
@@ -8,7 +8,7 @@ TrustOps runs in two modes that share one assessment engine:
 - **Server / warehouse mode**: the same engine behind a FastAPI server with an
   application-state database, RBAC, SSO, the Next.js console, and governed
   evidence in Snowflake or ClickHouse. See
-  [`trustops-assessment-architecture.svg`](../images/trustops-assessment-architecture.svg)
+  [`grc-lake-assessment-architecture.svg`](../images/grc-lake-assessment-architecture.svg)
   and [`dual-lakehouse.md`](dual-lakehouse.md).
 
 The two are not alternatives to reconcile: local mode is the embedded

@@ -19,8 +19,8 @@ dist/
 *.bak
 *.orig
 
-# Docker Compose server secrets (template: deploy/compose/trustops.env.example)
-/trustops.env
+# Docker Compose server secrets (template: deploy/compose/grc-lake.env.example)
+/grc-lake.env
 
 # Root-level safety net; per-package node_modules entries below stay too.
 node_modules/

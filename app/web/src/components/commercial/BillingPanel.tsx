@@ -102,7 +102,7 @@ export function BillingPanel() {
           </CardTitle>
           <CardDescription>
             Plans are paid and changed through Stripe; card details never reach
-            TrustOps.
+            GRC Lake.
           </CardDescription>
         </div>
         {isAdmin && status?.customer_linked ? (

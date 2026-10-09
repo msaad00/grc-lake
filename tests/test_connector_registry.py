@@ -145,27 +145,27 @@ def test_snowflake_poc_bootstrap_matches_connector_contract() -> None:
     body = (REPO_ROOT / "deploy" / "snowflake" / "bootstrap_poc.sql").read_text(encoding="utf-8")
 
     for expected in (
-        "TRUSTOPS_SECURITY_LAKE",
-        "TRUSTOPS_READ_WH",
-        "TRUSTOPS_READER",
-        "TRUSTOPS_AUDIT_EVENTS",
-        "TRUSTOPS_CONTROL_POSTURE",
-        "TRUSTOPS_ASSET_RISK",
-        "TRUSTOPS_EVIDENCE_BUNDLES",
+        "GRC_LAKE_SECURITY_LAKE",
+        "GRC_LAKE_READ_WH",
+        "GRC_LAKE_READER",
+        "GRC_LAKE_AUDIT_EVENTS",
+        "GRC_LAKE_CONTROL_POSTURE",
+        "GRC_LAKE_ASSET_RISK",
+        "GRC_LAKE_EVIDENCE_BUNDLES",
     ):
         assert expected in body
     assert "GRANT SELECT ON VIEW" in body
-    assert "GRANT USAGE ON WAREHOUSE TRUSTOPS_READ_WH" in body
+    assert "GRANT USAGE ON WAREHOUSE GRC_LAKE_READ_WH" in body
     assert "CREATE USER" not in body
     assert "PASSWORD" not in body
     assert "SECRET" not in body
 
 
 def test_aws_posture_role_bootstrap_matches_connector_contract() -> None:
-    body = (REPO_ROOT / "deploy" / "aws" / "trustops-posture-readonly-role.yaml").read_text(encoding="utf-8")
+    body = (REPO_ROOT / "deploy" / "aws" / "grc-lake-posture-readonly-role.yaml").read_text(encoding="utf-8")
 
     for expected in (
-        "TrustOpsPostureReadOnlyRole",
+        "GrcLakePostureReadOnlyRole",
         "sts:AssumeRole",
         "sts:ExternalId",
         "iam:GetAccountPasswordPolicy",
@@ -202,7 +202,7 @@ def test_aws_assume_role_lifecycle_is_documented_for_operators() -> None:
     runbook = (REPO_ROOT / "docs" / "LIVE_CLOUD_POC.md").read_text(encoding="utf-8")
     deploy_readme = (REPO_ROOT / "deploy" / "README.md").read_text(encoding="utf-8")
     connectors = (REPO_ROOT / "docs" / "CONNECTORS.md").read_text(encoding="utf-8")
-    visual = (REPO_ROOT / "docs" / "images" / "trustops-aws-sts-lifecycle.svg").read_text(encoding="utf-8")
+    visual = (REPO_ROOT / "docs" / "images" / "grc-lake-aws-sts-lifecycle.svg").read_text(encoding="utf-8")
     combined = "\n".join([readme, runbook, deploy_readme, connectors, visual])
 
     for expected in (
@@ -220,11 +220,11 @@ def test_aws_assume_role_lifecycle_is_documented_for_operators() -> None:
     ):
         assert expected in combined
 
-    assert "trustops-aws-sts-lifecycle.svg" in readme
+    assert "grc-lake-aws-sts-lifecycle.svg" in readme
 
 
 def test_azure_posture_reader_bootstrap_matches_connector_contract() -> None:
-    body = (REPO_ROOT / "deploy" / "azure" / "trustops-posture-reader.bicep").read_text(encoding="utf-8")
+    body = (REPO_ROOT / "deploy" / "azure" / "grc-lake-posture-reader.bicep").read_text(encoding="utf-8")
 
     assert "targetScope = 'subscription'" in body
     assert "Microsoft.Authorization/roleAssignments@2022-04-01" in body

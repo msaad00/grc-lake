@@ -64,7 +64,7 @@ def test_poc_readiness_reports_launch_gates_without_secrets(tmp_path: Path, monk
         idempotency_key="poc-readiness-test",
     )
     raw_share_token = created["token"]
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://trustops.example.test")
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://trustops.example.test")
     app = create_app(tmp_path)
     client = TestClient(app)
     tokens = _seed_auth(app, tenant_slug="example")
@@ -114,7 +114,7 @@ def test_poc_readiness_is_in_resource_catalog() -> None:
 
 
 def _local_readiness(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
-    for name in ("TRUSTOPS_PUBLIC_URL", "TRUSTOPS_BASE_URL", "TRUSTOPS_APP_URL"):
+    for name in ("GRC_LAKE_PUBLIC_URL", "GRC_LAKE_BASE_URL", "GRC_LAKE_APP_URL"):
         monkeypatch.delenv(name, raising=False)
     _seed_lake(tmp_path)
     app = create_app(tmp_path, require_auth=False)
@@ -147,4 +147,4 @@ def test_public_url_step_has_plain_copy_link_and_follows_source_sync(
     assert public["status"] == "needs_setup"
     assert public["detail"] == "Set the public URL so invite and share links work"
     assert public["href"] == "/console/deploy/"
-    assert "TRUSTOPS_PUBLIC_URL" not in public["detail"]
+    assert "GRC_LAKE_PUBLIC_URL" not in public["detail"]

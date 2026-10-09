@@ -1,24 +1,24 @@
 # Repository Governance Connector
 
-TrustOps can sync authenticated **GitHub** and **GitLab** repository governance
+GRC Lake can sync authenticated **GitHub** and **GitLab** repository governance
 evidence for private repos and organization-only controls that public audit
 cannot observe. The connector emits raw JSONL evidence that can be validated and
 routed into the security data lake.
 
 ```bash
-TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN=... security-lakehouse repo governance-sync OWNER/REPO --out build/repo-governance.jsonl
-TRUSTOPS_GITLAB_ACCESS_TOKEN=... security-lakehouse repo governance-sync NAMESPACE/PROJECT --provider gitlab --out build/gitlab-governance.jsonl
-security-lakehouse validate --raw build/repo-governance.jsonl
+GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN=... grc-lake repo governance-sync OWNER/REPO --out build/repo-governance.jsonl
+GRC_LAKE_GITLAB_ACCESS_TOKEN=... grc-lake repo governance-sync NAMESPACE/PROJECT --provider gitlab --out build/gitlab-governance.jsonl
+grc-lake validate --raw build/repo-governance.jsonl
 ```
 
 Offline fixture mode is available for tests, demos, and CI without credentials:
 
 ```bash
-security-lakehouse repo governance-sync OWNER/REPO \
+grc-lake repo governance-sync OWNER/REPO \
   --fixture-dir tests/fixtures/github-governance \
   --out build/repo-governance.jsonl
 
-security-lakehouse repo governance-sync acme/private-agent-api \
+grc-lake repo governance-sync acme/private-agent-api \
   --provider gitlab \
   --fixture-dir tests/fixtures/gitlab-governance \
   --out build/gitlab-governance.jsonl
@@ -43,7 +43,7 @@ permissions.
 ### GitLab
 
 Use a project or group access token with read-only API access (`read_api`,
-`read_repository`). Optional `TRUSTOPS_GITLAB_API_URL` overrides the default
+`read_repository`). Optional `GRC_LAKE_GITLAB_API_URL` overrides the default
 `https://gitlab.com/api/v4` base for self-managed instances.
 
 | Scope or permission | Unlocks                                                            |
@@ -53,7 +53,7 @@ Use a project or group access token with read-only API access (`read_api`,
 | `read_user`         | member username resolution                                         |
 | fixture bundle      | deterministic local evidence with `credential_fingerprint=fixture` |
 
-Installation token values are never emitted. TrustOps stores only a short
+Installation token values are never emitted. GRC Lake stores only a short
 SHA-256 credential fingerprint so operators can tell which credential boundary
 produced evidence without exposing the credential itself.
 
@@ -91,13 +91,13 @@ rules.
 
 ## Relationship To Public Audit
 
-Use `security-lakehouse repo audit` first for fast public inventory and code
-graph evidence. Use `security-lakehouse repo governance-sync` when a control
+Use `grc-lake repo audit` first for fast public inventory and code
+graph evidence. Use `grc-lake repo governance-sync` when a control
 depends on private or organization-scoped GitHub settings.
 
 ```bash
-security-lakehouse repo audit https://github.com/OWNER/REPO --out build/repo-audit.jsonl
-security-lakehouse validate --raw build/repo-audit.jsonl
+grc-lake repo audit https://github.com/OWNER/REPO --out build/repo-audit.jsonl
+grc-lake validate --raw build/repo-audit.jsonl
 ```
 
 Public audit needs no token and collects only what GitHub exposes without

@@ -25,7 +25,7 @@ def test_connected_cloud_drawer_stays_compact_at_narrow_widths() -> None:
 def test_aws_linking_explains_authorization_and_role_boundary() -> None:
     panel = PANEL.read_text(encoding="utf-8")
 
-    assert "TrustOps verifies STS assume-role after deployment." in panel
+    assert "GRC Lake verifies STS assume-role after deployment." in panel
     assert "Deploy the customer-owned AWS role, then save the account target." in panel
     assert "Open AWS guided deploy" in panel
     assert "AWS Console" in panel
@@ -50,7 +50,7 @@ def test_aws_linking_explains_authorization_and_role_boundary() -> None:
     assert "Read-only IAM posture" in panel
     assert "IAM posture read-only" in panel
     assert "session.cloudshell_command" in panel
-    assert "YOUR_TRUSTOPS_PRINCIPAL_ARN" not in panel
+    assert "YOUR_GRC_LAKE_PRINCIPAL_ARN" not in panel
     assert "TemplateURL" not in panel
     assert "Next: verify access" in panel
     assert "Save AWS account" not in panel
@@ -78,7 +78,7 @@ def test_aws_linking_explains_authorization_and_role_boundary() -> None:
     assert "View trust details" not in panel
     assert "AWS role ARN" not in panel
     assert "Deploy links unavailable" not in panel
-    assert "TRUSTOPS_AWS_TEMPLATE_URL" not in panel
+    assert "GRC_LAKE_AWS_TEMPLATE_URL" not in panel
     assert 'aria-label="AWS deployment method"' not in panel
 
 
@@ -102,7 +102,7 @@ def test_aws_onboarding_is_a_guided_multi_account_wizard() -> None:
     assert "3. Add account targets" in panel
     assert "4. Verify and finish" in panel
     assert "Snowflake runs a live probe" not in drawer
-    assert "TrustOps will call AWS STS AssumeRole" in drawer
+    assert "GRC Lake will call AWS STS AssumeRole" in drawer
 
 
 def test_aws_linking_accepts_account_id_or_role_arn() -> None:
@@ -119,7 +119,7 @@ def test_aws_linking_accepts_account_id_or_role_arn() -> None:
     assert "awsRoleIdentifierError(awsRoleIdentifier)" in panel
     assert 'placeholder="AWS account ID or role ARN"' in panel
     assert 'placeholder="030225640638"' not in panel
-    assert 'placeholder="arn:aws:iam::123456789012:role/CustomTrustOpsRole"' not in panel
+    assert 'placeholder="arn:aws:iam::123456789012:role/CustomGrcLakeRole"' not in panel
 
 
 def test_azure_linking_is_provider_identity_first() -> None:
@@ -132,10 +132,10 @@ def test_azure_linking_is_provider_identity_first() -> None:
     assert "Deploy Azure access" in panel
     assert "Copy Cloud Shell setup" in panel
     assert "View command" in panel
-    assert "TRUSTOPS_AZURE_APP_ID" in panel
+    assert "GRC_LAKE_AZURE_APP_ID" in panel
     assert "session.azure_app_id" in panel
-    assert "TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID" in panel
-    assert "Set TRUSTOPS_AZURE_APP_ID or TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID" in panel
+    assert "GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID" in panel
+    assert "Set GRC_LAKE_AZURE_APP_ID or GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID" in panel
     assert "--role Reader" in panel
     assert "management-group" in panel
     assert "No Azure password or" in panel
@@ -143,7 +143,7 @@ def test_azure_linking_is_provider_identity_first() -> None:
     assert "Next: verify access" in panel
     assert "Save cloud connection" not in panel
     assert "Azure Cloud Shell setup" not in panel
-    assert "Grants Reader to the TrustOps app or managed identity." not in panel
+    assert "Grants Reader to the GRC Lake app or managed identity." not in panel
     assert "The final line prints the IDs to confirm below." not in panel
     assert "local az login" not in panel
     assert "Use my laptop login" not in panel
@@ -246,7 +246,7 @@ def test_integration_wizard_has_provider_presets_for_cloud_data_and_sso() -> Non
 
     assert "Integration wizard" in panel
     assert "Provider setup" in panel
-    assert "TrustOps needs" in panel
+    assert "GRC Lake needs" in panel
     assert "Advanced provider details" in panel
     assert "No long-lived keys" in presets
     assert "STS assume-role" in presets
@@ -325,7 +325,7 @@ def test_aws_probe_errors_are_actionable_in_drawer() -> None:
     assert "AWS STS probe failed." in drawer
     assert "role trust policy" in drawer
     assert "network access to AWS STS" in drawer
-    assert "Configure AWS credentials for the TrustOps runtime" in drawer
+    assert "Configure AWS credentials for the GRC Lake runtime" in drawer
     assert "Probe error: ${runErrorDetail(run)}" in drawer
 
 

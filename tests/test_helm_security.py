@@ -10,7 +10,7 @@ import pytest
 
 pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
 
-CHART = Path(__file__).resolve().parents[1] / "deploy" / "helm" / "trustops"
+CHART = Path(__file__).resolve().parents[1] / "deploy" / "helm" / "grc-lake"
 
 
 def _helm_template(extra_sets: list[str] | None = None) -> subprocess.CompletedProcess[str]:
@@ -34,7 +34,7 @@ def test_insecure_no_auth_passes_with_acknowledged_override() -> None:
         ]
     )
     assert result.returncode == 0
-    assert "TRUSTOPS_ALLOW_INSECURE_NO_AUTH" in result.stdout
+    assert "GRC_LAKE_ALLOW_INSECURE_NO_AUTH" in result.stdout
 
 
 def test_ingress_requires_auth_configuration() -> None:
@@ -47,7 +47,7 @@ def test_ingress_passes_with_cookie_signing_key() -> None:
     result = _helm_template(
         [
             "ingress.enabled=true",
-            "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY",
             "env[0].value=super-secret-for-tests",
         ]
     )
@@ -58,7 +58,7 @@ def test_session_secret_alone_does_not_replace_cookie_signing_key() -> None:
     result = _helm_template(
         [
             "ingress.enabled=true",
-            "env[0].name=TRUSTOPS_SESSION_SECRET",
+            "env[0].name=GRC_LAKE_SESSION_SECRET",
             "env[0].value=super-secret-for-tests",
         ]
     )
@@ -86,9 +86,9 @@ def test_multiple_writers_rejected_independent_of_volume_mode(access_mode):
 def test_rate_limit_redis_url_rendered_when_configured() -> None:
     result = _helm_template(["rateLimit.redisUrl=redis://redis:6379/0"])
     assert result.returncode == 0
-    assert "TRUSTOPS_API_RATE_LIMIT_REDIS_URL" in result.stdout
+    assert "GRC_LAKE_API_RATE_LIMIT_REDIS_URL" in result.stdout
     assert "redis://redis:6379/0" in result.stdout
-    assert "TRUSTOPS_API_RATE_LIMIT_RPS" in result.stdout
+    assert "GRC_LAKE_API_RATE_LIMIT_RPS" in result.stdout
 
 
 def test_rollout_stops_previous_writer_before_starting_replacement() -> None:
@@ -118,7 +118,7 @@ def test_scheduler_tenant_scope_matches_deployment(settings, expected):
     assert ("--all-tenants" in args) is expected
 
 
-@pytest.mark.parametrize("name", ["TRUSTOPS_OIDC_CLIENT_ID", "TRUSTOPS_SAML_IDP_METADATA_URL"])
+@pytest.mark.parametrize("name", ["GRC_LAKE_OIDC_CLIENT_ID", "GRC_LAKE_SAML_IDP_METADATA_URL"])
 def test_identity_provider_without_signing_secret_is_not_bootable(name):
     result = _helm_template(["ingress.enabled=true", f"env[0].name={name}", "env[0].value=idp-example"])
     assert result.returncode != 0
@@ -130,7 +130,7 @@ def test_identity_provider_without_signing_secret_is_not_bootable(name):
 )
 def test_empty_or_nonsecret_signing_configuration_is_rejected(source):
     result = _helm_template(
-        ["security.requireAuthentication=true", "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY", f"env[0].{source}"]
+        ["security.requireAuthentication=true", "env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY", f"env[0].{source}"]
     )
     assert result.returncode != 0
     assert "signing" in result.stderr
@@ -143,9 +143,9 @@ def test_secret_reference_renders_for_application_and_scheduler():
         [
             "security.requireAuthentication=true",
             "ingress.enabled=true",
-            "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY",
             "env[0].valueFrom.secretKeyRef.name=trustops-server",
-            "env[0].valueFrom.secretKeyRef.key=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].valueFrom.secretKeyRef.key=GRC_LAKE_COOKIE_SIGNING_KEY",
         ]
     )
     assert result.returncode == 0, result.stderr
@@ -154,8 +154,8 @@ def test_secret_reference_renders_for_application_and_scheduler():
         documents["Deployment"]["spec"]["template"]["spec"],
         documents["CronJob"]["spec"]["jobTemplate"]["spec"]["template"]["spec"],
     ):
-        secret = next(item for item in spec["containers"][0]["env"] if item["name"] == "TRUSTOPS_COOKIE_SIGNING_KEY")
-        assert secret["valueFrom"]["secretKeyRef"] == {"name": "trustops-server", "key": "TRUSTOPS_COOKIE_SIGNING_KEY"}
+        secret = next(item for item in spec["containers"][0]["env"] if item["name"] == "GRC_LAKE_COOKIE_SIGNING_KEY")
+        assert secret["valueFrom"]["secretKeyRef"] == {"name": "trustops-server", "key": "GRC_LAKE_COOKIE_SIGNING_KEY"}
 
 
 def test_scheduler_launches_cli_under_the_image_tini_entrypoint():
@@ -174,24 +174,24 @@ def test_scheduler_launches_cli_under_the_image_tini_entrypoint():
     assert entrypoint == ["/usr/bin/tini", "--"]
     # Kubernetes args replace Docker CMD, not ENTRYPOINT. tini must receive
     # the executable before the scheduler subcommand.
-    assert container.get("command", container["args"])[0] == "security-lakehouse"
+    assert container.get("command", container["args"])[0] == "grc-lake"
 
 
 @pytest.mark.parametrize("with_session", [False, True])
 def test_oidc_also_requires_its_separate_session_secret(with_session):
     settings = [
         "ingress.enabled=true",
-        "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+        "env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY",
         "env[0].value=test-cookie-key",
-        "env[1].name=TRUSTOPS_OIDC_CLIENT_ID",
+        "env[1].name=GRC_LAKE_OIDC_CLIENT_ID",
         "env[1].value=test-client",
-        "env[2].name=TRUSTOPS_OIDC_ISSUER",
+        "env[2].name=GRC_LAKE_OIDC_ISSUER",
         "env[2].value=https://idp.example.com",
-        "env[3].name=TRUSTOPS_OIDC_CLIENT_SECRET",
+        "env[3].name=GRC_LAKE_OIDC_CLIENT_SECRET",
         "env[3].value=test-client-secret",
     ]
     if with_session:
-        settings += ["env[4].name=TRUSTOPS_SESSION_SECRET", "env[4].value=test-oauth-key"]
+        settings += ["env[4].name=GRC_LAKE_SESSION_SECRET", "env[4].value=test-oauth-key"]
     result = _helm_template(settings)
     assert (result.returncode == 0) is with_session
 
@@ -200,11 +200,45 @@ def test_env_cannot_bypass_explicit_no_auth_guard():
     result = _helm_template(
         [
             "security.requireAuthentication=true",
-            "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY",
             "env[0].value=test-cookie-key",
-            "env[1].name=TRUSTOPS_ALLOW_INSECURE_NO_AUTH",
+            "env[1].name=GRC_LAKE_ALLOW_INSECURE_NO_AUTH",
             "env[1].value=1",
         ]
     )
     assert result.returncode != 0
     assert "security.allowInsecureNoAuth" in result.stderr
+
+
+def test_legacy_cookie_secret_still_satisfies_auth_guard() -> None:
+    result = _helm_template(
+        [
+            "security.requireAuthentication=true",
+            "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].value=test-only-signing-key",
+        ]
+    )
+    assert result.returncode == 0
+
+
+def test_empty_new_secret_cannot_fall_back_to_legacy_secret() -> None:
+    result = _helm_template(
+        [
+            "security.requireAuthentication=true",
+            "env[0].name=TRUSTOPS_COOKIE_SIGNING_KEY",
+            "env[0].value=test-only-signing-key",
+            "env[1].name=GRC_LAKE_COOKIE_SIGNING_KEY",
+            "env[1].value=",
+        ]
+    )
+    assert result.returncode != 0
+
+
+def test_legacy_no_auth_env_cannot_bypass_acknowledgement() -> None:
+    result = _helm_template(
+        [
+            "env[0].name=TRUSTOPS_ALLOW_INSECURE_NO_AUTH",
+            "env[0].value=true",
+        ]
+    )
+    assert result.returncode != 0

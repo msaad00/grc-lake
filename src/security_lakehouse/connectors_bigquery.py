@@ -4,7 +4,7 @@ Reads existing BigQuery tables through lake mappings with one parameterized
 standard-SQL SELECT per mapping (``@name`` query parameters; only validated
 identifiers reach the SQL text). Authentication is Application Default
 Credentials: workload identity, an attached service account, or gcloud ADC.
-No key file is configured in TrustOps. ``impersonate_service_account`` makes the
+No key file is configured in GRC Lake. ``impersonate_service_account`` makes the
 reader impersonate a customer service account from that ADC identity; hosted
 server mode requires it, and there a fully qualified source table must live in
 the configured project unless ``options.allow_cross_project`` is set.

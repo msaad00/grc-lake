@@ -229,7 +229,7 @@ class CrowdStrikeClient:
                     "accept": "application/json",
                     "authorization": f"Bearer {token}",
                     "content-type": "application/json",
-                    "user-agent": "trustops-security-data-lake",
+                    "user-agent": "grc-lake",
                 },
             )
             return backoff.retry(

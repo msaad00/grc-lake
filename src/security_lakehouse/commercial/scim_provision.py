@@ -3,14 +3,14 @@
 * **Tenancy by token.** Each tenant issues its own SCIM bearer tokens
   (:func:`create_scim_token`); only the SHA-256 hash is stored, and the token
   resolves the tenant for every request. Rotation is "create new, revoke old".
-  ``TRUSTOPS_SCIM_BEARER_TOKEN`` + ``TRUSTOPS_SCIM_TENANT_SLUG`` still work as a
+  ``GRC_LAKE_SCIM_BEARER_TOKEN`` + ``GRC_LAKE_SCIM_TENANT_SLUG`` still work as a
   deprecated single-tenant fallback.
 * **Users.** Create, PUT replace, PATCH (path and path-less operations, as sent
   by Okta and Entra ID), ``userName``/``externalId eq`` filters, and DELETE as a
   soft delete: the user is deactivated and hidden from SCIM (404) but kept for
   the audit trail; re-creating the same ``userName`` restores it.
-* **Groups.** Group membership maps to TrustOps roles through
-  ``TRUSTOPS_SCIM_ROLE_MAP`` (``{"IdP group": "role"}``), using the same
+* **Groups.** Group membership maps to GRC Lake roles through
+  ``GRC_LAKE_SCIM_ROLE_MAP`` (``{"IdP group": "role"}``), using the same
   highest-privilege rule as OIDC/SAML claims. Without a role map, groups never
   change roles.
 
@@ -21,7 +21,6 @@ error responses.
 from __future__ import annotations
 
 import hashlib
-import os
 import re
 import secrets
 from datetime import UTC, datetime
@@ -33,6 +32,7 @@ from sqlalchemy.orm import Session
 from security_lakehouse.auth.idp_roles import load_role_map, resolve_role_from_claims
 from security_lakehouse.commercial.limits import assert_within_limit
 from security_lakehouse.db.models import USER_ROLES, ScimGroup, ScimGroupMember, ScimToken, Tenant, User
+from security_lakehouse.runtime_environment import runtime_env
 
 USER_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:User"
 GROUP_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:Group"
@@ -124,14 +124,18 @@ def authenticate_scim_request(session: Session, header_value: str | None) -> str
             row.last_used_at = _now()
             session.flush()
             return row.tenant_id
-        legacy = os.environ.get("TRUSTOPS_SCIM_BEARER_TOKEN", "").strip()
+        legacy = runtime_env().get("GRC_LAKE_SCIM_BEARER_TOKEN", "").strip()
         if legacy and secrets.compare_digest(token, legacy):
             return _legacy_tenant_id(session)
     raise ScimError(401, "invalid SCIM bearer token")
 
 
 def _legacy_tenant_id(session: Session) -> str:
-    slug = os.environ.get("TRUSTOPS_SCIM_TENANT_SLUG", os.environ.get("TRUSTOPS_OIDC_TENANT_SLUG", "default")).strip()
+    slug = (
+        runtime_env()
+        .get("GRC_LAKE_SCIM_TENANT_SLUG", runtime_env().get("GRC_LAKE_OIDC_TENANT_SLUG", "default"))
+        .strip()
+    )
     tenant = session.scalars(select(Tenant).where(Tenant.slug == slug)).one_or_none()
     if tenant is None:
         raise ScimError(401, "SCIM tenant for the configured bearer token does not exist")
@@ -477,10 +481,10 @@ def delete_scim_group(session: Session, *, tenant_id: str, group_id: str) -> Non
 
 def _recompute_roles(session: Session, tenant_id: str, user_ids: Any) -> None:
     """Set each user's role from their SCIM groups when a role map is configured."""
-    role_map = load_role_map("TRUSTOPS_SCIM_ROLE_MAP")
+    role_map = load_role_map("GRC_LAKE_SCIM_ROLE_MAP")
     if not role_map:
         return
-    default_role = os.environ.get("TRUSTOPS_SCIM_DEFAULT_ROLE", "read_only").strip() or "read_only"
+    default_role = runtime_env().get("GRC_LAKE_SCIM_DEFAULT_ROLE", "read_only").strip() or "read_only"
     for user_id in set(user_ids):
         user = session.get(User, user_id)
         if user is None or user.tenant_id != tenant_id:

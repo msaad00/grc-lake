@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const MARKS =
-  'header svg[aria-label="TrustOps"], aside svg[aria-label="TrustOps"], [role="dialog"] svg[aria-label="TrustOps"]';
+  'header svg[aria-label="GRC Lake"], aside svg[aria-label="GRC Lake"], [role="dialog"] svg[aria-label="GRC Lake"]';
 
 test("the app shell shows the brand mark once, in the top bar", async ({
   page,
@@ -13,11 +13,11 @@ test("the app shell shows the brand mark once, in the top bar", async ({
 
   const marks = page.locator(MARKS);
   await expect(marks).toHaveCount(1);
-  await expect(page.locator('header svg[aria-label="TrustOps"]')).toHaveCount(
+  await expect(page.locator('header svg[aria-label="GRC Lake"]')).toHaveCount(
     1,
   );
   // At 32px the source glyphs blur into specks: the bar mark is waves only.
-  const header = page.locator('header svg[aria-label="TrustOps"]');
+  const header = page.locator('header svg[aria-label="GRC Lake"]');
   await expect(header).toHaveAttribute("data-variant", "simple");
   expect(await header.locator("circle, rect[rx='3']").count()).toBe(0);
   expect(await header.locator("path").count()).toBe(1);
@@ -41,7 +41,7 @@ test("the app shell shows the brand mark once, in the top bar", async ({
 
 test("marks at 40px and below draw the waves only", async ({ page }) => {
   await page.goto("/console/agents/");
-  const marks = page.locator('svg[aria-label="TrustOps"]');
+  const marks = page.locator('svg[aria-label="GRC Lake"]');
   await expect(marks.first()).toBeVisible({ timeout: 20_000 });
   const sizes = await marks.evaluateAll((nodes) =>
     nodes.map((node) => ({

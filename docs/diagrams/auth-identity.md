@@ -1,6 +1,6 @@
 # Identity & Auth Boundary
 
-TrustOps server mode uses one identity model for browser SSO and headless API
+GRC Lake server mode uses one identity model for browser SSO and headless API
 keys — the same tenant, role, scope, and audit envelope.
 
 ## Identity flow
@@ -17,7 +17,7 @@ flowchart LR
     SESS["API key → browser session"]
   end
 
-  subgraph TrustOps["TrustOps auth core"]
+  subgraph GRC Lake["GRC Lake auth core"]
     MAP["Map email → user<br/>IdP group → role"]
     TEN["Tenant scope"]
     RBAC["Role + scopes"]
@@ -43,7 +43,7 @@ flowchart LR
 
 ## OIDC vs SAML vs API key
 
-| Method            | Best for                             | TrustOps endpoints                   |
+| Method            | Best for                             | GRC Lake endpoints                   |
 | ----------------- | ------------------------------------ | ------------------------------------ |
 | **OIDC**          | Modern IdPs (Okta, Entra ID, Google) | `GET /api/v1/auth/login` → callback  |
 | **SAML 2.0**      | Enterprise IdPs without OIDC         | `GET /api/v1/auth/saml/login` → ACS  |
@@ -54,14 +54,14 @@ flowchart LR
 ## Session contract
 
 Browser session cookies are **always signed** when auth is enabled
-(`TRUSTOPS_COOKIE_SIGNING_KEY`). OIDC OAuth state uses a separate
-`TRUSTOPS_SESSION_SECRET`.
+(`GRC_LAKE_COOKIE_SIGNING_KEY`). OIDC OAuth state uses a separate
+`GRC_LAKE_SESSION_SECRET`.
 
 ```mermaid
 sequenceDiagram
   participant User as Human user
   participant IdP as Identity provider
-  participant TO as TrustOps API
+  participant TO as GRC Lake API
   participant DB as App state DB
 
   User->>TO: GET /api/v1/auth/login
@@ -81,7 +81,7 @@ sequenceDiagram
 | `GET/PATCH /api/v1/auth/users`       | Tenant user directory (admin)                       |
 | `POST /api/v1/auth/session-from-key` | Paste API key on login page                         |
 | Console **Access**                   | API keys, users & roles, invites                    |
-| IdP role maps                        | `TRUSTOPS_OIDC_ROLE_MAP` / `TRUSTOPS_SAML_ROLE_MAP` |
+| IdP role maps                        | `GRC_LAKE_OIDC_ROLE_MAP` / `GRC_LAKE_SAML_ROLE_MAP` |
 
 ## Roles (summary)
 
@@ -95,4 +95,4 @@ sequenceDiagram
 | `read_only`           | Internal read                    |
 
 See [SERVER_AUTH.md](../SERVER_AUTH.md) and
-[identity boundary SVG](../images/trustops-identity-boundary.svg).
+[identity boundary SVG](../images/grc-lake-identity-boundary.svg).

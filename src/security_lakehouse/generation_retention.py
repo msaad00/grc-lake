@@ -12,6 +12,7 @@ from typing import Any
 
 from security_lakehouse.generations import active_generation, publication_lock, verify_generation
 from security_lakehouse.io import read_json
+from security_lakehouse.runtime_environment import runtime_env
 
 
 def _references(value: Any) -> set[str]:
@@ -32,7 +33,7 @@ def retained_generations(lake: Path) -> set[str]:
     for path in (lake / "gold/snapshots").glob("*.json"):
         protected.update(_references(read_json(path)))
     root = lake.parent.parent if lake.parent.name == "tenants" else lake
-    if (root / "server/app.db").is_file() or os.environ.get("TRUSTOPS_DATABASE_URL"):
+    if (root / "server/app.db").is_file() or runtime_env().get("GRC_LAKE_DATABASE_URL"):
         from sqlalchemy import select
 
         from security_lakehouse.db.base import create_engine_for, session_factory

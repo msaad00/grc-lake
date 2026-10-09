@@ -61,7 +61,7 @@ MIN_PASSWORD_LENGTH = 14
 MAX_ACCESS_KEY_AGE_DAYS = 90
 
 # The read action each optional inventory service needs, matching
-# deploy/aws/trustops-posture-readonly-role.yaml, so a denied read names the
+# deploy/aws/grc-lake-posture-readonly-role.yaml, so a denied read names the
 # permission to grant.
 INVENTORY_PERMISSIONS = {
     "ec2": "ec2:DescribeInstances",
@@ -99,12 +99,12 @@ class AWSClient:
 
     * **Ambient** (default) — credentials resolve through boto3's standard
       provider chain (``AWS_*`` env vars / profiles / IRSA / instance roles).
-      Use this when TrustOps already runs as the reader identity.
-    * **Assume-role** — when ``role_arn`` is given, TrustOps calls
+      Use this when GRC Lake already runs as the reader identity.
+    * **Assume-role** — when ``role_arn`` is given, GRC Lake calls
       ``sts:AssumeRole`` (with the customer's ``external_id`` for confused-deputy
       protection) and reads with the returned short-lived session. This is the
       hosted-GRC connect model: the customer deploys the read-only role
-      (``deploy/aws/trustops-posture-readonly-role.yaml``) and hands TrustOps
+      (``deploy/aws/grc-lake-posture-readonly-role.yaml``) and hands GRC Lake
       only the Role ARN + External ID — never a key. The base session used to
       assume is itself ambient (the runtime's pod/instance identity).
     """

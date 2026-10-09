@@ -16,7 +16,7 @@ from security_lakehouse.secret_refs import (
 )
 
 TENANT = "3f2b8c1e-9a4d-4c2b-8f1e-2a6b7c8d9e0f"
-TENANT_PREFIX = "TRUSTOPS_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
+TENANT_PREFIX = "GRC_LAKE_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
 
 
 @pytest.fixture(autouse=True)
@@ -26,7 +26,7 @@ def _no_hosted_flag(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_tenant_prefix_is_upper_snake_of_tenant_id_with_terminator() -> None:
     assert tenant_secret_prefix(TENANT) == TENANT_PREFIX
-    assert tenant_secret_prefix("insecure") == "TRUSTOPS_TENANT_INSECURE__"
+    assert tenant_secret_prefix("insecure") == "GRC_LAKE_TENANT_INSECURE__"
 
 
 @pytest.mark.parametrize("tenant_id", ["a_b", "A-B", "a--b", "-a", "a-", "a.b", "", "a b"])
@@ -48,30 +48,30 @@ def test_tenant_prefixes_never_collide_or_nest() -> None:
 
 
 def test_ineligible_tenant_id_only_gets_the_operator_allowlist() -> None:
-    env = {"TRUSTOPS_TENANT_A_B__TOKEN": "x", "ACME_TOKEN": "y", ALLOWLIST_ENV: "ACME_TOKEN"}
+    env = {"GRC_LAKE_TENANT_A_B__TOKEN": "x", "ACME_TOKEN": "y", ALLOWLIST_ENV: "ACME_TOKEN"}
     with server_execution("a_b"):
-        assert secret_ref_denial("TRUSTOPS_TENANT_A_B__TOKEN", env=env)
+        assert secret_ref_denial("GRC_LAKE_TENANT_A_B__TOKEN", env=env)
         assert resolve_secret_ref("ACME_TOKEN", env) == "y"
 
 
 def test_local_mode_resolves_any_name_unchanged() -> None:
-    env = {"TRUSTOPS_COOKIE_SIGNING_KEY": "local-ok"}
-    assert secret_ref_denial("TRUSTOPS_COOKIE_SIGNING_KEY", env=env) is None
-    assert resolve_secret_ref("TRUSTOPS_COOKIE_SIGNING_KEY", env) == "local-ok"
+    env = {"GRC_LAKE_COOKIE_SIGNING_KEY": "local-ok"}
+    assert secret_ref_denial("GRC_LAKE_COOKIE_SIGNING_KEY", env=env) is None
+    assert resolve_secret_ref("GRC_LAKE_COOKIE_SIGNING_KEY", env) == "local-ok"
 
 
 @pytest.mark.parametrize(
     "name",
     [
-        "TRUSTOPS_COOKIE_SIGNING_KEY",
-        "TRUSTOPS_COOKIE_SIGNING_KEY_FILE",
+        "GRC_LAKE_COOKIE_SIGNING_KEY",
+        "GRC_LAKE_COOKIE_SIGNING_KEY_FILE",
         "DATABASE_URL",
         "AWS_SECRET_ACCESS_KEY",
         "AWS_SESSION_TOKEN",
         "STRIPE_SECRET_KEY",
         "GOOGLE_APPLICATION_CREDENTIALS",
         "AZURE_CLIENT_SECRET",
-        "TRUSTOPS_TENANT_OTHER_TENANT_TOKEN",
+        "GRC_LAKE_TENANT_OTHER_TENANT_TOKEN",
     ],
 )
 def test_server_mode_denies_server_secrets_even_when_allowlisted(name: str) -> None:

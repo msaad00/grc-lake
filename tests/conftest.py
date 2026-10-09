@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 # Signed session cookies are mandatory whenever server auth is enabled.
-os.environ.setdefault("TRUSTOPS_COOKIE_SIGNING_KEY", "test-cookie-signing-key-for-pytest-only")
+os.environ.setdefault("GRC_LAKE_COOKIE_SIGNING_KEY", "test-cookie-signing-key-for-pytest-only")
 
 _ENTRY_POINT_FIXTURE_MODULES = frozenset(
     path.stem for path in (Path(__file__).parent / "fixtures" / "entry_point_connectors").glob("*.py")

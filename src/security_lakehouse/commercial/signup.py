@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hmac
-import os
 import re
 from typing import Any
 
@@ -12,12 +11,13 @@ from sqlalchemy.orm import Session
 from security_lakehouse.commercial.email import commercial_hosted_enabled
 from security_lakehouse.commercial.pricing import TIER_IDS, get_tier
 from security_lakehouse.db import repository
+from security_lakehouse.runtime_environment import runtime_env
 
 _SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 
 
 def self_serve_signup_enabled() -> bool:
-    return commercial_hosted_enabled() and os.environ.get("TRUSTOPS_SELF_SERVE_SIGNUP", "").lower() in {
+    return commercial_hosted_enabled() and runtime_env().get("GRC_LAKE_SELF_SERVE_SIGNUP", "").lower() in {
         "1",
         "true",
         "yes",
@@ -25,16 +25,16 @@ def self_serve_signup_enabled() -> bool:
 
 
 def signup_secret_configured() -> bool:
-    return bool(os.environ.get("TRUSTOPS_SIGNUP_SECRET", "").strip())
+    return bool(runtime_env().get("GRC_LAKE_SIGNUP_SECRET", "").strip())
 
 
 def open_signup_allowed() -> bool:
-    return os.environ.get("TRUSTOPS_ALLOW_OPEN_SIGNUP", "").strip().lower() in {"1", "true", "yes"}
+    return runtime_env().get("GRC_LAKE_ALLOW_OPEN_SIGNUP", "").strip().lower() in {"1", "true", "yes"}
 
 
 def verify_signup_secret(provided: str | None) -> bool:
     """Check the signup secret; with none configured, signup is closed unless explicitly opened."""
-    expected = os.environ.get("TRUSTOPS_SIGNUP_SECRET", "").strip()
+    expected = runtime_env().get("GRC_LAKE_SIGNUP_SECRET", "").strip()
     if not expected:
         return open_signup_allowed()
     return hmac.compare_digest((provided or "").strip().encode("utf-8"), expected.encode("utf-8"))
@@ -58,7 +58,7 @@ def create_workspace(
 ) -> dict[str, Any]:
     """Create tenant + first admin user for self-serve signup."""
     if not self_serve_signup_enabled():
-        raise ValueError("self-serve signup requires TRUSTOPS_COMMERCIAL_HOSTED=1 and TRUSTOPS_SELF_SERVE_SIGNUP=1")
+        raise ValueError("self-serve signup requires GRC_LAKE_COMMERCIAL_HOSTED=1 and GRC_LAKE_SELF_SERVE_SIGNUP=1")
     slug = normalize_slug(org_slug)
     tier = plan_tier.strip().lower()
     if tier not in TIER_IDS:

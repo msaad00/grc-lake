@@ -85,8 +85,8 @@ def test_linked_task_cannot_be_dismissed_without_retest(credentials):
 
 @pytest.mark.parametrize("env", ["production", "prod", "staging"])
 def test_local_insecure_flag_cannot_override_production_guard(monkeypatch, env):
-    monkeypatch.setenv("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", "true")
-    monkeypatch.setenv("TRUSTOPS_ENV", env)
+    monkeypatch.setenv("GRC_LAKE_ALLOW_INSECURE_NO_AUTH", "true")
+    monkeypatch.setenv("GRC_LAKE_ENV", env)
     with pytest.raises(SystemExit, match="production|staging"):
         _refuse_exposed_local_mode("0.0.0.0")
 

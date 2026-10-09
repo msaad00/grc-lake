@@ -17,7 +17,7 @@ import pytest
 import security_lakehouse.workflows as wf
 from security_lakehouse import netguard
 
-ALLOWLIST_ENV = "TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST"
+ALLOWLIST_ENV = "GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST"
 
 
 class _FakeResponse:
@@ -166,7 +166,7 @@ def test_non_http_scheme_rejected(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
 
 def test_secret_resolved_into_request_but_not_persisted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch)
-    monkeypatch.setenv("TRUSTOPS_SECRET_FOO", "super-secret-token")
+    monkeypatch.setenv("GRC_LAKE_SECRET_FOO", "super-secret-token")
     captured: list[urllib.request.Request] = []
     monkeypatch.setattr(netguard, "open_guarded", _capturing_urlopen(captured))
 
@@ -189,7 +189,7 @@ def test_secret_resolved_into_request_but_not_persisted(monkeypatch: pytest.Monk
 
 def test_unset_secret_raises(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch)
-    monkeypatch.delenv("TRUSTOPS_SECRET_MISSING", raising=False)
+    monkeypatch.delenv("GRC_LAKE_SECRET_MISSING", raising=False)
     monkeypatch.setattr(netguard, "open_guarded", _capturing_urlopen([]))
     with pytest.raises(ValueError, match="secret 'MISSING' is not set"):
         wf.run_action(
@@ -201,7 +201,7 @@ def test_unset_secret_raises(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
 
 def test_run_log_keeps_secret_token_not_value(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch)
-    monkeypatch.setenv("TRUSTOPS_SECRET_FOO", "super-secret-token")
+    monkeypatch.setenv("GRC_LAKE_SECRET_FOO", "super-secret-token")
     captured: list[urllib.request.Request] = []
     monkeypatch.setattr(netguard, "open_guarded", _capturing_urlopen(captured))
 

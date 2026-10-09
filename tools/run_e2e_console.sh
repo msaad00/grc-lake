@@ -7,15 +7,15 @@ cd "$ROOT"
 
 PORT="${PLAYWRIGHT_PORT:-8787}"
 BASE="http://127.0.0.1:${PORT}"
-LAKE="${TRUSTOPS_LAKE:-build/lakehouse-e2e}"
+LAKE="${GRC_LAKE_LAKE:-build/lakehouse-e2e}"
 
 echo "==> Load golden fixture into ${LAKE}"
-uv run security-lakehouse fixtures load --company golden --out "$LAKE" --rebase-times
-uv run security-lakehouse db upgrade --lake "$LAKE"
+uv run grc-lake fixtures load --company golden --out "$LAKE" --rebase-times
+uv run grc-lake db upgrade --lake "$LAKE"
 
 echo "==> Start server on ${BASE}"
-export TRUSTOPS_COOKIE_SIGNING_KEY="${TRUSTOPS_COOKIE_SIGNING_KEY:-e2e-test-cookie-signing-key}"
-uv run security-lakehouse serve \
+export GRC_LAKE_COOKIE_SIGNING_KEY="${GRC_LAKE_COOKIE_SIGNING_KEY:-e2e-test-cookie-signing-key}"
+uv run grc-lake serve \
   --lake "$LAKE" \
   --server \
   --allow-insecure-no-auth \

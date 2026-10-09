@@ -187,7 +187,7 @@ def test_runtime_retries_on_transient_5xx_then_succeeds(monkeypatch: pytest.Monk
 
 
 def test_runtime_probe_and_discovery_with_env_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_RUNTIME_GATEWAY_TOKEN", "secret-token")
+    monkeypatch.setenv("GRC_LAKE_RUNTIME_GATEWAY_TOKEN", "secret-token")
 
     with patch.object(
         RuntimeGatewayClient,
@@ -197,7 +197,7 @@ def test_runtime_probe_and_discovery_with_env_token(monkeypatch: pytest.MonkeyPa
         probe = probe_runtime_gateway_access(
             credentials={
                 "host": "https://runtime.example",
-                "credential_ref": "TRUSTOPS_RUNTIME_GATEWAY_TOKEN",
+                "credential_ref": "GRC_LAKE_RUNTIME_GATEWAY_TOKEN",
             },
             options={"stream": "runtime-events"},
         )
@@ -217,7 +217,7 @@ def test_runtime_probe_and_discovery_with_env_token(monkeypatch: pytest.MonkeyPa
         scope = discover_runtime_gateway_scope(
             credentials={
                 "host": "https://runtime.example",
-                "credential_ref": "TRUSTOPS_RUNTIME_GATEWAY_TOKEN",
+                "credential_ref": "GRC_LAKE_RUNTIME_GATEWAY_TOKEN",
             },
             options={},
         )

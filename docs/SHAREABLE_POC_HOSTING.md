@@ -1,11 +1,11 @@
 # Shareable POC Hosting
 
-This is the shortest path from a local TrustOps proof to a link a team can
+This is the shortest path from a local GRC Lake proof to a link a team can
 open, sign into, connect a source, and evaluate posture.
 
 ```text
-https://trustops.example.com
-  -> TrustOps API + console
+https://grc-lake.example.com
+  -> GRC Lake API + console
   -> authenticated users and API keys
   -> tenant lake at /lake
   -> server-side connector secrets
@@ -15,7 +15,7 @@ https://trustops.example.com
 
 ## What You Are Publishing
 
-Publish the TrustOps console and API, not a raw evidence store.
+Publish the GRC Lake console and API, not a raw evidence store.
 
 | Surface                | Who uses it                 | Authentication             | Data shown                                      |
 | ---------------------- | --------------------------- | -------------------------- | ----------------------------------------------- |
@@ -36,7 +36,7 @@ Do not publish:
 | Layer         | POC default                                             | Production hardening                                           |
 | ------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
 | Runtime       | Helm chart on EKS, AKS, GKE, or a small managed cluster | Private nodes, workload identity, external secrets             |
-| URL           | Public HTTPS ingress, e.g. `trustops-poc.example.com`   | WAF/API gateway, managed cert rotation, private admin routes   |
+| URL           | Public HTTPS ingress, e.g. `grc-lake-poc.example.com`   | WAF/API gateway, managed cert rotation, private admin routes   |
 | Auth          | One tenant, OIDC/SAML for humans, API keys for agents   | SCIM/user lifecycle, least-privilege roles, enforced SSO       |
 | State         | Persistent volume mounted at `/lake`                    | Backup policy, encrypted volume, tenant-specific lake prefixes |
 | Evidence      | Read-only Snowflake/cloud/service identities            | Customer IaC owns roles, grants, views, and secret rotation    |
@@ -49,16 +49,16 @@ For a public POC, use the version pinned in your checked-out release chart;
 record the image digest for reproducibility:
 
 ```bash
-TRUSTOPS_VERSION=$(awk '/^appVersion:/ {gsub(/"/, "", $2); print $2}' deploy/helm/trustops/Chart.yaml)
-docker pull "ghcr.io/msaad00/trustops:$TRUSTOPS_VERSION"
+GRC_LAKE_VERSION=$(awk '/^appVersion:/ {gsub(/"/, "", $2); print $2}' deploy/helm/grc-lake/Chart.yaml)
+docker pull "ghcr.io/msaad00/grc-lake:$GRC_LAKE_VERSION"
 ```
 
 For a private build:
 
 ```bash
 make docker-build
-docker tag trustops:dev registry.example.com/trustops:2026-06-poc
-docker push registry.example.com/trustops:2026-06-poc
+docker tag grc-lake:dev registry.example.com/grc-lake:2026-06-poc
+docker push registry.example.com/grc-lake:2026-06-poc
 ```
 
 The image serves both the FastAPI backend and the built React console from the
@@ -66,26 +66,26 @@ same process. The public app URL is therefore the API URL too.
 
 ## 2. Create Runtime Secrets
 
-Create secrets in the hosting platform. TrustOps should receive references or
+Create secrets in the hosting platform. GRC Lake should receive references or
 mounted files, not raw values typed into the UI.
 
 ```bash
-kubectl create namespace trustops --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace grc-lake --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 Minimum server secrets:
 
 ```bash
-kubectl -n trustops create secret generic trustops-server \
-  --from-literal=TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
-  --from-literal=TRUSTOPS_SESSION_SECRET="$(openssl rand -hex 32)"
+kubectl -n grc-lake create secret generic grc-lake-server \
+  --from-literal=GRC_LAKE_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
+  --from-literal=GRC_LAKE_SESSION_SECRET="$(openssl rand -hex 32)"
 ```
 
 Snowflake key-pair example:
 
 ```bash
-kubectl -n trustops create secret generic trustops-snowflake-key \
-  --from-file=snowflake_key.p8="$HOME/.trustops/snowflake/trustops_snowflake_key.p8"
+kubectl -n grc-lake create secret generic grc-lake-snowflake-key \
+  --from-file=snowflake_key.p8="$HOME/.grc-lake/snowflake/grc-lake_snowflake_key.p8"
 ```
 
 For AWS/Azure/GCP, prefer workload identity or assumed roles over exported
@@ -112,21 +112,21 @@ mount, and EKS IRSA annotation. The minimal shape is:
 ```yaml
 # poc-values.yaml
 image:
-  repository: ghcr.io/msaad00/trustops
+  repository: ghcr.io/msaad00/grc-lake
   tag: "" # inherit appVersion from the checked-out release chart
 
 ingress:
   enabled: true
   className: nginx
   hosts:
-    - host: trustops-poc.example.com
+    - host: grc-lake-poc.example.com
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: trustops-poc-tls
+    - secretName: grc-lake-poc-tls
       hosts:
-        - trustops-poc.example.com
+        - grc-lake-poc.example.com
 
 lake:
   persistence:
@@ -141,39 +141,39 @@ security:
   requireAuthentication: true
 
 env:
-  - name: TRUSTOPS_ENV
+  - name: GRC_LAKE_ENV
     value: production
-  - name: TRUSTOPS_COOKIE_SIGNING_KEY
+  - name: GRC_LAKE_COOKIE_SIGNING_KEY
     valueFrom:
       secretKeyRef:
-        name: trustops-server
-        key: TRUSTOPS_COOKIE_SIGNING_KEY
-  - name: TRUSTOPS_SESSION_SECRET
+        name: grc-lake-server
+        key: GRC_LAKE_COOKIE_SIGNING_KEY
+  - name: GRC_LAKE_SESSION_SECRET
     valueFrom:
       secretKeyRef:
-        name: trustops-server
-        key: TRUSTOPS_SESSION_SECRET
-  - name: TRUSTOPS_PUBLIC_URL
-    value: https://trustops-poc.example.com
+        name: grc-lake-server
+        key: GRC_LAKE_SESSION_SECRET
+  - name: GRC_LAKE_PUBLIC_URL
+    value: https://grc-lake-poc.example.com
   - name: SNOWFLAKE_PRIVATE_KEY_FILE
-    value: /var/run/secrets/trustops/snowflake_key.p8
+    value: /var/run/secrets/grc-lake/snowflake_key.p8
 
 extraVolumeMounts:
   - name: snowflake-key
-    mountPath: /var/run/secrets/trustops
+    mountPath: /var/run/secrets/grc-lake
     readOnly: true
 
 extraVolumes:
   - name: snowflake-key
     secret:
-      secretName: trustops-snowflake-key
+      secretName: grc-lake-snowflake-key
 ```
 
 Install:
 
 ```bash
-helm upgrade --install trustops deploy/helm/trustops \
-  --namespace trustops \
+helm upgrade --install grc-lake deploy/helm/grc-lake \
+  --namespace grc-lake \
   --create-namespace \
   --values poc-values.yaml
 ```
@@ -181,8 +181,8 @@ helm upgrade --install trustops deploy/helm/trustops \
 Verify:
 
 ```bash
-kubectl -n trustops get pods
-curl -fsS https://trustops-poc.example.com/api/healthz
+kubectl -n grc-lake get pods
+curl -fsS https://grc-lake-poc.example.com/api/healthz
 ```
 
 ## 4. Turn On Server Auth
@@ -198,32 +198,32 @@ security:
   requireAuthentication: true
 
 env:
-  - name: TRUSTOPS_ENV
+  - name: GRC_LAKE_ENV
     value: production
-  - name: TRUSTOPS_COOKIE_SIGNING_KEY
+  - name: GRC_LAKE_COOKIE_SIGNING_KEY
     valueFrom:
       secretKeyRef:
-        name: trustops-server
-        key: TRUSTOPS_COOKIE_SIGNING_KEY
-  - name: TRUSTOPS_SESSION_SECRET
+        name: grc-lake-server
+        key: GRC_LAKE_COOKIE_SIGNING_KEY
+  - name: GRC_LAKE_SESSION_SECRET
     valueFrom:
       secretKeyRef:
-        name: trustops-server
-        key: TRUSTOPS_SESSION_SECRET
-  - name: TRUSTOPS_PUBLIC_URL
-    value: https://trustops-poc.example.com
-  - name: TRUSTOPS_OIDC_ISSUER
+        name: grc-lake-server
+        key: GRC_LAKE_SESSION_SECRET
+  - name: GRC_LAKE_PUBLIC_URL
+    value: https://grc-lake-poc.example.com
+  - name: GRC_LAKE_OIDC_ISSUER
     value: https://idp.example.com
-  - name: TRUSTOPS_OIDC_CLIENT_ID
-    value: trustops-poc
-  - name: TRUSTOPS_OIDC_CLIENT_SECRET
+  - name: GRC_LAKE_OIDC_CLIENT_ID
+    value: grc-lake-poc
+  - name: GRC_LAKE_OIDC_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: trustops-oidc
+        name: grc-lake-oidc
         key: client_secret
-  - name: TRUSTOPS_OIDC_TENANT_SLUG
+  - name: GRC_LAKE_OIDC_TENANT_SLUG
     value: poc
-  - name: TRUSTOPS_OIDC_AUTO_PROVISION
+  - name: GRC_LAKE_OIDC_AUTO_PROVISION
     value: "true"
 ```
 

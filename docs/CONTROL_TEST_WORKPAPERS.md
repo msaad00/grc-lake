@@ -7,8 +7,8 @@ closed assessment period. Requirement mappings come from the generation's CCF
 catalog, with their review states, rather than from claims in the plan.
 
 ```sh
-security-lakehouse pipeline run --raw examples/control-assurance/events.jsonl --out build/assurance-demo
-security-lakehouse assessment test-plan --lake build/assurance-demo --plan examples/control-assurance/plan.json
+grc-lake pipeline run --raw examples/control-assurance/events.jsonl --out build/assurance-demo
+grc-lake assessment test-plan --lake build/assurance-demo --plan examples/control-assurance/plan.json
 ```
 
 The fixture uses five controls: privileged access, production changes, audit

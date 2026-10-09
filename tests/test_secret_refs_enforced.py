@@ -31,7 +31,7 @@ EXEMPT = {
     "auth/saml.py": "operator-set SAML config env",
     "commercial/billing.py": "operator-set Stripe config",
     "cli.py": "operator-typed --*-env flags on the local CLI, never tenant input",
-    "workflows.py": "workflow secrets: TRUSTOPS_SECRET_ locally, the tenant's own prefix in server mode",
+    "workflows.py": "workflow secrets: GRC_LAKE_SECRET_ locally, the tenant's own prefix in server mode",
 }
 
 _ENV_RECEIVERS = {"env", "environment", "environ", "source_env", "process_env"}
@@ -110,7 +110,7 @@ def test_every_connector_rejects_a_server_secret_ref_at_configure_time(
     connector_id: str, field: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.delenv(COMMERCIAL_HOSTED_ENV, raising=False)
-    credentials = {field: "TRUSTOPS_COOKIE_SIGNING_KEY"}
+    credentials = {field: "GRC_LAKE_COOKIE_SIGNING_KEY"}
     with server_execution("tenant-a"):
         error = configure_payload_error(connector_id=connector_id, state="enabled", credentials=credentials, options={})
     assert error is not None and "server secret" in error

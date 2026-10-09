@@ -7,14 +7,18 @@ the routes in :mod:`security_lakehouse.server_routes.routers.scim`; both return
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 from security_lakehouse.commercial.email import commercial_hosted_enabled
+from security_lakehouse.runtime_environment import runtime_env
 
 
 def scim_enabled() -> bool:
-    return commercial_hosted_enabled() and os.environ.get("TRUSTOPS_SCIM_ENABLED", "").lower() in {"1", "true", "yes"}
+    return commercial_hosted_enabled() and runtime_env().get("GRC_LAKE_SCIM_ENABLED", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
 
 
 def scim_config() -> dict[str, Any]:
@@ -25,14 +29,14 @@ def scim_config() -> dict[str, Any]:
         "supported": scim_enabled(),
         "note": (
             "SCIM uses per-tenant bearer tokens issued at /api/v1/platform/scim/tokens (SHA-256 hashed at rest). "
-            "OSS/self-hosted returns 501 until TRUSTOPS_COMMERCIAL_HOSTED=1 and TRUSTOPS_SCIM_ENABLED=1."
+            "OSS/self-hosted returns 501 until GRC_LAKE_COMMERCIAL_HOSTED=1 and GRC_LAKE_SCIM_ENABLED=1."
         ),
     }
 
 
 def scim_not_implemented_detail() -> str:
     return (
-        "SCIM provisioning is a commercial hosted feature; enable TRUSTOPS_COMMERCIAL_HOSTED and TRUSTOPS_SCIM_ENABLED"
+        "SCIM provisioning is a commercial hosted feature; enable GRC_LAKE_COMMERCIAL_HOSTED and GRC_LAKE_SCIM_ENABLED"
     )
 
 

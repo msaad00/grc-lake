@@ -1,6 +1,6 @@
 # Mapping review
 
-TrustOps ships a Common Control Framework: reusable safeguards, each mapped to
+GRC Lake ships a Common Control Framework: reusable safeguards, each mapped to
 the framework requirements it satisfies (see
 [Common Control Framework](COMMON_CONTROL_FRAMEWORK.md)). Before an auditor
 relies on a mapping, someone has to confirm that the safeguard's evidence
@@ -11,7 +11,7 @@ recorded, and how the result shows up in coverage.
 
 Each mapping in `controls/safeguards.json` ships with a `review_status`:
 
-- **reviewed**: a TrustOps maintainer confirmed the equivalence against the
+- **reviewed**: a GRC Lake maintainer confirmed the equivalence against the
   requirement text. The console and API call this **maintainer-reviewed**.
 - **proposed**: suggested by a published crosswalk or by matching titles, and
   not yet confirmed by anyone.
@@ -68,7 +68,7 @@ Each record holds:
 
 The latest decision for a mapping wins, and earlier ones stay in the log. The
 log is hash-chained (`prev_hash`, `record_hash`) and serialized across
-processes, like the other TrustOps ledgers. `GET /api/v1/mapping-reviews/summary`
+processes, like the other GRC Lake ledgers. `GET /api/v1/mapping-reviews/summary`
 and `frameworks review export` report whether the chain verifies.
 
 ### Integrity
@@ -83,7 +83,7 @@ and `frameworks review export` report whether the chain verifies.
   `mapping_reviews.tip.json` sidecar) from backup to recover.
 - Each decision batch is written with one append and `fsync`, so a batch lands
   whole or, after a crash mid-write, as a torn line that verification reports.
-- When `TRUSTOPS_COOKIE_SIGNING_KEY` is set (always, when server auth is on),
+- When `GRC_LAKE_COOKIE_SIGNING_KEY` is set (always, when server auth is on),
   the chain tip is also MACed with a key derived from it and stored in
   `gold/mapping_reviews.tip.json`. Someone who can write the lake but does not
   hold the key cannot rewrite the log and recompute every hash undetected.
@@ -94,16 +94,16 @@ and `frameworks review export` report whether the chain verifies.
 
 ### Rotating the signing key
 
-After changing `TRUSTOPS_COOKIE_SIGNING_KEY`, re-sign each lake's decision-log
-tip with the new key. Run it with the new key in `TRUSTOPS_COOKIE_SIGNING_KEY`
+After changing `GRC_LAKE_COOKIE_SIGNING_KEY`, re-sign each lake's decision-log
+tip with the new key. Run it with the new key in `GRC_LAKE_COOKIE_SIGNING_KEY`
 and the old one in any other variable you name:
 
 ```bash
-export TRUSTOPS_COOKIE_SIGNING_KEY="<new key>"
-export TRUSTOPS_PREVIOUS_SIGNING_KEY="<old key>"
-security-lakehouse frameworks review resign --lake <root>/tenants/<tenant_id> \
-  --previous-key-env TRUSTOPS_PREVIOUS_SIGNING_KEY --actor ops@example.com
-unset TRUSTOPS_PREVIOUS_SIGNING_KEY
+export GRC_LAKE_COOKIE_SIGNING_KEY="<new key>"
+export GRC_LAKE_PREVIOUS_SIGNING_KEY="<old key>"
+grc-lake frameworks review resign --lake <root>/tenants/<tenant_id> \
+  --previous-key-env GRC_LAKE_PREVIOUS_SIGNING_KEY --actor ops@example.com
+unset GRC_LAKE_PREVIOUS_SIGNING_KEY
 ```
 
 The command holds the log's lock, verifies the hash chain, and checks the
@@ -176,25 +176,25 @@ nothing.
 CLI (local lake):
 
 ```bash
-security-lakehouse frameworks review approve --lake ./lake \
+grc-lake frameworks review approve --lake ./lake \
   --safeguard SG-IDENTITY-001 --framework cmmc-2-level2 --control CMMC-3.1.14 \
   --rationale "MFA evidence covers remote access routing" --reviewer grc@example.com
-security-lakehouse frameworks review reject ...        # same flags
-security-lakehouse frameworks review needs-changes ... # same flags
-security-lakehouse frameworks review export --lake ./lake --format csv --out decisions.csv
-security-lakehouse frameworks review resign --lake ./lake --previous-key-env OLD_KEY  # after a key rotation
+grc-lake frameworks review reject ...        # same flags
+grc-lake frameworks review needs-changes ... # same flags
+grc-lake frameworks review export --lake ./lake --format csv --out decisions.csv
+grc-lake frameworks review resign --lake ./lake --previous-key-env OLD_KEY  # after a key rotation
 
 # Coverage, queue, and OSCAL with your decisions applied
-security-lakehouse frameworks safeguards --lake ./lake --format table
-security-lakehouse frameworks coverage --lake ./lake
-security-lakehouse frameworks review-queue --lake ./lake
-security-lakehouse oscal export --component-definition --lake ./lake --out cd.json
+grc-lake frameworks safeguards --lake ./lake --format table
+grc-lake frameworks coverage --lake ./lake
+grc-lake frameworks review-queue --lake ./lake
+grc-lake oscal export --component-definition --lake ./lake --out cd.json
 ```
 
 ## OSCAL
 
 The component definition (see [OSCAL export](OSCAL_EXPORT.md)) emits
 maintainer-reviewed mappings plus your org-reviewed ones. Each
-implemented requirement carries `trustops-review-state`. Org-reviewed ones also
-carry `trustops-reviewed-by`, `trustops-reviewed-at`, and
-`trustops-review-decision-id`. Rejected and proposed mappings are left out.
+implemented requirement carries `grc-lake-review-state`. Org-reviewed ones also
+carry `grc-lake-reviewed-by`, `grc-lake-reviewed-at`, and
+`grc-lake-review-decision-id`. Rejected and proposed mappings are left out.

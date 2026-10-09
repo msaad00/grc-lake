@@ -191,7 +191,7 @@ def test_agent_run_api_langgraph_orchestrator_requires_extra(env) -> None:
     assert created.status_code == HTTPStatus.BAD_REQUEST
     assert created.json()["errors"][0] == {
         "code": "bad_request",
-        "detail": "langgraph orchestrator requires trustops-security-data-lake[agents]",
+        "detail": "langgraph orchestrator requires grc-lake[agents]",
     }
 
 
@@ -326,10 +326,10 @@ def test_agent_run_rejects_role_escalation(env) -> None:
 
 def test_agent_run_provider_metadata_does_not_expose_key_env(env, monkeypatch: pytest.MonkeyPatch) -> None:
     _app, client, tokens = env
-    monkeypatch.setenv("TRUSTOPS_AGENT_PROVIDER", "openai")
-    monkeypatch.setenv("TRUSTOPS_AGENT_MODEL", "gpt-test")
-    monkeypatch.setenv("TRUSTOPS_AGENT_API_KEY_ENV", "TRUSTOPS_TEST_OPENAI_KEY")
-    monkeypatch.setenv("TRUSTOPS_TEST_OPENAI_KEY", "secret-test-value")
+    monkeypatch.setenv("GRC_LAKE_AGENT_PROVIDER", "openai")
+    monkeypatch.setenv("GRC_LAKE_AGENT_MODEL", "gpt-test")
+    monkeypatch.setenv("GRC_LAKE_AGENT_API_KEY_ENV", "GRC_LAKE_TEST_OPENAI_KEY")
+    monkeypatch.setenv("GRC_LAKE_TEST_OPENAI_KEY", "secret-test-value")
 
     created = client.post(
         "/api/v1/agent-runs",
@@ -339,7 +339,7 @@ def test_agent_run_provider_metadata_does_not_expose_key_env(env, monkeypatch: p
 
     assert created.status_code == HTTPStatus.CREATED
     text = json.dumps(created.json(), sort_keys=True)
-    assert "TRUSTOPS_TEST_OPENAI_KEY" not in text
+    assert "GRC_LAKE_TEST_OPENAI_KEY" not in text
     assert "secret-test-value" not in text
     assert created.json()["data"]["provider"]["configured"] is True
 

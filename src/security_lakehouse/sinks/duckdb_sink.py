@@ -34,9 +34,10 @@ from typing import Any
 
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.io import read_json, read_jsonl
+from security_lakehouse.runtime_environment import runtime_env
 
 DEFAULT_TENANT = "customer-managed"
-ENV_PATH = "TRUSTOPS_DUCKDB_PATH"
+ENV_PATH = "GRC_LAKE_DUCKDB_PATH"
 
 
 @dataclass(frozen=True)
@@ -44,7 +45,7 @@ class DuckDBSinkConfig:
     """Embedded DuckDB target — just the path to the lake file.
 
     No host/user/password: the lake is a local file the customer owns. The path
-    is read from ``TRUSTOPS_DUCKDB_PATH``; an in-memory ``:memory:`` value is
+    is read from ``GRC_LAKE_DUCKDB_PATH``; an in-memory ``:memory:`` value is
     accepted for ephemeral use.
     """
 
@@ -53,6 +54,7 @@ class DuckDBSinkConfig:
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> DuckDBSinkConfig | None:
         """Build a config from env, or ``None`` when the embedded sink is unset."""
+        env = runtime_env(env)
         path = env.get(ENV_PATH)
         if not path:
             return None

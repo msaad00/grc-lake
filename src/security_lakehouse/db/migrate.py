@@ -2,7 +2,7 @@
 
 ``alembic upgrade head`` works from a checkout via the repo-root ``alembic.ini``;
 this module makes the same migrations runnable from an installed wheel and from
-the ``security-lakehouse db`` CLI, without depending on the ini file.
+the ``grc-lake db`` CLI, without depending on the ini file.
 """
 
 from __future__ import annotations

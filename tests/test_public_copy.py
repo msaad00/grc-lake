@@ -11,7 +11,7 @@ PUBLIC_DOCS = sorted(
 )
 
 INTERNAL_DOCS = (
-    "docs/TRUSTOPS_85_PLAN.md",
+    "docs/GRC_LAKE_85_PLAN.md",
     "docs/PILOT_ROADMAP.md",
     "docs/FRAMEWORK_EXPANSION_PLAN.md",
     "docs/REPO_AUDIT.md",

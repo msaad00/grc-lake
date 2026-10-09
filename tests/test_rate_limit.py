@@ -64,7 +64,7 @@ def test_keys_are_isolated() -> None:
 
 
 def test_disabled_config_always_allows() -> None:
-    limiter = RateLimiter(RateLimitConfig.from_env({"TRUSTOPS_API_RATE_LIMIT_RPS": "0"}))
+    limiter = RateLimiter(RateLimitConfig.from_env({"GRC_LAKE_API_RATE_LIMIT_RPS": "0"}))
     assert limiter.enabled is False
     assert all(limiter.check("k")[0] for _ in range(50))
 
@@ -128,8 +128,8 @@ def frozen_clock() -> _Clock:
 @pytest.fixture
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, frozen_clock: _Clock):
     # A tiny limit so a couple of requests trip it.
-    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_RPS", "1")
-    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_BURST", "2")
+    monkeypatch.setenv("GRC_LAKE_API_RATE_LIMIT_RPS", "1")
+    monkeypatch.setenv("GRC_LAKE_API_RATE_LIMIT_BURST", "2")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     # Time only moves when a test advances it, so a slow run cannot refill the
@@ -179,8 +179,8 @@ def test_health_probe_is_never_throttled(client) -> None:
 
 
 def test_distinct_credentials_do_not_share_a_budget(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_RPS", "0.001")
-    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_BURST", "2")
+    monkeypatch.setenv("GRC_LAKE_API_RATE_LIMIT_RPS", "0.001")
+    monkeypatch.setenv("GRC_LAKE_API_RATE_LIMIT_BURST", "2")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     tokens = []

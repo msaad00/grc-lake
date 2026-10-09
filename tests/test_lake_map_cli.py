@@ -1,4 +1,4 @@
-"""``security-lakehouse lake map --dry-run`` and ``lake presets``."""
+"""``grc-lake lake map --dry-run`` and ``lake presets``."""
 
 from __future__ import annotations
 

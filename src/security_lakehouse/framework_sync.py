@@ -1,6 +1,6 @@
 """Re-fetch official framework sources, recompute sha256, record content drift.
 
-Runs as ``security-lakehouse frameworks sync`` (CLI) and on a cron via
+Runs as ``grc-lake frameworks sync`` (CLI) and on a cron via
 ``.github/workflows/framework-sync.yml``. The job is intentionally append-only
 in spirit: it mutates ``frameworks/registry.json`` in place but only the
 ``source_sha256`` + ``pulled_at`` fields, and only when the upstream body has
@@ -41,12 +41,12 @@ from typing import Any
 from security_lakehouse.catalog import DEFAULT_FRAMEWORK_REGISTRY
 from security_lakehouse.io import append_jsonl
 
-PROJECT_URL = "https://github.com/msaad00/trustops-security-data-lake"
+PROJECT_URL = "https://github.com/msaad00/grc-lake"
 
 
 def _package_version() -> str:
     try:
-        return metadata.version("trustops-security-data-lake")
+        return metadata.version("grc-lake")
     except metadata.PackageNotFoundError:
         return "0.0.0"
 

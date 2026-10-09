@@ -1,6 +1,6 @@
 # Headless GRC Architecture
 
-TrustOps is **headless-first**: compliance posture, evidence, controls, and audit
+GRC Lake is **headless-first**: compliance posture, evidence, controls, and audit
 artifacts are produced and consumed through **APIs, CLI, MCP, and CI** — the same
 deterministic lake and `/api/v1` contract everywhere. The web console is a **peer
 surface** for human reviewers, auditors, and operators — not the source of truth.
@@ -87,30 +87,30 @@ Console actions hit the **same API** as headless callers and appear in request a
 
 ## MCP local trust boundary
 
-`trustops-mcp` can run in two modes:
+`grc-lake-mcp` can run in two modes:
 
 | Mode              | Env                                        | RBAC                                                               | Typical use                                         |
 | ----------------- | ------------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------------- |
-| **Local lake**    | `TRUSTOPS_MCP_MODE=local`, `TRUSTOPS_LAKE` | Application RBAC **not** enforced for lake-backed read/write tools | Developer laptop, CI job with dedicated lake volume |
-| **Remote server** | `TRUSTOPS_API_URL` + `TRUSTOPS_API_KEY`    | Same scopes as API keys (`read`, `write`, `admin`, …)              | Shared hosts, multi-tenant server mode              |
+| **Local lake**    | `GRC_LAKE_MCP_MODE=local`, `GRC_LAKE_LAKE` | Application RBAC **not** enforced for lake-backed read/write tools | Developer laptop, CI job with dedicated lake volume |
+| **Remote server** | `GRC_LAKE_API_URL` + `GRC_LAKE_API_KEY`    | Same scopes as API keys (`read`, `write`, `admin`, …)              | Shared hosts, multi-tenant server mode              |
 
-**In local mode, lake-backed write tools** (`create_snapshot`, `sync_connector`, `configure_connector`, `run_workflow`, `run_scheduler_tick`, `create_trust_share`, …) mutate files under `TRUSTOPS_LAKE` directly. They do not pass through FastAPI identity checks — security relies on **who can run the MCP process** and **filesystem permissions** on the lake directory.
+**In local mode, lake-backed write tools** (`create_snapshot`, `sync_connector`, `configure_connector`, `run_workflow`, `run_scheduler_tick`, `create_trust_share`, …) mutate files under `GRC_LAKE_LAKE` directly. They do not pass through FastAPI identity checks — security relies on **who can run the MCP process** and **filesystem permissions** on the lake directory.
 
 **In local mode, lake-backed read tools** (`get_posture`, `get_ai_governance`, `list_evidence`, …) read the same JSONL artifacts as `GET /api/v1/*` without a bearer token.
 
 **In remote mode, all tenant-backed tools** use the authenticated API, including
 posture, evidence, connectors, shares, snapshots, workflows, and scheduling.
-Either `TRUSTOPS_API_URL` or `TRUSTOPS_API_KEY` selects remote mode by default;
+Either `GRC_LAKE_API_URL` or `GRC_LAKE_API_KEY` selects remote mode by default;
 both are required, and partial configuration fails closed. Explicit
-`TRUSTOPS_MCP_MODE=local` disables remote-only tools. Private API destinations
-require `TRUSTOPS_API_ALLOW_PRIVATE=1`; other outbound SSRF protections are
+`GRC_LAKE_MCP_MODE=local` disables remote-only tools. Private API destinations
+require `GRC_LAKE_API_ALLOW_PRIVATE=1`; other outbound SSRF protections are
 unchanged. See the [MCP cookbook](cookbook/MCP_EVIDENCE_AND_APPROVALS.md).
 
 ### Deployment guidance
 
 1. On shared machines, prefer **remote API mode** for MCP agents so writes are RBAC-gated and request-audited.
 2. When using local mode, run MCP under a **dedicated service account** with minimal lake ACL (no world-readable `gold/` or `silver/`).
-3. Never point `TRUSTOPS_LAKE` at a production lake path from an untrusted stdio client (IDE plugins, unvetted agent hosts).
+3. Never point `GRC_LAKE_LAKE` at a production lake path from an untrusted stdio client (IDE plugins, unvetted agent hosts).
 4. Rotate API keys used for remote MCP the same as CI deploy keys.
 
 ## Idempotency and traceability

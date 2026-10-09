@@ -33,7 +33,7 @@ jobs:
       # does not fail the job; the other sources still refresh. Only a crash
       # of the sync itself fails this step.
       - name: Sync framework sources
-        run: uv run security-lakehouse frameworks sync --allow-network | tee sync.json
+        run: uv run grc-lake frameworks sync --allow-network | tee sync.json
       - name: Report source errors
         run: |
           uv run python -m security_lakehouse.framework_sync report sync.json > sync-report.md

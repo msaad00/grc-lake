@@ -1,4 +1,4 @@
-"""Async SDK tests: drive ``AsyncTrustOpsClient`` against the real app.
+"""Async SDK tests: drive ``AsyncGrcLakeClient`` against the real app.
 
 Mirrors :mod:`test_sdk` but for the coroutine surface. Each FastAPI app is
 served by uvicorn on an ephemeral localhost port in a background thread (the
@@ -30,7 +30,7 @@ import uvicorn  # noqa: E402
 
 from security_lakehouse.db.base import session_scope  # noqa: E402
 from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.sdk import AsyncTrustOpsClient, TrustOpsError  # noqa: E402
+from security_lakehouse.sdk import AsyncGrcLakeClient, GrcLakeError  # noqa: E402
 from security_lakehouse.server_app import create_app  # noqa: E402
 from test_api_v1 import _seed_lake  # noqa: E402
 
@@ -72,7 +72,7 @@ def test_async_get_posture_has_score(tmp_path: Path) -> None:
     with _server(create_app(tmp_path, require_auth=False)) as base_url:
 
         async def run() -> dict:
-            async with AsyncTrustOpsClient(base_url, timeout=10.0) as client:
+            async with AsyncGrcLakeClient(base_url, timeout=10.0) as client:
                 return await client.get_posture()
 
         posture = asyncio.run(run())
@@ -85,7 +85,7 @@ def test_async_posture_as_of_round_trips(tmp_path: Path) -> None:
     with _server(create_app(tmp_path, require_auth=False)) as base_url:
 
         async def run() -> tuple[dict, dict]:
-            async with AsyncTrustOpsClient(base_url, timeout=10.0) as client:
+            async with AsyncGrcLakeClient(base_url, timeout=10.0) as client:
                 await client.create_snapshot(reason="async-as-of")
                 return await client.posture_as_of("2030-01-01"), await client.posture_as_of("2000-01-01")
 
@@ -99,7 +99,7 @@ def test_async_list_controls_returns_seeded_ids(tmp_path: Path) -> None:
     with _server(create_app(tmp_path, require_auth=False)) as base_url:
 
         async def run() -> list[dict]:
-            async with AsyncTrustOpsClient(base_url, timeout=10.0) as client:
+            async with AsyncGrcLakeClient(base_url, timeout=10.0) as client:
                 return await client.list_controls(sort="-risk_score")
 
         controls = asyncio.run(run())
@@ -114,7 +114,7 @@ def test_async_create_risk_then_list_round_trips(tmp_path: Path) -> None:
     with _server(app) as base_url:
 
         async def run() -> tuple[dict, list[dict], dict, dict, dict]:
-            async with AsyncTrustOpsClient(base_url, api_key=token, timeout=10.0) as client:
+            async with AsyncGrcLakeClient(base_url, api_key=token, timeout=10.0) as client:
                 created = await client.create_risk(title="Vendor data exfiltration", severity="high", owner="alice")
                 risk_id = created["id"]
                 listed = await client.list_risks()
@@ -138,7 +138,7 @@ def test_async_create_task_then_list_round_trips(tmp_path: Path) -> None:
     with _server(app) as base_url:
 
         async def run() -> tuple[dict, list[dict]]:
-            async with AsyncTrustOpsClient(base_url, api_key=token, timeout=10.0) as client:
+            async with AsyncGrcLakeClient(base_url, api_key=token, timeout=10.0) as client:
                 created = await client.create_task(title="Rotate access keys", owner="bob", priority="high")
                 tasks = await client.list_tasks()
                 return created, tasks
@@ -153,7 +153,7 @@ def test_async_create_snapshot_round_trips(tmp_path: Path) -> None:
     with _server(create_app(tmp_path, require_auth=False)) as base_url:
 
         async def run() -> tuple[dict, list[dict]]:
-            async with AsyncTrustOpsClient(base_url, timeout=10.0) as client:
+            async with AsyncGrcLakeClient(base_url, timeout=10.0) as client:
                 created = await client.create_snapshot(reason="async-sdk-test")
                 snapshots = await client.list_snapshots()
                 return created, snapshots
@@ -168,10 +168,10 @@ def test_async_non_2xx_raises_typed_error_with_envelope(tmp_path: Path) -> None:
     with _server(create_app(tmp_path, require_auth=False)) as base_url:
 
         async def run() -> None:
-            async with AsyncTrustOpsClient(base_url, timeout=10.0) as client:
+            async with AsyncGrcLakeClient(base_url, timeout=10.0) as client:
                 await client.list_controls(limit=9999)  # limit > 1000 -> 400 bad_request
 
-        with pytest.raises(TrustOpsError) as excinfo:
+        with pytest.raises(GrcLakeError) as excinfo:
             asyncio.run(run())
     err = excinfo.value
     assert err.status_code == 400
@@ -184,7 +184,7 @@ def test_async_explicit_close_releases_pool(tmp_path: Path) -> None:
     with _server(create_app(tmp_path, require_auth=False)) as base_url:
 
         async def run() -> dict:
-            client = AsyncTrustOpsClient(base_url, timeout=10.0)
+            client = AsyncGrcLakeClient(base_url, timeout=10.0)
             try:
                 return await client.describe_api()
             finally:

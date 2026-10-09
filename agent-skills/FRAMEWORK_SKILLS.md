@@ -12,7 +12,7 @@ evidence, current posture, official source references, and bounded conclusions.
 | `iso27001-isms-analyst`       | assess ISO/IEC 27001 ISMS evidence and control gaps with ISO source guardrails |
 | `ai-governance-analyst`       | assess AI governance posture using NIST AI RMF evidence mappings               |
 
-The broader [TrustOps operator](trustops-operator/SKILL.md) skill covers collection,
+The broader [GRC Lake operator](trustops-operator/SKILL.md) skill covers collection,
 normalization, evaluation, triage and export.
 [Compliance analytics](compliance-analytics/SKILL.md) covers local evidence analysis.
 

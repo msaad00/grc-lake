@@ -190,7 +190,7 @@ const OIDC_UNCONFIGURED = {
   configured: false,
   login_url: "/auth/oidc/login",
   protocol: "OIDC",
-  setup_hint: "Set TRUSTOPS_OIDC_ISSUER and client credentials.",
+  setup_hint: "Set GRC_LAKE_OIDC_ISSUER and client credentials.",
 };
 
 test("login page tells end users to ask their admin for SSO", async ({
@@ -218,7 +218,7 @@ test("login page tells end users to ask their admin for SSO", async ({
   await page.goto("/console/login/");
   await expect(page.getByText(/Ask your admin to enable SSO/)).toBeVisible();
   await expect(page.getByText(/environment variables/)).toHaveCount(0);
-  await expect(page.getByText(/TRUSTOPS_OIDC_ISSUER/)).toHaveCount(0);
+  await expect(page.getByText(/GRC_LAKE_OIDC_ISSUER/)).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: /SSO setup guide/ }),
   ).toHaveAttribute("href", /docs\/SERVER_AUTH\.md$/);
@@ -255,7 +255,7 @@ test("auth page links unconfigured SSO to the setup guide; users panel hides env
     /docs\/SERVER_AUTH\.md$/,
   );
   await expect(page.getByText("No users yet")).toBeVisible();
-  const envVar = page.getByText("TRUSTOPS_OIDC_ROLE_MAP");
+  const envVar = page.getByText("GRC_LAKE_OIDC_ROLE_MAP");
   await expect(envVar).toBeHidden();
   await page.getByText("Details", { exact: true }).click();
   await expect(envVar).toBeVisible();
@@ -272,5 +272,5 @@ test("agents page links to key creation, shows a CI gate, and tucks env detail a
   await expect(
     page.getByText(/uses: \.\/\.github\/actions\/posture-gate/),
   ).toBeVisible();
-  await expect(page.getByText("TRUSTOPS_PUBLIC_URL")).toBeHidden();
+  await expect(page.getByText("GRC_LAKE_PUBLIC_URL")).toBeHidden();
 });

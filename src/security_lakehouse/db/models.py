@@ -153,7 +153,7 @@ class ScimToken(Base):
 
 
 class ScimGroup(Base):
-    """An IdP group pushed over SCIM; membership drives TrustOps roles via a role map."""
+    """An IdP group pushed over SCIM; membership drives GRC Lake roles via a role map."""
 
     __tablename__ = "scim_groups"
     __table_args__ = (UniqueConstraint("tenant_id", "display_name", name="uq_scim_groups_tenant_name"),)

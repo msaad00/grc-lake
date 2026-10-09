@@ -192,7 +192,7 @@ def test_failed_commit_does_not_expose_partial_table_or_backend_secrets(setup, m
 )
 def test_unsafe_catalog_urls_are_rejected_without_network(uri):
     with pytest.raises(iceberg_export.IcebergPublicationError):
-        iceberg_export.rest_catalog(uri, warehouse="test", token_env="TRUSTOPS_TEST_MISSING")
+        iceberg_export.rest_catalog(uri, warehouse="test", token_env="GRC_LAKE_TEST_MISSING")
 
 
 def test_concurrent_writer_cannot_be_silently_overwritten(setup, tmp_path, monkeypatch):
@@ -223,14 +223,14 @@ def test_concurrent_writer_cannot_be_silently_overwritten(setup, tmp_path, monke
 
 def test_rest_token_is_explicit_and_server_cannot_inject_auth_plugin(rest_stub, monkeypatch):
     url, state = rest_stub
-    monkeypatch.setenv("TRUSTOPS_TEST_BEARER", "synthetic-ephemeral-bearer")
+    monkeypatch.setenv("GRC_LAKE_TEST_BEARER", "synthetic-ephemeral-bearer")
     state["overrides"] = {
         "token": "different-token",
         "auth": {"type": "custom", "impl": "nonexistent.plugin"},
         "py-io-impl": "nonexistent.plugin",
     }
     catalog = iceberg_export.rest_catalog(
-        url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
+        url, warehouse="fixture", token_env="GRC_LAKE_TEST_BEARER", allow_http_localhost=True
     )
     try:
         assert catalog.list_namespaces() == []
@@ -244,9 +244,9 @@ def test_rest_token_is_explicit_and_server_cannot_inject_auth_plugin(rest_stub, 
 
 def test_expired_token_fails_without_implicit_refresh_or_retry(rest_stub, monkeypatch):
     url, state = rest_stub
-    monkeypatch.setenv("TRUSTOPS_TEST_BEARER", "synthetic-ephemeral-bearer")
+    monkeypatch.setenv("GRC_LAKE_TEST_BEARER", "synthetic-ephemeral-bearer")
     catalog = iceberg_export.rest_catalog(
-        url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
+        url, warehouse="fixture", token_env="GRC_LAKE_TEST_BEARER", allow_http_localhost=True
     )
     try:
         state["expired"] = True
@@ -260,10 +260,10 @@ def test_expired_token_fails_without_implicit_refresh_or_retry(rest_stub, monkey
 def test_rest_redirect_cannot_forward_bearer_token(rest_stub, monkeypatch):
     url, state = rest_stub
     state["redirect"] = True
-    monkeypatch.setenv("TRUSTOPS_TEST_BEARER", "synthetic-ephemeral-bearer")
+    monkeypatch.setenv("GRC_LAKE_TEST_BEARER", "synthetic-ephemeral-bearer")
     with pytest.raises(iceberg_export.IcebergPublicationError) as error:
         iceberg_export.rest_catalog(
-            url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
+            url, warehouse="fixture", token_env="GRC_LAKE_TEST_BEARER", allow_http_localhost=True
         )
     assert len(state["headers"]) == 1
     assert "synthetic-ephemeral-bearer" not in str(error.value)
@@ -272,10 +272,10 @@ def test_rest_redirect_cannot_forward_bearer_token(rest_stub, monkeypatch):
 def test_catalog_cannot_relocate_credentialed_endpoint(rest_stub, monkeypatch):
     url, state = rest_stub
     state["overrides"] = {"uri": "https://unrelated.example.test"}
-    monkeypatch.setenv("TRUSTOPS_TEST_BEARER", "synthetic-ephemeral-bearer")
+    monkeypatch.setenv("GRC_LAKE_TEST_BEARER", "synthetic-ephemeral-bearer")
     with pytest.raises(iceberg_export.IcebergPublicationError, match="relocation"):
         iceberg_export.rest_catalog(
-            url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
+            url, warehouse="fixture", token_env="GRC_LAKE_TEST_BEARER", allow_http_localhost=True
         )
     assert len(state["headers"]) == 1
 

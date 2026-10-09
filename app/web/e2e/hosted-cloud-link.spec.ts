@@ -3,7 +3,7 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 // The e2e server runs in server mode without auth, acting for the synthetic
 // "insecure" tenant: cloud links must name tenant-delegated access and secret
 // references must sit under that tenant's prefix.
-const PREFIX = "TRUSTOPS_TENANT_INSECURE__";
+const PREFIX = "GRC_LAKE_TENANT_INSECURE__";
 const SUBSCRIPTION = "11111111-2222-3333-4444-555555555555";
 const ENTRA_TENANT = "99999999-8888-7777-6666-555555555555";
 const CLIENT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
@@ -118,7 +118,7 @@ test.describe("hosted cloud link", () => {
       .getByRole("button", { name: "Connect cloud account" })
       .click({ timeout: 15_000 });
 
-    await expect(dialog.getByText(/TRUSTOPS_GCP_WIF_MEMBER/)).toHaveCount(0);
+    await expect(dialog.getByText(/GRC_LAKE_GCP_WIF_MEMBER/)).toHaveCount(0);
     await dialog.getByLabel("GCP project ID").fill("customer-proj");
     const target = dialog.getByLabel("Service account to impersonate");
     await target.fill("someone@gmail.com");

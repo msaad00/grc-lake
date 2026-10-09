@@ -24,7 +24,7 @@ def test_empty_legacy_posture_cannot_bypass_export_verification(tmp_path):
 
 
 def test_empty_signed_review_log_cannot_revert_to_verified(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MAPPING_REVIEW_SIGNING_KEY", "test-signing-key")
+    monkeypatch.setenv("GRC_LAKE_MAPPING_REVIEW_SIGNING_KEY", "test-signing-key")
     # Use the actual configured variable below, independent of ambient configuration.
     monkeypatch.setattr(mapping_review, "_tip_key", lambda: b"test-key")
     _decide(tmp_path, "approve", _item("SG-A", "ISO27001-A.5.15", "iso-27001-2022"))

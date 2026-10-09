@@ -27,7 +27,7 @@ def _bearer(token: str) -> dict[str, str]:
 
 @pytest.fixture
 def env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -83,7 +83,7 @@ def test_list_and_accept_invite(env) -> None:
 
 
 def test_commercial_disabled_returns_501(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("TRUSTOPS_COMMERCIAL_HOSTED", raising=False)
+    monkeypatch.delenv("GRC_LAKE_COMMERCIAL_HOSTED", raising=False)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -111,16 +111,16 @@ def test_scim_config_for_admin(env, monkeypatch: pytest.MonkeyPatch) -> None:
     assert resp.status_code == HTTPStatus.OK
     assert resp.json()["data"]["enabled"] is False
 
-    monkeypatch.setenv("TRUSTOPS_SCIM_ENABLED", "1")
+    monkeypatch.setenv("GRC_LAKE_SCIM_ENABLED", "1")
     resp2 = client.get("/api/v1/platform/scim", headers=_bearer(tokens["admin"]))
     assert resp2.json()["data"]["enabled"] is True
 
 
 def test_scim_users_when_enabled(env, monkeypatch: pytest.MonkeyPatch) -> None:
     client, tokens = env
-    monkeypatch.setenv("TRUSTOPS_SCIM_ENABLED", "1")
-    monkeypatch.setenv("TRUSTOPS_SCIM_BEARER_TOKEN", "scim-test-token")
-    monkeypatch.setenv("TRUSTOPS_SCIM_TENANT_SLUG", "acme")
+    monkeypatch.setenv("GRC_LAKE_SCIM_ENABLED", "1")
+    monkeypatch.setenv("GRC_LAKE_SCIM_BEARER_TOKEN", "scim-test-token")
+    monkeypatch.setenv("GRC_LAKE_SCIM_TENANT_SLUG", "acme")
     scim_auth = {"Authorization": "Bearer scim-test-token"}
 
     listed = client.get("/api/v1/scim/v2/Users", headers=scim_auth)

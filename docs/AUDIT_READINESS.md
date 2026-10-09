@@ -1,6 +1,6 @@
 # Audit Readiness (Headless-First)
 
-TrustOps audit readiness is exposed through **`GET /api/v1/platform/audit-readiness`**
+GRC Lake audit readiness is exposed through **`GET /api/v1/platform/audit-readiness`**
 for headless consumers (CI, agents, runbooks) and the **`/console/audit-room/`**
 console for human GRC leads and auditors. Both surfaces read the same payload.
 
@@ -8,7 +8,7 @@ See [HEADLESS_GRC.md](HEADLESS_GRC.md) for the overall architecture.
 
 ## Executive summary
 
-| Dimension                     | TrustOps v0.2.x                                            |
+| Dimension                     | GRC Lake v0.2.x                                            |
 | ----------------------------- | ---------------------------------------------------------- |
 | Continuous control monitoring | Deterministic tests over customer lake                     |
 | Framework packs               | SOC 2, NIST AI RMF, FedRAMP foundation, CIS AWS, ISO packs |
@@ -97,7 +97,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 CLI snapshot creation (PDF requires the snapshot id from the API response or `list_snapshots`):
 
 ```bash
-security-lakehouse assessment snapshot --lake build/lakehouse --reason vendor_due_diligence
+grc-lake assessment snapshot --lake build/lakehouse --reason vendor_due_diligence
 ```
 
 ## Related

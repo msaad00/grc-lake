@@ -9,7 +9,7 @@ demo tenant, through the same service functions the HTTP API uses.
 Guarantees:
 
 - Only the lake-local SQLite database is written. A configured
-  ``TRUSTOPS_DATABASE_URL`` is never treated as a demo target.
+  ``GRC_LAKE_DATABASE_URL`` is never treated as a demo target.
 - Lake files (bronze/silver/gold, snapshots, manifest) are never touched, so
   assessment hashes and pinned pipeline outputs do not change.
 - Re-running is a no-op for records that already exist.
@@ -18,10 +18,11 @@ Guarantees:
 
 from __future__ import annotations
 
-import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+
+from security_lakehouse.runtime_environment import runtime_env
 
 DEMO_SEED_ACTOR = "trustops-demo-seed"
 SYNTHETIC_MARKER = "Synthetic demo"
@@ -151,7 +152,7 @@ def seed_golden_demo(
         from security_lakehouse.db.base import ENV_DATABASE_URL, create_engine_for, session_factory
     except ModuleNotFoundError:
         return {"seeded": False, "reason": "the 'server' extra is not installed"}
-    if os.environ.get(ENV_DATABASE_URL):
+    if runtime_env().get(ENV_DATABASE_URL):
         return {
             "seeded": False,
             "reason": f"{ENV_DATABASE_URL} is set; demo records only go to the lake-local database",

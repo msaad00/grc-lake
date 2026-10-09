@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { ConnectorView } from "@/lib/api/types";
 import { joinList } from "@/lib/format";
 
-const NORMALIZE_COMMAND = `security-lakehouse ingestion normalize \\
+const NORMALIZE_COMMAND = `grc-lake ingestion normalize \\
   --raw ./raw/connector_events.jsonl \\
   --out ./lake`;
 
@@ -69,7 +69,7 @@ export function EvidencePathPanel({
                 {readers.ga.length
                   ? `Connect ${joinList(readers.ga, "or")} with a read-only role.`
                   : "Connect a data lake with a read-only role."}{" "}
-                TrustOps reads the granted evidence surfaces and normalizes
+                GRC Lake reads the granted evidence surfaces and normalizes
                 them.
                 {readers.preview.length
                   ? ` Preview: ${joinList(readers.preview)}.`
@@ -123,7 +123,7 @@ export function EvidencePathPanel({
 
       <p className="text-xs leading-5 text-muted">
         The console never accepts local filesystem paths or raw secrets. Source
-        schemas that are not canonical TrustOps raw events need an adapter
+        schemas that are not canonical GRC Lake raw events need an adapter
         mapping before normalization.
       </p>
     </section>

@@ -39,7 +39,7 @@ JSON_FILES = [
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate TrustOps JSON, JSONL, schemas, and generated artifacts.")
+    parser = argparse.ArgumentParser(description="Validate GRC Lake JSON, JSONL, schemas, and generated artifacts.")
     parser.add_argument("--generated", action="store_true", help="Also validate generated lake artifacts.")
     args = parser.parse_args()
 

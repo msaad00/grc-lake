@@ -92,7 +92,7 @@ class PublicGitHubClient:
 
     def file_text(self, branch: str, path: str) -> str | None:
         url = f"https://raw.githubusercontent.com/{self.spec.slug}/{branch}/{path}"
-        request = urllib.request.Request(url, headers={"user-agent": "trustops-security-data-lake"})
+        request = urllib.request.Request(url, headers={"user-agent": "grc-lake"})
         try:
             with urllib.request.urlopen(request, timeout=20) as resp:  # noqa: S310
                 return resp.read(200_000).decode("utf-8", errors="replace")
@@ -104,7 +104,7 @@ class PublicGitHubClient:
     @staticmethod
     def _json(url: str) -> dict[str, Any]:
         request = urllib.request.Request(
-            url, headers={"accept": "application/vnd.github+json", "user-agent": "trustops-security-data-lake"}
+            url, headers={"accept": "application/vnd.github+json", "user-agent": "grc-lake"}
         )
         with urllib.request.urlopen(request, timeout=20) as resp:  # noqa: S310
             payload = json.loads(resp.read().decode("utf-8"))

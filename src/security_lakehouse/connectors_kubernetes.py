@@ -192,7 +192,7 @@ def _default_apis(
     except ImportError as exc:
         raise RuntimeError(
             "kubernetes-cluster live collection requires the official kubernetes client; install the "
-            "kubernetes extra (pip install 'trustops-security-data-lake[kubernetes]') or use --fixture-dir"
+            "kubernetes extra (pip install 'grc-lake[kubernetes]') or use --fixture-dir"
         ) from exc
     if in_cluster:
         configuration = k8s_client.Configuration()

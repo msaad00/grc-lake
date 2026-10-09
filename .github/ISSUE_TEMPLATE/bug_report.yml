@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in TrustOps does not work as documented.
+description: Something in GRC Lake does not work as documented.
 labels: ["bug"]
 body:
   - type: markdown
@@ -18,7 +18,7 @@ body:
     id: reproduce
     attributes:
       label: Steps to reproduce
-      description: Commands, API calls, or console clicks. The golden sample company (`security-lakehouse fixtures load --company golden`) is a good baseline.
+      description: Commands, API calls, or console clicks. The golden sample company (`grc-lake fixtures load --company golden`) is a good baseline.
       placeholder: |
         1. docker compose up
         2. Open /console/controls/
@@ -29,14 +29,14 @@ body:
     id: version
     attributes:
       label: Version
-      description: Output of `pip show trustops-security-data-lake`, or the image tag.
+      description: Output of `pip show grc-lake`, or the image tag.
       placeholder: "0.2.19"
     validations:
       required: true
   - type: dropdown
     id: install
     attributes:
-      label: How you run TrustOps
+      label: How you run GRC Lake
       options:
         - pip / uv (local lake)
         - Docker Compose

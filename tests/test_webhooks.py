@@ -294,7 +294,7 @@ def test_deliver_webhook_ssrf_blocked_url_fails_without_an_attempt(monkeypatch: 
 def test_deliver_webhook_allows_any_public_url_when_allowlist_unset(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Default behavior (no TRUSTOPS_WEBHOOK_EGRESS_ALLOWLIST set) is unchanged:
+    """Default behavior (no GRC_LAKE_WEBHOOK_EGRESS_ALLOWLIST set) is unchanged:
     any public URL is deliverable -- the self-service webhook model."""
     monkeypatch.delenv(webhook_delivery.EGRESS_ALLOWLIST_ENV, raising=False)
     monkeypatch.setattr(
@@ -317,7 +317,7 @@ def test_deliver_webhook_rejects_non_allowlisted_host_when_allowlist_set(
     )
     assert result["ok"] is False
     assert result["attempts"] == 0
-    assert "TRUSTOPS_WEBHOOK_EGRESS_ALLOWLIST" in (result["error"] or "")
+    assert "GRC_LAKE_WEBHOOK_EGRESS_ALLOWLIST" in (result["error"] or "")
 
 
 def test_deliver_webhook_allows_allowlisted_host_when_allowlist_set(monkeypatch: pytest.MonkeyPatch) -> None:

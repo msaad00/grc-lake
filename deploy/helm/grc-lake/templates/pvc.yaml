@@ -1,0 +1,17 @@
+{{- if .Values.lake.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "grc-lake.fullname" . }}-lake
+  labels:
+    {{- include "grc-lake.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.lake.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.lake.persistence.size }}
+  {{- with .Values.lake.persistence.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
+{{- end }}

@@ -44,11 +44,13 @@ def iso_offset(value: datetime | None, *, tz: IsoOffsetTz = "keep") -> str | Non
 
 
 @overload
-def parse_iso(value: str, *, lenient: Literal[False] = False) -> datetime: ...
+def parse_iso(value: str, *, lenient: Literal[False] = False) -> datetime:
+    raise NotImplementedError
 
 
 @overload
-def parse_iso(value: Any, *, lenient: Literal[True]) -> datetime | None: ...
+def parse_iso(value: Any, *, lenient: Literal[True]) -> datetime | None:
+    raise NotImplementedError
 
 
 def parse_iso(value: Any, *, lenient: bool = False) -> datetime | None:

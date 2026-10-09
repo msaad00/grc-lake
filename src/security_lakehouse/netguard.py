@@ -156,7 +156,7 @@ class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
         super().__init__()
         self._validate = validate
 
-    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001, ANN201
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
         self._validate(newurl)  # raises ValueError on a disallowed target
         new = super().redirect_request(req, fp, code, msg, headers, newurl)
         if new is not None and _origin(newurl) != _origin(req.full_url):
@@ -222,7 +222,7 @@ class _PinnedHTTPHandler(urllib.request.HTTPHandler):
         super().__init__()
         self._label = label
 
-    def http_open(self, req):  # noqa: ANN001, ANN201
+    def http_open(self, req):
         return self.do_open(
             functools.partial(PinnedHTTPConnection, label=self._label, proxied=_is_proxied(req)),
             req,
@@ -234,11 +234,11 @@ class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
         super().__init__(context=ssl.create_default_context())
         self._label = label
 
-    def https_open(self, req):  # noqa: ANN001, ANN201
+    def https_open(self, req):
         return self.do_open(
             functools.partial(PinnedHTTPSConnection, label=self._label, proxied=_is_proxied(req)),
             req,
-            context=self._context,
+            context=self._context,  # type: ignore[attr-defined]
         )
 
 

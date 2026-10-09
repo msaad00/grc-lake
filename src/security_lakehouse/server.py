@@ -23,7 +23,7 @@ _LOOPBACK_NAMES = {"localhost", "127.0.0.1", "::1"}
 
 
 def serve(lake_dir: str | Path, *, host: str = "127.0.0.1", port: int = 8787) -> None:
-    """Serve the TrustOps console and JSON assessment API."""
+    """Serve the GRC Lake console and JSON assessment API."""
     lake = resolve_path(lake_dir)
     dashboard = lake / "console.html"
     render_dashboard(lake, dashboard)
@@ -53,14 +53,14 @@ class _Handler(BaseHTTPRequestHandler):
     dashboard_path: Path
     web_dist: Path | None = None
 
-    server_version = "TrustOpsAssessment/0.1"
+    server_version = "GrcLakeAssessment/0.1"
 
     @staticmethod
     def _safe_header_value(value: str) -> str:
         """Return a header-safe value by removing CR/LF characters."""
         return str(value).replace("\r", "").replace("\n", "")
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if not self._host_allowed():
             self._send_guard_error(parsed.path, HTTPStatus.FORBIDDEN, "forbidden", "unrecognized Host header")
@@ -97,7 +97,7 @@ class _Handler(BaseHTTPRequestHandler):
         status, body = api_legacy.handle_get(parsed.path, parse_qs(parsed.query), self.lake_dir)
         self._send_json(body, status=status)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         parsed = urlparse(self.path)
         request_body = self._guarded_json_body(parsed.path)
         if request_body is None:

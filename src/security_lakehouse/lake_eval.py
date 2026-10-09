@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import tempfile
 import time
 from collections.abc import Iterator, Mapping
@@ -24,6 +23,7 @@ from security_lakehouse.lake_scale import (
 )
 from security_lakehouse.models import PipelineResult, utc_iso
 from security_lakehouse.pipeline import normalize_raw_events
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.sinks import land_if_configured
 
 EVAL_RUNS_FILE = ("gold", "eval_runs.jsonl")
@@ -89,9 +89,10 @@ def run_lake_eval(
     actor: str = "system",
 ) -> LakeEvalResult:
     """Evaluate locally, then optionally export the committed generation."""
+    env = runtime_env(env)
     lake = Path(lake_dir)
     raw_path = lake / CONNECTOR_RAW_FILE
-    runtime = {} if in_server_mode() else (os.environ if env is None else env)
+    runtime = {} if in_server_mode() else (runtime_env() if env is None else env)
     start = time.perf_counter()
     strategy = resolve_materialize_strategy(lake, raw_path, env=runtime)
     mode = str(strategy["mode"])
@@ -125,7 +126,7 @@ def run_lake_eval(
         result = "error"
         error = str(exc)
         write_lake_scale_state(lake, {**strategy, "last_error": error})
-    except Exception:  # noqa: BLE001 - eval runs record sanitized errors
+    except Exception:  # eval runs record sanitized errors
         logging.getLogger(__name__).exception("Lake evaluation failed; see the private operator log for the cause")
         result = "error"
         error = (

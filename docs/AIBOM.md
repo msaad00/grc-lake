@@ -1,14 +1,14 @@
 # AI bill of materials
 
-TrustOps imports machine-readable AI inventory into the customer-controlled
+GRC Lake imports machine-readable AI inventory into the customer-controlled
 lake and exports it without a hosted service.
 
 ```bash
-security-lakehouse aibom import \
+grc-lake aibom import \
   --input model-bom.json \
   --lake build/lakehouse
 
-security-lakehouse aibom export \
+grc-lake aibom export \
   --lake build/lakehouse \
   --format cyclonedx-1.7 \
   --out build/model-bom.cdx.json
@@ -24,7 +24,7 @@ Exports are deterministic inventory projections:
 - `spdx-3.0.1` — AI/dataset package identity and descriptive metadata
 
 Input is limited to 10 MiB. Unknown formats and documents without supported AI
-model, dataset, application, or library components fail closed. TrustOps stores
+model, dataset, application, or library components fail closed. GRC Lake stores
 the source SHA-256 for provenance but does not upload the source document.
 
 CycloneDX and SPDX remain the authorities for full schema/profile conformance:

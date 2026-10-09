@@ -9,10 +9,10 @@ import pytest
 
 pytest.importorskip("fastapi")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def test_snapshot_detail_returns_summary(tmp_path: Path) -> None:

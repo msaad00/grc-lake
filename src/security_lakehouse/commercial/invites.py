@@ -20,6 +20,7 @@ from security_lakehouse.commercial.email import (
 )
 from security_lakehouse.commercial.limits import assert_within_limit
 from security_lakehouse.db.models import USER_ROLES, Tenant, TenantInvite, User
+from security_lakehouse.runtime_environment import runtime_env
 
 INVITE_TTL_HOURS = 168  # 7 days
 
@@ -37,9 +38,7 @@ def _hash_token(token: str) -> str:
 
 
 def _public_base_url() -> str:
-    import os
-
-    return os.environ.get("TRUSTOPS_PUBLIC_URL", "http://127.0.0.1:8787").rstrip("/")
+    return runtime_env().get("GRC_LAKE_PUBLIC_URL", "http://127.0.0.1:8787").rstrip("/")
 
 
 def create_invite(
@@ -53,7 +52,7 @@ def create_invite(
 ) -> tuple[TenantInvite, str]:
     """Create an invite and optionally send email. Returns (row, plaintext_token)."""
     if not commercial_hosted_enabled():
-        raise ValueError("commercial hosted invites require TRUSTOPS_COMMERCIAL_HOSTED=1")
+        raise ValueError("commercial hosted invites require GRC_LAKE_COMMERCIAL_HOSTED=1")
     normalized = email.strip().lower()
     if not normalized:
         raise ValueError("email is required")
@@ -81,9 +80,9 @@ def create_invite(
     sender.send(
         EmailMessage(
             to=normalized,
-            subject="You're invited to TrustOps",
+            subject="You're invited to GRC Lake",
             body_text=(
-                f"You have been invited to TrustOps as {role}.\n\n"
+                f"You have been invited to GRC Lake as {role}.\n\n"
                 f"Accept: {accept_url}\n\n"
                 f"This link expires in {INVITE_TTL_HOURS} hours."
             ),
@@ -110,7 +109,7 @@ def accept_invite(
 ) -> dict[str, Any]:
     """Accept a pending invite; returns user summary."""
     if not commercial_hosted_enabled():
-        raise ValueError("commercial hosted invites require TRUSTOPS_COMMERCIAL_HOSTED=1")
+        raise ValueError("commercial hosted invites require GRC_LAKE_COMMERCIAL_HOSTED=1")
     digest = _hash_token(token.strip())
     row = session.scalars(select(TenantInvite).where(TenantInvite.token_hash == digest)).one_or_none()
     if row is None:

@@ -9,7 +9,6 @@ so it is unit-testable without a live identity provider.
 from __future__ import annotations
 
 import logging
-import os
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -18,11 +17,12 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db import repository
 from security_lakehouse.db.models import User
+from security_lakehouse.runtime_environment import runtime_env
 
 logger = logging.getLogger(__name__)
 
 _TRUTHY = {"1", "true", "yes", "on"}
-ALLOWED_DOMAINS_ENV = "TRUSTOPS_OIDC_ALLOWED_DOMAINS"
+ALLOWED_DOMAINS_ENV = "GRC_LAKE_OIDC_ALLOWED_DOMAINS"
 
 
 @dataclass(frozen=True)
@@ -49,30 +49,30 @@ def load_oidc_config() -> OIDCConfig | None:
     """Build OIDC config from the environment, or ``None`` when not configured."""
     from security_lakehouse.auth.idp_roles import load_role_map
 
-    issuer = os.environ.get("TRUSTOPS_OIDC_ISSUER")
-    client_id = os.environ.get("TRUSTOPS_OIDC_CLIENT_ID")
-    client_secret = os.environ.get("TRUSTOPS_OIDC_CLIENT_SECRET")
+    issuer = runtime_env().get("GRC_LAKE_OIDC_ISSUER")
+    client_id = runtime_env().get("GRC_LAKE_OIDC_CLIENT_ID")
+    client_secret = runtime_env().get("GRC_LAKE_OIDC_CLIENT_SECRET")
     if not (issuer and client_id and client_secret):
         return None
     role_map: dict[str, str] = {}
     try:
-        role_map = load_role_map("TRUSTOPS_OIDC_ROLE_MAP")
+        role_map = load_role_map("GRC_LAKE_OIDC_ROLE_MAP")
     except ValueError:
         role_map = {}
     config = OIDCConfig(
         issuer=issuer,
         client_id=client_id,
         client_secret=client_secret,
-        tenant_slug=os.environ.get("TRUSTOPS_OIDC_TENANT_SLUG", "default"),
-        auto_provision=os.environ.get("TRUSTOPS_OIDC_AUTO_PROVISION", "").lower() in _TRUTHY,
-        default_role=os.environ.get("TRUSTOPS_OIDC_DEFAULT_ROLE", "read_only"),
-        role_claim=os.environ.get("TRUSTOPS_OIDC_ROLE_CLAIM", "groups"),
+        tenant_slug=runtime_env().get("GRC_LAKE_OIDC_TENANT_SLUG", "default"),
+        auto_provision=runtime_env().get("GRC_LAKE_OIDC_AUTO_PROVISION", "").lower() in _TRUTHY,
+        default_role=runtime_env().get("GRC_LAKE_OIDC_DEFAULT_ROLE", "read_only"),
+        role_claim=runtime_env().get("GRC_LAKE_OIDC_ROLE_CLAIM", "groups"),
         role_map=role_map,
-        allowed_domains=parse_allowed_domains(os.environ.get(ALLOWED_DOMAINS_ENV, "")),
+        allowed_domains=parse_allowed_domains(runtime_env().get(ALLOWED_DOMAINS_ENV, "")),
     )
     if auto_provision_misconfigured(config):
         logger.error(
-            "TRUSTOPS_OIDC_AUTO_PROVISION is on but %s is empty; no new SSO user will be "
+            "GRC_LAKE_OIDC_AUTO_PROVISION is on but %s is empty; no new SSO user will be "
             "provisioned until it lists the email domains allowed to join",
             ALLOWED_DOMAINS_ENV,
         )

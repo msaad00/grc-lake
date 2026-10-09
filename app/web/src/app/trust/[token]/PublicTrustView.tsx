@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { readinessCoverage } from "@/lib/readiness-coverage";
 import { Lock, Loader2, ShieldAlert } from "lucide-react";
-import { TrustOpsLogo } from "@/components/brand/TrustOpsLogo";
+import { GrcLakeLogo } from "@/components/brand/GrcLakeLogo";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, plural } from "@/lib/format";
 
@@ -134,7 +134,7 @@ export default function PublicTrustView() {
     <section className="grid min-h-screen place-items-center bg-panel p-4 sm:p-6">
       <div className="w-full min-w-0 max-w-[860px]">
         <header className="mb-6 flex flex-wrap items-center gap-4">
-          <TrustOpsLogo
+          <GrcLakeLogo
             showWordmark
             subtitle="Trust Center"
             markSize="lg"

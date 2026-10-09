@@ -14,7 +14,7 @@ RELEASE_DATE = "2026-10-07"
 
 def test_release_version_is_consistent_across_package_chart_and_console() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    chart = (ROOT / "deploy" / "helm" / "trustops" / "Chart.yaml").read_text(encoding="utf-8")
+    chart = (ROOT / "deploy" / "helm" / "grc-lake" / "Chart.yaml").read_text(encoding="utf-8")
     brand = (ROOT / "app" / "web" / "src" / "lib" / "brand.ts").read_text(encoding="utf-8")
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
@@ -28,16 +28,16 @@ def test_release_version_is_consistent_across_package_chart_and_console() -> Non
     assert f'version: "{RELEASE_VERSION}"' in brand
     assert f"## {RELEASE_VERSION} - {RELEASE_DATE}" in changelog
     compose = (ROOT / "compose.yaml").read_text(encoding="utf-8")
-    assert compose.count(f"ghcr.io/msaad00/trustops:${{TRUSTOPS_VERSION:-{RELEASE_VERSION}}}") == 2
+    assert compose.count(f"ghcr.io/msaad00/grc-lake:${{GRC_LAKE_VERSION:-{RELEASE_VERSION}}}") == 2
     for doc in (
         "docs/CI_GATE.md",
         "docs/playbooks/CI_POSTURE_GATE.md",
         "docs/api/AGENT_SKILLS.md",
-        "examples/github-actions/trustops-golden-gate.yml",
-        "examples/github-actions/trustops-posture-gate.yml",
+        "examples/github-actions/grc-lake-golden-gate.yml",
+        "examples/github-actions/grc-lake-posture-gate.yml",
     ):
         text = (ROOT / doc).read_text(encoding="utf-8")
-        refs = re.findall(r"posture-gate@v([\d.]+)", text) + re.findall(r"data-lake\[server\]==([\d.]+)", text)
+        refs = re.findall(r"posture-gate@v([\d.]+)", text) + re.findall(r"grc-lake\[server\]==([\d.]+)", text)
         assert refs and set(refs) == {RELEASE_VERSION}, (doc, refs)
     # Development after a release may add an Unreleased section without
     # changing the published package/chart/console version.

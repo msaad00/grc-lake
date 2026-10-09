@@ -96,7 +96,7 @@ class OktaClient:
                 headers={
                     "accept": "application/json",
                     "authorization": f"SSWS {self.token}",
-                    "user-agent": "trustops-security-data-lake",
+                    "user-agent": "grc-lake",
                 },
             )
 

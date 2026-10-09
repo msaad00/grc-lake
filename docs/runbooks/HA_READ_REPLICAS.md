@@ -1,6 +1,6 @@
 # Deployment topology and high-availability boundary
 
-The supported Helm topology is **one application replica with a writable lake**.
+The default local-mode Helm topology is **one application replica with a writable lake**.
 Startup writes the console and runs operational database migrations; requests
 can append audit records. Setting `lake.readOnly: true` does not produce a
 working read-only service. The chart rejects it, and rejects every replica count
@@ -37,14 +37,14 @@ publish. This is local crash recovery evidence, not cross-host failover.
 Back up the lake,
 review ledger, and operational database together and test restore before use.
 
-## Work required before read replicas
+## Distributed replicas
 
-- Separate immutable assessment reads from startup, migration, and audit writes.
-- Route audit and workflow writes through a supported shared store.
-- Add durable writer leases with fencing and single-owner scheduling.
-- Qualify cross-host publication, failover, retries, and recovery under load.
-- Measure availability and latency with concurrent tenants and realistic evidence.
+Opt-in [distributed PostgreSQL/S3 mode](../DISTRIBUTED.md) provides multiple API,
+worker and reader replicas, stable tenant shards, partitioned Parquet, shared
+request audit and fenced publication. Each replica has private scratch storage.
+The chart permits rolling updates and multiple replicas only in that mode.
 
-Read replicas, automated failover, and horizontal evaluation are design work,
-not supported deployment modes. See [architecture](../ARCHITECTURE.md) and
-[benchmark boundaries](../BENCHMARKS.md).
+A distributed reader still needs the PostgreSQL primary for authentication and
+request audit. It rejects tenant mutations and uses committed object manifests;
+it is not a read-only mount of another pod's local lake. The runbook describes
+resource bounds, migration, backup, failover responsibilities and limitations.

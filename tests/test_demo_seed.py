@@ -10,22 +10,22 @@ import pytest
 
 pytest.importorskip("sqlalchemy")
 
-from sqlalchemy import func, select  # noqa: E402
+from sqlalchemy import func, select
 
-from security_lakehouse.assessment import build_current_posture  # noqa: E402
-from security_lakehouse.auth.authority import INSECURE_IDENTITY  # noqa: E402
-from security_lakehouse.cli import main  # noqa: E402
-from security_lakehouse.db.base import ENV_DATABASE_URL, create_engine_for, session_factory  # noqa: E402
-from security_lakehouse.db.models import (  # noqa: E402
+from security_lakehouse.assessment import build_current_posture
+from security_lakehouse.auth.authority import INSECURE_IDENTITY
+from security_lakehouse.cli import main
+from security_lakehouse.db.base import ENV_DATABASE_URL, create_engine_for, session_factory
+from security_lakehouse.db.models import (
     PolicyDocument,
     PostureMetricPoint,
     RemediationTask,
     Risk,
     VendorAssessment,
 )
-from security_lakehouse.demo_seed import DEMO_SEED_ACTOR, SYNTHETIC_MARKER, seed_golden_demo  # noqa: E402
-from security_lakehouse.fixtures import find_fixture  # noqa: E402
-from security_lakehouse.pipeline import run_pipeline  # noqa: E402
+from security_lakehouse.demo_seed import DEMO_SEED_ACTOR, SYNTHETIC_MARKER, seed_golden_demo
+from security_lakehouse.fixtures import find_fixture
+from security_lakehouse.pipeline import run_pipeline
 
 DEMO_TENANT = INSECURE_IDENTITY.tenant_id
 

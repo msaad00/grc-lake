@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-import os
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 from security_lakehouse.io import read_json, write_json
+from security_lakehouse.runtime_environment import runtime_env
 
 WAREHOUSE_ROW_THRESHOLD = 100_000
 DEFAULT_SYNC_SCHEDULE = "every 15m"
@@ -18,7 +18,8 @@ LAKE_SCALE_FILE = ("gold", "lake_scale.json")
 
 def warehouse_sink_configured(env: Mapping[str, str] | None = None) -> bool:
     """Return True when any evidence sink env is configured."""
-    runtime = os.environ if env is None else env
+    env = runtime_env(env)
+    runtime = runtime_env() if env is None else env
     from security_lakehouse.sinks import ClickHouseSinkConfig, DuckDBSinkConfig, SnowflakeSinkConfig
 
     return any(
@@ -97,9 +98,10 @@ def resolve_materialize_strategy(
     force_local: bool = False,
 ) -> dict[str, Any]:
     """Choose local full, incremental, or warehouse evaluation for this lake."""
+    env = runtime_env(env)
     lake_path = Path(lake)
     raw = Path(raw_path)
-    runtime = os.environ if env is None else env
+    runtime = runtime_env() if env is None else env
     silver = silver_row_count(lake_path)
     raw_count = raw_row_count(raw) if raw.is_file() else silver
     event_count = max(silver, raw_count)

@@ -12,15 +12,15 @@ pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from fastapi import FastAPI  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
-from security_lakehouse.commercial.pricing import get_tier, list_pricing_tiers  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.models import Tenant  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.commercial.pricing import get_tier, list_pricing_tiers
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.models import Tenant
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def test_pricing_tiers_structure() -> None:
@@ -41,7 +41,7 @@ def test_platform_pricing_public(tmp_path: Path) -> None:
 
 
 def test_platform_pricing_commercial_hosted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     _seed_lake(tmp_path)
     client = TestClient(create_app(tmp_path))
     resp = client.get("/api/v1/platform/pricing")
@@ -52,7 +52,7 @@ def test_platform_pricing_commercial_hosted(tmp_path: Path, monkeypatch: pytest.
 
 
 def test_signup_requires_flags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("TRUSTOPS_COMMERCIAL_HOSTED", raising=False)
+    monkeypatch.delenv("GRC_LAKE_COMMERCIAL_HOSTED", raising=False)
     _seed_lake(tmp_path)
     client = TestClient(create_app(tmp_path))
     body = {
@@ -65,9 +65,9 @@ def test_signup_requires_flags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_signup_creates_tenant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
-    monkeypatch.setenv("TRUSTOPS_SELF_SERVE_SIGNUP", "1")
-    monkeypatch.setenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_SELF_SERVE_SIGNUP", "1")
+    monkeypatch.setenv("GRC_LAKE_ALLOW_OPEN_SIGNUP", "1")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -86,10 +86,11 @@ def test_signup_creates_tenant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
         assert tenant.plan_tier == "team"
 
 
-def test_signup_secret_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
-    monkeypatch.setenv("TRUSTOPS_SELF_SERVE_SIGNUP", "1")
-    monkeypatch.setenv("TRUSTOPS_SIGNUP_SECRET", "test-signup-secret")
+@pytest.mark.parametrize("header", ["X-GRC-Lake-Signup-Secret", "X-TrustOps-Signup-Secret"])
+def test_signup_secret_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, header: str) -> None:
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_SELF_SERVE_SIGNUP", "1")
+    monkeypatch.setenv("GRC_LAKE_SIGNUP_SECRET", "test-signup-secret")
     _seed_lake(tmp_path)
     client = TestClient(create_app(tmp_path))
     body = {"org_slug": "gated", "org_name": "Gated", "admin_email": "a@gated.test"}
@@ -97,24 +98,30 @@ def test_signup_secret_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     ok = client.post(
         "/api/v1/signup",
         json=body,
-        headers={"X-TrustOps-Signup-Secret": "test-signup-secret"},
+        headers={header: "test-signup-secret"},
     )
     assert ok.status_code == HTTPStatus.CREATED
+    rejected = client.post(
+        "/api/v1/signup",
+        json={**body, "org_slug": "rejected"},
+        headers={"X-GRC-Lake-Signup-Secret": "", "X-TrustOps-Signup-Secret": "test-signup-secret"},
+    )
+    assert rejected.status_code == HTTPStatus.FORBIDDEN
 
 
 def test_signup_without_secret_is_closed_unless_explicitly_opened(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
-    monkeypatch.setenv("TRUSTOPS_SELF_SERVE_SIGNUP", "1")
-    monkeypatch.delenv("TRUSTOPS_SIGNUP_SECRET", raising=False)
-    monkeypatch.delenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", raising=False)
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_SELF_SERVE_SIGNUP", "1")
+    monkeypatch.delenv("GRC_LAKE_SIGNUP_SECRET", raising=False)
+    monkeypatch.delenv("GRC_LAKE_ALLOW_OPEN_SIGNUP", raising=False)
     _seed_lake(tmp_path)
     client = TestClient(create_app(tmp_path))
     body = {"org_slug": "closed", "org_name": "Closed", "admin_email": "a@closed.test"}
     assert client.post("/api/v1/signup", json=body).status_code == HTTPStatus.FORBIDDEN
     assert (
-        client.post("/api/v1/signup", json=body, headers={"X-TrustOps-Signup-Secret": ""}).status_code
+        client.post("/api/v1/signup", json=body, headers={"X-GRC-Lake-Signup-Secret": ""}).status_code
         == HTTPStatus.FORBIDDEN
     )
 
@@ -122,22 +129,22 @@ def test_signup_without_secret_is_closed_unless_explicitly_opened(
 def test_verify_signup_secret_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
     from security_lakehouse.commercial import signup
 
-    monkeypatch.delenv("TRUSTOPS_SIGNUP_SECRET", raising=False)
-    monkeypatch.delenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", raising=False)
+    monkeypatch.delenv("GRC_LAKE_SIGNUP_SECRET", raising=False)
+    monkeypatch.delenv("GRC_LAKE_ALLOW_OPEN_SIGNUP", raising=False)
     assert signup.verify_signup_secret(None) is False
     assert signup.verify_signup_secret("anything") is False
-    monkeypatch.setenv("TRUSTOPS_ALLOW_OPEN_SIGNUP", "true")
+    monkeypatch.setenv("GRC_LAKE_ALLOW_OPEN_SIGNUP", "true")
     assert signup.verify_signup_secret(None) is True
-    monkeypatch.setenv("TRUSTOPS_SIGNUP_SECRET", "s3cret")
+    monkeypatch.setenv("GRC_LAKE_SIGNUP_SECRET", "s3cret")
     assert signup.verify_signup_secret(None) is False  # a configured secret always wins
     assert signup.verify_signup_secret("s3cret") is True
     assert signup.verify_signup_secret("s3cre") is False
 
 
 def test_signup_disabled_is_501_even_without_a_secret(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
-    monkeypatch.delenv("TRUSTOPS_SELF_SERVE_SIGNUP", raising=False)
-    monkeypatch.delenv("TRUSTOPS_SIGNUP_SECRET", raising=False)
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
+    monkeypatch.delenv("GRC_LAKE_SELF_SERVE_SIGNUP", raising=False)
+    monkeypatch.delenv("GRC_LAKE_SIGNUP_SECRET", raising=False)
     _seed_lake(tmp_path)
     client = TestClient(create_app(tmp_path))
     body = {"org_slug": "off", "org_name": "Off", "admin_email": "a@off.test"}
@@ -149,7 +156,7 @@ def _bearer(token: str) -> dict[str, str]:
 
 
 def test_usage_summary_for_admin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -167,7 +174,7 @@ def test_usage_summary_for_admin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 
 
 def test_usage_summary_is_501_without_commercial_hosting(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("TRUSTOPS_COMMERCIAL_HOSTED", raising=False)
+    monkeypatch.delenv("GRC_LAKE_COMMERCIAL_HOSTED", raising=False)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -190,7 +197,7 @@ def _member_token(app: FastAPI, slug: str, role: str = "read_only") -> str:
 def test_platform_features_reports_every_commercial_surface_off_in_oss(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    for name in ("TRUSTOPS_COMMERCIAL_HOSTED", "TRUSTOPS_BILLING_ENABLED", "TRUSTOPS_SCIM_ENABLED"):
+    for name in ("GRC_LAKE_COMMERCIAL_HOSTED", "GRC_LAKE_BILLING_ENABLED", "GRC_LAKE_SCIM_ENABLED"):
         monkeypatch.delenv(name, raising=False)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
@@ -208,9 +215,9 @@ def test_platform_features_reports_every_commercial_surface_off_in_oss(
 def test_platform_features_track_the_same_switches_as_the_gated_routes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
-    monkeypatch.setenv("TRUSTOPS_SCIM_ENABLED", "1")
-    monkeypatch.delenv("TRUSTOPS_BILLING_ENABLED", raising=False)
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_SCIM_ENABLED", "1")
+    monkeypatch.delenv("GRC_LAKE_BILLING_ENABLED", raising=False)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)

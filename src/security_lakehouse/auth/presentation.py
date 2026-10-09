@@ -12,13 +12,13 @@ from security_lakehouse.auth.oidc import OIDCConfig
 from security_lakehouse.auth.saml import SAMLConfig
 
 _SETUP_HINTS: dict[str, str] = {
-    "okta": "Okta OIDC app with openid, email, and profile scopes; map users to the TrustOps tenant.",
+    "okta": "Okta OIDC app with openid, email, and profile scopes; map users to the GRC Lake tenant.",
     "azure_ad": "Entra ID app registration with redirect URI to /api/v1/auth/callback.",
-    "google": "Google OAuth client with authorized redirect to the TrustOps callback URL.",
+    "google": "Google OAuth client with authorized redirect to the GRC Lake callback URL.",
     "auth0": "Auth0 application with OIDC callback and email in the ID token.",
-    "onelogin": "OneLogin OIDC connector pointed at the TrustOps redirect URI.",
+    "onelogin": "OneLogin OIDC connector pointed at the GRC Lake redirect URI.",
     "generic_oidc": "OIDC issuer, client ID, and secret mounted server-side; email claim required.",
-    "okta_saml": "Upload TrustOps SP metadata to Okta; map NameID to email.",
+    "okta_saml": "Upload GRC Lake SP metadata to Okta; map NameID to email.",
     "azure_ad_saml": "Enterprise application SAML SSO with ACS URL and email NameID.",
     "generic_saml": "IdP metadata with ACS URL, entity ID, and x509 cert mounted on the server.",
     "api_key": "Paste an API key on the sign-in page for a browser session, or use Bearer auth for MCP and CI.",
@@ -229,7 +229,7 @@ def build_auth_methods_payload(
             login_url="/api/v1/auth/session-from-key",
             protocol="API key",
             provider_kind="api_key",
-            provider_label="TrustOps API keys",
+            provider_label="GRC Lake API keys",
             setup_hint=_SETUP_HINTS["api_key"],
         )
     )

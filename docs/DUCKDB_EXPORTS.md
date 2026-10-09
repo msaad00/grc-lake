@@ -22,7 +22,7 @@ cross-lake reuse, not a database authorization boundary against an administrator
 
 Existing destinations without ownership metadata are rejected without changing
 their tables. For upgrade, keep the old database, configure a new
-`TRUSTOPS_DUCKDB_PATH`, export the current assessment, verify row counts and gold
+`GRC_LAKE_DUCKDB_PATH`, export the current assessment, verify row counts and gold
 views, then switch consumers. No destructive schema migration runs automatically.
 An injected DuckDB connection must be idle; nested transactions are unsupported
 and DuckDB requires the caller to roll back after a nested-BEGIN error.

@@ -1,13 +1,13 @@
 ###############################################################################
-# TrustOps EKS reference IaC                                                  #
+# GRC Lake EKS reference IaC                                                  #
 #                                                                             #
 # Provisions:                                                                 #
 #   * VPC with public + private subnets across 2 AZs                          #
 #   * EKS cluster (managed control plane) with one managed node group         #
 #   * OIDC provider for IRSA                                                  #
-#   * IAM role bound to the trustops service account, with read-only access   #
+#   * IAM role bound to the grc-lake service account, with read-only access   #
 #     to the customer-owned evidence S3 bucket (residency boundary)           #
-#   * Helm release of ../helm/trustops with the IRSA annotation applied       #
+#   * Helm release of ../helm/grc-lake with the IRSA annotation applied       #
 #                                                                             #
 # Customer evidence stays in the customer S3 bucket. Nothing about this stack #
 # requires the bucket to be inside the same AWS account; cross-account is a   #
@@ -17,7 +17,7 @@
 locals {
   base_tags = merge(
     {
-      "trustops:cluster" = var.cluster_name
+      "grc-lake:cluster" = var.cluster_name
     },
     var.tags,
   )
@@ -138,7 +138,7 @@ data "aws_iam_policy_document" "evidence_read_only" {
 
 resource "aws_iam_policy" "evidence_read_only" {
   name        = "${var.cluster_name}-evidence-ro"
-  description = "Read-only access to the TrustOps evidence bucket."
+  description = "Read-only access to the GRC Lake evidence bucket."
   policy      = data.aws_iam_policy_document.evidence_read_only.json
   tags        = local.base_tags
 }
@@ -147,7 +147,7 @@ module "trustops_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.39"
 
-  role_name = "${var.cluster_name}-trustops"
+  role_name = "${var.cluster_name}-grc-lake"
 
   role_policy_arns = {
     evidence = aws_iam_policy.evidence_read_only.arn
@@ -156,7 +156,7 @@ module "trustops_irsa" {
   oidc_providers = {
     main = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["${var.namespace}:trustops"]
+      namespace_service_accounts = ["${var.namespace}:grc-lake"]
     }
   }
 
@@ -206,9 +206,9 @@ moved {
 
 resource "helm_release" "trustops" {
   count     = var.deploy_application ? 1 : 0
-  name      = "trustops"
+  name      = "grc-lake"
   namespace = kubernetes_namespace.trustops.metadata[0].name
-  chart     = "${path.module}/../helm/trustops"
+  chart     = "${path.module}/../helm/grc-lake"
 
   values = concat([
     yamlencode({
@@ -217,20 +217,20 @@ resource "helm_release" "trustops" {
         tag        = var.image_tag
       }
       env = [
-        { name = "TRUSTOPS_ENV", value = "production" },
+        { name = "GRC_LAKE_ENV", value = "production" },
         {
-          name = "TRUSTOPS_COOKIE_SIGNING_KEY"
+          name = "GRC_LAKE_COOKIE_SIGNING_KEY"
           valueFrom = {
             secretKeyRef = {
               name = var.server_secret_name
-              key  = "TRUSTOPS_COOKIE_SIGNING_KEY"
+              key  = "GRC_LAKE_COOKIE_SIGNING_KEY"
             }
           }
         },
       ]
       serviceAccount = {
         create = true
-        name   = "trustops"
+        name   = "grc-lake"
         annotations = {
           "eks.amazonaws.com/role-arn" = module.trustops_irsa.iam_role_arn
         }

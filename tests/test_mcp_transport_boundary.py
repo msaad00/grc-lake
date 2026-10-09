@@ -11,10 +11,10 @@ from security_lakehouse import mcp_server, netguard
 
 @pytest.fixture
 def remote(monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://api.example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-private-token")
-    monkeypatch.delenv("TRUSTOPS_API_ALLOW_PRIVATE", raising=False)
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "remote")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://api.example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture-private-token")
+    monkeypatch.delenv("GRC_LAKE_API_ALLOW_PRIVATE", raising=False)
     monkeypatch.setattr(netguard, "assert_url_is_public", lambda *a, **kw: "api.example.test")
 
 
@@ -66,7 +66,7 @@ def test_error_cannot_echo_bearer_token(remote, monkeypatch):
 
 def test_public_transport_uses_guarded_connections_and_refuses_redirects(remote, monkeypatch):
     def guarded(request, *, timeout, validate, label):
-        assert label == "TRUSTOPS_API_URL"
+        assert label == "GRC_LAKE_API_URL"
         validate(request.full_url)
         validate("https://other.example.test/stolen-token")
         pytest.fail("redirect accepted")
@@ -89,21 +89,21 @@ def test_public_transport_uses_guarded_connections_and_refuses_redirects(remote,
     ],
 )
 def test_operator_url_rejects_ambiguous_or_credential_fields(remote, monkeypatch, url):
-    monkeypatch.setenv("TRUSTOPS_API_URL", url)
+    monkeypatch.setenv("GRC_LAKE_API_URL", url)
     with pytest.raises(ValueError):
         mcp_server.resolve_api_base_url()
 
 
 @pytest.mark.parametrize("timeout", ["nan", "inf", "-inf"])
 def test_nonfinite_timeouts_fail_before_network(remote, monkeypatch, timeout):
-    monkeypatch.setenv("TRUSTOPS_API_TIMEOUT_SECONDS", timeout)
+    monkeypatch.setenv("GRC_LAKE_API_TIMEOUT_SECONDS", timeout)
     monkeypatch.setattr(mcp_server, "_open_api_request", lambda *a, **kw: pytest.fail("invalid timeout connected"))
     with pytest.raises(ValueError, match="finite"):
         mcp_server._server_api_request("GET", "/api/v1/controls")
 
 
 def test_explicit_local_mode_disables_server_only_tools(remote, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "local")
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "local")
     monkeypatch.setattr(mcp_server, "_open_api_request", lambda *a, **kw: pytest.fail("local mode connected"))
     with pytest.raises(ValueError, match="requires remote"):
         mcp_server._server_api_request("GET", "/api/v1/agent-runs")
@@ -133,10 +133,10 @@ def test_private_http_redirect_never_reaches_second_origin(monkeypatch):
             return RedirectResponse(target_url + "/capture")
 
         with _server(source) as source_url:
-            monkeypatch.setenv("TRUSTOPS_API_URL", source_url)
-            monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-token")
-            monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
-            monkeypatch.setenv("TRUSTOPS_API_ALLOW_PRIVATE", "1")
+            monkeypatch.setenv("GRC_LAKE_API_URL", source_url)
+            monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture-token")
+            monkeypatch.setenv("GRC_LAKE_MCP_MODE", "remote")
+            monkeypatch.setenv("GRC_LAKE_API_ALLOW_PRIVATE", "1")
             with pytest.raises(ValueError, match="redirects are not allowed"):
                 mcp_server._server_api_request("GET", "/api/v1/controls")
     assert received == []

@@ -10,14 +10,14 @@ pytest.importorskip("fastapi")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from security_lakehouse import mcp_server, netguard  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user, revoke_api_key  # noqa: E402
-from security_lakehouse.io import write_jsonl  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
-from test_async_sdk import _server  # noqa: E402
-from test_mcp_server import call_tool  # noqa: E402
+from security_lakehouse import mcp_server, netguard
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user, revoke_api_key
+from security_lakehouse.io import write_jsonl
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
+from test_async_sdk import _server
+from test_mcp_server import call_tool
 
 
 def _principal(app, slug, role):
@@ -29,10 +29,10 @@ def _principal(app, slug, role):
 
 
 def _remote(monkeypatch, base, token):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
-    monkeypatch.setenv("TRUSTOPS_API_URL", base)
-    monkeypatch.setenv("TRUSTOPS_API_KEY", token)
-    monkeypatch.setenv("TRUSTOPS_API_ALLOW_PRIVATE", "1")
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "remote")
+    monkeypatch.setenv("GRC_LAKE_API_URL", base)
+    monkeypatch.setenv("GRC_LAKE_API_KEY", token)
+    monkeypatch.setenv("GRC_LAKE_API_ALLOW_PRIVATE", "1")
 
 
 def test_real_http_reads_tenant_data_and_writes_only_authorized_remote_lake(tmp_path, monkeypatch):
@@ -75,7 +75,7 @@ def test_real_http_reads_tenant_data_and_writes_only_authorized_remote_lake(tmp_
         assert len(call_tool(server, "list_trust_shares", include_revoked=True)) == 1
         snapshot = call_tool(server, "create_snapshot", reason="remote MCP integration")
         assert snapshot
-        monkeypatch.setenv("TRUSTOPS_API_KEY", b_token)
+        monkeypatch.setenv("GRC_LAKE_API_KEY", b_token)
         assert call_tool(server, "get_snapshots_integrity")["length"] == 0
         assert call_tool(server, "list_controls") == []
         assert call_tool(server, "list_connector_runs") == []
@@ -134,7 +134,7 @@ def test_revoked_key_fails_without_local_fallback(tmp_path, monkeypatch):
 
 
 def test_private_opt_in_does_not_relax_general_ssrf_guard(monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_API_ALLOW_PRIVATE", "1")
+    monkeypatch.setenv("GRC_LAKE_API_ALLOW_PRIVATE", "1")
     with pytest.raises(ValueError, match="non-public"):
         netguard.assert_url_is_public("http://127.0.0.1:8787")
 

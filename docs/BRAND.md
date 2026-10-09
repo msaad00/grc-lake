@@ -1,15 +1,15 @@
-# TrustOps brand
+# GRC Lake brand
 
-**TrustOps** is the only customer-facing product name. “Security data lake” describes the architecture; it is not a second brand.
+**GRC Lake** is the only customer-facing product name. “Security data lake” describes the architecture; it is not a second brand.
 
-| Use                  | Form                          |
-| -------------------- | ----------------------------- |
-| Product              | **TrustOps**                  |
-| Console              | **TrustOps Console**          |
-| Reviewer shares      | **TrustOps Trust Center**     |
-| Repository / package | `trustops-security-data-lake` |
-| Operator CLI         | `security-lakehouse`          |
-| MCP command          | `trustops-mcp`                |
+| Use                  | Form                      |
+| -------------------- | ------------------------- |
+| Product              | **GRC Lake**              |
+| Console              | **GRC Lake Console**      |
+| Reviewer shares      | **GRC Lake Trust Center** |
+| Repository / package | `grc-lake`                |
+| Operator CLI         | `grc-lake`                |
+| MCP command          | `grc-lake-mcp`            |
 
 Do not introduce alternate product names. Do not use “Workbench,” “Assessment Console,” or “Security Lakehouse” as a customer-facing brand.
 
@@ -51,14 +51,10 @@ not a claim that every context source or prioritization rule is implemented.
 
 ## Visual identity
 
-The full mark places cloud, identity, AI agent, and activity-log symbols above
-three lake waves. These represent assets and their evidence entering a shared,
-customer-owned evidence layer. The wordmark remains **TrustOps**.
-
-Use the same approved full mark at every size, including the app shell, favicon,
-and MCP icons. Do not substitute the log-only variant. The header uses a 48 px
-mark and the sidebar uses 40 px. The lake is part of the identity, not a separate
-product name.
+The full mark combines an open G with three evidence-lake waves. At 40 px and
+below, the app uses the waves alone for legibility. The wordmark is **GRC Lake**.
+The logo, favicon, social card and embedded MCP icon are generated from the same
+canonical SVG in `brand_assets.py` using `tools/render_readme_header.py`.
 
 | Token           | Value                 |
 | --------------- | --------------------- |
@@ -71,14 +67,14 @@ product name.
 
 Primary assets:
 
-- `docs/images/trustops-mark.svg` — full evidence-lake mark
-- `docs/images/trustops-logo.svg` — documentation lockup
+- `docs/images/grc-lake-mark.svg` — full evidence-lake mark
+- `docs/images/grc-lake-logo.svg` — documentation lockup
 - `app/web/src/app/icon.svg` — approved favicon
-- `src/security_lakehouse/static/trustops-mark.svg` — approved hosted icon
+- `src/security_lakehouse/static/grc-lake-mark.svg` — approved hosted icon
 - `src/security_lakehouse/brand_assets.py` — matching embedded MCP icon
-- `app/web/src/components/brand/TrustOpsMark.tsx` — UI mark
-- `app/web/src/components/brand/TrustOpsLogo.tsx` — UI lockup
-- `app/web/public/og/trustops-share.svg` — social preview
+- `app/web/src/components/brand/GrcLakeMark.tsx` — UI mark
+- `app/web/src/components/brand/GrcLakeLogo.tsx` — UI lockup
+- `app/web/public/og/grc-lake-share.svg` — social preview
 
 Do not stretch, rotate, shadow, or recolor the mark. Framework and connector logos follow [THIRD_PARTY_ASSETS.md](THIRD_PARTY_ASSETS.md).
 

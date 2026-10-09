@@ -40,6 +40,7 @@ test("choosing All frameworks keeps the wide map", async ({ page }) => {
   const framework = page.getByRole("combobox", {
     name: "Filter graph by framework",
   });
+  await expect(framework).toBeVisible({ timeout: 45_000 });
   await expect(framework).not.toHaveValue("");
   await framework.selectOption("");
   await page.waitForTimeout(500);

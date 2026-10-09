@@ -1,6 +1,6 @@
 # Audit-scale ingestion, evaluation, and synthetic data
 
-TrustOps evaluates evidence in the local Python process and can export the resulting generation to Snowflake, ClickHouse, or DuckDB. Configuring a sink does not provide warehouse-native evaluation or remove local memory limits. This document describes implementation limits and tools for bounded measurement; it does not establish million-event capacity.
+GRC Lake evaluates evidence in the local Python process and can export the resulting generation to Snowflake, ClickHouse, or DuckDB. Configuring a sink does not provide warehouse-native evaluation or remove local memory limits. This document describes implementation limits and tools for bounded measurement; it does not establish million-event capacity.
 
 ## Audit findings (synthesis)
 
@@ -21,10 +21,10 @@ Generate reproducible raw evidence without live connectors:
 
 ```bash
 # Project cardinality before generating
-security-lakehouse benchmark plan --events 1000000 --controls-per-event 3 --open-ratio 0.12
+grc-lake benchmark plan --events 1000000 --controls-per-event 3 --open-ratio 0.12
 
 # Stream 1M events (~360k findings at defaults) to disk
-security-lakehouse fixtures synthesize-scale \
+grc-lake fixtures synthesize-scale \
   --count 1000000 \
   --out /tmp/audit-scale/raw.jsonl \
   --controls-per-event 3 \
@@ -32,7 +32,7 @@ security-lakehouse fixtures synthesize-scale \
   --seed 42
 
 # Materialize lake + timing
-security-lakehouse benchmark pipeline --raw /tmp/audit-scale/raw.jsonl --out /tmp/audit-scale/lake
+grc-lake benchmark pipeline --raw /tmp/audit-scale/raw.jsonl --out /tmp/audit-scale/lake
 ```
 
 Controls are sampled from the active catalog. Each open event fans out to `controls_per_event` findings during evaluation.
@@ -63,15 +63,15 @@ When a prior `manifest.json` exists, incremental materialize:
 Use split schedules so connector sync stays ingest-only and lake eval runs less often:
 
 ```bash
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake /lake \
   --connector-id github-security \
   --state enabled \
   --sync-schedule "every 15m" \
   --eval-schedule "every 6h"
 
-security-lakehouse pipeline eval --lake /lake
-security-lakehouse scheduler tick --lake /lake
+grc-lake pipeline eval --lake /lake
+grc-lake scheduler tick --lake /lake
 ```
 
 HTTP/API (same contract as UI, MCP, and agents):

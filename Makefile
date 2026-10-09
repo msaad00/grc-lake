@@ -58,7 +58,7 @@ release-build: web-install web-build ## Build the console, wheel and source arch
 	python tools/verify_wheel.py dist/*.whl
 
 openapi-export: ## Regenerate OpenAPI and API resource catalog documents.
-	uv run security-lakehouse openapi --out docs/api/openapi.v1.json
+	uv run grc-lake openapi --out docs/api/openapi.v1.json
 	uv run python -c "import json; from security_lakehouse import api_v1; json.dump({'resources': api_v1.resource_catalog()}, open('docs/api/resource-catalog.v1.json','w'), indent=2, sort_keys=True); print('wrote docs/api/resource-catalog.v1.json')"
 
 smoke: validate validate-json validate-doc-images validate-brand pipeline validate-generated dashboard api-smoke test ## Validate catalogs and artifacts, run the sample pipeline and test suite.
@@ -91,10 +91,10 @@ demo-screenshots-full: ## Build and serve the golden fixture, then capture demo 
 
 # Local console with golden fixture (run on your machine — localhost is not remote-hosted).
 demo-local: web-install web-build ## Build and serve the golden demo on loopback port 8787 with auth off.
-	uv run security-lakehouse fixtures load --company golden --out build/lakehouse --rebase-times
-	uv run security-lakehouse db upgrade --lake build/lakehouse
+	uv run grc-lake fixtures load --company golden --out build/lakehouse --rebase-times
+	uv run grc-lake db upgrade --lake build/lakehouse
 	@echo "Starting console at http://127.0.0.1:8787/console/dashboard/"
-	uv run security-lakehouse serve --lake build/lakehouse --server --allow-insecure-no-auth --port 8787
+	uv run grc-lake serve --lake build/lakehouse --server --allow-insecure-no-auth --port 8787
 
 web-ci: web-install web-typecheck web-build ## Install, type-check and build the console.
 
@@ -106,15 +106,15 @@ web-clean: ## Remove the generated console bundle and restore its placeholder.
 # --- Deploy targets -------------------------------------------------------
 # Container image, Helm chart, EKS Terraform reference IaC.
 
-docker-build: ## Build the local trustops:dev container image.
-	docker build -t trustops:dev .
+docker-build: ## Build the local grc-lake:dev container image.
+	docker build -t grc-lake:dev .
 
-helm-lint: ## Lint the TrustOps Helm chart.
-	helm lint deploy/helm/trustops
+helm-lint: ## Lint the GRC Lake Helm chart.
+	helm lint deploy/helm/grc-lake
 
-helm-template: ## Render the Helm chart to /tmp/trustops-helm-render.yaml.
-	helm template trustops deploy/helm/trustops > /tmp/trustops-helm-render.yaml
-	@echo "wrote /tmp/trustops-helm-render.yaml ($$(wc -l < /tmp/trustops-helm-render.yaml) lines)"
+helm-template: ## Render the Helm chart to /tmp/grc-lake-helm-render.yaml.
+	helm template grc-lake deploy/helm/grc-lake > /tmp/grc-lake-helm-render.yaml
+	@echo "wrote /tmp/grc-lake-helm-render.yaml ($$(wc -l < /tmp/grc-lake-helm-render.yaml) lines)"
 
 terraform-fmt: ## Check formatting of the EKS Terraform reference.
 	terraform -chdir=deploy/eks-terraform fmt -check -recursive
@@ -149,8 +149,8 @@ pre-commit-run: ## Run all pre-commit checks across tracked files.
 	uv run pre-commit run --all-files
 
 pip-audit: ## Audit locked Python runtime dependencies for known vulnerabilities.
-	uv export --no-emit-project --format requirements-txt --no-hashes > /tmp/trustops-reqs.txt
-	uv run pip-audit --strict -r /tmp/trustops-reqs.txt
+	uv export --no-emit-project --format requirements-txt --no-hashes > /tmp/grc-lake-reqs.txt
+	uv run pip-audit --strict -r /tmp/grc-lake-reqs.txt
 
 npm-audit: ## Audit production npm dependencies at high severity or above.
 	cd app/web && npm audit --omit=dev --audit-level=high

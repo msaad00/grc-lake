@@ -87,7 +87,7 @@ class ClientCredentialsToken:
             headers={
                 "content-type": "application/x-www-form-urlencoded",
                 "accept": "application/json",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         try:

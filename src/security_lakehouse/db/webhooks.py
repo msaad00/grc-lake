@@ -9,7 +9,7 @@ returned by ``list``/``get`` serialization — only ``create`` hands it back, on
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -22,14 +22,7 @@ from security_lakehouse.db.models import (
     WebhookDelivery,
     WebhookSubscription,
 )
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def _validate_event_types(event_types: list[str]) -> list[str]:
@@ -168,7 +161,7 @@ def update_subscription(
         if changes["enabled"] is None:
             raise ValueError("enabled cannot be null")
         subscription.enabled = bool(changes["enabled"])
-    subscription.updated_at = _now(now)
+    subscription.updated_at = utc_now(now)
     session.flush()
     return subscription
 
@@ -195,7 +188,7 @@ def record_delivery_result(
     error: str = "",
     now: datetime | None = None,
 ) -> WebhookDelivery:
-    moment = _now(now)
+    moment = utc_now(now)
     status = "success" if ok else "failed"
     if status not in WEBHOOK_DELIVERY_STATUSES:  # pragma: no cover - defensive, status is derived above
         raise ValueError(f"status must be one of {list(WEBHOOK_DELIVERY_STATUSES)}, got {status!r}")
@@ -242,9 +235,9 @@ def subscription_to_dict(subscription: WebhookSubscription, *, include_secret: b
         "description": subscription.description,
         "event_types": json.loads(subscription.event_types_json or "[]"),
         "enabled": subscription.enabled,
-        "created_at": _iso(subscription.created_at),
-        "updated_at": _iso(subscription.updated_at),
-        "last_delivery_at": _iso(subscription.last_delivery_at),
+        "created_at": iso_offset(subscription.created_at),
+        "updated_at": iso_offset(subscription.updated_at),
+        "last_delivery_at": iso_offset(subscription.last_delivery_at),
         "last_delivery_status": subscription.last_delivery_status,
     }
     if include_secret:
@@ -262,7 +255,7 @@ def delivery_to_dict(delivery: WebhookDelivery) -> dict[str, Any]:
         "attempts": delivery.attempts,
         "response_status": delivery.response_status,
         "error": delivery.error,
-        "created_at": _iso(delivery.created_at),
+        "created_at": iso_offset(delivery.created_at),
     }
 
 

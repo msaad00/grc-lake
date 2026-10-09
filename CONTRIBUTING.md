@@ -1,8 +1,8 @@
-# Contributing to TrustOps
+# Contributing to GRC Lake
 
 Thanks for helping. Bug reports, docs fixes, connectors, framework packs, and
 console polish are all welcome. Issues labeled
-[`good first issue`](https://github.com/msaad00/trustops-security-data-lake/labels/good%20first%20issue)
+[`good first issue`](https://github.com/msaad00/grc-lake/labels/good%20first%20issue)
 are scoped to be finished in one pull request.
 
 By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Report
@@ -15,8 +15,8 @@ You need Python 3.11 or later, [uv](https://docs.astral.sh/uv/), Node 22 or
 later, and `make`.
 
 ```bash
-git clone https://github.com/msaad00/trustops-security-data-lake.git
-cd trustops-security-data-lake
+git clone https://github.com/msaad00/grc-lake.git
+cd grc-lake
 make uv-sync               # uv sync --frozen --all-extras, same as CI
 source .venv/bin/activate  # make targets call `python`; or prefix them: uv run make test
 make pre-commit-install    # pre-commit and commit-message hooks
@@ -76,8 +76,8 @@ quickstart. CodeQL cancels superseded runs for the same branch or pull request.
 Write the test first when you fix a bug or add behavior, and check that it
 fails without your change. Tests assert on real output, not on "it ran".
 
-For Compose or image changes, build locally with `docker build -t trustops:ci .`,
-then run `python3 tools/compose_smoke.py --image trustops:ci`. Docker Compose
+For Compose or image changes, build locally with `docker build -t grc-lake:ci .`,
+then run `python3 tools/compose_smoke.py --image grc-lake:ci`. Docker Compose
 2.24.4 or newer is required. The check uses a fresh project and a dynamic loopback
 port, recreates the demo container on the same volume, and removes its containers
 and volumes afterward. It also validates the authenticated server profile with

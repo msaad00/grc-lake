@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -11,14 +11,7 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
 from security_lakehouse.db.models import VENDOR_ASSESSMENT_STATUSES, VendorAssessment
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def _parse_responses(raw: str) -> dict[str, Any]:
@@ -40,11 +33,11 @@ def assessment_to_dict(row: VendorAssessment, *, template: dict[str, Any] | None
         "responses": _parse_responses(row.responses_json),
         "score": row.score,
         "risk_level": row.risk_level,
-        "due_at": _iso(row.due_at),
+        "due_at": iso_offset(row.due_at),
         "created_by": row.created_by,
-        "created_at": _iso(row.created_at),
-        "updated_at": _iso(row.updated_at),
-        "completed_at": _iso(row.completed_at),
+        "created_at": iso_offset(row.created_at),
+        "updated_at": iso_offset(row.updated_at),
+        "completed_at": iso_offset(row.completed_at),
     }
     if template is not None:
         data["template"] = template
@@ -111,7 +104,7 @@ def update_assessment(
     row = get_assessment(session, tenant_id=tenant_id, assessment_id=assessment_id)
     if row is None:
         return None
-    moment = _now(now)
+    moment = utc_now(now)
     if "vendor_name" in changes and str(changes["vendor_name"]).strip():
         row.vendor_name = str(changes["vendor_name"]).strip()
     if "owner" in changes:

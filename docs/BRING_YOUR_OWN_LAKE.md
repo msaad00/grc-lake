@@ -1,8 +1,8 @@
 # Bring your own lake
 
-Connect TrustOps to the security lake you already run, read-only, without
-creating TrustOps-shaped views first. A **lake mapping** says which columns of an
-existing table become TrustOps evidence; the lake readers apply it with a
+Connect GRC Lake to the security lake you already run, read-only, without
+creating GRC Lake-shaped views first. A **lake mapping** says which columns of an
+existing table become GRC Lake evidence; the lake readers apply it with a
 parameterized, read-only query and feed the rows into the normal pipeline
 (raw → bronze/silver/gold → posture).
 
@@ -19,14 +19,14 @@ parameterized, read-only query and feed the rows into the normal pipeline
 
 | Mode                               | Readers                           | What you provide                                                                                  |
 | ---------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| TrustOps views (unchanged default) | Snowflake, Databricks, ClickHouse | The TrustOps evidence views or table ([HERO_DATA_LAKES.md](HERO_DATA_LAKES.md))                   |
+| GRC Lake views (unchanged default) | Snowflake, Databricks, ClickHouse | The GRC Lake evidence views or table ([HERO_DATA_LAKES.md](HERO_DATA_LAKES.md))                   |
 | Mapped tables                      | Snowflake, Databricks, ClickHouse | `options.mapping` (one spec or preset reference) or `options.mappings` (a list)                   |
 | Iceberg / Parquet (preview)        | `iceberg-parquet-lake`            | A Glue or Iceberg REST catalog, or a Parquet location, plus mappings (optional for Security Lake) |
 | BigQuery (preview)                 | `bigquery-evidence-lake`          | A query project, plus mappings                                                                    |
 
 Without `mapping`/`mappings`, the Snowflake, Databricks, and ClickHouse readers
 behave exactly as before. With a mapping, they read only the mapped tables, and
-**Test connection** reads one row from each mapped table instead of the TrustOps
+**Test connection** reads one row from each mapped table instead of the GRC Lake
 views.
 
 ## Quick start
@@ -34,8 +34,8 @@ views.
 Preview a built-in preset against sample rows. Nothing is written:
 
 ```bash
-security-lakehouse lake presets
-security-lakehouse lake map --dry-run \
+grc-lake lake presets
+grc-lake lake map --dry-run \
   --preset ocsf/compliance_finding --table security_lake.sh_findings \
   --input sample_rows.jsonl --dialect snowflake
 ```
@@ -51,20 +51,20 @@ reader, live or with `--fixture-dir`, again without writing evidence or moving t
 watermark:
 
 ```bash
-security-lakehouse lake map --dry-run --lake build/lakehouse --connector-id snowflake-evidence-lake
+grc-lake lake map --dry-run --lake build/lakehouse --connector-id snowflake-evidence-lake
 ```
 
 Configure a reader with a mapping (API and console configure calls take the same
 `options` object):
 
 ```bash
-security-lakehouse connectors configure --lake build/lakehouse \
+grc-lake connectors configure --lake build/lakehouse \
   --connector-id snowflake-evidence-lake --state enabled \
-  --credentials-json '{"account":"acme-prod","user":"TRUSTOPS_READER_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"SECURITY","schema":"OCSF",
+  --credentials-json '{"account":"acme-prod","user":"GRC_LAKE_READER_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"SECURITY","schema":"OCSF",
                    "mappings":[{"preset":"ocsf/api_activity","source":{"table":"CLOUDTRAIL_OCSF"}},
                                {"preset":"ocsf/authentication","source":{"table":"CLOUDTRAIL_OCSF"}}]}'
-security-lakehouse connectors sync --lake build/lakehouse --connector-id snowflake-evidence-lake
+grc-lake connectors sync --lake build/lakehouse --connector-id snowflake-evidence-lake
 ```
 
 Invalid mappings are rejected when the connector is configured, with every
@@ -260,7 +260,7 @@ Severity comes from OCSF `severity_id` (1 Informational → info, 2 → low,
 account-change, and API events are activity evidence, so they are `observed`
 rather than control failures; a failed sign-in is not a failed control. Control
 hints are ids from `controls/catalog.json`. Security Hub `compliance.control`
-values (for example `IAM.6`) are kept in `attributes`, not treated as TrustOps
+values (for example `IAM.6`) are kept in `attributes`, not treated as GRC Lake
 controls.
 
 Amazon Security Lake source version 2 writes OCSF 1.1.0 and source version 1
@@ -294,7 +294,7 @@ runtime's cloud identity) and are never stored.
 ### Snowflake
 
 Grant a dedicated role `USAGE` on the warehouse, database, and schema, and
-`SELECT` on each mapped table or view. Nothing else is needed; the TrustOps views
+`SELECT` on each mapped table or view. Nothing else is needed; the GRC Lake views
 are not required in mapping mode. Authentication is unchanged: key-pair or OAuth
 service user, see [CONNECTORS.md](CONNECTORS.md#connector-runner) and
 [LIVE_CLOUD_POC.md](LIVE_CLOUD_POC.md).
@@ -353,7 +353,7 @@ In hosted server mode `role_arn` and `external_id` are required (see
 
 Credentials: `catalog_type: "rest"`, `uri` (HTTPS, resolving to a public
 address), `warehouse`, and `credential_ref`, the name of an environment variable
-holding a short-lived bearer token (default `TRUSTOPS_ICEBERG_TOKEN`). The client
+holding a short-lived bearer token (default `GRC_LAKE_ICEBERG_TOKEN`). The client
 is the hardened one used by [Iceberg publication](ICEBERG_REST.md): no redirects,
 no endpoint relocation, no refresh credentials. The token needs read access
 (load table and scan) to the mapped namespaces only. From the catalog's config
@@ -376,20 +376,20 @@ optionally `region`, `role_arn`, and `external_id`. The role needs `s3:ListBucke
 on the prefix and `s3:GetObject` on its objects. Hive-style partition
 directories (`region=us-east-1/...`) become filterable columns.
 
-Local paths are refused unless `TRUSTOPS_LAKE_LOCAL_ROOT` names the directory
+Local paths are refused unless `GRC_LAKE_LAKE_LOCAL_ROOT` names the directory
 they may read, and resolved paths cannot escape it. In hosted server mode each
-tenant may read only `$TRUSTOPS_LAKE_LOCAL_ROOT/<tenant_id>`, and S3 paths need
+tenant may read only `$GRC_LAKE_LAKE_LOCAL_ROOT/<tenant_id>`, and S3 paths need
 `role_arn` plus `external_id`. Anything other than `s3://` or an absolute local
 path is rejected.
 
 ### BigQuery (`bigquery-evidence-lake`, preview)
 
-Install the `bigquery` extra (`pip install 'trustops-security-data-lake[bigquery]'`).
+Install the `bigquery` extra (`pip install 'grc-lake[bigquery]'`).
 Credentials: `project_id` (the project that runs the queries), and optionally
 `dataset` (qualifies one-part table names) and `location`. Authentication is
 Application Default Credentials: workload identity, an attached service
 account, or `gcloud auth application-default login` for a trial. No key file is
-configured in TrustOps. Set `impersonate_service_account` to have that identity
+configured in GRC Lake. Set `impersonate_service_account` to have that identity
 impersonate a service account in your project; hosted server mode requires it,
 and there a fully qualified table in another project than `project_id` needs
 `options.allow_cross_project: true`.

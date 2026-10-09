@@ -6,7 +6,7 @@ scope ``workers.read``) and emits one vendor-neutral
 :mod:`security_lakehouse.hris`).
 
 The workers endpoint has no field selection, so the response can carry fields
-outside the TrustOps PII boundary (date of birth, gender, compensation ids,
+outside the GRC Lake PII boundary (date of birth, gender, compensation ids,
 personal email). :func:`_record` copies only the allowlisted fields; nothing
 else is retained or written. Pagination follows ``next_link`` only while it
 stays on ``https://rest.ripplingapis.com`` so the bearer token is never sent
@@ -68,7 +68,7 @@ class RipplingClient:
             headers={
                 "accept": "application/json",
                 "authorization": f"Bearer {self._token}",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         with netguard.open_public(request, timeout=self.timeout, label="rippling api") as resp:

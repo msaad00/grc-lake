@@ -1,0 +1,30 @@
+apiVersion: v2
+name: grc-lake
+description: |
+  GRC Lake Security Data Lake — continuous compliance assessment workbench.
+  Ships the API + React workbench in one OCI image with a persistent local
+  JSONL evidence lake and SQLite mart. Includes optional DuckDB, Parquet, and
+  Iceberg REST export commands. Catalogs and remote storage require separate provisioning;
+  egress depends on configured connectors and sinks.
+type: application
+version: 0.2.24
+appVersion: "0.2.24"
+kubeVersion: ">=1.27.0"
+home: https://github.com/msaad00/grc-lake
+sources:
+  - https://github.com/msaad00/grc-lake
+maintainers:
+  - name: GRC Lake maintainers
+    url: https://github.com/msaad00/grc-lake
+keywords:
+  - compliance
+  - soc2
+  - iso27001
+  - hipaa
+  - pci
+  - gdpr
+  - eu-ai-act
+  - iso42001
+  - security
+  - data-lake
+  - workbench

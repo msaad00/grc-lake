@@ -159,7 +159,7 @@ const ROUTES: RouteSpec[] = [
     body_example: {
       actor: "coding-agent",
       credentials: {
-        credential_ref: "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN",
+        credential_ref: "GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN",
       },
       options: { repo: "acme/platform" },
     },
@@ -174,7 +174,7 @@ const ROUTES: RouteSpec[] = [
       state: "enabled",
       actor: "coding-agent",
       credentials: {
-        credential_ref: "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN",
+        credential_ref: "GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN",
       },
       options: { repo: "acme/platform" },
     },

@@ -4,7 +4,7 @@ Back up the **whole lake root** and the application-state database together.
 The lake includes bronze/silver/gold, published generations and their `current`
 pointer, snapshots, integrity/review ledgers and operational history. Copying
 only selected JSONL files can lose the generation or audit chain they reference.
-SQLite defaults to `server/app.db` inside the lake. When `TRUSTOPS_DATABASE_URL`
+SQLite defaults to `server/app.db` inside the lake. When `GRC_LAKE_DATABASE_URL`
 selects PostgreSQL, that database requires a separate backup.
 
 Keep runtime signing keys, OIDC settings, connector secrets and encryption keys
@@ -14,12 +14,14 @@ plaintext cannot be recovered from its stored hash.
 
 ## Quiesce Kubernetes writers
 
-The chart supports one writable application replica and one scheduler owner.
+Local mode supports one writable application replica and one scheduler owner.
+For PostgreSQL/S3 deployments, also follow the coordinated catalog/object recovery
+requirements in [distributed mode](../DISTRIBUTED.md).
 Pause external CLI/automation writers too. First prevent new scheduled jobs:
 
 ```bash
-NS=trustops
-RELEASE=trustops
+NS=grc-lake
+RELEASE=grc-lake
 kubectl -n "$NS" patch cronjob/"$RELEASE"-scheduler --type=merge \
   -p '{"spec":{"suspend":true}}'
 kubectl -n "$NS" get jobs
@@ -46,7 +48,7 @@ snapshot taken at a different point in the workflow.
 
 For Kubernetes, use your CSI driver's VolumeSnapshot procedure and wait for
 `readyToUse` before considering the snapshot complete. The chart's default PVC
-is `trustops-lake`; resolve the actual claim from the Deployment volume when
+is `grc-lake-lake`; resolve the actual claim from the Deployment volume when
 using a different release name or name overrides:
 
 ```bash
@@ -63,13 +65,13 @@ not a durable backup destination, and deleting that pod deletes the output.
 For local files, after stopping all writers:
 
 ```bash
-LAKE="${TRUSTOPS_LAKE:-build/lakehouse}"
-BACKUP="$PWD/trustops-lake-$(date +%F).tar.gz"
+LAKE="${GRC_LAKE_LAKE:-build/lakehouse}"
+BACKUP="$PWD/grc-lake-lake-$(date +%F).tar.gz"
 tar czf "$BACKUP" -C "$LAKE" .
 tar tzf "$BACKUP" >/dev/null
 ```
 
-For Compose, stop `trustops-server` first and identify its actual mounted volume
+For Compose, stop `grc-lake-server` first and identify its actual mounted volume
 with `docker inspect`; Compose may prefix the logical volume name with its
 project name. Archive that volume to durable external storage. A bind-mount
 installation can use the local command above. Do not use `docker compose down
@@ -92,12 +94,12 @@ an existing lake:
 ```bash
 RESTORED_LAKE=$(mktemp -d)
 tar xzf "$BACKUP" -C "$RESTORED_LAKE"
-security-lakehouse db upgrade --lake "$RESTORED_LAKE"
-security-lakehouse db current --lake "$RESTORED_LAKE"
+grc-lake db upgrade --lake "$RESTORED_LAKE"
+grc-lake db current --lake "$RESTORED_LAKE"
 ```
 
 For PostgreSQL, restore the matching database to a separate target and set the
-restored application's `TRUSTOPS_DATABASE_URL` accordingly. SQLite comes with
+restored application's `GRC_LAKE_DATABASE_URL` accordingly. SQLite comes with
 the full lake backup. Run migrations with the intended release version and
 keep the pre-migration backup. In Kubernetes the normal application startup
 runs migrations on its mounted lake/database; a standalone migration pod must
@@ -111,12 +113,12 @@ Start one application replica while the scheduler remains suspended:
 ```bash
 kubectl -n "$NS" scale deployment/"$RELEASE" --replicas=1
 kubectl -n "$NS" rollout status deployment/"$RELEASE"
-curl -fsS "$TRUSTOPS_URL/api/healthz"
-curl -fsS "$TRUSTOPS_URL/api/readyz"
-curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
-  "$TRUSTOPS_URL/api/v1/snapshots/integrity"
-curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
-  "$TRUSTOPS_URL/api/v1/tracking/integrity"
+curl -fsS "$GRC_LAKE_URL/api/healthz"
+curl -fsS "$GRC_LAKE_URL/api/readyz"
+curl -fsS -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
+  "$GRC_LAKE_URL/api/v1/snapshots/integrity"
+curl -fsS -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
+  "$GRC_LAKE_URL/api/v1/tracking/integrity"
 ```
 
 Check human login, tenant scope, retained snapshot/workpaper retrieval, posture,

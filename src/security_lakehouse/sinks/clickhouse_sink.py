@@ -31,6 +31,7 @@ from typing import Any
 
 from security_lakehouse.connectors_clickhouse import safe_identifier
 from security_lakehouse.io import read_jsonl
+from security_lakehouse.runtime_environment import runtime_env
 
 DEFAULT_DATABASE = "security"
 DEFAULT_TENANT = "customer-managed"
@@ -57,6 +58,7 @@ class ClickHouseSinkConfig:
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> ClickHouseSinkConfig | None:
+        env = runtime_env(env)
         host = env.get("CLICKHOUSE_HOST")
         if not host:
             return None
@@ -216,7 +218,7 @@ class ClickHouseSink:
     def _connect(self) -> Any:
         if self._client is not None:
             return self._client
-        import clickhouse_connect  # noqa: PLC0415
+        import clickhouse_connect
 
         params: dict[str, Any] = {
             "host": self.config.host,

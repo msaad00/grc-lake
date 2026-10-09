@@ -4,7 +4,7 @@ description: >-
   Triage continuous compliance and risk assessment findings for security
   operations. Use when an agent needs to analyze open violations, runtime
   policy events, SIEM signals, owner queues, evidence freshness, current
-  posture, or remediation priority using this repo's TrustOps API and artifacts.
+  posture, or remediation priority using this repo's GRC Lake API and artifacts.
 ---
 
 # Security Operations Analyst

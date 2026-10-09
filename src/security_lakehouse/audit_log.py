@@ -251,9 +251,9 @@ def _mapping_review_entries(lake: Path) -> list[dict[str, Any]]:
     return out
 
 
-def _request_entries(lake: Path) -> list[dict[str, Any]]:
+def _request_entries(lake: Path, extra_rows: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    for row in _read_log(_gold(lake) / REQUEST_AUDIT_FILE):
+    for row in [*_read_log(_gold(lake) / REQUEST_AUDIT_FILE), *(extra_rows or [])]:
         out.append(
             _entry(
                 category="request",
@@ -275,6 +275,7 @@ def build_audit_log(
     actor: str | None = None,
     limit: int = 200,
     include_requests: bool = False,
+    request_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     lake = Path(lake_dir)
     entries = (
@@ -286,7 +287,7 @@ def build_audit_log(
         + _mapping_review_entries(lake)
     )
     if include_requests or category == "request":
-        entries += _request_entries(lake)
+        entries += _request_entries(lake, request_rows)
     if category:
         entries = [e for e in entries if e["category"] == category]
     if actor:

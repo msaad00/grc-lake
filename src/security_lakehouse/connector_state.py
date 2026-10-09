@@ -54,6 +54,7 @@ from security_lakehouse.io import read_jsonl
 from security_lakehouse.lake_scale import apply_split_schedule_defaults
 from security_lakehouse.models import instant_sort_key, parse_event_time, utc_iso
 from security_lakehouse.secret_refs import ref_payload_error
+from security_lakehouse.timeutil import utc_now_iso_z as _utc_now_iso
 
 CONFIG_FILE = "connector_config.jsonl"
 RUNS_FILE = "connector_runs.jsonl"
@@ -138,7 +139,7 @@ def _fingerprint_salt(lake_dir: str | Path) -> bytes:
 
     The salt used to be a compile-time constant, identical on every install, so
     one rainbow table over likely credential values worked against every
-    TrustOps deployment at once -- and `credential_fingerprint` is readable at
+    GRC Lake deployment at once -- and `credential_fingerprint` is readable at
     `read` scope, which makes those tables worth building.
 
     Rotating this invalidates existing fingerprints. That fails closed: a probe
@@ -190,10 +191,6 @@ def _access_fingerprint(
         100_000,
         dklen=16,
     ).hex()[:16]
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
@@ -364,7 +361,7 @@ def _mapping_error(options: dict[str, Any]) -> str | None:
     """Validate ``options.mapping``/``options.mappings`` so a bad spec is rejected before it is stored."""
     if options.get("mapping") in (None, "", {}) and options.get("mappings") in (None, "", []):
         return None
-    from security_lakehouse.lake_mapping import MappingError, write_mode_for_options  # noqa: PLC0415
+    from security_lakehouse.lake_mapping import MappingError, write_mode_for_options
 
     try:
         write_mode_for_options(options)
@@ -755,14 +752,14 @@ def _scope_candidates(
         database = str(options.get("database") or "")
         schema = str(options.get("schema") or "")
         warehouse = str(options.get("warehouse") or "")
-        recommended_database = "TRUSTOPS_SECURITY_LAKE"
+        recommended_database = "GRC_LAKE_SECURITY_LAKE"
         recommended_schema = "EVIDENCE"
-        recommended_warehouse = "TRUSTOPS_READ_WH"
+        recommended_warehouse = "GRC_LAKE_READ_WH"
         defaults = {
-            "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-            "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-            "asset_risk": "TRUSTOPS_ASSET_RISK",
-            "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+            "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+            "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+            "asset_risk": "GRC_LAKE_ASSET_RISK",
+            "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
         }
         views = [
             {

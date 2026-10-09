@@ -23,7 +23,7 @@ def optimize(path: Path) -> tuple[int, int]:
 
 
 def main(argv: list[str]) -> int:
-    paths = [Path(arg) for arg in argv] or sorted(Path("docs/images").glob("trustops-demo-*.png"))
+    paths = [Path(arg) for arg in argv] or sorted(Path("docs/images").glob("grc-lake-demo-*.png"))
     total_before = total_after = 0
     for path in paths:
         before, after = optimize(path)

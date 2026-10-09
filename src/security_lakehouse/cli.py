@@ -1,4 +1,4 @@
-"""Command line interface for TrustOps Security Data Lake."""
+"""Command line interface for GRC Lake Security Data Lake."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from security_lakehouse import __version__, strict_json
 from security_lakehouse.dashboard import render_dashboard
 from security_lakehouse.io import read_jsonl
 from security_lakehouse.pipeline import normalize_raw_events, run_pipeline
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.validation import validate_raw_events
 
 # Risk vocabulary mirrored from security_lakehouse.db.models (RISK_LEVELS /
@@ -27,6 +28,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
+        from security_lakehouse.distributed.config import ClusterConfig
+
+        if ClusterConfig.from_env() is not None and args.command not in {"cluster", "serve", "scheduler", "db"}:
+            raise ValueError(
+                "distributed mode uses cluster commands or the authenticated API; local lake commands require local mode"
+            )
         return int(args.func(args))
     except Exception as exc:  # noqa: BLE001
         print(f"error: {exc}", file=sys.stderr)
@@ -40,9 +47,12 @@ _REVIEW_LAKE_HELP = "apply this lake's org mapping review decisions (default: sh
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="security-lakehouse")
+    parser = argparse.ArgumentParser(prog="grc-lake")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
+    from security_lakehouse.distributed.commands import register
+
+    register(sub)
 
     validate = sub.add_parser("validate", help="validate raw JSONL evidence")
     validate.add_argument("--raw", required=True, help="raw security events JSONL")
@@ -72,6 +82,9 @@ def _parser() -> argparse.ArgumentParser:
     export_parquet.add_argument("--out", required=True, help="new directory outside the lake; never overwritten")
     export_parquet.add_argument("--tenant-id", required=True, help="must match both assessment and evidence tenant")
     export_parquet.add_argument("--batch-size", type=int, default=8192, help="rows per Parquet write batch (1–65536)")
+    export_parquet.add_argument(
+        "--partitioned", action="store_true", help="partition by tenant, source and UTC event date"
+    )
     export_parquet.set_defaults(func=_export_parquet)
     publish_iceberg = pipeline_sub.add_parser(
         "publish-iceberg", help="publish verified evidence to a tenant-scoped Iceberg REST table"
@@ -81,10 +94,10 @@ def _parser() -> argparse.ArgumentParser:
     publish_iceberg.add_argument("--catalog-uri", required=True, help="HTTPS Iceberg REST catalog endpoint")
     publish_iceberg.add_argument("--warehouse", required=True, help="catalog warehouse name")
     publish_iceberg.add_argument("--namespace", required=True, help="preprovisioned tenant namespace")
-    publish_iceberg.add_argument("--table", default="evidence", help="TrustOps evidence table name")
+    publish_iceberg.add_argument("--table", default="evidence", help="GRC Lake evidence table name")
     publish_iceberg.add_argument(
         "--token-env",
-        default="TRUSTOPS_ICEBERG_TOKEN",
+        default="GRC_LAKE_ICEBERG_TOKEN",
         help="environment variable containing a short-lived bearer token",
     )
     publish_iceberg.add_argument(
@@ -280,7 +293,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     ingestion_normalize.set_defaults(func=_ingestion_normalize)
 
-    scenario = sub.add_parser("scenario", help="run repeatable TrustOps proof scenarios")
+    scenario = sub.add_parser("scenario", help="run repeatable GRC Lake proof scenarios")
     scenario_sub = scenario.add_subparsers(dest="scenario_command", required=True)
     scenario_run = scenario_sub.add_parser("run", help="run a named scenario and emit a JSON report")
     scenario_run.add_argument("name", choices=["live-cloud-posture"], help="scenario name")
@@ -650,7 +663,7 @@ def _parser() -> argparse.ArgumentParser:
     review_export.set_defaults(func=_frameworks_review_export)
     review_resign = review_sub.add_parser(
         "resign",
-        help="re-sign the decision log tip with the current TRUSTOPS_COOKIE_SIGNING_KEY after rotating it",
+        help="re-sign the decision log tip with the current GRC_LAKE_COOKIE_SIGNING_KEY after rotating it",
     )
     review_resign.add_argument("--lake", required=True, help="lake whose decision log to re-sign")
     review_resign.add_argument(
@@ -833,10 +846,10 @@ def _parser() -> argparse.ArgumentParser:
         choices=["sequential", "langgraph"],
         help="deterministic node orchestrator; langgraph requires the agents extra",
     )
-    agents_review.add_argument("--provider", default=None, help="override TRUSTOPS_AGENT_PROVIDER")
-    agents_review.add_argument("--model", default=None, help="override TRUSTOPS_AGENT_MODEL")
-    agents_review.add_argument("--base-url", default=None, help="override TRUSTOPS_AGENT_BASE_URL")
-    agents_review.add_argument("--api-key-env", default=None, help="override TRUSTOPS_AGENT_API_KEY_ENV")
+    agents_review.add_argument("--provider", default=None, help="override GRC_LAKE_AGENT_PROVIDER")
+    agents_review.add_argument("--model", default=None, help="override GRC_LAKE_AGENT_MODEL")
+    agents_review.add_argument("--base-url", default=None, help="override GRC_LAKE_AGENT_BASE_URL")
+    agents_review.add_argument("--api-key-env", default=None, help="override GRC_LAKE_AGENT_API_KEY_ENV")
     agents_review.add_argument(
         "--use-model",
         action="store_true",
@@ -893,10 +906,10 @@ def _parser() -> argparse.ArgumentParser:
         choices=["sequential", "langgraph"],
         help="deterministic node orchestrator; langgraph requires the agents extra",
     )
-    agents_soc.add_argument("--provider", default=None, help="override TRUSTOPS_AGENT_PROVIDER")
-    agents_soc.add_argument("--model", default=None, help="override TRUSTOPS_AGENT_MODEL")
-    agents_soc.add_argument("--base-url", default=None, help="override TRUSTOPS_AGENT_BASE_URL")
-    agents_soc.add_argument("--api-key-env", default=None, help="override TRUSTOPS_AGENT_API_KEY_ENV")
+    agents_soc.add_argument("--provider", default=None, help="override GRC_LAKE_AGENT_PROVIDER")
+    agents_soc.add_argument("--model", default=None, help="override GRC_LAKE_AGENT_MODEL")
+    agents_soc.add_argument("--base-url", default=None, help="override GRC_LAKE_AGENT_BASE_URL")
+    agents_soc.add_argument("--api-key-env", default=None, help="override GRC_LAKE_AGENT_API_KEY_ENV")
     agents_soc.add_argument(
         "--use-model",
         action="store_true",
@@ -1238,7 +1251,7 @@ def _lake_map_connector(args: argparse.Namespace) -> int:
         repo=None,
         fixture_dir=args.fixture_dir,
         token_env=DEFAULT_TOKEN_ENV,
-        env=dict(os.environ),
+        env=dict(runtime_env()),
         since=args.since,
         credentials=dict(config.get("credentials") or {}),
         options={**options, "max_rows_per_sync": max(args.limit, 1) * 20},
@@ -1502,18 +1515,16 @@ def _serve(args: argparse.Namespace) -> int:
         try:
             from security_lakehouse.server_app import serve
         except ModuleNotFoundError as exc:
-            raise SystemExit(
-                "server mode requires the 'server' extra: pip install 'trustops-security-data-lake[server]'"
-            ) from exc
+            raise SystemExit("server mode requires the 'server' extra: pip install 'grc-lake[server]'") from exc
         require_auth = not getattr(args, "allow_insecure_no_auth", False)
         mode = "server mode" if require_auth else "server mode, INSECURE no-auth"
-        print(f"serving TrustOps console ({mode}): http://{args.host}:{args.port}/")
+        print(f"serving GRC Lake console ({mode}): http://{args.host}:{args.port}/")
         serve(args.lake, host=args.host, port=args.port, require_auth=require_auth)
     else:
         from security_lakehouse.server import serve as serve_local
 
         _refuse_exposed_local_mode(args.host)
-        print(f"serving TrustOps console (local mode, no authentication): http://{args.host}:{args.port}/")
+        print(f"serving GRC Lake console (local mode, no authentication): http://{args.host}:{args.port}/")
         serve_local(args.lake, host=args.host, port=args.port)
     return 0
 
@@ -1527,7 +1538,7 @@ def _refuse_exposed_local_mode(host: str) -> None:
     """Stop local mode from binding an address other people can reach.
 
     Local mode is :mod:`security_lakehouse.server`, which has no authentication
-    at all -- it never reads ``TRUSTOPS_OIDC_*``, ``TRUSTOPS_SESSION_SECRET``, or
+    at all -- it never reads ``GRC_LAKE_OIDC_*``, ``GRC_LAKE_SESSION_SECRET``, or
     any other auth setting, because those belong to ``server_app``. Bound to
     0.0.0.0 it hands every control, violation, and piece of evidence to anyone
     who can route to the port, while an operator who configured OIDC has every
@@ -1536,11 +1547,11 @@ def _refuse_exposed_local_mode(host: str) -> None:
     Refusing here rather than warning is deliberate: a warning scrolls past in a
     container log, and the failure it precedes is silent.
     """
-    if os.environ.get("TRUSTOPS_ENV", "").strip().lower() in {"production", "prod", "staging"}:
+    if runtime_env().get("GRC_LAKE_ENV", "").strip().lower() in {"production", "prod", "staging"}:
         raise SystemExit("unauthenticated local mode is forbidden in production or staging; use --server")
     if host in _LOCAL_ONLY_HOSTS or host.startswith("127."):
         return
-    if os.environ.get("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", "").strip().lower() in {"1", "true", "yes"}:
+    if runtime_env().get("GRC_LAKE_ALLOW_INSECURE_NO_AUTH", "").strip().lower() in {"1", "true", "yes"}:
         print(
             f"WARNING: serving UNAUTHENTICATED local mode on {host} — "
             "every control, violation, and evidence record is readable by anyone who can reach this port.",
@@ -1550,8 +1561,8 @@ def _refuse_exposed_local_mode(host: str) -> None:
     raise SystemExit(
         f"refusing to serve local mode on {host}: local mode has no authentication.\n"
         "  Use --server (requires the 'server' extra) for authenticated serving, which is what\n"
-        "  TRUSTOPS_OIDC_*, TRUSTOPS_SAML_*, and TRUSTOPS_SESSION_SECRET configure.\n"
-        "  To serve without authentication anyway, set TRUSTOPS_ALLOW_INSECURE_NO_AUTH=true."
+        "  GRC_LAKE_OIDC_*, GRC_LAKE_SAML_*, and GRC_LAKE_SESSION_SECRET configure.\n"
+        "  To serve without authentication anyway, set GRC_LAKE_ALLOW_INSECURE_NO_AUTH=true."
     )
 
 
@@ -1559,9 +1570,7 @@ def _db_upgrade(args: argparse.Namespace) -> int:
     try:
         from security_lakehouse.db import migrate
     except ModuleNotFoundError as exc:
-        raise SystemExit(
-            "the db commands require the 'server' extra: pip install 'trustops-security-data-lake[server]'"
-        ) from exc
+        raise SystemExit("the db commands require the 'server' extra: pip install 'grc-lake[server]'") from exc
     url = migrate.upgrade(args.lake, revision=args.revision)
     print(f"application-state database upgraded to {args.revision}: {url}")
     return 0
@@ -1571,9 +1580,7 @@ def _db_current(args: argparse.Namespace) -> int:
     try:
         from security_lakehouse.db import migrate
     except ModuleNotFoundError as exc:
-        raise SystemExit(
-            "the db commands require the 'server' extra: pip install 'trustops-security-data-lake[server]'"
-        ) from exc
+        raise SystemExit("the db commands require the 'server' extra: pip install 'grc-lake[server]'") from exc
     print(migrate.current(args.lake) or "(no revision applied)")
     return 0
 
@@ -1584,9 +1591,7 @@ def _auth_session(lake: str):
         from security_lakehouse.db import migrate
         from security_lakehouse.db.base import create_engine_for, session_factory, session_scope
     except ModuleNotFoundError as exc:
-        raise SystemExit(
-            "the auth commands require the 'server' extra: pip install 'trustops-security-data-lake[server]'"
-        ) from exc
+        raise SystemExit("the auth commands require the 'server' extra: pip install 'grc-lake[server]'") from exc
     migrate.upgrade(lake)
     return session_scope(session_factory(create_engine_for(lake)))
 
@@ -1969,7 +1974,7 @@ def _fixtures_load(args: argparse.Namespace) -> int:
 
     fixture = find_fixture(args.company)
     if fixture is None:
-        raise ValueError(f"unknown fixture {args.company!r}; run `security-lakehouse fixtures list` to see the options")
+        raise ValueError(f"unknown fixture {args.company!r}; run `grc-lake fixtures list` to see the options")
     raw_path = fixture.raw_path
     if getattr(args, "rebase_times", False):
         from security_lakehouse.fixtures import rebase_fixture_times
@@ -2349,7 +2354,7 @@ def _frameworks_review_resign(args: argparse.Namespace) -> int:
 
     from security_lakehouse.mapping_review import resign_review_tip, verify_review_log
 
-    previous = os.environ.get(args.previous_key_env, "").strip()
+    previous = runtime_env().get(args.previous_key_env, "").strip()
     if not previous:
         raise ValueError(f"{args.previous_key_env} is not set; export the pre-rotation signing key there")
     try:
@@ -2518,9 +2523,7 @@ def _openapi(args: argparse.Namespace) -> int:
     try:
         from security_lakehouse.server_app import create_app
     except ModuleNotFoundError as exc:
-        raise SystemExit(
-            "the openapi command requires the 'server' extra: pip install 'trustops-security-data-lake[server]'"
-        ) from exc
+        raise SystemExit("the openapi command requires the 'server' extra: pip install 'grc-lake[server]'") from exc
     from security_lakehouse import api_v1
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -2538,7 +2541,12 @@ def _openapi(args: argparse.Namespace) -> int:
 def _export_parquet(args: argparse.Namespace) -> int:
     from security_lakehouse.parquet_export import export_parquet
 
-    result = export_parquet(args.lake, args.out, tenant_id=args.tenant_id, batch_size=args.batch_size)
+    if args.partitioned:
+        from security_lakehouse.distributed.partitioning import export_partitions
+
+        result = export_partitions(args.lake, args.out, tenant_id=args.tenant_id, batch_size=args.batch_size)
+    else:
+        result = export_parquet(args.lake, args.out, tenant_id=args.tenant_id, batch_size=args.batch_size)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

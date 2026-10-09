@@ -79,7 +79,7 @@ jobs:
           python -m venv "$install_root/venv"
           uv pip install --python "$install_root/venv/bin/python" "$wheel[server]"
           cd "$install_root"
-          unset PYTHONPATH TRUSTOPS_DATA_DIR
+          unset PYTHONPATH GRC_LAKE_DATA_DIR
           "$install_root/venv/bin/python" "$smoke" "$install_root/venv"
           export PYTHONUSERBASE="$install_root/user"
           python -m pip install --user --ignore-installed "$wheel[server]"
@@ -207,24 +207,24 @@ jobs:
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
       - name: Validate sample evidence
-        run: uv run security-lakehouse validate --raw data/raw/security_events.jsonl
+        run: uv run grc-lake validate --raw data/raw/security_events.jsonl
       - name: Validate catalog and mappings
         run: uv run python -c "from security_lakehouse.catalog import validate_catalog; from security_lakehouse.programs import validate_program_catalog; errors = validate_catalog() + validate_program_catalog(); assert not errors, errors"
       - name: Validate connector access contracts
-        run: uv run security-lakehouse connectors validate
+        run: uv run grc-lake connectors validate
       - name: Run pipeline smoke
-        run: uv run security-lakehouse pipeline run --raw data/raw/security_events.jsonl --out build/lakehouse
+        run: uv run grc-lake pipeline run --raw data/raw/security_events.jsonl --out build/lakehouse
       - name: Validate generated lake artifacts
         run: uv run python tools/validate_ci_artifacts.py --generated
       - name: Validate current posture API payload
-        run: uv run security-lakehouse assessment status --lake build/lakehouse
+        run: uv run grc-lake assessment status --lake build/lakehouse
       - name: Render dashboard
-        run: uv run security-lakehouse dashboard --lake build/lakehouse --out build/dashboard/index.html
+        run: uv run grc-lake dashboard --lake build/lakehouse --out build/dashboard/index.html
       - name: Verify dashboard artifact
         run: test -s build/dashboard/index.html && grep -q 'id="app-data"' build/dashboard/index.html
       - name: Run live API smoke
         env:
-          TRUSTOPS_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
         run: uv run python tools/api_smoke.py
 
   python-tests:
@@ -253,11 +253,14 @@ jobs:
         run: uv sync --frozen --all-extras
       - name: Run Python test shard
         env:
-          TRUSTOPS_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
           SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
+          COVERAGE_FILE: build/coverage-shard-${{ matrix.shard }}.data
         run: >-
           uv run python -m pytest -q -p tools.pytest_shard --ci-shard="$SHARD"
           --durations=10 --junitxml=build/pytest-results.xml
+          --cov --cov-report=term-missing:skip-covered
+          --cov-report=xml:build/coverage-shard-${{ matrix.shard }}.xml
       - name: Retain test results and timings
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -266,6 +269,52 @@ jobs:
           path: build/pytest-results.xml
           if-no-files-found: warn
           retention-days: 14
+      - name: Retain shard coverage
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-${{ matrix.shard }}
+          path: |
+            build/coverage-shard-${{ matrix.shard }}.xml
+            build/coverage-shard-${{ matrix.shard }}.data
+          if-no-files-found: warn
+          retention-days: 14
+
+  # Reporting only: no threshold, and not a dependency of the smoke gate.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: python-tests
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.23" # keep in step with the Dockerfile uv image
+          enable-cache: true
+      - name: Install (frozen)
+        run: uv sync --frozen --extra dev
+      - name: Download shard coverage
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+          path: build/coverage-shards
+      - name: Combine and report
+        run: |
+          uv run coverage combine --keep build/coverage-shards/*.data
+          uv run coverage report --skip-covered --sort=cover
+          uv run coverage xml -o build/coverage.xml
+          echo "Combined line+branch coverage: $(uv run coverage report --format=total)%" >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain combined coverage
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-combined
+          path: build/coverage.xml
+          if-no-files-found: error
+          retention-days: 14
 
   # Keep the protected-branch check name stable. A failed, cancelled, or skipped
   # shard must fail this gate, including when an upstream web build fails.
@@ -273,17 +322,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: always()
-    needs: [pipeline-smoke, python-tests, pre-commit, security]
+    needs: [pipeline-smoke, python-tests, pre-commit, security, e2e, postgres-migrations]
     steps:
-      - name: Require smoke, all Python shards, hooks, and security
+      - name: Require smoke, Python shards, hooks, security, browser and distributed contracts
         env:
           PIPELINE_RESULT: ${{ needs.pipeline-smoke.result }}
           TEST_RESULT: ${{ needs.python-tests.result }}
           HOOK_RESULT: ${{ needs.pre-commit.result }}
           SECURITY_RESULT: ${{ needs.security.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          POSTGRES_RESULT: ${{ needs.postgres-migrations.result }}
         run: |
           test "$PIPELINE_RESULT" = success && test "$TEST_RESULT" = success && \
-            test "$HOOK_RESULT" = success && test "$SECURITY_RESULT" = success
+            test "$HOOK_RESULT" = success && test "$SECURITY_RESULT" = success && \
+            test "$E2E_RESULT" = success && test "$POSTGRES_RESULT" = success
 
   postgres-migrations:
     runs-on: ubuntu-latest
@@ -317,6 +369,11 @@ jobs:
           TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable%40pass%25word@localhost:5432/postgres
         run: uv run pytest -q tests/test_migration_portability.py tests/test_agent_decision_authority.py tests/test_access_review_authority_state.py tests/test_authority_migration_data.py tests/test_operation_worker_fairness.py
 
+      - name: Distributed PostgreSQL and S3 protocol contracts
+        env:
+          TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable%40pass%25word@localhost:5432/postgres
+        run: uv run --extra server --extra dev --extra cloud --extra parquet --extra analytics --with 'moto[server,s3]==5.2.3' pytest -q tests/test_distributed_*.py
+
   iceberg-interop:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -343,9 +400,9 @@ jobs:
         with:
           version: v3.16.0
       - name: helm lint
-        run: helm lint deploy/helm/trustops
+        run: helm lint deploy/helm/grc-lake
       - name: helm template
-        run: helm template trustops deploy/helm/trustops > /tmp/render.yaml
+        run: helm template grc-lake deploy/helm/grc-lake > /tmp/render.yaml
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.9.5
@@ -380,27 +437,27 @@ jobs:
           push: false
           load: true
           provenance: false
-          tags: trustops:ci
+          tags: grc-lake:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Scan image (fixable HIGH/CRITICAL fail the build)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: trustops:ci
+          image-ref: grc-lake:ci
           version: v0.70.0
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
       - name: Exercise Compose quickstart against the built image
-        run: python3 tools/compose_smoke.py --image trustops:ci
+        run: python3 tools/compose_smoke.py --image grc-lake:ci
       - name: Clean up Compose smoke resources
         if: always()
         run: |
           if [ -f build/compose-smoke/project-name.txt ]; then
-            touch build/compose-smoke/trustops.env
+            touch build/compose-smoke/grc-lake.env
             docker compose -p "$(cat build/compose-smoke/project-name.txt)" \
               -f build/compose-smoke/compose.yaml -f build/compose-smoke/override.yaml down --volumes
-            rm -f build/compose-smoke/trustops.env
+            rm -f build/compose-smoke/grc-lake.env
           fi
       - name: Retain Compose smoke diagnostics
         if: always()
@@ -446,5 +503,5 @@ jobs:
         run: npx playwright install chromium --with-deps
       - name: Console Playwright smoke
         env:
-          TRUSTOPS_COOKIE_SIGNING_KEY: ci-e2e-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: ci-e2e-cookie-signing-key
         run: bash tools/run_e2e_console.sh

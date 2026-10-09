@@ -5,14 +5,14 @@ assessment generation as a snapshot of one tenant's Iceberg v2 table. Local
 JSONL remains the working evidence format. Parquet carries the data; Iceberg
 provides table metadata and snapshots; an Iceberg REST catalog such as Polaris
 authorizes and commits table changes. Evaluation and application state remain
-in TrustOps.
+in GRC Lake.
 
 ## Connect and publish
 
 Install the optional adapter. Container images from 0.2.10 onward also include these dependencies.
 
 ```bash
-pip install 'trustops-security-data-lake[iceberg]>=0.2.10'
+pip install 'grc-lake[iceberg]>=0.2.10'
 ```
 
 A catalog administrator must provision the warehouse/catalog and namespace,
@@ -23,13 +23,13 @@ roles, grants, storage policies, or token issuers. Use a dedicated table, since 
 new assessment replaces its current contents while preserving older snapshots.
 
 Have your identity system or secret broker supply a short-lived bearer token in
-`TRUSTOPS_ICEBERG_TOKEN` for this process. Do not put the token in command arguments,
+`GRC_LAKE_ICEBERG_TOKEN` for this process. Do not put the token in command arguments,
 source files, shell history, or repository configuration. The command accepts an
 environment-variable name, never a token value. Renew expired tokens externally;
 the adapter does not retain a client secret or refresh token.
 
 ```bash
-security-lakehouse pipeline publish-iceberg \
+grc-lake pipeline publish-iceberg \
   --lake build/lakehouse \
   --tenant-id acme-prod \
   --catalog-uri https://catalog.example.com/api/catalog \

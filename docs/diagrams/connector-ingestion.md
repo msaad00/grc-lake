@@ -1,9 +1,9 @@
 # Connector Ingestion — Read-Only Connection Model
 
-How TrustOps (and typical enterprise GRC tools) connect to sources:
+How GRC Lake (and typical enterprise GRC tools) connect to sources:
 **APIs and read-only roles**, not admin write access.
 
-## TrustOps ingestion loop
+## GRC Lake ingestion loop
 
 ```mermaid
 flowchart LR
@@ -14,7 +14,7 @@ flowchart LR
     SF["Snowflake views<br/>SELECT only"]
   end
 
-  subgraph TrustOps["TrustOps runtime"]
+  subgraph GRC Lake["GRC Lake runtime"]
     DISC["Discover scope"]
     PROBE["Probe access"]
     SYNC["Sync scheduler"]
@@ -56,7 +56,7 @@ flowchart LR
 ```mermaid
 sequenceDiagram
   participant Admin as Customer admin
-  participant TO as TrustOps
+  participant TO as GRC Lake
   participant Src as Source API
 
   Admin->>TO: Configure credential ref + scope
@@ -75,4 +75,4 @@ See also:
 
 - [CONTINUOUS_INGESTION.md](../CONTINUOUS_INGESTION.md)
 - [CONNECTORS.md](../CONNECTORS.md)
-- [Read-only connections SVG](../images/trustops-readonly-connections.svg)
+- [Read-only connections SVG](../images/grc-lake-readonly-connections.svg)

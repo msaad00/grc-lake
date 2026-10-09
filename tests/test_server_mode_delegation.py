@@ -111,7 +111,7 @@ def test_local_mode_keeps_ambient_aws_for_cli(no_boto: list[str]) -> None:
 def test_iceberg_rest_default_token_env_needs_explicit_ref_in_server_mode() -> None:
     creds = {"catalog_type": "rest", "uri": "https://catalog.example.com/api", "warehouse": "w"}
     with server_execution(TENANT), pytest.raises(ConnectorConfigError, match="credential_ref"):
-        ice.build_reader(creds, {"mapping": {}}, env={"TRUSTOPS_ICEBERG_TOKEN": "operator"})
+        ice.build_reader(creds, {"mapping": {}}, env={"GRC_LAKE_ICEBERG_TOKEN": "operator"})
     with server_execution(TENANT), pytest.raises(ConnectorConfigError, match="server secret"):
         ice.build_reader({**creds, "credential_ref": "DATABASE_URL"}, {}, env={"DATABASE_URL": "x"})
 
@@ -125,7 +125,7 @@ def test_local_parquet_paths_are_scoped_to_the_tenant_in_server_mode(tmp_path: P
     other = root / "other-tenant" / "events"
     own.mkdir(parents=True)
     other.mkdir(parents=True)
-    env = {"TRUSTOPS_LAKE_LOCAL_ROOT": str(root)}
+    env = {"GRC_LAKE_LAKE_LOCAL_ROOT": str(root)}
     with server_execution(TENANT):
         assert ice._parse_location(str(own), env) == ("local", str(own.resolve()))
         with pytest.raises(ValueError, match="tenant"):
@@ -173,7 +173,7 @@ def test_kubernetes_tenant_kubeconfig_ref_is_used_in_server_mode(monkeypatch: py
 
     monkeypatch.setattr(connector_runner, "KubernetesClient", FakeClient)
     monkeypatch.setattr(connector_runner, "collect_kubernetes_evidence", lambda *a, **k: [])
-    prefix = "TRUSTOPS_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
+    prefix = "GRC_LAKE_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
     env = {f"{prefix}KUBECONFIG": "/secrets/tenant/kubeconfig", "KUBERNETES_SERVICE_HOST": "10.0.0.1"}
     with server_execution(TENANT):
         connector_runner._collect_kubernetes(

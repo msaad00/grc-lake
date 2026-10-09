@@ -191,7 +191,7 @@ export function UsersPanel() {
           </summary>
           <p className="mt-1">
             SSO group → role mapping uses{" "}
-            <code className="text-ink">TRUSTOPS_OIDC_ROLE_MAP</code> on the
+            <code className="text-ink">GRC_LAKE_OIDC_ROLE_MAP</code> on the
             server when sync is enabled. Manual changes here hold until the next
             SSO sign-in re-syncs roles.
           </p>

@@ -9,7 +9,7 @@ the audit evidence that access was reviewed.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import case, func, select, update
@@ -22,16 +22,8 @@ from security_lakehouse.db.models import (
     ACCESS_REVIEW_STATUSES,
     AccessReviewCampaign,
     AccessReviewItem,
-    _as_aware,
 )
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return _as_aware(value).astimezone(UTC).isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def _lock_campaign(
@@ -147,7 +139,7 @@ def set_campaign_status(
             raise ValueError("cannot complete an empty campaign")
         if progress["pending"]:
             raise ValueError("cannot complete a campaign with pending decisions")
-    moment = _now(now)
+    moment = utc_now(now)
     campaign.status = status
     campaign.completed_at = moment if status == "completed" else None
     campaign.updated_at = moment
@@ -252,7 +244,7 @@ def record_decision(
     item.decision = decision
     item.reviewer = reviewer
     item.note = note
-    item.decided_at = None if decision == "pending" else _now(now)
+    item.decided_at = None if decision == "pending" else utc_now(now)
     session.flush()
     return item
 
@@ -324,11 +316,11 @@ def campaign_to_dict(campaign: AccessReviewCampaign) -> dict[str, Any]:
         "scope": campaign.scope,
         "status": campaign.status,
         "control_id": campaign.control_id,
-        "due_at": _iso(campaign.due_at),
+        "due_at": iso_offset(campaign.due_at, tz="utc"),
         "created_by": campaign.created_by,
-        "created_at": _iso(campaign.created_at),
-        "updated_at": _iso(campaign.updated_at),
-        "completed_at": _iso(campaign.completed_at),
+        "created_at": iso_offset(campaign.created_at, tz="utc"),
+        "updated_at": iso_offset(campaign.updated_at, tz="utc"),
+        "completed_at": iso_offset(campaign.completed_at, tz="utc"),
     }
 
 
@@ -343,8 +335,8 @@ def item_to_dict(item: AccessReviewItem) -> dict[str, Any]:
         "decision": item.decision,
         "reviewer": item.reviewer,
         "note": item.note,
-        "decided_at": _iso(item.decided_at),
-        "created_at": _iso(item.created_at),
+        "decided_at": iso_offset(item.decided_at, tz="utc"),
+        "created_at": iso_offset(item.created_at, tz="utc"),
     }
 
 

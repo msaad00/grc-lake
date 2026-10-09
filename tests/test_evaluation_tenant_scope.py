@@ -43,7 +43,7 @@ def test_rejects_unbound_or_conflicting_server_scope_before_publication(tmp_path
 
 
 def test_hosted_daemon_uses_tenant_lake_path(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     lake = tmp_path / "tenants/platform-a"
     raw = seed(lake)
     result = normalize_raw_events(raw, lake)
@@ -55,7 +55,7 @@ def test_hosted_eval_does_not_use_process_sink_settings(tmp_path, monkeypatch):
     seed(lake)
     monkeypatch.setattr("security_lakehouse.lake_scale.WAREHOUSE_ROW_THRESHOLD", 1)
     target = tmp_path / "shared.duckdb"
-    monkeypatch.setenv("TRUSTOPS_DUCKDB_PATH", str(target))
+    monkeypatch.setenv("GRC_LAKE_DUCKDB_PATH", str(target))
     with server_execution("platform-a"):
         result = run_lake_eval(lake)
     assert result.mode == "warehouse_required"
@@ -66,7 +66,7 @@ def test_hosted_eval_does_not_use_process_sink_settings(tmp_path, monkeypatch):
 def test_sink_dispatch_refuses_server_credentials_even_if_explicit(tmp_path):
     target = tmp_path / "shared.duckdb"
     with server_execution("platform-a"), pytest.raises(ValueError, match="tenant"):
-        land_if_configured(tmp_path, {"TRUSTOPS_DUCKDB_PATH": str(target)})
+        land_if_configured(tmp_path, {"GRC_LAKE_DUCKDB_PATH": str(target)})
     assert not target.exists()
 
 
@@ -104,7 +104,7 @@ def test_server_connector_materialization_does_not_inherit_sink(tmp_path, monkey
 
     raw = seed(tmp_path)
     target = tmp_path / "ambient.duckdb"
-    monkeypatch.setenv("TRUSTOPS_DUCKDB_PATH", str(target))
+    monkeypatch.setenv("GRC_LAKE_DUCKDB_PATH", str(target))
     monkeypatch.setattr("security_lakehouse.lake_scale.WAREHOUSE_ROW_THRESHOLD", 1)
     with server_execution("platform-a"), pytest.raises(LakeEvalError):
         _materialize_after_sync(tmp_path, raw, connector_id="github-security")

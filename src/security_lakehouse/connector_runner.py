@@ -11,7 +11,6 @@ from __future__ import annotations
 import fcntl
 import importlib.metadata
 import logging
-import os
 import sys
 import time
 from collections.abc import Callable
@@ -169,6 +168,7 @@ from security_lakehouse.offboarding import (
 )
 from security_lakehouse.pipeline import normalize_raw_events
 from security_lakehouse.repo_governance import sync_repo_governance
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_provider_default, resolve_ref_or_default, resolve_secret_ref
 from security_lakehouse.sinks import land_if_configured
 from security_lakehouse.validation import validate_raw_events
@@ -186,7 +186,7 @@ CONNECTOR_ENTRY_POINT_GROUP = "trustops.connectors"
 # installation or OAuth token environment variables are used unless an operator
 # explicitly passes ``--token-env``.
 DEFAULT_TOKEN_ENV = "__provider_default__"
-GITHUB_APP_INSTALLATION_TOKEN_ENV = "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"
+GITHUB_APP_INSTALLATION_TOKEN_ENV = "GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"
 
 
 def _resolve_provider_token(token_env: str, provider_env: str, env: dict[str, str]) -> str | None:
@@ -196,6 +196,7 @@ def _resolve_provider_token(token_env: str, provider_env: str, env: dict[str, st
     variable is used. The generic default is never read for a connector, so one
     source credential cannot silently become another source's auth header.
     """
+    env = runtime_env(env)
     if token_env != DEFAULT_TOKEN_ENV:
         explicit = resolve_secret_ref(token_env, env, field="credential_ref", file_first=False)
         if explicit:
@@ -213,6 +214,7 @@ def _read_secret_file_first(name: str, env: dict[str, str]) -> str | None:
     when no file is configured. Returns ``None`` when neither is set. In hosted
     server mode the name must pass :mod:`secret_refs` policy.
     """
+    env = runtime_env(env)
     return resolve_secret_ref(name, env)
 
 
@@ -223,6 +225,7 @@ def _resolve_provider_secret(ref: str, provider_env: str, env: dict[str, str]) -
     otherwise the provider-specific default variable is used. Each name is
     resolved file-first via :func:`_read_secret_file_first`.
     """
+    env = runtime_env(env)
     value = resolve_secret_ref(ref, env) if (ref or "").strip() else None
     return value or resolve_provider_default(provider_env, env)
 
@@ -237,8 +240,8 @@ OKTA_ORG_URL_ENV = "OKTA_ORG_URL"
 AWS_ACCOUNT_ID_ENV = "AWS_ACCOUNT_ID"
 AWS_REGION_ENV = "AWS_REGION"
 # Optional cross-account assume-role auth (the hosted-GRC connect model): the
-# customer deploys the read-only role and hands TrustOps only the Role ARN +
-# External ID. TrustOps assumes it with its own ambient/base identity. These can
+# customer deploys the read-only role and hands GRC Lake only the Role ARN +
+# External ID. GRC Lake assumes it with its own ambient/base identity. These can
 # come from the connector's stored credentials or be overridden by env.
 AWS_ROLE_ARN_ENV = "AWS_ROLE_ARN"
 AWS_EXTERNAL_ID_ENV = "AWS_EXTERNAL_ID"
@@ -384,7 +387,7 @@ def run_connector_sync(
         raw_path = lake / CONNECTOR_RAW_FILE
         _upsert_raw_events(raw_path, rows, connector_id=connector_id, write_mode=write_mode)
         if any(is_offboarding_input(row) for row in rows):
-            _refresh_offboarding(raw_path, env=dict(os.environ))
+            _refresh_offboarding(raw_path, env=dict(runtime_env()))
         cursor = _advance_watermark(lake, connector_id, rows, write_mode=write_mode)
         if materialize:
             _materialize_after_sync(lake, raw_path, connector_id=connector_id)
@@ -443,7 +446,7 @@ def _materialize_after_sync(lake: Path, raw_path: Path, *, connector_id: str) ->
     """Run scale-aware materialize after a connector sync."""
     from security_lakehouse.lake_scale import LakeEvalError
 
-    env = {} if in_server_mode() else os.environ
+    env = {} if in_server_mode() else runtime_env()
     strategy = resolve_materialize_strategy(lake, raw_path, env=env)
     mode = str(strategy["mode"])
     write_lake_scale_state(lake, strategy)
@@ -470,7 +473,7 @@ def _land_to_sink(lake: Path, *, connector_id: str | None = None) -> None:
     """
     if in_server_mode():
         return
-    env = dict(os.environ)
+    env = dict(runtime_env())
     if connector_id == "snowflake-evidence-lake":
         # Snowflake can be either an existing read-only evidence lake or an
         # optional write sink. A read-connector sync must not infer write-sink
@@ -506,7 +509,7 @@ def _fire_evidence_changed(lake: Path, connector_id: str) -> None:
     next cron tick. Best-effort — an automation failure never fails collection.
     """
     try:
-        from security_lakehouse.workflows import run_evidence_changed_workflows  # noqa: PLC0415
+        from security_lakehouse.workflows import run_evidence_changed_workflows
 
         runs = run_evidence_changed_workflows(lake, connector_id=connector_id)
     except Exception as exc:  # noqa: BLE001 - automations are optional; never fatal to a sync
@@ -836,13 +839,13 @@ def _load_entry_point_connectors() -> dict[str, ConnectorBuilder]:
     discovered: dict[str, ConnectorBuilder] = {}
     try:
         entry_points = importlib.metadata.entry_points(group=CONNECTOR_ENTRY_POINT_GROUP)
-    except Exception:
+    except Exception:  # noqa: BLE001 - broken plugin metadata must not stop startup; logged
         logger.warning("failed to enumerate %s entry points", CONNECTOR_ENTRY_POINT_GROUP, exc_info=True)
         return discovered
     for entry_point in entry_points:
         try:
             builder = entry_point.load()
-        except Exception:
+        except Exception:  # noqa: BLE001 - a broken third-party connector is logged and excluded
             logger.warning(
                 "connector entry point %r (%s) failed to load; excluding it",
                 entry_point.name,
@@ -899,7 +902,7 @@ def _collect(
             repo=repo,
             fixture_dir=fixture_dir,
             token_env=token_env,
-            env=dict(os.environ),
+            env=dict(runtime_env()),
             since=since,
             credentials=dict(credentials or {}),
             options=dict(options or {}),
@@ -914,6 +917,7 @@ def _collect_okta(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     client: OktaClient | OktaFixtureClient
     creds = credentials or {}
     if fixture_dir:
@@ -940,6 +944,7 @@ def _collect_okta_system_log(
     credentials: dict[str, Any] | None = None,
     since: str | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     client: OktaClient | OktaFixtureClient
     creds = credentials or {}
     if fixture_dir:
@@ -965,6 +970,7 @@ def _collect_aws(
     credentials: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     scope = options or {}
     if fixture_dir:
@@ -1021,6 +1027,7 @@ def _collect_google_workspace(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     client: GoogleWorkspaceClient | GoogleWorkspaceFixtureClient
     creds = credentials or {}
     if fixture_dir:
@@ -1057,6 +1064,7 @@ def _build_google_workspace_token_source(
     access-token path unchanged. Secrets resolve file-first; the resolved token
     lives only in the source's memory and is never persisted.
     """
+    env = runtime_env(env)
     refresh_ref = str(creds.get("refresh_token_ref") or "").strip()
     client_secret_ref = str(creds.get("client_secret_ref") or "").strip()
     refresh_token = _resolve_provider_secret(refresh_ref, GOOGLE_WORKSPACE_REFRESH_TOKEN_ENV, env)
@@ -1078,6 +1086,7 @@ def _collect_gcp(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     stored_project = str((credentials or {}).get("project_id") or "").strip()
     if fixture_dir:
         fixture_project = env.get(GCP_PROJECT_ID_ENV) or stored_project or "fixture-project"
@@ -1103,6 +1112,7 @@ def _collect_azure(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     stored_subscription = str((credentials or {}).get("subscription_id") or "").strip()
     env_subscription = server_env_override(env.get(AZURE_SUBSCRIPTION_ID_ENV))
     if fixture_dir:
@@ -1127,6 +1137,7 @@ def _collect_intune(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     tenant_id = (
         server_env_override(env.get(AZURE_TENANT_ID_ENV)) or str((credentials or {}).get("tenant_id") or "").strip()
     )
@@ -1151,6 +1162,7 @@ def _collect_bamboohr(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     company_domain = str(creds.get("company_domain") or "").strip()
     if fixture_dir:
@@ -1170,6 +1182,7 @@ def _collect_rippling(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     if fixture_dir:
         return collect_rippling_evidence(RipplingFixtureClient(fixture_dir))
     creds = credentials or {}
@@ -1188,6 +1201,7 @@ def _collect_workday(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     report_url = str(creds.get("report_url") or "").strip()
     if fixture_dir:
@@ -1210,6 +1224,7 @@ def _collect_databricks(
     options: dict[str, Any] | None = None,
     since: str | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     host = str(creds.get("host") or env.get("DATABRICKS_HOST") or "").strip()
     if fixture_dir:
@@ -1242,6 +1257,7 @@ def _collect_jamf(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     base_url = str(creds.get("base_url") or env.get(JAMF_URL_ENV) or "").strip()
     screen_lock_attribute = str(creds.get("screen_lock_attribute") or "").strip() or None
@@ -1270,6 +1286,7 @@ def _collect_crowdstrike(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     cloud = str(creds.get("cloud") or env.get(CROWDSTRIKE_CLOUD_ENV) or "us-1").strip()
     if fixture_dir:
@@ -1291,6 +1308,7 @@ def _collect_kubernetes(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     cluster_name = str(creds.get("cluster_name") or "").strip()
     allowed_registries = _split_list(creds.get("allowed_registries"))
@@ -1333,6 +1351,7 @@ def _collect_knowbe4(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     creds = credentials or {}
     region = str(creds.get("region") or "us").strip().lower()
     if fixture_dir:
@@ -1363,6 +1382,7 @@ def _collect_jira(
     env: dict[str, str],
     credentials: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     client: JiraClient | JiraFixtureClient
     creds = credentials or {}
     if fixture_dir:
@@ -1391,6 +1411,7 @@ def _collect_clickhouse(
     options: dict[str, Any] | None = None,
     since: str | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     credentials = credentials or {}
     options = options or {}
     database = str(options.get("database") or CLICKHOUSE_DEFAULT_DATABASE).strip() or CLICKHOUSE_DEFAULT_DATABASE
@@ -1429,6 +1450,7 @@ def _collect_s3(
     credentials: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     credentials = credentials or {}
     options = options or {}
     bucket = str(options.get("bucket") or credentials.get("bucket") or "").strip()
@@ -1464,6 +1486,7 @@ def _collect_siem(
     options: dict[str, Any] | None = None,
     since: str | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     credentials = credentials or {}
     options = options or {}
     index = str(options.get("index") or "alerts").strip() or "alerts"
@@ -1474,7 +1497,7 @@ def _collect_siem(
         token = str(
             credentials.get("token")
             or resolve_ref_or_default(
-                credentials.get("credential_ref"), "TRUSTOPS_SIEM_TOKEN", env, field="credential_ref", file_first=False
+                credentials.get("credential_ref"), "GRC_LAKE_SIEM_TOKEN", env, field="credential_ref", file_first=False
             )
             or ""
         ).strip()
@@ -1493,6 +1516,7 @@ def _collect_runtime_gateway(
     options: dict[str, Any] | None = None,
     since: str | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     credentials = credentials or {}
     options = options or {}
     stream = str(options.get("stream") or "runtime-events").strip() or "runtime-events"
@@ -1506,7 +1530,7 @@ def _collect_runtime_gateway(
             credentials.get("token")
             or resolve_ref_or_default(
                 credentials.get("credential_ref"),
-                "TRUSTOPS_RUNTIME_GATEWAY_TOKEN",
+                "GRC_LAKE_RUNTIME_GATEWAY_TOKEN",
                 env,
                 field="credential_ref",
                 file_first=False,
@@ -1529,6 +1553,7 @@ def _collect_snowflake(
     options: dict[str, Any] | None = None,
     since: str | None = None,
 ) -> list[dict[str, Any]]:
+    env = runtime_env(env)
     client: SnowflakeClient | SnowflakeFixtureClient
     credentials = credentials or {}
     options = options or {}
@@ -1599,7 +1624,7 @@ def _collect_mapped(
 ) -> list[dict[str, Any]] | None:
     """Collect through ``options.mapping``/``options.mappings`` when configured, else ``None``.
 
-    ``None`` keeps the reader on its TrustOps-shaped view contract, so existing
+    ``None`` keeps the reader on its GRC Lake-shaped view contract, so existing
     configurations behave exactly as before.
     """
     specs = resolve_mappings(options)
@@ -1760,6 +1785,7 @@ def _refresh_offboarding(raw_path: Path, *, env: dict[str, str]) -> None:
     Read and write happen under the same lock as ``_upsert_raw_events`` so two
     concurrent HR/IdP syncs cannot each derive from a view missing the other.
     """
+    env = runtime_env(env)
     lock_path = raw_path.with_suffix(".lock")
     with open(lock_path, "a") as lock_fd:
         fcntl.flock(lock_fd.fileno(), fcntl.LOCK_EX)

@@ -1,9 +1,9 @@
 """Databricks evidence-lake collector.
 
-An existing-lake reader, like ``snowflake-evidence-lake``: TrustOps reads the
-same four TrustOps evidence views (``TRUSTOPS_AUDIT_EVENTS``,
-``TRUSTOPS_CONTROL_POSTURE``, ``TRUSTOPS_ASSET_RISK``,
-``TRUSTOPS_EVIDENCE_BUNDLES``) from a Unity Catalog schema and never creates,
+An existing-lake reader, like ``snowflake-evidence-lake``: GRC Lake reads the
+same four GRC Lake evidence views (``GRC_LAKE_AUDIT_EVENTS``,
+``GRC_LAKE_CONTROL_POSTURE``, ``GRC_LAKE_ASSET_RISK``,
+``GRC_LAKE_EVIDENCE_BUNDLES``) from a Unity Catalog schema and never creates,
 updates, or deletes workspace objects. ``deploy/databricks/bootstrap_poc.sql``
 provisions the views over ``system.access.audit``.
 
@@ -72,7 +72,7 @@ def validate_identifier(name: str) -> str:
 
 
 class DatabricksClient:
-    """Read-only client for TrustOps evidence views on a Databricks SQL warehouse."""
+    """Read-only client for GRC Lake evidence views on a Databricks SQL warehouse."""
 
     def __init__(
         self,
@@ -184,7 +184,7 @@ class DatabricksClient:
                     "authorization": self._basic,
                     "content-type": "application/x-www-form-urlencoded",
                     "accept": "application/json",
-                    "user-agent": "trustops-security-data-lake",
+                    "user-agent": "grc-lake",
                 },
             )
             payload = backoff.http_retry(lambda: self._open(request))
@@ -203,7 +203,7 @@ class DatabricksClient:
                 "authorization": f"Bearer {self._bearer()}",
                 "content-type": "application/json",
                 "accept": "application/json",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         payload = backoff.http_retry(lambda: self._open(request))

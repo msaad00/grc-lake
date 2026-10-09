@@ -1,9 +1,9 @@
-"""OSCAL export: map TrustOps's control model into NIST's interchange format.
+"""OSCAL export: map GRC Lake's control model into NIST's interchange format.
 
 OSCAL (the Open Security Controls Assessment Language) is NIST's JSON/XML/YAML
 format for control catalogs, component implementations, and assessment
 results — the format auditor and GRC tooling ecosystems actually consume.
-TrustOps's own control model (the CCF safeguards in ``controls/safeguards.json``
+GRC Lake's own control model (the CCF safeguards in ``controls/safeguards.json``
 and the 942-requirement catalog in ``controls/catalog.json``) predates and is
 richer than what OSCAL needs, so this module is a one-way projection: it reads
 the existing model and emits two of the OSCAL layer models, it does not import
@@ -51,6 +51,7 @@ from security_lakehouse.catalog import load_control_catalog, load_framework_regi
 from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_identity, generation_reader, pin_generation, verify_generation
 from security_lakehouse.io import file_sha256, read_json, read_jsonl, resolve_path
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.models import utc_iso
 from security_lakehouse.safeguards import (
     ATTESTABLE_STATES,
@@ -65,17 +66,16 @@ from security_lakehouse.safeguards import (
 # against (controls/oscal/*.json). Bump together with the vendored schemas.
 OSCAL_VERSION = "1.2.3"
 
-JsonObject = dict[str, Any]
 
 # Fixed namespace so every emitted uuid is a deterministic function of its
 # inputs (uuid5) rather than random (uuid4) -- re-exporting the same safeguard
 # or control posture twice produces byte-identical OSCAL, which is what makes
 # the output diffable and the tests reproducible.
-_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "https://github.com/msaad00/trustops-security-data-lake/oscal")
+_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "https://github.com/msaad00/grc-lake/oscal")
 
 _INVALID_TOKEN_CHARS = re.compile(r"[^A-Za-z0-9._-]")
 
-# TrustOps status vocabulary (written by the pipeline into
+# GRC Lake status vocabulary (written by the pipeline into
 # gold/control_posture.jsonl -- see security_lakehouse.pipeline) mapped to
 # OSCAL's finding-target objective-status. OSCAL only has two states,
 # satisfied/not-satisfied; stale evidence and an unevaluated control are both
@@ -94,7 +94,7 @@ def _oscal_token(value: str) -> str:
     """Return a valid OSCAL token derived from ``value``.
 
     OSCAL control/objective ids are XML NCName tokens: a leading letter or
-    underscore, then letters, digits, ``.``, ``-``, or ``_``. Most TrustOps
+    underscore, then letters, digits, ``.``, ``-``, or ``_``. Most GRC Lake
     control ids already qualify (``SOC2-CC6.1``, ``CIS-AWS-1.10``), but HIPAA
     ids carry parentheses (``HIPAA-164.308(a)(1)(ii)(A)``) that the token
     grammar forbids. Disallowed characters become ``-``; nothing is dropped
@@ -237,7 +237,7 @@ def build_component_definition(
         "component-definition": {
             "uuid": _uuid5("component-definition", "trustops-ccf"),
             "metadata": {
-                "title": "TrustOps Common Control Framework — Component Definition",
+                "title": "GRC Lake Common Control Framework — Component Definition",
                 "last-modified": utc_iso(moment),
                 "version": moment.strftime("%Y-%m-%d"),
                 "oscal-version": OSCAL_VERSION,
@@ -250,9 +250,9 @@ def build_component_definition(
 def _import_ap_href(posture_payload: JsonObject) -> str:
     """Return a URI identifying the control basis this assessment was run against.
 
-    TrustOps has no separate OSCAL Assessment Plan document, so this points at
+    GRC Lake has no separate OSCAL Assessment Plan document, so this points at
     the content-addressed catalog bundle (framework + control versions in
-    force) instead -- the closest TrustOps equivalent of "what was assessed
+    force) instead -- the closest GRC Lake equivalent of "what was assessed
     against". Point-in-time snapshots pin ``catalog_bundle`` at freeze time
     (see :func:`security_lakehouse.assessment.write_assessment_snapshot`);
     current posture has no pinned bundle, so this falls back to the active
@@ -424,8 +424,8 @@ def build_assessment_results(
     )
     result: JsonObject = {
         "uuid": _uuid5("result", version),
-        "title": "TrustOps continuous control assessment",
-        "description": "Automated OSCAL assessment result generated from TrustOps deterministic control evaluation.",
+        "title": "GRC Lake continuous control assessment",
+        "description": "Automated OSCAL assessment result generated from GRC Lake deterministic control evaluation.",
         "start": started,
         "reviewed-controls": {
             "control-selections": [control_selection],
@@ -446,7 +446,7 @@ def build_assessment_results(
         "assessment-results": {
             "uuid": _uuid5("assessment-results", version),
             "metadata": {
-                "title": "TrustOps Assessment Results",
+                "title": "GRC Lake Assessment Results",
                 "last-modified": evaluated_at,
                 "version": version,
                 "oscal-version": OSCAL_VERSION,

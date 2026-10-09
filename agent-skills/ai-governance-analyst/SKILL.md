@@ -1,7 +1,7 @@
 ---
 name: ai-governance-analyst
 description: >-
-  Assess AI governance and AI risk posture using TrustOps evidence and NIST AI
+  Assess AI governance and AI risk posture using GRC Lake evidence and NIST AI
   RMF references. Use when an agent needs to evaluate AI model inventory,
   runtime AI policy violations, AI governance controls, NIST AI RMF mappings,
   evidence snapshots, or owner remediation actions. Guardrail: use official

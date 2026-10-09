@@ -187,7 +187,7 @@ def test_aws_adapter_runs_live_probe_before_enable(tmp_path: Path, monkeypatch: 
     assert "not enabled" in skipped["error"]
 
     def fake_probe(*, credentials: dict, options: dict, **_kwargs: object) -> dict:
-        assert credentials["role_arn"].endswith(":role/TrustOpsPostureReadOnlyRole")
+        assert credentials["role_arn"].endswith(":role/GrcLakePostureReadOnlyRole")
         assert credentials["external_id"] == "tenant-binding"
         assert options["region"] == "us-east-1"
         return {"ok": True, "account_id": ACCOUNT, "capabilities": ["iam:ListUsers"]}
@@ -198,7 +198,7 @@ def test_aws_adapter_runs_live_probe_before_enable(tmp_path: Path, monkeypatch: 
         connector_id="aws-posture",
         credentials={
             "account_id": ACCOUNT,
-            "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole",
+            "role_arn": f"arn:aws:iam::{ACCOUNT}:role/GrcLakePostureReadOnlyRole",
             "external_id": "tenant-binding",
         },
         options={"region": "us-east-1"},
@@ -221,7 +221,7 @@ def test_aws_adapter_records_safe_error_when_live_probe_fails(tmp_path: Path, mo
         connector_id="aws-posture",
         credentials={
             "account_id": ACCOUNT,
-            "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole",
+            "role_arn": f"arn:aws:iam::{ACCOUNT}:role/GrcLakePostureReadOnlyRole",
         },
         options={},
     )
@@ -248,7 +248,7 @@ def test_aws_adapter_records_bounded_provider_error_when_sts_fails(
     rec = run_probe(
         tmp_path,
         connector_id="aws-posture",
-        credentials={"account_id": ACCOUNT, "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole"},
+        credentials={"account_id": ACCOUNT, "role_arn": f"arn:aws:iam::{ACCOUNT}:role/GrcLakePostureReadOnlyRole"},
         options={},
     )
 
@@ -276,7 +276,7 @@ def test_probe_aws_access_uses_assumed_role_and_read_permission(monkeypatch: pyt
     result = probe_aws_access(
         credentials={
             "account_id": ACCOUNT,
-            "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole",
+            "role_arn": f"arn:aws:iam::{ACCOUNT}:role/GrcLakePostureReadOnlyRole",
             "external_id": "tenant-binding",
         },
         options={"region": "us-east-1"},
@@ -284,7 +284,7 @@ def test_probe_aws_access_uses_assumed_role_and_read_permission(monkeypatch: pyt
 
     assert calls["init"] == {
         "region_name": "us-east-1",
-        "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole",
+        "role_arn": f"arn:aws:iam::{ACCOUNT}:role/GrcLakePostureReadOnlyRole",
         "external_id": "tenant-binding",
     }
     assert calls["caller_identity"] is True
@@ -293,7 +293,7 @@ def test_probe_aws_access_uses_assumed_role_and_read_permission(monkeypatch: pyt
         "ok": True,
         "account_id": ACCOUNT,
         "credential_mode": "assume_role",
-        "role_arn": f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole",
+        "role_arn": f"arn:aws:iam::{ACCOUNT}:role/GrcLakePostureReadOnlyRole",
         "capabilities": ["sts:AssumeRole", "sts:GetCallerIdentity", "iam:ListUsers"],
         "principal_count": 2,
     }
@@ -308,12 +308,12 @@ class _FakeBoto3:
         self.session_creds: dict | None = None
         self.session_services: list[tuple[str, str | None]] = []
 
-    def client(self, service: str, region_name=None):  # noqa: ANN001
+    def client(self, service: str, region_name=None):
         if service == "sts":
             outer = self
 
             class _STS:
-                def assume_role(self, **kwargs):  # noqa: ANN003
+                def assume_role(self, **kwargs):
                     outer.assume_calls.append(kwargs)
                     return {
                         "Credentials": {
@@ -329,12 +329,12 @@ class _FakeBoto3:
             return SimpleNamespace(get_paginator=lambda *_a, **_k: None)
         raise AssertionError(f"unexpected client {service}")
 
-    def Session(self, **creds):  # noqa: N802, ANN003
+    def Session(self, **creds):
         self.session_creds = creds
         outer = self
 
         class _Session:
-            def client(self, service: str, region_name=None):  # noqa: ANN001
+            def client(self, service: str, region_name=None):
                 outer.session_services.append((service, region_name))
                 if service == "iam":
                     outer.iam_from = "session"
@@ -344,16 +344,16 @@ class _FakeBoto3:
 
 
 def test_aws_client_assumes_role_with_external_id(monkeypatch: pytest.MonkeyPatch) -> None:
-    # The hosted-GRC connect model: hand TrustOps a Role ARN + External ID and it
+    # The hosted-GRC connect model: hand GRC Lake a Role ARN + External ID and it
     # assumes the read-only role via STS — no static key, no ambient identity.
     fake = _FakeBoto3()
     monkeypatch.setitem(sys.modules, "boto3", fake)
 
-    AWSClient(role_arn="arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole", external_id="ext-secret-123")
+    AWSClient(role_arn="arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole", external_id="ext-secret-123")
 
     assert len(fake.assume_calls) == 1
     call = fake.assume_calls[0]
-    assert call["RoleArn"].endswith(":role/TrustOpsPostureReadOnlyRole")
+    assert call["RoleArn"].endswith(":role/GrcLakePostureReadOnlyRole")
     assert call["ExternalId"] == "ext-secret-123"
     assert call["RoleSessionName"] == "trustops-posture"
     # IAM client is built from the assumed short-lived session, not ambient.
@@ -365,7 +365,7 @@ def test_aws_inventory_clients_share_the_assumed_session(monkeypatch: pytest.Mon
     fake = _FakeBoto3()
     monkeypatch.setitem(sys.modules, "boto3", fake)
     client = AWSClient(
-        role_arn="arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole",
+        role_arn="arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole",
         external_id="ext-secret-123",
     )
 
@@ -380,7 +380,7 @@ def test_aws_inventory_clients_share_the_assumed_session(monkeypatch: pytest.Mon
 
 
 def test_aws_role_template_covers_selected_inventory_services() -> None:
-    template = (Path(__file__).parents[1] / "deploy/aws/trustops-posture-readonly-role.yaml").read_text(
+    template = (Path(__file__).parents[1] / "deploy/aws/grc-lake-posture-readonly-role.yaml").read_text(
         encoding="utf-8"
     )
     for action in (
@@ -494,7 +494,7 @@ def test_mfa_finding_only_applies_to_console_users(tmp_path: Path) -> None:
 def test_aws_client_console_access_reads_login_profile(monkeypatch: pytest.MonkeyPatch) -> None:
     # GetLoginProfile success => console user; NoSuchEntity (raises) => programmatic.
     class _IAM:
-        def get_login_profile(self, *, UserName: str):  # noqa: N803
+        def get_login_profile(self, *, UserName: str):
             if UserName == "human":
                 return {"LoginProfile": {"UserName": "human"}}
             # Model botocore's ClientError shape so the client's code-based
@@ -591,16 +591,16 @@ class _RaisingIam:
     def __init__(self, code: str) -> None:
         self._code = code
 
-    def get_account_password_policy(self):  # noqa: ANN201
+    def get_account_password_policy(self):
         raise _FakeClientError(self._code)
 
-    def get_login_profile(self, **_kwargs):  # noqa: ANN003, ANN201
+    def get_login_profile(self, **_kwargs):
         raise _FakeClientError(self._code)
 
 
 def _client_with_iam(code: str) -> AWSClient:
     client = AWSClient.__new__(AWSClient)  # bypass boto3 in __init__
-    client._iam = _RaisingIam(code)  # type: ignore[attr-defined]  # noqa: SLF001
+    client._iam = _RaisingIam(code)  # type: ignore[attr-defined]
     return client
 
 

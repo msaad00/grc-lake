@@ -6,7 +6,7 @@ subcategories — 37 controls total on the workbench dashboard without live
 connectors — plus a handful of repository-governance events for one public repo.
 
 ``mockup_companies/golden/raw/security_events.jsonl`` is generated from this
-module (``security-lakehouse fixtures write-golden``); a test keeps the two
+module (``grc-lake fixtures write-golden``); a test keeps the two
 identical. Asset IDs are stable identifiers; each asset also carries a
 human-readable ``asset_name`` that the console shows instead of the ID.
 """

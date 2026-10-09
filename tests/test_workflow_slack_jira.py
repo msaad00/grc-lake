@@ -21,7 +21,7 @@ import pytest
 import security_lakehouse.workflows as wf
 from security_lakehouse import netguard
 
-ALLOWLIST_ENV = "TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST"
+ALLOWLIST_ENV = "GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST"
 
 
 class _FakeResponse:
@@ -42,7 +42,7 @@ class _FakeResponse:
 
 
 def _capturing_urlopen(captured: list[urllib.request.Request], status: int = 200, body: bytes = b"ok"):
-    def _urlopen(request, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _urlopen(request, timeout=None, validate=None):
         captured.append(request)
         return _FakeResponse(status, body)
 
@@ -59,7 +59,7 @@ def _no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
 def _public_dns(monkeypatch: pytest.MonkeyPatch) -> None:
     """Default: every host resolves to a public IP unless a test overrides it."""
 
-    def _getaddrinfo(host, port, *args, **kwargs):  # noqa: ANN001, ARG001
+    def _getaddrinfo(host, port, *args, **kwargs):
         return [(2, 1, 6, "", ("93.184.216.34", 0))]
 
     monkeypatch.setattr(netguard.socket, "getaddrinfo", _getaddrinfo)
@@ -105,7 +105,7 @@ def test_slack_posts_expected_payload(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
 def test_slack_webhook_secret_not_persisted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch, "hooks.slack.com")
-    monkeypatch.setenv("TRUSTOPS_SECRET_SLACK_WEBHOOK", "https://hooks.slack.com/services/T0/B0/SECRET")
+    monkeypatch.setenv("GRC_LAKE_SECRET_SLACK_WEBHOOK", "https://hooks.slack.com/services/T0/B0/SECRET")
     captured: list[urllib.request.Request] = []
     monkeypatch.setattr(netguard, "open_guarded", _capturing_urlopen(captured))
 
@@ -148,7 +148,7 @@ def test_slack_requires_text(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
 
 def test_jira_posts_to_issue_path_with_basic_auth(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch, "org.atlassian.net")
-    monkeypatch.setenv("TRUSTOPS_SECRET_JIRA_TOKEN", "jira-api-token")
+    monkeypatch.setenv("GRC_LAKE_SECRET_JIRA_TOKEN", "jira-api-token")
     captured: list[urllib.request.Request] = []
     monkeypatch.setattr(
         netguard,
@@ -189,7 +189,7 @@ def test_jira_posts_to_issue_path_with_basic_auth(monkeypatch: pytest.MonkeyPatc
 
 def test_jira_bearer_auth_and_default_issue_type(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch, "org.atlassian.net")
-    monkeypatch.setenv("TRUSTOPS_SECRET_JIRA_TOKEN", "bearer-token")
+    monkeypatch.setenv("GRC_LAKE_SECRET_JIRA_TOKEN", "bearer-token")
     captured: list[urllib.request.Request] = []
     monkeypatch.setattr(
         netguard,
@@ -219,7 +219,7 @@ def test_jira_bearer_auth_and_default_issue_type(monkeypatch: pytest.MonkeyPatch
 
 def test_jira_secret_not_persisted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch, "org.atlassian.net")
-    monkeypatch.setenv("TRUSTOPS_SECRET_JIRA_TOKEN", "top-secret-jira")
+    monkeypatch.setenv("GRC_LAKE_SECRET_JIRA_TOKEN", "top-secret-jira")
     monkeypatch.setattr(
         netguard,
         "open_guarded",

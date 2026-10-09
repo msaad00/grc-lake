@@ -9,7 +9,6 @@ same hashed browser session token used by all human SSO flows.
 from __future__ import annotations
 
 import logging
-import os
 import threading
 import time
 from collections import OrderedDict
@@ -26,16 +25,17 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db import repository
 from security_lakehouse.db.models import SamlAssertionReplay, User
+from security_lakehouse.runtime_environment import runtime_env
 
 logger = logging.getLogger(__name__)
 
 _TRUTHY = {"1", "true", "yes", "on"}
 _REQUIRED_ENV = {
-    "TRUSTOPS_SAML_SP_ENTITY_ID",
-    "TRUSTOPS_SAML_ACS_URL",
-    "TRUSTOPS_SAML_IDP_ENTITY_ID",
-    "TRUSTOPS_SAML_IDP_SSO_URL",
-    "TRUSTOPS_SAML_IDP_X509_CERT",
+    "GRC_LAKE_SAML_SP_ENTITY_ID",
+    "GRC_LAKE_SAML_ACS_URL",
+    "GRC_LAKE_SAML_IDP_ENTITY_ID",
+    "GRC_LAKE_SAML_IDP_SSO_URL",
+    "GRC_LAKE_SAML_IDP_X509_CERT",
 }
 SAML_REQUEST_COOKIE = "trustops_saml_request"
 SAML_REQUEST_MAX_AGE_SECONDS = 600
@@ -121,7 +121,7 @@ def load_saml_config() -> SAMLConfig | None:
     """Build SAML config from the environment, or ``None`` when disabled."""
     from security_lakehouse.auth.idp_roles import load_role_map
 
-    present = {name for name in _REQUIRED_ENV if os.environ.get(name)}
+    present = {name for name in _REQUIRED_ENV if runtime_env().get(name)}
     if not present:
         return None
     missing = sorted(_REQUIRED_ENV - present)
@@ -129,26 +129,26 @@ def load_saml_config() -> SAMLConfig | None:
         raise SAMLConfigError(f"incomplete SAML configuration; missing: {', '.join(missing)}")
     role_map: dict[str, str] = {}
     try:
-        role_map = load_role_map("TRUSTOPS_SAML_ROLE_MAP")
+        role_map = load_role_map("GRC_LAKE_SAML_ROLE_MAP")
     except ValueError:
         role_map = {}
     return SAMLConfig(
-        sp_entity_id=os.environ["TRUSTOPS_SAML_SP_ENTITY_ID"],
-        acs_url=os.environ["TRUSTOPS_SAML_ACS_URL"],
-        idp_entity_id=os.environ["TRUSTOPS_SAML_IDP_ENTITY_ID"],
-        idp_sso_url=os.environ["TRUSTOPS_SAML_IDP_SSO_URL"],
-        idp_x509_cert=os.environ["TRUSTOPS_SAML_IDP_X509_CERT"],
-        sls_url=os.environ.get("TRUSTOPS_SAML_SLS_URL", ""),
-        tenant_slug=os.environ.get("TRUSTOPS_SAML_TENANT_SLUG", "default"),
-        auto_provision=os.environ.get("TRUSTOPS_SAML_AUTO_PROVISION", "").lower() in _TRUTHY,
-        default_role=os.environ.get("TRUSTOPS_SAML_DEFAULT_ROLE", "read_only"),
-        name_id_format=os.environ.get(
-            "TRUSTOPS_SAML_NAME_ID_FORMAT",
+        sp_entity_id=runtime_env()["GRC_LAKE_SAML_SP_ENTITY_ID"],
+        acs_url=runtime_env()["GRC_LAKE_SAML_ACS_URL"],
+        idp_entity_id=runtime_env()["GRC_LAKE_SAML_IDP_ENTITY_ID"],
+        idp_sso_url=runtime_env()["GRC_LAKE_SAML_IDP_SSO_URL"],
+        idp_x509_cert=runtime_env()["GRC_LAKE_SAML_IDP_X509_CERT"],
+        sls_url=runtime_env().get("GRC_LAKE_SAML_SLS_URL", ""),
+        tenant_slug=runtime_env().get("GRC_LAKE_SAML_TENANT_SLUG", "default"),
+        auto_provision=runtime_env().get("GRC_LAKE_SAML_AUTO_PROVISION", "").lower() in _TRUTHY,
+        default_role=runtime_env().get("GRC_LAKE_SAML_DEFAULT_ROLE", "read_only"),
+        name_id_format=runtime_env().get(
+            "GRC_LAKE_SAML_NAME_ID_FORMAT",
             "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
         ),
-        role_attribute=os.environ.get("TRUSTOPS_SAML_ROLE_ATTRIBUTE", "groups"),
+        role_attribute=runtime_env().get("GRC_LAKE_SAML_ROLE_ATTRIBUTE", "groups"),
         role_map=role_map,
-        allow_idp_initiated=os.environ.get("TRUSTOPS_SAML_ALLOW_IDP_INITIATED", "").lower() in _TRUTHY,
+        allow_idp_initiated=runtime_env().get("GRC_LAKE_SAML_ALLOW_IDP_INITIATED", "").lower() in _TRUTHY,
     )
 
 
@@ -260,7 +260,7 @@ def encode_saml_request_id(request_id: str) -> str:
     """Sign the AuthnRequest ID for the short-lived login cookie."""
     serializer = _request_serializer()
     if serializer is None:
-        raise RuntimeError("TRUSTOPS_COOKIE_SIGNING_KEY is required for SAML login")
+        raise RuntimeError("GRC_LAKE_COOKIE_SIGNING_KEY is required for SAML login")
     return serializer.dumps(request_id)
 
 

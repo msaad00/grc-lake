@@ -15,10 +15,10 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _request, _seed_lake, _spin  # noqa: E402
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _request, _seed_lake, _spin
 
 # Resources whose payloads are pure functions of seeded lake files, so the two
 # servers must return identical JSON. Posture/violations/snapshots embed a

@@ -8,13 +8,12 @@ row-level tenant isolation matter.
 
 Connection URL resolution (first match wins):
 
-1. ``TRUSTOPS_DATABASE_URL`` environment variable (e.g. a Postgres DSN)
+1. ``GRC_LAKE_DATABASE_URL`` environment variable (e.g. a Postgres DSN)
 2. ``sqlite:///<lake>/server/app.db`` (zero-config default for a single node)
 """
 
 from __future__ import annotations
 
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -23,7 +22,9 @@ from sqlalchemy import Select, create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-ENV_DATABASE_URL = "TRUSTOPS_DATABASE_URL"
+from security_lakehouse.runtime_environment import runtime_env
+
+ENV_DATABASE_URL = "GRC_LAKE_DATABASE_URL"
 
 # Pagination bounds for list endpoints. ``DEFAULT_PAGE_LIMIT`` is the page size
 # the HTTP layer applies when a caller does not ask for one; ``MAX_PAGE_LIMIT``
@@ -63,7 +64,7 @@ class Base(DeclarativeBase):
 
 def database_url(lake_dir: str | Path) -> str:
     """Resolve the application-state database URL for a lake directory."""
-    override = os.environ.get(ENV_DATABASE_URL)
+    override = runtime_env().get(ENV_DATABASE_URL)
     if override:
         return override
     db_path = Path(lake_dir) / "server" / "app.db"
@@ -80,7 +81,23 @@ def create_engine_for(lake_dir: str | Path, *, url: str | None = None, echo: boo
 
 def session_factory(engine: Engine) -> sessionmaker[Session]:
     """Build a session factory bound to ``engine``."""
-    return sessionmaker(bind=engine, expire_on_commit=False, future=True)
+    return sessionmaker(bind=engine, class_=_WorkspaceSession, expire_on_commit=False, future=True)
+
+
+class _WorkspaceSession(Session):
+    """Domain commits join a distributed publication's outer transaction."""
+
+    def __init__(self, **kwargs):
+        from security_lakehouse.distributed.context import binding
+
+        workspace = binding.get()
+        if workspace is not None and workspace.connection is not None:
+            engine = kwargs.get("bind")
+            if engine is None or engine.url != workspace.connection.engine.url:
+                raise ValueError("distributed transaction cannot span different databases")
+            kwargs["bind"] = workspace.connection
+            kwargs["join_transaction_mode"] = "create_savepoint"
+        super().__init__(**kwargs)
 
 
 @contextmanager

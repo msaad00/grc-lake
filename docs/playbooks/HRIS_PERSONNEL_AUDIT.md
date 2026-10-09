@@ -1,6 +1,6 @@
 # HRIS personnel audit playbook
 
-The `bamboohr-personnel`, `rippling-personnel`, and `workday-personnel` connectors bring employment records (status, hire and termination dates) into the lake ([CONNECTORS.md](../CONNECTORS.md#bamboohr-employment-records)). With Okta or Google Workspace also connected, the [offboarding check](../CONNECTORS.md#offboarding-check-hr-terminations--idp-accounts) flags any terminated employee whose account can still sign in. Use this playbook for identity providers TrustOps does not read yet and for access-review evidence. Device posture comes from the `intune-devices` MDM connector ([CONNECTORS.md](../CONNECTORS.md#microsoft-intune-device-posture)).
+The `bamboohr-personnel`, `rippling-personnel`, and `workday-personnel` connectors bring employment records (status, hire and termination dates) into the lake ([CONNECTORS.md](../CONNECTORS.md#bamboohr-employment-records)). With Okta or Google Workspace also connected, the [offboarding check](../CONNECTORS.md#offboarding-check-hr-terminations--idp-accounts) flags any terminated employee whose account can still sign in. Use this playbook for identity providers GRC Lake does not read yet and for access-review evidence. Device posture comes from the `intune-devices` MDM connector ([CONNECTORS.md](../CONNECTORS.md#microsoft-intune-device-posture)).
 
 ## When to use this playbook
 
@@ -76,6 +76,6 @@ list_evidence_freshness?status=stale
 
 ## Roadmap
 
-BambooHR, Rippling, and Workday connectors and the HR ↔ IdP offboarding check (Okta, Google Workspace) ship. Offboarding coverage is only as complete as the connected identity providers — do not claim it for systems TrustOps does not read.
+BambooHR, Rippling, and Workday connectors and the HR ↔ IdP offboarding check (Okta, Google Workspace) ship. Offboarding coverage is only as complete as the connected identity providers — do not claim it for systems GRC Lake does not read.
 
 See also [AUDIT_READINESS.md](../AUDIT_READINESS.md).

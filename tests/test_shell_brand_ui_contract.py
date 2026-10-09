@@ -1,4 +1,4 @@
-"""Regression contract for TrustOps shell branding scale."""
+"""Regression contract for GRC Lake shell branding scale."""
 
 from pathlib import Path
 
@@ -13,8 +13,8 @@ def test_shell_shows_the_brand_once_in_the_top_bar() -> None:
     topbar = TOPBAR.read_text(encoding="utf-8")
 
     assert 'markSize="md"' in topbar
-    assert "TrustOpsLogo" not in sidebar
-    assert "TrustOpsMark" not in sidebar
+    assert "GrcLakeLogo" not in sidebar
+    assert "GrcLakeMark" not in sidebar
 
 
 def test_shell_uses_document_scroll_not_fixed_canvas() -> None:

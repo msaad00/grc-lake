@@ -6,13 +6,13 @@ snapshots understandable for both humans and agents.
 
 Product name, logo, taglines, and naming hierarchy: [BRAND.md](BRAND.md).
 
-## TrustOps mark
+## GRC Lake mark
 
 - Blue-to-mint evidence-lake mark (`#4f7cff` → `#42dfcf`) with cloud,
-  identity, agent, and log glyphs. Use `TrustOpsMark` / `TrustOpsLogo` in the
+  identity, agent, and log glyphs. Use `GrcLakeMark` / `GrcLakeLogo` in the
   console shell and the SVG lockup in docs. Below 48 px, use the compact
   activity-log and waves variant.
-- Console chrome label: **TrustOps Console** (sidebar subtitle), not
+- Console chrome label: **GRC Lake Console** (sidebar subtitle), not
   "Workbench" or "Assessment Console".
 
 ## Framework visual identity
@@ -83,17 +83,17 @@ Full index: [diagrams/README.md](diagrams/README.md)
 ### Connectors & ingestion
 
 - [Connector ingestion (mermaid)](diagrams/connector-ingestion.md)
-- [Read-only connections (SVG)](images/trustops-readonly-connections.svg)
+- [Read-only connections (SVG)](images/grc-lake-readonly-connections.svg)
 - [Continuous ingestion](CONTINUOUS_INGESTION.md)
 
 ### Identity & deployment
 
 - [Auth identity (mermaid)](diagrams/auth-identity.md)
-- [Identity boundary (SVG)](images/trustops-identity-boundary.svg)
+- [Identity boundary (SVG)](images/grc-lake-identity-boundary.svg)
 - [Deployment models (mermaid)](diagrams/deployment-models.md)
 - [Deployment](DEPLOYMENT.md)
 
 ### Hero SVGs
 
-- [Assessment architecture](images/trustops-assessment-architecture.svg)
-- [Snowflake evidence lake](images/trustops-snowflake-evidence-lake.svg)
+- [Assessment architecture](images/grc-lake-assessment-architecture.svg)
+- [Snowflake evidence lake](images/grc-lake-snowflake-evidence-lake.svg)

@@ -93,8 +93,8 @@ jobs:
           # The Helm chart pins image.tag to appVersion; if it lags the release
           # tag, `helm install` pulls a non-existent image. The chart package and
           # bundled console must carry the same version too.
-          chart_version="$(grep -m1 '^version:' deploy/helm/trustops/Chart.yaml | awk '{print $2}')"
-          chart_app_version="$(grep -m1 '^appVersion:' deploy/helm/trustops/Chart.yaml | sed 's/.*"\(.*\)".*/\1/')"
+          chart_version="$(grep -m1 '^version:' deploy/helm/grc-lake/Chart.yaml | awk '{print $2}')"
+          chart_app_version="$(grep -m1 '^appVersion:' deploy/helm/grc-lake/Chart.yaml | sed 's/.*"\(.*\)".*/\1/')"
           brand_version="$(sed -n 's/^[[:space:]]*version: "\(.*\)",$/\1/p' app/web/src/lib/brand.ts | head -n1)"
           web_package_version="$(jq -r .version app/web/package.json)"
           if [ "${chart_version}" != "${project_version}" ]; then
@@ -158,7 +158,7 @@ jobs:
           mkdir -p sbom
           uv export --frozen --format cyclonedx1.5 --no-dev \
             --extra server --extra analytics --extra cloud --extra mcp --extra iceberg \
-            --output-file "sbom/trustops-security-data-lake-${{ needs.verify-version.outputs.version }}.cdx.json" \
+            --output-file "sbom/grc-lake-${{ needs.verify-version.outputs.version }}.cdx.json" \
             > /dev/null
           jq -e '.bomFormat == "CycloneDX" and (.components | length) > 0' sbom/*.cdx.json > /dev/null
 
@@ -209,7 +209,7 @@ jobs:
       artifact-metadata: write
     env:
       PUBLISH: ${{ github.ref_type == 'tag' && (github.event_name == 'push' || !inputs.dry_run) }}
-      IMAGE: ghcr.io/${{ github.repository_owner }}/trustops
+      IMAGE: ghcr.io/${{ github.repository_owner }}/grc-lake
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
@@ -226,13 +226,13 @@ jobs:
           push: false
           load: true
           provenance: false
-          tags: trustops:scan
+          tags: grc-lake:scan
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Scan image (fixable HIGH/CRITICAL block the release)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: trustops:scan
+          image-ref: grc-lake:scan
           version: v0.70.0
           severity: CRITICAL,HIGH
           ignore-unfixed: true

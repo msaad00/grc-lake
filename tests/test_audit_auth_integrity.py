@@ -17,10 +17,10 @@ from test_api_v1 import _seed_lake
 @pytest.mark.parametrize("environment", ["production", "prod", "staging", " Production "])
 @pytest.mark.parametrize("entry", ["argument", "environment", "cli"])
 def test_production_rejects_all_no_auth_entries(tmp_path, monkeypatch, environment, entry):
-    monkeypatch.setenv("TRUSTOPS_ENV", environment)
-    monkeypatch.delenv("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", raising=False)
+    monkeypatch.setenv("GRC_LAKE_ENV", environment)
+    monkeypatch.delenv("GRC_LAKE_ALLOW_INSECURE_NO_AUTH", raising=False)
     if entry == "environment":
-        monkeypatch.setenv("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", "true")
+        monkeypatch.setenv("GRC_LAKE_ALLOW_INSECURE_NO_AUTH", "true")
     monkeypatch.setattr("uvicorn.run", lambda *args, **kwargs: None)
     with pytest.raises(RuntimeError, match="forbidden"):
         if entry == "cli":
@@ -42,7 +42,7 @@ def test_only_authenticated_sessions_are_interactive(method, expected):
 
 
 def test_development_insecure_cannot_decide_mapping_review(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_ENV", "development")
+    monkeypatch.setenv("GRC_LAKE_ENV", "development")
     from test_mapping_review_api import _proposed_items
 
     client = TestClient(create_app(tmp_path, require_auth=False))
@@ -54,8 +54,8 @@ def test_development_insecure_cannot_decide_mapping_review(tmp_path, monkeypatch
 
 
 def test_integrity_route_is_authenticated_tenant_scoped_and_matches_local(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_ENV", "production")
-    monkeypatch.delenv("TRUSTOPS_ALLOW_INSECURE_NO_AUTH", raising=False)
+    monkeypatch.setenv("GRC_LAKE_ENV", "production")
+    monkeypatch.delenv("GRC_LAKE_ALLOW_INSECURE_NO_AUTH", raising=False)
     app = create_app(tmp_path)
     tokens = []
     with session_scope(app.state.sessionmaker) as session:

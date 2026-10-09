@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("mcp")
 
-from security_lakehouse import mcp_server  # noqa: E402
+from security_lakehouse import mcp_server
 
 CASES = [
     ("get_posture", {}, "GET", "/api/v1/posture/current"),
@@ -42,8 +42,8 @@ def _structured(result):
 
 @pytest.mark.parametrize("name,args,method,path", CASES)
 def test_tenant_tool_uses_remote_api_without_local_access(tmp_path, monkeypatch, name, args, method, path):
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://remote.example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-token")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://remote.example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture-token")
     calls = []
 
     def remote(verb, route, body=None, **params):
@@ -58,10 +58,10 @@ def test_tenant_tool_uses_remote_api_without_local_access(tmp_path, monkeypatch,
     assert list(tmp_path.iterdir()) == []
 
 
-@pytest.mark.parametrize("missing", ["TRUSTOPS_API_URL", "TRUSTOPS_API_KEY"])
+@pytest.mark.parametrize("missing", ["GRC_LAKE_API_URL", "GRC_LAKE_API_KEY"])
 def test_incomplete_remote_configuration_cannot_read_local_lake(tmp_path, monkeypatch, missing):
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://remote.example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-token")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://remote.example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture-token")
     monkeypatch.delenv(missing)
     monkeypatch.setattr(
         mcp_server.api_v1, "handle_get", lambda *a, **kw: pytest.fail("remote mode fell back to local data")
@@ -71,18 +71,18 @@ def test_incomplete_remote_configuration_cannot_read_local_lake(tmp_path, monkey
 
 
 def test_private_api_requires_explicit_operator_opt_in(monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_API_URL", "http://127.0.0.1:8787")
-    monkeypatch.delenv("TRUSTOPS_API_ALLOW_PRIVATE", raising=False)
+    monkeypatch.setenv("GRC_LAKE_API_URL", "http://127.0.0.1:8787")
+    monkeypatch.delenv("GRC_LAKE_API_ALLOW_PRIVATE", raising=False)
     with pytest.raises(ValueError):
         mcp_server.resolve_api_base_url()
-    monkeypatch.setenv("TRUSTOPS_API_ALLOW_PRIVATE", "1")
+    monkeypatch.setenv("GRC_LAKE_API_ALLOW_PRIVATE", "1")
     assert mcp_server.resolve_api_base_url() == "http://127.0.0.1:8787"
 
 
 @pytest.mark.parametrize("name,args", [("list_trust_shares", {}), ("create_trust_share", {})])
 def test_remote_share_tools_do_not_touch_local_lake(tmp_path, monkeypatch, name, args):
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://remote.example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-token")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://remote.example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture-token")
     calls = []
 
     def remote(method, path, body=None, **params):
@@ -97,9 +97,9 @@ def test_remote_share_tools_do_not_touch_local_lake(tmp_path, monkeypatch, name,
 
 
 def test_explicit_local_mode_ignores_remote_configuration(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "local")
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://remote.example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-token")
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "local")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://remote.example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture-token")
     monkeypatch.setattr(
         mcp_server, "_server_api_request", lambda *a, **kw: pytest.fail("explicit local mode used remote API")
     )
@@ -108,8 +108,8 @@ def test_explicit_local_mode_ignores_remote_configuration(tmp_path, monkeypatch)
 
 
 def test_explicit_remote_mode_requires_configuration(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
-    monkeypatch.delenv("TRUSTOPS_API_URL", raising=False)
-    monkeypatch.delenv("TRUSTOPS_API_KEY", raising=False)
-    with pytest.raises(ValueError, match="TRUSTOPS_API_URL"):
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "remote")
+    monkeypatch.delenv("GRC_LAKE_API_URL", raising=False)
+    monkeypatch.delenv("GRC_LAKE_API_KEY", raising=False)
+    with pytest.raises(ValueError, match="GRC_LAKE_API_URL"):
         mcp_server._get("/api/v1/posture/current", tmp_path)

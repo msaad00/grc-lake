@@ -1,6 +1,6 @@
 # Ingestion, Connectors, Idempotency, and Headless GRC
 
-TrustOps is built for **continuous compliance automation**: connectors ingest
+GRC Lake is built for **continuous compliance automation**: connectors ingest
 evidence into **your** lake, the pipeline materializes gold posture, and the
 **same `/api/v1` contract** serves humans (console), agents (MCP/CLI), and CI.
 
@@ -65,7 +65,7 @@ suppress duplicate audit rows on client retries. Use `Idempotency-Key` on
 
 ## Security findings (not a separate issue tracker)
 
-TrustOps does not mirror Dependabot/Snyk as a standalone “security issues”
+GRC Lake does not mirror Dependabot/Snyk as a standalone “security issues”
 product. Findings flow through **normalized evidence → violations**:
 
 | Source            | Event types                              | Downstream                        |
@@ -83,7 +83,7 @@ not a separate `/security-issues` store.
 | Caller        | Entry                        | Write model                             | Audit                          |
 | ------------- | ---------------------------- | --------------------------------------- | ------------------------------ |
 | **Console**   | `/console/*`                 | Same API as agents                      | Session cookie + request audit |
-| **CLI**       | `security-lakehouse`         | Lake + server DB                        | Operator identity              |
+| **CLI**       | `grc-lake`                   | Lake + server DB                        | Operator identity              |
 | **CI / gate** | `POST /api/v1/...` + API key | Read posture; optional snapshot         | API key + correlation ID       |
 | **MCP agent** | `mcp_server.py` tools        | Lake writes local; DB writes via server | Same RBAC as API key           |
 | **Scheduler** | CronJob `scheduler tick`     | Connector sync + workflows              | System actor in connector runs |

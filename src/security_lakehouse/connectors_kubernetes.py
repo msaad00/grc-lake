@@ -187,12 +187,12 @@ def _default_apis(
     *, context: str | None, kubeconfig_path: str | None, in_cluster: bool
 ) -> tuple[dict[str, Any], Callable[[Any], Any]]:
     try:
-        from kubernetes import client as k8s_client  # noqa: PLC0415
-        from kubernetes import config as k8s_config  # noqa: PLC0415
+        from kubernetes import client as k8s_client
+        from kubernetes import config as k8s_config
     except ImportError as exc:
         raise RuntimeError(
             "kubernetes-cluster live collection requires the official kubernetes client; install the "
-            "kubernetes extra (pip install 'trustops-security-data-lake[kubernetes]') or use --fixture-dir"
+            "kubernetes extra (pip install 'grc-lake[kubernetes]') or use --fixture-dir"
         ) from exc
     if in_cluster:
         configuration = k8s_client.Configuration()

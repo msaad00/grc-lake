@@ -10,9 +10,9 @@ In hosted server mode the process environment holds the server's own secrets
 tenant chooses both the reference and the host the resolved value is sent to.
 There, a name resolves only when it is
 
-* under the tenant's own prefix ``TRUSTOPS_TENANT_<TENANT_ID>__`` (tenant id
+* under the tenant's own prefix ``GRC_LAKE_TENANT_<TENANT_ID>__`` (tenant id
   upper-cased, ``-`` replaced by ``_``; see :func:`tenant_secret_prefix`), or
-* listed by the operator in ``TRUSTOPS_CONNECTOR_SECRET_REFS`` (comma-separated
+* listed by the operator in ``GRC_LAKE_CONNECTOR_SECRET_REFS`` (comma-separated
   exact names, or ``PREFIX*`` patterns),
 
 and never when it matches the server-secret denylist below, whatever the
@@ -35,18 +35,20 @@ from typing import Any
 
 from security_lakehouse.connector_errors import ConnectorConfigError
 from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
+from security_lakehouse.runtime_environment import runtime_env
 
 logger = logging.getLogger(__name__)
 
-ALLOWLIST_ENV = "TRUSTOPS_CONNECTOR_SECRET_REFS"
-TENANT_PREFIX_ROOT = "TRUSTOPS_TENANT_"
+ALLOWLIST_ENV = "GRC_LAKE_CONNECTOR_SECRET_REFS"
+TENANT_PREFIX_ROOT = "GRC_LAKE_TENANT_"
 ENV_NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _TENANT_ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 # Server-side secrets and runtime identity. Denied in server mode even when an
-# operator's allowlist pattern would match. ``TRUSTOPS_`` covers every core
-# setting except the calling tenant's own ``TRUSTOPS_TENANT_<id>_`` prefix.
+# operator's allowlist pattern would match. ``GRC_LAKE_`` covers every core
+# setting except the calling tenant's own ``GRC_LAKE_TENANT_<id>_`` prefix.
 DENIED_PREFIXES = (
+    "GRC_LAKE_",
     "TRUSTOPS_",
     "AWS_",
     "AMAZON_",
@@ -87,7 +89,7 @@ class SecretRefPolicyError(ConnectorConfigError):
 
 
 def tenant_secret_prefix(tenant_id: str) -> str | None:
-    """``TRUSTOPS_TENANT_<ID>__`` for ids that map to it one-to-one, else ``None``.
+    """``GRC_LAKE_TENANT_<ID>__`` for ids that map to it one-to-one, else ``None``.
 
     Only lowercase alphanumeric ids with single inner hyphens qualify (UUIDs,
     slugs). Upper-casing and ``-`` -> ``_`` are then injective, and because such
@@ -103,7 +105,8 @@ def tenant_secret_prefix(tenant_id: str) -> str | None:
 def _allowlist(env: dict[str, str] | os._Environ[str]) -> tuple[frozenset[str], tuple[str, ...]]:
     # Operator config lives in the process env; a caller's env snapshot (a
     # probe passes an empty one) only overrides it when it carries the key.
-    raw = env.get(ALLOWLIST_ENV) if ALLOWLIST_ENV in env else os.environ.get(ALLOWLIST_ENV)
+    env = runtime_env(env)
+    raw = env.get(ALLOWLIST_ENV) if ALLOWLIST_ENV in env else runtime_env().get(ALLOWLIST_ENV)
     exact: set[str] = set()
     prefixes: list[str] = []
     for item in str(raw or "").split(","):
@@ -118,6 +121,7 @@ def _allowlist(env: dict[str, str] | os._Environ[str]) -> tuple[frozenset[str], 
 
 
 def _denied_as_server_secret(name: str, tenant_prefix: str | None) -> bool:
+    name = "GRC_LAKE_" + name[len("TRUSTOPS_") :] if name.startswith("TRUSTOPS_") else name
     upper = name.upper()
     if tenant_prefix and name.startswith(tenant_prefix):
         return False
@@ -136,7 +140,8 @@ def secret_ref_denial(
     The message never echoes the name, which an operator may have filled with
     the secret itself.
     """
-    source: dict[str, str] | os._Environ[str] = os.environ if env is None else env
+    env = runtime_env(env)
+    source: dict[str, str] | os._Environ[str] = runtime_env() if env is None else env
     if not in_server_mode(dict(source) if env is None else env):
         return None
     label = field or "credential reference"
@@ -147,7 +152,8 @@ def secret_ref_denial(
     tenant_prefix = tenant_secret_prefix(tenant_id) if tenant_id else None
     if _denied_as_server_secret(candidate, tenant_prefix):
         return f"{label} names a server secret; hosted connectors cannot read server credentials"
-    if tenant_prefix and candidate.startswith(tenant_prefix):
+    tenant_candidate = "GRC_LAKE_" + candidate[len("TRUSTOPS_") :] if candidate.startswith("TRUSTOPS_") else candidate
+    if tenant_prefix and tenant_candidate.startswith(tenant_prefix):
         return None
     exact, prefixes = _allowlist(source)
     if candidate in exact or any(prefix and candidate.startswith(prefix) for prefix in prefixes):
@@ -157,6 +163,7 @@ def secret_ref_denial(
 
 
 def _read_env_value(name: str, env: dict[str, str], *, file_first: bool) -> str | None:
+    env = runtime_env(env)
     if file_first:
         file_path = env.get(f"{name}_FILE")
         if file_path:
@@ -182,6 +189,7 @@ def resolve_secret_ref(
     ``file_first`` reads ``<NAME>_FILE`` (a mounted secret path) before
     ``<NAME>``; pass ``False`` when the variable itself holds a path.
     """
+    env = runtime_env(env)
     candidate = (name or "").strip()
     if not candidate:
         return None
@@ -193,6 +201,7 @@ def resolve_secret_ref(
 
 def resolve_provider_default(name: str, env: dict[str, str], *, file_first: bool = True) -> str | None:
     """Resolve a connector's built-in default variable; skip it if policy forbids it."""
+    env = runtime_env(env)
     if secret_ref_denial(name, env=env) is not None:
         return None
     return _read_env_value(name, env, file_first=file_first)
@@ -207,6 +216,7 @@ def resolve_ref_or_default(
     file_first: bool = True,
 ) -> str | None:
     """An explicit ``ref`` wins (and is policed); otherwise the provider default."""
+    env = runtime_env(env)
     if (ref or "").strip():
         return resolve_secret_ref(ref, env, field=field, file_first=file_first)
     return resolve_provider_default(default, env, file_first=file_first)

@@ -1,7 +1,7 @@
 ---
 name: soc2-control-analyst
 description: >-
-  Assess SOC 2-oriented control posture from local TrustOps evidence. Use when
+  Assess SOC 2-oriented control posture from local GRC Lake evidence. Use when
   an agent needs to review SOC 2 control mappings, current posture, violations,
   evidence freshness, audit snapshots, or owner remediation queues. Guardrail:
   use official AICPA Trust Services Criteria references and do not invent

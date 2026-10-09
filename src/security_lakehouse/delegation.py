@@ -24,6 +24,7 @@ from typing import Any
 
 from security_lakehouse.connector_errors import ConnectorConfigError
 from security_lakehouse.execution_mode import in_server_mode
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_secret_ref
 
 GCP_IMPERSONATION_FIELD = "impersonate_service_account"
@@ -58,6 +59,7 @@ def azure_credential(credentials: dict[str, Any], env: dict[str, str], *, label:
     Locally, with none of these set, returns ``None`` so callers keep
     ``DefaultAzureCredential``. In server mode that is refused.
     """
+    env = runtime_env(env)
     delegated = azure_app_registration(credentials, label=label)
     if delegated is None:
         return None
@@ -66,7 +68,7 @@ def azure_credential(credentials: dict[str, Any], env: dict[str, str], *, label:
     if not value:
         raise ConnectorConfigError(f"{label}: the variable named by {field} is not set")
     try:
-        import azure.identity as azure_identity  # noqa: PLC0415
+        import azure.identity as azure_identity
     except ImportError as exc:  # pragma: no cover - optional extra
         raise ConnectorConfigError(f"{label} requires azure-identity; install the cloud extra") from exc
     if field == "client_secret_ref":
@@ -113,7 +115,7 @@ def gcp_impersonation_target(credentials: dict[str, Any]) -> str | None:
         if in_server_mode():
             raise ConnectorConfigError(
                 f"GCP readers in hosted mode require {GCP_IMPERSONATION_FIELD}: a service account in the "
-                "customer project that grants the TrustOps identity the Service Account Token Creator role"
+                "customer project that grants the GRC Lake identity the Service Account Token Creator role"
             )
         return None
     if not _SERVICE_ACCOUNT_EMAIL.fullmatch(target):
@@ -149,8 +151,8 @@ def gcp_credentials(credentials: dict[str, Any]) -> Any:
     if target is None:
         return None
     try:
-        import google.auth  # noqa: PLC0415
-        from google.auth import impersonated_credentials  # noqa: PLC0415
+        import google.auth
+        from google.auth import impersonated_credentials
     except ImportError as exc:  # pragma: no cover - optional extra
         raise ConnectorConfigError("GCP impersonation requires google-auth; install the cloud extra") from exc
     source, _project = google.auth.default(scopes=GCP_SCOPES)

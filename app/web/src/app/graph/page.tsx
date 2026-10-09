@@ -617,7 +617,7 @@ function GraphPageContent() {
     const payload = canvasRef.current?.toJSON();
     if (!payload) return;
     downloadBlob(
-      `trustops-graph-${Date.now()}.json`,
+      `grc-lake-graph-${Date.now()}.json`,
       new Blob([JSON.stringify(payload, null, 2)], {
         type: "application/json",
       }),
@@ -628,7 +628,7 @@ function GraphPageContent() {
     const svg = canvasRef.current?.toSVG();
     if (!svg) return;
     downloadBlob(
-      `trustops-graph-${Date.now()}.svg`,
+      `grc-lake-graph-${Date.now()}.svg`,
       new Blob([svg], { type: "image/svg+xml" }),
     );
   };

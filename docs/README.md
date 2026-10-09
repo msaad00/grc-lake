@@ -1,4 +1,4 @@
-# TrustOps documentation
+# GRC Lake documentation
 
 Every guide in `docs/`, grouped by task. New here? Start with the
 [5-minute tutorial](TUTORIAL_5_MIN.md) and [architecture](ARCHITECTURE.md).
@@ -19,6 +19,8 @@ Every guide in `docs/`, grouped by task. New here? Start with the
 
 ## Operate
 
+[Upgrade from TrustOps to GRC Lake](REBRANDING.md) covers preserved data and integration identities.
+
 | Guide                                                                    | Covers                                                  |
 | ------------------------------------------------------------------------ | ------------------------------------------------------- |
 | [Deployment](DEPLOYMENT.md)                                              | Self-hosted, hosted, and existing-lake deployment paths |
@@ -32,7 +34,8 @@ Every guide in `docs/`, grouped by task. New here? Start with the
 | [Commercial hosted](COMMERCIAL_HOSTED.md)                                | Gated hosted features: invites, limits, SCIM, billing   |
 | [Release readiness](RELEASE_READINESS.md)                                | Release gates and what they prove                       |
 | [Backup and restore](runbooks/BACKUP_RESTORE.md)                         | Backing up the lake and app database                    |
-| [HA and read replicas](runbooks/HA_READ_REPLICAS.md)                     | Deployment topology and the single-writer boundary      |
+| [Distributed PostgreSQL and S3](DISTRIBUTED.md)                          | Shards, partitions, replicas and operational boundaries |
+| [HA and read replicas](runbooks/HA_READ_REPLICAS.md)                     | Local and distributed deployment topology               |
 | [Connector sync observability](runbooks/OBSERVABILITY_CONNECTOR_SYNC.md) | Connector sync dashboards                               |
 | [Headless connector setup](playbooks/HEADLESS_CONNECTOR_SETUP.md)        | Configuring connectors without the console              |
 | [HRIS personnel audit](playbooks/HRIS_PERSONNEL_AUDIT.md)                | HR systems and offboarding checks                       |
@@ -106,7 +109,7 @@ Several pages describe the architecture at different depths; start with
 | [Components](architecture/COMPONENTS.md)                 | Component reference                            |
 | [Data flow](DATA_FLOW.md)                                | Where evidence is stored and how it moves      |
 | [Data model](DATA_MODEL.md)                              | Evidence, controls, tests, and snapshots       |
-| [Product artifacts](PRODUCT_ARTIFACTS.md)                | Files and outputs TrustOps produces            |
+| [Product artifacts](PRODUCT_ARTIFACTS.md)                | Files and outputs GRC Lake produces            |
 | [Console UX](CONSOLE_UX.md)                              | Console operator and contributor guide         |
 | [Visual system](VISUAL_SYSTEM.md)                        | Console layout and components                  |
 | [Brand](BRAND.md)                                        | Name, voice, and brand constants               |

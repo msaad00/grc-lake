@@ -131,7 +131,7 @@ class GoogleOAuthTokenSource:
             headers={
                 "accept": "application/json",
                 "content-type": "application/x-www-form-urlencoded",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
 
@@ -252,7 +252,7 @@ class GoogleWorkspaceClient:
             headers={
                 "accept": "application/json",
                 "authorization": f"Bearer {token}",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         with netguard.open_public(request, timeout=self.timeout, label="google workspace api") as resp:

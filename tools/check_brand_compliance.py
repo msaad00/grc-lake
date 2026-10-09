@@ -22,7 +22,7 @@ FORBIDDEN = re.compile(
     re.IGNORECASE,
 )
 
-# TrustOps is the only customer-facing product name. Keep the retired alias
+# GRC Lake is the only customer-facing product name. Keep the retired alias
 # from drifting back into UI, documentation, actions, or metadata.
 RETIRED_BRAND = re.compile(r"\bko" r"da\b", re.IGNORECASE)
 

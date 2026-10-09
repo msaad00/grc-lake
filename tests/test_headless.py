@@ -11,13 +11,13 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse import api_v1  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse import api_v1
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def _bearer(token: str) -> dict[str, str]:
@@ -108,7 +108,7 @@ def test_v1_connector_actions_require_connector_manage_scope(tmp_path: Path) -> 
 def test_v1_headless_github_security_probe_enable_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Headless path: probe before enable, same contract as console (#475)."""
     # Hosted server mode resolves only allowlisted or tenant-prefixed refs.
-    monkeypatch.setenv("TRUSTOPS_CONNECTOR_SECRET_REFS", "ACME_GITHUB_APP_TOKEN")
+    monkeypatch.setenv("GRC_LAKE_CONNECTOR_SECRET_REFS", "ACME_GITHUB_APP_TOKEN")
     app = create_app(tmp_path)
     client = TestClient(app)
     admin_token = _token_for_role(app, tmp_path, "security_admin")
@@ -147,7 +147,7 @@ def test_v1_headless_github_security_probe_enable_lifecycle(tmp_path: Path, monk
 def test_openapi_schema_documents_surface(tmp_path: Path) -> None:
     _seed_lake(tmp_path)
     spec = create_app(tmp_path, require_auth=False).openapi()
-    assert spec["info"]["title"] == "TrustOps API"
+    assert spec["info"]["title"] == "GRC Lake API"
     paths = spec["paths"]
     for documented in (
         "/api/v1",

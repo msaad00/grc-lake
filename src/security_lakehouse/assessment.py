@@ -34,6 +34,7 @@ from security_lakehouse.generations import generation_identity, generation_reade
 from security_lakehouse.io import append_jsonl, iter_jsonl, read_json, read_jsonl, write_json
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import SEVERITY_SCORE, utc_iso
+from security_lakehouse.vocabulary import ControlVerdict
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ def build_current_posture(
     warning_control_tests = [item for item in control_tests if str(item.get("result", "")).lower() == "warn"]
     posture_score = _weighted_posture_score(framework_scores)
     critical_for_state = critical_violation_count > 0
-    unevaluated = {str(row["control_id"]) for row in controls if row.get("status") == "not_evaluated"}
+    unevaluated = {str(row["control_id"]) for row in controls if row.get("status") == ControlVerdict.NOT_EVALUATED}
     assessment = {
         "schema_version": "trustops.assessment.v1",
         "assessment_type": "current_posture",
@@ -380,7 +381,7 @@ def write_assessment_snapshot(
         )
         try:
             new_violations, newly_failing_controls = _diff_violations(prior_payload, assessment)
-        except Exception:  # noqa: BLE001 - the diff is a defensive best-effort add-on, never allowed to break a snapshot write
+        except Exception:  # the diff is a defensive best-effort add-on, never allowed to break a snapshot write
             logger.exception("violations diff failed for %s; webhook finding/control events will not fire", output_path)
             new_violations, newly_failing_controls = [], []
     # Lock released above -- the hook (and any outbound webhook delivery it
@@ -388,7 +389,7 @@ def write_assessment_snapshot(
     if on_snapshot_written is not None:
         try:
             on_snapshot_written(output_path, assessment, new_violations, newly_failing_controls)
-        except Exception:  # noqa: BLE001 - a hook failure must never fail a successful snapshot write
+        except Exception:  # a hook failure must never fail a successful snapshot write
             logger.exception("on_snapshot_written hook failed for %s", output_path)
     return output_path
 

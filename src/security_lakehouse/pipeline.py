@@ -36,6 +36,7 @@ from security_lakehouse.models import SEVERITY_SCORE, PipelineResult, parse_even
 from security_lakehouse.policy import RuleResult
 from security_lakehouse.programs import build_control_tests, with_program_requirements
 from security_lakehouse.validation import validate_raw_event, validate_raw_events
+from security_lakehouse.vocabulary import ControlVerdict
 
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
@@ -589,7 +590,7 @@ def _evidence_ref(row: dict[str, Any], evidence: dict[str, Any], raw_sha256: str
     """Return an inspectable evidence pointer, even when a source lacks one.
 
     Some live cloud APIs expose posture facts without a durable object URL.
-    TrustOps still has an immutable bronze row for that fact, so use a stable
+    GRC Lake still has an immutable bronze row for that fact, so use a stable
     internal evidence reference instead of letting freshness mark valid evidence
     as missing.
     """
@@ -623,7 +624,9 @@ def _build_control_rows(
         result = (
             evaluate_evidence_verdict(control_id, rows, control.get("evaluation_rule"), stale=control_id in stale)
             if control_id in control_map
-            else RuleResult("not_evaluated", "unmapped", ["No active control definition is available."])
+            else RuleResult(
+                ControlVerdict.NOT_EVALUATED.value, "unmapped", ["No active control definition is available."]
+            )
         )
         coverage = round(len(evidence_rows) / len(rows), 4) if rows else 0
         control_rows.append(

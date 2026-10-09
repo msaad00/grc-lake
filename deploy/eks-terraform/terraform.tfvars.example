@@ -1,11 +1,11 @@
 # Copy to terraform.tfvars and fill in your values.
 region              = "us-east-1"
-cluster_name        = "trustops"
-namespace           = "trustops"
+cluster_name        = "grc-lake"
+namespace           = "grc-lake"
 
-# The S3 bucket where your existing evidence lives. The IRSA role TrustOps
+# The S3 bucket where your existing evidence lives. The IRSA role GRC Lake
 # runs as gets read-only on this bucket — nothing else, no Put/Delete.
-evidence_bucket_name = "acme-trustops-evidence"
+evidence_bucket_name = "acme-grc-lake-evidence"
 
 # Optional second bucket (Iceberg catalog, etc.) granted read-only.
 # evidence_bucket_arn_prefix = "arn:aws:s3:::acme-iceberg-catalog"
@@ -16,14 +16,14 @@ evidence_bucket_name = "acme-trustops-evidence"
 # deploy_application = false
 
 # Required signing Secret created outside Terraform.
-# server_secret_name = "trustops-server"
+# server_secret_name = "grc-lake-server"
 
 # Helm overrides with OIDC, TLS and storage settings; use Secret references.
 # helm_values_files = ["poc-values.yaml"]
 
 # Optional ALB ingress (requires the AWS Load Balancer Controller + TLS values).
-# ingress_host = "trustops.acme.io"
+# ingress_host = "grc-lake.acme.io"
 
 # Pin the image. Empty defaults to chart appVersion.
-# image_repository = "ghcr.io/msaad00/trustops"
+# image_repository = "ghcr.io/msaad00/grc-lake"
 # image_tag        = "" # use the versioned chart appVersion

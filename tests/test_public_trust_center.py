@@ -17,13 +17,13 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse import tenancy, trust_share  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse import tenancy, trust_share
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 # Owner-grade fields that the auditor lens redacts and the public summary must
 # never surface, recursively, anywhere in the payload.

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 # Signed session cookies are mandatory whenever server auth is enabled.
-os.environ.setdefault("TRUSTOPS_COOKIE_SIGNING_KEY", "test-cookie-signing-key-for-pytest-only")
+os.environ.setdefault("GRC_LAKE_COOKIE_SIGNING_KEY", "test-cookie-signing-key-for-pytest-only")
 
 _ENTRY_POINT_FIXTURE_MODULES = frozenset(
     path.stem for path in (Path(__file__).parent / "fixtures" / "entry_point_connectors").glob("*.py")
@@ -80,3 +80,17 @@ def rest_stub():
         server.shutdown()
         server.server_close()
         thread.join()
+
+
+@pytest.fixture
+def catalog():
+    from distributed_fixtures import _create_distributed_catalog
+
+    yield from _create_distributed_catalog()
+
+
+@pytest.fixture
+def replicas(catalog, tmp_path, monkeypatch):
+    from distributed_fixtures import _create_distributed_replicas
+
+    yield from _create_distributed_replicas(catalog, tmp_path, monkeypatch)

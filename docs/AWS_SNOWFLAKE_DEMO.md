@@ -1,6 +1,6 @@
 # AWS + Snowflake Demo Package
 
-This is the operator path for a shareable TrustOps POC: AWS hosts the console
+This is the operator path for a shareable GRC Lake POC: AWS hosts the console
 and API, Snowflake supplies governed evidence views, and the scheduler keeps
 posture fresh.
 
@@ -14,37 +14,37 @@ scheduler-driven use.
 ## Prerequisites
 
 - EKS cluster with AWS Load Balancer Controller, an ACM certificate covering
-  `trustops-poc.example.com`, and DNS pointing to the resulting ALB.
+  `grc-lake-poc.example.com`, and DNS pointing to the resulting ALB.
 - EBS CSI driver with an encrypted `gp3` StorageClass (or change the values).
   [EKS bootstrap](../deploy/eks-terraform/README.md) covers these prerequisites.
 - Helm 3 and `kubectl` configured for the cluster.
 - Snowflake bootstrap complete:
-  - role: `TRUSTOPS_READER`
-  - service user: `TRUSTOPS_INGEST_SVC`
-  - warehouse: `TRUSTOPS_READ_WH`
-  - database/schema: `TRUSTOPS_SECURITY_LAKE.EVIDENCE`
-  - service key stored locally at `~/.trustops/snowflake/trustops_snowflake_key.p8`
+  - role: `GRC_LAKE_READER`
+  - service user: `GRC_LAKE_INGEST_SVC`
+  - warehouse: `GRC_LAKE_READ_WH`
+  - database/schema: `GRC_LAKE_SECURITY_LAKE.EVIDENCE`
+  - service key stored locally at `~/.grc-lake/snowflake/grc-lake_snowflake_key.p8`
 - Optional AWS posture role from
-  `deploy/aws/trustops-posture-readonly-role.yaml`.
+  `deploy/aws/grc-lake-posture-readonly-role.yaml`.
 
 ## 1. Create Runtime Secrets
 
 ```bash
-kubectl create namespace trustops --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace grc-lake --dry-run=client -o yaml | kubectl apply -f -
 
-kubectl -n trustops create secret generic trustops-server \
-  --from-literal=TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
-  --from-literal=TRUSTOPS_SESSION_SECRET="$(openssl rand -hex 32)"
+kubectl -n grc-lake create secret generic grc-lake-server \
+  --from-literal=GRC_LAKE_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)" \
+  --from-literal=GRC_LAKE_SESSION_SECRET="$(openssl rand -hex 32)"
 
-kubectl -n trustops create secret generic trustops-snowflake-key \
-  --from-file=snowflake_key.p8="$HOME/.trustops/snowflake/trustops_snowflake_key.p8"
+kubectl -n grc-lake create secret generic grc-lake-snowflake-key \
+  --from-file=snowflake_key.p8="$HOME/.grc-lake/snowflake/grc-lake_snowflake_key.p8"
 ```
 
 For OIDC, store the client secret separately:
 
 ```bash
-kubectl -n trustops create secret generic trustops-oidc \
-  --from-literal=client_secret="$TRUSTOPS_OIDC_CLIENT_SECRET"
+kubectl -n grc-lake create secret generic grc-lake-oidc \
+  --from-literal=client_secret="$GRC_LAKE_OIDC_CLIENT_SECRET"
 ```
 
 Use External Secrets Operator, AWS Secrets Manager, or another secret manager
@@ -64,8 +64,8 @@ $EDITOR poc-values.yaml
 Install or upgrade:
 
 ```bash
-helm upgrade --install trustops deploy/helm/trustops \
-  --namespace trustops \
+helm upgrade --install grc-lake deploy/helm/grc-lake \
+  --namespace grc-lake \
   --create-namespace \
   --values poc-values.yaml
 ```
@@ -73,18 +73,18 @@ helm upgrade --install trustops deploy/helm/trustops \
 Verify:
 
 ```bash
-kubectl -n trustops get pods,cronjobs
-curl -fsS https://trustops-poc.example.com/api/healthz
+kubectl -n grc-lake get pods,cronjobs
+curl -fsS https://grc-lake-poc.example.com/api/healthz
 ```
 
 ## 3. Human Flow
 
-1. Open `https://trustops-poc.example.com/console/poc/`.
+1. Open `https://grc-lake-poc.example.com/console/poc/`.
 2. Confirm login, lake health, scheduler health, and connector readiness.
 3. Open **Connectors**.
 4. Select **Snowflake Evidence Lake**.
 5. Click **Discover scope**. The server uses the mounted service key and the
-   `TRUSTOPS_READER` grants to list warehouses, databases, schemas, and views.
+   `GRC_LAKE_READER` grants to list warehouses, databases, schemas, and views.
 6. Select the views that represent audit events, control posture, asset risk,
    and evidence bundles.
 7. Click **Test connection**, then **Enable connector**, then **Sync now**.
@@ -98,9 +98,9 @@ The UI, CLI, API, scheduler, and agent harness all use the same lake-backed
 contracts:
 
 ```bash
-curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" https://trustops-poc.example.com/api/v1/connectors
-curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" https://trustops-poc.example.com/api/v1/posture/current
-curl -fsS -H "Authorization: Bearer $TRUSTOPS_API_KEY" https://trustops-poc.example.com/api/v1/agent-runs
+curl -fsS -H "Authorization: Bearer $GRC_LAKE_API_KEY" https://grc-lake-poc.example.com/api/v1/connectors
+curl -fsS -H "Authorization: Bearer $GRC_LAKE_API_KEY" https://grc-lake-poc.example.com/api/v1/posture/current
+curl -fsS -H "Authorization: Bearer $GRC_LAKE_API_KEY" https://grc-lake-poc.example.com/api/v1/agent-runs
 ```
 
 Optional LangGraph runs are advisory. They can read redacted posture and propose
@@ -125,4 +125,4 @@ Before sharing the link externally:
 For a real customer pilot, add external secret sync, backup/restore for `/lake`,
 WAF or API gateway controls, OIDC group-to-role mapping, connector-failure
 alerts, and a written data-retention policy. Those are hosting controls around
-the same deterministic TrustOps core.
+the same deterministic GRC Lake core.

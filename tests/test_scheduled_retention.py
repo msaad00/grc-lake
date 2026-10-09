@@ -27,16 +27,16 @@ from test_generations import RAW
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV = (
-    "TRUSTOPS_RETENTION_SCHEDULE",
-    "TRUSTOPS_RETENTION_ARCHIVE_DIR",
-    "TRUSTOPS_RETENTION_OLDER_THAN_DAYS",
-    "TRUSTOPS_RETENTION_KEEP_LATEST",
+    "GRC_LAKE_RETENTION_SCHEDULE",
+    "GRC_LAKE_RETENTION_ARCHIVE_DIR",
+    "GRC_LAKE_RETENTION_OLDER_THAN_DAYS",
+    "GRC_LAKE_RETENTION_KEEP_LATEST",
 )
 
 
 @pytest.fixture(autouse=True)
 def _isolated(monkeypatch):
-    for key in (*ENV, "TRUSTOPS_COMMERCIAL_HOSTED", "TRUSTOPS_DATABASE_URL"):
+    for key in (*ENV, "GRC_LAKE_COMMERCIAL_HOSTED", "GRC_LAKE_DATABASE_URL"):
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setattr(scheduler, "_scheduled_lake_eval", lambda lake: None)
 
@@ -51,11 +51,11 @@ def _old_generation(lake: Path) -> Path:
 
 
 def _enable(monkeypatch, archive: Path | None, schedule: str = "@daily") -> None:
-    monkeypatch.setenv("TRUSTOPS_RETENTION_SCHEDULE", schedule)
-    monkeypatch.setenv("TRUSTOPS_RETENTION_OLDER_THAN_DAYS", "1")
-    monkeypatch.setenv("TRUSTOPS_RETENTION_KEEP_LATEST", "1")
+    monkeypatch.setenv("GRC_LAKE_RETENTION_SCHEDULE", schedule)
+    monkeypatch.setenv("GRC_LAKE_RETENTION_OLDER_THAN_DAYS", "1")
+    monkeypatch.setenv("GRC_LAKE_RETENTION_KEEP_LATEST", "1")
     if archive is not None:
-        monkeypatch.setenv("TRUSTOPS_RETENTION_ARCHIVE_DIR", str(archive))
+        monkeypatch.setenv("GRC_LAKE_RETENTION_ARCHIVE_DIR", str(archive))
 
 
 def _retention(rows: list[dict]) -> dict[str, dict]:
@@ -67,7 +67,7 @@ def test_unconfigured_retention_never_runs(tmp_path, monkeypatch):
     old = _old_generation(lake)
     monkeypatch.setattr(scheduled_retention, "archive_generations", pytest.fail)
     monkeypatch.setattr(scheduled_retention, "archive_operational_history", pytest.fail)
-    monkeypatch.setenv("TRUSTOPS_RETENTION_ARCHIVE_DIR", str(tmp_path / "archive"))
+    monkeypatch.setenv("GRC_LAKE_RETENTION_ARCHIVE_DIR", str(tmp_path / "archive"))
 
     assert _retention(scheduler.tick(lake)) == {}
     assert old.exists()
@@ -141,10 +141,10 @@ def test_scheduled_run_honors_cli_protections(tmp_path, monkeypatch, protection)
 @pytest.mark.parametrize(
     ("name", "value"),
     [
-        ("TRUSTOPS_RETENTION_SCHEDULE", "sometimes"),
-        ("TRUSTOPS_RETENTION_OLDER_THAN_DAYS", "0"),
-        ("TRUSTOPS_RETENTION_KEEP_LATEST", "none"),
-        ("TRUSTOPS_RETENTION_ARCHIVE_DIR", "relative/archive"),
+        ("GRC_LAKE_RETENTION_SCHEDULE", "sometimes"),
+        ("GRC_LAKE_RETENTION_OLDER_THAN_DAYS", "0"),
+        ("GRC_LAKE_RETENTION_KEEP_LATEST", "none"),
+        ("GRC_LAKE_RETENTION_ARCHIVE_DIR", "relative/archive"),
     ],
 )
 def test_invalid_configuration_fails_closed_and_visibly(tmp_path, monkeypatch, name, value):
@@ -206,7 +206,7 @@ def test_hosted_root_runs_retention_per_registered_tenant(tmp_path, monkeypatch)
         tenants = [create_tenant(session, slug=name, name=name).id for name in ("a", "b")]
     old = {tenant: _old_generation(tmp_path / "tenants" / tenant) for tenant in tenants}
     stray = _old_generation(tmp_path / "tenants" / "unregistered")
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
     archive = tmp_path.parent / (tmp_path.name + "-archive")
     _enable(monkeypatch, archive)
     seen: list[tuple[Path, str | None]] = []
@@ -283,7 +283,7 @@ def test_unverifiable_partial_archive_still_fails_closed(tmp_path):
 @pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
 def test_helm_scheduler_retention_values_reach_only_the_cronjob():
     def render(*overrides: str) -> dict:
-        args = ["helm", "template", "trustops", str(ROOT / "deploy/helm/trustops")]
+        args = ["helm", "template", "trustops", str(ROOT / "deploy/helm/grc-lake")]
         for item in overrides:
             args += ["--set", item]
         output = subprocess.run(args, capture_output=True, text=True, check=True).stdout
@@ -295,7 +295,7 @@ def test_helm_scheduler_retention_values_reach_only_the_cronjob():
         return {item["name"]: item.get("value") for item in pod["containers"][0].get("env", [])}
 
     default = render()
-    assert not any(name.startswith("TRUSTOPS_RETENTION_") for name in env(default, "CronJob"))
+    assert not any(name.startswith("GRC_LAKE_RETENTION_") for name in env(default, "CronJob"))
     configured = render(
         "scheduler.retention.schedule=@daily",
         "scheduler.retention.archiveDir=/mnt/archive",
@@ -303,8 +303,8 @@ def test_helm_scheduler_retention_values_reach_only_the_cronjob():
         "scheduler.retention.keepLatest=5",
     )
     cron = env(configured, "CronJob")
-    assert cron["TRUSTOPS_RETENTION_SCHEDULE"] == "@daily"
-    assert cron["TRUSTOPS_RETENTION_ARCHIVE_DIR"] == "/mnt/archive"
-    assert cron["TRUSTOPS_RETENTION_OLDER_THAN_DAYS"] == "180"
-    assert cron["TRUSTOPS_RETENTION_KEEP_LATEST"] == "5"
-    assert not any(name.startswith("TRUSTOPS_RETENTION_") for name in env(configured, "Deployment"))
+    assert cron["GRC_LAKE_RETENTION_SCHEDULE"] == "@daily"
+    assert cron["GRC_LAKE_RETENTION_ARCHIVE_DIR"] == "/mnt/archive"
+    assert cron["GRC_LAKE_RETENTION_OLDER_THAN_DAYS"] == "180"
+    assert cron["GRC_LAKE_RETENTION_KEEP_LATEST"] == "5"
+    assert not any(name.startswith("GRC_LAKE_RETENTION_") for name in env(configured, "Deployment"))

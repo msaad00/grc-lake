@@ -14,13 +14,13 @@ from security_lakehouse.cli import main
 
 
 def test_version_uses_installed_distribution_metadata(capsys) -> None:
-    expected = version("trustops-security-data-lake")
+    expected = version("grc-lake")
     project = tomllib.loads((Path(__file__).resolve().parents[1] / "pyproject.toml").read_text())
     assert expected == project["project"]["version"]
     with pytest.raises(SystemExit) as caught:
         main(["--version"])
     assert caught.value.code == 0
-    assert capsys.readouterr().out == f"security-lakehouse {expected}\n"
+    assert capsys.readouterr().out == f"grc-lake {expected}\n"
 
 
 def test_summary_reports_the_golden_assessment_counts(tmp_path, capsys) -> None:

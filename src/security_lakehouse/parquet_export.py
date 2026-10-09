@@ -133,7 +133,7 @@ def export_parquet(lake_dir: str | Path, output_dir: str | Path, *, tenant_id: s
         import pyarrow as pa
         import pyarrow.parquet as pq
     except ImportError:
-        raise RuntimeError("Parquet export requires pip install 'trustops-security-data-lake[parquet]'") from None
+        raise RuntimeError("Parquet export requires pip install 'grc-lake[parquet]'") from None
 
     lake = Path(lake_dir).resolve()
     target = Path(output_dir).absolute()

@@ -15,7 +15,7 @@ from security_lakehouse.connector_runner import DEFAULT_TOKEN_ENV, SyncInputs, e
 from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, server_execution
 from security_lakehouse.secret_refs import SecretRefPolicyError
 
-SERVER_SECRET = "TRUSTOPS_COOKIE_SIGNING_KEY"
+SERVER_SECRET = "GRC_LAKE_COOKIE_SIGNING_KEY"
 
 # Enough non-secret identity for each live path to reach its secret lookup.
 IDENTITY: dict[str, Any] = {

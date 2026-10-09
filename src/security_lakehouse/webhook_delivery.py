@@ -1,6 +1,6 @@
 """Outbound event webhook signing + delivery (transport-agnostic, no DB).
 
-TrustOps's API is otherwise pull-only. A registered subscription (see
+GRC Lake's API is otherwise pull-only. A registered subscription (see
 ``db.webhooks``) lets a tenant receive a push the moment something happens —
 a new finding, a completed assessment, a control transitioning to failing —
 instead of polling. This module is the sending half: build the signed
@@ -9,8 +9,8 @@ path in this codebase uses (:mod:`security_lakehouse.netguard`).
 
 Signing follows the GitHub/Stripe convention: the raw JSON body is HMAC-SHA256
 signed with the subscriber's registered secret, and the hex digest travels in
-an ``X-TrustOps-Signature: sha256=<hex>`` header so a receiver can verify the
-delivery actually came from this TrustOps instance and was not tampered with
+an ``X-GRC-Lake-Signature: sha256=<hex>`` header so a receiver can verify the
+delivery actually came from this GRC Lake instance and was not tampered with
 in transit. See ``docs/WEBHOOKS.md`` for the receiver-side verification code.
 
 Delivery never raises: every failure (non-2xx, timeout, DNS, SSRF-blocked
@@ -27,7 +27,6 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 import time
 import urllib.error
 import urllib.request
@@ -36,6 +35,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from security_lakehouse import netguard
+from security_lakehouse.runtime_environment import runtime_env
 
 logger = logging.getLogger(__name__)
 
@@ -43,14 +43,14 @@ DEFAULT_TIMEOUT_SECONDS = 10
 DEFAULT_MAX_RETRIES = 1
 DEFAULT_BACKOFF_SECONDS = 0.5
 
-SIGNATURE_HEADER = "X-TrustOps-Signature"
-EVENT_HEADER = "X-TrustOps-Event"
-DELIVERY_HEADER = "X-TrustOps-Delivery"
+SIGNATURE_HEADER = "X-GRC-Lake-Signature"
+EVENT_HEADER = "X-GRC-Lake-Event"
+DELIVERY_HEADER = "X-GRC-Lake-Delivery"
 
 # Optional, opt-in destination allowlist for webhook subscription deliveries.
 #
 # This is deliberately a *separate* control from the workflow engine's
-# TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST (see workflows.py's action.webhook), and
+# GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST (see workflows.py's action.webhook), and
 # deliberately NOT deny-by-default the way that one is. That allowlist gates
 # an admin-authored automation step POSTing to an admin-chosen target; this
 # gates a *tenant's own* subscription registered to receive that tenant's own
@@ -64,7 +64,7 @@ DELIVERY_HEADER = "X-TrustOps-Delivery"
 # allowlist's state; this allowlist is an *additional*, opt-in restriction for
 # operators who want to cap egress to specific approved destinations (e.g. an
 # approved SIEM vendor's IP range) even among public addresses.
-EGRESS_ALLOWLIST_ENV = "TRUSTOPS_WEBHOOK_EGRESS_ALLOWLIST"
+EGRESS_ALLOWLIST_ENV = "GRC_LAKE_WEBHOOK_EGRESS_ALLOWLIST"
 
 
 def _backoff_sleep(seconds: float) -> None:
@@ -74,8 +74,8 @@ def _backoff_sleep(seconds: float) -> None:
 
 
 def _load_egress_allowlist() -> set[str]:
-    """Parse ``TRUSTOPS_WEBHOOK_EGRESS_ALLOWLIST`` into normalized host[:port] entries."""
-    raw = os.environ.get(EGRESS_ALLOWLIST_ENV, "")
+    """Parse ``GRC_LAKE_WEBHOOK_EGRESS_ALLOWLIST`` into normalized host[:port] entries."""
+    raw = runtime_env().get(EGRESS_ALLOWLIST_ENV, "")
     entries: set[str] = set()
     for chunk in raw.split(","):
         entry = chunk.strip().lower()
@@ -91,7 +91,7 @@ def _host_is_allowlisted(host: str, port: int, allowlist: set[str]) -> bool:
 
 
 def _assert_egress_allowed(url: str) -> None:
-    """SSRF guard, plus ``TRUSTOPS_WEBHOOK_EGRESS_ALLOWLIST`` when an operator has set one.
+    """SSRF guard, plus ``GRC_LAKE_WEBHOOK_EGRESS_ALLOWLIST`` when an operator has set one.
 
     Always enforces the public-IP SSRF guard. The allowlist is opt-in: an
     unset/empty value applies no further restriction (see the module docstring
@@ -167,7 +167,7 @@ def deliver_webhook(
     Returns ``{"ok", "status_code", "attempts", "error"}``. A non-2xx response
     or a network/timeout error is retried up to ``max_retries`` additional
     times with a short backoff; a target that fails the SSRF guard or the
-    optional ``TRUSTOPS_WEBHOOK_EGRESS_ALLOWLIST`` (see :func:`_assert_egress_allowed`)
+    optional ``GRC_LAKE_WEBHOOK_EGRESS_ALLOWLIST`` (see :func:`_assert_egress_allowed`)
     fails immediately without an attempt (there is nothing safe to retry).
     """
     body = json.dumps(envelope, separators=(",", ":"), sort_keys=True).encode("utf-8")
@@ -176,6 +176,10 @@ def deliver_webhook(
         SIGNATURE_HEADER: sign_payload(secret, body),
         EVENT_HEADER: event_type,
         DELIVERY_HEADER: envelope.get("event_id", ""),
+        # Existing receivers keep their wire contract across the product rename.
+        "X-TrustOps-Signature": sign_payload(secret, body),
+        "X-TrustOps-Event": event_type,
+        "X-TrustOps-Delivery": envelope.get("event_id", ""),
     }
 
     try:

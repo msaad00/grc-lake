@@ -161,7 +161,7 @@ def run():
             )
             # Token values live only in this process. The adapter receives the
             # environment-variable name, never a token in argv or a config file.
-            token_name = "TRUSTOPS_POLARIS_SMOKE_TOKEN"
+            token_name = "GRC_LAKE_POLARIS_SMOKE_TOKEN"
             os.environ[token_name] = token(credentials["clientId"], credentials["clientSecret"])
             catalog = rest_catalog(
                 base + "/api/catalog", warehouse="tenant_a", token_env=token_name, allow_http_localhost=True
@@ -213,7 +213,7 @@ def run():
                 denied.list_namespaces()
             except ForbiddenError:
                 report["catalog_permission_denial"] = True
-            except Exception:
+            except Exception:  # noqa: BLE001 - any non-REST denial fails the smoke
                 # Only a real REST denial is acceptable, not a local scope check.
                 raise RuntimeError("unexpected cross-catalog denial type") from None
             else:
@@ -234,7 +234,7 @@ def run():
             return report
         finally:
             os.umask(previous_umask)
-            os.environ.pop("TRUSTOPS_POLARIS_SMOKE_TOKEN", None)
+            os.environ.pop("GRC_LAKE_POLARIS_SMOKE_TOKEN", None)
             subprocess.run(["docker", "rm", "-f", name], capture_output=True, timeout=30)
             session.close()
 
@@ -242,7 +242,7 @@ def run():
 if __name__ == "__main__":
     try:
         print(json.dumps(run(), indent=2, sort_keys=True))
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - redacts provider errors before exit
         # Do not emit arbitrary HTTP/provider errors, request bodies, or tokens.
         causes = []
         cause = error

@@ -245,7 +245,7 @@ def _bearer(token: str) -> dict[str, str]:
 
 @pytest.fixture
 def server(tmp_path: Path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key")
     _seed_lake(tmp_path)  # a flat single-tenant lake, so decisions land at the root
     app = create_app(tmp_path)
     tokens: dict[str, str] = {}
@@ -362,7 +362,7 @@ def test_invalid_decision_is_a_400_and_writes_nothing(server) -> None:
 
 
 def test_tenants_see_only_their_own_decisions(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key")
     _seed_lake(tmp_path)  # two tenants: the flat root is bound to nobody
     app = create_app(tmp_path)
     tokens = {}
@@ -417,7 +417,7 @@ def test_coverage_payloads_report_review_log_verified(tmp_path: Path, monkeypatc
     from security_lakehouse.framework_coverage import build_framework_coverage, framework_coverage_summary
     from security_lakehouse.mapping_review import review_log_path
 
-    monkeypatch.delenv("TRUSTOPS_COOKIE_SIGNING_KEY", raising=False)
+    monkeypatch.delenv("GRC_LAKE_COOKIE_SIGNING_KEY", raising=False)
     items = _proposed_items(1)
     api_v1.handle_post(
         "/api/v1/mapping-reviews/decisions",

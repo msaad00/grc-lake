@@ -3,7 +3,7 @@
 Workday's public Staffing REST worker resource carries no termination date or
 work email, so this connector reads a tenant-defined custom report published
 as a web service (RaaS). The customer builds the report with the columns in
-:data:`WORKDAY_COLUMNS` and gives TrustOps its JSON URL plus a read-only
+:data:`WORKDAY_COLUMNS` and gives GRC Lake its JSON URL plus a read-only
 integration system user (ISU). Rows map onto the vendor-neutral
 ``hris.personnel.employment`` event (see :mod:`security_lakehouse.hris`);
 any extra report column is ignored and never written.
@@ -78,7 +78,7 @@ class WorkdayReportClient:
             headers={
                 "accept": "application/json",
                 "authorization": self._auth,
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
         with netguard.open_public(request, timeout=self.timeout, label="workday report") as resp:

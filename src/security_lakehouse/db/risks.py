@@ -6,7 +6,7 @@ tenant-scoped so one workspace can never read or mutate another's register.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -14,14 +14,7 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
 from security_lakehouse.db.models import RISK_LEVELS, RISK_STATUSES, Risk
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def _validate_level(field: str, value: str) -> None:
@@ -128,7 +121,7 @@ def update_risk(
             setattr(risk, field, changes[field])
     if "due_at" in changes:
         risk.due_at = changes["due_at"]
-    risk.updated_at = _now(now)
+    risk.updated_at = utc_now(now)
     session.flush()
     return risk
 
@@ -156,9 +149,9 @@ def risk_to_dict(risk: Risk) -> dict[str, Any]:
         "owner": risk.owner,
         "control_id": risk.control_id,
         "asset_id": risk.asset_id,
-        "due_at": _iso(risk.due_at),
-        "created_at": _iso(risk.created_at),
-        "updated_at": _iso(risk.updated_at),
+        "due_at": iso_offset(risk.due_at),
+        "created_at": iso_offset(risk.created_at),
+        "updated_at": iso_offset(risk.updated_at),
     }
 
 

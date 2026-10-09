@@ -5,7 +5,7 @@ assets were collected. `assessment population` compares the generation against
 an explicitly declared inventory baseline and collection receipts.
 
 ```sh
-security-lakehouse assessment population --lake build/assurance-demo \
+grc-lake assessment population --lake build/assurance-demo \
   --baseline examples/control-assurance/baseline.json
 python tools/benchmark_population.py --assets 100000
 ```

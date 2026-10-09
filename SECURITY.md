@@ -3,14 +3,14 @@
 ## Report a vulnerability
 
 Please report security vulnerabilities privately through GitHub:
-**[Report a vulnerability](https://github.com/msaad00/trustops-security-data-lake/security/advisories/new)**
+**[Report a vulnerability](https://github.com/msaad00/grc-lake/security/advisories/new)**
 (the repository's **Security** tab, then **Report a vulnerability**).
 
 Do not open a public issue, pull request, or discussion for a vulnerability.
 
 Include what you can of:
 
-- the affected version (`pip show trustops-security-data-lake`, or the image tag);
+- the affected version (`pip show grc-lake`, or the image tag);
 - the component: API, console, CLI, MCP server, a connector, the Helm chart,
   the container image, or the posture-gate action;
 - steps to reproduce, and the impact you expect;
@@ -34,10 +34,10 @@ as a new patch release. Upgrade to the newest patch to receive them.
 
 In scope:
 
-- the `trustops-security-data-lake` Python package and its CLI, API, console,
+- the `grc-lake` Python package and its CLI, API, console,
   and MCP server;
-- the `ghcr.io/msaad00/trustops` container image and the Helm chart in
-  [`deploy/helm/trustops`](deploy/helm/trustops/);
+- the `ghcr.io/msaad00/grc-lake` container image and the Helm chart in
+  [`deploy/helm/grc-lake`](deploy/helm/grc-lake/);
 - the posture-gate GitHub Action in [`.github/actions/posture-gate`](.github/actions/posture-gate/);
 - deployment templates in [`deploy/`](deploy/) and [`compose.yaml`](compose.yaml).
 
@@ -51,7 +51,7 @@ Out of scope:
 - running with authentication disabled (`--allow-insecure-no-auth`, or the
   default `trustops` service in `compose.yaml`). That mode is unauthenticated
   by design, for local demos only;
-- vulnerabilities in third-party dependencies with no TrustOps-specific impact;
+- vulnerabilities in third-party dependencies with no GRC Lake-specific impact;
   report those upstream. Dependabot opens weekly version-update PRs;
 - findings in the bundled sample data under `mockup_companies/`;
 - results that need an already compromised host, or physical access.

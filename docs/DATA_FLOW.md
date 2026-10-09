@@ -1,7 +1,7 @@
 # Data Flow
 
 The product is assessment-first. Data can arrive from an existing security data
-lake or from TrustOps-managed connector outputs.
+lake or from GRC Lake-managed connector outputs.
 
 For the production operating loop that turns this data flow into continuous
 collection, evaluation, snapshots, and API access, see
@@ -79,7 +79,7 @@ The normalization handoff is explicit and reusable for pre-landed canonical raw
 evidence:
 
 ```bash
-security-lakehouse ingestion normalize \
+grc-lake ingestion normalize \
   --raw ./raw/connector_events.jsonl \
   --out ./lake
 ```
@@ -103,17 +103,17 @@ source evidence
 
 ## Current Implementation
 
-| Step              | Current artifact                                                             |
-| ----------------- | ---------------------------------------------------------------------------- |
-| Source evidence   | `data/raw/security_events.jsonl`                                             |
-| Validation        | `src/security_lakehouse/validation.py`                                       |
-| Normalization     | `src/security_lakehouse/pipeline.py`                                         |
-| Control mapping   | `mappings/control_map.json`                                                  |
-| Assessment engine | `src/security_lakehouse/assessment.py`                                       |
-| Current posture   | `build/lakehouse/gold/current_posture.json`                                  |
-| Violations        | `security-lakehouse assessment violations --lake build/lakehouse`            |
-| Snapshot          | `security-lakehouse assessment snapshot --lake build/lakehouse --reason ...` |
-| API               | `src/security_lakehouse/server_app.py`                                       |
+| Step              | Current artifact                                                   |
+| ----------------- | ------------------------------------------------------------------ |
+| Source evidence   | `data/raw/security_events.jsonl`                                   |
+| Validation        | `src/security_lakehouse/validation.py`                             |
+| Normalization     | `src/security_lakehouse/pipeline.py`                               |
+| Control mapping   | `mappings/control_map.json`                                        |
+| Assessment engine | `src/security_lakehouse/assessment.py`                             |
+| Current posture   | `build/lakehouse/gold/current_posture.json`                        |
+| Violations        | `grc-lake assessment violations --lake build/lakehouse`            |
+| Snapshot          | `grc-lake assessment snapshot --lake build/lakehouse --reason ...` |
+| API               | `src/security_lakehouse/server_app.py`                             |
 
 ## Connector Contract
 

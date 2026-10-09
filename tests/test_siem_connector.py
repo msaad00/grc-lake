@@ -203,7 +203,7 @@ def test_siem_does_not_retry_client_error(monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def test_siem_probe_and_discovery_with_env_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_SIEM_TOKEN", "secret-token")
+    monkeypatch.setenv("GRC_LAKE_SIEM_TOKEN", "secret-token")
 
     with patch.object(
         SiemClient,
@@ -213,7 +213,7 @@ def test_siem_probe_and_discovery_with_env_token(monkeypatch: pytest.MonkeyPatch
         probe = probe_siem_access(
             credentials={
                 "host": "https://siem.example",
-                "credential_ref": "TRUSTOPS_SIEM_TOKEN",
+                "credential_ref": "GRC_LAKE_SIEM_TOKEN",
             },
             options={"index": "alerts"},
         )
@@ -233,7 +233,7 @@ def test_siem_probe_and_discovery_with_env_token(monkeypatch: pytest.MonkeyPatch
         scope = discover_siem_scope(
             credentials={
                 "host": "https://siem.example",
-                "credential_ref": "TRUSTOPS_SIEM_TOKEN",
+                "credential_ref": "GRC_LAKE_SIEM_TOKEN",
             },
             options={},
         )

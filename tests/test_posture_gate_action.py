@@ -1,4 +1,4 @@
-"""Tests for the TrustOps GitHub Action posture gate script."""
+"""Tests for the GRC Lake GitHub Action posture gate script."""
 
 from __future__ import annotations
 
@@ -44,8 +44,8 @@ def _run_gate(
     host, port = server.server_address
     env = {
         **os.environ,
-        "TRUSTOPS_URL": f"http://{host}:{port}",
-        "TRUSTOPS_API_TOKEN": "",
+        "GRC_LAKE_URL": f"http://{host}:{port}",
+        "GRC_LAKE_API_TOKEN": "",
         "CORRELATION_ID": correlation_id,
         "MIN_SCORE": min_score,
         "MAX_CRITICAL_VIOLATIONS": max_critical,
@@ -68,7 +68,7 @@ def _run_gate(
 
 def test_posture_gate_action_metadata_is_valid() -> None:
     action = yaml.safe_load((_action_dir() / "action.yml").read_text(encoding="utf-8"))
-    assert action["name"] == "TrustOps Posture Gate"
+    assert action["name"] == "GRC Lake Posture Gate"
     assert "trustops-url" in action["inputs"]
     assert "max-failing-control-tests" in action["inputs"]
     assert action["runs"]["using"] == "composite"
@@ -158,8 +158,8 @@ def _run_gate_against_stub(
     host, port = server.server_address
     env = {
         **os.environ,
-        "TRUSTOPS_URL": f"http://{host}:{port}",
-        "TRUSTOPS_API_TOKEN": "",
+        "GRC_LAKE_URL": f"http://{host}:{port}",
+        "GRC_LAKE_API_TOKEN": "",
         "CORRELATION_ID": "",
         "MIN_SCORE": "0",
         "MAX_CRITICAL_VIOLATIONS": "0",

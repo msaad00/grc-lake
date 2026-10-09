@@ -1,6 +1,6 @@
-"""Optional agent harness for TrustOps.
+"""Optional agent harness for GRC Lake.
 
-The harness is allowed to orchestrate TrustOps APIs and propose actions. It is
+The harness is allowed to orchestrate GRC Lake APIs and propose actions. It is
 not the source of truth for evidence, controls, RBAC, redaction, or compliance
 evaluation.
 """

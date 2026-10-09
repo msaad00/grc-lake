@@ -5,12 +5,10 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
 from security_lakehouse.connectors import load_connector_catalog
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.pack_data import PACK_DATA_DIR
-
-JsonObject = dict[str, Any]
 
 HINTS_PATH = PACK_DATA_DIR / "evidence_connector_hints.json"
 

@@ -171,7 +171,7 @@ def test_resign_refuses_an_empty_previous_key(rotated_lake: Path) -> None:
 def test_cli_resign_reads_the_previous_key_from_the_named_env(
     rotated_lake: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
-    monkeypatch.setenv("OLD_TRUSTOPS_KEY", OLD_KEY)
+    monkeypatch.setenv("OLD_GRC_LAKE_KEY", OLD_KEY)
     code = main(
         [
             "frameworks",
@@ -180,7 +180,7 @@ def test_cli_resign_reads_the_previous_key_from_the_named_env(
             "--lake",
             str(rotated_lake),
             "--previous-key-env",
-            "OLD_TRUSTOPS_KEY",
+            "OLD_GRC_LAKE_KEY",
             "--actor",
             "ops@acme.test",
         ]
@@ -195,22 +195,22 @@ def test_cli_resign_reads_the_previous_key_from_the_named_env(
 
 
 def test_cli_resign_fails_without_the_previous_key(rotated_lake: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
-    monkeypatch.delenv("OLD_TRUSTOPS_KEY", raising=False)
+    monkeypatch.delenv("OLD_GRC_LAKE_KEY", raising=False)
     code = main(
-        ["frameworks", "review", "resign", "--lake", str(rotated_lake), "--previous-key-env", "OLD_TRUSTOPS_KEY"]
+        ["frameworks", "review", "resign", "--lake", str(rotated_lake), "--previous-key-env", "OLD_GRC_LAKE_KEY"]
     )
     err = capsys.readouterr().err
     assert code == 1
-    assert "OLD_TRUSTOPS_KEY" in err
+    assert "OLD_GRC_LAKE_KEY" in err
     assert verify_review_log(rotated_lake)["tip_mac"] == "invalid"
 
 
 def test_cli_resign_fails_with_the_wrong_previous_key(
     rotated_lake: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
-    monkeypatch.setenv("OLD_TRUSTOPS_KEY", "wrong")
+    monkeypatch.setenv("OLD_GRC_LAKE_KEY", "wrong")
     code = main(
-        ["frameworks", "review", "resign", "--lake", str(rotated_lake), "--previous-key-env", "OLD_TRUSTOPS_KEY"]
+        ["frameworks", "review", "resign", "--lake", str(rotated_lake), "--previous-key-env", "OLD_GRC_LAKE_KEY"]
     )
     assert code == 1
     assert "previous key" in capsys.readouterr().err

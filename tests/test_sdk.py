@@ -1,4 +1,4 @@
-"""SDK tests: drive ``TrustOpsClient`` against the real app over a live socket.
+"""SDK tests: drive ``GrcLakeClient`` against the real app over a live socket.
 
 The SDK is a *synchronous* ``httpx.Client``, so we serve each FastAPI app with
 uvicorn on an ephemeral localhost port in a background thread and point the
@@ -25,13 +25,13 @@ pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 pytest.importorskip("uvicorn")
 
-import uvicorn  # noqa: E402
+import uvicorn
 
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.sdk import TrustOpsClient, TrustOpsError  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.sdk import GrcLakeClient, GrcLakeError
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def _free_port() -> int:
@@ -41,7 +41,7 @@ def _free_port() -> int:
 
 
 @contextlib.contextmanager
-def _client(app, *, api_key: str | None = None) -> Iterator[TrustOpsClient]:
+def _client(app, *, api_key: str | None = None) -> Iterator[GrcLakeClient]:
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
     thread = threading.Thread(target=server.run, daemon=True)
@@ -50,7 +50,7 @@ def _client(app, *, api_key: str | None = None) -> Iterator[TrustOpsClient]:
     while not server.started and time.monotonic() < deadline:
         time.sleep(0.02)
     assert server.started, "uvicorn did not start"
-    client = TrustOpsClient(f"http://127.0.0.1:{port}", api_key=api_key, timeout=10.0)
+    client = GrcLakeClient(f"http://127.0.0.1:{port}", api_key=api_key, timeout=10.0)
     try:
         yield client
     finally:
@@ -156,7 +156,7 @@ def test_non_2xx_raises_typed_error_with_envelope(tmp_path: Path) -> None:
     _seed_lake(tmp_path)
     with (
         _client(create_app(tmp_path, require_auth=False)) as client,
-        pytest.raises(TrustOpsError) as excinfo,
+        pytest.raises(GrcLakeError) as excinfo,
     ):
         client.list_controls(limit=9999)  # limit > 1000 -> 400 bad_request
     err = excinfo.value
@@ -170,7 +170,7 @@ def test_unauthorized_write_raises_typed_error(tmp_path: Path) -> None:
     # require_auth on, but no bearer token -> 401 with an error envelope.
     with (
         _client(create_app(tmp_path)) as client,
-        pytest.raises(TrustOpsError) as excinfo,
+        pytest.raises(GrcLakeError) as excinfo,
     ):
         client.create_risk(title="x")
     assert excinfo.value.status_code == 401

@@ -17,7 +17,7 @@ import pytest
 import security_lakehouse.workflows as wf
 from security_lakehouse import netguard
 
-ALLOWLIST_ENV = "TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST"
+ALLOWLIST_ENV = "GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST"
 
 
 class _FakeResponse:
@@ -38,7 +38,7 @@ class _FakeResponse:
 
 
 def _capturing_urlopen(captured: list[urllib.request.Request], status: int = 200, body: bytes = b"ok"):
-    def _urlopen(request, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _urlopen(request, timeout=None, validate=None):
         captured.append(request)
         return _FakeResponse(status, body)
 
@@ -55,7 +55,7 @@ def _no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
 def _public_dns(monkeypatch: pytest.MonkeyPatch) -> None:
     """Default: every host resolves to a public IP unless a test overrides it."""
 
-    def _getaddrinfo(host, port, *args, **kwargs):  # noqa: ANN001, ARG001
+    def _getaddrinfo(host, port, *args, **kwargs):
         return [(2, 1, 6, "", ("93.184.216.34", 0))]
 
     monkeypatch.setattr(netguard.socket, "getaddrinfo", _getaddrinfo)
@@ -166,7 +166,7 @@ def test_non_http_scheme_rejected(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
 
 def test_secret_resolved_into_request_but_not_persisted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch)
-    monkeypatch.setenv("TRUSTOPS_SECRET_FOO", "super-secret-token")
+    monkeypatch.setenv("GRC_LAKE_SECRET_FOO", "super-secret-token")
     captured: list[urllib.request.Request] = []
     monkeypatch.setattr(netguard, "open_guarded", _capturing_urlopen(captured))
 
@@ -189,7 +189,7 @@ def test_secret_resolved_into_request_but_not_persisted(monkeypatch: pytest.Monk
 
 def test_unset_secret_raises(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch)
-    monkeypatch.delenv("TRUSTOPS_SECRET_MISSING", raising=False)
+    monkeypatch.delenv("GRC_LAKE_SECRET_MISSING", raising=False)
     monkeypatch.setattr(netguard, "open_guarded", _capturing_urlopen([]))
     with pytest.raises(ValueError, match="secret 'MISSING' is not set"):
         wf.run_action(
@@ -201,7 +201,7 @@ def test_unset_secret_raises(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
 
 def test_run_log_keeps_secret_token_not_value(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch)
-    monkeypatch.setenv("TRUSTOPS_SECRET_FOO", "super-secret-token")
+    monkeypatch.setenv("GRC_LAKE_SECRET_FOO", "super-secret-token")
     captured: list[urllib.request.Request] = []
     monkeypatch.setattr(netguard, "open_guarded", _capturing_urlopen(captured))
 
@@ -238,7 +238,7 @@ def test_retry_on_5xx_then_success(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     seen_keys: list[str] = []
     calls = {"n": 0}
 
-    def _urlopen(request, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _urlopen(request, timeout=None, validate=None):
         seen_keys.append(request.get_header("Idempotency-key"))
         calls["n"] += 1
         if calls["n"] < 3:
@@ -262,7 +262,7 @@ def test_retry_on_5xx_then_success(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
 def test_retry_exhausted_returns_last_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _allow(monkeypatch)
 
-    def _urlopen(request, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _urlopen(request, timeout=None, validate=None):
         raise urllib.error.HTTPError(request.full_url, 500, "boom", hdrs=None, fp=io.BytesIO(b"boom"))
 
     monkeypatch.setattr(netguard, "open_guarded", _urlopen)
@@ -298,7 +298,7 @@ def test_4xx_not_retried(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
     _allow(monkeypatch)
     calls = {"n": 0}
 
-    def _urlopen(request, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _urlopen(request, timeout=None, validate=None):
         calls["n"] += 1
         raise urllib.error.HTTPError(request.full_url, 404, "nope", hdrs=None, fp=io.BytesIO(b"nope"))
 

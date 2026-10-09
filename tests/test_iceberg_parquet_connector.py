@@ -213,7 +213,7 @@ def test_parquet_reader_without_a_path_for_the_table_fails_clearly(
 
 
 def test_rest_catalog_uri_must_be_public_https(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_ICEBERG_TOKEN", "tok")
+    monkeypatch.setenv("GRC_LAKE_ICEBERG_TOKEN", "tok")
     with pytest.raises(ValueError, match="SSRF|non-public"):
         ice.build_reader({"catalog_type": "rest", "uri": "https://10.0.0.8/api/catalog", "warehouse": "w"}, {}, env={})
     with pytest.raises(ValueError):

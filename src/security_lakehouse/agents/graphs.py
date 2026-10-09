@@ -1,4 +1,4 @@
-"""Optional LangGraph workflows around TrustOps facts."""
+"""Optional LangGraph workflows around GRC Lake facts."""
 
 from __future__ import annotations
 
@@ -144,7 +144,7 @@ def build_posture_review_graph(*, checkpointer: Any | None = None) -> Any:
     try:
         from langgraph.graph import END, StateGraph
     except ImportError as exc:  # pragma: no cover - exercised without optional extra
-        raise RuntimeError("install trustops-security-data-lake[agents] to use LangGraph orchestration") from exc
+        raise RuntimeError("install grc-lake[agents] to use LangGraph orchestration") from exc
 
     graph = StateGraph(AgentRunState)
 
@@ -189,7 +189,7 @@ def build_soc_triage_graph(*, checkpointer: Any | None = None) -> Any:
     try:
         from langgraph.graph import END, StateGraph
     except ImportError as exc:  # pragma: no cover
-        raise RuntimeError("install trustops-security-data-lake[agents] to use LangGraph orchestration") from exc
+        raise RuntimeError("install grc-lake[agents] to use LangGraph orchestration") from exc
 
     graph = StateGraph(AgentRunState)
     graph.add_node("load_alerts", _load_alerts_node)

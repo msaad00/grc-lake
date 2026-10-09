@@ -15,14 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from security_lakehouse.db.models import PostureMetricPoint, RemediationTask
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def _as_aware(value: datetime) -> datetime:
@@ -44,7 +37,7 @@ def capture_metric_point(
     """Read current posture + remediation state and insert a snapshot row."""
     from security_lakehouse.assessment import build_current_posture
 
-    moment = _now(now)
+    moment = utc_now(now)
     posture = build_current_posture(lake_dir, now=moment)
     p = posture.get("posture", {})
 
@@ -122,7 +115,7 @@ def remediation_insights(
     now: datetime | None = None,
 ) -> dict[str, Any]:
     """Derive MTTR, SLA attainment, open and overdue counts from remediation tasks."""
-    moment = _now(now)
+    moment = utc_now(now)
     stmt = select(RemediationTask).where(RemediationTask.tenant_id == tenant_id)
     tasks = list(session.scalars(stmt))
 
@@ -201,7 +194,7 @@ def framework_readiness_trends(
             fw_scores[name] = round(float(row.get("score") or 0.0), 1)
         points.append(
             {
-                "at": _iso(evaluated_at),
+                "at": iso_offset(evaluated_at),
                 "source": "snapshot",
                 "snapshot_id": path.stem,
                 "frameworks": fw_scores,
@@ -241,7 +234,7 @@ def sla_heatmap(
     now: datetime | None = None,
 ) -> dict[str, Any]:
     """Remediation SLA grids by owner and priority with live resolution timing."""
-    moment = _now(now)
+    moment = utc_now(now)
     stmt = select(RemediationTask).where(RemediationTask.tenant_id == tenant_id)
     tasks = list(session.scalars(stmt))
 
@@ -298,7 +291,7 @@ def metric_point_to_dict(point: PostureMetricPoint) -> dict[str, Any]:
     return {
         "id": point.id,
         "tenant_id": point.tenant_id,
-        "captured_at": _iso(point.captured_at),
+        "captured_at": iso_offset(point.captured_at),
         "posture_score": point.posture_score,
         "control_pass_rate": point.control_pass_rate,
         "open_violations": point.open_violations,

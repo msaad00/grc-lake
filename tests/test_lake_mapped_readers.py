@@ -329,7 +329,7 @@ def test_databricks_enablement_accepts_views_or_a_valid_mapping_and_rejects_a_ba
     assert bad is not None and "spec_version" in bad
 
 
-# --- probes check mapped tables, not the TrustOps views -------------------------
+# --- probes check mapped tables, not the GRC Lake views -------------------------
 
 
 def test_snowflake_probe_checks_mapped_tables_instead_of_views(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -345,7 +345,7 @@ def test_snowflake_probe_checks_mapped_tables_instead_of_views(monkeypatch: pyte
     assert [check["view"] for check in probe["views"]] == ["okta_events"]
     [(sql, _params)] = log
     assert sql.endswith("LIMIT 1")
-    assert "TRUSTOPS_AUDIT_EVENTS" not in sql
+    assert "GRC_LAKE_AUDIT_EVENTS" not in sql
 
 
 def test_clickhouse_probe_checks_mapped_tables(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -172,7 +172,7 @@ class JamfProClient:
                 headers={
                     "accept": "application/json",
                     "authorization": f"Bearer {token}",
-                    "user-agent": "trustops-security-data-lake",
+                    "user-agent": "grc-lake",
                 },
             )
             return backoff.http_retry(lambda: self._open(request))

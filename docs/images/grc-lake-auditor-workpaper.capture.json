@@ -1,0 +1,11 @@
+{
+  "source": "examples/control-assurance",
+  "synthetic": true,
+  "viewport": {
+    "width": 1280,
+    "height": 1000
+  },
+  "content_sha256": "226a04993ccebd89bf3690efa65f414b94bf460e8b57f9f6dfd6615837ed702f",
+  "html_sha256": "022f72193d7c9bc0637dd573e55d6c178af5983c34d0fb678b75e0fb5097276e",
+  "image_sha256": "a9b7a05cb677ec5f74a91268537a555cf980543260dbd3289fb66b8fa4abe64a"
+}

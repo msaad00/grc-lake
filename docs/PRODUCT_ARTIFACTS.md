@@ -6,27 +6,27 @@ This page is the product review index for the public repo.
 
 | Artifact                       | Path                                           |
 | ------------------------------ | ---------------------------------------------- |
-| Next.js TrustOps workbench     | `app/web/src/app/`                             |
+| Next.js GRC Lake workbench     | `app/web/src/app/`                             |
 | Local console/API server       | `src/security_lakehouse/server.py`             |
 | FastAPI server mode            | `src/security_lakehouse/server_app.py`         |
 | Continuous assessment engine   | `src/security_lakehouse/assessment.py`         |
 | CLI entry point                | `src/security_lakehouse/cli.py`                |
 | Vendor diligence use case      | `docs/USE_CASE_VENDOR_DILIGENCE.md`            |
-| Trust Home screenshot          | `docs/images/trustops-demo-dashboard.png`      |
-| Workflow canvas screenshot     | `docs/images/trustops-demo-workflows.png`      |
-| Graph workbench screenshot     | `docs/images/trustops-demo-graph.png`          |
-| Framework workbench screenshot | `docs/images/trustops-demo-frameworks.png`     |
-| Mapping review screenshot      | `docs/images/trustops-demo-mapping-review.png` |
-| Control drawer screenshot      | `docs/images/trustops-demo-control-drawer.png` |
-| Evidence room screenshot       | `docs/images/trustops-demo-evidence.png`       |
-| Connector workbench screenshot | `docs/images/trustops-demo-connectors.png`     |
-| Trust center screenshot        | `docs/images/trustops-demo-trust-center.png`   |
+| Trust Home screenshot          | `docs/images/grc-lake-demo-dashboard.png`      |
+| Workflow canvas screenshot     | `docs/images/grc-lake-demo-workflows.png`      |
+| Graph workbench screenshot     | `docs/images/grc-lake-demo-graph.png`          |
+| Framework workbench screenshot | `docs/images/grc-lake-demo-frameworks.png`     |
+| Mapping review screenshot      | `docs/images/grc-lake-demo-mapping-review.png` |
+| Control drawer screenshot      | `docs/images/grc-lake-demo-control-drawer.png` |
+| Evidence room screenshot       | `docs/images/grc-lake-demo-evidence.png`       |
+| Connector workbench screenshot | `docs/images/grc-lake-demo-connectors.png`     |
+| Trust center screenshot        | `docs/images/grc-lake-demo-trust-center.png`   |
 
 Run locally:
 
 ```bash
 make smoke
-security-lakehouse serve --lake build/lakehouse --port 8787
+grc-lake serve --lake build/lakehouse --port 8787
 ```
 
 Then open:
@@ -60,7 +60,7 @@ See [Human and Agent API](api/AGENT_API.md).
 | Evaluation lifecycle      | [evaluation-lifecycle.md](diagrams/evaluation-lifecycle.md)                         |
 | Hosting model             | [hosting.md](diagrams/hosting.md)                                                   |
 | ASCII system map          | [ascii-system-map.md](diagrams/ascii-system-map.md)                                 |
-| SVG architecture visual   | [trustops-assessment-architecture.svg](images/trustops-assessment-architecture.svg) |
+| SVG architecture visual   | [grc-lake-assessment-architecture.svg](images/grc-lake-assessment-architecture.svg) |
 | Framework coverage matrix | [FRAMEWORK_COVERAGE.md](FRAMEWORK_COVERAGE.md)                                      |
 
 ## Data And Schema

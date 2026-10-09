@@ -11,7 +11,7 @@ env = remediation_env
 
 @pytest.fixture(autouse=True)
 def signing_key(monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "test-governed-exceptions-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "test-governed-exceptions-signing-key")
 
 
 def request_body():

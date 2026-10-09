@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: GRC Lake hosted connector runtime role assumed by the deployed GRC Lake workload.
+
+Parameters:
+  TrustedWorkloadPrincipalArn:
+    Type: String
+    Description: ECS task role, EKS IRSA role, EC2 role, or federated workload principal running GRC Lake.
+    AllowedPattern: "^arn:aws[a-zA-Z-]*:iam::[0-9]{12}:(role|root)(/.+)?$"
+  CustomerRoleName:
+    Type: String
+    Default: GrcLakePostureReadOnlyRole
+    AllowedPattern: "^[A-Za-z0-9+=,.@_-]{1,64}$"
+
+Resources:
+  GrcLakeConnectorRuntimeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GrcLakeConnectorRuntimeRole
+      Description: Runtime identity used by GRC Lake to assume customer-owned read-only connector roles.
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                Ref: TrustedWorkloadPrincipalArn
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AssumeCustomerPostureRoles
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  Fn::Sub: "arn:${AWS::Partition}:iam::*:role/${CustomerRoleName}"
+
+Outputs:
+  RuntimeRoleArn:
+    Description: Configure this value as GRC_LAKE_AWS_LINK_PRINCIPAL.
+    Value:
+      Fn::GetAtt:
+        - GrcLakeConnectorRuntimeRole
+        - Arn

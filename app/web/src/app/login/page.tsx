@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { KeyRound, Loader2, LogIn, ShieldCheck, Terminal } from "lucide-react";
 import { AuthMark } from "@/components/auth/AuthMark";
-import { TrustOpsLogo } from "@/components/brand/TrustOpsLogo";
+import { GrcLakeLogo } from "@/components/brand/GrcLakeLogo";
 import { BRAND } from "@/lib/brand";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -124,13 +124,13 @@ export default function LoginPage() {
     <section className="grid min-h-screen place-items-center p-4 sm:p-6">
       <div className="grid w-full max-w-[980px] gap-5 lg:grid-cols-[1fr_420px]">
         <div className="order-last flex flex-col rounded-2xl border border-code-fg/15 bg-code p-8 text-code-fg shadow-hero lg:order-none">
-          <TrustOpsLogo
+          <GrcLakeLogo
             href="/dashboard"
             inverted
             markSize="lg"
             subtitle={BRAND.consoleSubtitle}
             className="mb-6"
-            gradientId="trustops-login-gradient"
+            gradientId="grc-lake-login-gradient"
           />
           <Badge tone="info" className="mb-5 self-start">
             Server mode

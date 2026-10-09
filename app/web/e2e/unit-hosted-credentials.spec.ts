@@ -13,7 +13,7 @@ import type { ConnectorFieldDef } from "../src/lib/connector-forms";
 
 // Pure-function checks for the hosted credential helpers; no browser page needed.
 
-const PREFIX = "TRUSTOPS_TENANT_ACME__";
+const PREFIX = "GRC_LAKE_TENANT_ACME__";
 const HOSTED = { hosted: true, secretRefPrefix: PREFIX };
 const LOCAL = { hosted: false, secretRefPrefix: null };
 const CLIENT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
@@ -21,17 +21,17 @@ const ENTRA = "99999999-8888-7777-6666-555555555555";
 
 test.describe("hosted ref placeholders", () => {
   test("rewrites env-var names under the tenant prefix", () => {
-    expect(hostedRefPlaceholder("TRUSTOPS_CLICKHOUSE_TOKEN", PREFIX)).toBe(
-      "TRUSTOPS_TENANT_ACME__CLICKHOUSE_TOKEN",
+    expect(hostedRefPlaceholder("GRC_LAKE_CLICKHOUSE_TOKEN", PREFIX)).toBe(
+      "GRC_LAKE_TENANT_ACME__CLICKHOUSE_TOKEN",
     );
     expect(hostedRefPlaceholder("JAMF_CLIENT_SECRET", PREFIX)).toBe(
-      "TRUSTOPS_TENANT_ACME__JAMF_CLIENT_SECRET",
+      "GRC_LAKE_TENANT_ACME__JAMF_CLIENT_SECRET",
     );
     expect(
-      hostedRefPlaceholder("TRUSTOPS_TENANT_<ID>__AZURE_CLIENT_SECRET", PREFIX),
-    ).toBe("TRUSTOPS_TENANT_ACME__AZURE_CLIENT_SECRET");
-    expect(hostedRefPlaceholder("TRUSTOPS_API_TOKEN", null)).toBe(
-      "TRUSTOPS_TENANT_<ID>__API_TOKEN",
+      hostedRefPlaceholder("GRC_LAKE_TENANT_<ID>__AZURE_CLIENT_SECRET", PREFIX),
+    ).toBe("GRC_LAKE_TENANT_ACME__AZURE_CLIENT_SECRET");
+    expect(hostedRefPlaceholder("GRC_LAKE_API_TOKEN", null)).toBe(
+      "GRC_LAKE_TENANT_<ID>__API_TOKEN",
     );
   });
 
@@ -39,22 +39,22 @@ test.describe("hosted ref placeholders", () => {
     const ref: ConnectorFieldDef = {
       name: "credential_ref",
       label: "Scoped credential reference",
-      placeholder: "TRUSTOPS_SIEM_TOKEN",
+      placeholder: "GRC_LAKE_SIEM_TOKEN",
     };
     const legacyRef: ConnectorFieldDef = {
       name: "api_key",
       label: "API key reference",
-      placeholder: "TRUSTOPS_API_KEY",
+      placeholder: "GRC_LAKE_API_KEY",
     };
     const warehouse: ConnectorFieldDef = {
       name: "warehouse",
       label: "Warehouse",
-      placeholder: "TRUSTOPS_READ_WH",
+      placeholder: "GRC_LAKE_READ_WH",
     };
     const role: ConnectorFieldDef = {
       name: "role",
       label: "Read-only role (optional)",
-      placeholder: "TRUSTOPS_READER",
+      placeholder: "GRC_LAKE_READER",
     };
     expect(isSecretRefField(ref)).toBe(true);
     expect(isSecretRefField(legacyRef)).toBe(true);
@@ -62,7 +62,7 @@ test.describe("hosted ref placeholders", () => {
     expect(isSecretRefField(role)).toBe(false);
 
     const hosted = hostedCredentialFields([ref, warehouse], HOSTED);
-    expect(hosted[0].placeholder).toBe("TRUSTOPS_TENANT_ACME__SIEM_TOKEN");
+    expect(hosted[0].placeholder).toBe("GRC_LAKE_TENANT_ACME__SIEM_TOKEN");
     expect(hosted[0].hint).toContain(PREFIX);
     expect(hosted[1]).toEqual(warehouse);
     expect(hostedCredentialFields([ref], LOCAL)[0]).toEqual(ref);
@@ -78,9 +78,9 @@ test.describe("hosted secret reference validation", () => {
       /environment variable name/,
     );
     expect(secretRefError("AZURE_CLIENT_SECRET", HOSTED)).toContain(PREFIX);
-    expect(secretRefError("TRUSTOPS_OTHER", HOSTED)).toContain(PREFIX);
+    expect(secretRefError("GRC_LAKE_OTHER", HOSTED)).toContain(PREFIX);
     expect(
-      secretRefError("TRUSTOPS_TENANT_OTHER__AZURE_CLIENT_SECRET", HOSTED),
+      secretRefError("GRC_LAKE_TENANT_OTHER__AZURE_CLIENT_SECRET", HOSTED),
     ).toContain(PREFIX);
     expect(secretRefError(`${PREFIX}AZURE_CLIENT_SECRET`, HOSTED)).toBeNull();
     // Operator allowlists are server-side; a non-reserved name is not blocked.

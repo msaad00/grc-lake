@@ -9,7 +9,6 @@ is stored directly.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -18,15 +17,7 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
 from security_lakehouse.db.models import EntityTag, SavedView, Tag
-
-
-def _now() -> datetime:
-    return datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
-
+from security_lakehouse.timeutil import iso_offset
 
 # ---------------------------------------------------------------------------
 # Tags
@@ -84,7 +75,7 @@ def tag_to_dict(tag: Tag) -> dict[str, Any]:
         "tenant_id": tag.tenant_id,
         "name": tag.name,
         "color": tag.color,
-        "created_at": _iso(tag.created_at),
+        "created_at": iso_offset(tag.created_at),
     }
 
 
@@ -221,7 +212,7 @@ def entity_tag_to_dict(et: EntityTag) -> dict[str, Any]:
         "tag_id": et.tag_id,
         "entity_type": et.entity_type,
         "entity_id": et.entity_id,
-        "created_at": _iso(et.created_at),
+        "created_at": iso_offset(et.created_at),
     }
 
 
@@ -298,7 +289,7 @@ def saved_view_to_dict(view: SavedView) -> dict[str, Any]:
         "name": view.name,
         "filters": filters,
         "created_by": view.created_by,
-        "created_at": _iso(view.created_at),
+        "created_at": iso_offset(view.created_at),
     }
 
 

@@ -1,6 +1,6 @@
 # AI inventory and deployment context
 
-These safeguards are proposed TrustOps curations of the cited NIST outcomes. They are not NIST-published crosswalks, human-reviewed equivalence, certification, or proof of automated discovery. Existing collector coverage remains unchanged.
+These safeguards are proposed GRC Lake curations of the cited NIST outcomes. They are not NIST-published crosswalks, human-reviewed equivalence, certification, or proof of automated discovery. Existing collector coverage remains unchanged.
 
 ## SG-AIINVENTORY-001 — AI system inventory and risk resourcing
 

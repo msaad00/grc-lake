@@ -1,9 +1,9 @@
 const orgName =
-  process.env.NEXT_PUBLIC_TRUSTOPS_ORG_NAME?.trim() || "Workspace";
+  process.env.NEXT_PUBLIC_GRC_LAKE_ORG_NAME?.trim() || "Workspace";
 const environmentName =
-  process.env.NEXT_PUBLIC_TRUSTOPS_ENVIRONMENT?.trim() || "";
+  process.env.NEXT_PUBLIC_GRC_LAKE_ENVIRONMENT?.trim() || "";
 const secondaryEnvironmentName =
-  process.env.NEXT_PUBLIC_TRUSTOPS_SECONDARY_ENVIRONMENT?.trim() || "";
+  process.env.NEXT_PUBLIC_GRC_LAKE_SECONDARY_ENVIRONMENT?.trim() || "";
 
 export const workspaceIdentity = {
   orgName,

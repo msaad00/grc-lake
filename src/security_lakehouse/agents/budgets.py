@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import json
-import os
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
+from security_lakehouse.runtime_environment import runtime_env
+
 
 def _env_int(name: str, default: int, *, minimum: int, maximum: int) -> int:
-    raw = os.environ.get(name)
+    raw = runtime_env().get(name)
     if raw is None:
         return default
     try:
@@ -39,10 +40,10 @@ class AgentBudgetPolicy:
     def from_env(cls) -> AgentBudgetPolicy:
         """Load bounded budget knobs from environment."""
         return cls(
-            max_context_chars=_env_int("TRUSTOPS_AGENT_MAX_CONTEXT_CHARS", 12_000, minimum=1_000, maximum=200_000),
-            max_fact_items=_env_int("TRUSTOPS_AGENT_MAX_FACT_ITEMS", 20, minimum=1, maximum=250),
-            max_output_tokens=_env_int("TRUSTOPS_AGENT_MAX_OUTPUT_TOKENS", 600, minimum=64, maximum=8_000),
-            max_string_chars=_env_int("TRUSTOPS_AGENT_MAX_STRING_CHARS", 1_000, minimum=128, maximum=16_000),
+            max_context_chars=_env_int("GRC_LAKE_AGENT_MAX_CONTEXT_CHARS", 12_000, minimum=1_000, maximum=200_000),
+            max_fact_items=_env_int("GRC_LAKE_AGENT_MAX_FACT_ITEMS", 20, minimum=1, maximum=250),
+            max_output_tokens=_env_int("GRC_LAKE_AGENT_MAX_OUTPUT_TOKENS", 600, minimum=64, maximum=8_000),
+            max_string_chars=_env_int("GRC_LAKE_AGENT_MAX_STRING_CHARS", 1_000, minimum=128, maximum=16_000),
         )
 
     def public_dict(self) -> dict[str, int | str]:

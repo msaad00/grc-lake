@@ -3,7 +3,7 @@
 Composable **skills** for coding agents, CI jobs, and MCP clients. Each skill maps
 intent → `/api/v1` routes → MCP tools → example payloads.
 
-TrustOps is **headless-first**: run these without the console. The human workbench
+GRC Lake is **headless-first**: run these without the console. The human workbench
 is a peer surface on the same contracts.
 
 Related: [AGENT_API.md](AGENT_API.md) · [openapi.v1.json](openapi.v1.json) ·
@@ -11,10 +11,10 @@ Related: [AGENT_API.md](AGENT_API.md) · [openapi.v1.json](openapi.v1.json) ·
 
 ## Portable agent skills
 
-The repository includes [TrustOps operator](../../agent-skills/trustops-operator/SKILL.md)
+The repository includes [GRC Lake operator](../../agent-skills/grc-lake-operator/SKILL.md)
 and six [analyst skills](../../agent-skills/FRAMEWORK_SKILLS.md). Copy the chosen
 skill folder into the skill search path supported by your agent client, and
-configure access to your TrustOps deployment separately. These Markdown skills
+configure access to your GRC Lake deployment separately. These Markdown skills
 provide instructions; they do not grant API permissions or install credentials.
 
 Skills installed with the Python distribution are data files under
@@ -22,11 +22,11 @@ Skills installed with the Python distribution are data files under
 `agent-skills/`. Copy a whole folder (including `references/`) into your client's
 skill directory. Skills do not install themselves into an agent's search path.
 
-MCP advertises `trustops://review-guide` and the `review_evidence` prompt.
+MCP advertises `grc-lake://review-guide` and the `review_evidence` prompt.
 Tools reject unknown top-level arguments and carry per-tool annotations:
 `readOnlyHint`, `destructiveHint` (can delete, revoke, overwrite, or close
 records), `idempotentHint`, and `openWorldHint`. Only tools that reach a system
-outside TrustOps are open-world: `probe_connector`, `discover_connector`,
+outside GRC Lake are open-world: `probe_connector`, `discover_connector`,
 `sync_connector`, `run_scheduler_tick`, `run_workflow` (outbound webhooks),
 `run_lake_eval` (warehouse sink), and `create_agent_run` (model provider).
 Annotations are client guidance, not access controls: restrict tool permissions
@@ -62,10 +62,10 @@ human approval for writes.
 
 ```bash
 # Machine-readable catalog (requires API key)
-curl -sS "$TRUSTOPS_API_URL/api/v1" -H "Authorization: Bearer $TRUSTOPS_API_KEY" | jq .
+curl -sS "$GRC_LAKE_API_URL/api/v1" -H "Authorization: Bearer $GRC_LAKE_API_KEY" | jq .
 
 # OpenAPI schema (no auth on local dev server)
-curl -sS "$TRUSTOPS_API_URL/openapi.json" | jq .info
+curl -sS "$GRC_LAKE_API_URL/openapi.json" | jq .info
 
 # MCP
 describe_api
@@ -108,29 +108,29 @@ must stop the run rather than substitute a different rule.
 ```bash
 export CORR="agent-connect-$(date +%s)"
 
-curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/connectors/github-security/probe" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+curl -sS -X POST "$GRC_LAKE_API_URL/api/v1/connectors/github-security/probe" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: $CORR" \
   -d '{
     "actor": "coding-agent",
-    "credentials": {"credential_ref": "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"},
+    "credentials": {"credential_ref": "GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"},
     "options": {"repo": "acme/platform"}
   }'
 
-curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/connectors/github-security/configure" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+curl -sS -X POST "$GRC_LAKE_API_URL/api/v1/connectors/github-security/configure" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: $CORR" \
-  -d '{"state":"enabled","actor":"coding-agent","credentials":{"credential_ref":"TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"},"options":{"repo":"acme/platform"}}'
+  -d '{"state":"enabled","actor":"coding-agent","credentials":{"credential_ref":"GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"},"options":{"repo":"acme/platform"}}'
 
-curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/connectors/github-security/sync" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+curl -sS -X POST "$GRC_LAKE_API_URL/api/v1/connectors/github-security/sync" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"actor":"coding-agent"}'
 
-curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/ingestion/eval" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+curl -sS -X POST "$GRC_LAKE_API_URL/api/v1/ingestion/eval" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"actor":"coding-agent"}'
 ```
@@ -160,11 +160,11 @@ violations — read-only; redact private evidence before including it in agent o
 **Example:**
 
 ```bash
-curl -sS "$TRUSTOPS_API_URL/api/v1/posture/current" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" | jq '.data.posture'
+curl -sS "$GRC_LAKE_API_URL/api/v1/posture/current" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" | jq '.data.posture'
 
-curl -sS "$TRUSTOPS_API_URL/api/v1/control-tests?result=fail&limit=10" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" | jq '.data[] | {control_id, result, owner}'
+curl -sS "$GRC_LAKE_API_URL/api/v1/control-tests?result=fail&limit=10" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" | jq '.data[] | {control_id, result, owner}'
 ```
 
 ---
@@ -198,8 +198,8 @@ by the identity broker; do not put tokens in prompts, command arguments, or repo
 **Example:**
 
 ```bash
-curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/snapshots" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+curl -sS -X POST "$GRC_LAKE_API_URL/api/v1/snapshots" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"reason":"quarterly_audit","actor":"grc-agent"}'
 ```
@@ -225,8 +225,8 @@ write proposals stay **approval-gated** until a human approves.
 **Example (rules-only posture review):**
 
 ```bash
-curl -sS -X POST "$TRUSTOPS_API_URL/api/v1/agent-runs" \
-  -H "Authorization: Bearer $TRUSTOPS_API_KEY" \
+curl -sS -X POST "$GRC_LAKE_API_URL/api/v1/agent-runs" \
+  -H "Authorization: Bearer $GRC_LAKE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "harness": "posture_review",
@@ -257,10 +257,10 @@ Console: `/console/agents/` — same routes with curl builder.
 **GitHub Action:**
 
 ```yaml
-- uses: msaad00/trustops-security-data-lake/.github/actions/posture-gate@v0.2.24
+- uses: msaad00/grc-lake/.github/actions/posture-gate@v0.2.24
   with:
-    trustops-url: ${{ secrets.TRUSTOPS_URL }}
-    api-token: ${{ secrets.TRUSTOPS_API_TOKEN }}
+    grc-lake-url: ${{ secrets.GRC_LAKE_URL }}
+    api-token: ${{ secrets.GRC_LAKE_API_TOKEN }}
     correlation-id: deploy-${{ github.run_id }}
     min-score: "70"
     max-failing-control-tests: "0"
@@ -269,7 +269,7 @@ Console: `/console/agents/` — same routes with curl builder.
 **Shell:**
 
 ```bash
-TRUSTOPS_URL="$TRUSTOPS_API_URL" \
+GRC_LAKE_URL="$GRC_LAKE_API_URL" \
 CORRELATION_ID="ci-$(date +%s)" \
 MAX_FAILING_CONTROL_TESTS=0 \
 ./tools/ci/posture-gate.sh
@@ -291,8 +291,8 @@ Playbook: [CI_POSTURE_GATE.md](../playbooks/CI_POSTURE_GATE.md)
 
 | Mode       | Env                                     | RBAC                                    |
 | ---------- | --------------------------------------- | --------------------------------------- |
-| Remote API | `TRUSTOPS_API_URL` + `TRUSTOPS_API_KEY` | Enforced — **preferred for agents**     |
-| Local lake | `TRUSTOPS_LAKE`                         | Filesystem trust boundary — dev/CI only |
+| Remote API | `GRC_LAKE_API_URL` + `GRC_LAKE_API_KEY` | Enforced — **preferred for agents**     |
+| Local lake | `GRC_LAKE_LAKE`                         | Filesystem trust boundary — dev/CI only |
 
 See [HEADLESS_GRC.md](../HEADLESS_GRC.md#mcp-local-trust-boundary).
 

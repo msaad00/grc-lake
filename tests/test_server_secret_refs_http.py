@@ -10,11 +10,11 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, in_server_mode  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _request, _seed_lake, _spin  # noqa: E402
+from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, in_server_mode
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _request, _seed_lake, _spin
 
 CONFIGURE = "/api/v1/connectors/jamf-devices/configure"
 LEGACY_CONFIGURE = "/api/connectors/jamf-devices/configure"
@@ -34,7 +34,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     return TestClient(create_app(tmp_path, require_auth=False))
 
 
-@pytest.mark.parametrize("ref", ["TRUSTOPS_COOKIE_SIGNING_KEY", "DATABASE_URL", "STRIPE_SECRET_KEY", "OKTA_API_TOKEN"])
+@pytest.mark.parametrize("ref", ["GRC_LAKE_COOKIE_SIGNING_KEY", "DATABASE_URL", "STRIPE_SECRET_KEY", "OKTA_API_TOKEN"])
 def test_server_configure_refuses_refs_outside_policy(client: TestClient, ref: str) -> None:
     resp = client.post(CONFIGURE, json=_payload(ref))
     assert resp.status_code == HTTPStatus.BAD_REQUEST
@@ -44,13 +44,13 @@ def test_server_configure_refuses_refs_outside_policy(client: TestClient, ref: s
 
 
 def test_server_legacy_configure_refuses_server_secret_ref(client: TestClient) -> None:
-    resp = client.post(LEGACY_CONFIGURE, json=_payload("TRUSTOPS_COOKIE_SIGNING_KEY"))
+    resp = client.post(LEGACY_CONFIGURE, json=_payload("GRC_LAKE_COOKIE_SIGNING_KEY"))
     assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_server_configure_accepts_the_tenant_prefix(client: TestClient) -> None:
     # Insecure (no-auth) mode serves the synthetic "insecure" tenant.
-    resp = client.post(CONFIGURE, json=_payload("TRUSTOPS_TENANT_INSECURE__JAMF_SECRET"))
+    resp = client.post(CONFIGURE, json=_payload("GRC_LAKE_TENANT_INSECURE__JAMF_SECRET"))
     assert resp.status_code == HTTPStatus.CREATED, resp.json()
 
 
@@ -64,7 +64,7 @@ def test_local_stdlib_server_keeps_accepting_any_ref(tmp_path: Path, monkeypatch
     _seed_lake(tmp_path)
     server = _spin(tmp_path)
     try:
-        status, body = _request(server, "POST", CONFIGURE, _payload("TRUSTOPS_COOKIE_SIGNING_KEY"))
+        status, body = _request(server, "POST", CONFIGURE, _payload("GRC_LAKE_COOKIE_SIGNING_KEY"))
     finally:
         server.shutdown()
     assert status == HTTPStatus.CREATED, body

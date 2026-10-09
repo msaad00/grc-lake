@@ -1,6 +1,6 @@
 # GRC Automation
 
-TrustOps runs the compliance loop on evidence you hold: it connects read-only
+GRC Lake runs the compliance loop on evidence you hold: it connects read-only
 sources, evaluates controls on a schedule, opens remediation work, and freezes
 proof for auditors.
 
@@ -33,7 +33,7 @@ no special surfaces.
 
 ## Headless agent verbs
 
-Agents with `TRUSTOPS_API_URL` + `TRUSTOPS_API_KEY` can:
+Agents with `GRC_LAKE_API_URL` + `GRC_LAKE_API_KEY` can:
 
 1. `get_sprs_score` — CMMC Level 2 SPRS from live control tests
 2. `sync_poam_from_posture` — auto-create POA&M rows from failing practices

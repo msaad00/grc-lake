@@ -5,18 +5,19 @@ httpOnly cookie. Only a keyed SHA-256 lookup digest is persisted, so a database
 leak never exposes a live session; the 256-bit random token makes a slow KDF
 unnecessary. Rows minted before that change hold a PBKDF2 digest and are
 upgraded on first use. Cookie values are
-always signed with ``TRUSTOPS_COOKIE_SIGNING_KEY`` when authentication is enabled.
+always signed with ``GRC_LAKE_COOKIE_SIGNING_KEY`` when authentication is enabled.
 """
 
 from __future__ import annotations
 
 import hashlib
 import hmac
-import os
 import re
 import secrets
 
 from itsdangerous import BadData, URLSafeTimedSerializer
+
+from security_lakehouse.runtime_environment import runtime_env
 
 SESSION_COOKIE = "trustops_session"
 SESSION_TOKEN_PREFIX = "tops_sess_"
@@ -57,14 +58,14 @@ def legacy_hash_session_token(token: str) -> str:
 
 def cookie_signing_key() -> str:
     """Return the configured cookie signing secret (empty when unset)."""
-    return os.environ.get("TRUSTOPS_COOKIE_SIGNING_KEY", "").strip()
+    return runtime_env().get("GRC_LAKE_COOKIE_SIGNING_KEY", "").strip()
 
 
 def ensure_cookie_signing_configured() -> None:
     """Fail fast when auth is enabled but the signing key is missing."""
     if not cookie_signing_key():
         raise RuntimeError(
-            "TRUSTOPS_COOKIE_SIGNING_KEY is required when authentication is enabled "
+            "GRC_LAKE_COOKIE_SIGNING_KEY is required when authentication is enabled "
             "(generate with: openssl rand -hex 32)"
         )
 
@@ -72,7 +73,7 @@ def ensure_cookie_signing_configured() -> None:
 def _serializer() -> URLSafeTimedSerializer:
     key = cookie_signing_key()
     if not key:
-        raise RuntimeError("TRUSTOPS_COOKIE_SIGNING_KEY is required for signed session cookies")
+        raise RuntimeError("GRC_LAKE_COOKIE_SIGNING_KEY is required for signed session cookies")
     return URLSafeTimedSerializer(key, salt=_COOKIE_SIGNING_SALT)
 
 

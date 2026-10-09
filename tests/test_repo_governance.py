@@ -122,7 +122,7 @@ def test_governance_sync_redacts_secret_like_fields(tmp_path: Path) -> None:
 
 
 def test_governance_sync_requires_fixture_or_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN", raising=False)
+    monkeypatch.delenv("GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN", raising=False)
     with pytest.raises(ValueError, match="requires --fixture-dir"):
         sync_repo_governance("acme/private-agent-api")
 

@@ -1,6 +1,6 @@
 # Server Auth
 
-TrustOps server mode has one identity model:
+GRC Lake server mode has one identity model:
 
 ```text
 API key, OIDC login, or SAML login
@@ -12,13 +12,13 @@ API key, OIDC login, or SAML login
 ```
 
 Local mode stays zero-dependency. These settings apply only when running the
-FastAPI server surface from `trustops-security-data-lake[server]`.
+FastAPI server surface from `grc-lake[server]`.
 
 Browser session cookies are **always signed**. Set a dedicated secret before
 starting the server with authentication enabled:
 
 ```bash
-export TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)"
+export GRC_LAKE_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)"
 ```
 
 Without this key, `create_app()` fails fast when auth is required (CI, Helm, and
@@ -32,7 +32,7 @@ log token bodies, authorization headers, refresh tokens, private keys, or secret
 in evidence, screenshots, source control, or generated reports. JWTs remain
 credentials and require issuer, audience, expiry, and authorization checks.
 
-The current implementation has exceptions: TrustOps API keys can be issued without
+The current implementation has exceptions: GRC Lake API keys can be issued without
 an expiry, browser sessions need protected signing material, and the Snowflake
 sink currently uses a private-key reference. These are not a fully federated,
 credential-free deployment. Use explicit API-key expiry for trials and keep any
@@ -49,9 +49,9 @@ derived lookup digest. Raw key material is returned once by the authenticated
 API creation endpoint.
 
 ```bash
-security-lakehouse platform seed-dev --lake build/lakehouse
-security-lakehouse auth issue-key --lake build/lakehouse --tenant-slug dev --email admin@localhost --name local
-security-lakehouse auth list-keys --lake build/lakehouse --tenant-slug acme
+grc-lake platform seed-dev --lake build/lakehouse
+grc-lake auth issue-key --lake build/lakehouse --tenant-slug dev --email admin@localhost --name local
+grc-lake auth list-keys --lake build/lakehouse --tenant-slug acme
 ```
 
 The console **Access** page (`/console/auth/`) lets admins create, list, and
@@ -67,20 +67,20 @@ OIDC is the preferred human-login path when the company identity provider
 supports it.
 
 ```bash
-export TRUSTOPS_OIDC_ISSUER="https://idp.example.com"
-export TRUSTOPS_OIDC_CLIENT_ID="trustops"
-export TRUSTOPS_OIDC_CLIENT_SECRET="..."
-export TRUSTOPS_OIDC_TENANT_SLUG="acme"
-export TRUSTOPS_OIDC_AUTO_PROVISION="false"
+export GRC_LAKE_OIDC_ISSUER="https://idp.example.com"
+export GRC_LAKE_OIDC_CLIENT_ID="trustops"
+export GRC_LAKE_OIDC_CLIENT_SECRET="..."
+export GRC_LAKE_OIDC_TENANT_SLUG="acme"
+export GRC_LAKE_OIDC_AUTO_PROVISION="false"
 # Required when auto-provisioning is on: only these email domains may join.
-export TRUSTOPS_OIDC_ALLOWED_DOMAINS="acme.com"
-export TRUSTOPS_SESSION_SECRET="replace-with-32-byte-random-secret"
-export TRUSTOPS_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)"
+export GRC_LAKE_OIDC_ALLOWED_DOMAINS="acme.com"
+export GRC_LAKE_SESSION_SECRET="replace-with-32-byte-random-secret"
+export GRC_LAKE_COOKIE_SIGNING_KEY="$(openssl rand -hex 32)"
 ```
 
-With `TRUSTOPS_OIDC_AUTO_PROVISION=true`, a first-time SSO user is created only
+With `GRC_LAKE_OIDC_AUTO_PROVISION=true`, a first-time SSO user is created only
 when their verified email's domain exactly matches an entry in the
-comma-separated `TRUSTOPS_OIDC_ALLOWED_DOMAINS` (subdomains are not implied).
+comma-separated `GRC_LAKE_OIDC_ALLOWED_DOMAINS` (subdomains are not implied).
 Auto-provisioning fails closed: with the list unset, no new user is provisioned
 and the server logs an error at startup. Users that already exist sign in
 regardless of the list.
@@ -116,15 +116,15 @@ Last active admin cannot be demoted or deactivated.
 
 ## IdP group → role mapping
 
-Map identity-provider groups to TrustOps roles on SSO login:
+Map identity-provider groups to GRC Lake roles on SSO login:
 
 ```bash
-export TRUSTOPS_OIDC_ROLE_MAP='{"TrustOps-Admins":"admin","TrustOps-Auditors":"auditor"}'
-export TRUSTOPS_OIDC_ROLE_CLAIM="groups"
-export TRUSTOPS_IDP_SYNC_ROLE_ON_LOGIN="true"
+export GRC_LAKE_OIDC_ROLE_MAP='{"GRC Lake-Admins":"admin","GRC Lake-Auditors":"auditor"}'
+export GRC_LAKE_OIDC_ROLE_CLAIM="groups"
+export GRC_LAKE_IDP_SYNC_ROLE_ON_LOGIN="true"
 ```
 
-SAML uses `TRUSTOPS_SAML_ROLE_MAP` and `TRUSTOPS_SAML_ROLE_ATTRIBUTE` (default
+SAML uses `GRC_LAKE_SAML_ROLE_MAP` and `GRC_LAKE_SAML_ROLE_ATTRIBUTE` (default
 `groups`). When sync is enabled, each login reapplies the highest matched role.
 
 ## SCIM (commercial hosted)
@@ -132,10 +132,10 @@ SAML uses `TRUSTOPS_SAML_ROLE_MAP` and `TRUSTOPS_SAML_ROLE_ATTRIBUTE` (default
 Enable with commercial hosted mode plus:
 
 ```bash
-export TRUSTOPS_COMMERCIAL_HOSTED="1"
-export TRUSTOPS_SCIM_ENABLED="1"
-export TRUSTOPS_SCIM_BEARER_TOKEN="replace-with-long-random-secret"
-export TRUSTOPS_SCIM_TENANT_SLUG="acme"
+export GRC_LAKE_COMMERCIAL_HOSTED="1"
+export GRC_LAKE_SCIM_ENABLED="1"
+export GRC_LAKE_SCIM_BEARER_TOKEN="replace-with-long-random-secret"
+export GRC_LAKE_SCIM_TENANT_SLUG="acme"
 ```
 
 | Endpoint                           | Purpose                   |
@@ -147,7 +147,7 @@ export TRUSTOPS_SCIM_TENANT_SLUG="acme"
 SCIM requests authenticate with the SCIM bearer token, not a user API key.
 
 <p align="center">
-  <img src="images/trustops-identity-boundary.svg" alt="TrustOps identity boundary: OIDC, SAML, and API keys to tenant RBAC and audit" width="100%">
+  <img src="images/grc-lake-identity-boundary.svg" alt="GRC Lake identity boundary: OIDC, SAML, and API keys to tenant RBAC and audit" width="100%">
 </p>
 
 Mermaid diagrams: [auth-identity.md](diagrams/auth-identity.md)
@@ -155,17 +155,17 @@ Mermaid diagrams: [auth-identity.md](diagrams/auth-identity.md)
 ## SAML
 
 SAML is the enterprise fallback for identity providers that do not expose OIDC
-to the TrustOps deployment. It resolves into the same browser session and RBAC
+to the GRC Lake deployment. It resolves into the same browser session and RBAC
 context as OIDC.
 
 ```bash
-export TRUSTOPS_SAML_SP_ENTITY_ID="https://trustops.example.com/api/v1/auth/saml/metadata"
-export TRUSTOPS_SAML_ACS_URL="https://trustops.example.com/api/v1/auth/saml/acs"
-export TRUSTOPS_SAML_IDP_ENTITY_ID="https://idp.example.com/saml"
-export TRUSTOPS_SAML_IDP_SSO_URL="https://idp.example.com/saml/sso"
-export TRUSTOPS_SAML_IDP_X509_CERT="-----BEGIN CERTIFICATE-----..."
-export TRUSTOPS_SAML_TENANT_SLUG="acme"
-export TRUSTOPS_SAML_AUTO_PROVISION="false"
+export GRC_LAKE_SAML_SP_ENTITY_ID="https://trustops.example.com/api/v1/auth/saml/metadata"
+export GRC_LAKE_SAML_ACS_URL="https://trustops.example.com/api/v1/auth/saml/acs"
+export GRC_LAKE_SAML_IDP_ENTITY_ID="https://idp.example.com/saml"
+export GRC_LAKE_SAML_IDP_SSO_URL="https://idp.example.com/saml/sso"
+export GRC_LAKE_SAML_IDP_X509_CERT="-----BEGIN CERTIFICATE-----..."
+export GRC_LAKE_SAML_TENANT_SLUG="acme"
+export GRC_LAKE_SAML_AUTO_PROVISION="false"
 ```
 
 Endpoints:
@@ -184,10 +184,10 @@ Login is SP-initiated by default. `/login` stores the AuthnRequest ID in a
 signed, ten-minute `SameSite=None; Secure` cookie, so the deployment must be
 served over HTTPS (or `localhost`). The ACS accepts only a response whose
 `InResponseTo` matches that ID. IdP-initiated (unsolicited) responses are
-rejected unless `TRUSTOPS_SAML_ALLOW_IDP_INITIATED=true`. Consumed assertion
+rejected unless `GRC_LAKE_SAML_ALLOW_IDP_INITIATED=true`. Consumed assertion
 IDs are recorded in the application database (`saml_assertion_replays`, unique
 on issuer + assertion ID) until their `NotOnOrAfter`, and a replay is rejected.
-Replicas that share one database (`TRUSTOPS_DATABASE_URL`, as every
+Replicas that share one database (`GRC_LAKE_DATABASE_URL`, as every
 multi-replica deployment must) share that table, so a replay sent to a
 different replica is caught too; when two replicas race on one assertion,
 exactly one insert succeeds. Expired rows are swept every few minutes, and a database error
@@ -216,7 +216,7 @@ method, decision, status, and timestamp.
 
 ## Data sensitivity defaults
 
-TrustOps treats visibility as a server-side policy, not a UI convention.
+GRC Lake treats visibility as a server-side policy, not a UI convention.
 Supported labels are `public`, `internal`, `confidential`, `restricted`, and
 `secret`.
 
@@ -284,13 +284,13 @@ a `Retry-After` header; health probes (`/api/healthz`, `/api/v1/healthz`) are
 exempt so a limiter trip never hides liveness from an orchestrator.
 
 ```bash
-export TRUSTOPS_API_RATE_LIMIT_RPS="50"    # steady tokens/second per credential
-export TRUSTOPS_API_RATE_LIMIT_BURST="100" # bucket capacity (short-spike headroom)
+export GRC_LAKE_API_RATE_LIMIT_RPS="50"    # steady tokens/second per credential
+export GRC_LAKE_API_RATE_LIMIT_BURST="100" # bucket capacity (short-spike headroom)
 ```
 
 Defaults are `50` rps / `100` burst — generous enough that interactive and agent
 traffic never trips them, low enough to blunt a runaway loop. Set
-`TRUSTOPS_API_RATE_LIMIT_RPS=0` to disable. The limiter is single-node and
+`GRC_LAKE_API_RATE_LIMIT_RPS=0` to disable. The limiter is single-node and
 in-process; a multi-replica deployment that needs a shared budget should front
 the API with a gateway limiter or a shared store (Redis).
 
@@ -320,17 +320,17 @@ Local and CLI runs act for the operator and are unchanged.
 `client_secret_ref`, `credential_ref`, `kubeconfig_ref`, `options.token_env`)
 names an environment variable. In server mode a name resolves only when it is:
 
-- under the tenant's own prefix `TRUSTOPS_TENANT_<TENANT_ID>__`: the tenant id
+- under the tenant's own prefix `GRC_LAKE_TENANT_<TENANT_ID>__`: the tenant id
   upper-cased, `-` replaced by `_`, then a double underscore (for tenant
-  `3f2b8c1e-9a4d-...`, `TRUSTOPS_TENANT_3F2B8C1E_9A4D_...__JAMF_SECRET`). Only
+  `3f2b8c1e-9a4d-...`, `GRC_LAKE_TENANT_3F2B8C1E_9A4D_...__JAMF_SECRET`). Only
   lowercase alphanumeric ids with single inner hyphens (UUIDs, slugs) get a
   prefix, so no two tenants share one and no tenant's prefix starts another's;
   a tenant with any other id resolves only allowlisted names, or
-- listed in `TRUSTOPS_CONNECTOR_SECRET_REFS`, a comma-separated list of exact
+- listed in `GRC_LAKE_CONNECTOR_SECRET_REFS`, a comma-separated list of exact
   names or `PREFIX*` patterns set by the operator.
 
 Server secrets are always refused, whatever the allowlist says: every
-`TRUSTOPS_*` name other than the tenant's own prefix, and names starting with
+`GRC_LAKE_*` name other than the tenant's own prefix, and names starting with
 `AWS_`, `GOOGLE_`, `GCLOUD_`, `CLOUDSDK_`, `AZURE_`, `ARM_`, `STRIPE_`,
 `DATABASE_`, `POSTGRES`, `PG`, `REDIS_`, `SMTP_`, `KUBERNETES_`, `KUBECONFIG`,
 `VAULT_`, `GITHUB_`, and similar (the full list is `DENIED_PREFIXES` in
@@ -348,10 +348,10 @@ hosted tenants must set an explicit ref.
   `AWS_ROLE_ARN` and `AWS_EXTERNAL_ID` overrides are ignored for tenants.
 - GCP readers (`gcp-posture`, `bigquery-evidence-lake`) require
   `impersonate_service_account`: a service account in the customer's project
-  that grants the TrustOps runtime identity `roles/iam.serviceAccountTokenCreator`.
+  that grants the GRC Lake runtime identity `roles/iam.serviceAccountTokenCreator`.
   The server's Application Default Credentials only mint that impersonated
   token. GCP has no external-id equivalent, so run each hosted deployment's
-  runtime under a service account that customers grant only to TrustOps.
+  runtime under a service account that customers grant only to GRC Lake.
 - BigQuery refuses a fully qualified source table in another project than the
   configured `project_id` unless `options.allow_cross_project` is true.
 - Kubernetes requires `kubeconfig_ref` naming the tenant's kubeconfig; the
@@ -363,7 +363,7 @@ hosted tenants must set an explicit ref.
   mounted via `<NAME>_FILE`), or `federated_token_file_ref` (a path to a
   workload identity token that the app's federated credential trusts). Each
   reference follows the secret-reference rule above, so it names a
-  `TRUSTOPS_TENANT_<TENANT_ID>__` variable the operator provisions for that
+  `GRC_LAKE_TENANT_<TENANT_ID>__` variable the operator provisions for that
   tenant. `DefaultAzureCredential` and the `az` CLI login are refused, and the
   server-wide `AZURE_SUBSCRIPTION_ID` and `AZURE_TENANT_ID` overrides are
   ignored for tenants. Grant the app `Reader` on the subscription
@@ -381,28 +381,28 @@ tenant's prefix in placeholders and hints. `link/complete` takes a
 validated with the readers' rules before anything is staged. References are
 env-var names only; a value that is not a variable name is refused, so a
 pasted secret is never stored. In server mode the link offers no admin-consent
-URL for an operator-owned multi-tenant app (`TRUSTOPS_AZURE_LINK_CLIENT_ID`),
+URL for an operator-owned multi-tenant app (`GRC_LAKE_AZURE_LINK_CLIENT_ID`),
 because tenants never collect through it. The consent callback is
 unauthenticated, so the Entra tenant it reports is kept on the link session for
 display only and is never written into a connector config.
 
 **Workflow secrets.** A workflow action's `{{secret.NAME}}` token resolves
-locally from `TRUSTOPS_SECRET_<NAME>`. In server mode it resolves from the
-calling tenant's `TRUSTOPS_TENANT_<TENANT_ID>__SECRET_<NAME>` (for tenant
-`acme`, `{{secret.SLACK_WEBHOOK}}` reads `TRUSTOPS_TENANT_ACME__SECRET_SLACK_WEBHOOK`).
+locally from `GRC_LAKE_SECRET_<NAME>`. In server mode it resolves from the
+calling tenant's `GRC_LAKE_TENANT_<TENANT_ID>__SECRET_<NAME>` (for tenant
+`acme`, `{{secret.SLACK_WEBHOOK}}` reads `GRC_LAKE_TENANT_ACME__SECRET_SLACK_WEBHOOK`).
 The token names only the suffix, so a tenant can never reach another tenant's
-variable. The shared `TRUSTOPS_SECRET_<NAME>` is used in server mode only for
-names the operator lists in `TRUSTOPS_WORKFLOW_SHARED_SECRETS`
+variable. The shared `GRC_LAKE_SECRET_<NAME>` is used in server mode only for
+names the operator lists in `GRC_LAKE_WORKFLOW_SHARED_SECRETS`
 (comma-separated, for example `STATUSPAGE_TOKEN`), and only when the tenant has
 no variable of its own with that name. Any other name fails the action, and
 nothing is sent.
 
-**Local lake paths.** `TRUSTOPS_LAKE_LOCAL_ROOT` is shared by the whole server,
+**Local lake paths.** `GRC_LAKE_LAKE_LOCAL_ROOT` is shared by the whole server,
 so a hosted tenant may read local Parquet only under
-`$TRUSTOPS_LAKE_LOCAL_ROOT/<tenant_id>`.
+`$GRC_LAKE_LAKE_LOCAL_ROOT/<tenant_id>`.
 
 A request is in server mode when the FastAPI server (`serve --server`) handles it. A
-process with `TRUSTOPS_COMMERCIAL_HOSTED=1` applies the same policy to runs
+process with `GRC_LAKE_COMMERCIAL_HOSTED=1` applies the same policy to runs
 without a request, such as a scheduler pass over `<root>/tenants/<tenant_id>`,
 and takes the tenant from that lake path.
 

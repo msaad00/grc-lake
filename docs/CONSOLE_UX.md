@@ -1,6 +1,6 @@
 # Console UX — operator and contributor guide
 
-TrustOps ships a Next.js console at `/console/*` backed by `/api/v1/*` and legacy lake APIs. This doc maps routes to hooks and notes what is fully shipped vs API-only.
+GRC Lake ships a Next.js console at `/console/*` backed by `/api/v1/*` and legacy lake APIs. This doc maps routes to hooks and notes what is fully shipped vs API-only.
 
 ## Shell patterns
 

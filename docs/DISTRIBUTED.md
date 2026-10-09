@@ -1,0 +1,222 @@
+# Distributed PostgreSQL and S3 mode
+
+GRC Lake can run multiple API replicas and workers with independent local disks.
+PostgreSQL coordinates ownership, application records, job claims and publication;
+S3-compatible storage holds immutable evidence objects. This mode is part of OSS
+and works for self-hosted or operator-hosted installations. Hosted billing and
+signup features do not enable distribution by themselves.
+
+## Deployment modes
+
+| Mode                      | Durable state                        | Application topology                                            |
+| ------------------------- | ------------------------------------ | --------------------------------------------------------------- |
+| Local / small self-hosted | Local lake plus SQLite or PostgreSQL | One writable application replica; `Recreate` rollout            |
+| Distributed API           | PostgreSQL primary endpoint plus S3  | Multiple API replicas with private scratch volumes              |
+| Distributed worker        | Same PostgreSQL/S3 cluster           | Multiple worker processes, optionally assigned virtual shards   |
+| Distributed reader        | Same PostgreSQL/S3 cluster           | Read traffic on a separate Service; tenant mutations return 405 |
+
+A reader still writes authentication and request-audit records to PostgreSQL.
+It is not a connection to a read-only PostgreSQL standby. Authentication callbacks
+remain available. Local CLI commands do not implicitly publish to a distributed
+cluster; use `cluster` commands or the authenticated API. MCP uses remote API mode.
+
+## Shards, partitions and replicas
+
+- **Virtual shards:** tenant IDs hash into 64 stable buckets by default, configurable
+  from 1 to 4096 at cluster creation. PostgreSQL registers the shard count and object
+  location; changing them on an existing cluster fails closed. Replica count does
+  not change a tenant's shard or object keys. Shards route work, not PostgreSQL rows
+  across multiple database servers. A tenant remains one consistency boundary.
+- **Worker placement:** workers may claim all shards or an explicit comma-separated
+  list using `cluster worker --shards 0,1,2`. Overlapping assignments are safe;
+  database claims admit at most one running job per tenant. Reassign shard ranges
+  by changing worker configuration. There is no automatic shard placement service.
+- **Evidence partitions:** each published assessment also produces typed Parquet
+  partitions by owning tenant, source and UTC event date. Original source-account
+  IDs remain in the evidence rows. Paths encode the source with a digest; the
+  manifest retains its original name, row count, size and SHA-256. Conversion uses
+  bounded row batches. `cluster partitions` prunes source/date partitions before
+  downloading objects. Existing JSONL and assessment APIs retain their contracts.
+- **Application replicas:** API and worker pods may run on different machines and
+  write different tenants concurrently. Same-tenant lake publication uses an
+  expiring lease and a monotonically increasing fence; conflicting immediate
+  mutations return 409. Workers wait up to 95 seconds for a busy tenant, covering the 90-second
+  lease of a failed owner. A single tenant's
+  evaluation is not split across workers.
+- **Storage replicas:** PostgreSQL normally has one primary and operator-managed
+  standbys; use its primary service endpoint. Object-store replication or erasure
+  coding belongs to the S3 service. GRC Lake does not configure either system's
+  failover, quorum or durability policy.
+- **RAID:** configure it at the host/NAS/storage layer if appropriate. It neither
+  coordinates application writers nor substitutes for backups.
+
+## Publication and failure behavior
+
+A worker restores the last committed tenant manifest into private scratch space.
+It writes locally, uploads new content-addressed objects with conditional S3
+writes, then atomically commits the new manifest pointer and domain SQL changes.
+Unchanged verified objects reuse their existing references. Readers discover the
+head through PostgreSQL, never an S3 listing or a pod-local pointer.
+
+PostgreSQL checks lease expiry using its own clock. An expired or superseded fence
+cannot publish. Upload failures and rejected HTTP mutations roll back domain SQL
+and leave the old publication visible. Denied requests remain in the shared audit
+sink. Scheduler attempt cadence is committed independently before execution, so
+an abandoned publication does not erase an attempted workflow or connector run.
+An interrupted job is not automatically replayed: external effects may already
+have occurred. Review domain history before submitting a new idempotency key.
+
+This is atomic publication of database state and object references, not a
+transaction spanning external email, webhooks or warehouse providers. A network
+failure after commit can make the response uncertain; retain the idempotency key
+for supported asynchronous operations and inspect their status before retrying.
+
+## Configure a cluster
+
+Install `grc-lake[server,cloud,parquet]` or build the repository's Docker image.
+Provision a dedicated PostgreSQL application database and an S3 bucket. One
+database belongs to one cluster; sharing it between distinct cluster IDs is rejected. All replicas must share the same cluster
+identity, database, bucket, endpoint, region, signing keys and connector secrets.
+Credentials use the normal AWS SDK credential chain, including workload identity.
+
+```bash
+export GRC_LAKE_DEPLOYMENT_MODE=distributed
+export GRC_LAKE_CLUSTER_ID=grc-primary
+export GRC_LAKE_DATABASE_URL='postgresql+psycopg://USER:PASSWORD@PRIMARY/grc_lake'
+export GRC_LAKE_OBJECT_BUCKET=grc-lake-evidence
+export GRC_LAKE_OBJECT_REGION=us-east-1
+# For a self-hosted S3 service:
+# export GRC_LAKE_OBJECT_ENDPOINT=https://objects.example.com
+export GRC_LAKE_COOKIE_SIGNING_KEY='REPLACE_WITH_A_SHARED_RANDOM_SECRET'
+
+grc-lake cluster init --lake /private/scratch
+grc-lake serve --server --lake /private/scratch --host 0.0.0.0 --port 8787
+# On worker nodes, with the same shared configuration:
+grc-lake cluster worker --lake /private/scratch --concurrency 2 --shards all
+```
+
+`cluster init` migrates PostgreSQL and checks the bucket's conditional-write
+behavior. Startup migrations are serialized by a PostgreSQL transaction lock.
+The preflight needs Get/Put/Delete on `clusters/<id>/preflight/`; runtime data needs
+Get/Put and multipart-upload permissions under `clusters/<id>/shard=*/`.
+S3-compatible services must implement `If-None-Match: *` for PutObject and
+CompleteMultipartUpload. Validate the specific provider before production use.
+HTTPS is required for configured endpoints; only local testing should set
+`GRC_LAKE_OBJECT_ALLOW_HTTP=1`.
+
+Create users and tenant records using the existing authenticated onboarding or
+`grc-lake db` commands. To migrate an existing tenant, first quiesce its old writer
+and retain a backup of its application database and lake. The source must have a
+verified sealed generation matching the existing target tenant ID:
+
+```bash
+grc-lake cluster import --lake /private/scratch --tenant-id TENANT_ID --source /old/tenant-lake
+grc-lake cluster status --lake /private/scratch --tenant-id TENANT_ID
+```
+
+Import refuses a nonempty target publication and server/multi-tenant roots. It
+preserves the source. Application identity records are not copied from SQLite by
+this command; migrate those to PostgreSQL separately before switching traffic.
+
+## Kubernetes profiles
+
+The chart defaults to local mode. The distributed profiles require customer
+Secrets: `grc-lake-database` containing `database-url`, and `grc-lake-signing`
+containing `cookie-key`. Override the example cluster ID, bucket and endpoint.
+Configure workload identity or supply S3 credential Secret references in `env`.
+
+```bash
+helm upgrade --install grc-api deploy/helm/grc-lake \
+  -f deploy/examples/distributed/api-values.yaml
+helm upgrade --install grc-workers deploy/helm/grc-lake \
+  -f deploy/examples/distributed/api-values.yaml \
+  -f deploy/examples/distributed/worker-values.yaml
+helm upgrade --install grc-readers deploy/helm/grc-lake \
+  -f deploy/examples/distributed/api-values.yaml \
+  -f deploy/examples/distributed/reader-values.yaml
+```
+
+The profiles render two replicas, rolling updates, and bounded private `emptyDir`
+volumes. No shared lake PVC is used. Worker deployments have no HTTP Service or
+HTTP probes. Route browser/API mutations to the API Service; use the reader
+Service for read traffic. Enable `scheduler.enabled` on one release; overlapping
+scheduler pods are fenced per tenant. Deploy additional scheduler processes with
+`grc-lake scheduler tick --all-tenants` when required. Tenant failures are isolated.
+Readiness checks PostgreSQL, writable scratch and S3 bucket reachability. These
+checks do not prove provider replication, multipart semantics or failover readiness.
+
+## Query a partition subset
+
+```bash
+grc-lake cluster partitions --lake /private/scratch --tenant-id TENANT_ID \
+  --source cloud-cspm --start-date 2026-05-01 --end-date 2026-05-31 \
+  --out /exports/cspm-may
+# For a local verified lake:
+grc-lake pipeline export-parquet --lake /local/lake --tenant-id TENANT_ID \
+  --partitioned --out /exports/all-evidence
+```
+
+Date bounds are inclusive UTC dates. Each downloaded file is checked against the
+committed manifest; unavailable or corrupt objects fail closed. An empty match
+produces a manifest with zero selected rows. Use the manifest's explicit file list
+with an analytical engine; its source field is the original source name, whereas
+the directory's `source_hash` component is a digest. Distinct column names prevent
+Hive partition discovery from replacing the original evidence `source` values.
+
+## Performance and capacity boundaries
+
+The example resource requests are starting configurations, not certified capacity.
+Measure cold reads, warm reads, concurrent writes, queue wait and failover against
+your provider and tenant data before selecting production limits.
+
+- Default runtime workspace limit: 20 GiB and 100,000 filesystem entries per tenant.
+  The Helm profiles lower the byte limit to 512 MiB. Exceeding a limit fails before
+  publication; it does not truncate evidence. Old retained generations count too.
+- Each replica admits four workspace requests by default, configurable with
+  `GRC_LAKE_WORKSPACE_CONCURRENCY` (1–64). Excess requests receive 503/Retry-After.
+  Queue admission, polling and cancellation avoid downloading the tenant lake.
+- Compatibility API reads materialize a tenant revision and make a private local
+  copy. One full revision is cached per replica. This prevents read-side projections
+  from poisoning shared data, but cold reads and large tenants are expensive.
+  Partition downloads bypass full-lake hydration and prune objects by source/date.
+- Evaluation still materializes rows in memory. More tenant shards increase
+  concurrency across tenants; they do not make one evaluation distributed or
+  bounded in memory. Worker concurrency is 1–16; isolated jobs have deadlines.
+- Reserve scratch for the cache, active readers/writers, temporary Parquet export
+  and free-space headroom. Keep the filesystem's capacity limit above that working
+  set and monitor disk pressure. Node-local scratch is disposable.
+- Request-rate limits are per replica unless the existing Redis limiter is
+  configured. PostgreSQL/S3 alone do not turn them into cluster-wide quotas.
+- Historical manifests and immutable objects are retained. Do not apply bucket
+  lifecycle deletion to referenced objects. Automatic object garbage collection
+  and automatic PostgreSQL table partition management are not implemented.
+
+## Recovery and validation
+
+Back up PostgreSQL with PITR and retain the referenced object versions together.
+Losing only local scratch is recoverable by rehydration. Losing the authoritative
+catalog cannot be repaired by guessing object order. Test restore with the same
+cluster identity, storage location and signing keys before switching traffic.
+Never let two independent PostgreSQL primaries govern the same cluster after a
+split-brain event. Operator-managed fencing and failover are required.
+
+The regression suite covers independent API roots, concurrent publication,
+expired fences, database connection loss, failed SQL/file mutations, shared audit,
+shard-restricted jobs, scheduler-attempt durability, reader isolation, concurrent
+startup migrations, partition pruning and spawned-worker publication. Real
+PostgreSQL and an S3 HTTP emulator run in the PostgreSQL CI gate. Emulator success
+is not qualification of AWS S3, MinIO, Ceph or another production provider.
+
+For a bounded, reproducible local measurement (requires a disposable PostgreSQL
+URL in `TEST_POSTGRES_URL` with permission to create test databases):
+
+```bash
+uv run --all-extras --with 'moto[server,s3]==5.2.3' \
+  python tools/benchmark_distributed.py --tenants 4 --rows 1000 \
+  --out /tmp/grc-distributed-benchmark.json
+```
+
+This creates and removes its own test database and S3 emulator. The report
+separates publication, cold/warm materialization and selected partition download,
+and records process peak RSS and workload bounds. It does not measure networked
+storage replicas or database failover.

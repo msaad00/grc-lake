@@ -129,7 +129,7 @@ export function DemoShareKit({ kit }: { kit: DemoKit }) {
           </CardTitle>
           <CardDescription>
             Copy invite, sign-in, and connect URLs for evaluators. Set{" "}
-            <code className="text-ink">TRUSTOPS_PUBLIC_URL</code> on the server
+            <code className="text-ink">GRC_LAKE_PUBLIC_URL</code> on the server
             to generate absolute links.
           </CardDescription>
         </CardHeader>

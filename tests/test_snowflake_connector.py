@@ -96,7 +96,7 @@ def test_snowflake_sync_writes_raw_evidence_and_materializes(tmp_path: Path) -> 
 def test_snowflake_live_select_normalizes_driver_values() -> None:
     client = object.__new__(SnowflakeClient)
     client.query_params = {"account": "acme"}
-    client.views = {"audit_events": "TRUSTOPS_AUDIT_EVENTS"}
+    client.views = {"audit_events": "GRC_LAKE_AUDIT_EVENTS"}
     client._connector = _FakeSnowflakeConnector(
         rows=[
             (
@@ -125,15 +125,15 @@ def test_snowflake_live_discovery_recommends_visible_scope() -> None:
     client = object.__new__(SnowflakeClient)
     client.query_params = {
         "account": "acme",
-        "warehouse": "TRUSTOPS_READ_WH",
-        "database": "TRUSTOPS_SECURITY_LAKE",
+        "warehouse": "GRC_LAKE_READ_WH",
+        "database": "GRC_LAKE_SECURITY_LAKE",
         "schema": "EVIDENCE",
     }
     client.views = {
-        "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-        "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-        "asset_risk": "TRUSTOPS_ASSET_RISK",
-        "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+        "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+        "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+        "asset_risk": "GRC_LAKE_ASSET_RISK",
+        "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
     }
     client._connector = _FakeSnowflakeDiscoveryConnector()
 
@@ -142,24 +142,24 @@ def test_snowflake_live_discovery_recommends_visible_scope() -> None:
     assert result["ok"] is True
     assert result["selection_mode"] == "live_snowflake_scope"
     assert result["candidates"] == {
-        "warehouses": ["TRUSTOPS_READ_WH"],
-        "databases": ["TRUSTOPS_SECURITY_LAKE"],
+        "warehouses": ["GRC_LAKE_READ_WH"],
+        "databases": ["GRC_LAKE_SECURITY_LAKE"],
         "schemas": ["EVIDENCE"],
         "views": [
-            "TRUSTOPS_ASSET_RISK",
-            "TRUSTOPS_AUDIT_EVENTS",
-            "TRUSTOPS_CONTROL_POSTURE",
-            "TRUSTOPS_EVIDENCE_BUNDLES",
+            "GRC_LAKE_ASSET_RISK",
+            "GRC_LAKE_AUDIT_EVENTS",
+            "GRC_LAKE_CONTROL_POSTURE",
+            "GRC_LAKE_EVIDENCE_BUNDLES",
         ],
     }
     assert result["recommended_options"] == {
-        "warehouse": "TRUSTOPS_READ_WH",
-        "database": "TRUSTOPS_SECURITY_LAKE",
+        "warehouse": "GRC_LAKE_READ_WH",
+        "database": "GRC_LAKE_SECURITY_LAKE",
         "schema": "EVIDENCE",
-        "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-        "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-        "asset_risk": "TRUSTOPS_ASSET_RISK",
-        "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+        "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+        "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+        "asset_risk": "GRC_LAKE_ASSET_RISK",
+        "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
     }
 
 
@@ -265,7 +265,7 @@ def test_snowflake_live_uses_key_pair_file_for_service_user(tmp_path: Path, monk
     monkeypatch.setattr(connector_runner, "SnowflakeClient", FakeSnowflakeClient)
     monkeypatch.setattr(connector_runner, "collect_snowflake_evidence", lambda client, account=None: [])
     monkeypatch.setenv("SNOWFLAKE_ACCOUNT", "acme-trustops")
-    monkeypatch.setenv("SNOWFLAKE_USER", "TRUSTOPS_INGEST_SVC")
+    monkeypatch.setenv("SNOWFLAKE_USER", "GRC_LAKE_INGEST_SVC")
     monkeypatch.setenv("SNOWFLAKE_PRIVATE_KEY_FILE", "/run/secrets/trustops_snowflake_key.p8")
     monkeypatch.delenv("SNOWFLAKE_OAUTH_TOKEN", raising=False)
     monkeypatch.delenv("SNOWFLAKE_AUTHENTICATOR", raising=False)
@@ -288,18 +288,18 @@ def test_snowflake_sync_uses_configured_scope_and_private_key_ref(
         actor="alice",
         credentials={
             "account": "MJFAYEE-YS65534",
-            "user": "TRUSTOPS_INGEST_SVC",
+            "user": "GRC_LAKE_INGEST_SVC",
             "private_key_ref": "SNOWFLAKE_PRIVATE_KEY_FILE",
         },
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
-            "role": "TRUSTOPS_READER",
-            "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-            "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-            "asset_risk": "TRUSTOPS_ASSET_RISK",
-            "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+            "role": "GRC_LAKE_READER",
+            "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+            "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+            "asset_risk": "GRC_LAKE_ASSET_RISK",
+            "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
         },
     )
     captured: dict[str, object] = {}
@@ -328,21 +328,21 @@ def test_snowflake_sync_uses_configured_scope_and_private_key_ref(
     assert result.result == "ok"
     assert captured["query_params"] == {
         "account": "MJFAYEE-YS65534",
-        "user": "TRUSTOPS_INGEST_SVC",
+        "user": "GRC_LAKE_INGEST_SVC",
         "authenticator": "SNOWFLAKE_JWT",
         "token": None,
-        "warehouse": "TRUSTOPS_READ_WH",
-        "database": "TRUSTOPS_SECURITY_LAKE",
+        "warehouse": "GRC_LAKE_READ_WH",
+        "database": "GRC_LAKE_SECURITY_LAKE",
         "schema": "EVIDENCE",
-        "role": "TRUSTOPS_READER",
+        "role": "GRC_LAKE_READER",
         "private_key_file": "/run/secrets/trustops_snowflake_key.p8",
         "private_key_file_pwd": None,
     }
     assert captured["views"] == {
-        "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-        "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-        "asset_risk": "TRUSTOPS_ASSET_RISK",
-        "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+        "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+        "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+        "asset_risk": "GRC_LAKE_ASSET_RISK",
+        "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
     }
 
 
@@ -354,10 +354,10 @@ def test_snowflake_probe_resolves_oauth_ref_from_environment() -> None:
             "credential_ref": "SNOWFLAKE_OAUTH_TOKEN",
         },
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
-            "role": "TRUSTOPS_READER",
+            "role": "GRC_LAKE_READER",
         },
         env={"SNOWFLAKE_OAUTH_TOKEN": "read-only-oauth-token"},
     )
@@ -367,10 +367,10 @@ def test_snowflake_probe_resolves_oauth_ref_from_environment() -> None:
         "user": "trustops.reader@example.com",
         "authenticator": "oauth",
         "token": "read-only-oauth-token",
-        "warehouse": "TRUSTOPS_READ_WH",
-        "database": "TRUSTOPS_SECURITY_LAKE",
+        "warehouse": "GRC_LAKE_READ_WH",
+        "database": "GRC_LAKE_SECURITY_LAKE",
         "schema": "EVIDENCE",
-        "role": "TRUSTOPS_READER",
+        "role": "GRC_LAKE_READER",
     }
 
 
@@ -378,15 +378,15 @@ def test_snowflake_probe_resolves_private_key_ref_from_environment() -> None:
     params = _probe_query_params(
         credentials={
             "account": "acme-trustops",
-            "user": "TRUSTOPS_INGEST_SVC",
+            "user": "GRC_LAKE_INGEST_SVC",
             "private_key_ref": "SNOWFLAKE_PRIVATE_KEY_FILE",
             "private_key_file_pwd_ref": "SNOWFLAKE_PRIVATE_KEY_FILE_PWD",
         },
         options={
-            "warehouse": "TRUSTOPS_READ_WH",
-            "database": "TRUSTOPS_SECURITY_LAKE",
+            "warehouse": "GRC_LAKE_READ_WH",
+            "database": "GRC_LAKE_SECURITY_LAKE",
             "schema": "EVIDENCE",
-            "role": "TRUSTOPS_READER",
+            "role": "GRC_LAKE_READER",
         },
         env={
             "SNOWFLAKE_PRIVATE_KEY_FILE": "/run/secrets/trustops_snowflake_key.p8",
@@ -396,13 +396,13 @@ def test_snowflake_probe_resolves_private_key_ref_from_environment() -> None:
 
     assert params == {
         "account": "acme-trustops",
-        "user": "TRUSTOPS_INGEST_SVC",
+        "user": "GRC_LAKE_INGEST_SVC",
         "authenticator": "SNOWFLAKE_JWT",
         "token": None,
-        "warehouse": "TRUSTOPS_READ_WH",
-        "database": "TRUSTOPS_SECURITY_LAKE",
+        "warehouse": "GRC_LAKE_READ_WH",
+        "database": "GRC_LAKE_SECURITY_LAKE",
         "schema": "EVIDENCE",
-        "role": "TRUSTOPS_READER",
+        "role": "GRC_LAKE_READER",
         "private_key_file": "/run/secrets/trustops_snowflake_key.p8",
         "private_key_file_pwd": "key-password",
     }
@@ -413,12 +413,12 @@ def test_snowflake_probe_rejects_missing_private_key_ref_without_connection() ->
         probe_snowflake_access(
             credentials={
                 "account": "acme-trustops",
-                "user": "TRUSTOPS_INGEST_SVC",
+                "user": "GRC_LAKE_INGEST_SVC",
                 "private_key_ref": "SNOWFLAKE_PRIVATE_KEY_FILE",
             },
             options={
-                "warehouse": "TRUSTOPS_READ_WH",
-                "database": "TRUSTOPS_SECURITY_LAKE",
+                "warehouse": "GRC_LAKE_READ_WH",
+                "database": "GRC_LAKE_SECURITY_LAKE",
                 "schema": "EVIDENCE",
             },
             env={},
@@ -434,8 +434,8 @@ def test_snowflake_probe_rejects_missing_oauth_ref_without_connection() -> None:
                 "credential_ref": "SNOWFLAKE_OAUTH_TOKEN",
             },
             options={
-                "warehouse": "TRUSTOPS_READ_WH",
-                "database": "TRUSTOPS_SECURITY_LAKE",
+                "warehouse": "GRC_LAKE_READ_WH",
+                "database": "GRC_LAKE_SECURITY_LAKE",
                 "schema": "EVIDENCE",
             },
             env={},
@@ -508,23 +508,23 @@ class _FakeSnowflakeDiscoveryCursor:
         normalized = query.upper()
         if normalized.startswith("SELECT CURRENT_ROLE"):
             self.description = [("CURRENT_ROLE",), ("CURRENT_WAREHOUSE",), ("CURRENT_DATABASE",), ("CURRENT_SCHEMA",)]
-            self._rows = [("TRUSTOPS_READER", "TRUSTOPS_READ_WH", "TRUSTOPS_SECURITY_LAKE", "EVIDENCE")]
+            self._rows = [("GRC_LAKE_READER", "GRC_LAKE_READ_WH", "GRC_LAKE_SECURITY_LAKE", "EVIDENCE")]
         elif normalized == "SHOW WAREHOUSES":
             self.description = [("created_on",), ("name",)]
-            self._rows = [(None, "TRUSTOPS_READ_WH")]
+            self._rows = [(None, "GRC_LAKE_READ_WH")]
         elif normalized == "SHOW DATABASES":
             self.description = [("created_on",), ("name",)]
-            self._rows = [(None, "TRUSTOPS_SECURITY_LAKE")]
+            self._rows = [(None, "GRC_LAKE_SECURITY_LAKE")]
         elif normalized.startswith("SHOW SCHEMAS"):
             self.description = [("created_on",), ("name",)]
             self._rows = [(None, "EVIDENCE")]
         elif normalized.startswith("SHOW VIEWS"):
             self.description = [("created_on",), ("name",)]
             self._rows = [
-                (None, "TRUSTOPS_CONTROL_POSTURE"),
-                (None, "TRUSTOPS_AUDIT_EVENTS"),
-                (None, "TRUSTOPS_EVIDENCE_BUNDLES"),
-                (None, "TRUSTOPS_ASSET_RISK"),
+                (None, "GRC_LAKE_CONTROL_POSTURE"),
+                (None, "GRC_LAKE_AUDIT_EVENTS"),
+                (None, "GRC_LAKE_EVIDENCE_BUNDLES"),
+                (None, "GRC_LAKE_ASSET_RISK"),
             ]
         else:  # pragma: no cover - protects fake cursor contract
             raise AssertionError(f"unexpected query {query}")

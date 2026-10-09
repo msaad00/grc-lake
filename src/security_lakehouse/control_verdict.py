@@ -4,6 +4,7 @@ from typing import Any
 
 from security_lakehouse.event_status import FAIL_STATUSES, normalize_event_status
 from security_lakehouse.policy import ControlContext, RuleResult, evaluate_control
+from security_lakehouse.vocabulary import ControlVerdict, EventStatus, Severity
 
 
 def evaluate_evidence_verdict(control_id: str, rows: list[dict[str, Any]], rule: Any, *, stale: bool) -> RuleResult:
@@ -13,9 +14,9 @@ def evaluate_evidence_verdict(control_id: str, rows: list[dict[str, Any]], rule:
     evidence. Source failures respect the declared rule's severity threshold.
     Freshness is evaluated over current evidence populations by the caller.
     """
-    verdict_rows = [row for row in rows if normalize_event_status(row["status"]) != "observed"]
+    verdict_rows = [row for row in rows if normalize_event_status(row["status"]) != EventStatus.OBSERVED]
     failures = [row for row in verdict_rows if normalize_event_status(row["status"]) in FAIL_STATUSES]
-    unknown = any(normalize_event_status(row["status"]) == "not_evaluated" for row in verdict_rows)
+    unknown = any(normalize_event_status(row["status"]) == EventStatus.NOT_EVALUATED for row in verdict_rows)
     evidence = [row for row in verdict_rows if row.get("evidence_ref") and row.get("evidence_available", True)]
     top_open = max(failures, key=lambda row: row["severity_score"], default=None)
     context = ControlContext(
@@ -23,19 +24,19 @@ def evaluate_evidence_verdict(control_id: str, rows: list[dict[str, Any]], rule:
         open_violation_count=len(failures),
         event_count=len(verdict_rows),
         evidence_count=len(evidence),
-        max_severity=str(top_open["severity"]) if top_open else "info",
+        max_severity=str(top_open["severity"]) if top_open else Severity.INFO.value,
         evidence_status="stale" if stale else "fresh",
     )
     result = evaluate_control(context, rule)
-    if result.status == "fail" and (failures or (verdict_rows and not evidence)):
+    if result.status == ControlVerdict.FAIL and (failures or (verdict_rows and not evidence)):
         return result
     if unknown or not verdict_rows:
-        result.status = "not_evaluated"
+        result.status = ControlVerdict.NOT_EVALUATED.value
         result.reasons.append(
             "Source evidence has an unknown or unevaluated outcome."
             if unknown
             else "Source evidence contains only observations, without an evaluated outcome."
         )
     elif stale or not evidence:
-        result.status = "stale"
+        result.status = ControlVerdict.STALE.value
     return result

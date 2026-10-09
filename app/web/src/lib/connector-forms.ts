@@ -21,12 +21,12 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "user",
         label: "Read-only user",
-        placeholder: "trustops_reader",
+        placeholder: "grc-lake_reader",
       },
       {
         name: "credential_ref",
         label: "Scoped credential reference",
-        placeholder: "TRUSTOPS_CLICKHOUSE_TOKEN",
+        placeholder: "GRC_LAKE_CLICKHOUSE_TOKEN",
         required: true,
         hint: "Environment variable name holding the read-only token.",
       },
@@ -68,13 +68,13 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "role_arn",
         label: "Read-only role ARN (optional)",
-        placeholder: "arn:aws:iam::111122223333:role/trustops-lake-reader",
+        placeholder: "arn:aws:iam::111122223333:role/grc-lake-lake-reader",
         hint: "Assumed for Glue and S3 reads; otherwise the runtime's AWS identity is used.",
       },
       {
         name: "external_id",
         label: "External ID (optional)",
-        placeholder: "trustops-external-id",
+        placeholder: "grc-lake-external-id",
       },
       {
         name: "uri",
@@ -90,7 +90,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "credential_ref",
         label: "Bearer token env var",
-        placeholder: "TRUSTOPS_ICEBERG_TOKEN",
+        placeholder: "GRC_LAKE_ICEBERG_TOKEN",
         hint: "REST catalogs only; a short-lived token supplied by your secret broker.",
       },
       {
@@ -98,7 +98,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "Parquet location",
         placeholder:
           "s3://aws-security-data-lake-us-east-1-abc/aws/SH_FINDINGS/1.0/",
-        hint: "Parquet only: s3://bucket/prefix, or a local path under TRUSTOPS_LAKE_LOCAL_ROOT.",
+        hint: "Parquet only: s3://bucket/prefix, or a local path under GRC_LAKE_LAKE_LOCAL_ROOT.",
       },
     ],
     "snowflake-evidence-lake": [
@@ -111,7 +111,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "user",
         label: "Service user",
-        placeholder: "TRUSTOPS_INGEST_SVC",
+        placeholder: "GRC_LAKE_INGEST_SVC",
         required: true,
       },
       {
@@ -124,7 +124,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "role",
         label: "Read-only role (optional)",
-        placeholder: "TRUSTOPS_READER",
+        placeholder: "GRC_LAKE_READER",
       },
       {
         name: "private_key_file_pwd_ref",
@@ -143,7 +143,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         name: "role_arn",
         label: "Read-only role ARN (optional)",
         placeholder:
-          "arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole",
+          "arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole",
         hint: "Cross-account assume-role; pair with external ID in the trust policy.",
       },
       {
@@ -158,7 +158,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "Azure subscription ID",
         placeholder: "00000000-0000-0000-0000-000000000000",
         required: true,
-        hint: "Confirm the subscription after granting Reader to the TrustOps app or workload identity.",
+        hint: "Confirm the subscription after granting Reader to the GRC Lake app or workload identity.",
       },
     ],
     "intune-devices": [
@@ -167,30 +167,30 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "Microsoft Entra tenant ID",
         placeholder: "00000000-0000-0000-0000-000000000000",
         required: true,
-        hint: "Tenant whose Intune devices TrustOps reads. The app registration or managed identity needs the Graph application permission DeviceManagementManagedDevices.Read.All.",
+        hint: "Tenant whose Intune devices GRC Lake reads. The app registration or managed identity needs the Graph application permission DeviceManagementManagedDevices.Read.All.",
       },
       {
         name: "client_id",
         label: "App registration client ID",
         placeholder: "00000000-0000-0000-0000-000000000000",
-        hint: "Your Entra app registration. Required on hosted TrustOps, with one of the three references below.",
+        hint: "Your Entra app registration. Required on hosted GRC Lake, with one of the three references below.",
       },
       {
         name: "client_secret_ref",
         label: "Client secret env var",
-        placeholder: "TRUSTOPS_TENANT_<ID>__AZURE_CLIENT_SECRET",
+        placeholder: "GRC_LAKE_TENANT_<ID>__AZURE_CLIENT_SECRET",
         hint: "Environment variable holding the app's client secret; do not paste the secret.",
       },
       {
         name: "client_certificate_ref",
         label: "Client certificate env var",
-        placeholder: "TRUSTOPS_TENANT_<ID>__AZURE_CLIENT_CERT",
+        placeholder: "GRC_LAKE_TENANT_<ID>__AZURE_CLIENT_CERT",
         hint: "PEM certificate with its private key, inline or mounted via <NAME>_FILE.",
       },
       {
         name: "federated_token_file_ref",
         label: "Federated token file env var",
-        placeholder: "TRUSTOPS_TENANT_<ID>__AZURE_TOKEN_FILE",
+        placeholder: "GRC_LAKE_TENANT_<ID>__AZURE_TOKEN_FILE",
         hint: "Path to a workload identity token that the app's federated credential trusts.",
       },
     ],
@@ -207,7 +207,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "API key env var",
         placeholder: "BAMBOOHR_API_KEY",
         required: true,
-        hint: "API key of a dedicated BambooHR user whose access level can view only the employment fields TrustOps reads.",
+        hint: "API key of a dedicated BambooHR user whose access level can view only the employment fields GRC Lake reads.",
       },
     ],
     "rippling-personnel": [
@@ -239,7 +239,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "Client secret env var",
         placeholder: "JAMF_CLIENT_SECRET",
         required: true,
-        hint: "API client secret, stored as a secret reference. TrustOps mints short-lived tokens from it.",
+        hint: "API client secret, stored as a secret reference. GRC Lake mints short-lived tokens from it.",
       },
       {
         name: "screen_lock_attribute",
@@ -268,7 +268,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "Client secret env var",
         placeholder: "CROWDSTRIKE_CLIENT_SECRET",
         required: true,
-        hint: "API client secret, stored as a secret reference. TrustOps mints short-lived tokens from it.",
+        hint: "API client secret, stored as a secret reference. GRC Lake mints short-lived tokens from it.",
       },
     ],
     "kubernetes-cluster": [
@@ -283,7 +283,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         name: "context",
         label: "Kubeconfig context",
         placeholder: "prod-eks-readonly",
-        hint: "Optional. Leave empty to use the current context, or when TrustOps runs in-cluster.",
+        hint: "Optional. Leave empty to use the current context, or when GRC Lake runs in-cluster.",
       },
       {
         name: "kubeconfig_ref",
@@ -322,12 +322,12 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         placeholder:
           "https://wd5-services1.myworkday.com/ccx/service/customreport2/<tenant>/<owner>/<report>?format=json",
         required: true,
-        hint: "JSON URL of the custom report with the TrustOps column contract (see docs/CONNECTORS.md).",
+        hint: "JSON URL of the custom report with the GRC Lake column contract (see docs/CONNECTORS.md).",
       },
       {
         name: "username",
         label: "Integration system user",
-        placeholder: "isu_trustops",
+        placeholder: "isu_grc-lake",
         required: true,
       },
       {
@@ -354,7 +354,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "catalog",
         label: "Evidence catalog",
-        placeholder: "trustops",
+        placeholder: "grc-lake",
         required: true,
       },
       {
@@ -374,7 +374,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         label: "OAuth secret env var",
         placeholder: "DATABRICKS_CLIENT_SECRET",
         required: true,
-        hint: "Service principal OAuth secret, stored as a secret reference. TrustOps mints one-hour tokens from it.",
+        hint: "Service principal OAuth secret, stored as a secret reference. GRC Lake mints one-hour tokens from it.",
       },
     ],
     "gcp-posture": [
@@ -390,7 +390,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "credential_ref",
         label: "GitHub App installation token env",
-        placeholder: "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN",
+        placeholder: "GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN",
         required: true,
         hint: "Read-only GitHub App token with repository metadata scopes.",
       },
@@ -399,7 +399,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "credential_ref",
         label: "GitLab access token env",
-        placeholder: "TRUSTOPS_GITLAB_ACCESS_TOKEN",
+        placeholder: "GRC_LAKE_GITLAB_ACCESS_TOKEN",
         required: true,
         hint: "Read-only project token with api read_repository scope.",
       },
@@ -489,7 +489,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
         name: "role_arn",
         label: "Read-only role ARN (optional)",
         placeholder:
-          "arn:aws:iam::123456789012:role/TrustOpsEvidenceReadOnlyRole",
+          "arn:aws:iam::123456789012:role/GrcLakeEvidenceReadOnlyRole",
         hint: "Cross-account assume-role; ambient IAM works when omitted.",
       },
       {
@@ -508,7 +508,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "credential_ref",
         label: "Scoped credential reference",
-        placeholder: "TRUSTOPS_SIEM_TOKEN",
+        placeholder: "GRC_LAKE_SIEM_TOKEN",
         required: true,
         hint: "Environment variable name holding the read-only export token.",
       },
@@ -523,7 +523,7 @@ export const CONNECTOR_CREDENTIAL_FIELDS: Record<string, ConnectorFieldDef[]> =
       {
         name: "credential_ref",
         label: "Scoped credential reference",
-        placeholder: "TRUSTOPS_RUNTIME_GATEWAY_TOKEN",
+        placeholder: "GRC_LAKE_RUNTIME_GATEWAY_TOKEN",
         required: true,
         hint: "Environment variable name holding the read-only export token.",
       },
@@ -601,13 +601,13 @@ export const CONNECTOR_SCOPE_FIELDS: Record<string, ConnectorFieldDef[]> = {
     {
       name: "warehouse",
       label: "Warehouse",
-      placeholder: "TRUSTOPS_READ_WH",
+      placeholder: "GRC_LAKE_READ_WH",
       required: true,
     },
     {
       name: "database",
       label: "Database",
-      placeholder: "TRUSTOPS_SECURITY_LAKE",
+      placeholder: "GRC_LAKE_SECURITY_LAKE",
       required: true,
     },
     {
@@ -619,25 +619,25 @@ export const CONNECTOR_SCOPE_FIELDS: Record<string, ConnectorFieldDef[]> = {
     {
       name: "audit_events",
       label: "Audit events view",
-      placeholder: "TRUSTOPS_AUDIT_EVENTS",
+      placeholder: "GRC_LAKE_AUDIT_EVENTS",
       required: true,
     },
     {
       name: "control_posture",
       label: "Control posture view",
-      placeholder: "TRUSTOPS_CONTROL_POSTURE",
+      placeholder: "GRC_LAKE_CONTROL_POSTURE",
       required: true,
     },
     {
       name: "asset_risk",
       label: "Asset risk view",
-      placeholder: "TRUSTOPS_ASSET_RISK",
+      placeholder: "GRC_LAKE_ASSET_RISK",
       required: true,
     },
     {
       name: "evidence_bundles",
       label: "Evidence bundles view",
-      placeholder: "TRUSTOPS_EVIDENCE_BUNDLES",
+      placeholder: "GRC_LAKE_EVIDENCE_BUNDLES",
       required: true,
     },
   ],
@@ -645,7 +645,7 @@ export const CONNECTOR_SCOPE_FIELDS: Record<string, ConnectorFieldDef[]> = {
     {
       name: "bucket",
       label: "S3 bucket",
-      placeholder: "trustops-evidence",
+      placeholder: "grc-lake-evidence",
       required: true,
     },
     {
@@ -713,7 +713,7 @@ export function fallbackCredentialFields(
       {
         name: "client_secret_ref",
         label: "Client secret reference",
-        placeholder: "TRUSTOPS_CLIENT_SECRET",
+        placeholder: "GRC_LAKE_CLIENT_SECRET",
         required: true,
       },
     ];
@@ -723,7 +723,7 @@ export function fallbackCredentialFields(
       fields.push({
         name: "refresh_token_ref",
         label: "Refresh token reference",
-        placeholder: "TRUSTOPS_REFRESH_TOKEN",
+        placeholder: "GRC_LAKE_REFRESH_TOKEN",
         required: true,
       });
     return fields;
@@ -745,7 +745,7 @@ export function fallbackCredentialFields(
       {
         name: "private_key",
         label: "Private key reference",
-        placeholder: "TRUSTOPS_PRIVATE_KEY",
+        placeholder: "GRC_LAKE_PRIVATE_KEY",
         secret: true,
         required: true,
       },
@@ -755,7 +755,7 @@ export function fallbackCredentialFields(
       {
         name: "credential_ref",
         label: "Credential reference",
-        placeholder: "TRUSTOPS_API_TOKEN",
+        placeholder: "GRC_LAKE_API_TOKEN",
         required: true,
         hint: "Environment variable name; raw secrets are not stored in the lake.",
       },
@@ -765,7 +765,7 @@ export function fallbackCredentialFields(
       {
         name: "lake_path",
         label: "Lake path",
-        placeholder: "/lake/trustops",
+        placeholder: "/lake/grc-lake",
         required: true,
       },
     ];
@@ -773,7 +773,7 @@ export function fallbackCredentialFields(
     {
       name: "api_key",
       label: "API key reference",
-      placeholder: "TRUSTOPS_API_KEY",
+      placeholder: "GRC_LAKE_API_KEY",
       required: true,
     },
   ];

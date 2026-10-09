@@ -6,23 +6,22 @@ asset evidence cannot become passes. Inventory completeness is a separate claim.
 
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import Any
 
 from security_lakehouse.control_verdict import evaluate_evidence_verdict
 from security_lakehouse.evidence_freshness import build_evidence_freshness, current_evidence_is_stale
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.safeguards import ATTESTABLE_STATES, contributes_to_coverage, effective_review_state
-
-JsonObject = dict[str, Any]
+from security_lakehouse.vocabulary import ControlVerdict
 
 
 def _combine(states: list[str]) -> str:
-    if "fail" in states:
-        return "fail"
-    if not states or "not_evaluated" in states:
-        return "not_evaluated"
-    if "stale" in states:
-        return "stale"
-    return "pass"
+    if ControlVerdict.FAIL in states:
+        return ControlVerdict.FAIL.value
+    if not states or ControlVerdict.NOT_EVALUATED in states:
+        return ControlVerdict.NOT_EVALUATED.value
+    if ControlVerdict.STALE in states:
+        return ControlVerdict.STALE.value
+    return ControlVerdict.PASS.value
 
 
 def evaluate_safeguards(
@@ -59,7 +58,7 @@ def evaluate_safeguards(
             reasons = []
             types = assets[asset_key]
             if len(types) != 1 or not types <= eligible_types:
-                status = "not_evaluated"
+                status = ControlVerdict.NOT_EVALUATED.value
                 reasons.append("The asset type does not establish safeguard applicability.")
                 invalid += 1
             else:
@@ -85,7 +84,7 @@ def evaluate_safeguards(
             )
         missing = max(0, eligible_count - assessed)
         if missing or ambiguous_count or invalid:
-            states.append("not_evaluated")
+            states.append(ControlVerdict.NOT_EVALUATED.value)
         results.append(
             {
                 "safeguard_id": safeguard_id,
@@ -124,9 +123,9 @@ def evaluate_safeguards(
                 for row in asset_rows
             ]
             if current_evidence_is_stale(requirement_rows, required_types=required):
-                statuses.append("stale")
+                statuses.append(ControlVerdict.STALE.value)
         if pending or not payload.get("review_log_verified", False):
-            statuses.append("not_evaluated")
+            statuses.append(ControlVerdict.NOT_EVALUATED.value)
         requirements.append(
             {
                 "control_id": control_id,

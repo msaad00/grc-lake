@@ -1,19 +1,19 @@
 # Product Walkthrough
 
-TrustOps runs on infrastructure you operate: your laptop, a single host, or your
+GRC Lake runs on infrastructure you operate: your laptop, a single host, or your
 Kubernetes cluster. There is no managed service. This page gets the demo running
 and maps each console page to the job it does. What is shipped versus planned
 lives in the [roadmap](../ROADMAP.md).
 
 ## First run
 
-| Step            | Command                                                                                         | Result                                                                                                                                    |
-| --------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Install         | `uv sync --frozen --extra dev --extra server`                                                   | The `security-lakehouse` CLI and server dependencies.                                                                                     |
-| Load the demo   | `uv run security-lakehouse fixtures load --company golden --out build/lakehouse --rebase-times` | Bronze, silver, and gold lake files, the SQLite mart, and synthetic demo tasks, risks, a policy, vendor assessments, and metrics history. |
-| Check posture   | `uv run security-lakehouse assessment status --lake build/lakehouse`                            | Scores, failing controls, and findings in the terminal.                                                                                   |
-| Freeze evidence | `uv run security-lakehouse assessment snapshot --lake build/lakehouse --reason vendor_review`   | An immutable `gold/snapshots/assessment-*.json`.                                                                                          |
-| Open the app    | `make demo-local`                                                                               | The console at `http://127.0.0.1:8787/console/dashboard/`.                                                                                |
+| Step            | Command                                                                               | Result                                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Install         | `uv sync --frozen --extra dev --extra server`                                         | The `grc-lake` CLI and server dependencies.                                                                                               |
+| Load the demo   | `uv run grc-lake fixtures load --company golden --out build/lakehouse --rebase-times` | Bronze, silver, and gold lake files, the SQLite mart, and synthetic demo tasks, risks, a policy, vendor assessments, and metrics history. |
+| Check posture   | `uv run grc-lake assessment status --lake build/lakehouse`                            | Scores, failing controls, and findings in the terminal.                                                                                   |
+| Freeze evidence | `uv run grc-lake assessment snapshot --lake build/lakehouse --reason vendor_review`   | An immutable `gold/snapshots/assessment-*.json`.                                                                                          |
+| Open the app    | `make demo-local`                                                                     | The console at `http://127.0.0.1:8787/console/dashboard/`.                                                                                |
 
 The demo fixture is synthetic and includes failing controls on purpose, so the
 findings, evidence, and remediation pages have something to show. `make
@@ -58,8 +58,8 @@ Every page reads the same `/api/v1` resources that agents and CI use:
 ```bash
 curl -s http://127.0.0.1:8787/api/v1/posture/current | jq .data.posture
 curl -s 'http://127.0.0.1:8787/api/v1/control-tests?result=fail&limit=10' | jq .
-security-lakehouse connectors list
-security-lakehouse frameworks review --help
+grc-lake connectors list
+grc-lake frameworks review --help
 ```
 
 See the [agent API](api/AGENT_API.md), [headless GRC](HEADLESS_GRC.md), the

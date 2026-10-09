@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
-from verify_wheel import verify  # noqa: E402
+from verify_wheel import verify
 
 COMPLETE = {
     "security_lakehouse/web/dist/index.html": "<html></html>",

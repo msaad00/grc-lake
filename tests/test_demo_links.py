@@ -16,7 +16,7 @@ def test_share_links_require_public_url_for_invites() -> None:
     )
     assert len(links) == 1
     assert links[0]["kind"] == "workspace"
-    assert "TRUSTOPS_PUBLIC_URL" in links[0]["description"]
+    assert "GRC_LAKE_PUBLIC_URL" in links[0]["description"]
 
 
 def test_share_links_include_login_and_connect_when_hosted() -> None:
@@ -74,7 +74,7 @@ def test_share_links_reject_unsafe_public_url() -> None:
         active_share_count=0,
     )
     assert links[0]["kind"] == "workspace"
-    assert links[0]["description"].startswith("Set TRUSTOPS_PUBLIC_URL")
+    assert links[0]["description"].startswith("Set GRC_LAKE_PUBLIC_URL")
 
 
 def test_account_linking_deep_links_and_status() -> None:

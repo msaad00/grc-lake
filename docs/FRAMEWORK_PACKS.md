@@ -1,6 +1,6 @@
 # Framework Packs
 
-TrustOps ships **framework packs**: criterion and subcategory catalogs with
+GRC Lake ships **framework packs**: criterion and subcategory catalogs with
 safeguard mappings, evidence requirements, and evaluation rules. Full packs
 cover every identifier in the official source; limited-mapping packs seed an
 honest, cited subset.
@@ -24,7 +24,7 @@ honest, cited subset.
 | ISO/IEC 42001:2023 Annex A   | `iso-42001-2023`      | **38** AI controls                                                                    | [ISO/IEC 42001:2023](https://www.iso.org/standard/42001)                                                                                           |
 
 **Important:** 100% here means **every official criterion ID is seeded and
-evaluable in TrustOps**. How many are mapped to safeguards, and how many of those
+evaluable in GRC Lake**. How many are mapped to safeguards, and how many of those
 mappings are reviewed, is per pack in the [coverage matrix](FRAMEWORK_COVERAGE.md).
 It does not mean certification, audit opinion, or that every point-of-focus has
 bespoke automated evidence yet.
@@ -69,15 +69,15 @@ to their current members. Evidence types and connector hints are set per family
 ## Sync packs into the catalog
 
 ```bash
-security-lakehouse frameworks sync-packs
+grc-lake frameworks sync-packs
 # or one pack:
-security-lakehouse frameworks sync-packs --pack nist-csf-2.0
-security-lakehouse frameworks sync-packs --pack fedramp-moderate
-security-lakehouse frameworks sync-packs --pack cis-aws
-security-lakehouse frameworks sync-packs --pack cmmc-2-level2
-security-lakehouse frameworks sync-packs --pack iso-27001-2022
-security-lakehouse frameworks sync-packs --pack iso-27017-2015
-security-lakehouse frameworks sync-packs --pack iso-42001-2023
+grc-lake frameworks sync-packs --pack nist-csf-2.0
+grc-lake frameworks sync-packs --pack fedramp-moderate
+grc-lake frameworks sync-packs --pack cis-aws
+grc-lake frameworks sync-packs --pack cmmc-2-level2
+grc-lake frameworks sync-packs --pack iso-27001-2022
+grc-lake frameworks sync-packs --pack iso-27017-2015
+grc-lake frameworks sync-packs --pack iso-42001-2023
 make framework-packs
 ```
 
@@ -147,15 +147,15 @@ PackManifestRow) -> PackControlSpec`, covering whatever isn't flat data:
 4. Write a row-level identity test if converting an existing framework, or a
    coverage test (count + identifier set) for a new one — see
    `tests/test_framework_packs.py` and `tests/test_pack_manifest.py`.
-5. Run `security-lakehouse frameworks sync-packs --pack <framework>` then
-   `security-lakehouse catalog verify` (regenerate the lockfile per the
+5. Run `grc-lake frameworks sync-packs --pack <framework>` then
+   `grc-lake catalog verify` (regenerate the lockfile per the
    command above if it reports stale).
 
 ## Verify coverage
 
 ```bash
-security-lakehouse frameworks coverage --format markdown > docs/FRAMEWORK_COVERAGE.md
-security-lakehouse catalog verify
+grc-lake frameworks coverage --format markdown > docs/FRAMEWORK_COVERAGE.md
+grc-lake catalog verify
 ```
 
 Full packs should show **100% seeded mapping coverage** with `seeded_control_count`
@@ -284,7 +284,7 @@ Add customer-specific or internal frameworks under `frameworks/custom/`:
 2. Register the framework in your deployment's data directory or merge into
    `frameworks/registry.json`.
 3. Add controls with full provenance fields (see `controls/catalog.json`).
-4. Run `security-lakehouse controls provenance` and `security-lakehouse catalog verify`.
+4. Run `grc-lake controls provenance` and `grc-lake catalog verify`.
 
 Custom packs can reuse evaluation rule aliases from `policy.py` and map to
 your connectors' evidence types.

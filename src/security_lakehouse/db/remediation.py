@@ -27,16 +27,9 @@ from security_lakehouse.db.models import (
     RemediationTask,
     _as_aware,
 )
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 RESOLUTION_NOTE_MAX = 4000
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return _as_aware(value).isoformat() if value else None
 
 
 # --- remediation tasks -------------------------------------------------------
@@ -107,7 +100,7 @@ def list_tasks(
     if overdue is not None:
         # Push the overdue predicate into SQL so pagination is stable.
         # overdue = due_at IS NOT NULL AND due_at < now AND status is open.
-        moment = _now(now)
+        moment = utc_now(now)
         closed = list(REMEDIATION_CLOSED)
         if overdue:
             stmt = stmt.where(
@@ -147,7 +140,7 @@ def update_task(
     if task is None:
         return None
     session.refresh(task)
-    moment = _now(now)
+    moment = utc_now(now)
     if "status" in changes:
         status = str(changes["status"])
         if status not in REMEDIATION_STATUSES:
@@ -191,12 +184,12 @@ def task_to_dict(task: RemediationTask, *, now: datetime | None = None) -> dict[
         "owner": task.owner,
         "status": task.status,
         "priority": task.priority,
-        "due_at": _iso(task.due_at),
+        "due_at": iso_offset(task.due_at, tz="assume_utc"),
         "overdue": task.is_overdue(now=now),
         "created_by": task.created_by,
-        "created_at": _iso(task.created_at),
-        "updated_at": _iso(task.updated_at),
-        "resolved_at": _iso(task.resolved_at),
+        "created_at": iso_offset(task.created_at, tz="assume_utc"),
+        "updated_at": iso_offset(task.updated_at, tz="assume_utc"),
+        "resolved_at": iso_offset(task.resolved_at, tz="assume_utc"),
         "resolution_note": task.resolution_note or "",
         "verification_history": json.loads(task.verification_history or "[]"),
         "authority_history_available": task.authority_history is not None,
@@ -255,7 +248,7 @@ def set_evidence_request_status(
     if request is None or request.tenant_id != tenant_id:
         return None
     request.status = status
-    request.fulfilled_at = _now(now) if status == "fulfilled" else None
+    request.fulfilled_at = utc_now(now) if status == "fulfilled" else None
     session.flush()
     return request
 
@@ -267,10 +260,10 @@ def evidence_request_to_dict(request: EvidenceRequest) -> dict[str, Any]:
         "requested_from": request.requested_from,
         "status": request.status,
         "note": request.note,
-        "due_at": _iso(request.due_at),
+        "due_at": iso_offset(request.due_at, tz="assume_utc"),
         "created_by": request.created_by,
-        "created_at": _iso(request.created_at),
-        "fulfilled_at": _iso(request.fulfilled_at),
+        "created_at": iso_offset(request.created_at, tz="assume_utc"),
+        "fulfilled_at": iso_offset(request.fulfilled_at, tz="assume_utc"),
     }
 
 
@@ -291,7 +284,7 @@ def create_exception(
         raise ValueError("control exception requires a control_id")
     if not reason.strip() or not created_by.strip() or not requested_by_id.strip():
         raise ValueError("exception requires a reason and an authenticated requester")
-    if expires_at is None or expires_at.tzinfo is None or expires_at <= _now(None):
+    if expires_at is None or expires_at.tzinfo is None or expires_at <= utc_now():
         raise ValueError("exception requires a future timezone-aware expiry")
     exception = ControlException(
         tenant_id=tenant_id,
@@ -322,7 +315,7 @@ def list_exceptions(
         stmt = stmt.where(
             ControlException.status == "active",
             ControlException.revoked_at.is_(None),
-            ControlException.expires_at > _now(now),
+            ControlException.expires_at > utc_now(now),
             ControlException.approved_at.is_not(None),
             ControlException.requested_by_id.is_not(None),
             ControlException.approved_by_id.is_not(None),
@@ -337,7 +330,7 @@ def list_exceptions(
 def approve_exception(
     session: Session, *, tenant_id: str, exception_id: str, reviewer_id: str, reviewer: str, now: datetime | None = None
 ) -> ControlException:
-    moment = _now(now)
+    moment = utc_now(now)
     if not reviewer_id or not reviewer:
         raise ValueError("approval requires an authenticated reviewer")
     result = session.execute(
@@ -371,13 +364,13 @@ def revoke_exception(
     if exception is None or exception.tenant_id != tenant_id or exception.status not in {"pending", "active"}:
         return None
     exception.status = "revoked"
-    exception.revoked_at = _now(now)
+    exception.revoked_at = utc_now(now)
     session.flush()
     return exception
 
 
 def exception_to_dict(exception: ControlException, *, now: datetime | None = None) -> dict[str, Any]:
-    moment = _now(now)
+    moment = utc_now(now)
     effective_status = exception.status
     if effective_status in {"pending", "active"} and exception.expires_at and _as_aware(exception.expires_at) <= moment:
         effective_status = "expired"
@@ -386,16 +379,16 @@ def exception_to_dict(exception: ControlException, *, now: datetime | None = Non
         "control_id": exception.control_id,
         "reason": exception.reason,
         "approved_by": exception.approved_by,
-        "approved_at": _iso(exception.approved_at),
+        "approved_at": iso_offset(exception.approved_at, tz="assume_utc"),
         "requested_by_id": exception.requested_by_id,
         "approved_by_id": exception.approved_by_id,
         "acceptance_effect": "risk_accepted_not_control_pass",
         "status": effective_status,
         "active": exception.is_active(now=moment),
-        "expires_at": _iso(exception.expires_at),
+        "expires_at": iso_offset(exception.expires_at, tz="assume_utc"),
         "created_by": exception.created_by,
-        "created_at": _iso(exception.created_at),
-        "revoked_at": _iso(exception.revoked_at),
+        "created_at": iso_offset(exception.created_at, tz="assume_utc"),
+        "revoked_at": iso_offset(exception.revoked_at, tz="assume_utc"),
     }
 
 

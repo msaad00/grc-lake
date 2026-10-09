@@ -1,9 +1,12 @@
 # Deployment
 
-TrustOps is an **open-source trust operations platform** you can run locally or
+GRC Lake is an **open-source trust operations platform** you can run locally or
 self-host in your cloud. The product goal is enterprise-grade continuous
 compliance — evidence ingestion, control tests, posture dashboards, trust-center
 sharing, and agent APIs — without locking evidence in a vendor silo.
+
+Upgrading from TrustOps? Follow the [rebranding migration guide](REBRANDING.md)
+to preserve volumes, release names, secrets and compatibility aliases.
 
 ## Deployment models
 
@@ -15,11 +18,11 @@ sharing, and agent APIs — without locking evidence in a vendor silo.
 
 Evidence stays in **your boundary** in every model: local files, customer-owned
 Snowflake/ClickHouse/DuckDB, or a tenant-scoped `/lake` volume on your cluster.
-TrustOps is not a hosted evidence warehouse that copies your cloud posture into
+GRC Lake is not a hosted evidence warehouse that copies your cloud posture into
 an opaque SaaS database.
 
 <p align="center">
-  <img src="images/trustops-readonly-connections.svg" alt="Read-only connections vs vendor SaaS evidence boundary" width="92%">
+  <img src="images/grc-lake-readonly-connections.svg" alt="Read-only connections vs vendor SaaS evidence boundary" width="92%">
 </p>
 
 Diagrams: [deployment-models.md](diagrams/deployment-models.md) · [connector-ingestion.md](diagrams/connector-ingestion.md)
@@ -53,13 +56,13 @@ The wheel includes the CLI and static console. Optional extras select runtime
 dependencies; they are not separate hosted services:
 
 ```bash
-pip install 'trustops-security-data-lake[server,mcp]'
-TRUSTOPS_LAKE=./lake trustops-mcp
+pip install 'grc-lake[server,mcp]'
+GRC_LAKE_LAKE=./lake grc-lake-mcp
 ```
 
-`trustops-mcp` speaks stdio to an MCP client. It can read the operator's local
-lake or call an authenticated TrustOps API using `TRUSTOPS_API_URL` and
-`TRUSTOPS_API_KEY`. The HTTP server and console use `security-lakehouse serve
+`grc-lake-mcp` speaks stdio to an MCP client. It can read the operator's local
+lake or call an authenticated GRC Lake API using `GRC_LAKE_API_URL` and
+`GRC_LAKE_API_KEY`. The HTTP server and console use `grc-lake serve
 --server`; configure [server auth](SERVER_AUTH.md) before exposing them.
 The Docker image also includes MCP, but its default command starts the HTTP
 server. Neither package publication nor container publication creates a cloud
@@ -68,7 +71,7 @@ service.
 ### Self-hosted
 
 Self-hosted shape: Helm chart on EKS/AKS/GKE (or Docker Compose for small pilots),
-**one writable application replica**, OIDC/SAML for humans, API keys for agents,
+**one writable application replica in local mode**, OIDC/SAML for humans, API keys for agents,
 persistent `/lake`, scheduler-driven
 connector syncs, and token-scoped trust-center links.
 
@@ -79,8 +82,10 @@ connector syncs, and token-scoped trust-center links.
 | State     | Encrypted PVC at `/lake`           | Backup/restore, per-tenant prefixes                |
 | Evidence  | Read-only cloud/service identities | Customer IaC owns roles, grants, rotation          |
 
-The chart rejects read-only lakes and multiple application replicas, even with
-RWX storage or PostgreSQL. Updates have downtime. See the
+Local mode rejects read-only lakes and multiple application replicas, even with
+RWX storage or PostgreSQL. Local updates have downtime. Opt-in
+[distributed PostgreSQL/S3 mode](DISTRIBUTED.md) supports multiple API, worker and
+reader replicas with private scratch storage. See the
 [topology boundary](runbooks/HA_READ_REPLICAS.md). EKS has reference Terraform;
 AKS/GKE use the same chart with operator-provisioned infrastructure.
 
@@ -90,7 +95,7 @@ Runbook: [Shareable POC Hosting](SHAREABLE_POC_HOSTING.md),
 
 ### Hosted mode
 
-Hosted mode is the same TrustOps binary and chart, run by an operator for
+Hosted mode is the same GRC Lake binary and chart, run by an operator for
 several tenants. There is no public managed service; operators enable the
 hosted features with environment flags. Each tenant's connector secrets resolve
 only under its own prefix, and cloud readers need delegated access: see
@@ -101,7 +106,7 @@ Evaluator flow: [Shareable Demo](SHAREABLE_DEMO.md).
 
 ## Capabilities in 0.2.x
 
-| Capability                                      | TrustOps 0.2.x                            |
+| Capability                                      | GRC Lake 0.2.x                            |
 | ----------------------------------------------- | ----------------------------------------- |
 | Continuous control tests from live integrations | Yes (connectors + scheduler)              |
 | Executive dashboard + framework readiness       | Yes                                       |
@@ -126,7 +131,7 @@ Want a live demo link for evaluators this week?
 
 Already centralize security evidence in Snowflake, Databricks, ClickHouse,
 Iceberg/Parquet (Amazon Security Lake), BigQuery, or a SIEM lake?
-  -> Existing-lake read mode + TrustOps assessment on top (BRING_YOUR_OWN_LAKE.md)
+  -> Existing-lake read mode + GRC Lake assessment on top (BRING_YOUR_OWN_LAKE.md)
 ```
 
 ## Next steps
@@ -142,3 +147,19 @@ Iceberg/Parquet (Amazon Security Lake), BigQuery, or a SIEM lake?
 
 For self-hosted support inquiries, open a GitHub discussion or issue on the
 repository.
+
+## Partitioning, sharding, replicas and disks
+
+| Capability                | Current support                                         | Deployment responsibility                                                 |
+| ------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Local evidence lake       | One writable application and scheduler owner per lake   | Operator supplies persistent storage and coordinated backups              |
+| ClickHouse partitions     | Reference tables partition by month and tenant          | Operator provisions and operates ClickHouse                               |
+| Parquet partitions        | Distributed exports partition by tenant/source/UTC date | Export layout and analytical engine determine pruning                     |
+| Iceberg export            | Unpartitioned format-v2 target tables                   | Partitioned target tables are rejected by the exporter                    |
+| Application shards        | Stable tenant virtual shards in distributed mode        | Operator assigns worker shard ranges; no automatic placement              |
+| Application replicas      | Local: one writer; distributed: multiple replicas       | Distributed mode requires configured PostgreSQL and S3; see its runbook   |
+| Database/storage replicas | Backend-specific infrastructure capability              | Operator configures replication, failover and restore testing             |
+| RAID                      | No application-managed RAID                             | Host, NAS/SAN or cloud storage layer; redundancy does not replace backups |
+
+OSS local, self-hosted and operator-hosted deployments use the same application
+constraints. Hosted mode is an operating model, not a distributed storage mode.

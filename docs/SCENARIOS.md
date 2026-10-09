@@ -1,6 +1,6 @@
-# TrustOps Scenarios
+# GRC Lake Scenarios
 
-Scenarios are repeatable product proofs. They run shipped TrustOps primitives in
+Scenarios are repeatable product proofs. They run shipped GRC Lake primitives in
 one flow and write a machine-readable report that can be attached to a PR,
 demo, audit packet, or buyer proof.
 
@@ -31,7 +31,7 @@ artifact paths.
 Use this in CI or local demos without cloud credentials:
 
 ```bash
-security-lakehouse scenario run live-cloud-posture \
+grc-lake scenario run live-cloud-posture \
   --lake build/scenarios/live-cloud-posture \
   --connector azure-posture \
   --connector aws-posture \
@@ -60,10 +60,10 @@ Expected proof points:
 
 Azure uses `DefaultAzureCredential`, so local `az login`, Cloud Shell, managed
 identity, or service-principal environment variables can authenticate without
-TrustOps storing credentials.
+GRC Lake storing credentials.
 
 ```bash
-security-lakehouse scenario run live-cloud-posture \
+grc-lake scenario run live-cloud-posture \
   --lake build/scenarios/azure-live \
   --connector azure-posture \
   --summary
@@ -82,7 +82,7 @@ assumed role, or workload identity. Do not create root access keys.
 
 ```bash
 AWS_ACCOUNT_ID=030225640638 \
-security-lakehouse scenario run live-cloud-posture \
+grc-lake scenario run live-cloud-posture \
   --lake build/scenarios/aws-live \
   --connector aws-posture \
   --summary
@@ -101,11 +101,11 @@ human proof only:
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
 SNOWFLAKE_USER="$SNOWFLAKE_USER" \
 SNOWFLAKE_AUTHENTICATOR=externalbrowser \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse scenario run live-cloud-posture \
+grc-lake scenario run live-cloud-posture \
   --lake build/scenarios/snowflake-live \
   --connector snowflake-evidence-lake \
   --summary
@@ -113,18 +113,18 @@ security-lakehouse scenario run live-cloud-posture \
 
 Continuous jobs should use a non-human Snowflake service user with key-pair
 auth. The private key is mounted by the runtime secret manager and only the file
-path is passed to TrustOps:
+path is passed to GRC Lake:
 
 ```bash
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
-SNOWFLAKE_USER=TRUSTOPS_INGEST_SVC \
+SNOWFLAKE_USER=GRC_LAKE_INGEST_SVC \
 SNOWFLAKE_AUTHENTICATOR=SNOWFLAKE_JWT \
 SNOWFLAKE_PRIVATE_KEY_FILE="$SNOWFLAKE_PRIVATE_KEY_FILE" \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse scenario run live-cloud-posture \
+grc-lake scenario run live-cloud-posture \
   --lake build/scenarios/snowflake-live \
   --connector snowflake-evidence-lake \
   --summary
@@ -142,14 +142,14 @@ After Azure, AWS, and Snowflake are configured, run all three into one lake:
 AZURE_SUBSCRIPTION_ID=8e134453-ac1f-46fb-8047-0af5d5e86427 \
 AWS_ACCOUNT_ID=030225640638 \
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
-SNOWFLAKE_USER=TRUSTOPS_INGEST_SVC \
+SNOWFLAKE_USER=GRC_LAKE_INGEST_SVC \
 SNOWFLAKE_AUTHENTICATOR=SNOWFLAKE_JWT \
 SNOWFLAKE_PRIVATE_KEY_FILE="$SNOWFLAKE_PRIVATE_KEY_FILE" \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse scenario run live-cloud-posture \
+grc-lake scenario run live-cloud-posture \
   --lake build/scenarios/live-cloud-posture \
   --summary
 ```
@@ -159,7 +159,7 @@ source, posture score/state, integrity status, snapshot-chain verification,
 workflow result, the durable JSON report path, and the Markdown proof pack path.
 Omit it when an automation or PR attachment needs the full JSON report.
 
-This is the default scenario for proving that TrustOps can operate as a
+This is the default scenario for proving that GRC Lake can operate as a
 self-hosted, deterministic trust center: evidence comes from real systems, the
 core evaluation path stays model-independent, and the workflow layer is a
 guarded action path rather than the compliance engine.

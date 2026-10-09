@@ -106,6 +106,7 @@ export interface CredentialPolicy {
 // Mirrors security_lakehouse.secret_refs; tests/test_cloud_link_ui_contract.py
 // pins these lists to the server's.
 export const SERVER_SECRET_PREFIXES = [
+  "GRC_LAKE_",
   "TRUSTOPS_",
   "AWS_",
   "AMAZON_",
@@ -151,7 +152,7 @@ const AZURE_CLIENT_RE =
 const GCP_SERVICE_ACCOUNT_RE =
   /^[a-z][a-z0-9-]{4,28}[a-z0-9]@[a-z][a-z0-9-]{4,28}[a-z0-9]\.iam\.gserviceaccount\.com$/;
 
-export const TENANT_PREFIX_PLACEHOLDER = "TRUSTOPS_TENANT_<ID>__";
+export const TENANT_PREFIX_PLACEHOLDER = "GRC_LAKE_TENANT_<ID>__";
 
 function prefixHint(policy: CredentialPolicy): string {
   return `use the tenant prefix ${policy.secretRefPrefix ?? TENANT_PREFIX_PLACEHOLDER}`;

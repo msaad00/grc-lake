@@ -2,7 +2,7 @@ import * as React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { ApiError } from "@/lib/api/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrustOpsMark } from "@/components/brand/TrustOpsMark";
+import { GrcLakeMark } from "@/components/brand/GrcLakeMark";
 
 /**
  * Minimal shape of a TanStack query result this component depends on. Accepting
@@ -61,7 +61,7 @@ function DefaultSkeleton({ label }: { label: string }) {
   return (
     <div className="grid gap-3 p-5" role="status" aria-live="polite">
       <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-card">
-        <TrustOpsMark size="sm" gradientId="trustops-query-state-gradient" />
+        <GrcLakeMark size="sm" gradientId="grc-lake-query-state-gradient" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink">Loading {label}…</p>
           <p className="text-xs text-muted">

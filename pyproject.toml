@@ -3,7 +3,7 @@ requires = ["setuptools>=77.0,<85", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "trustops-security-data-lake"
+name = "grc-lake"
 version = "0.2.24"
 description = "Open-source, self-hosted trust operations: read-only evidence collection, deterministic control tests, and reproducible assessment exports via API, CLI, and MCP."
 readme = "README.md"
@@ -31,15 +31,15 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/msaad00/trustops-security-data-lake"
-Documentation = "https://github.com/msaad00/trustops-security-data-lake/tree/main/docs"
-Repository = "https://github.com/msaad00/trustops-security-data-lake"
-Changelog = "https://github.com/msaad00/trustops-security-data-lake/blob/main/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/msaad00/trustops-security-data-lake/issues"
+Homepage = "https://github.com/msaad00/grc-lake"
+Documentation = "https://github.com/msaad00/grc-lake/tree/main/docs"
+Repository = "https://github.com/msaad00/grc-lake"
+Changelog = "https://github.com/msaad00/grc-lake/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/msaad00/grc-lake/issues"
 
 [project.optional-dependencies]
 # Server mode: the ASGI platform surface for auth, multi-tenancy, and live
-# connectors. Local mode stays zero-dependency (`pip install trustops-security-data-lake`).
+# connectors. Local mode stays zero-dependency (`pip install grc-lake`).
 server = [
     "fastapi>=0.141.1",
     "uvicorn>=0.30",
@@ -56,6 +56,7 @@ server = [
 dev = [
     "jsonschema>=4.23",
     "pytest>=8.0",
+    "pytest-cov>=7.1",
     "ruff>=0.8.0",
     "mypy>=2.3",
     # supply-chain scan + pre-commit driver
@@ -119,9 +120,9 @@ kubernetes = [
 mcp = [
     "mcp>=1.2.0,<2",
 ]
-# Typed Python client (`TrustOpsClient`) over the `/api/v1` surface so agents
+# Typed Python client (`GrcLakeClient`) over the `/api/v1` surface so agents
 # and scripts share the same contract as humans
-# (`pip install trustops-security-data-lake[sdk]`).
+# (`pip install grc-lake[sdk]`).
 sdk = [
     "httpx>=0.28.1",
 ]
@@ -140,9 +141,11 @@ version_files = ["pyproject.toml:version"]
 tag_format = "v$version"
 
 [project.scripts]
+grc-lake = "security_lakehouse.cli:main"
 security-lakehouse = "security_lakehouse.cli:main"
 # Agent-native front door: stdio MCP server over the existing read surface.
-# Requires the optional `mcp` extra (`pip install 'trustops-security-data-lake[mcp]'`).
+# Requires the optional `mcp` extra (`pip install 'grc-lake[mcp]'`).
+grc-lake-mcp = "security_lakehouse.mcp_server:main"
 trustops-mcp = "security_lakehouse.mcp_server:main"
 
 [tool.setuptools.packages.find]
@@ -184,7 +187,7 @@ where = ["src"]
 "agent-skills/security-operations-analyst" = ["agent-skills/security-operations-analyst/SKILL.md"]
 "agent-skills/soc2-control-analyst" = ["agent-skills/soc2-control-analyst/SKILL.md"]
 "agent-skills/soc2-control-analyst/references" = ["agent-skills/soc2-control-analyst/references/sources.md"]
-"agent-skills/trustops-operator" = ["agent-skills/trustops-operator/SKILL.md"]
+"agent-skills/grc-lake-operator" = ["agent-skills/grc-lake-operator/SKILL.md"]
 
 "frameworks/packs/data" = [
     "frameworks/packs/data/cis_aws_v3.json",
@@ -214,6 +217,11 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["."]
 
+[tool.coverage.run]
+source = ["security_lakehouse"]
+branch = true
+relative_files = true
+
 [tool.mypy]
 files = ["src/security_lakehouse"]
 python_version = "3.11"
@@ -221,6 +229,7 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 warn_unused_configs = true
 strict_equality = true
+check_untyped_defs = true
 
 # Optional third-party SDKs that ship neither inline types nor a stub package
 # in uv.lock. Listed by name so a new untyped import still fails the gate.
@@ -251,8 +260,13 @@ line-length = 120
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "I", "UP", "B", "SIM", "BLE", "RUF100"]
 ignore = ["E501"]
+# Lazy imports are the deliberate convention (optional SDK extras, cycle
+# breaking, CLI start-up cost), so PLC0415 is not selected. S310/S608 are not
+# enforced, but their noqa comments record reviewed URL-open and SQL-identifier
+# sites, so RUF100 keeps them.
+external = ["S310", "S608"]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's dependency-injection markers are evaluated once and used as defaults

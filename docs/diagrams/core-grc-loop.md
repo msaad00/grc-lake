@@ -1,6 +1,6 @@
 # Core GRC Loop
 
-How TrustOps moves from connector sync to auditor-ready proof — the same path
+How GRC Lake moves from connector sync to auditor-ready proof — the same path
 in the console, `/api/v1`, and MCP.
 
 See also: [AUDIT_READINESS.md](../AUDIT_READINESS.md)
@@ -59,4 +59,4 @@ flowchart TB
 
 Every secured route resolves **API key, OIDC, or SAML** → user → tenant → role →
 scopes → request audit event. Browser sessions use **signed cookies**
-(`TRUSTOPS_COOKIE_SIGNING_KEY`). See [auth-identity.md](auth-identity.md).
+(`GRC_LAKE_COOKIE_SIGNING_KEY`). See [auth-identity.md](auth-identity.md).

@@ -3,7 +3,7 @@
 A REST catalog's config/table responses and a Glue table's parameters are
 controlled by whoever runs the catalog. They must not be able to point the
 reader at an internal endpoint (SSRF), a proxy, a signer, a custom FileIO or
-retry class, or a local file on the TrustOps host.
+retry class, or a local file on the GRC Lake host.
 """
 
 from __future__ import annotations
@@ -14,11 +14,11 @@ import pytest
 
 pytest.importorskip("pyiceberg")
 
-from pyiceberg.io.pyarrow import PyArrowFileIO  # noqa: E402
+from pyiceberg.io.pyarrow import PyArrowFileIO
 
-from security_lakehouse import connectors_iceberg as ice  # noqa: E402
-from security_lakehouse import iceberg_export  # noqa: E402
-from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, server_execution  # noqa: E402
+from security_lakehouse import connectors_iceberg as ice
+from security_lakehouse import iceberg_export
+from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, server_execution
 
 HOSTILE_PROPERTIES = {
     "s3.endpoint": "http://169.254.169.254",
@@ -133,10 +133,10 @@ def test_warehouse_scheme_opt_in_is_limited_to_object_stores() -> None:
 
 def test_rest_catalog_filters_config_and_table_properties(rest_stub: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     url, state = rest_stub
-    monkeypatch.setenv("TRUSTOPS_TEST_BEARER", "synthetic-ephemeral-bearer")
+    monkeypatch.setenv("GRC_LAKE_TEST_BEARER", "synthetic-ephemeral-bearer")
     state["overrides"] = dict(HOSTILE_PROPERTIES)
     catalog = iceberg_export.rest_catalog(
-        url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
+        url, warehouse="fixture", token_env="GRC_LAKE_TEST_BEARER", allow_http_localhost=True
     )
     try:
         with server_execution("tenant-a"):
@@ -173,9 +173,9 @@ def test_glue_catalog_file_io_rejects_local_metadata_locations(monkeypatch: pyte
 def test_loopback_test_catalog_may_use_a_local_file_warehouse(rest_stub: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     """Local catalog testing (loopback opt-in) can use a local FILE warehouse; server mode cannot."""
     url, _state = rest_stub
-    monkeypatch.setenv("TRUSTOPS_TEST_BEARER", "synthetic-ephemeral-bearer")
+    monkeypatch.setenv("GRC_LAKE_TEST_BEARER", "synthetic-ephemeral-bearer")
     catalog = iceberg_export.rest_catalog(
-        url, warehouse="fixture", token_env="TRUSTOPS_TEST_BEARER", allow_http_localhost=True
+        url, warehouse="fixture", token_env="GRC_LAKE_TEST_BEARER", allow_http_localhost=True
     )
     try:
         io = catalog._load_file_io({"s3.endpoint": "http://169.254.169.254"})

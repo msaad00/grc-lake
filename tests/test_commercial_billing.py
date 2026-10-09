@@ -23,15 +23,15 @@ pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse import netguard  # noqa: E402
-from security_lakehouse.commercial.billing import verify_stripe_signature  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.models import Tenant  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse import netguard
+from security_lakehouse.commercial.billing import verify_stripe_signature
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.models import Tenant
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 WHSEC = "whsec_test_secret"
 PRICES = {"starter": "price_starter", "team": "price_team", "business": "price_business"}
@@ -96,13 +96,13 @@ class FakeStripe:
 
 @pytest.fixture
 def env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
-    monkeypatch.setenv("TRUSTOPS_BILLING_ENABLED", "1")
-    monkeypatch.setenv("TRUSTOPS_STRIPE_SECRET_KEY", "sk_test_123")
-    monkeypatch.setenv("TRUSTOPS_STRIPE_WEBHOOK_SECRET", WHSEC)
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://trustops.example.com")
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_BILLING_ENABLED", "1")
+    monkeypatch.setenv("GRC_LAKE_STRIPE_SECRET_KEY", "sk_test_123")
+    monkeypatch.setenv("GRC_LAKE_STRIPE_WEBHOOK_SECRET", WHSEC)
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://grc-lake.example.com")
     for tier, price in PRICES.items():
-        monkeypatch.setenv(f"TRUSTOPS_STRIPE_PRICE_{tier.upper()}", price)
+        monkeypatch.setenv(f"GRC_LAKE_STRIPE_PRICE_{tier.upper()}", price)
     fake = FakeStripe()
     monkeypatch.setattr(netguard, "open_public", fake)
     _seed_lake(tmp_path)
@@ -182,7 +182,7 @@ def test_admin_checkout_creates_a_subscription_session(env) -> None:
     assert form["line_items[0][quantity]"] == ["1"]
     assert form["client_reference_id"] == [keys["tenant_id"]]
     assert form["subscription_data[metadata][tenant_id]"] == [keys["tenant_id"]]
-    assert form["success_url"][0].startswith("https://trustops.example.com/")
+    assert form["success_url"][0].startswith("https://grc-lake.example.com/")
     assert request.get_header("Authorization") == "Bearer sk_test_123"
     assert request.get_header("Idempotency-key")
 
@@ -298,7 +298,7 @@ def test_past_due_is_writable_during_grace_then_read_only(env, monkeypatch: pyte
     resp = client.post("/api/v1/risks", json={"title": "during grace"}, headers=_bearer(keys["contributor"]))
     assert resp.status_code == HTTPStatus.CREATED
 
-    monkeypatch.setenv("TRUSTOPS_BILLING_GRACE_DAYS", "0")
+    monkeypatch.setenv("GRC_LAKE_BILLING_GRACE_DAYS", "0")
     assert client.get("/api/v1/billing", headers=_bearer(keys["admin"])).json()["data"]["access"] == "read_only"
     blocked = client.post("/api/v1/risks", json={"title": "blocked"}, headers=_bearer(keys["contributor"]))
     assert blocked.status_code == HTTPStatus.FORBIDDEN
@@ -335,7 +335,7 @@ def test_disabled_billing_returns_501_and_never_restricts(env, monkeypatch: pyte
     client, keys, _app, fake = env
     _checkout_completed(client, fake, keys["tenant_id"])
     _set_status(client, fake, "canceled", "evt_c")
-    monkeypatch.setenv("TRUSTOPS_BILLING_ENABLED", "0")
+    monkeypatch.setenv("GRC_LAKE_BILLING_ENABLED", "0")
     assert client.get("/api/v1/billing", headers=_bearer(keys["admin"])).status_code == HTTPStatus.NOT_IMPLEMENTED
     resp = client.post("/api/v1/risks", json={"title": "x"}, headers=_bearer(keys["contributor"]))
     assert resp.status_code == HTTPStatus.CREATED
@@ -346,8 +346,8 @@ def test_secret_key_prefers_the_file_variant(tmp_path: Path, monkeypatch: pytest
 
     key_file = tmp_path / "stripe_key"
     key_file.write_text("sk_test_from_file\n")
-    monkeypatch.setenv("TRUSTOPS_STRIPE_SECRET_KEY", "sk_test_inline")
-    monkeypatch.setenv("TRUSTOPS_STRIPE_SECRET_KEY_FILE", str(key_file))
+    monkeypatch.setenv("GRC_LAKE_STRIPE_SECRET_KEY", "sk_test_inline")
+    monkeypatch.setenv("GRC_LAKE_STRIPE_SECRET_KEY_FILE", str(key_file))
     assert stripe_secret_key() == "sk_test_from_file"
 
 

@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 from security_lakehouse.connectors import load_connector_catalog
 from security_lakehouse.io import jsonl_field_counts, read_jsonl
-
-JsonObject = dict[str, Any]
+from security_lakehouse.jsontypes import JsonObject
 
 _PASS_RESULTS = frozenset({"pass", "ready"})
 _FAIL_RESULTS = frozenset({"fail"})

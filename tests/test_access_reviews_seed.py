@@ -11,10 +11,10 @@ import pytest
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from security_lakehouse.db import migrate  # noqa: E402
-from security_lakehouse.db.base import create_engine_for, session_factory, session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_tenant  # noqa: E402
-from security_lakehouse.services import access_reviews as ars  # noqa: E402
+from security_lakehouse.db import migrate
+from security_lakehouse.db.base import create_engine_for, session_factory, session_scope
+from security_lakehouse.db.repository import create_tenant
+from security_lakehouse.services import access_reviews as ars
 
 
 def _ev(asset_id: str, asset_type: str, source: str, event_type: str, status: str) -> dict:

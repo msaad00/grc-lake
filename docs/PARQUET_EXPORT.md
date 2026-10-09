@@ -16,11 +16,11 @@ snapshot publication.
 Install the optional dependencies (the example also uses repository sample data):
 
 ```bash
-pip install 'trustops-security-data-lake[parquet,analytics]>=0.2.10'
-security-lakehouse ingestion normalize \
+pip install 'grc-lake[parquet,analytics]>=0.2.10'
+grc-lake ingestion normalize \
   --raw data/raw/security_events.jsonl --out build/parquet-demo-lake \
   --tenant-id acme-prod
-security-lakehouse pipeline export-parquet \
+grc-lake pipeline export-parquet \
   --lake build/parquet-demo-lake --tenant-id acme-prod \
   --out build/parquet-demo-export
 ```
@@ -32,7 +32,7 @@ silently filtered or relabeled. Normalize a correctly scoped source first.
 The explicit tenant argument is a consistency check; local filesystem access
 and permissions remain the authorization boundary.
 
-Query with DuckDB without importing TrustOps or PyArrow:
+Query with DuckDB without importing GRC Lake or PyArrow:
 
 ```python
 import duckdb
@@ -111,5 +111,8 @@ rewritten. The normalized JSON contract remains v1 with this additive field.
 
 Existing Iceberg tables without the new column fail schema validation before
 publication. Provision a compatible table or explicitly evolve its schema before
-publishing v2-normalized generations. TrustOps does not silently mutate that table
+publishing v2-normalized generations. GRC Lake does not silently mutate that table
 schema. Historical snapshots and exports remain pinned to their source generation.
+
+For tenant/source/date partitioned bundles and selective S3 downloads, see
+[distributed partitions](DISTRIBUTED.md#query-a-partition-subset).

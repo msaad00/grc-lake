@@ -1,0 +1,27 @@
+# Starting resources only. Measure your tenant data and concurrency before sizing.
+replicaCount: 2
+distributed:
+  enabled: true
+  clusterId: grc-primary
+  bucket: grc-lake-evidence
+  databaseSecretName: grc-lake-database
+  role: api
+  workspaceBytes: "536870912"
+  scratchSize: 20Gi
+security:
+  requireAuthentication: true
+env:
+  - name: GRC_LAKE_COOKIE_SIGNING_KEY
+    valueFrom:
+      secretKeyRef:
+        name: grc-lake-signing
+        key: cookie-key
+  - name: GRC_LAKE_WORKSPACE_CONCURRENCY
+    value: "4"
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi

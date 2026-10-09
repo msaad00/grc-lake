@@ -11,11 +11,11 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse import api_v1  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_paging import _seed_evidence  # noqa: E402
+from security_lakehouse import api_v1
+from security_lakehouse.server_app import create_app
+from test_api_paging import _seed_evidence
 
 
 def test_framework_coverage_pages_frameworks_and_keeps_summary(tmp_path: Path) -> None:

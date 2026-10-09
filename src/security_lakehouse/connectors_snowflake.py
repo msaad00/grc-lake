@@ -1,6 +1,6 @@
 """Snowflake evidence-lake collector.
 
-The Snowflake connector is an existing-lake reader: it expects TrustOps-shaped
+The Snowflake connector is an existing-lake reader: it expects GRC Lake-shaped
 evidence views to already exist in the customer's Snowflake account and reads
 them with a least-privilege role. It never creates, updates, or deletes
 Snowflake objects.
@@ -16,7 +16,6 @@ Two clients sit behind one interface:
 
 from __future__ import annotations
 
-import os
 import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -37,16 +36,17 @@ from security_lakehouse.lake_mapping import (
     resolve_mappings,
 )
 from security_lakehouse.models import utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_secret_ref
 
 CONNECTOR_ID = "snowflake-evidence-lake"
 SOURCE = "snowflake"
 
 DEFAULT_VIEWS = {
-    "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-    "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-    "asset_risk": "TRUSTOPS_ASSET_RISK",
-    "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+    "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+    "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+    "asset_risk": "GRC_LAKE_ASSET_RISK",
+    "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
 }
 VIEW_PURPOSES = tuple(DEFAULT_VIEWS)
 
@@ -59,17 +59,17 @@ BUNDLE_CONTROLS = ["SOC2-CC6.1", "ISO27001-A.5.15"]
 class SnowflakeClient:
     """Read-only Snowflake client backed by ``snowflake.connector``.
 
-    The connector is imported lazily so TrustOps remains lightweight unless a
+    The connector is imported lazily so GRC Lake remains lightweight unless a
     user opts into live Snowflake collection. Authentication supports the
     Snowflake Python connector's standard keyword arguments passed by the runner
     (account, user, authenticator, token, warehouse, database, schema, role).
     Human POCs can use ``authenticator=externalbrowser``; automation can use
-    OAuth without persisting the raw credential in TrustOps.
+    OAuth without persisting the raw credential in GRC Lake.
     """
 
     def __init__(self, *, query_params: dict[str, Any], views: dict[str, str] | None = None) -> None:
         try:
-            import snowflake.connector  # noqa: PLC0415
+            import snowflake.connector
         except ImportError as exc:  # pragma: no cover - live Snowflake only
             raise RuntimeError(
                 "snowflake-evidence-lake live collection requires snowflake-connector-python; "
@@ -214,7 +214,7 @@ def collect_snowflake_evidence(
     tenant_id: str = "customer-managed",
     source: str = SOURCE,
 ) -> list[dict[str, Any]]:
-    """Collect canonical raw evidence from the four TrustOps evidence views.
+    """Collect canonical raw evidence from the four GRC Lake evidence views.
 
     ``source`` labels the lake the views live in; the Databricks connector
     reuses this contract with ``source="databricks"``.
@@ -255,11 +255,12 @@ def probe_snowflake_access(
     names, row counts, and sanitized diagnostics only; raw credential material is
     never returned.
     """
-    environment = env or dict(os.environ)
+    env = runtime_env(env)
+    environment = env or dict(runtime_env())
     query_params = _probe_query_params(credentials=credentials, options=options, env=environment)
     specs = resolve_mappings(options)
     if specs:
-        # Mapped reads never touch the TrustOps views, so probe the mapped tables.
+        # Mapped reads never touch the GRC Lake views, so probe the mapped tables.
         mapped = probe_mappings(SnowflakeClient(query_params=query_params), specs)
         return {
             "ok": mapped["ok"],
@@ -278,7 +279,7 @@ def probe_snowflake_access(
     views = {key: str(options.get(key) or default) for key, default in DEFAULT_VIEWS.items()}
     try:
         result = SnowflakeClient(query_params=query_params, views=views).probe()
-    except Exception as exc:  # pragma: no cover - exercised with the live driver
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - live driver; probe returns the error
         return {
             "ok": False,
             "context": {},
@@ -308,12 +309,13 @@ def discover_snowflake_scope(
     UI should collect only account + service identity + a secret reference, then
     let the active Snowflake grants drive which scope objects can be selected.
     """
-    environment = env or dict(os.environ)
+    env = runtime_env(env)
+    environment = env or dict(runtime_env())
     try:
         query_params = _probe_query_params(credentials=credentials, options=options, env=environment)
         views = {key: str(options.get(key) or default) for key, default in DEFAULT_VIEWS.items()}
         return SnowflakeClient(query_params=query_params, views=views).discover_scope()
-    except Exception as exc:  # pragma: no cover - exercised with the live driver
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - live driver; discovery returns the error
         return {
             "ok": False,
             "selection_mode": "live_snowflake_scope",
@@ -331,6 +333,7 @@ def _probe_query_params(
     options: dict[str, Any],
     env: dict[str, str],
 ) -> dict[str, Any]:
+    env = runtime_env(env)
     account = str(credentials.get("account") or "").strip()
     user = str(credentials.get("user") or "").strip()
     if not account or not user:
@@ -701,8 +704,8 @@ def _snowflake_scope_metadata(
     selected: dict[str, str],
 ) -> dict[str, Any]:
     recommended = {
-        "warehouse": _pick_scope_value(warehouses, selected.get("warehouse"), "TRUSTOPS_READ_WH"),
-        "database": _pick_scope_value(databases, selected.get("database"), "TRUSTOPS_SECURITY_LAKE"),
+        "warehouse": _pick_scope_value(warehouses, selected.get("warehouse"), "GRC_LAKE_READ_WH"),
+        "database": _pick_scope_value(databases, selected.get("database"), "GRC_LAKE_SECURITY_LAKE"),
         "schema": _pick_scope_value(schemas, selected.get("schema"), "EVIDENCE"),
     }
     for purpose, default in DEFAULT_VIEWS.items():
@@ -802,7 +805,7 @@ def _view_probe_check(cursor: Any, *, purpose: str, view: str) -> dict[str, Any]
             "row_count": int(row[0] or 0),
             "error": None,
         }
-    except Exception as exc:  # pragma: no cover - live Snowflake only
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - live Snowflake only; probe returns the error
         return {
             "purpose": purpose,
             "view": view,

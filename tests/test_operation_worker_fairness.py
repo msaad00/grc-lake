@@ -100,19 +100,19 @@ def test_worker_concurrency_is_bounded(tmp_path, value):
 
 
 def test_server_reads_worker_count_from_environment(tmp_path, monkeypatch):
-    monkeypatch.delenv("TRUSTOPS_OPERATION_WORKERS", raising=False)
+    monkeypatch.delenv("GRC_LAKE_OPERATION_WORKERS", raising=False)
     assert create_app(tmp_path, require_auth=False).state.operation_worker.concurrency == 2
-    monkeypatch.setenv("TRUSTOPS_OPERATION_WORKERS", "4")
+    monkeypatch.setenv("GRC_LAKE_OPERATION_WORKERS", "4")
     assert create_app(tmp_path, require_auth=False).state.operation_worker.concurrency == 4
-    monkeypatch.setenv("TRUSTOPS_OPERATION_WORKERS", "lots")
-    with pytest.raises(ValueError, match="TRUSTOPS_OPERATION_WORKERS"):
+    monkeypatch.setenv("GRC_LAKE_OPERATION_WORKERS", "lots")
+    with pytest.raises(ValueError, match="GRC_LAKE_OPERATION_WORKERS"):
         create_app(tmp_path, require_auth=False)
 
 
 def test_lifespan_starts_configured_workers_and_joins_them_on_shutdown(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
 
-    monkeypatch.setenv("TRUSTOPS_OPERATION_WORKERS", "3")
+    monkeypatch.setenv("GRC_LAKE_OPERATION_WORKERS", "3")
     app = create_app(tmp_path, require_auth=False)
     with TestClient(app):
         worker = app.state.operation_worker
@@ -144,7 +144,7 @@ def test_stop_waits_for_in_flight_work_and_joins_every_thread(tmp_path):
 @pytest.fixture(params=["sqlite", "postgresql"])
 def database(request, tmp_path, monkeypatch):
     if request.param == "sqlite":
-        monkeypatch.delenv("TRUSTOPS_DATABASE_URL", raising=False)
+        monkeypatch.delenv("GRC_LAKE_DATABASE_URL", raising=False)
         yield
         return
     configured = os.environ.get("TEST_POSTGRES_URL")
@@ -155,7 +155,7 @@ def database(request, tmp_path, monkeypatch):
     with admin.connect() as conn:
         conn.execute(text(f'CREATE DATABASE "{name}"'))
     monkeypatch.setenv(
-        "TRUSTOPS_DATABASE_URL", make_url(configured).set(database=name).render_as_string(hide_password=False)
+        "GRC_LAKE_DATABASE_URL", make_url(configured).set(database=name).render_as_string(hide_password=False)
     )
     try:
         yield

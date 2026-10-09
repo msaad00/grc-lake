@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -10,14 +10,7 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
 from security_lakehouse.db.models import POAM_STATUSES, PoamItem
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def create_item(
@@ -111,7 +104,7 @@ def update_item(
     item = get_item(session, tenant_id=tenant_id, item_id=item_id)
     if item is None:
         return None
-    moment = _now(now)
+    moment = utc_now(now)
     if "status" in changes:
         status = str(changes["status"])
         if status not in POAM_STATUSES:
@@ -141,12 +134,12 @@ def item_to_dict(item: PoamItem) -> dict[str, Any]:
         "milestone": item.milestone,
         "sprs_points": item.sprs_points,
         "poam_eligible": item.poam_eligible,
-        "due_at": _iso(item.due_at),
+        "due_at": iso_offset(item.due_at),
         "remediation_task_id": item.remediation_task_id,
         "created_by": item.created_by,
-        "created_at": _iso(item.created_at),
-        "updated_at": _iso(item.updated_at),
-        "completed_at": _iso(item.completed_at),
+        "created_at": iso_offset(item.created_at),
+        "updated_at": iso_offset(item.updated_at),
+        "completed_at": iso_offset(item.completed_at),
     }
 
 

@@ -31,15 +31,24 @@ def test_smoke_gate_rejects_failed_cancelled_or_skipped_dependencies() -> None:
     jobs = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())["jobs"]
     gate = jobs["smoke"]
     assert gate["if"] == "always()"
-    assert set(gate["needs"]) == {"pipeline-smoke", "python-tests", "pre-commit", "security"}
+    assert set(gate["needs"]) == {
+        "pipeline-smoke",
+        "python-tests",
+        "pre-commit",
+        "security",
+        "e2e",
+        "postgres-migrations",
+    }
     step = gate["steps"][0]
     assert step["env"] == {
         "PIPELINE_RESULT": "${{ needs.pipeline-smoke.result }}",
         "TEST_RESULT": "${{ needs.python-tests.result }}",
         "HOOK_RESULT": "${{ needs.pre-commit.result }}",
         "SECURITY_RESULT": "${{ needs.security.result }}",
+        "E2E_RESULT": "${{ needs.e2e.result }}",
+        "POSTGRES_RESULT": "${{ needs.postgres-migrations.result }}",
     }
-    for results in itertools.product(("success", "failure", "cancelled", "skipped"), repeat=4):
+    for results in itertools.product(("success", "failure", "cancelled", "skipped"), repeat=len(step["env"])):
         result = subprocess.run(
             ["bash", "-c", step["run"]],
             env={**os.environ, **dict(zip(step["env"], results, strict=True))},

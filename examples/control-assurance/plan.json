@@ -1,5 +1,5 @@
 {
-  "schema_version": "grc-lake.control_test_plan.v1",
+  "schema_version": "trustops.control_test_plan.v1",
   "tenant_id": "default",
   "period_start": "2026-01-01T00:00:00Z",
   "period_end": "2026-01-03T00:00:00Z",

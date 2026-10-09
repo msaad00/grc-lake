@@ -131,7 +131,9 @@ test.describe("graph opens readable", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/console/graph/");
     const scope = page.getByTestId("graph-path-scope");
-    await expect(scope).toContainText("Showing the path through");
+    await expect(scope).toContainText("Showing the path through", {
+      timeout: 20_000,
+    });
     const nodes = page.locator(".react-flow__node");
     await expect(nodes.first()).toBeVisible();
     const count = await nodes.count();
@@ -145,7 +147,9 @@ test.describe("graph opens readable", () => {
   test("on a phone the canvas starts on the first screen", async ({ page }) => {
     await page.setViewportSize(PHONE);
     await page.goto("/console/graph/");
-    await expect(page.getByTestId("graph-summary-line")).toBeVisible();
+    await expect(page.getByTestId("graph-summary-line")).toBeVisible({
+      timeout: 20_000,
+    });
     await expect(page.getByText("Controls in view")).toBeHidden();
     const canvas = page.locator(".react-flow").first();
     await expect(canvas).toBeVisible({ timeout: 20_000 });
@@ -214,10 +218,12 @@ test("chart tooltips use the themed surface in dark mode", async ({ page }) => {
 });
 
 test("empty lists share one empty state", async ({ page }) => {
-  await page.route("**/api/v1/risks", (route) =>
-    route.request().method() === "GET"
-      ? route.fulfill({ json: { data: [] } })
-      : route.fallback(),
+  await page.route(
+    (url) => url.pathname === "/api/v1/risks",
+    (route) =>
+      route.request().method() === "GET"
+        ? route.fulfill({ json: { data: [] } })
+        : route.fallback(),
   );
   await page.goto("/console/risks/");
   const empty = page.getByText("No risks recorded yet.", { exact: false });

@@ -14,6 +14,10 @@ def transaction_lock(session, namespace: str, identity: str) -> None:
     session.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": key(namespace, identity)})
 
 
+def try_transaction_lock(session, namespace: str, identity: str) -> bool:
+    return bool(session.scalar(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": key(namespace, identity)}))
+
+
 @contextmanager
 def process_lock(engine, namespace: str, identity: str):
     # An exclusively checked-out connection owns this session-level lock.

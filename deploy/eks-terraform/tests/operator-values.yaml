@@ -2,7 +2,7 @@
 ingress:
   enabled: true
   hosts:
-    - host: trustops.example.com
+    - host: grc-lake.example.com
       paths:
         - path: /
           pathType: Prefix

@@ -14,7 +14,7 @@ the observed-time column and bounded per sync, and ``lake_mapping.map_rows``
 re-applies the same filters and bound.
 
 Egress: Glue and S3 use the AWS SDK's regional endpoints; no endpoint override
-is accepted from TrustOps configuration. Catalog-supplied storage settings are
+is accepted from GRC Lake configuration. Catalog-supplied storage settings are
 filtered, not trusted: FileIO keeps only vended short-lived credentials and the
 region from a REST catalog's config/table responses (endpoint, proxy, signer,
 role, retry and FileIO implementation keys are dropped), and every metadata,
@@ -30,7 +30,6 @@ Requires the ``iceberg`` extra (pyiceberg + pyarrow) for Iceberg and the
 
 from __future__ import annotations
 
-import os
 import re
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -52,13 +51,14 @@ from security_lakehouse.lake_mapping import (
     resolve_mapping_ref,
     resolve_mappings,
 )
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import SecretRefPolicyError, secret_ref_denial
 
 CONNECTOR_ID = "iceberg-parquet-lake"
 SOURCE = "iceberg"
 CATALOG_TYPES = ("glue", "rest", "parquet")
-LOCAL_ROOT_ENV = "TRUSTOPS_LAKE_LOCAL_ROOT"
-DEFAULT_REST_TOKEN_ENV = "TRUSTOPS_ICEBERG_TOKEN"
+LOCAL_ROOT_ENV = "GRC_LAKE_LAKE_LOCAL_ROOT"
+DEFAULT_REST_TOKEN_ENV = "GRC_LAKE_ICEBERG_TOKEN"
 DEFAULT_INITIAL_WINDOW_DAYS = 30
 
 # Amazon Security Lake source version 2 (OCSF 1.1.0, Iceberg) table suffixes and
@@ -164,7 +164,8 @@ class ParquetDatasetReader(_WindowMixin):
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         env: dict[str, str] | None = None,
     ) -> None:
-        environment = os.environ if env is None else env
+        env = runtime_env(env)
+        environment = runtime_env() if env is None else env
         self.locations = {table: _parse_location(uri, environment) for table, uri in paths.items()}
         self.region = region
         self._credentials = credentials or {}
@@ -233,6 +234,7 @@ class IcebergFixtureClient:
 def build_reader(
     credentials: dict[str, Any], options: dict[str, Any], *, env: dict[str, str]
 ) -> IcebergCatalogReader | ParquetDatasetReader:
+    env = runtime_env(env)
     catalog_type = str(credentials.get("catalog_type") or "").strip()
     window = _initial_window_days(options)
     if catalog_type == "glue":
@@ -458,6 +460,7 @@ def _ordered_rows(arrow: Any, observed: str, limit: int) -> list[dict[str, Any]]
 
 
 def _parse_location(uri: str, env: Any) -> tuple[str, str]:
+    env = runtime_env(env)
     text = str(uri or "").strip()
     if text.startswith("s3://"):
         bucket, _, prefix = text[len("s3://") :].partition("/")

@@ -90,7 +90,7 @@ def test_live_cloud_posture_scenario_runs_connectors_integrity_snapshot_and_work
     proof_pack = tmp_path / "gold" / "scenario_reports" / "live-cloud-posture.md"
     assert proof_pack.is_file()
     proof_text = proof_pack.read_text(encoding="utf-8")
-    assert "# TrustOps Live Cloud Proof Pack" in proof_text
+    assert "# GRC Lake Live Cloud Proof Pack" in proof_text
     assert "| `snowflake-evidence-lake` | ok | 8 | yes |" in proof_text
     assert "`triage_open_findings`: 15 open violation(s) need owners or exceptions." in proof_text
 
@@ -151,7 +151,7 @@ def test_live_cloud_posture_scenario_cli_can_emit_operator_summary(tmp_path: Pat
 
     assert code == 0
     output = capsys.readouterr().out
-    assert "TrustOps scenario: live-cloud-posture" in output
+    assert "GRC Lake scenario: live-cloud-posture" in output
     assert "Status: ok" in output
     assert "Evidence: 22 normalized rows from aws=7, azure=7, snowflake=8" in output
     assert "- azure-posture: ok, evidence=7, materialized" in output

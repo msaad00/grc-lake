@@ -1,7 +1,7 @@
-"""Model contract for optional TrustOps agent runs.
+"""Model contract for optional GRC Lake agent runs.
 
 The model sees redacted facts and tool schemas. It may summarize, rank, and
-propose allowed tool calls, but TrustOps core remains the executor and source
+propose allowed tool calls, but GRC Lake core remains the executor and source
 of truth for compliance decisions.
 """
 
@@ -31,7 +31,7 @@ def tool_manifest(*, use_case: str = "posture_review") -> list[dict[str, Any]]:
         {
             "name": "load_redacted_posture",
             "mode": "read",
-            "description": "Loads current TrustOps posture after role-based redaction.",
+            "description": "Loads current GRC Lake posture after role-based redaction.",
             "inputs": {"lake_dir": "string", "role": "string"},
             "outputs": {"posture": "object"},
         },
@@ -45,21 +45,21 @@ def tool_manifest(*, use_case: str = "posture_review") -> list[dict[str, Any]]:
         {
             "name": "create_evidence_request",
             "mode": "propose_only",
-            "description": "Proposes a human-approved evidence request. TrustOps APIs execute it later.",
+            "description": "Proposes a human-approved evidence request. GRC Lake APIs execute it later.",
             "inputs": {"control_id": "string", "reason": "string"},
             "outputs": {"proposal": "object"},
         },
         {
             "name": "create_remediation_task",
             "mode": "propose_only",
-            "description": "Proposes a human-approved remediation task. TrustOps APIs execute it later.",
+            "description": "Proposes a human-approved remediation task. GRC Lake APIs execute it later.",
             "inputs": {"control_id": "string", "reason": "string", "owner": "string"},
             "outputs": {"proposal": "object"},
         },
         {
             "name": "freeze_snapshot",
             "mode": "propose_only",
-            "description": "Proposes freezing a point-in-time snapshot. TrustOps computes and signs it.",
+            "description": "Proposes freezing a point-in-time snapshot. GRC Lake computes and signs it.",
             "inputs": {"reason": "string"},
             "outputs": {"proposal": "object"},
         },
@@ -78,7 +78,7 @@ def tool_manifest(*, use_case: str = "posture_review") -> list[dict[str, Any]]:
         {
             "name": "create_soc_case",
             "mode": "propose_only",
-            "description": "Proposes a SOC case for an alert. TrustOps APIs execute it later.",
+            "description": "Proposes a SOC case for an alert. GRC Lake APIs execute it later.",
             "inputs": {"event_id": "string", "severity": "string", "reason": "string"},
             "outputs": {"proposal": "object"},
         },
@@ -99,7 +99,7 @@ def tool_manifest(*, use_case: str = "posture_review") -> list[dict[str, Any]]:
         {
             "name": "notify_channel",
             "mode": "propose_only",
-            "description": "Proposes notifying an approved channel. TrustOps egress policy gates execution.",
+            "description": "Proposes notifying an approved channel. GRC Lake egress policy gates execution.",
             "inputs": {"event_id": "string", "channel": "string", "reason": "string"},
             "outputs": {"proposal": "object"},
         },
@@ -122,7 +122,7 @@ def build_model_context(
         "role": state.get("role", "read_only"),
         "provider": provider.public_dict(),
         "policy": {
-            "compliance_truth": "TrustOps deterministic controls, evidence, hashes, and snapshots only",
+            "compliance_truth": "GRC Lake deterministic controls, evidence, hashes, and snapshots only",
             "model_allowed": ["summarize", "rank", "explain", "propose_allowed_tool_calls"],
             "model_forbidden": [
                 "mark_control_passed",
@@ -164,14 +164,14 @@ def model_messages(context: dict[str, Any]) -> list[dict[str, str]]:
         {
             "role": "system",
             "content": (
-                "You are the optional TrustOps orchestration brain. You do not decide compliance. "
+                "You are the optional GRC Lake orchestration brain. You do not decide compliance. "
                 "Use only the supplied redacted facts and tool manifest. Return strict JSON."
             ),
         },
         {
             "role": "user",
             "content": (
-                "Review this TrustOps agent context and return JSON with summary, priorities, "
+                "Review this GRC Lake agent context and return JSON with summary, priorities, "
                 f"and proposed_tool_calls only:\n{json.dumps(context, sort_keys=True, separators=(',', ':'))}"
             ),
         },

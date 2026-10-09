@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
@@ -1364,6 +1364,140 @@ wheels = [
 grpc = [
     { name = "grpcio" },
 ]
+
+[[package]]
+name = "grc-lake"
+version = "0.2.24"
+source = { editable = "." }
+
+[package.optional-dependencies]
+agents = [
+    { name = "langgraph" },
+]
+analytics = [
+    { name = "duckdb" },
+]
+bigquery = [
+    { name = "google-cloud-bigquery" },
+]
+cloud = [
+    { name = "azure-identity" },
+    { name = "azure-mgmt-authorization" },
+    { name = "azure-mgmt-resource" },
+    { name = "boto3" },
+    { name = "clickhouse-connect" },
+    { name = "google-cloud-asset" },
+    { name = "google-cloud-org-policy" },
+    { name = "google-cloud-resource-manager" },
+    { name = "snowflake-connector-python", extra = ["pandas"] },
+]
+dev = [
+    { name = "alembic" },
+    { name = "authlib" },
+    { name = "commitizen" },
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "itsdangerous" },
+    { name = "jsonschema" },
+    { name = "mako" },
+    { name = "mypy" },
+    { name = "pandas" },
+    { name = "pip-audit" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "python3-saml" },
+    { name = "redis" },
+    { name = "reportlab" },
+    { name = "ruff" },
+    { name = "sqlalchemy" },
+    { name = "uvicorn" },
+]
+iceberg = [
+    { name = "pyarrow", version = "23.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "pyarrow", version = "24.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "pyiceberg", extra = ["pyarrow"] },
+]
+kubernetes = [
+    { name = "kubernetes" },
+]
+mcp = [
+    { name = "mcp" },
+]
+parquet = [
+    { name = "pyarrow", version = "23.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
+    { name = "pyarrow", version = "24.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+]
+sdk = [
+    { name = "httpx" },
+]
+server = [
+    { name = "alembic" },
+    { name = "authlib" },
+    { name = "fastapi" },
+    { name = "itsdangerous" },
+    { name = "mako" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "python3-saml" },
+    { name = "redis" },
+    { name = "reportlab" },
+    { name = "sqlalchemy" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", marker = "extra == 'dev'", specifier = ">=1.13" },
+    { name = "alembic", marker = "extra == 'server'", specifier = ">=1.13" },
+    { name = "authlib", marker = "extra == 'dev'", specifier = ">=1.3" },
+    { name = "authlib", marker = "extra == 'server'", specifier = ">=1.3" },
+    { name = "azure-identity", marker = "extra == 'cloud'", specifier = ">=1.17" },
+    { name = "azure-mgmt-authorization", marker = "extra == 'cloud'", specifier = ">=4.0" },
+    { name = "azure-mgmt-resource", marker = "extra == 'cloud'", specifier = ">=23.0,<24" },
+    { name = "boto3", marker = "extra == 'cloud'", specifier = ">=1.34" },
+    { name = "clickhouse-connect", marker = "extra == 'cloud'", specifier = ">=0.7" },
+    { name = "commitizen", marker = "extra == 'dev'", specifier = ">=3.27" },
+    { name = "duckdb", marker = "extra == 'analytics'", specifier = ">=1.0" },
+    { name = "fastapi", marker = "extra == 'dev'", specifier = ">=0.141.1" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.141.1" },
+    { name = "google-cloud-asset", marker = "extra == 'cloud'", specifier = ">=3.20" },
+    { name = "google-cloud-bigquery", marker = "extra == 'bigquery'", specifier = ">=3.45,<4" },
+    { name = "google-cloud-org-policy", marker = "extra == 'cloud'", specifier = ">=1.11" },
+    { name = "google-cloud-resource-manager", marker = "extra == 'cloud'", specifier = ">=1.12" },
+    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1" },
+    { name = "httpx", marker = "extra == 'sdk'", specifier = ">=0.28.1" },
+    { name = "itsdangerous", marker = "extra == 'dev'", specifier = ">=2.2" },
+    { name = "itsdangerous", marker = "extra == 'server'", specifier = ">=2.2" },
+    { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.23" },
+    { name = "kubernetes", marker = "extra == 'kubernetes'", specifier = ">=36.0.3" },
+    { name = "langgraph", marker = "extra == 'agents'", specifier = ">=0.2.0" },
+    { name = "mako", marker = "extra == 'dev'", specifier = ">=1.4.3" },
+    { name = "mako", marker = "extra == 'server'", specifier = ">=1.4.3" },
+    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2.0,<2" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=2.3" },
+    { name = "pandas", marker = "extra == 'dev'", specifier = ">=2.0" },
+    { name = "pip-audit", marker = "extra == 'dev'", specifier = ">=2.7" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.7" },
+    { name = "psycopg", extras = ["binary"], marker = "extra == 'server'", specifier = ">=3.1" },
+    { name = "pyarrow", marker = "extra == 'iceberg'", specifier = ">=23.0.1,<26" },
+    { name = "pyarrow", marker = "extra == 'parquet'", specifier = ">=23.0.1,<26" },
+    { name = "pyiceberg", extras = ["pyarrow"], marker = "extra == 'iceberg'", specifier = ">=0.12.0,<0.13" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1" },
+    { name = "python3-saml", marker = "extra == 'dev'", specifier = ">=1.16" },
+    { name = "python3-saml", marker = "extra == 'server'", specifier = ">=1.16" },
+    { name = "redis", marker = "extra == 'dev'", specifier = ">=8.1.0" },
+    { name = "redis", marker = "extra == 'server'", specifier = ">=8.1.0" },
+    { name = "reportlab", marker = "extra == 'dev'", specifier = ">=5.0.1" },
+    { name = "reportlab", marker = "extra == 'server'", specifier = ">=5.0.1" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
+    { name = "snowflake-connector-python", extras = ["pandas"], marker = "extra == 'cloud'", specifier = ">=4.7.1" },
+    { name = "sqlalchemy", marker = "extra == 'dev'", specifier = ">=2.0" },
+    { name = "sqlalchemy", marker = "extra == 'server'", specifier = ">=2.0" },
+    { name = "uvicorn", marker = "extra == 'dev'", specifier = ">=0.30" },
+    { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.30" },
+]
+provides-extras = ["server", "dev", "parquet", "iceberg", "analytics", "bigquery", "cloud", "kubernetes", "mcp", "sdk", "agents"]
 
 [[package]]
 name = "greenlet"
@@ -4594,140 +4728,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/51/db/03eaf4331631ef6b2
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/43/8bd850ee71a191bf072e31302c73a66be413fecdd98fdcd111ecbcce13ca/tomlkit-0.15.0-py3-none-any.whl", hash = "sha256:4dbc8f0fc024412b57ced8757ac7461305126a648ff8c2c807fcb8e133a78738", size = 41328, upload-time = "2026-05-10T07:38:23.517Z" },
 ]
-
-[[package]]
-name = "trustops-security-data-lake"
-version = "0.2.24"
-source = { editable = "." }
-
-[package.optional-dependencies]
-agents = [
-    { name = "langgraph" },
-]
-analytics = [
-    { name = "duckdb" },
-]
-bigquery = [
-    { name = "google-cloud-bigquery" },
-]
-cloud = [
-    { name = "azure-identity" },
-    { name = "azure-mgmt-authorization" },
-    { name = "azure-mgmt-resource" },
-    { name = "boto3" },
-    { name = "clickhouse-connect" },
-    { name = "google-cloud-asset" },
-    { name = "google-cloud-org-policy" },
-    { name = "google-cloud-resource-manager" },
-    { name = "snowflake-connector-python", extra = ["pandas"] },
-]
-dev = [
-    { name = "alembic" },
-    { name = "authlib" },
-    { name = "commitizen" },
-    { name = "fastapi" },
-    { name = "httpx" },
-    { name = "itsdangerous" },
-    { name = "jsonschema" },
-    { name = "mako" },
-    { name = "mypy" },
-    { name = "pandas" },
-    { name = "pip-audit" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "python3-saml" },
-    { name = "redis" },
-    { name = "reportlab" },
-    { name = "ruff" },
-    { name = "sqlalchemy" },
-    { name = "uvicorn" },
-]
-iceberg = [
-    { name = "pyarrow", version = "23.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
-    { name = "pyarrow", version = "24.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
-    { name = "pyiceberg", extra = ["pyarrow"] },
-]
-kubernetes = [
-    { name = "kubernetes" },
-]
-mcp = [
-    { name = "mcp" },
-]
-parquet = [
-    { name = "pyarrow", version = "23.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
-    { name = "pyarrow", version = "24.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
-]
-sdk = [
-    { name = "httpx" },
-]
-server = [
-    { name = "alembic" },
-    { name = "authlib" },
-    { name = "fastapi" },
-    { name = "itsdangerous" },
-    { name = "mako" },
-    { name = "psycopg", extra = ["binary"] },
-    { name = "python3-saml" },
-    { name = "redis" },
-    { name = "reportlab" },
-    { name = "sqlalchemy" },
-    { name = "uvicorn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "alembic", marker = "extra == 'dev'", specifier = ">=1.13" },
-    { name = "alembic", marker = "extra == 'server'", specifier = ">=1.13" },
-    { name = "authlib", marker = "extra == 'dev'", specifier = ">=1.3" },
-    { name = "authlib", marker = "extra == 'server'", specifier = ">=1.3" },
-    { name = "azure-identity", marker = "extra == 'cloud'", specifier = ">=1.17" },
-    { name = "azure-mgmt-authorization", marker = "extra == 'cloud'", specifier = ">=4.0" },
-    { name = "azure-mgmt-resource", marker = "extra == 'cloud'", specifier = ">=23.0,<24" },
-    { name = "boto3", marker = "extra == 'cloud'", specifier = ">=1.34" },
-    { name = "clickhouse-connect", marker = "extra == 'cloud'", specifier = ">=0.7" },
-    { name = "commitizen", marker = "extra == 'dev'", specifier = ">=3.27" },
-    { name = "duckdb", marker = "extra == 'analytics'", specifier = ">=1.0" },
-    { name = "fastapi", marker = "extra == 'dev'", specifier = ">=0.141.1" },
-    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.141.1" },
-    { name = "google-cloud-asset", marker = "extra == 'cloud'", specifier = ">=3.20" },
-    { name = "google-cloud-bigquery", marker = "extra == 'bigquery'", specifier = ">=3.45,<4" },
-    { name = "google-cloud-org-policy", marker = "extra == 'cloud'", specifier = ">=1.11" },
-    { name = "google-cloud-resource-manager", marker = "extra == 'cloud'", specifier = ">=1.12" },
-    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1" },
-    { name = "httpx", marker = "extra == 'sdk'", specifier = ">=0.28.1" },
-    { name = "itsdangerous", marker = "extra == 'dev'", specifier = ">=2.2" },
-    { name = "itsdangerous", marker = "extra == 'server'", specifier = ">=2.2" },
-    { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.23" },
-    { name = "kubernetes", marker = "extra == 'kubernetes'", specifier = ">=36.0.3" },
-    { name = "langgraph", marker = "extra == 'agents'", specifier = ">=0.2.0" },
-    { name = "mako", marker = "extra == 'dev'", specifier = ">=1.4.3" },
-    { name = "mako", marker = "extra == 'server'", specifier = ">=1.4.3" },
-    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2.0,<2" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=2.3" },
-    { name = "pandas", marker = "extra == 'dev'", specifier = ">=2.0" },
-    { name = "pip-audit", marker = "extra == 'dev'", specifier = ">=2.7" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.7" },
-    { name = "psycopg", extras = ["binary"], marker = "extra == 'server'", specifier = ">=3.1" },
-    { name = "pyarrow", marker = "extra == 'iceberg'", specifier = ">=23.0.1,<26" },
-    { name = "pyarrow", marker = "extra == 'parquet'", specifier = ">=23.0.1,<26" },
-    { name = "pyiceberg", extras = ["pyarrow"], marker = "extra == 'iceberg'", specifier = ">=0.12.0,<0.13" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1" },
-    { name = "python3-saml", marker = "extra == 'dev'", specifier = ">=1.16" },
-    { name = "python3-saml", marker = "extra == 'server'", specifier = ">=1.16" },
-    { name = "redis", marker = "extra == 'dev'", specifier = ">=8.1.0" },
-    { name = "redis", marker = "extra == 'server'", specifier = ">=8.1.0" },
-    { name = "reportlab", marker = "extra == 'dev'", specifier = ">=5.0.1" },
-    { name = "reportlab", marker = "extra == 'server'", specifier = ">=5.0.1" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
-    { name = "snowflake-connector-python", extras = ["pandas"], marker = "extra == 'cloud'", specifier = ">=4.7.1" },
-    { name = "sqlalchemy", marker = "extra == 'dev'", specifier = ">=2.0" },
-    { name = "sqlalchemy", marker = "extra == 'server'", specifier = ">=2.0" },
-    { name = "uvicorn", marker = "extra == 'dev'", specifier = ">=0.30" },
-    { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.30" },
-]
-provides-extras = ["server", "dev", "parquet", "iceberg", "analytics", "bigquery", "cloud", "kubernetes", "mcp", "sdk", "agents"]
 
 [[package]]
 name = "typing-extensions"

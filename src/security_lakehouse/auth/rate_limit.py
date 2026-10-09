@@ -15,7 +15,7 @@ and dependency-free:
   limiter itself cannot leak memory under a flood of distinct keys.
 
 Distributed deployments can share one budget across replicas by setting
-``TRUSTOPS_API_RATE_LIMIT_REDIS_URL`` (see :mod:`security_lakehouse.auth.rate_limit_redis`).
+``GRC_LAKE_API_RATE_LIMIT_REDIS_URL`` (see :mod:`security_lakehouse.auth.rate_limit_redis`).
 The in-process limiter remains the default when that URL is unset.
 """
 
@@ -26,12 +26,14 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass
 
+from security_lakehouse.runtime_environment import runtime_env
+
 # Env knobs. Rate limiting is on by default with a generous ceiling — high
 # enough that normal interactive + agent traffic never trips it, low enough to
 # blunt a runaway loop or a leaked credential.
-ENV_RPS = "TRUSTOPS_API_RATE_LIMIT_RPS"
-ENV_BURST = "TRUSTOPS_API_RATE_LIMIT_BURST"
-ENV_REDIS_URL = "TRUSTOPS_API_RATE_LIMIT_REDIS_URL"
+ENV_RPS = "GRC_LAKE_API_RATE_LIMIT_RPS"
+ENV_BURST = "GRC_LAKE_API_RATE_LIMIT_BURST"
+ENV_REDIS_URL = "GRC_LAKE_API_RATE_LIMIT_REDIS_URL"
 DEFAULT_RPS = 50.0
 DEFAULT_BURST = 100
 MAX_TRACKED_KEYS = 10_000
@@ -69,6 +71,7 @@ class RateLimitConfig:
     @classmethod
     def from_env(cls, env: dict[str, str]) -> RateLimitConfig:
         """Build config from environment. ``rps <= 0`` disables the limiter."""
+        env = runtime_env(env)
         try:
             rps = float(env.get(ENV_RPS, DEFAULT_RPS))
         except ValueError:

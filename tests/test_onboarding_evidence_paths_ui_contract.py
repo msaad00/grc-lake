@@ -12,7 +12,7 @@ def test_onboarding_explains_connector_first_and_lake_first_paths() -> None:
     component = COMPONENT.read_text(encoding="utf-8")
 
     assert "OnboardingEvidencePaths" in page
-    assert "Choose how evidence enters TrustOps" in component
+    assert "Choose how evidence enters GRC Lake" in component
     assert "Connect sources directly" in component
     assert "Bring an existing lake" in component
     assert "same normalized evidence" in component

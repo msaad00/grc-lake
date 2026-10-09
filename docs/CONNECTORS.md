@@ -1,6 +1,6 @@
 # Connector And Access Model
 
-TrustOps should collect evidence with the smallest viable access boundary.
+GRC Lake should collect evidence with the smallest viable access boundary.
 
 For ingestion idempotency, unique event IDs, headless/agent vs console surfaces,
 and security-finding flow, see
@@ -9,7 +9,7 @@ and security-finding flow, see
 ## Default path (most teams)
 
 **No customer security data lake required.** Connect read-only to source systems
-(GitHub, AWS, Okta, …), sync evidence into TrustOps's assessment store, then run
+(GitHub, AWS, Okta, …), sync evidence into GRC Lake's assessment store, then run
 control evaluation:
 
 ```text
@@ -17,7 +17,7 @@ discover scope → probe → enable → sync → eval
 ```
 
 This is the same agentless model as typical GRC SaaS — scoped tokens and
-read-only roles, not agents or broad cloud admin. TrustOps keeps the assessment
+read-only roles, not agents or broad cloud admin. GRC Lake keeps the assessment
 store in **your** boundary (`/lake` volume or self-hosted storage), not an opaque
 vendor database.
 
@@ -52,7 +52,7 @@ connectors/catalog.json
 Validate it with:
 
 ```bash
-security-lakehouse connectors validate
+grc-lake connectors validate
 ```
 
 Each catalog entry also carries **UX metadata** consumed by the console and demo kit:
@@ -65,7 +65,7 @@ Each catalog entry also carries **UX metadata** consumed by the console and demo
 
 `release_stage` is optional: `"preview"` marks an implemented connector that has not
 been verified against a live tenant (the console shows a Preview badge); absent or
-`"ga"` is the legacy standard release-stage label. It does not prove a successful live run against your provider, permission set, or data shape. Committed fixtures and local tests establish bounded adapter behavior; validate a read-only live collection before relying on its results. `security-lakehouse connectors validate` rejects any
+`"ga"` is the legacy standard release-stage label. It does not prove a successful live run against your provider, permission set, or data shape. Committed fixtures and local tests establish bounded adapter behavior; validate a read-only live collection before relying on its results. `grc-lake connectors validate` rejects any
 other value.
 
 Connection field definitions live in `app/web/src/lib/connector-forms.ts`; vendor
@@ -85,12 +85,12 @@ idempotent raw upserts, API limits, error behavior, and snapshot integrity.
 List configured connector contracts:
 
 ```bash
-security-lakehouse connectors list
+grc-lake connectors list
 ```
 
 ## Connector Runner
 
-TrustOps currently has **28 connector contracts**. **Twenty-five** are executable
+GRC Lake currently has **28 connector contracts**. **Twenty-five** are executable
 runners (direct source/API runners, the Snowflake, Databricks, ClickHouse,
 Iceberg/Parquet, BigQuery, S3, SIEM, and runtime-gateway existing-lake readers, and
 the Okta System Log incremental adapter). The remaining entries are read-only access contracts or managed evidence
@@ -101,8 +101,8 @@ they are implemented and fixture-tested against the vendor's documented API but
 have not yet been verified against a live tenant.
 
 In hosted server mode, secret references must use the tenant's
-`TRUSTOPS_TENANT_<TENANT_ID>__` prefix or the operator's
-`TRUSTOPS_CONNECTOR_SECRET_REFS` allowlist, and cloud readers need delegated
+`GRC_LAKE_TENANT_<TENANT_ID>__` prefix or the operator's
+`GRC_LAKE_CONNECTOR_SECRET_REFS` allowlist, and cloud readers need delegated
 access (AWS role plus external ID, GCP `impersonate_service_account`, the
 customer's own Entra app registration for Azure and Intune, a tenant
 kubeconfig). See [Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials).
@@ -160,41 +160,41 @@ AWS posture uses the same third-party role pattern for one account or hundreds:
 | Item          | Scaling rule                                                                                                                            |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Rollout       | Use **CloudFormation StackSets** or **Terraform workspaces** to deploy the same read-only role across target AWS accounts.              |
-| Authorization | The deployed role trusts the TrustOps runtime principal and constrains access with External ID.                                         |
-| External ID   | Use **one External ID per deployed role**; TrustOps includes that exact value in STS AssumeRole.                                        |
+| Authorization | The deployed role trusts the GRC Lake runtime principal and constrains access with External ID.                                         |
+| External ID   | Use **one External ID per deployed role**; GRC Lake includes that exact value in STS AssumeRole.                                        |
 | Confirmation  | Default role names can be confirmed by AWS account ID; custom role names use the Role ARN output.                                       |
 | Scale surface | **Bulk account import** is the follow-up console/API surface for registering many deployed roles after rollout.                         |
 | Sync          | The scheduled sync assumes each registered role, receives short-lived session credentials, and reads only the granted IAM posture APIs. |
 | Evaluation    | Raw evidence keeps the AWS account ID attached; deterministic controls evaluate across the combined evidence set.                       |
 
 <p align="center">
-  <img src="images/trustops-readonly-connections.svg" alt="Read-only connector model: AWS IAM role, GitHub App, Okta token, Snowflake SELECT into TrustOps ingestion" width="100%">
+  <img src="images/grc-lake-readonly-connections.svg" alt="Read-only connector model: AWS IAM role, GitHub App, Okta token, Snowflake SELECT into GRC Lake ingestion" width="100%">
 </p>
 
 Mermaid diagrams: [connector-ingestion.md](diagrams/connector-ingestion.md)
 
 Do not paste passwords, human-scoped developer tokens, root keys, or private
-keys into TrustOps. Use SSO, an assumable role, OAuth, key-pair auth, or a
-secret-manager reference. TrustOps records a non-secret fingerprint so a later
+keys into GRC Lake. Use SSO, an assumable role, OAuth, key-pair auth, or a
+secret-manager reference. GRC Lake records a non-secret fingerprint so a later
 enable action must match the probed access payload.
 
 Probe and enable a fixture-backed GitHub connector:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id github-security \
   --credentials-json '{"token":"fixture-read-token"}' \
   --options-json '{"org":"acme"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id github-security \
   --state enabled \
   --credentials-json '{"token":"fixture-read-token"}' \
   --options-json '{"org":"acme"}'
 
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id github-security \
   --repo OWNER/REPO \
@@ -215,25 +215,25 @@ The minimum GitHub App repository permissions are:
 | Secret scanning alerts: read | Aggregate secret-scanning counts by state; alert details are not persisted |
 | Dependabot alerts: read      | Aggregate dependency-alert counts by state and severity                    |
 
-TrustOps follows GitHub list pagination for these alert APIs, capped at 1,000
+GRC Lake follows GitHub list pagination for these alert APIs, capped at 1,000
 records per category per sync. It persists aggregate counts only; alert payloads,
 secret material, and tokens are not copied into evidence.
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id github-security \
-  --credentials-json '{"credential_ref":"TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"}' \
+  --credentials-json '{"credential_ref":"GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"}' \
   --options-json '{"repo":"OWNER/REPO"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id github-security \
   --state enabled \
-  --credentials-json '{"credential_ref":"TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"}' \
+  --credentials-json '{"credential_ref":"GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"}' \
   --options-json '{"repo":"OWNER/REPO"}'
 
-TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN=... security-lakehouse connectors sync \
+GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN=... grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id github-security \
   --repo OWNER/REPO
@@ -242,19 +242,19 @@ TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN=... security-lakehouse connectors sync \
 GitLab governance sync (fixture-backed or live token):
 
 ```bash
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id gitlab-security \
   --repo GROUP/PROJECT \
   --fixture-dir tests/fixtures/gitlab-governance
 
-TRUSTOPS_GITLAB_ACCESS_TOKEN=... security-lakehouse connectors sync \
+GRC_LAKE_GITLAB_ACCESS_TOKEN=... grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id gitlab-security \
   --repo GROUP/PROJECT
 ```
 
-Self-managed GitLab: set `TRUSTOPS_GITLAB_API_URL` to your instance API base
+Self-managed GitLab: set `GRC_LAKE_GITLAB_API_URL` to your instance API base
 (for example `https://gitlab.example.com/api/v4`) before sync.
 
 Snowflake is the read-existing-lake path. The fixture path mirrors the expected
@@ -262,20 +262,20 @@ views (`audit_events`, `control_posture`, `asset_risk`, and
 `evidence_bundles`) and exercises the same raw-to-gold pipeline:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
-  --credentials-json '{"account":"fixture","user":"trustops_reader","credential_ref":"fixture-sso"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --credentials-json '{"account":"fixture","user":"grc-lake_reader","credential_ref":"fixture-sso"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
   --state enabled \
-  --credentials-json '{"account":"fixture","user":"trustops_reader","credential_ref":"fixture-sso"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --credentials-json '{"account":"fixture","user":"grc-lake_reader","credential_ref":"fixture-sso"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
   --fixture-dir tests/fixtures/snowflake
@@ -286,28 +286,28 @@ ClickHouse is the high-velocity telemetry lake reader. The fixture path mirrors
 append-mode ingestion with a high-water cursor:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id clickhouse-telemetry-lake \
-  --credentials-json '{"host":"https://cluster.example.clickhouse.cloud:8443","user":"trustops_reader","credential_ref":"TRUSTOPS_CLICKHOUSE_TOKEN"}' \
+  --credentials-json '{"host":"https://cluster.example.clickhouse.cloud:8443","user":"grc-lake_reader","credential_ref":"GRC_LAKE_CLICKHOUSE_TOKEN"}' \
   --options-json '{"database":"security","table":"normalized_events"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id clickhouse-telemetry-lake \
   --state enabled \
-  --credentials-json '{"host":"https://cluster.example.clickhouse.cloud:8443","user":"trustops_reader","credential_ref":"TRUSTOPS_CLICKHOUSE_TOKEN"}' \
+  --credentials-json '{"host":"https://cluster.example.clickhouse.cloud:8443","user":"grc-lake_reader","credential_ref":"GRC_LAKE_CLICKHOUSE_TOKEN"}' \
   --options-json '{"database":"security","table":"normalized_events"}'
 
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id clickhouse-telemetry-lake \
   --fixture-dir tests/fixtures/clickhouse-telemetry-lake
 ```
 
 For live ClickHouse collection, point the connector at your cluster HTTP endpoint
-and mount the read-only token via `TRUSTOPS_CLICKHOUSE_TOKEN` (or the
-`credential_ref` you configured). TrustOps only issues `SELECT` reads against
+and mount the read-only token via `GRC_LAKE_CLICKHOUSE_TOKEN` (or the
+`credential_ref` you configured). GRC Lake only issues `SELECT` reads against
 the discovered table, keyset-paginated on the composite `(event_time, event_id)`
 cursor with `LIMIT` so a large table streams in bounded pages instead of one
 unbounded response; rows sharing an `event_time` across a page boundary are never
@@ -317,16 +317,16 @@ dropped, and the append-mode merge dedups by `event_id` as a second safety net.
 
 The `siem-alerts` and `runtime-gateway` readers pull an incremental window with a
 watermark cursor (`?since=`) and follow server-side pagination within that window:
-when a response is a JSON object carrying a `next_cursor` string, TrustOps requests
+when a response is a JSON object carrying a `next_cursor` string, GRC Lake requests
 the next page with `?cursor=<token>` and repeats until `next_cursor` is absent. An
 export that returns a bare JSON array (or an object without `next_cursor`) is read
 as a single page, so a non-paginating endpoint still works unchanged.
 
 For live Snowflake collection, install the cloud connector extra and use the
 fixed POC objects from [`docs/LIVE_CLOUD_POC.md`](LIVE_CLOUD_POC.md):
-`TRUSTOPS_SECURITY_LAKE.EVIDENCE`, `TRUSTOPS_READ_WH`, and `TRUSTOPS_READER`.
+`GRC_LAKE_SECURITY_LAKE.EVIDENCE`, `GRC_LAKE_READ_WH`, and `GRC_LAKE_READER`.
 For a human POC, use browser SSO. This is not the scheduled-ingestion path.
-TrustOps only issues `SELECT * FROM <view>` reads:
+GRC Lake only issues `SELECT * FROM <view>` reads:
 
 ```bash
 uv pip install -e ".[cloud]"
@@ -334,36 +334,36 @@ uv pip install -e ".[cloud]"
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
 SNOWFLAKE_USER="$SNOWFLAKE_USER" \
 SNOWFLAKE_AUTHENTICATOR=externalbrowser \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake
 ```
 
 Headless jobs should use a non-human service user such as
-`TRUSTOPS_INGEST_SVC`, with only `TRUSTOPS_READER` and warehouse `USAGE`.
+`GRC_LAKE_INGEST_SVC`, with only `GRC_LAKE_READER` and warehouse `USAGE`.
 Snowflake key-pair auth uses a mounted private-key file path, not raw key
 contents in connector config:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
-  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"TRUSTOPS_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","role":"TRUSTOPS_READER","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"GRC_LAKE_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","role":"GRC_LAKE_READER","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
-SNOWFLAKE_USER=TRUSTOPS_INGEST_SVC \
+SNOWFLAKE_USER=GRC_LAKE_INGEST_SVC \
 SNOWFLAKE_AUTHENTICATOR=SNOWFLAKE_JWT \
 SNOWFLAKE_PRIVATE_KEY_FILE="$SNOWFLAKE_PRIVATE_KEY_FILE" \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake
 ```
@@ -376,20 +376,20 @@ Object storage evidence uses read-only LIST against an S3 prefix and syncs in
 **snapshot** mode so removed objects disappear from the lake on the next pull:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id object-storage-evidence \
-  --credentials-json '{"role_arn":"arn:aws:iam::123456789012:role/TrustOpsEvidenceRead"}' \
-  --options-json '{"bucket":"trustops-evidence","prefix":"bundles/"}'
+  --credentials-json '{"role_arn":"arn:aws:iam::123456789012:role/GrcLakeEvidenceRead"}' \
+  --options-json '{"bucket":"grc-lake-evidence","prefix":"bundles/"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id object-storage-evidence \
   --state enabled \
-  --credentials-json '{"role_arn":"arn:aws:iam::123456789012:role/TrustOpsEvidenceRead"}' \
-  --options-json '{"bucket":"trustops-evidence","prefix":"bundles/"}'
+  --credentials-json '{"role_arn":"arn:aws:iam::123456789012:role/GrcLakeEvidenceRead"}' \
+  --options-json '{"bucket":"grc-lake-evidence","prefix":"bundles/"}'
 
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id object-storage-evidence \
   --fixture-dir tests/fixtures/object-storage-evidence
@@ -408,17 +408,17 @@ continuous posture.
 Persist scheduler options on the connector configuration:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id github-security \
-  --credentials-json '{"credential_ref":"TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"}' \
+  --credentials-json '{"credential_ref":"GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"}' \
   --options-json '{"repo":"OWNER/REPO"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id github-security \
   --state enabled \
-  --credentials-json '{"credential_ref":"TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"}' \
+  --credentials-json '{"credential_ref":"GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"}' \
   --options-json '{"repo":"OWNER/REPO"}' \
   --sync-schedule "every 15m" \
   --repo OWNER/REPO
@@ -427,8 +427,8 @@ security-lakehouse connectors configure \
 Run the scheduler from cron, Kubernetes `CronJob`, or the local daemon:
 
 ```bash
-security-lakehouse scheduler tick --lake build/lakehouse
-security-lakehouse scheduler run --lake build/lakehouse --tick-seconds 60
+grc-lake scheduler tick --lake build/lakehouse
+grc-lake scheduler run --lake build/lakehouse --tick-seconds 60
 ```
 
 Supported schedule expressions are intentionally small and portable:
@@ -440,8 +440,8 @@ fire time in `gold/scheduler_state.jsonl`, writes sync history to
 Repository evidence has two concrete collection paths:
 
 ```bash
-security-lakehouse repo audit https://github.com/OWNER/REPO --out build/repo-audit.jsonl
-TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN=... security-lakehouse repo governance-sync OWNER/REPO --out build/repo-governance.jsonl
+grc-lake repo audit https://github.com/OWNER/REPO --out build/repo-audit.jsonl
+GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN=... grc-lake repo governance-sync OWNER/REPO --out build/repo-governance.jsonl
 ```
 
 The public audit path requires no credentials. The governance sync path uses a
@@ -483,8 +483,8 @@ data — never claimed where a native connector does not exist.
 Inspect the resolved plan per source (a live demo command):
 
 ```bash
-security-lakehouse ingestion plan        # table: velocity → method → SLO + cost note
-security-lakehouse ingestion plan --json  # machine-readable
+grc-lake ingestion plan        # table: velocity → method → SLO + cost note
+grc-lake ingestion plan --json  # machine-readable
 ```
 
 ## Okta: two velocities, not one
@@ -518,12 +518,12 @@ OAuth material to mint tokens itself. Pick one:
 
 Both need `customer_id`. The `*_ref` fields name environment variables, never raw
 secrets; a `<NAME>_FILE` variant is preferred over the inline value when both are
-present. With the refresh shape, TrustOps exchanges the refresh token at
+present. With the refresh shape, GRC Lake exchanges the refresh token at
 `oauth2.googleapis.com/token` on first use, near expiry (300s skew), or once on a
 401, and the resolved access token stays in memory only.
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id google-workspace-identity \
   --credentials-json '{"customer_id":"C01234567","refresh_token_ref":"GOOGLE_WORKSPACE_REFRESH_TOKEN","client_id":"123-abc.apps.googleusercontent.com","client_secret_ref":"GOOGLE_WORKSPACE_OAUTH_CLIENT_SECRET"}'
@@ -644,7 +644,7 @@ connectors, and all three feed the offboarding check below.
 ## Databricks evidence lake (preview)
 
 `databricks-evidence-lake` is an existing-lake reader. It runs
-`SELECT * FROM` each of the four TrustOps evidence views in a Unity Catalog
+`SELECT * FROM` each of the four GRC Lake evidence views in a Unity Catalog
 schema through the SQL Statement Execution API (`POST /api/2.0/sql/statements`,
 `INLINE` + `JSON_ARRAY`, polling while `PENDING`/`RUNNING`, following
 `next_chunk_internal_link`). No Databricks SDK or driver is installed.
@@ -653,14 +653,14 @@ Setup:
 
 1. Run [`deploy/databricks/bootstrap_poc.sql`](../deploy/databricks/bootstrap_poc.sql)
    as a user who can create a catalog and read `system.access.audit`, replacing
-   `<trustops-sp-application-id>` with a service principal's application id.
+   `<grc-lake-sp-application-id>` with a service principal's application id.
 2. Grant that service principal `CAN USE` on one SQL warehouse.
 3. Create an OAuth secret for the service principal and store it as a secret
    reference (`client_secret_ref`, default `DATABRICKS_CLIENT_SECRET`).
 4. Configure `host`, `warehouse_id`, `catalog`, `schema`, and `client_id`, then
    probe and enable.
 
-TrustOps mints a one-hour token at `https://<host>/oidc/v1/token`
+GRC Lake mints a one-hour token at `https://<host>/oidc/v1/token`
 (`client_credentials`, `scope=all-apis`) per sync and keeps it in memory. The
 host must be a Databricks workspace domain (`*.cloud.databricks.com`,
 `*.azuredatabricks.net`, `*.gcp.databricks.com`); result chunk links may not
@@ -703,13 +703,13 @@ or 404) no patch verdict is emitted.
    (`https://yourcompany.jamfcloud.com`), `client_id`, and `client_secret_ref`
    (default `JAMF_CLIENT_SECRET`).
 
-TrustOps exchanges the client credentials at `POST {base_url}/api/v1/oauth/token`
+GRC Lake exchanges the client credentials at `POST {base_url}/api/v1/oauth/token`
 for a short-lived bearer token held in memory only, re-mints it once on a 401, and
 fails closed after that. No Jamf user account or password is used.
 
 **Data minimization.** Only the GENERAL, DISK_ENCRYPTION, OPERATING_SYSTEM, SECURITY,
 and USER_AND_LOCATION sections are requested (EXTENSION_ATTRIBUTES only when a
-screen-lock attribute is configured). From them TrustOps keeps device ID and name,
+screen-lock attribute is configured). From them GRC Lake keeps device ID and name,
 platform, OS version, encryption, firewall and passcode state, managed and check-in
 state, and the assigned user's email (the join key to identity-provider users). IP
 addresses, serial numbers, usernames, real names, phone numbers, recovery keys, and
@@ -734,7 +734,7 @@ sensor that has not reported in 7 days, or never reported, is medium.
 **Least privilege.** On the Falcon console's API clients and keys page, create an API client with only **Hosts: Read**, **Prevention policies: Read**,
 and **Alerts: Read**. Store its secret and configure `cloud` (`us-1`, `us-2`, `eu-1`,
 `us-gov-1`, `us-gov-2`), `client_id`, and `client_secret_ref` (default
-`CROWDSTRIKE_CLIENT_SECRET`). TrustOps exchanges the client credentials at
+`CROWDSTRIKE_CLIENT_SECRET`). GRC Lake exchanges the client credentials at
 `https://<cloud API host>/oauth2/token` for a short-lived token held in memory only
 and re-mints it once on a 401.
 
@@ -755,7 +755,7 @@ used, and only to compute the summary counts.
 
 `kubernetes-cluster` reads cluster configuration with `list` calls only, using the
 official Kubernetes Python client
-(`pip install 'trustops-security-data-lake[kubernetes]'`), and emits current-state
+(`pip install 'grc-lake[kubernetes]'`), and emits current-state
 events:
 
 | Event                                   | Open when                                                                                               | Controls                                                                                              |
@@ -782,7 +782,7 @@ similar) expose the apiserver static pod and are evaluated.
 
 **Least privilege.** Use a kubeconfig for a dedicated identity (optionally a named
 `context`; `kubeconfig_ref` names the env var holding its path, default `KUBECONFIG`)
-or the in-cluster service account when TrustOps runs inside the cluster (local and
+or the in-cluster service account when GRC Lake runs inside the cluster (local and
 CLI runs only; hosted server mode requires `kubeconfig_ref`). Bind it to
 this get/list-only ClusterRole — never `view`, `edit`, or `cluster-admin`, and no
 access to Secrets:
@@ -791,7 +791,7 @@ access to Secrets:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: trustops-config-reader
+  name: grc-lake-config-reader
 rules:
   - apiGroups: [""]
     resources: ["namespaces", "pods"]
@@ -812,15 +812,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: trustops-config-reader
+  name: grc-lake-config-reader
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: trustops-config-reader
+  name: grc-lake-config-reader
 subjects:
   - kind: ServiceAccount
-    name: trustops
-    namespace: trustops
+    name: grc-lake
+    namespace: grc-lake
 ```
 
 **Egress.** The client talks directly to the operator-configured API server. Cluster
@@ -867,7 +867,7 @@ Any `Past Due` enrollment is an open medium finding (`training_overdue`); only
 `Not Started`/`In Progress` is open low (`training_incomplete`); an active user with no
 enrollment is open medium (`not_enrolled`). The enrollment schema has no due date, so
 `Past Due` is KnowBe4's own verdict. No phishing test in the last 90 days is
-`observed`, never a pass. The 20% threshold is a TrustOps default, not a KnowBe4
+`observed`, never a pass. The 20% threshold is a GRC Lake default, not a KnowBe4
 benchmark.
 
 **Least privilege.** A Reporting API key from the KnowBe4 Reporting API console
@@ -879,7 +879,7 @@ KnowBe4 does not name a narrower admin role for this, so treat it as an account-
 Tokens expire after at most five years. The key is read-only
 reporting for the whole account — KnowBe4 offers no finer scope — and is not the User
 Event API key. Store it as a secret and reference it with `credential_ref` (default
-`KNOWBE4_API_TOKEN`); only the region is stored in TrustOps. Anonymized consoles return
+`KNOWBE4_API_TOKEN`); only the region is stored in GRC Lake. Anonymized consoles return
 no per-user data.
 
 **Rate limits.** KnowBe4 allows 4 requests/second, a 50/minute burst, and 2,000 plus
@@ -898,7 +898,7 @@ stored. The key is only ever sent to the configured regional host.
 
 The Snowflake, Databricks, and ClickHouse readers can read existing tables
 through a lake mapping (`options.mapping` / `options.mappings`) instead of the
-TrustOps views. `iceberg-parquet-lake` reads Iceberg tables through AWS Glue
+GRC Lake views. `iceberg-parquet-lake` reads Iceberg tables through AWS Glue
 (including Amazon Security Lake, with OCSF presets by default) or an Iceberg REST
 catalog, and Parquet on S3 or an allowed local root. `bigquery-evidence-lake` reads
 BigQuery tables with Application Default Credentials. The spec, the OCSF presets,
@@ -909,10 +909,10 @@ BigQuery tables with Application Default Credentials. The spec, the OCSF presets
 
 After any sync that writes HR employment rows (`hris.personnel.employment`, from
 any HRIS connector) or identity-provider user rows (`okta-identity`,
-`google-workspace-identity`), TrustOps rebuilds one derived row per terminated
+`google-workspace-identity`), GRC Lake rebuilds one derived row per terminated
 employee. It joins HR records to IdP accounts on the lower-cased work email and
 writes the result as a snapshot under the derived id `hris-idp-offboarding`
-(source `trustops-correlation`), so a fixed account clears on the next sync.
+(source `grc-lake-correlation`), so a fixed account clears on the next sync.
 
 | Outcome                    | Meaning                                                        | Status     |
 | -------------------------- | -------------------------------------------------------------- | ---------- |
@@ -925,7 +925,7 @@ Rows map to SOC2-CC6.2, FEDRAMP-PS-4, FEDRAMP-AC-2.3, ISO27001-A.5.18,
 ISO27001-A.6.5, and CMMC-3.9.2, each of which fails on an open violation. Nothing
 is produced until both HR and IdP evidence exist, and future-dated terminations are
 ignored. The grace period defaults to 1 day; set
-`TRUSTOPS_OFFBOARDING_GRACE_DAYS` (0–365) to change it. Attributes (including the
+`GRC_LAKE_OFFBOARDING_GRACE_DAYS` (0–365) to change it. Attributes (including the
 work email and matched account ids) are marked `data_sensitivity: confidential`.
 The derive step runs under the same raw-file lock as connector writes, so
 concurrent HR and IdP syncs cannot each derive from a partial view.

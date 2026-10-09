@@ -1,12 +1,12 @@
 # Live Cloud POC
 
-TrustOps can use live Azure, AWS, and Snowflake access for a stronger proof, but
+GRC Lake can use live Azure, AWS, and Snowflake access for a stronger proof, but
 the first POC must be read-only and reversible. Do not paste passwords,
 human-scoped developer tokens, root keys, or broad cloud credentials into chat,
 Git, screenshots, or PR bodies.
 
 For repeatable end-to-end proof, use
-[`security-lakehouse scenario run live-cloud-posture`](SCENARIOS.md) after the
+[`grc-lake scenario run live-cloud-posture`](SCENARIOS.md) after the
 provider-specific setup below. The scenario syncs connectors, materializes the
 lake, verifies evidence integrity, freezes a snapshot, runs a workflow DAG, and
 writes a JSON report.
@@ -20,7 +20,7 @@ Preferred order:
 3. service-user key-pair auth or OAuth exposed only as an environment variable
    or mounted secret for the local process
 
-TrustOps should store configuration metadata and fingerprints, not raw cloud
+GRC Lake should store configuration metadata and fingerprints, not raw cloud
 secrets. Use fixtures until a live probe proves access.
 
 ## AWS Trial Account
@@ -36,16 +36,16 @@ The current AWS runner uses the standard `boto3` credential chain and only calls
 
 Use an SSO profile or assumed read-only role. Do not create root credentials.
 
-To create the exact read-only role TrustOps needs, deploy the CloudFormation
+To create the exact read-only role GRC Lake needs, deploy the CloudFormation
 template in the target AWS account:
 
 ```bash
 aws cloudformation deploy \
-  --stack-name trustops-posture-readonly \
-  --template-file deploy/aws/trustops-posture-readonly-role.yaml \
+  --stack-name grc-lake-posture-readonly \
+  --template-file deploy/aws/grc-lake-posture-readonly-role.yaml \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
-    TrustedPrincipalArn=arn:aws:iam::<trustops-runtime-account-id>:role/<trustops-runtime-role> \
+    TrustedPrincipalArn=arn:aws:iam::<grc-lake-runtime-account-id>:role/<grc-lake-runtime-role> \
     ExternalId=<customer-generated-external-id>
 ```
 
@@ -53,15 +53,15 @@ aws cloudformation deploy \
 
 | Phase        | Boundary                                                                                                            |
 | ------------ | ------------------------------------------------------------------------------------------------------------------- |
-| Authorize    | The CloudFormation template creates the customer-owned role and trust policy with TrustOps principal + External ID. |
-| Authenticate | At probe, manual sync, or scheduled sync, TrustOps calls STS AssumeRole with the Role ARN and External ID.          |
-| Read         | AWS returns short-lived session credentials. TrustOps uses them only for read-only IAM posture APIs.                |
+| Authorize    | The CloudFormation template creates the customer-owned role and trust policy with GRC Lake principal + External ID. |
+| Authenticate | At probe, manual sync, or scheduled sync, GRC Lake calls STS AssumeRole with the Role ARN and External ID.          |
+| Read         | AWS returns short-lived session credentials. GRC Lake uses them only for read-only IAM posture APIs.                |
 | Expire       | The temporary credentials expire after the AWS session window. The next run repeats STS AssumeRole.                 |
-| Persist      | TrustOps stores connector metadata, fingerprints, and run results, not long-lived AWS access keys.                  |
+| Persist      | GRC Lake stores connector metadata, fingerprints, and run results, not long-lived AWS access keys.                  |
 
 For multi-account pilots, roll out the same role with **CloudFormation
 StackSets** or **Terraform workspaces**. Each deployed role gets **one External
-ID per deployed role**. TrustOps verifies the target with STS, then scheduled
+ID per deployed role**. GRC Lake verifies the target with STS, then scheduled
 sync assumes registered roles one at a time and tags landed evidence with the
 source account before control evaluation. **Bulk account import** is the
 follow-up surface for registering many rolled-out roles in one pass.
@@ -80,13 +80,13 @@ proves `iam:ListUsers`.
 **Assume-role (recommended, and required over the API/console):**
 
 ```bash
-creds='{"account_id":"<account-id>","role_arn":"arn:aws:iam::<account-id>:role/TrustOpsPostureReadOnlyRole","external_id":"<external-id>"}'
+creds='{"account_id":"<account-id>","role_arn":"arn:aws:iam::<account-id>:role/GrcLakePostureReadOnlyRole","external_id":"<external-id>"}'
 
-security-lakehouse connectors probe --lake build/lakehouse \
+grc-lake connectors probe --lake build/lakehouse \
   --connector-id aws-posture --credentials-json "$creds"
-security-lakehouse connectors configure --lake build/lakehouse \
+grc-lake connectors configure --lake build/lakehouse \
   --connector-id aws-posture --credentials-json "$creds" --state enabled
-security-lakehouse connectors sync --lake build/lakehouse --connector-id aws-posture
+grc-lake connectors sync --lake build/lakehouse --connector-id aws-posture
 ```
 
 **Local SSO or CLI profile (local CLI lake only):** omit `role_arn`, and the
@@ -95,15 +95,15 @@ environment). The API and console never accept this mode, so a server cannot
 prove access with its own runtime identity.
 
 ```bash
-aws sso login --profile trustops-poc
-export AWS_PROFILE=trustops-poc
+aws sso login --profile grc-lake-poc
+export AWS_PROFILE=grc-lake-poc
 creds='{"account_id":"<account-id>"}'
 
-security-lakehouse connectors probe --lake build/lakehouse \
+grc-lake connectors probe --lake build/lakehouse \
   --connector-id aws-posture --credentials-json "$creds"
-security-lakehouse connectors configure --lake build/lakehouse \
+grc-lake connectors configure --lake build/lakehouse \
   --connector-id aws-posture --credentials-json "$creds" --state enabled
-security-lakehouse connectors sync --lake build/lakehouse --connector-id aws-posture
+grc-lake connectors sync --lake build/lakehouse --connector-id aws-posture
 ```
 
 `AWS_ACCOUNT_ID`, `AWS_ROLE_ARN`, and `AWS_EXTERNAL_ID` still override the
@@ -124,14 +124,14 @@ build/lakehouse/raw/connector_events.jsonl
 The Azure runner uses `DefaultAzureCredential`, so the production path is a
 provider-owned identity, not a pasted password:
 
-- admin consent to an operator-owned app (`TRUSTOPS_AZURE_LINK_CLIENT_ID`), local
+- admin consent to an operator-owned app (`GRC_LAKE_AZURE_LINK_CLIENT_ID`), local
   and CLI runs only
-- managed identity when TrustOps runs in Azure
+- managed identity when GRC Lake runs in Azure
 - federated workload identity for Kubernetes/CI
 - service-principal credentials only by secret-manager reference
 
 Local `az login` is acceptable for developer proof only. Do not present it as
-the customer onboarding path. Hosted TrustOps never uses its own Azure identity:
+the customer onboarding path. Hosted GRC Lake never uses its own Azure identity:
 the connector must name the customer's app registration (`tenant_id`,
 `client_id`, and a secret, certificate, or federated token file reference); see
 [Hosted connector credentials](SERVER_AUTH.md#hosted-connector-credentials). The
@@ -145,23 +145,23 @@ For a POC, built-in `Reader` at subscription scope is usually enough for resourc
 and policy inventory. For many subscriptions, grant at management-group scope or
 roll the same assignment across subscriptions, then import the subscription IDs.
 
-To grant a TrustOps managed identity or Entra app read access:
+To grant a GRC Lake managed identity or Entra app read access:
 
 ```bash
 subscription_id="$(az account show --query id -o tsv)"
 tenant_id="$(az account show --query tenantId -o tsv)"
 
-# Hosted app: set TRUSTOPS_AZURE_APP_ID.
-# Self-hosted Azure runtime: set TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID.
-trustops_app_id="${TRUSTOPS_AZURE_APP_ID:-}"
-principal_object_id="${TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID:-}"
+# Hosted app: set GRC_LAKE_AZURE_APP_ID.
+# Self-hosted Azure runtime: set GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID.
+grc-lake_app_id="${GRC_LAKE_AZURE_APP_ID:-}"
+principal_object_id="${GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID:-}"
 
-if [ -n "$trustops_app_id" ] && [ -z "$principal_object_id" ]; then
-  principal_object_id="$(az ad sp show --id "$trustops_app_id" --query id -o tsv)"
+if [ -n "$grc-lake_app_id" ] && [ -z "$principal_object_id" ]; then
+  principal_object_id="$(az ad sp show --id "$grc-lake_app_id" --query id -o tsv)"
 fi
 
 if [ -z "$principal_object_id" ]; then
-  echo "Set TRUSTOPS_AZURE_APP_ID or TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID before running."
+  echo "Set GRC_LAKE_AZURE_APP_ID or GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID before running."
   exit 1
 fi
 
@@ -180,7 +180,7 @@ identity, or group object ID:
 ```bash
 az deployment sub create \
   --location eastus \
-  --template-file deploy/azure/trustops-posture-reader.bicep \
+  --template-file deploy/azure/grc-lake-posture-reader.bicep \
   --parameters principalId=<service-principal-or-managed-identity-object-id> \
                principalType=ServicePrincipal
 ```
@@ -197,11 +197,11 @@ installed, so "Test connection" proves the identity can see the subscription.
 ```bash
 creds='{"subscription_id":"<subscription-id>"}'
 
-security-lakehouse connectors probe --lake build/lakehouse \
+grc-lake connectors probe --lake build/lakehouse \
   --connector-id azure-posture --credentials-json "$creds"
-security-lakehouse connectors configure --lake build/lakehouse \
+grc-lake connectors configure --lake build/lakehouse \
   --connector-id azure-posture --credentials-json "$creds" --state enabled
-security-lakehouse connectors sync --lake build/lakehouse --connector-id azure-posture
+grc-lake connectors sync --lake build/lakehouse --connector-id azure-posture
 ```
 
 ## GCP Project
@@ -229,11 +229,11 @@ The probe reads the project IAM policy, the one read every sync needs:
 ```bash
 creds='{"project_id":"<project-id>"}'
 
-security-lakehouse connectors probe --lake build/lakehouse \
+grc-lake connectors probe --lake build/lakehouse \
   --connector-id gcp-posture --credentials-json "$creds"
-security-lakehouse connectors configure --lake build/lakehouse \
+grc-lake connectors configure --lake build/lakehouse \
   --connector-id gcp-posture --credentials-json "$creds" --state enabled
-security-lakehouse connectors sync --lake build/lakehouse --connector-id gcp-posture
+grc-lake connectors sync --lake build/lakehouse --connector-id gcp-posture
 ```
 
 If the Org Policy or Cloud Asset API is disabled, or the permission is denied,
@@ -257,7 +257,7 @@ Org Policy API (orgpolicy.googleapis.com) is not enabled on project <project-id>
 ```
 
 Other provider failures (network, authentication, server errors) still fail
-the sync closed. Messages that TrustOps writes itself, such as a missing
+the sync closed. Messages that GRC Lake writes itself, such as a missing
 `account_id`, an account mismatch, or missing Application Default Credentials,
 are shown in the run record. Raw provider text is not.
 
@@ -267,62 +267,62 @@ materialization.
 
 ## Snowflake Evidence Lake
 
-Snowflake is the existing-lake path. TrustOps should read curated evidence views
+Snowflake is the existing-lake path. GRC Lake should read curated evidence views
 and never create, update, or delete source objects in the first POC.
 
 Use these fixed POC names:
 
-- database: `TRUSTOPS_SECURITY_LAKE`
-- schema: `TRUSTOPS_SECURITY_LAKE.EVIDENCE`
-- warehouse: `TRUSTOPS_READ_WH`
-- read role: `TRUSTOPS_READER`
-- views: `TRUSTOPS_AUDIT_EVENTS`, `TRUSTOPS_CONTROL_POSTURE`, `TRUSTOPS_ASSET_RISK`,
-  `TRUSTOPS_EVIDENCE_BUNDLES`
+- database: `GRC_LAKE_SECURITY_LAKE`
+- schema: `GRC_LAKE_SECURITY_LAKE.EVIDENCE`
+- warehouse: `GRC_LAKE_READ_WH`
+- read role: `GRC_LAKE_READER`
+- views: `GRC_LAKE_AUDIT_EVENTS`, `GRC_LAKE_CONTROL_POSTURE`, `GRC_LAKE_ASSET_RISK`,
+  `GRC_LAKE_EVIDENCE_BUNDLES`
 
 Run [`deploy/snowflake/bootstrap_poc.sql`](../deploy/snowflake/bootstrap_poc.sql)
 from a role allowed to create a database, warehouse, and role. It creates only
-TrustOps-owned objects and read-only views over
+GRC Lake-owned objects and read-only views over
 `SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY`. It does not create users, passwords,
 stages, integrations, or external network access.
 
-Validate counts before connecting TrustOps:
+Validate counts before connecting GRC Lake:
 
 ```sql
-USE ROLE TRUSTOPS_READER;
-USE WAREHOUSE TRUSTOPS_READ_WH;
-USE DATABASE TRUSTOPS_SECURITY_LAKE;
+USE ROLE GRC_LAKE_READER;
+USE WAREHOUSE GRC_LAKE_READ_WH;
+USE DATABASE GRC_LAKE_SECURITY_LAKE;
 USE SCHEMA EVIDENCE;
 
 SELECT COUNT(*) AS audit_events
-FROM TRUSTOPS_AUDIT_EVENTS;
+FROM GRC_LAKE_AUDIT_EVENTS;
 
 SELECT COUNT(*) AS control_posture
-FROM TRUSTOPS_CONTROL_POSTURE;
+FROM GRC_LAKE_CONTROL_POSTURE;
 
 SELECT COUNT(*) AS asset_risk
-FROM TRUSTOPS_ASSET_RISK;
+FROM GRC_LAKE_ASSET_RISK;
 
 SELECT COUNT(*) AS evidence_bundles
-FROM TRUSTOPS_EVIDENCE_BUNDLES;
+FROM GRC_LAKE_EVIDENCE_BUNDLES;
 ```
 
 If any validation query returns `Object does not exist, or operation cannot be
 performed`, the bootstrap SQL did not run under a create-capable role, the
-active user was not granted `TRUSTOPS_READER`, or one of the view grants is
+active user was not granted `GRC_LAKE_READER`, or one of the view grants is
 missing. Rerun the bootstrap from `ACCOUNTADMIN` or an existing governed GRC
 admin role that can create the database, warehouse, role, secure views, and
 grants.
 
 For a human POC, use browser SSO. No Snowflake credential needs to be pasted
-into chat, Git, or TrustOps config. Do not use this path for scheduled
+into chat, Git, or GRC Lake config. Do not use this path for scheduled
 ingestion:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
   --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"'"$SNOWFLAKE_USER"'","credential_ref":"externalbrowser"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 ```
 
 The probe performs lightweight `SELECT COUNT(*)` checks against every configured
@@ -330,60 +330,60 @@ view and returns sanitized per-view diagnostics. Do not enable the connector
 until the probe result is `ok`.
 
 ```bash
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
   --state enabled \
   --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"'"$SNOWFLAKE_USER"'","credential_ref":"externalbrowser"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
 SNOWFLAKE_USER="$SNOWFLAKE_USER" \
 SNOWFLAKE_AUTHENTICATOR=externalbrowser \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake
 ```
 
 For headless automation, create a non-human service user and use Snowflake
-key-pair auth. The service user should have only `TRUSTOPS_READER` and
-`USAGE` on `TRUSTOPS_READ_WH`.
+key-pair auth. The service user should have only `GRC_LAKE_READER` and
+`USAGE` on `GRC_LAKE_READ_WH`.
 
 Run [`deploy/snowflake/bootstrap_service_user.sql`](../deploy/snowflake/bootstrap_service_user.sql)
-after setting `TRUSTOPS_SERVICE_RSA_PUBLIC_KEY` in the Snowflake worksheet. The
+after setting `GRC_LAKE_SERVICE_RSA_PUBLIC_KEY` in the Snowflake worksheet. The
 matching private key stays in your secret manager or mounted runtime secret,
-not in Snowflake, Git, chat, screenshots, or TrustOps connector config.
+not in Snowflake, Git, chat, screenshots, or GRC Lake connector config.
 
 Probe and enable the connector with a key-file reference:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
-  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"TRUSTOPS_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","role":"TRUSTOPS_READER","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"GRC_LAKE_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","role":"GRC_LAKE_READER","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
   --state enabled \
-  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"TRUSTOPS_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","role":"TRUSTOPS_READER","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}' \
+  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"GRC_LAKE_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","role":"GRC_LAKE_READER","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}' \
   --sync-schedule "every 15m"
 
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
-SNOWFLAKE_USER=TRUSTOPS_INGEST_SVC \
+SNOWFLAKE_USER=GRC_LAKE_INGEST_SVC \
 SNOWFLAKE_AUTHENTICATOR=SNOWFLAKE_JWT \
 SNOWFLAKE_PRIVATE_KEY_FILE="$SNOWFLAKE_PRIVATE_KEY_FILE" \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake
 ```
@@ -392,38 +392,38 @@ OAuth is also supported when the customer already has a governed token broker.
 The token must be injected by the runtime secret manager:
 
 ```bash
-security-lakehouse connectors probe \
+grc-lake connectors probe \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
-  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"TRUSTOPS_INGEST_SVC","credential_ref":"SNOWFLAKE_OAUTH_TOKEN"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"GRC_LAKE_INGEST_SVC","credential_ref":"SNOWFLAKE_OAUTH_TOKEN"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 
-security-lakehouse connectors configure \
+grc-lake connectors configure \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake \
   --state enabled \
-  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"TRUSTOPS_INGEST_SVC","credential_ref":"SNOWFLAKE_OAUTH_TOKEN"}' \
-  --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+  --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"GRC_LAKE_INGEST_SVC","credential_ref":"SNOWFLAKE_OAUTH_TOKEN"}' \
+  --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
 
 SNOWFLAKE_ACCOUNT="$SNOWFLAKE_ACCOUNT" \
-SNOWFLAKE_USER=TRUSTOPS_INGEST_SVC \
+SNOWFLAKE_USER=GRC_LAKE_INGEST_SVC \
 SNOWFLAKE_AUTHENTICATOR=oauth \
 SNOWFLAKE_OAUTH_TOKEN="$SNOWFLAKE_OAUTH_TOKEN" \
-SNOWFLAKE_ROLE=TRUSTOPS_READER \
-SNOWFLAKE_WAREHOUSE=TRUSTOPS_READ_WH \
-SNOWFLAKE_DATABASE=TRUSTOPS_SECURITY_LAKE \
+SNOWFLAKE_ROLE=GRC_LAKE_READER \
+SNOWFLAKE_WAREHOUSE=GRC_LAKE_READ_WH \
+SNOWFLAKE_DATABASE=GRC_LAKE_SECURITY_LAKE \
 SNOWFLAKE_SCHEMA=EVIDENCE \
-security-lakehouse connectors sync \
+grc-lake connectors sync \
   --lake build/lakehouse \
   --connector-id snowflake-evidence-lake
 ```
 
 The default views are:
 
-- `TRUSTOPS_AUDIT_EVENTS`
-- `TRUSTOPS_CONTROL_POSTURE`
-- `TRUSTOPS_ASSET_RISK`
-- `TRUSTOPS_EVIDENCE_BUNDLES`
+- `GRC_LAKE_AUDIT_EVENTS`
+- `GRC_LAKE_CONTROL_POSTURE`
+- `GRC_LAKE_ASSET_RISK`
+- `GRC_LAKE_EVIDENCE_BUNDLES`
 
 Override them only when the customer has already standardized different view
 names:

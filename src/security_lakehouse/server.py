@@ -23,7 +23,7 @@ _LOOPBACK_NAMES = {"localhost", "127.0.0.1", "::1"}
 
 
 def serve(lake_dir: str | Path, *, host: str = "127.0.0.1", port: int = 8787) -> None:
-    """Serve the TrustOps console and JSON assessment API."""
+    """Serve the GRC Lake console and JSON assessment API."""
     lake = resolve_path(lake_dir)
     dashboard = lake / "console.html"
     render_dashboard(lake, dashboard)
@@ -53,7 +53,7 @@ class _Handler(BaseHTTPRequestHandler):
     dashboard_path: Path
     web_dist: Path | None = None
 
-    server_version = "TrustOpsAssessment/0.1"
+    server_version = "GrcLakeAssessment/0.1"
 
     @staticmethod
     def _safe_header_value(value: str) -> str:

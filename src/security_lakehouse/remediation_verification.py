@@ -20,6 +20,7 @@ from security_lakehouse.db.identity_aliases import identity_aliases
 from security_lakehouse.db.models import RemediationTask, _as_aware
 from security_lakehouse.generations import generation_identity, generation_reader
 from security_lakehouse.io import read_json, read_jsonl
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.verification import verify_lake_integrity
 
 
@@ -135,7 +136,6 @@ def reconcile_published_tasks(lake: Path, *, tenant_id: str) -> int:
     Called after publication only when an application database already exists,
     or in hosted mode with an explicitly configured external database.
     """
-    import os
 
     from sqlalchemy import select
 
@@ -143,7 +143,7 @@ def reconcile_published_tasks(lake: Path, *, tenant_id: str) -> int:
     from security_lakehouse.execution_mode import in_server_mode
 
     root = lake.parent.parent if lake.parent.name == "tenants" else lake
-    if not (root / "server/app.db").is_file() and not (in_server_mode() and os.environ.get("TRUSTOPS_DATABASE_URL")):
+    if not (root / "server/app.db").is_file() and not (in_server_mode() and runtime_env().get("GRC_LAKE_DATABASE_URL")):
         return 0
     failures = {r["control_id"] for r in read_jsonl(lake / "gold/control_posture.jsonl") if r.get("status") == "fail"}
     if not failures:

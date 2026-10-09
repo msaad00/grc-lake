@@ -1,11 +1,11 @@
 # Human And Agent API
 
-The API is the shared control surface for the TrustOps console, coding agents,
+The API is the shared control surface for the GRC Lake console, coding agents,
 CI jobs, MCP tools, and reviewer workflows. Route names describe assessment
 concepts, not storage implementation details.
 
 <p align="center">
-  <img src="../images/trustops-agent-api-flow.svg" alt="TrustOps human and agent API flow with callers, versioned API boundary, RBAC, audit, and composable skills" width="100%">
+  <img src="../images/grc-lake-agent-api-flow.svg" alt="GRC Lake human and agent API flow with callers, versioned API boundary, RBAC, audit, and composable skills" width="100%">
 </p>
 
 Humans and agents use the same facts:
@@ -81,7 +81,7 @@ sequenceDiagram
   autonumber
   participant Source as Evidence source
   participant Ingest as Ingestion skill
-  participant Lake as TrustOps lake
+  participant Lake as GRC Lake lake
   participant Eval as Evaluation skill
   participant API as /api/v1
   participant Human as Human reviewer
@@ -121,7 +121,7 @@ agent action should be rendered back to humans with the same audit trail.
 | `GET`  | `/api/v1/agent-runs`                                               | persisted human/headless harness runs                                                                                                     |
 | `POST` | `/api/v1/agent-runs`                                               | run and persist a deterministic, optional LangGraph-orchestrated, or optional model-assisted harness with data-readiness preflight        |
 | `GET`  | `/api/v1/agent-runs/{run_id}`                                      | inspect one persisted harness run, including evaluation and proposed actions                                                              |
-| `POST` | `/api/v1/agent-runs/{run_id}/decisions/{decision_index}/approve`   | approve one stored proposal and execute its allowlisted TrustOps write idempotently                                                       |
+| `POST` | `/api/v1/agent-runs/{run_id}/decisions/{decision_index}/approve`   | approve one stored proposal and execute its allowlisted GRC Lake write idempotently                                                       |
 | `POST` | `/api/v1/agent-runs/{run_id}/decisions/{decision_index}/reconcile` | independently review and close an abandoned execution claim without replaying its action                                                  |
 | `GET`  | `/api/v1/audit-log`                                                | unified activity stream (`event_id`, `occurred_at`, category filters)                                                                     |
 | `GET`  | `/api/v1/connectors`                                               | connector catalog + live sync health                                                                                                      |
@@ -190,7 +190,7 @@ MCP equivalents: `get_ingestion_status`, `list_eval_runs`, `run_lake_eval`,
 | AI governance              | `GET /api/v1/platform/ai-governance`           | model inventory, lineage, framework mapping |
 | AI inventory               | `GET /api/v1/platform/ai-governance/inventory` | paginated model/agent inventory rows        |
 | Remediation insight        | `GET /api/v1/insights/remediation`             | open/overdue task analytics                 |
-| Scenario proof             | `security-lakehouse scenario run …`            | JSON report under `gold/scenario_reports/`  |
+| Scenario proof             | `grc-lake scenario run …`                      | JSON report under `gold/scenario_reports/`  |
 | OSCAL component definition | `GET /api/v1/oscal/component-definition`       | see [OSCAL_EXPORT.md](../OSCAL_EXPORT.md)   |
 | OSCAL assessment results   | `GET /api/v1/oscal/assessment-results`         | see [OSCAL_EXPORT.md](../OSCAL_EXPORT.md)   |
 
@@ -222,11 +222,11 @@ Agents should:
 Agents should not infer compliance status from visual text. The API is the
 contract.
 
-Remote MCP mode routes all tenant-backed tools through `TRUSTOPS_API_URL` with
-`TRUSTOPS_API_KEY`, including lake reads, shares, snapshots, workflows, and
+Remote MCP mode routes all tenant-backed tools through `GRC_LAKE_API_URL` with
+`GRC_LAKE_API_KEY`, including lake reads, shares, snapshots, workflows, and
 ingestion writes. Either API setting selects remote mode; missing configuration
-fails closed. Explicit `TRUSTOPS_MCP_MODE=local` preserves operator-controlled
-lake access through `TRUSTOPS_LAKE` and disables server-only tools. See the
+fails closed. Explicit `GRC_LAKE_MCP_MODE=local` preserves operator-controlled
+lake access through `GRC_LAKE_LAKE` and disables server-only tools. See the
 [MCP cookbook](../cookbook/MCP_EVIDENCE_AND_APPROVALS.md) for private-destination
 opt-in, response bounds, and independent human-review requirements.
 
@@ -237,7 +237,7 @@ returns the proposed-mapping report used by MCP, with `framework_id` and
 
 ## Skills And Guardrails
 
-TrustOps skills are small, auditable operating guides over this API and the lake
+GRC Lake skills are small, auditable operating guides over this API and the lake
 artifacts. A skill is not a hidden model prompt that invents controls. It is a
 versioned contract that says what evidence it may read, what actions it may take,
 what official sources it must cite, and what claims it must not make.
@@ -280,20 +280,20 @@ tests:
 
 ## OCSF Boundary
 
-TrustOps uses OCSF where OCSF is a good fit: cloud, identity, repository,
+GRC Lake uses OCSF where OCSF is a good fit: cloud, identity, repository,
 runtime, detection, vulnerability, and audit telemetry. It does not force OCSF
 onto everything.
 
-The canonical TrustOps model stays separate for:
+The canonical GRC Lake model stays separate for:
 
 - framework catalogs, source provenance, and control mappings
 - evidence requirements and controls-as-code rules
 - posture scores, confidence, freshness, exceptions, and owner SLAs
 - remediation tasks, workflow runs, snapshots, trust shares, and audit boundary
 
-That split is intentional. OCSF normalizes security facts; TrustOps models the
+That split is intentional. OCSF normalizes security facts; GRC Lake models the
 trust operation built on top of those facts. Connector and ingestion skills may
-emit OCSF-shaped silver records when possible, plus TrustOps-specific fields
+emit OCSF-shaped silver records when possible, plus GRC Lake-specific fields
 where needed for control evaluation and audit proof.
 
 ## Example
@@ -301,7 +301,7 @@ where needed for control evaluation and audit proof.
 **Local development** (no auth required — `--allow-insecure-no-auth` disables the auth gate):
 
 ```bash
-security-lakehouse serve --lake build/lakehouse --allow-insecure-no-auth --port 8787
+grc-lake serve --lake build/lakehouse --allow-insecure-no-auth --port 8787
 
 curl -s http://127.0.0.1:8787/api/v1/posture/current | jq .
 curl -s 'http://127.0.0.1:8787/api/v1/control-tests?result=fail&sort=-confidence_score&limit=10' | jq .
@@ -315,21 +315,21 @@ curl -s -X POST http://127.0.0.1:8787/api/v1/snapshots \
 **Server deployment** (create an API key in the console under Settings → API keys):
 
 ```bash
-export TRUSTOPS_TOKEN="tok_..."
+export GRC_LAKE_TOKEN="tok_..."
 
-curl -s -H "Authorization: Bearer $TRUSTOPS_TOKEN" \
+curl -s -H "Authorization: Bearer $GRC_LAKE_TOKEN" \
   https://your-server/api/v1/posture/current | jq .
 
-curl -s -H "Authorization: Bearer $TRUSTOPS_TOKEN" \
+curl -s -H "Authorization: Bearer $GRC_LAKE_TOKEN" \
   'https://your-server/api/v1/control-tests?result=fail&sort=-confidence_score&limit=10' | jq .
 
-curl -s -H "Authorization: Bearer $TRUSTOPS_TOKEN" \
+curl -s -H "Authorization: Bearer $GRC_LAKE_TOKEN" \
   'https://your-server/api/v1/violations?severity=critical,high' | jq .
 
-curl -s -H "Authorization: Bearer $TRUSTOPS_TOKEN" \
+curl -s -H "Authorization: Bearer $GRC_LAKE_TOKEN" \
   'https://your-server/api/v1/evidence/freshness?status=stale,expired,missing&sort=-age_minutes' | jq .
 
-curl -s -X POST -H "Authorization: Bearer $TRUSTOPS_TOKEN" \
+curl -s -X POST -H "Authorization: Bearer $GRC_LAKE_TOKEN" \
   -H 'content-type: application/json' \
   --data '{"reason":"vendor_due_diligence"}' \
   https://your-server/api/v1/snapshots | jq .

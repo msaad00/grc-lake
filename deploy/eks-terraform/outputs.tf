@@ -19,8 +19,8 @@ output "vpc_id" {
   value       = module.vpc.vpc_id
 }
 
-output "trustops_role_arn" {
-  description = "IAM role ARN bound to the trustops service account via IRSA."
+output "grc-lake_role_arn" {
+  description = "IAM role ARN bound to the grc-lake service account via IRSA."
   value       = module.trustops_irsa.iam_role_arn
 }
 

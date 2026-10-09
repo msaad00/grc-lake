@@ -28,7 +28,7 @@ from security_lakehouse.validation import validate_raw_events
 FIXTURES = Path(__file__).parent / "fixtures"
 COLLECTED = datetime(2026, 6, 3, tzinfo=UTC)
 REPORT_URL = (
-    "https://wd5-services1.myworkday.com/ccx/service/customreport2/acme/isu_trustops/TrustOps_Employment?format=json"
+    "https://wd5-services1.myworkday.com/ccx/service/customreport2/acme/isu_trustops/GrcLake_Employment?format=json"
 )
 PERSONNEL_ATTRIBUTES = {
     "employee_id",

@@ -105,7 +105,7 @@ def test_live_client_mints_m2m_token_polls_and_follows_chunks(monkeypatch: pytes
     assert token_request.data == b"grant_type=client_credentials&scope=all-apis"
     assert token_request.get_header("Authorization").startswith("Basic ")
     body = json.loads(statement_request.data)
-    assert body["statement"] == "SELECT * FROM `trustops`.`evidence`.`TRUSTOPS_AUDIT_EVENTS`"
+    assert body["statement"] == "SELECT * FROM `trustops`.`evidence`.`GRC_LAKE_AUDIT_EVENTS`"
     assert body["warehouse_id"] == "wh123"
     assert (body["disposition"], body["format"]) == ("INLINE", "JSON_ARRAY")
     assert statement_request.get_header("Authorization") == "Bearer tok"

@@ -280,7 +280,7 @@ def test_clickhouse_retries_on_transient_gateway_error(monkeypatch: pytest.Monke
 
 
 def test_clickhouse_probe_and_discovery_with_env_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_CLICKHOUSE_TOKEN", "secret-token")
+    monkeypatch.setenv("GRC_LAKE_CLICKHOUSE_TOKEN", "secret-token")
 
     with patch.object(
         ClickHouseClient,
@@ -290,7 +290,7 @@ def test_clickhouse_probe_and_discovery_with_env_token(monkeypatch: pytest.Monke
         probe = probe_clickhouse_access(
             credentials={
                 "host": "https://ch.example:8443",
-                "credential_ref": "TRUSTOPS_CLICKHOUSE_TOKEN",
+                "credential_ref": "GRC_LAKE_CLICKHOUSE_TOKEN",
             },
             options={},
         )
@@ -310,7 +310,7 @@ def test_clickhouse_probe_and_discovery_with_env_token(monkeypatch: pytest.Monke
         scope = discover_clickhouse_scope(
             credentials={
                 "host": "https://ch.example:8443",
-                "credential_ref": "TRUSTOPS_CLICKHOUSE_TOKEN",
+                "credential_ref": "GRC_LAKE_CLICKHOUSE_TOKEN",
             },
             options={},
         )

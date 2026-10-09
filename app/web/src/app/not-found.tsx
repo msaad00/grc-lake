@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <main className="mx-auto grid min-h-[60vh] max-w-xl content-center gap-4 px-6 py-16">
       <p className="text-xs font-semibold uppercase tracking-widest text-brand">
-        TrustOps · 404
+        GRC Lake · 404
       </p>
       <h1 className="text-3xl font-semibold tracking-tight text-ink">
         This page is not available

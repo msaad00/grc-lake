@@ -13,12 +13,12 @@ minutes, without manually assembling screenshots and spreadsheets.
 
 ```bash
 make smoke
-security-lakehouse assessment status --lake build/lakehouse
-security-lakehouse assessment violations --lake build/lakehouse
-security-lakehouse assessment snapshot \
+grc-lake assessment status --lake build/lakehouse
+grc-lake assessment violations --lake build/lakehouse
+grc-lake assessment snapshot \
   --lake build/lakehouse \
   --reason vendor_due_diligence
-security-lakehouse serve --lake build/lakehouse --port 8787
+grc-lake serve --lake build/lakehouse --port 8787
 ```
 
 Open:
@@ -50,4 +50,4 @@ sample evidence
 
 ## Screenshot
 
-![TrustOps Trust Home screenshot](images/trustops-demo-dashboard.png)
+![GRC Lake Trust Home screenshot](images/grc-lake-demo-dashboard.png)

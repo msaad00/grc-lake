@@ -72,7 +72,7 @@ def test_spawned_executor_preserves_production_no_auth_guard(tmp_path, monkeypat
     from security_lakehouse.db.models import OperationJob
     from security_lakehouse.operation_execution import execute_stored_operation
 
-    monkeypatch.setenv("TRUSTOPS_ENV", environment)
+    monkeypatch.setenv("GRC_LAKE_ENV", environment)
     with pytest.raises(RuntimeError, match="Unauthenticated server mode is forbidden"):
         execute_stored_operation(tmp_path, OperationJob(), require_auth=False)
 

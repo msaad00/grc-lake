@@ -8,13 +8,12 @@ row-level tenant isolation matter.
 
 Connection URL resolution (first match wins):
 
-1. ``TRUSTOPS_DATABASE_URL`` environment variable (e.g. a Postgres DSN)
+1. ``GRC_LAKE_DATABASE_URL`` environment variable (e.g. a Postgres DSN)
 2. ``sqlite:///<lake>/server/app.db`` (zero-config default for a single node)
 """
 
 from __future__ import annotations
 
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -23,7 +22,9 @@ from sqlalchemy import Select, create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-ENV_DATABASE_URL = "TRUSTOPS_DATABASE_URL"
+from security_lakehouse.runtime_environment import runtime_env
+
+ENV_DATABASE_URL = "GRC_LAKE_DATABASE_URL"
 
 # Pagination bounds for list endpoints. ``DEFAULT_PAGE_LIMIT`` is the page size
 # the HTTP layer applies when a caller does not ask for one; ``MAX_PAGE_LIMIT``
@@ -63,7 +64,7 @@ class Base(DeclarativeBase):
 
 def database_url(lake_dir: str | Path) -> str:
     """Resolve the application-state database URL for a lake directory."""
-    override = os.environ.get(ENV_DATABASE_URL)
+    override = runtime_env().get(ENV_DATABASE_URL)
     if override:
         return override
     db_path = Path(lake_dir) / "server" / "app.db"

@@ -33,18 +33,18 @@ Egress safety
 ``action.jira`` build on the same machinery. Every outbound action routes through
 the shared ``_http_post`` helper, so the egress guarantees are identical and not
 duplicated. Egress is deny-by-default: a target host must match
-``TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST``
+``GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST``
 (comma-separated ``host`` or ``host:port`` patterns) or the action refuses to
 run. Every target is additionally SSRF-guarded — only ``http``/``https`` is
 allowed and the *resolved* IP(s) must be public (private, loopback, link-local,
 reserved and multicast ranges are rejected, as is ``localhost``). Secrets are
 referenced as ``{{secret.NAME}}`` and resolved at run time; the resolved value is
 never written to the run log — the persisted params keep the ``{{secret.NAME}}``
-token. Locally a token resolves from ``TRUSTOPS_SECRET_<NAME>``. In hosted server
-mode it resolves from the calling tenant's ``TRUSTOPS_TENANT_<ID>__SECRET_<NAME>``
+token. Locally a token resolves from ``GRC_LAKE_SECRET_<NAME>``. In hosted server
+mode it resolves from the calling tenant's ``GRC_LAKE_TENANT_<ID>__SECRET_<NAME>``
 (see :func:`security_lakehouse.secret_refs.tenant_secret_prefix`); the shared
-``TRUSTOPS_SECRET_<NAME>`` is used there only for names the operator lists in
-``TRUSTOPS_WORKFLOW_SHARED_SECRETS``.
+``GRC_LAKE_SECRET_<NAME>`` is used there only for names the operator lists in
+``GRC_LAKE_WORKFLOW_SHARED_SECRETS``.
 
 Every action declares its input schema (the params the user fills in) and
 its output schema (the keys downstream nodes can read), so the canvas can
@@ -57,7 +57,6 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
-import os
 import re
 import time
 import urllib.error
@@ -75,6 +74,7 @@ from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
 from security_lakehouse.io import append_jsonl, canonical_sha256, read_jsonl
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import instant_sort_key
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import tenant_secret_prefix
 from security_lakehouse.timeutil import utc_now_iso_z
 from security_lakehouse.tracking import append_event as append_triage_event
@@ -85,9 +85,9 @@ RUNS_FILE = "workflow_runs.jsonl"
 _RUN_ACTORS = {"console", "scheduler", "api"}
 
 # --- webhook egress safety -------------------------------------------------
-EGRESS_ALLOWLIST_ENV = "TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST"
-SECRET_ENV_PREFIX = "TRUSTOPS_SECRET_"
-WORKFLOW_SHARED_SECRETS_ENV = "TRUSTOPS_WORKFLOW_SHARED_SECRETS"
+EGRESS_ALLOWLIST_ENV = "GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST"
+SECRET_ENV_PREFIX = "GRC_LAKE_SECRET_"
+WORKFLOW_SHARED_SECRETS_ENV = "GRC_LAKE_WORKFLOW_SHARED_SECRETS"
 _WEBHOOK_TIMEOUT_SECONDS = 15
 _WEBHOOK_BACKOFF_CAP_SECONDS = 2.0
 _SECRET_RE = re.compile(r"\{\{\s*secret\.([A-Za-z0-9_]+)\s*\}\}")
@@ -242,12 +242,12 @@ def _webhook_backoff_sleep(seconds: float) -> None:
 
 
 def _load_egress_allowlist() -> set[str]:
-    """Parse ``TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST`` into normalized host[:port] entries.
+    """Parse ``GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST`` into normalized host[:port] entries.
 
     An empty/unset env means egress is disabled (deny-by-default); the caller
     treats an empty set as "deny all".
     """
-    raw = os.environ.get(EGRESS_ALLOWLIST_ENV, "")
+    raw = runtime_env().get(EGRESS_ALLOWLIST_ENV, "")
     entries: set[str] = set()
     for chunk in raw.split(","):
         entry = chunk.strip().lower()
@@ -270,7 +270,7 @@ def _assert_resolved_ip_is_public(host: str) -> list[str]:
 
 
 def _shared_secret_allowlist() -> frozenset[str]:
-    raw = os.environ.get(WORKFLOW_SHARED_SECRETS_ENV, "")
+    raw = runtime_env().get(WORKFLOW_SHARED_SECRETS_ENV, "")
     return frozenset(item.strip() for item in raw.split(",") if item.strip())
 
 
@@ -278,7 +278,7 @@ def _resolve_secret(name: str, lake_dir: str | Path | None) -> str:
     """One ``{{secret.NAME}}`` value for the current mode (see the module docstring)."""
     shared_key = f"{SECRET_ENV_PREFIX}{name}"
     if not in_server_mode():
-        secret = os.environ.get(shared_key)
+        secret = runtime_env().get(shared_key)
         if secret is None:
             raise ValueError(f"secret {name!r} is not set (expected env {shared_key})")
         return secret
@@ -287,11 +287,11 @@ def _resolve_secret(name: str, lake_dir: str | Path | None) -> str:
     if prefix:
         # The key is built from the validated tenant prefix and a [A-Za-z0-9_]
         # name, so a token can never step outside the tenant's namespace.
-        tenant_value = os.environ.get(f"{prefix}SECRET_{name}")
+        tenant_value = runtime_env().get(f"{prefix}SECRET_{name}")
         if tenant_value is not None:
             return tenant_value
     if name in _shared_secret_allowlist():
-        shared = os.environ.get(shared_key)
+        shared = runtime_env().get(shared_key)
         if shared is not None:
             return shared
     expected = f"{prefix}SECRET_{name}" if prefix else "a tenant-scoped secret"
@@ -361,7 +361,7 @@ def _assert_egress_allowed(url: str, *, what: str = "webhook") -> None:
 
     allowlist = _load_egress_allowlist()
     if not allowlist:
-        raise ValueError("workflow egress is disabled; set TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST")
+        raise ValueError("workflow egress is disabled; set GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST")
     if not _host_is_allowlisted(host, port, allowlist):
         raise ValueError(f"{what} target host {host!r} is not in the egress allowlist")
     _assert_resolved_ip_is_public(host)

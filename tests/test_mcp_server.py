@@ -181,28 +181,28 @@ def test_mcp_server_branding(tmp_path: Path) -> None:
 
 
 def test_resolve_lake_dir_defaults(monkeypatch):
-    monkeypatch.delenv("TRUSTOPS_LAKE", raising=False)
+    monkeypatch.delenv("GRC_LAKE_LAKE", raising=False)
     assert mcp_server.resolve_lake_dir() == Path("./lake").expanduser().resolve()
-    monkeypatch.setenv("TRUSTOPS_LAKE", "/tmp/some-lake")
+    monkeypatch.setenv("GRC_LAKE_LAKE", "/tmp/some-lake")
     assert mcp_server.resolve_lake_dir() == Path("/tmp/some-lake").resolve()
 
 
 def test_resolve_api_base_url(monkeypatch):
-    monkeypatch.delenv("TRUSTOPS_API_URL", raising=False)
+    monkeypatch.delenv("GRC_LAKE_API_URL", raising=False)
     with pytest.raises(ValueError):
         mcp_server.resolve_api_base_url()
-    monkeypatch.setenv("TRUSTOPS_API_URL", "file:///tmp/lake")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "file:///tmp/lake")
     with pytest.raises(ValueError):
         mcp_server.resolve_api_base_url()
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://trustops.example.test/")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://trustops.example.test/")
     monkeypatch.setattr(netguard, "assert_url_is_public", _no_ssrf_check)
     assert mcp_server.resolve_api_base_url() == "https://trustops.example.test"
 
 
 def test_expected_tools_registered(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture")
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "remote")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture")
     server = _seeded_server(tmp_path)
     assert tool_names(server) >= EXPECTED_TOOLS - {
         "record_access_review_decision",
@@ -410,7 +410,7 @@ def test_probe_connector_calls_api(tmp_path, monkeypatch):
         server,
         "probe_connector",
         connector_id="aws-posture",
-        credentials_json='{"role_arn":"arn:aws:iam::123:role/TrustOps"}',
+        credentials_json='{"role_arn":"arn:aws:iam::123:role/GRC Lake"}',
     )
     assert result == "ok"
     assert calls[0]["path"].endswith("/aws-posture/probe")
@@ -1151,8 +1151,8 @@ def test_get_repository_graph_rejects_invalid_page(tmp_path, args):
 
 
 def test_get_repository_graph_remote_sends_page_params(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://remote.example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture-token")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://remote.example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture-token")
     calls = []
 
     def remote(method, path, body=None, **params):

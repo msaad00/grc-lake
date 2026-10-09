@@ -147,7 +147,7 @@ def cis_section_risk_domain(section: str) -> str:
 
 
 def csf_category_risk_domain(function: str, category: str) -> str:
-    """Map NIST CSF 2.0 function/category pairs to TrustOps risk domains."""
+    """Map NIST CSF 2.0 function/category pairs to GRC Lake risk domains."""
     key = f"{function}.{category}"
     return {
         "GV.OC": "governance",

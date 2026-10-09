@@ -1,22 +1,22 @@
 """Typed Python client over the ``/api/v1`` surface (BR-5).
 
-Agents and scripts should reach TrustOps through the *same* contract a human
+Agents and scripts should reach GRC Lake through the *same* contract a human
 console uses -- the versioned ``/api/v1`` envelope ``{data, meta, errors}``.
-This module ships :class:`TrustOpsClient`, a thin synchronous wrapper around
+This module ships :class:`GrcLakeClient`, a thin synchronous wrapper around
 ``httpx.Client`` that:
 
 - attaches the ``Authorization: Bearer <api_key>`` header,
 - parses the v1 envelope and returns the unwrapped ``data``,
-- raises a typed :class:`TrustOpsError` carrying the envelope ``errors`` on any
+- raises a typed :class:`GrcLakeError` carrying the envelope ``errors`` on any
   non-2xx response.
 
 The client lives behind the optional ``sdk`` extra::
 
-    pip install 'trustops-security-data-lake[sdk]'
+    pip install 'grc-lake[sdk]'
 
 ``httpx`` is imported lazily inside the client so ``import
 security_lakehouse.sdk`` never hard-requires it -- only constructing a
-:class:`TrustOpsClient` does.
+:class:`GrcLakeClient` does.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     import httpx
 
 
-class TrustOpsError(RuntimeError):
+class GrcLakeError(RuntimeError):
     """Raised when the API returns a non-2xx response.
 
     The structured v1 ``errors`` list (each entry a ``{"code", "detail"}``
@@ -85,7 +85,7 @@ def _parse_envelope(response: httpx.Response) -> Any:
 
     Shared by the sync and async clients: both unwrap the same
     ``{data, meta, errors}`` envelope and raise the same
-    :class:`TrustOpsError` on any non-2xx response, so the parsing contract
+    :class:`GrcLakeError` on any non-2xx response, so the parsing contract
     lives in exactly one place.
     """
     try:
@@ -94,20 +94,20 @@ def _parse_envelope(response: httpx.Response) -> Any:
         body = {}
     if not response.is_success:
         errors = body.get("errors") if isinstance(body, dict) else None
-        raise TrustOpsError(response.status_code, errors or [])
+        raise GrcLakeError(response.status_code, errors or [])
     if isinstance(body, dict) and "data" in body:
         return body["data"]
     return body
 
 
-class TrustOpsClient:
-    """Synchronous client for the TrustOps ``/api/v1`` surface.
+class GrcLakeClient:
+    """Synchronous client for the GRC Lake ``/api/v1`` surface.
 
     Example::
 
-        from security_lakehouse.sdk import TrustOpsClient
+        from security_lakehouse.sdk import GrcLakeClient
 
-        client = TrustOpsClient("https://trustops.example.com", api_key="tops_example_token")
+        client = GrcLakeClient("https://grc-lake.example.com", api_key="tops_example_token")
         posture = client.get_posture()
         print(posture["posture"]["score"])
 
@@ -126,8 +126,8 @@ class TrustOpsClient:
         """Create a client.
 
         Args:
-            base_url: Root URL of the TrustOps server (e.g.
-                ``https://trustops.example.com``). The ``/api/v1`` prefix is
+            base_url: Root URL of the GRC Lake server (e.g.
+                ``https://grc-lake.example.com``). The ``/api/v1`` prefix is
                 added by each method.
             api_key: Bearer token minted via ``/api/v1/auth/keys``. Omit only
                 for servers started with ``require_auth=False``.
@@ -148,7 +148,7 @@ class TrustOpsClient:
         )
 
     # --- context manager / lifecycle ---------------------------------------
-    def __enter__(self) -> TrustOpsClient:
+    def __enter__(self) -> GrcLakeClient:
         return self
 
     def __exit__(self, *_exc: object) -> None:
@@ -283,13 +283,13 @@ class TrustOpsClient:
         """Fetch a single risk by id.
 
         The server exposes risks as a tenant-scoped collection; this reads the
-        list and selects the matching id, raising :class:`TrustOpsError` (404)
+        list and selects the matching id, raising :class:`GrcLakeError` (404)
         when absent so the method behaves like a direct GET.
         """
         for risk in self.list_risks():
             if risk.get("id") == risk_id:
                 return risk
-        raise TrustOpsError(404, [{"code": "not_found", "detail": "risk not found"}])
+        raise GrcLakeError(404, [{"code": "not_found", "detail": "risk not found"}])
 
     def update_risk(self, risk_id: str, **fields: Any) -> JsonObject:
         """Patch a risk-register entry; ``fields`` are the columns to change."""
@@ -315,17 +315,17 @@ class TrustOpsClient:
         return self._post("/api/v1/remediation/tasks", json=dict(fields))
 
 
-class AsyncTrustOpsClient:
-    """Asynchronous client for the TrustOps ``/api/v1`` surface.
+class AsyncGrcLakeClient:
+    """Asynchronous client for the GRC Lake ``/api/v1`` surface.
 
-    Mirrors :class:`TrustOpsClient` on ``httpx.AsyncClient`` -- same
+    Mirrors :class:`GrcLakeClient` on ``httpx.AsyncClient`` -- same
     constructor, same method surface, and the same v1-envelope-unwrap /
-    :class:`TrustOpsError` behavior (shared via :func:`_parse_envelope`) -- but
+    :class:`GrcLakeError` behavior (shared via :func:`_parse_envelope`) -- but
     every request method is a coroutine. Example::
 
-        from security_lakehouse.sdk import AsyncTrustOpsClient
+        from security_lakehouse.sdk import AsyncGrcLakeClient
 
-        async with AsyncTrustOpsClient("https://trustops.example.com", api_key="tops_example_token") as client:
+        async with AsyncGrcLakeClient("https://grc-lake.example.com", api_key="tops_example_token") as client:
             posture = await client.get_posture()
             print(posture["posture"]["score"])
 
@@ -344,8 +344,8 @@ class AsyncTrustOpsClient:
         """Create an async client.
 
         Args:
-            base_url: Root URL of the TrustOps server (e.g.
-                ``https://trustops.example.com``). The ``/api/v1`` prefix is
+            base_url: Root URL of the GRC Lake server (e.g.
+                ``https://grc-lake.example.com``). The ``/api/v1`` prefix is
                 added by each method.
             api_key: Bearer token minted via ``/api/v1/auth/keys``. Omit only
                 for servers started with ``require_auth=False``.
@@ -366,7 +366,7 @@ class AsyncTrustOpsClient:
         )
 
     # --- context manager / lifecycle ---------------------------------------
-    async def __aenter__(self) -> AsyncTrustOpsClient:
+    async def __aenter__(self) -> AsyncGrcLakeClient:
         return self
 
     async def __aexit__(self, *_exc: object) -> None:
@@ -510,13 +510,13 @@ class AsyncTrustOpsClient:
         """Fetch a single risk by id.
 
         The server exposes risks as a tenant-scoped collection; this reads the
-        list and selects the matching id, raising :class:`TrustOpsError` (404)
+        list and selects the matching id, raising :class:`GrcLakeError` (404)
         when absent so the method behaves like a direct GET.
         """
         for risk in await self.list_risks():
             if risk.get("id") == risk_id:
                 return risk
-        raise TrustOpsError(404, [{"code": "not_found", "detail": "risk not found"}])
+        raise GrcLakeError(404, [{"code": "not_found", "detail": "risk not found"}])
 
     async def update_risk(self, risk_id: str, **fields: Any) -> JsonObject:
         """Patch a risk-register entry; ``fields`` are the columns to change."""
@@ -540,3 +540,9 @@ class AsyncTrustOpsClient:
     async def create_task(self, **fields: Any) -> JsonObject:
         """Create a remediation task (e.g. ``title=``, ``owner=``, ``priority=``)."""
         return await self._post("/api/v1/remediation/tasks", json=dict(fields))
+
+
+# Compatibility for existing Python integrations.
+TrustOpsClient = GrcLakeClient
+AsyncTrustOpsClient = AsyncGrcLakeClient
+TrustOpsError = GrcLakeError

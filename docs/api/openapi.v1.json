@@ -1621,8 +1621,8 @@
     }
   },
   "info": {
-    "description": "Open-source, headless-first trust operations for customer-owned evidence lakes. The same engine serves TrustOps Console and `/api/v1` for agents, CI, and runbooks. Discover the contract at `GET /api/v1`; browse it at `/docs`.",
-    "title": "TrustOps API",
+    "description": "Open-source, headless-first trust operations for customer-owned evidence lakes. The same engine serves GRC Lake Console and `/api/v1` for agents, CI, and runbooks. Discover the contract at `GET /api/v1`; browse it at `/docs`.",
+    "title": "GRC Lake API",
     "version": "v1"
   },
   "openapi": "3.1.0",

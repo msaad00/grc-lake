@@ -1,10 +1,10 @@
 """Stripe billing for commercial hosted tenants.
 
 * **Plans ↔ prices.** Each self-serve tier maps to a Stripe Price through
-  ``TRUSTOPS_STRIPE_PRICE_<TIER>`` (``STARTER``/``TEAM``/``BUSINESS``);
+  ``GRC_LAKE_STRIPE_PRICE_<TIER>`` (``STARTER``/``TEAM``/``BUSINESS``);
   Enterprise stays sales-led. Nothing is hardcoded to an account.
 * **Hosted surfaces.** Plan purchase uses Stripe Checkout and changes use the
-  Stripe customer portal, so card data never touches TrustOps.
+  Stripe customer portal, so card data never touches GRC Lake.
 * **Webhooks.** ``Stripe-Signature`` is verified (HMAC-SHA256 over
   ``t.payload``, ``v1`` only, constant-time, 5-minute tolerance, several secrets
   for rotation). Event ids are recorded after successful processing, so
@@ -14,14 +14,14 @@
 * **Plan state.** The subscription's price sets ``tenants.plan_tier``, which the
   existing usage limits read.
 * **Failure states.** ``past_due`` keeps full access for
-  ``TRUSTOPS_BILLING_GRACE_DAYS`` (default 7), then the workspace becomes
+  ``GRC_LAKE_BILLING_GRACE_DAYS`` (default 7), then the workspace becomes
   read-only; ``canceled``/``unpaid``/``incomplete_expired``/``paused`` are
   read-only immediately. Read-only keeps all data and reads; only writes are
   blocked, and admins can always reach billing to fix payment. Tenants that
   never subscribed (for example invoiced Enterprise contracts) are not locked.
 
-Secrets follow the file-first pattern: ``TRUSTOPS_STRIPE_SECRET_KEY_FILE`` wins
-over ``TRUSTOPS_STRIPE_SECRET_KEY``; webhook secrets likewise, comma-separated
+Secrets follow the file-first pattern: ``GRC_LAKE_STRIPE_SECRET_KEY_FILE`` wins
+over ``GRC_LAKE_STRIPE_SECRET_KEY``; webhook secrets likewise, comma-separated
 while rolling. Stripe is called over HTTPS without the Stripe SDK.
 """
 
@@ -30,7 +30,6 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-import os
 import time
 import urllib.parse
 import urllib.request
@@ -45,6 +44,7 @@ from sqlalchemy.orm import Session
 from security_lakehouse import netguard
 from security_lakehouse.commercial.email import commercial_hosted_enabled
 from security_lakehouse.db.models import StripeEvent, Tenant, TenantBilling
+from security_lakehouse.runtime_environment import runtime_env
 
 STRIPE_API = "https://api.stripe.com"
 SELF_SERVE_TIERS = ("starter", "team", "business")
@@ -77,29 +77,29 @@ class BillingError(Exception):
 
 
 def _secret(name: str) -> str | None:
-    file_path = os.environ.get(f"{name}_FILE", "").strip()
+    file_path = runtime_env().get(f"{name}_FILE", "").strip()
     if file_path:
         try:
             value = Path(file_path).read_text(encoding="utf-8").strip()
         except OSError:
             return None
         return value or None
-    return os.environ.get(name, "").strip() or None
+    return runtime_env().get(name, "").strip() or None
 
 
 def stripe_secret_key() -> str | None:
-    return _secret("TRUSTOPS_STRIPE_SECRET_KEY")
+    return _secret("GRC_LAKE_STRIPE_SECRET_KEY")
 
 
 def webhook_secrets() -> list[str]:
-    raw = _secret("TRUSTOPS_STRIPE_WEBHOOK_SECRET") or ""
+    raw = _secret("GRC_LAKE_STRIPE_WEBHOOK_SECRET") or ""
     return [part.strip() for part in raw.split(",") if part.strip()]
 
 
 def billing_enabled() -> bool:
     return (
         commercial_hosted_enabled()
-        and os.environ.get("TRUSTOPS_BILLING_ENABLED", "").lower() in {"1", "true", "yes"}
+        and runtime_env().get("GRC_LAKE_BILLING_ENABLED", "").lower() in {"1", "true", "yes"}
         and stripe_secret_key() is not None
     )
 
@@ -108,7 +108,7 @@ def price_for_tier(tier: str) -> str | None:
     tier = str(tier or "").strip().lower()
     if tier not in SELF_SERVE_TIERS:
         return None
-    return os.environ.get(f"TRUSTOPS_STRIPE_PRICE_{tier.upper()}", "").strip() or None
+    return runtime_env().get(f"GRC_LAKE_STRIPE_PRICE_{tier.upper()}", "").strip() or None
 
 
 def tier_for_price(price_id: str | None) -> str | None:
@@ -120,7 +120,7 @@ def tier_for_price(price_id: str | None) -> str | None:
 
 def grace_days() -> int:
     try:
-        return max(0, int(os.environ.get("TRUSTOPS_BILLING_GRACE_DAYS", DEFAULT_GRACE_DAYS)))
+        return max(0, int(runtime_env().get("GRC_LAKE_BILLING_GRACE_DAYS", DEFAULT_GRACE_DAYS)))
     except ValueError:
         return DEFAULT_GRACE_DAYS
 
@@ -163,7 +163,7 @@ def _stripe_request(method: str, path: str, *, form: list[tuple[str, str]] | Non
     headers = {
         "authorization": f"Bearer {key}",
         "accept": "application/json",
-        "user-agent": "trustops-security-data-lake",
+        "user-agent": "grc-lake",
     }
     data = None
     if form is not None:
@@ -189,9 +189,9 @@ def _latest_subscription(customer_id: str) -> dict[str, Any] | None:
 
 
 def _public_url(path: str) -> str:
-    base = os.environ.get("TRUSTOPS_PUBLIC_URL", "").strip().rstrip("/")
+    base = runtime_env().get("GRC_LAKE_PUBLIC_URL", "").strip().rstrip("/")
     if not base.startswith("https://"):
-        raise BillingError(500, "TRUSTOPS_PUBLIC_URL must be an https URL for Stripe redirects")
+        raise BillingError(500, "GRC_LAKE_PUBLIC_URL must be an https URL for Stripe redirects")
     return f"{base}{path}"
 
 

@@ -7,9 +7,9 @@
 #   2. py-build   — Python 3.12 installs the package + analytics extras into a
 #                   virtualenv that runtime mounts read-only (matches CI)
 #   3. runtime    — Python 3.12 slim, copies the venv + lake mount points,
-#                   runs `security-lakehouse serve` as a non-root user
+#                   runs `grc-lake serve` as a non-root user
 #
-# Build:  docker build -t trustops:dev .
+# Build:  docker build -t grc-lake:dev .
 # Run: see deploy/README.md for authenticated Compose and Kubernetes profiles.
 
 # Base images are pinned by multi-arch index digest so a rebuild of the same
@@ -53,55 +53,55 @@ ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
 # The image binds 0.0.0.0, so it must be able to run the authenticated
 # server. Without the `server` extra the CMD below silently falls back to
 # local mode, which has no authentication at all.
-RUN python -m venv /opt/trustops-venv \
+RUN python -m venv /opt/grc-lake-venv \
   && uv export --frozen --no-dev --no-emit-project \
        --extra server --extra analytics --extra cloud --extra mcp --extra iceberg \
-       --output-file /tmp/trustops-requirements.txt \
-  && uv pip install --python /opt/trustops-venv/bin/python \
-       --require-hashes --requirement /tmp/trustops-requirements.txt \
-  && uv pip install --python /opt/trustops-venv/bin/python --no-deps \
+       --output-file /tmp/grc-lake-requirements.txt \
+  && uv pip install --python /opt/grc-lake-venv/bin/python \
+       --require-hashes --requirement /tmp/grc-lake-requirements.txt \
+  && uv pip install --python /opt/grc-lake-venv/bin/python --no-deps \
        ".[server,analytics,cloud,mcp,iceberg]"
 
 # --- 3. Slim runtime ------------------------------------------------------
 FROM python:3.12-slim@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016 AS runtime
-LABEL org.opencontainers.image.title="TrustOps Security Data Lake"
-LABEL org.opencontainers.image.source="https://github.com/msaad00/trustops-security-data-lake"
+LABEL org.opencontainers.image.title="GRC Lake Security Data Lake"
+LABEL org.opencontainers.image.source="https://github.com/msaad00/grc-lake"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
-ENV PATH="/opt/trustops-venv/bin:${PATH}" \
+ENV PATH="/opt/grc-lake-venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    TRUSTOPS_LAKE=/lake \
-    TRUSTOPS_DATA_DIR=/opt/trustops-data
+    GRC_LAKE_LAKE=/lake \
+    GRC_LAKE_DATA_DIR=/opt/grc-lake-data
 
 # Refresh PCRE2 from Debian security until the pinned base includes DSA-6530-1.
 RUN apt-get update \
   && apt-get install --no-install-recommends -y tini libpcre2-8-0 \
   && rm -rf /var/lib/apt/lists/* \
-  && groupadd --gid 1100 trustops \
-  && useradd --uid 1100 --gid 1100 --home /home/trustops --create-home --shell /bin/bash trustops \
+  && groupadd --gid 1100 grc-lake \
+  && useradd --uid 1100 --gid 1100 --home /home/grc-lake --create-home --shell /bin/bash grc-lake \
   && mkdir -p /lake \
-  && chown -R trustops:trustops /lake
+  && chown -R grc-lake:grc-lake /lake
 
-COPY --from=py-build /opt/trustops-venv /opt/trustops-venv
+COPY --from=py-build /opt/grc-lake-venv /opt/grc-lake-venv
 # Ship the framework / control / connector / mapping catalogs inside the
 # image so the wheel-installed Python package can find them. The env var
-# TRUSTOPS_DATA_DIR (set above) tells security_lakehouse where to look.
-COPY frameworks/ /opt/trustops-data/frameworks/
-COPY controls/ /opt/trustops-data/controls/
-COPY connectors/ /opt/trustops-data/connectors/
-COPY mappings/ /opt/trustops-data/mappings/
-COPY programs/ /opt/trustops-data/programs/
-COPY mockup_companies/ /opt/trustops-data/mockup_companies/
-COPY policy_templates/ /opt/trustops-data/policy_templates/
-COPY agent-skills/ /opt/trustops-data/agent-skills/
+# GRC_LAKE_DATA_DIR (set above) tells security_lakehouse where to look.
+COPY frameworks/ /opt/grc-lake-data/frameworks/
+COPY controls/ /opt/grc-lake-data/controls/
+COPY connectors/ /opt/grc-lake-data/connectors/
+COPY mappings/ /opt/grc-lake-data/mappings/
+COPY programs/ /opt/grc-lake-data/programs/
+COPY mockup_companies/ /opt/grc-lake-data/mockup_companies/
+COPY policy_templates/ /opt/grc-lake-data/policy_templates/
+COPY agent-skills/ /opt/grc-lake-data/agent-skills/
 
-USER trustops
-WORKDIR /home/trustops
+USER grc-lake
+WORKDIR /home/grc-lake
 EXPOSE 8787
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/api/healthz', timeout=2)"
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["security-lakehouse", "serve", "--server", "--lake", "/lake", "--host", "0.0.0.0", "--port", "8787"]
+CMD ["grc-lake", "serve", "--server", "--lake", "/lake", "--host", "0.0.0.0", "--port", "8787"]

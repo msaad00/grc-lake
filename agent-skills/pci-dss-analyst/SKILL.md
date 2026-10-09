@@ -1,7 +1,7 @@
 ---
 name: pci-dss-analyst
 description: >-
-  Assess PCI DSS-oriented control posture from TrustOps evidence. Use when an
+  Assess PCI DSS-oriented control posture from GRC Lake evidence. Use when an
   agent needs to analyze PCI DSS violations, payment data evidence, cardholder
   data environment assets, remediation queues, current posture, or point-in-time
   snapshots. Guardrail: use PCI SSC official source references and do not invent

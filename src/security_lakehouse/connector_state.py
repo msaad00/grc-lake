@@ -139,7 +139,7 @@ def _fingerprint_salt(lake_dir: str | Path) -> bytes:
 
     The salt used to be a compile-time constant, identical on every install, so
     one rainbow table over likely credential values worked against every
-    TrustOps deployment at once -- and `credential_fingerprint` is readable at
+    GRC Lake deployment at once -- and `credential_fingerprint` is readable at
     `read` scope, which makes those tables worth building.
 
     Rotating this invalidates existing fingerprints. That fails closed: a probe
@@ -752,14 +752,14 @@ def _scope_candidates(
         database = str(options.get("database") or "")
         schema = str(options.get("schema") or "")
         warehouse = str(options.get("warehouse") or "")
-        recommended_database = "TRUSTOPS_SECURITY_LAKE"
+        recommended_database = "GRC_LAKE_SECURITY_LAKE"
         recommended_schema = "EVIDENCE"
-        recommended_warehouse = "TRUSTOPS_READ_WH"
+        recommended_warehouse = "GRC_LAKE_READ_WH"
         defaults = {
-            "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-            "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-            "asset_risk": "TRUSTOPS_ASSET_RISK",
-            "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+            "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+            "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+            "asset_risk": "GRC_LAKE_ASSET_RISK",
+            "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
         }
         views = [
             {

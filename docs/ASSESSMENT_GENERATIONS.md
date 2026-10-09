@@ -1,6 +1,6 @@
 # Assessment publication and failure contracts
 
-TrustOps keeps local JSONL and SQL artifacts as its working evidence mode. An
+GRC Lake keeps local JSONL and SQL artifacts as its working evidence mode. An
 assessment publication consists of one verified generation. An optional
 [Parquet export](PARQUET_EXPORT.md) preserves normalized evidence from one pinned
 generation. Optional [Iceberg REST publication](ICEBERG_REST.md) commits that
@@ -51,7 +51,7 @@ active. Existing local lakes are migrated by retaining a copy of their previous
 artifacts before installing compatibility links. The first successful publication
 then switches to the new generation.
 
-Published artifacts reject writes through TrustOps shared JSON IO. Local
+Published artifacts reject writes through GRC Lake shared JSON IO. Local
 administrators can still edit files directly; integrity verification detects
 such changes. This is not object-lock/WORM storage or cryptographic signing.
 Historical and interrupted staging directories are retained. Old unreferenced
@@ -74,7 +74,7 @@ the compatibility links for each file can cross a publication boundary. API
 pagination across multiple requests does not yet offer a historical-generation
 selector; compare returned generation identities before combining pages.
 
-`security-lakehouse pipeline verify-integrity --lake <lake-directory>` checks the published
+`grc-lake pipeline verify-integrity --lake <lake-directory>` checks the published
 generation hashes as well as evidence integrity. An explicit generation directory
 can also be inspected with `verify_generation(Path(...))` from
 `security_lakehouse.generations`.

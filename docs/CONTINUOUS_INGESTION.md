@@ -1,6 +1,6 @@
 # Continuous Ingestion Operating Model
 
-TrustOps is not meant to run as a pile of one-off bootstrap scripts. Bootstrap
+GRC Lake is not meant to run as a pile of one-off bootstrap scripts. Bootstrap
 artifacts create customer-owned read scopes. The running product then uses the
 same connector contract from the UI, REST API, CLI, scheduler, and agents.
 
@@ -15,14 +15,14 @@ reviewers/agents   -> read posture, runs, evidence, snapshots, trust shares
 
 | Layer              | Owns                                     | Must not own                         |
 | ------------------ | ---------------------------------------- | ------------------------------------ |
-| Customer platform  | Snowflake user, cloud role, secret mount | TrustOps app code                    |
-| TrustOps connector | read scope, fingerprint, sync history    | passwords, PATs, raw private keys    |
+| Customer platform  | Snowflake user, cloud role, secret mount | GRC Lake app code                    |
+| GRC Lake connector | read scope, fingerprint, sync history    | passwords, PATs, raw private keys    |
 | Scheduler          | due checks, locks, sync/evaluation runs  | broad cloud permissions              |
 | Assessment engine  | normalized evidence, controls, snapshots | connector-specific compliance claims |
 
 ## Production Flow
 
-1. **Provision access outside TrustOps.**
+1. **Provision access outside GRC Lake.**
    Use Terraform, Bicep, CloudFormation, Snowflake SQL, or the customer secret
    manager. Identities are non-human and read-only by default.
 
@@ -31,13 +31,13 @@ reviewers/agents   -> read posture, runs, evidence, snapshots, trust shares
    recommended options without enabling collection.
 
    ```bash
-   security-lakehouse connectors discover \
+   grc-lake connectors discover \
      --lake /lake \
      --connector-id snowflake-evidence-lake \
      --account "$SNOWFLAKE_ACCOUNT" \
-     --user TRUSTOPS_INGEST_SVC \
-     --warehouse TRUSTOPS_READ_WH \
-     --database TRUSTOPS_SECURITY_LAKE \
+     --user GRC_LAKE_INGEST_SVC \
+     --warehouse GRC_LAKE_READ_WH \
+     --database GRC_LAKE_SECURITY_LAKE \
      --schema EVIDENCE
    ```
 
@@ -46,11 +46,11 @@ reviewers/agents   -> read posture, runs, evidence, snapshots, trust shares
    writes a non-secret access fingerprint to `gold/connector_runs.jsonl`.
 
    ```bash
-   security-lakehouse connectors probe \
+   grc-lake connectors probe \
      --lake /lake \
      --connector-id snowflake-evidence-lake \
-     --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"TRUSTOPS_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
-     --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","role":"TRUSTOPS_READER","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}'
+     --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"GRC_LAKE_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
+     --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","role":"GRC_LAKE_READER","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}'
    ```
 
 4. **Enable only after a successful probe.**
@@ -58,17 +58,17 @@ reviewers/agents   -> read posture, runs, evidence, snapshots, trust shares
    match the same credential/scope fingerprint.
 
    ```bash
-   security-lakehouse connectors configure \
+   grc-lake connectors configure \
      --lake /lake \
      --connector-id snowflake-evidence-lake \
      --state enabled \
-     --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"TRUSTOPS_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
-     --options-json '{"warehouse":"TRUSTOPS_READ_WH","database":"TRUSTOPS_SECURITY_LAKE","schema":"EVIDENCE","role":"TRUSTOPS_READER","audit_events":"TRUSTOPS_AUDIT_EVENTS","control_posture":"TRUSTOPS_CONTROL_POSTURE","asset_risk":"TRUSTOPS_ASSET_RISK","evidence_bundles":"TRUSTOPS_EVIDENCE_BUNDLES"}' \
+     --credentials-json '{"account":"'"$SNOWFLAKE_ACCOUNT"'","user":"GRC_LAKE_INGEST_SVC","private_key_ref":"SNOWFLAKE_PRIVATE_KEY_FILE"}' \
+     --options-json '{"warehouse":"GRC_LAKE_READ_WH","database":"GRC_LAKE_SECURITY_LAKE","schema":"EVIDENCE","role":"GRC_LAKE_READER","audit_events":"GRC_LAKE_AUDIT_EVENTS","control_posture":"GRC_LAKE_CONTROL_POSTURE","asset_risk":"GRC_LAKE_ASSET_RISK","evidence_bundles":"GRC_LAKE_EVIDENCE_BUNDLES"}' \
      --sync-schedule "every 15m"
    ```
 
 5. **Run continuously.**
-   Production deployments should run `security-lakehouse scheduler tick` from a
+   Production deployments should run `grc-lake scheduler tick` from a
    Kubernetes `CronJob`, system cron, CI scheduler, Airflow, Dagster, Prefect, or
    another orchestrator. The Helm chart ships a scheduler CronJob.
 
@@ -126,11 +126,11 @@ For Snowflake, `deploy/snowflake/bootstrap_poc.sql` and
 admin/IaC step. In production, a team should convert those objects into its
 normal change-management system:
 
-- `TRUSTOPS_READER` is a read-only role.
-- `TRUSTOPS_INGEST_SVC` is a non-human service user.
+- `GRC_LAKE_READER` is a read-only role.
+- `GRC_LAKE_INGEST_SVC` is a non-human service user.
 - The RSA public key is set in Snowflake.
 - The matching private key is stored in the customer secret manager.
-- The TrustOps runtime mounts the private key and sets
+- The GRC Lake runtime mounts the private key and sets
   `SNOWFLAKE_PRIVATE_KEY_FILE`.
 
 In Kubernetes, mount the key as a Secret and pass the file path to both the API
@@ -141,33 +141,33 @@ env:
   - name: SNOWFLAKE_ACCOUNT
     value: YOUR_ORG-YOUR_ACCOUNT
   - name: SNOWFLAKE_USER
-    value: TRUSTOPS_INGEST_SVC
+    value: GRC_LAKE_INGEST_SVC
   - name: SNOWFLAKE_AUTHENTICATOR
     value: SNOWFLAKE_JWT
   - name: SNOWFLAKE_PRIVATE_KEY_FILE
-    value: /var/run/secrets/trustops/snowflake_key.p8
+    value: /var/run/secrets/grc-lake/snowflake_key.p8
   - name: SNOWFLAKE_ROLE
-    value: TRUSTOPS_READER
+    value: GRC_LAKE_READER
   - name: SNOWFLAKE_WAREHOUSE
-    value: TRUSTOPS_READ_WH
+    value: GRC_LAKE_READ_WH
   - name: SNOWFLAKE_DATABASE
-    value: TRUSTOPS_SECURITY_LAKE
+    value: GRC_LAKE_SECURITY_LAKE
   - name: SNOWFLAKE_SCHEMA
     value: EVIDENCE
 
 extraVolumeMounts:
   - name: snowflake-key
-    mountPath: /var/run/secrets/trustops
+    mountPath: /var/run/secrets/grc-lake
     readOnly: true
 
 extraVolumes:
   - name: snowflake-key
     secret:
-      secretName: trustops-snowflake-key
+      secretName: grc-lake-snowflake-key
 ```
 
 The bootstrap SQL proves the required Snowflake boundary; the continuous
-TrustOps value comes from scheduled sync, deterministic evaluation, fresh
+GRC Lake value comes from scheduled sync, deterministic evaluation, fresh
 evidence status, snapshots, and shared API/UI/agent access to the same state.
 
 ## API Surface
@@ -221,11 +221,11 @@ history. Reads reject malformed JSON records without rewriting or skipping them.
 
 ### Scheduling a hosted deployment
 
-Use `security-lakehouse scheduler tick --lake /lake --all-tenants` for an
+Use `grc-lake scheduler tick --lake /lake --all-tenants` for an
 authenticated server lake root, or add `--all-tenants` to `scheduler run` for
-the daemon. `TRUSTOPS_COMMERCIAL_HOSTED=1` also selects tenant enumeration for
+the daemon. `GRC_LAKE_COMMERCIAL_HOSTED=1` also selects tenant enumeration for
 unbound root ticks. The application database must already be migrated, with
-the same `TRUSTOPS_DATABASE_URL` and storage root used by the API.
+the same `GRC_LAKE_DATABASE_URL` and storage root used by the API.
 
 Only tenants registered in that database are considered. Within each lake,
 only enabled connector schedules and configured cron workflows run. Each tenant
@@ -248,16 +248,16 @@ Generation and operational retention are separate operator actions, run by hand
 or on a configured schedule:
 
 ```bash
-security-lakehouse lake retention --lake ./lake
-security-lakehouse lake operational-retention --lake ./lake --older-than-days 90
+grc-lake lake retention --lake ./lake
+grc-lake lake operational-retention --lake ./lake --older-than-days 90
 ```
 
 These commands preview eligible data. Supply `--archive-to /separate/archive`
 to copy eligible history durably before reclaiming active storage. Choose an
 archive on separately controlled storage and a window that covers your evidence
 obligations. Run preview first, then either schedule the explicit archive
-invocation yourself or set `TRUSTOPS_RETENTION_SCHEDULE` and
-`TRUSTOPS_RETENTION_ARCHIVE_DIR` (Helm: `scheduler.retention.*`) so the
+invocation yourself or set `GRC_LAKE_RETENTION_SCHEDULE` and
+`GRC_LAKE_RETENTION_ARCHIVE_DIR` (Helm: `scheduler.retention.*`) so the
 scheduler runs it; see [automatic retention](OPERATIONS_CONTRACTS.md#automatic-retention).
 Automatic retention is off by default and previews only until an archive is
 configured. There is no silent deletion policy.
@@ -302,7 +302,7 @@ setting deployment capacity.
 
 ## Reassessing imported evidence
 
-`security-lakehouse pipeline eval --lake ./lake` also works after an initial
+`grc-lake pipeline eval --lake ./lake` also works after an initial
 `pipeline run` from an external JSONL file. When no connector landing file exists,
 evaluation verifies the retained sealed generation and reconstructs temporary
 input from its original bronze records under the publication lock. It does not

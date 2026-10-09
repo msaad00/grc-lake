@@ -590,7 +590,7 @@ def _evidence_ref(row: dict[str, Any], evidence: dict[str, Any], raw_sha256: str
     """Return an inspectable evidence pointer, even when a source lacks one.
 
     Some live cloud APIs expose posture facts without a durable object URL.
-    TrustOps still has an immutable bronze row for that fact, so use a stable
+    GRC Lake still has an immutable bronze row for that fact, so use a stable
     internal evidence reference instead of letting freshness mark valid evidence
     as missing.
     """

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import sys
 import sysconfig
 from collections import Counter
@@ -13,13 +12,14 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.policy import validate_rule
+from security_lakehouse.runtime_environment import runtime_env
 
 
 def _data_root() -> Path:
     """Return the directory holding ``frameworks/``, ``controls/``, ``mappings/``.
 
     Resolution order:
-      1. ``TRUSTOPS_DATA_DIR`` environment variable — set by the Docker
+      1. ``GRC_LAKE_DATA_DIR`` environment variable — set by the Docker
          image and Helm chart so the wheel can find the JSON catalogs.
       2. The user-install data scheme, only when this module was installed there.
       3. The prefix whose Python library contains this imported module.
@@ -28,7 +28,7 @@ def _data_root() -> Path:
     Missing catalogs fail at their owning location; another installation must
     never silently supply a different catalog version.
     """
-    override = os.environ.get("TRUSTOPS_DATA_DIR")
+    override = runtime_env().get("GRC_LAKE_DATA_DIR")
     if override:
         return Path(override)
     module_path = Path(__file__).resolve()

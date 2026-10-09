@@ -13,7 +13,7 @@ body:
     id: proposal
     attributes:
       label: Proposal
-      description: What should TrustOps do? Include the API, CLI, or console surface if you have one in mind.
+      description: What should GRC Lake do? Include the API, CLI, or console surface if you have one in mind.
     validations:
       required: true
   - type: dropdown

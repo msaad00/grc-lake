@@ -9,7 +9,8 @@ import type { ConnectorFieldDef } from "@/lib/connector-forms";
 const ENV_NAME_PLACEHOLDER = /^[A-Z][A-Z0-9_<>]*$/;
 const REF_NAME = /_(ref|env)$/;
 const REF_LABEL = /\b(reference|env var|env)\b/i;
-const EXISTING_PREFIX = /^TRUSTOPS_TENANT_.*?__|^TRUSTOPS_/;
+const EXISTING_PREFIX =
+  /^(?:GRC_LAKE|TRUSTOPS)_TENANT_.*?__|^(?:GRC_LAKE|TRUSTOPS)_/;
 
 /** A field whose value names an environment variable (mirrors REF_KEY_SUFFIXES). */
 export function isSecretRefField(field: ConnectorFieldDef): boolean {

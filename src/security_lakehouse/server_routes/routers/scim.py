@@ -1,9 +1,9 @@
 """SCIM 2.0 routes (commercial hosted) and per-tenant SCIM token administration.
 
 SCIM endpoints speak the SCIM wire format that identity providers parse:
-``application/scim+json`` bodies without the TrustOps API envelope, and SCIM
+``application/scim+json`` bodies without the GRC Lake API envelope, and SCIM
 error objects. Each request is authenticated by a per-tenant SCIM bearer token,
-which also selects the tenant. Token administration uses the normal TrustOps
+which also selects the tenant. Token administration uses the normal GRC Lake
 admin API and envelope.
 """
 
@@ -249,7 +249,7 @@ def build_scim_router() -> APIRouter:
             session, request, lambda tenant_id: scim.delete_scim_group(session, tenant_id=tenant_id, group_id=group_id)
         )
 
-    # --- token administration (TrustOps admin API) ---------------------------
+    # --- token administration (GRC Lake admin API) ---------------------------
 
     @router.post("/api/v1/platform/scim/tokens", status_code=status.HTTP_201_CREATED)
     async def create_token(

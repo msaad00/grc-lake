@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Capture console screenshots for README / docs.
- * Requires: server at TRUSTOPS_SCREENSHOT_URL (default http://127.0.0.1:8787)
+ * Requires: server at GRC_LAKE_SCREENSHOT_URL (default http://127.0.0.1:8787)
  *           and `npx playwright install chromium` once.
  *
  * Every theme is captured in one run against one server with the browser clock
  * frozen at a single instant, so light and dark variants show identical data
- * and identical relative times. Set TRUSTOPS_SCREENSHOT_NOW (ISO) to pin it.
+ * and identical relative times. Set GRC_LAKE_SCREENSHOT_NOW (ISO) to pin it.
  */
 import { chromium } from "playwright";
 import { mkdir } from "node:fs/promises";
@@ -14,7 +14,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const base =
-  process.env.TRUSTOPS_SCREENSHOT_URL?.replace(/\/$/, "") ||
+  process.env.GRC_LAKE_SCREENSHOT_URL?.replace(/\/$/, "") ||
   "http://127.0.0.1:8787";
 const root = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -23,9 +23,9 @@ const root = path.resolve(
   "..",
 );
 const outDir = path.join(root, "docs", "images");
-const frozenNow = new Date(process.env.TRUSTOPS_SCREENSHOT_NOW || Date.now());
+const frozenNow = new Date(process.env.GRC_LAKE_SCREENSHOT_NOW || Date.now());
 if (Number.isNaN(frozenNow.getTime()))
-  throw new Error("TRUSTOPS_SCREENSHOT_NOW is not a valid date");
+  throw new Error("GRC_LAKE_SCREENSHOT_NOW is not a valid date");
 
 const WIDE = { width: 1440, height: 1024 };
 const TALL = { width: 1440, height: 1600 };
@@ -43,9 +43,9 @@ const MOBILE = { width: 390, height: 1800 };
  * table stops on a row boundary instead of mid-row.
  */
 const shots = [
-  { file: "trustops-demo-dashboard.png", route: "/dashboard/", dark: true },
+  { file: "grc-lake-demo-dashboard.png", route: "/dashboard/", dark: true },
   {
-    file: "trustops-demo-overview-mobile.png",
+    file: "grc-lake-demo-overview-mobile.png",
     route: "/dashboard/",
     viewport: MOBILE,
     endAt: (page) =>
@@ -55,12 +55,12 @@ const shots = [
         .nth(2),
   },
   {
-    file: "trustops-demo-control-families.png",
+    file: "grc-lake-demo-control-families.png",
     route: "/dashboard/",
     setup: "control-families-tab",
   },
   {
-    file: "trustops-demo-crosswalk.png",
+    file: "grc-lake-demo-crosswalk.png",
     route: "/crosswalk/",
     viewport: { width: 1440, height: 2400 },
     setup: "crosswalk-matrix",
@@ -71,34 +71,34 @@ const shots = [
         .locator("tbody tr")
         .nth(3),
   },
-  { file: "trustops-demo-findings.png", route: "/violations/" },
-  { file: "trustops-demo-remediation.png", route: "/remediation/" },
+  { file: "grc-lake-demo-findings.png", route: "/violations/" },
+  { file: "grc-lake-demo-remediation.png", route: "/remediation/" },
   {
-    file: "trustops-demo-triage.png",
+    file: "grc-lake-demo-triage.png",
     route: "/violations/",
     dark: true,
     setup: "finding-drawer",
     crop: (page) => [page.getByRole("dialog")],
   },
-  { file: "trustops-demo-audit-room.png", route: "/audit-room/" },
+  { file: "grc-lake-demo-audit-room.png", route: "/audit-room/" },
   {
-    file: "trustops-demo-evidence.png",
+    file: "grc-lake-demo-evidence.png",
     route: "/evidence/",
     dark: true,
     viewport: TALL,
     endAt: (page) => page.locator("table tbody tr").nth(7),
   },
-  { file: "trustops-demo-insights.png", route: "/insights/" },
-  { file: "trustops-demo-connectors.png", route: "/connectors/" },
+  { file: "grc-lake-demo-insights.png", route: "/insights/" },
+  { file: "grc-lake-demo-connectors.png", route: "/connectors/" },
   {
-    file: "trustops-demo-frameworks.png",
+    file: "grc-lake-demo-frameworks.png",
     route: "/frameworks/",
     dark: true,
     viewport: TALL,
     endAt: (page) => page.getByLabel("Framework roster").locator("li").nth(7),
   },
   {
-    file: "trustops-demo-mapping-review.png",
+    file: "grc-lake-demo-mapping-review.png",
     route: "/mapping-review/",
     dark: true,
     viewport: TALL,
@@ -109,25 +109,25 @@ const shots = [
         .locator("tbody tr")
         .nth(4),
   },
-  { file: "trustops-demo-policies.png", route: "/policies/" },
-  { file: "trustops-demo-vendor-risk.png", route: "/vendor-risk/" },
+  { file: "grc-lake-demo-policies.png", route: "/policies/" },
+  { file: "grc-lake-demo-vendor-risk.png", route: "/vendor-risk/" },
   {
-    file: "trustops-demo-workflows.png",
+    file: "grc-lake-demo-workflows.png",
     route: "/automation/",
     // Tall enough for the whole canvas, so the fitted flow is not cut.
     viewport: { width: 1440, height: 1240 },
   },
-  { file: "trustops-demo-trust-center.png", route: "/trust-center/" },
-  { file: "trustops-demo-onboarding.png", route: "/onboarding/" },
-  { file: "trustops-demo-auth.png", route: "/auth/" },
+  { file: "grc-lake-demo-trust-center.png", route: "/trust-center/" },
+  { file: "grc-lake-demo-onboarding.png", route: "/onboarding/" },
+  { file: "grc-lake-demo-auth.png", route: "/auth/" },
   {
-    file: "trustops-demo-graph.png",
+    file: "grc-lake-demo-graph.png",
     route: "/graph/?focus=evidence:monitoring.detection",
     dark: true,
     setup: "graph-focus",
   },
   {
-    file: "trustops-demo-control-drawer.png",
+    file: "grc-lake-demo-control-drawer.png",
     route: "/controls/?id=SOC2-CC6.4",
     dark: true,
     setup: "control-drawer",
@@ -135,7 +135,7 @@ const shots = [
   },
 ];
 
-const themes = (process.env.TRUSTOPS_SCREENSHOT_THEMES || "light,dark").split(
+const themes = (process.env.GRC_LAKE_SCREENSHOT_THEMES || "light,dark").split(
   ",",
 );
 
@@ -156,7 +156,7 @@ async function requireSeededDemo() {
   const tasks = (await api("GET", "/v1/remediation/tasks?limit=1")).data ?? [];
   if (tasks.length === 0) {
     throw new Error(
-      "No remediation tasks: load the lake with `security-lakehouse fixtures load --company golden` (without --no-demo-records).",
+      "No remediation tasks: load the lake with `grc-lake fixtures load --company golden` (without --no-demo-records).",
     );
   }
 }

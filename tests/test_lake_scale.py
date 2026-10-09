@@ -94,7 +94,7 @@ def test_configure_applies_split_schedule_defaults(tmp_path: Path) -> None:
         connector_id="github-security",
         state="enabled",
         actor="alice",
-        credentials={"credential_ref": "TRUSTOPS_GITHUB_APP_INSTALLATION_TOKEN"},
+        credentials={"credential_ref": "GRC_LAKE_GITHUB_APP_INSTALLATION_TOKEN"},
         options={"sync_schedule": "every 15m", "repo": "acme/app"},
     )
     config = latest_config(tmp_path, "github-security")
@@ -214,7 +214,7 @@ def test_failed_export_reports_committed_local_generation(tmp_path, monkeypatch)
 
 
 def test_explicit_empty_sink_environment_does_not_use_process_credentials(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_DUCKDB_PATH", str(tmp_path / "ambient.duckdb"))
+    monkeypatch.setenv("GRC_LAKE_DUCKDB_PATH", str(tmp_path / "ambient.duckdb"))
     from security_lakehouse.lake_scale import warehouse_sink_configured
 
     assert warehouse_sink_configured({}) is False

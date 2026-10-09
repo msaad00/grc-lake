@@ -137,7 +137,7 @@ def test_action_catalog_includes_all_nodes() -> None:
 
 def test_action_catalog_descriptions_use_plain_language() -> None:
     """Node descriptions render in the workflow builder; keep internals out."""
-    internal = re.compile(r"TRUSTOPS_|gold/|silver|bronze|\bPOST /|/rest/api/")
+    internal = re.compile(r"GRC_LAKE_|gold/|silver|bronze|\bPOST /|/rest/api/")
     for action in action_catalog():
         assert not internal.search(action["description"]), (action["node_type"], action["description"])
 

@@ -184,7 +184,7 @@ def _fallback_html(app_data: dict[str, Any]) -> str:
 _REPORT_TEMPLATE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TrustOps Overview — frozen evidence report</title>
+<title>GRC Lake Overview — frozen evidence report</title>
 <style>
 :root{{color-scheme:light;font-family:system-ui,-apple-system,sans-serif;color:#182335;background:#edf2f7}}
 *{{box-sizing:border-box}}body{{margin:0}}main{{max-width:1120px;margin:auto;padding:40px 24px 64px}}
@@ -204,7 +204,7 @@ footer{{margin-top:24px;border-top:1px solid #ccd6e3;padding-top:16px}}:focus-vi
 @media print{{:root{{background:#fff}}main{{max-width:none;padding:0}}section,.metric{{break-inside:avoid}}details{{display:block}}details::details-content{{content-visibility:visible;display:block}}}}
 </style></head><body>
 <script id="app-data" type="application/json">{payload}</script>
-<main><header><div class="brand">TrustOps · Frozen evidence report</div><h1>Overview</h1>
+<main><header><div class="brand">GRC Lake · Frozen evidence report</div><h1>Overview</h1>
 <p class="muted">Saved assessment and evidence for offline review. Values reflect the recorded evaluation; this file does not refresh evidence or connect to an API.</p>
 <p class="meta"><strong>Evaluated at:</strong> {evaluated}</p></header>
 {notice}<dl class="metrics">{cards}</dl>

@@ -25,7 +25,7 @@ def test_published_profiles_boot_authenticated_server(profile, monkeypatch, tmp_
             "helm",
             "template",
             "trustops",
-            str(ROOT / "deploy/helm/trustops"),
+            str(ROOT / "deploy/helm/grc-lake"),
             "-f",
             str(ROOT / "deploy/examples" / profile),
         ],
@@ -36,12 +36,12 @@ def test_published_profiles_boot_authenticated_server(profile, monkeypatch, tmp_
     documents = {doc["kind"]: doc for doc in yaml.safe_load_all(rendered.stdout) if doc}
     container = documents["Deployment"]["spec"]["template"]["spec"]["containers"][0]
     version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
-    assert container["image"] == f"ghcr.io/msaad00/trustops:{version}"
+    assert container["image"] == f"ghcr.io/msaad00/grc-lake:{version}"
     for key in os.environ:
-        if key.startswith("TRUSTOPS_"):
+        if key.startswith("GRC_LAKE_"):
             monkeypatch.delenv(key)
     for item in container["env"]:
-        if item["name"] == "TRUSTOPS_LAKE":
+        if item["name"] == "GRC_LAKE_LAKE":
             continue
         # The chart references customer Secrets. Resolve only synthetic values
         # here; this exercises server configuration, never a cloud connection.
@@ -49,14 +49,14 @@ def test_published_profiles_boot_authenticated_server(profile, monkeypatch, tmp_
     app = create_app(tmp_path / "lake", require_auth=True)
     assert app.state.require_auth is True
     assert (app.state.oidc_config is not None) is (profile == "aws-snowflake-poc-values.yaml")
-    monkeypatch.delenv("TRUSTOPS_COOKIE_SIGNING_KEY")
-    with pytest.raises(RuntimeError, match="TRUSTOPS_COOKIE_SIGNING_KEY"):
+    monkeypatch.delenv("GRC_LAKE_COOKIE_SIGNING_KEY")
+    with pytest.raises(RuntimeError, match="GRC_LAKE_COOKIE_SIGNING_KEY"):
         create_app(tmp_path / "missing-secret", require_auth=True)
 
     scheduler = documents["CronJob"]["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
     assert scheduler["image"] == container["image"]
     argv = scheduler["args"]
-    assert argv[:3] == ["security-lakehouse", "scheduler", "tick"]
+    assert argv[:3] == ["grc-lake", "scheduler", "tick"]
     result = subprocess.run(
         [sys.executable, "-m", "security_lakehouse.cli", *argv[1:], "--help"],
         capture_output=True,

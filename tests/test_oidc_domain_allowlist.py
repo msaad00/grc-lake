@@ -76,7 +76,7 @@ def test_auto_provision_admits_allowlisted_domain_case_insensitively(factory) ->
 
 
 def test_auto_provision_without_allowlist_fails_closed(factory) -> None:
-    with session_scope(factory) as session, pytest.raises(OIDCLoginError, match="TRUSTOPS_OIDC_ALLOWED_DOMAINS"):
+    with session_scope(factory) as session, pytest.raises(OIDCLoginError, match="GRC_LAKE_OIDC_ALLOWED_DOMAINS"):
         complete_oidc_login(session, config=_config(frozenset()), email="new@acme.test", email_verified=True)
 
 
@@ -104,4 +104,4 @@ def test_startup_logs_error_when_auto_provision_has_no_allowlist(
     monkeypatch.delenv("TRUSTOPS_OIDC_ALLOWED_DOMAINS", raising=False)
     with caplog.at_level(logging.ERROR):
         create_app(tmp_path, require_auth=False)
-    assert any("TRUSTOPS_OIDC_ALLOWED_DOMAINS" in record.getMessage() for record in caplog.records)
+    assert any("GRC_LAKE_OIDC_ALLOWED_DOMAINS" in record.getMessage() for record in caplog.records)

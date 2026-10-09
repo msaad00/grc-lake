@@ -25,6 +25,7 @@ data/
 tools/
 
 # Compose server secrets — never bake them into the image.
+grc-lake.env
 trustops.env
 
 # Local lakes — never bake customer evidence into the image.

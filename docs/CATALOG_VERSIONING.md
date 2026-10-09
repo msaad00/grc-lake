@@ -7,7 +7,7 @@ during its window — and reproduce that view later. This is how compliance plat
 an audit to a control library version and how CSPM rule packs ship versioned,
 checksummed content.
 
-TrustOps makes the control catalog **bivalent-temporal** without changing the
+GRC Lake makes the control catalog **bivalent-temporal** without changing the
 shape of the active set.
 
 ## The model
@@ -61,10 +61,10 @@ retire_control(
 
 ```bash
 # Every version of a control (retired + active), oldest-first
-security-lakehouse controls history --control-id SOC2-CC6.1
+grc-lake controls history --control-id SOC2-CC6.1
 
 # The exact control versions in force on an audit date
-security-lakehouse controls as-of --date 2026-03-15
+grc-lake controls as-of --date 2026-03-15
 ```
 
 `controls_as_of(date)` reconstructs the set of control versions where
@@ -79,10 +79,10 @@ evolution: a deterministic sha256 over the framework registry + active controls
 - reviewed crosswalk, with per-component digests.
 
 ```bash
-security-lakehouse catalog bundle            # print the active bundle header
-security-lakehouse catalog bundle --as-of 2026-03-15   # historical reconstruction
-security-lakehouse catalog lock              # (re)write controls/bundle.lock.json
-security-lakehouse catalog verify            # CI guard: catalog vs committed lock
+grc-lake catalog bundle            # print the active bundle header
+grc-lake catalog bundle --as-of 2026-03-15   # historical reconstruction
+grc-lake catalog lock              # (re)write controls/bundle.lock.json
+grc-lake catalog verify            # CI guard: catalog vs committed lock
 ```
 
 `controls/bundle.lock.json` is committed. `make validate` runs `catalog verify`,

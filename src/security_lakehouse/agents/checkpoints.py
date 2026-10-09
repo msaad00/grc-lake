@@ -11,7 +11,7 @@ def memory_checkpointer() -> Any:
     try:
         from langgraph.checkpoint.memory import MemorySaver
     except ImportError as exc:  # pragma: no cover - optional extra
-        raise RuntimeError("install trustops-security-data-lake[agents] to use LangGraph checkpoints") from exc
+        raise RuntimeError("install grc-lake[agents] to use LangGraph checkpoints") from exc
     return MemorySaver()
 
 
@@ -38,7 +38,7 @@ def invoke_with_checkpoint(
     """Invoke a compiled LangGraph, optionally checkpointing by ``thread_id``.
 
     The optional model step stays outside the graph; checkpoints only cover
-    deterministic TrustOps tool nodes.
+    deterministic GRC Lake tool nodes.
     """
     if not thread_id:
         return dict(compiled.invoke(state))

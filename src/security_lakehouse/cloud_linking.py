@@ -3,7 +3,7 @@
 AWS linking issues a tenant-scoped external ID and a CloudFormation quick-create
 URL against the read-only posture role template in ``deploy/aws/``. AWS and GCP
 also serve Terraform templates for teams that prefer IaC. Locally, Azure linking
-builds an admin-consent URL when ``TRUSTOPS_AZURE_LINK_CLIENT_ID`` is set.
+builds an admin-consent URL when ``GRC_LAKE_AZURE_LINK_CLIENT_ID`` is set.
 
 In hosted server mode the server never collects with its own cloud identity
 (see :mod:`security_lakehouse.delegation`), so a link session reports the
@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import base64
 import json
-import os
 import re
 import secrets
 from datetime import UTC, datetime
@@ -39,13 +38,14 @@ from security_lakehouse.execution_mode import in_server_mode, server_tenant_id
 from security_lakehouse.io import read_json, write_json
 from security_lakehouse.models import utc_iso
 from security_lakehouse.public_url import normalize_public_url
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import ENV_NAME_RE, secret_ref_denial, tenant_secret_prefix
 
 CLOUD_LINK_CONNECTORS = frozenset({"aws-posture", "azure-posture", "gcp-posture"})
-AWS_ROLE_NAME_DEFAULT = "TrustOpsPostureReadOnlyRole"
-AWS_TEMPLATE_REL = Path("deploy/aws/trustops-posture-readonly-role.yaml")
-AWS_TERRAFORM_REL = Path("deploy/aws/trustops-posture-readonly-role.tf")
-GCP_TEMPLATE_REL = Path("deploy/gcp/trustops-posture-reader.tf")
+AWS_ROLE_NAME_DEFAULT = "GrcLakePostureReadOnlyRole"
+AWS_TEMPLATE_REL = Path("deploy/aws/grc-lake-posture-readonly-role.yaml")
+AWS_TERRAFORM_REL = Path("deploy/aws/grc-lake-posture-readonly-role.tf")
+GCP_TEMPLATE_REL = Path("deploy/gcp/grc-lake-posture-reader.tf")
 _GCP_PROJECT_ID_RE = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
 _AZURE_SUBSCRIPTION_ID_RE = re.compile(r"^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
 _AWS_ROLE_ARN_RE = re.compile(
@@ -102,15 +102,15 @@ def gcp_template_bytes() -> bytes:
 
 
 def _aws_trusted_principal() -> str:
-    return str(os.environ.get("TRUSTOPS_AWS_LINK_PRINCIPAL") or "").strip()
+    return str(runtime_env().get("GRC_LAKE_AWS_LINK_PRINCIPAL") or "").strip()
 
 
 def _azure_link_client_id() -> str:
-    return str(os.environ.get("TRUSTOPS_AZURE_LINK_CLIENT_ID") or "").strip()
+    return str(runtime_env().get("GRC_LAKE_AZURE_LINK_CLIENT_ID") or "").strip()
 
 
 def _gcp_wif_member() -> str:
-    return str(os.environ.get("TRUSTOPS_GCP_WIF_MEMBER") or "").strip()
+    return str(runtime_env().get("GRC_LAKE_GCP_WIF_MEMBER") or "").strip()
 
 
 def valid_gcp_project_id(project_id: str) -> bool:
@@ -172,17 +172,17 @@ def aws_deployment_methods() -> list[dict[str, str]]:
 
 
 def aws_cloudshell_command(*, external_id: str, trusted_principal: str, role_name: str) -> str:
-    """Return a self-contained CloudShell command with no TrustOps network dependency."""
+    """Return a self-contained CloudShell command with no GRC Lake network dependency."""
     encoded = base64.b64encode(aws_template_bytes()).decode("ascii")
-    template_path = "/tmp/trustops-posture-readonly-role.yaml"
+    template_path = "/tmp/grc-lake-posture-readonly-role.yaml"
     return (
         f"printf '%s' '{encoded}' | base64 --decode > {template_path} && "
         "aws cloudformation deploy "
-        f"--template-file {template_path} --stack-name TrustOpsPostureReadOnly "
+        f"--template-file {template_path} --stack-name GrcLakePostureReadOnly "
         "--capabilities CAPABILITY_NAMED_IAM "
         f"--parameter-overrides TrustedPrincipalArn={trusted_principal} "
         f"ExternalId={external_id} RoleName={role_name} && "
-        "aws cloudformation describe-stacks --stack-name TrustOpsPostureReadOnly "
+        "aws cloudformation describe-stacks --stack-name GrcLakePostureReadOnly "
         "--query 'Stacks[0].Outputs[?OutputKey==`RoleArn`].OutputValue' --output text"
     )
 
@@ -201,12 +201,12 @@ def aws_scale_strategy() -> dict[str, str]:
 
 
 def _public_base(public_url: str | None) -> str | None:
-    return normalize_public_url(public_url) or normalize_public_url(os.environ.get("TRUSTOPS_PUBLIC_URL"))
+    return normalize_public_url(public_url) or normalize_public_url(runtime_env().get("GRC_LAKE_PUBLIC_URL"))
 
 
 def aws_template_url(public_url: str | None) -> str | None:
     """Return a public HTTPS URL for the AWS template, when ``public_url`` is set."""
-    override = str(os.environ.get("TRUSTOPS_AWS_TEMPLATE_URL") or "").strip()
+    override = str(runtime_env().get("GRC_LAKE_AWS_TEMPLATE_URL") or "").strip()
     if override:
         parsed = urlsplit(override)
         if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
@@ -234,7 +234,7 @@ def aws_quick_create_url(
         return None
     params = {
         "templateURL": template,
-        "stackName": "TrustOpsPostureReadOnly",
+        "stackName": "GrcLakePostureReadOnly",
         "param_TrustedPrincipalArn": principal,
         "param_ExternalId": external_id,
         "param_RoleName": role_name,

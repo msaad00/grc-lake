@@ -31,7 +31,7 @@ from test_api_v1 import _request, _spin
 
 def test_aws_template_bytes_is_packaged() -> None:
     body = aws_template_bytes()
-    assert b"TrustOpsPostureReadOnlyRole" in body
+    assert b"GrcLakePostureReadOnlyRole" in body
     assert b"TrustedPrincipalArn" in body
 
 
@@ -44,13 +44,13 @@ def test_aws_terraform_bytes_is_packaged() -> None:
 
 def test_aws_template_url_uses_external_https_override(monkeypatch: pytest.MonkeyPatch) -> None:
     external = "https://templates.example.com/trustops/aws-readonly.yaml"
-    monkeypatch.setenv("TRUSTOPS_AWS_TEMPLATE_URL", external)
+    monkeypatch.setenv("GRC_LAKE_AWS_TEMPLATE_URL", external)
 
     assert aws_template_url("http://127.0.0.1:8787") == external
 
 
 def test_aws_template_url_rejects_non_https_override(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AWS_TEMPLATE_URL", "http://templates.example.com/aws.yaml")
+    monkeypatch.setenv("GRC_LAKE_AWS_TEMPLATE_URL", "http://templates.example.com/aws.yaml")
 
     assert aws_template_url("http://127.0.0.1:8787") is None
 
@@ -68,7 +68,7 @@ def test_valid_gcp_project_id() -> None:
 
 
 def test_gcp_deploy_command_includes_wif_member(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_GCP_WIF_MEMBER", "serviceAccount:demo.svc.id.goog[ns/sa]")
+    monkeypatch.setenv("GRC_LAKE_GCP_WIF_MEMBER", "serviceAccount:demo.svc.id.goog[ns/sa]")
     cmd = gcp_deploy_command(project_id="demo-project")
     assert "demo-project" in cmd
     assert "workload_identity_member=serviceAccount:demo.svc.id.goog[ns/sa]" in cmd
@@ -90,7 +90,7 @@ def test_azure_callback_redirect_ignores_unsafe_session_ids() -> None:
 
 
 def test_aws_quick_create_url_includes_external_id(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AWS_LINK_PRINCIPAL", "arn:aws:iam::111122223333:role/TrustOpsLink")
+    monkeypatch.setenv("GRC_LAKE_AWS_LINK_PRINCIPAL", "arn:aws:iam::111122223333:role/GrcLakeLink")
     url = aws_quick_create_url(
         external_id="ext-abc123",
         public_url="https://demo.example.com",
@@ -102,11 +102,11 @@ def test_aws_quick_create_url_includes_external_id(monkeypatch: pytest.MonkeyPat
     params = parse_qs(query)
     assert "templateURL" in params
     assert params["param_ExternalId"] == ["ext-abc123"]
-    assert params["param_TrustedPrincipalArn"] == ["arn:aws:iam::111122223333:role/TrustOpsLink"]
+    assert params["param_TrustedPrincipalArn"] == ["arn:aws:iam::111122223333:role/GrcLakeLink"]
 
 
 def test_azure_consent_url_when_client_id_configured(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "azure-client-id")
     url = azure_consent_url(session_id="sess-1", public_url="https://demo.example.com")
     assert url is not None
     assert "login.microsoftonline.com/common/adminconsent" in url
@@ -117,7 +117,7 @@ def test_azure_consent_url_when_client_id_configured(monkeypatch: pytest.MonkeyP
 def test_azure_link_session_exposes_configured_non_secret_app_id(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "azure-client-id")
     session = start_cloud_link(tmp_path, "azure-posture", tenant_id="tenant-a")
 
     assert session["azure_app_id"] == "azure-client-id"
@@ -125,19 +125,19 @@ def test_azure_link_session_exposes_configured_non_secret_app_id(
 
 
 def test_start_and_complete_aws_cloud_link_stages_connector(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AWS_LINK_PRINCIPAL", "arn:aws:iam::111122223333:role/TrustOpsLink")
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://demo.example.com")
+    monkeypatch.setenv("GRC_LAKE_AWS_LINK_PRINCIPAL", "arn:aws:iam::111122223333:role/GrcLakeLink")
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://demo.example.com")
     session = start_cloud_link(tmp_path, "aws-posture", tenant_id="tenant-a")
     assert session["runtime_identity_ready"] is True
     assert session["cloudshell_command"]
     assert "127.0.0.1" not in session["cloudshell_command"]
     assert "localhost" not in session["cloudshell_command"]
-    assert "YOUR_TRUSTOPS_PRINCIPAL_ARN" not in session["cloudshell_command"]
+    assert "YOUR_GRC_LAKE_PRINCIPAL_ARN" not in session["cloudshell_command"]
     assert "base64" in session["cloudshell_command"]
     assert session["external_id"]
     assert session["quick_create_url"]
     assert session["terraform_url"] == "https://demo.example.com/api/v1/connectors/aws-posture/link/terraform.tf"
-    assert session["manual_terraform_path"] == "deploy/aws/trustops-posture-readonly-role.tf"
+    assert session["manual_terraform_path"] == "deploy/aws/grc-lake-posture-readonly-role.tf"
     assert session["account_scope"] == "aws_account"
     assert session["deployment_methods"] == [
         {
@@ -162,7 +162,7 @@ def test_start_and_complete_aws_cloud_link_stages_connector(tmp_path: Path, monk
 
 
 def test_aws_cloud_link_fails_closed_without_runtime_identity(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("TRUSTOPS_AWS_LINK_PRINCIPAL", raising=False)
+    monkeypatch.delenv("GRC_LAKE_AWS_LINK_PRINCIPAL", raising=False)
     session = start_cloud_link(tmp_path, "aws-posture", tenant_id="tenant-a", public_url="http://127.0.0.1:8787")
 
     assert session["runtime_identity_ready"] is False
@@ -176,13 +176,13 @@ def test_aws_cloud_link_fails_closed_without_runtime_identity(tmp_path: Path, mo
         "aws-posture",
         session_id=session["session_id"],
         actor="test",
-        role_arn="arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole",
+        role_arn="arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole",
     )
     configure = result["configure"]
     assert configure["connector_id"] == "aws-posture"
     assert configure["state"] == "disabled"
     assert configure["credentials"]["account_id"] == "123456789012"
-    assert configure["credentials"]["role_arn"] == "arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole"
+    assert configure["credentials"]["role_arn"] == "arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole"
     assert configure["credentials"]["external_id"] == session["external_id"]
 
 
@@ -192,7 +192,7 @@ def test_aws_cloud_link_fails_closed_without_runtime_identity(tmp_path: Path, mo
         "",
         "123456789012",
         "arn:aws:iam::123456789012:user/not-a-role",
-        "arn:aws:iam::not-an-account:role/TrustOpsPostureReadOnlyRole",
+        "arn:aws:iam::not-an-account:role/GrcLakePostureReadOnlyRole",
     ],
 )
 def test_complete_aws_cloud_link_rejects_invalid_role_arn(tmp_path: Path, role_arn: str) -> None:
@@ -209,8 +209,8 @@ def test_complete_aws_cloud_link_rejects_invalid_role_arn(tmp_path: Path, role_a
 
 
 def test_azure_consent_callback_and_complete(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://demo.example.com")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://demo.example.com")
     session = start_cloud_link(tmp_path, "azure-posture", tenant_id="tenant-a")
     record_azure_consent(
         tmp_path,
@@ -236,7 +236,7 @@ def test_azure_consent_callback_and_complete(tmp_path: Path, monkeypatch: pytest
 
 
 def test_azure_consent_can_complete_with_server_redirect_token(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "azure-client-id")
     session = start_cloud_link(tmp_path, "azure-posture", tenant_id="tenant-a")
     record_azure_consent(
         tmp_path,
@@ -265,8 +265,8 @@ def test_azure_consent_can_complete_with_server_redirect_token(tmp_path: Path, m
 
 
 def test_start_and_complete_gcp_cloud_link_stages_connector(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://demo.example.com")
-    monkeypatch.setenv("TRUSTOPS_GCP_WIF_MEMBER", "serviceAccount:demo.svc.id.goog[ns/sa]")
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://demo.example.com")
+    monkeypatch.setenv("GRC_LAKE_GCP_WIF_MEMBER", "serviceAccount:demo.svc.id.goog[ns/sa]")
     session = start_cloud_link(tmp_path, "gcp-posture", tenant_id="tenant-a")
     assert session["template_url"]
     assert session["deploy_command"]
@@ -286,8 +286,8 @@ def test_start_and_complete_gcp_cloud_link_stages_connector(tmp_path: Path, monk
 
 
 def test_v1_cloud_link_start_and_complete_api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AWS_LINK_PRINCIPAL", "arn:aws:iam::111122223333:role/TrustOpsLink")
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://demo.example.com")
+    monkeypatch.setenv("GRC_LAKE_AWS_LINK_PRINCIPAL", "arn:aws:iam::111122223333:role/GrcLakeLink")
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://demo.example.com")
     server = _spin(tmp_path)
     try:
         status, body = _request(
@@ -306,7 +306,7 @@ def test_v1_cloud_link_start_and_complete_api(tmp_path: Path, monkeypatch: pytes
             "/api/v1/connectors/aws-posture/link/complete",
             {
                 "session_id": session_id,
-                "role_arn": "arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole",
+                "role_arn": "arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole",
             },
         )
         assert complete_status == HTTPStatus.CREATED
@@ -339,7 +339,7 @@ def test_aws_template_endpoint_serves_yaml(tmp_path: Path) -> None:
         raw = resp.read()
         conn.close()
         assert resp.status == HTTPStatus.OK
-        assert b"TrustOpsPostureReadOnlyRole" in raw
+        assert b"GrcLakePostureReadOnlyRole" in raw
     finally:
         server.shutdown()
 
@@ -357,7 +357,7 @@ def test_aws_terraform_endpoint_serves_tf(tmp_path: Path) -> None:
         conn.close()
         assert resp.status == HTTPStatus.OK
         assert b'variable "external_id"' in raw
-        assert b"TrustOpsPostureReadOnly" in raw
+        assert b"GrcLakePostureReadOnly" in raw
     finally:
         server.shutdown()
 
@@ -382,7 +382,7 @@ def test_gcp_template_endpoint_serves_tf(tmp_path: Path) -> None:
 def test_azure_link_rejects_a_subscription_id_that_is_not_a_guid(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "azure-client-id")
     session = start_cloud_link(tmp_path, "azure-posture", tenant_id="tenant-a")
     with pytest.raises(ValueError, match="subscription_id"):
         complete_cloud_link(
@@ -396,7 +396,7 @@ def test_azure_link_rejects_a_subscription_id_that_is_not_a_guid(
 
 
 def test_a_completed_link_session_cannot_be_completed_again(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_GCP_WIF_MEMBER", "serviceAccount:demo.svc.id.goog[ns/sa]")
+    monkeypatch.setenv("GRC_LAKE_GCP_WIF_MEMBER", "serviceAccount:demo.svc.id.goog[ns/sa]")
     session = start_cloud_link(tmp_path, "gcp-posture", tenant_id="tenant-a")
     complete_cloud_link(tmp_path, "gcp-posture", session_id=session["session_id"], actor="a", project_id="first-proj")
     with pytest.raises(ValueError, match="already completed"):

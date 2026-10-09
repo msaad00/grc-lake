@@ -10,14 +10,14 @@ further down.
 ## Quick start
 
 ```bash
-security-lakehouse connectors scaffold my-vendor-evidence --title "My Vendor Evidence"
+grc-lake connectors scaffold my-vendor-evidence --title "My Vendor Evidence"
 ```
 
 This writes starter files under `./connector-scaffold/` (module, test, and next
 steps). Move them into the tree, implement the collector, then run:
 
 ```bash
-security-lakehouse connectors validate
+grc-lake connectors validate
 uv run pytest tests/test_my_vendor_evidence_connector.py
 ```
 
@@ -63,13 +63,13 @@ implementing the same `ConnectorBuilder` contract an in-repo adapter uses —
 `Callable[[SyncInputs], list[dict[str, Any]]]`. A minimal package looks like:
 
 ```
-my-trustops-connector/
+my-grc-lake-connector/
 ├── pyproject.toml
-└── my_trustops_connector.py
+└── my_grc-lake_connector.py
 ```
 
 ```python
-# my_trustops_connector.py
+# my_grc-lake_connector.py
 from security_lakehouse.connector_runner import SyncInputs
 
 
@@ -83,15 +83,15 @@ def build(inputs: SyncInputs) -> list[dict]:
 ```toml
 # pyproject.toml
 [project]
-name = "my-trustops-connector"
+name = "my-grc-lake-connector"
 version = "0.1.0"
-dependencies = ["trustops-security-data-lake"]
+dependencies = ["grc-lake"]
 
 [project.entry-points."trustops.connectors"]
-my-vendor-evidence = "my_trustops_connector:build"
+my-vendor-evidence = "my_grc-lake_connector:build"
 ```
 
-Once the package is installed (`pip install my-trustops-connector`), its
+Once the package is installed (`pip install my-grc-lake-connector`), its
 `my-vendor-evidence` builder is dispatched through the same sync path as any
 in-repo connector.
 
@@ -112,7 +112,7 @@ also registers its catalog row under `trustops.connector_catalog`, using the
 same entry-point name:
 
 ```python
-# my_trustops_connector.py
+# my_grc-lake_connector.py
 CATALOG_ENTRY = {
     "connector_id": "my-vendor-evidence",
     "name": "My Vendor Evidence",
@@ -131,7 +131,7 @@ CATALOG_ENTRY = {
 
 ```toml
 [project.entry-points."trustops.connector_catalog"]
-my-vendor-evidence = "my_trustops_connector:CATALOG_ENTRY"
+my-vendor-evidence = "my_grc-lake_connector:CATALOG_ENTRY"
 ```
 
 The value may be the row itself or a zero-argument callable returning it.

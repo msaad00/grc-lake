@@ -134,7 +134,7 @@ function runErrorDetail(run: ConnectorRun, connector?: ConnectorView): string {
     connector?.connector_id === "aws-posture" || error.includes("AssumeRole");
   if (!isAws) return error;
   if (error === "ClientError") {
-    return "AWS STS probe failed. Check that the TrustOps runtime can reach AWS, has AWS credentials, and the deployed role trusts this runtime principal with the current External ID.";
+    return "AWS STS probe failed. Check that the GRC Lake runtime can reach AWS, has AWS credentials, and the deployed role trusts this runtime principal with the current External ID.";
   }
   if (error.includes("AccessDenied") || error.includes("not authorized")) {
     return `${error} Check the role trust policy, TrustedPrincipalArn, External ID, and role ARN/account ID.`;
@@ -143,13 +143,13 @@ function runErrorDetail(run: ConnectorRun, connector?: ConnectorView): string {
     error.includes("EndpointConnectionError") ||
     error.includes("Could not connect")
   ) {
-    return `${error} Check that the TrustOps runtime has network access to AWS STS.`;
+    return `${error} Check that the GRC Lake runtime has network access to AWS STS.`;
   }
   if (
     error.includes("NoCredentialsError") ||
     error.includes("PartialCredentialsError")
   ) {
-    return `${error} Configure AWS credentials for the TrustOps runtime principal before probing.`;
+    return `${error} Configure AWS credentials for the GRC Lake runtime principal before probing.`;
   }
   return error;
 }
@@ -324,7 +324,7 @@ function LatestSyncProof({
           </p>
           {failed && runnable ? (
             <Link
-              href="https://github.com/msaad00/trustops-security-data-lake/blob/main/docs/runbooks/OBSERVABILITY_CONNECTOR_SYNC.md"
+              href="https://github.com/msaad00/grc-lake/blob/main/docs/runbooks/OBSERVABILITY_CONNECTOR_SYNC.md"
               className="mt-2 inline-flex text-xs font-semibold text-brand hover:underline"
               target="_blank"
               rel="noreferrer"
@@ -334,7 +334,7 @@ function LatestSyncProof({
           ) : null}
           {!runnable ? (
             <Link
-              href="https://github.com/msaad00/trustops-security-data-lake/blob/main/docs/ADDING_CONNECTORS.md"
+              href="https://github.com/msaad00/grc-lake/blob/main/docs/ADDING_CONNECTORS.md"
               className="mt-2 inline-flex text-xs font-semibold text-brand hover:underline"
               target="_blank"
               rel="noreferrer"
@@ -1250,7 +1250,7 @@ export function ConnectorDrawer({
                     </Button>
                   </div>
                   <p className="mt-2 text-xs leading-5 text-muted">
-                    TrustOps stores the account role target and External ID.
+                    GRC Lake stores the account role target and External ID.
                     Every probe, sync, and scheduled run creates a fresh AWS STS
                     assume-role session.
                   </p>
@@ -1741,12 +1741,12 @@ export function ConnectorDrawer({
                 {canEnable && !isEnabled && !probeGateSatisfied && (
                   <div className="mt-2 rounded-lg border border-info/40 bg-info-bg px-3 py-2 text-xs font-semibold text-info-fg">
                     {connector.connector_id === "aws-posture"
-                      ? "Test connection before enabling. TrustOps will call AWS STS AssumeRole with the account target and external ID; no long-lived AWS keys are stored."
+                      ? "Test connection before enabling. GRC Lake will call AWS STS AssumeRole with the account target and external ID; no long-lived AWS keys are stored."
                       : connector.connector_id === "azure-posture"
-                        ? "Test connection before enabling. TrustOps verifies that the configured identity can read the selected Azure subscription."
+                        ? "Test connection before enabling. GRC Lake verifies that the configured identity can read the selected Azure subscription."
                         : isSnowflake
-                          ? "Test connection before enabling. TrustOps runs a live read-only Snowflake probe."
-                          : "Test connection before enabling. TrustOps validates the connector configuration and reports whether access is ready."}
+                          ? "Test connection before enabling. GRC Lake runs a live read-only Snowflake probe."
+                          : "Test connection before enabling. GRC Lake validates the connector configuration and reports whether access is ready."}
                   </div>
                 )}
                 {discoveryRun?.metadata && (

@@ -1,6 +1,6 @@
-name: TrustOps Posture Gate
+name: GRC Lake Posture Gate
 description: >-
-  Query TrustOps /api/v1/posture/current and /api/v1/control-tests, then fail the job
+  Query GRC Lake /api/v1/posture/current and /api/v1/control-tests, then fail the job
   when score, violation, or control-regression thresholds are not met. Use in
   pull_request or deployment workflows to block merges when posture regresses.
 branding:
@@ -8,10 +8,14 @@ branding:
   color: blue
 inputs:
   trustops-url:
-    description: Base URL of the TrustOps deployment (for example https://trustops.example.com)
-    required: true
+    description: Legacy alias for grc-lake-url
+    required: false
+    default: ""
+  grc-lake-url:
+    description: Base URL of the GRC Lake deployment (for example https://grc-lake.example.com)
+    required: false
   api-token:
-    description: TrustOps API bearer token with read scope (omit for local --allow-insecure-no-auth)
+    description: GRC Lake API bearer token with read scope (omit for local --allow-insecure-no-auth)
     required: false
     default: ""
   correlation-id:
@@ -48,7 +52,7 @@ inputs:
     default: "false"
 outputs:
   posture_score:
-    description: Posture score returned by TrustOps
+    description: Posture score returned by GRC Lake
     value: ${{ steps.gate.outputs.posture_score }}
   posture_state:
     description: Posture state label (healthy, at_risk, etc.)
@@ -69,8 +73,8 @@ runs:
       shell: bash
       run: bash "${{ github.action_path }}/posture-gate.sh"
       env:
-        TRUSTOPS_URL: ${{ inputs.trustops-url }}
-        TRUSTOPS_API_TOKEN: ${{ inputs.api-token }}
+        GRC_LAKE_URL: ${{ inputs.grc-lake-url || inputs.trustops-url }}
+        GRC_LAKE_API_TOKEN: ${{ inputs.api-token }}
         CORRELATION_ID: ${{ inputs.correlation-id != '' && inputs.correlation-id || github.run_id }}
         MIN_SCORE: ${{ inputs.min-score }}
         MAX_CRITICAL_VIOLATIONS: ${{ inputs.max-critical-violations }}

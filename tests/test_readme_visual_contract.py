@@ -20,17 +20,17 @@ from security_lakehouse.safeguards import coverage_by_framework
 ROOT = Path(__file__).resolve().parents[1]
 README = ROOT / "README.md"
 ASSETS = (
-    ROOT / "docs" / "images" / "trustops-capability-header.svg",
-    ROOT / "docs" / "images" / "trustops-logo.svg",
-    ROOT / "docs" / "images" / "trustops-readme-banner.svg",
-    ROOT / "app" / "web" / "public" / "og" / "trustops-share.svg",
+    ROOT / "docs" / "images" / "grc-lake-capability-header.svg",
+    ROOT / "docs" / "images" / "grc-lake-logo.svg",
+    ROOT / "docs" / "images" / "grc-lake-readme-banner.svg",
+    ROOT / "app" / "web" / "public" / "og" / "grc-lake-share.svg",
 )
 
 
 def test_readme_header_leads_with_the_product_and_live_build_status() -> None:
     readme = README.read_text(encoding="utf-8")
     header = readme.split("## Quick start", maxsplit=1)[0]
-    assert 'src="docs/images/trustops-capability-header.svg"' in header
+    assert 'src="docs/images/grc-lake-capability-header.svg"' in header
     assert "**Open-source trust operations, on your evidence lake.**" in header
     assert "Open, self-hosted GRC for cloud and AI." not in header, "one tagline only"
     assert "Quick start" in header
@@ -45,7 +45,7 @@ def test_readme_hero_names_only_shipped_capabilities() -> None:
     coverage = coverage_by_framework()
 
     assert "Collect. Evaluate. Resolve. Export." in copy
-    assert "TrustOps" in copy
+    assert "GRC Lake" in copy
     assert "Read-only evidence" in copy
     assert "deterministic controls" in copy
     assert "owned findings" in copy
@@ -236,7 +236,7 @@ def test_product_preview_is_collapsible_and_uses_fixture_evidence() -> None:
     assert "bundled synthetic company" in preview
     assert "<summary>More screens:" in preview
     for image in ("dashboard", "frameworks", "evidence", "audit-room"):
-        assert f"trustops-demo-{image}.png" in preview
+        assert f"grc-lake-demo-{image}.png" in preview
 
 
 def test_readme_ccf_summary_matches_the_generator_and_names_every_family() -> None:

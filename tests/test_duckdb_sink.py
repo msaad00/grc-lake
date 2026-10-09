@@ -57,7 +57,7 @@ def _seed_lake(tmp_path: Path) -> Path:
 
 def test_config_requires_path() -> None:
     assert DuckDBSinkConfig.from_env({}) is None
-    assert DuckDBSinkConfig.from_env({"TRUSTOPS_DUCKDB_PATH": "/x/lake.duckdb"}).database == "/x/lake.duckdb"
+    assert DuckDBSinkConfig.from_env({"GRC_LAKE_DUCKDB_PATH": "/x/lake.duckdb"}).database == "/x/lake.duckdb"
 
 
 def test_load_creates_tables_and_lands_rows(tmp_path: Path) -> None:
@@ -96,7 +96,7 @@ def test_load_is_idempotent(tmp_path: Path) -> None:
 def test_land_if_configured_targets_duckdb(tmp_path: Path) -> None:
     lake = _seed_lake(tmp_path)
     db = tmp_path / "lake.duckdb"
-    landed = land_if_configured(lake, {"TRUSTOPS_DUCKDB_PATH": str(db)})
+    landed = land_if_configured(lake, {"GRC_LAKE_DUCKDB_PATH": str(db)})
     assert landed is not None
     assert landed["duckdb"]["normalized_events"] == 2
 

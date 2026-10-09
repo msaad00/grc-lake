@@ -30,7 +30,7 @@ export function Shell({ children }: { children: ReactNode }) {
   // API-health probes) entirely, the same way /login does.
   const isPublicTrustRoute = /(^|\/)trust\/[^/]+$/.test(normalizedPathname);
   const route = normalizedPathname.replace(/^\/console/, "");
-  const pageTitle = `${ROUTE_LABELS[route as keyof typeof ROUTE_LABELS] ?? (isPublicTrustRoute ? "Shared trust report" : isLoginRoute ? "Sign in" : "Page not found")} · TrustOps`;
+  const pageTitle = `${ROUTE_LABELS[route as keyof typeof ROUTE_LABELS] ?? (isPublicTrustRoute ? "Shared trust report" : isLoginRoute ? "Sign in" : "Page not found")} · GRC Lake`;
   const qc = useQueryClient();
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);

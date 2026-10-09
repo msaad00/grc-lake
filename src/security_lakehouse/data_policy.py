@@ -1,6 +1,6 @@
 """Data sensitivity and role visibility policy.
 
-This module is deliberately small and deterministic. TrustOps can use agents or
+This module is deliberately small and deterministic. GRC Lake can use agents or
 LLMs around the product, but data visibility must stay ordinary code that is
 easy to test and audit.
 """

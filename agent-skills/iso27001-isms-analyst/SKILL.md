@@ -1,7 +1,7 @@
 ---
 name: iso27001-isms-analyst
 description: >-
-  Assess ISO/IEC 27001-oriented ISMS evidence from TrustOps artifacts. Use when
+  Assess ISO/IEC 27001-oriented ISMS evidence from GRC Lake artifacts. Use when
   an agent needs to review ISO/IEC 27001 control mappings, ISMS evidence,
   violations, owner actions, current posture, stale evidence, or snapshots.
   Guardrail: use official ISO references and do not invent clause text or

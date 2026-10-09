@@ -4,8 +4,8 @@ Reviewed 2026-10-07. Dependency advisories change; rerun both production and ful
 build-tool audits when reviewing or upgrading the lockfiles.
 
 ```bash
-uv export --frozen --all-extras --no-emit-project --format requirements-txt --no-hashes > /tmp/trustops-requirements.txt
-uv run pip-audit --strict -r /tmp/trustops-requirements.txt
+uv export --frozen --all-extras --no-emit-project --format requirements-txt --no-hashes > /tmp/grc-lake-requirements.txt
+uv run pip-audit --strict -r /tmp/grc-lake-requirements.txt
 cd app/web
 npm audit --omit=dev --audit-level=high
 npm audit

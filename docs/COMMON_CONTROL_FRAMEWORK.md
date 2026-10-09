@@ -4,7 +4,7 @@ A Common Control Framework consolidates many regulatory requirements into one se
 of operational safeguards. You operate the safeguard; framework coverage is
 derived from it.
 
-TrustOps is adopting this model. This document describes the target, what exists
+GRC Lake is adopting this model. This document describes the target, what exists
 today, and how the rest gets there.
 
 The live, generated **[Framework Coverage Matrix](FRAMEWORK_COVERAGE.md)** shows
@@ -80,7 +80,7 @@ category id, or a category no family uses. Categories are a navigation and
 roll-up layer only: they carry no evaluation rule and no mapping of their own.
 `GET /api/v1/ccf/coverage` returns a `categories` ledger (distinct requirement and
 framework counts, reviewed and proposed mappings), every family row carries
-`category_id` and `category_label`, `security-lakehouse frameworks safeguards
+`category_id` and `category_label`, `grc-lake frameworks safeguards
 --format table` prints families under their category, and each OSCAL component
 carries a `trustops-category` property.
 
@@ -117,7 +117,7 @@ rest of that control.
 ## Where it stands
 
 ```
-$ security-lakehouse frameworks safeguards --format table
+$ grc-lake frameworks safeguards --format table
 94 safeguards map 1415 of 2252 requirements (62.8%) — 340 maintainer-reviewed, 0 org-reviewed (15.1% attestable), 1075 proposed; 0 mapping(s) rejected by the org
 ```
 
@@ -131,7 +131,7 @@ auditor.
 
 Curation is ordered by what teams are actually audited and certified against.
 
-The family ledger is available through `security-lakehouse frameworks safeguards`
+The family ledger is available through `grc-lake frameworks safeguards`
 and `GET /api/v1/ccf/coverage`. It groups the operated safeguards by their
 `risk_domain`, then reports the frameworks touched plus reviewed and proposed
 mapping counts. A family with proposed mappings is **evaluatable**, not
@@ -198,7 +198,7 @@ does not claim expert review or full compliance automation.
 
 ## Review and evaluation boundaries
 
-`security-lakehouse frameworks review-queue` lists proposed mappings, with
+`grc-lake frameworks review-queue` lists proposed mappings, with
 framework and risk-domain filters and source references. The
 `get_mapping_review_queue` MCP tool exposes the same review ledger. A reviewer
 must confirm semantic equivalence; source provenance alone does not do so.
@@ -219,7 +219,7 @@ Read results through the Frameworks page, `GET /api/v1/ccf/assessment`, the
 `get_ccf_assessment` MCP tool, or:
 
 ```bash
-security-lakehouse frameworks assessment --lake ./lake
+grc-lake frameworks assessment --lake ./lake
 ```
 
 The retained assessment includes event IDs and evidence hashes for each assessed

@@ -2,7 +2,7 @@
 
 ``controls/safeguards.json`` ships each safeguard->requirement mapping as
 ``reviewed`` (a maintainer confirmed the equivalence) or ``proposed``. A company
-using TrustOps in an audit needs its own reviewers to confirm or reject those
+using GRC Lake in an audit needs its own reviewers to confirm or reject those
 mappings, with a trail an auditor can follow. This module is that overlay:
 
 * decisions are appended to ``<lake>/gold/mapping_reviews.jsonl``, a hash-chained
@@ -26,7 +26,6 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 import uuid
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
@@ -43,6 +42,7 @@ from security_lakehouse.ledger import (
     verify_chained_jsonl,
 )
 from security_lakehouse.models import utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.safeguards import (
     DEFAULT_SAFEGUARDS,
     REVIEW_STATE_LABELS,
@@ -71,7 +71,7 @@ MAX_BATCH_ITEMS = 500
 # When the server's session-signing key is configured, the chain tip is also
 # MACed with a key derived from it, so rewriting the whole log (recomputing
 # every hash) is detectable by anyone without that key.
-SIGNING_KEY_ENV = "TRUSTOPS_COOKIE_SIGNING_KEY"
+SIGNING_KEY_ENV = "GRC_LAKE_COOKIE_SIGNING_KEY"
 _TIP_MAC_DOMAIN = b"trustops-mapping-review-tip-v1"
 
 __all__ = [
@@ -119,7 +119,7 @@ def _derive_tip_key(secret: str) -> bytes:
 
 
 def _tip_key() -> bytes | None:
-    secret = os.environ.get(SIGNING_KEY_ENV, "").strip()
+    secret = runtime_env().get(SIGNING_KEY_ENV, "").strip()
     if not secret:
         return None
     return _derive_tip_key(secret)
@@ -357,7 +357,7 @@ def resign_review_tip(
 ) -> JsonObject:
     """Re-sign the decision-log tip with the current signing key after a rotation.
 
-    ``previous_key`` is the value ``TRUSTOPS_COOKIE_SIGNING_KEY`` held before the
+    ``previous_key`` is the value ``GRC_LAKE_COOKIE_SIGNING_KEY`` held before the
     rotation. Under the chain lock this verifies the hash chain, then the
     recorded tip MAC against the previous key, and only then writes a new tip
     MAC with the current key and appends a ``tip_resigned`` entry to

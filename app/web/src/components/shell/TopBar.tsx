@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Camera, Menu, RefreshCw, Search } from "lucide-react";
-import { TrustOpsLogo } from "@/components/brand/TrustOpsLogo";
+import { GrcLakeLogo } from "@/components/brand/GrcLakeLogo";
 import { NotificationBell } from "./NotificationBell";
 import { UserMenu } from "./UserMenu";
 import { useHealth } from "@/lib/api/hooks";
@@ -56,7 +56,7 @@ export function TopBar({
       >
         <Menu aria-hidden="true" className="h-5 w-5" />
       </button>
-      <TrustOpsLogo
+      <GrcLakeLogo
         href="/dashboard"
         markSize="md"
         showWordmark

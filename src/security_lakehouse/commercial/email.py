@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from dataclasses import dataclass
 from typing import Protocol
+
+from security_lakehouse.runtime_environment import runtime_env
 
 logger = logging.getLogger(__name__)
 
@@ -35,16 +36,16 @@ class LogEmailDelivery:
 
 
 def email_delivery_from_env() -> EmailDelivery:
-    provider = os.environ.get("TRUSTOPS_EMAIL_PROVIDER", "log").strip().lower()
+    provider = runtime_env().get("GRC_LAKE_EMAIL_PROVIDER", "log").strip().lower()
     if provider in {"log", "none", ""}:
         return LogEmailDelivery()
     raise ValueError(
-        f"unsupported TRUSTOPS_EMAIL_PROVIDER {provider!r}; configure log (default) or extend commercial.email"
+        f"unsupported GRC_LAKE_EMAIL_PROVIDER {provider!r}; configure log (default) or extend commercial.email"
     )
 
 
 def commercial_hosted_enabled() -> bool:
-    return os.environ.get("TRUSTOPS_COMMERCIAL_HOSTED", "").lower() in {"1", "true", "yes"}
+    return runtime_env().get("GRC_LAKE_COMMERCIAL_HOSTED", "").lower() in {"1", "true", "yes"}
 
 
 __all__ = ["EmailDelivery", "EmailMessage", "LogEmailDelivery", "commercial_hosted_enabled", "email_delivery_from_env"]

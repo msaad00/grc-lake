@@ -13,7 +13,7 @@ Use this guide when you want a **hosted link** evaluators can open, sign into, *
 | `{PUBLIC_URL}/console/trust-center/`                   | Operators          | Issue auditor/customer trust links                     |
 | `{PUBLIC_URL}/console/trust/{token}`                   | External reviewers | Redacted posture (token shown once at create)          |
 
-Set `TRUSTOPS_PUBLIC_URL` on the server (Helm `env` or process environment). The console **Launch** and **Demo** pages surface copyable links when this variable is set.
+Set `GRC_LAKE_PUBLIC_URL` on the server (Helm `env` or process environment). The console **Launch** and **Demo** pages surface copyable links when this variable is set.
 
 ## Operator flow (15 minutes)
 
@@ -28,7 +28,7 @@ Set `TRUSTOPS_PUBLIC_URL` on the server (Helm `env` or process environment). The
 
 ## Account linking (true ingestion)
 
-TrustOps uses **read-only** connectors. The console walks:
+GRC Lake uses **read-only** connectors. The console walks:
 
 ```text
 Connect → Discover scope → Probe (Test) → Enable → Sync → Posture updates

@@ -14,7 +14,6 @@ leaks into another tenant's or the CLI's calls in the same process.
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -22,13 +21,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import ParamSpec, TypeVar
 
+from security_lakehouse.runtime_environment import runtime_env
+
 P = ParamSpec("P")
 R = TypeVar("R")
 
 # Set by hosted deployments (see commercial/signup.py). When it is on, a call
 # that arrives without request context (a CLI command or daemon run against
 # the server's lake root) is still treated as tenant-controlled configuration.
-COMMERCIAL_HOSTED_ENV = "TRUSTOPS_COMMERCIAL_HOSTED"
+COMMERCIAL_HOSTED_ENV = "GRC_LAKE_COMMERCIAL_HOSTED"
 
 
 @dataclass(frozen=True)
@@ -66,9 +67,10 @@ def _truthy(value: str | None) -> bool:
 
 def in_server_mode(env: dict[str, str] | None = None) -> bool:
     """True when the current call acts for a tenant rather than the operator."""
+    env = runtime_env(env)
     if _SERVER_CONTEXT.get() is not None:
         return True
-    source = os.environ if env is None else env
+    source = runtime_env() if env is None else env
     return _truthy(source.get(COMMERCIAL_HOSTED_ENV))
 
 

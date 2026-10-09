@@ -23,7 +23,7 @@ from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, server_exec
 from security_lakehouse.secret_refs import tenant_secret_prefix
 
 TENANT = "3f2b8c1e-9a4d-4c2b-8f1e-2a6b7c8d9e0f"
-PREFIX = "TRUSTOPS_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
+PREFIX = "GRC_LAKE_TENANT_3F2B8C1E_9A4D_4C2B_8F1E_2A6B7C8D9E0F__"
 SUBSCRIPTION = "11111111-2222-3333-4444-555555555555"
 CLIENT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 ENTRA_TENANT = "99999999-8888-7777-6666-555555555555"
@@ -33,7 +33,7 @@ SERVICE_ACCOUNT = "trustops-reader@customer-proj.iam.gserviceaccount.com"
 @pytest.fixture(autouse=True)
 def _no_hosted_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(COMMERCIAL_HOSTED_ENV, raising=False)
-    monkeypatch.delenv("TRUSTOPS_CONNECTOR_SECRET_REFS", raising=False)
+    monkeypatch.delenv("GRC_LAKE_CONNECTOR_SECRET_REFS", raising=False)
 
 
 def _azure_app(**overrides: str) -> dict[str, str]:
@@ -55,8 +55,8 @@ def test_prefix_constant_matches_the_secret_ref_policy() -> None:
 def test_hosted_session_reports_delegation_and_offers_no_server_consent_app(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "server-multitenant-app")
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://demo.example.com")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "server-multitenant-app")
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://demo.example.com")
     with server_execution(TENANT):
         session = start_cloud_link(tmp_path, "azure-posture", tenant_id="spoofed-by-body")
 
@@ -69,8 +69,8 @@ def test_hosted_session_reports_delegation_and_offers_no_server_consent_app(
 
 
 def test_local_session_reports_no_delegation_requirement(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
-    monkeypatch.setenv("TRUSTOPS_PUBLIC_URL", "https://demo.example.com")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    monkeypatch.setenv("GRC_LAKE_PUBLIC_URL", "https://demo.example.com")
     session = start_cloud_link(tmp_path, "azure-posture", tenant_id="tenant-a")
 
     assert session["delegation"] == {"required": False, "secret_ref_prefix": None}
@@ -115,7 +115,7 @@ def test_hosted_azure_link_stages_the_tenant_app_registration(tmp_path: Path) ->
         (_azure_app(client_certificate_ref=f"{PREFIX}AZURE_CERT"), "exactly one"),
         (_azure_app(client_secret_ref=""), "exactly one"),
         (_azure_app(client_secret_ref="AZURE_CLIENT_SECRET"), PREFIX),
-        (_azure_app(client_secret_ref="TRUSTOPS_TENANT_OTHER__AZURE_CLIENT_SECRET"), PREFIX),
+        (_azure_app(client_secret_ref="GRC_LAKE_TENANT_OTHER__AZURE_CLIENT_SECRET"), PREFIX),
         (_azure_app(client_secret_ref="s3cr3t value=="), "must name an environment variable"),
         (_azure_app(unexpected="x"), "unexpected"),
     ],
@@ -143,7 +143,7 @@ def test_local_azure_link_still_validates_a_supplied_app_registration(tmp_path: 
 def test_consent_callback_tenant_is_never_written_to_connector_config(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, hosted: bool
 ) -> None:
-    monkeypatch.setenv("TRUSTOPS_AZURE_LINK_CLIENT_ID", "azure-client-id")
+    monkeypatch.setenv("GRC_LAKE_AZURE_LINK_CLIENT_ID", "azure-client-id")
     session = start_cloud_link(tmp_path, "azure-posture", tenant_id="tenant-a")
     # Anyone holding the state value can call the unauthenticated callback
     # with any tenant; that value must not flow into the collector config.
@@ -236,7 +236,7 @@ def hosted_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     from security_lakehouse.server_app import create_app
     from test_api_v1 import _seed_lake
 
-    monkeypatch.setenv("TRUSTOPS_API_RATE_LIMIT_RPS", "0")
+    monkeypatch.setenv("GRC_LAKE_API_RATE_LIMIT_RPS", "0")
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     with session_scope(app.state.sessionmaker) as session:

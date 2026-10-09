@@ -67,10 +67,10 @@ def test_public_dict_carries_no_secrets() -> None:
 
 
 def test_provider_from_env_reads_cloud_settings(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AGENT_PROVIDER", "vertex")
-    monkeypatch.setenv("TRUSTOPS_AGENT_MODEL", "gemini-1.5-pro")
-    monkeypatch.setenv("TRUSTOPS_AGENT_PROJECT", "acme-prod")
-    monkeypatch.delenv("TRUSTOPS_AGENT_LOCATION", raising=False)
+    monkeypatch.setenv("GRC_LAKE_AGENT_PROVIDER", "vertex")
+    monkeypatch.setenv("GRC_LAKE_AGENT_MODEL", "gemini-1.5-pro")
+    monkeypatch.setenv("GRC_LAKE_AGENT_PROJECT", "acme-prod")
+    monkeypatch.delenv("GRC_LAKE_AGENT_LOCATION", raising=False)
     cfg = provider_from_env()
     assert cfg.provider == "vertex"
     assert cfg.project == "acme-prod"
@@ -79,8 +79,8 @@ def test_provider_from_env_reads_cloud_settings(monkeypatch: pytest.MonkeyPatch)
 
 
 def test_provider_from_env_bedrock_inherits_aws_region(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AGENT_PROVIDER", "bedrock")
-    monkeypatch.delenv("TRUSTOPS_AGENT_REGION", raising=False)
+    monkeypatch.setenv("GRC_LAKE_AGENT_PROVIDER", "bedrock")
+    monkeypatch.delenv("GRC_LAKE_AGENT_REGION", raising=False)
     monkeypatch.setenv("AWS_REGION", "eu-west-1")
     assert provider_from_env().region == "eu-west-1"
 
@@ -127,7 +127,7 @@ def test_cortex_without_snowflake_env_raises_clear_error(monkeypatch: pytest.Mon
 
 def test_missing_model_raises_for_each_cloud_provider() -> None:
     for name in CLOUD_PROVIDERS:
-        with pytest.raises(ModelClientError, match="TRUSTOPS_AGENT_MODEL"):
+        with pytest.raises(ModelClientError, match="GRC_LAKE_AGENT_MODEL"):
             call_model_json({}, ModelProviderConfig(provider=name, project="p"))
 
 

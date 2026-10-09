@@ -26,7 +26,7 @@ PAYLOAD = {
 
 
 def _install_payload(monkeypatch, payload):
-    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "framework-contract-test-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "framework-contract-test-key")
     for module in (safeguards, framework_coverage, mapping_review):
         monkeypatch.setattr(module, "load_safeguards", lambda: copy.deepcopy(payload))
 
@@ -160,8 +160,8 @@ def test_api_framework_and_ccf_adapters_report_same_tenant_coverage(tmp_path, mo
     from security_lakehouse import mcp_server
     from test_mcp_server import call_tool
 
-    monkeypatch.delenv("TRUSTOPS_API_URL", raising=False)
-    monkeypatch.delenv("TRUSTOPS_API_KEY", raising=False)
+    monkeypatch.delenv("GRC_LAKE_API_URL", raising=False)
+    monkeypatch.delenv("GRC_LAKE_API_KEY", raising=False)
     payload = call_tool(mcp_server.build_server(tmp_path), "get_framework_coverage")
     mcp_row = next(row for row in payload["frameworks"] if row["framework_id"] == FRAMEWORK)
     assert mcp_row == ledger

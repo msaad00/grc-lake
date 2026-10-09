@@ -97,7 +97,7 @@ test.describe("connectors workflow", () => {
     // the no-auth e2e server acts for the synthetic "insecure" tenant.
     await page
       .getByLabel(/GitHub App installation token env/i)
-      .fill("TRUSTOPS_TENANT_INSECURE__GITHUB_TOKEN");
+      .fill("GRC_LAKE_TENANT_INSECURE__GITHUB_TOKEN");
     await page.getByLabel(/Repository \(owner\/name\)/i).fill("acme/platform");
 
     const dialog = page.getByRole("dialog");

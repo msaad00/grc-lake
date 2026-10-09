@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
+
+from security_lakehouse.runtime_environment import runtime_env
 
 SUPPORTED_PROVIDERS = {
     "rules_only",
@@ -24,7 +25,7 @@ _AMBIENT_CREDENTIAL_PROVIDERS = {"bedrock", "vertex", "snowflake_cortex"}
 
 
 def _env_bool(name: str, *, default: bool = False) -> bool:
-    value = os.environ.get(name)
+    value = runtime_env().get(name)
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
@@ -44,7 +45,7 @@ class ModelProviderConfig:
     """LLM provider settings.
 
     ``rules_only`` means no model is configured. Agent graphs must still run in
-    this mode using deterministic TrustOps facts.
+    this mode using deterministic GRC Lake facts.
     """
 
     provider: str = "rules_only"
@@ -69,7 +70,7 @@ class ModelProviderConfig:
             return bool(self.model and self.project)
         if self.provider == "snowflake_cortex":
             return bool(self.model)
-        return bool(self.api_key_env and os.environ.get(self.api_key_env))
+        return bool(self.api_key_env and runtime_env().get(self.api_key_env))
 
     @property
     def should_call_model(self) -> bool:
@@ -89,7 +90,7 @@ class ModelProviderConfig:
             "base_url": self.base_url,
             "configured": self.enabled,
             "credential_env_configured": bool(self.api_key_env),
-            "credential_present": bool(self.api_key_env and os.environ.get(self.api_key_env)),
+            "credential_present": bool(self.api_key_env and runtime_env().get(self.api_key_env)),
             "ambient_credentials": self.uses_ambient_credentials,
             "region": self.region,
             "project": self.project,
@@ -101,32 +102,32 @@ class ModelProviderConfig:
 
 def provider_from_env() -> ModelProviderConfig:
     """Load optional model settings from environment."""
-    provider = normalize_provider(os.environ.get("TRUSTOPS_AGENT_PROVIDER", "rules_only"))
+    provider = normalize_provider(runtime_env().get("GRC_LAKE_AGENT_PROVIDER", "rules_only"))
     default_key_env = {
         "openai": "OPENAI_API_KEY",
         "openai_compatible": "OPENAI_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
     }.get(provider, "")
-    timeout = os.environ.get("TRUSTOPS_AGENT_TIMEOUT_SECONDS", "20")
+    timeout = runtime_env().get("GRC_LAKE_AGENT_TIMEOUT_SECONDS", "20")
     try:
         timeout_seconds = max(1.0, min(float(timeout), 120.0))
     except ValueError:
         timeout_seconds = 20.0
     # Vertex needs a location; default to the most common region when unset so a
     # caller only has to supply project + model.
-    location = os.environ.get("TRUSTOPS_AGENT_LOCATION", "us-central1" if provider == "vertex" else "")
-    region = os.environ.get("TRUSTOPS_AGENT_REGION") or os.environ.get("AWS_REGION", "")
+    location = runtime_env().get("GRC_LAKE_AGENT_LOCATION", "us-central1" if provider == "vertex" else "")
+    region = runtime_env().get("GRC_LAKE_AGENT_REGION") or runtime_env().get("AWS_REGION", "")
     return ModelProviderConfig(
         provider=provider,
-        model=os.environ.get("TRUSTOPS_AGENT_MODEL", ""),
-        base_url=os.environ.get(
-            "TRUSTOPS_AGENT_BASE_URL",
+        model=runtime_env().get("GRC_LAKE_AGENT_MODEL", ""),
+        base_url=runtime_env().get(
+            "GRC_LAKE_AGENT_BASE_URL",
             "http://127.0.0.1:11434" if provider == "ollama" else "",
         ),
-        api_key_env=os.environ.get("TRUSTOPS_AGENT_API_KEY_ENV", default_key_env),
-        use_model=_env_bool("TRUSTOPS_AGENT_USE_MODEL"),
+        api_key_env=runtime_env().get("GRC_LAKE_AGENT_API_KEY_ENV", default_key_env),
+        use_model=_env_bool("GRC_LAKE_AGENT_USE_MODEL"),
         timeout_seconds=timeout_seconds,
         region=region,
-        project=os.environ.get("TRUSTOPS_AGENT_PROJECT", ""),
+        project=runtime_env().get("GRC_LAKE_AGENT_PROJECT", ""),
         location=location,
     )

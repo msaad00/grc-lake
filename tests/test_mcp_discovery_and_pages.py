@@ -21,7 +21,7 @@ def test_unfiltered_assurance_tools_return_bounded_pages(tmp_path, name):
 
 
 def test_local_discovery_does_not_advertise_server_only_tools(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "local")
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "local")
     server = mcp_server.build_server(tmp_path)
     tools = anyio.run(server.list_tools)
     names = {tool.name for tool in tools}
@@ -31,9 +31,9 @@ def test_local_discovery_does_not_advertise_server_only_tools(tmp_path, monkeypa
 
 
 def test_remote_discovery_excludes_human_attestations(tmp_path, monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture")
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "remote")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture")
     tools = anyio.run(mcp_server.build_server(tmp_path).list_tools)
     names = {tool.name for tool in tools}
     assert "list_access_reviews" in names

@@ -27,7 +27,7 @@ PROVIDER_EVENT_ALIASES: dict[str, tuple[str, ...]] = {
 
 
 def expand_evidence_types(event_type: str) -> list[str]:
-    """Return the raw provider event type plus generic TrustOps aliases."""
+    """Return the raw provider event type plus generic GRC Lake aliases."""
     normalized = str(event_type or "").strip()
     if not normalized:
         return []

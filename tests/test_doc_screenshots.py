@@ -13,7 +13,7 @@ RAIL_WIDTH = 248
 # height, leaving up to ~200px under the content; a fixed-height capture left
 # 270-340px there.
 MAX_BLANK_BOTTOM = 240
-SCREENSHOTS = sorted(IMAGES.glob("trustops-demo-*.png"))
+SCREENSHOTS = sorted(IMAGES.glob("grc-lake-demo-*.png"))
 DARK = [path for path in SCREENSHOTS if path.stem.endswith("-dark")]
 
 
@@ -30,8 +30,8 @@ def test_screenshots_exist() -> None:
     assert len(FULL_WIDTH_PAGES) >= 10
 
 
-DRAWER_CROPS = {"trustops-demo-triage", "trustops-demo-control-drawer"}
-MOBILE_PAGES = {"trustops-demo-overview-mobile"}
+DRAWER_CROPS = {"grc-lake-demo-triage", "grc-lake-demo-control-drawer"}
+MOBILE_PAGES = {"grc-lake-demo-overview-mobile"}
 
 
 @pytest.mark.parametrize("path", SCREENSHOTS, ids=lambda path: path.name)
@@ -47,15 +47,15 @@ def test_crop_policy_keeps_the_app_shell(path: Path) -> None:
 def test_mapping_review_and_mobile_captures_exist() -> None:
     names = {path.name for path in SCREENSHOTS}
     assert {
-        "trustops-demo-mapping-review.png",
-        "trustops-demo-mapping-review-dark.png",
-        "trustops-demo-overview-mobile.png",
+        "grc-lake-demo-mapping-review.png",
+        "grc-lake-demo-mapping-review-dark.png",
+        "grc-lake-demo-overview-mobile.png",
     } <= names
 
 
 def test_control_families_and_crosswalk_captures_are_linked_from_the_readme() -> None:
     readme = (IMAGES.parents[1] / "README.md").read_text(encoding="utf-8")
-    for name in ("trustops-demo-control-families.png", "trustops-demo-crosswalk.png"):
+    for name in ("grc-lake-demo-control-families.png", "grc-lake-demo-crosswalk.png"):
         assert (IMAGES / name).is_file(), name
         assert f"docs/images/{name}" in readme, name
 

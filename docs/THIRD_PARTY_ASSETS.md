@@ -1,6 +1,6 @@
 # Third-Party Asset Policy
 
-TrustOps does not ship made-up framework logos, imitation certification seals,
+GRC Lake does not ship made-up framework logos, imitation certification seals,
 regulator marks, or third-party trust badges.
 
 Framework and compliance visuals should use project-owned icons and exact
@@ -12,7 +12,7 @@ official public brand or certification asset is added with:
 - required attribution
 - file owner and review date
 
-Certification marks must not be shown unless TrustOps or the displayed company
+Certification marks must not be shown unless GRC Lake or the displayed company
 actually holds that certification and the mark usage terms permit the display.
 
 ## Current Asset Registry
@@ -28,7 +28,7 @@ actually holds that certification and the mark usage terms permit the display.
 ## Approved Official Assets
 
 The following are framework illustrations, not agency logos or certification
-seals. NIST does not endorse TrustOps or its control evaluations.
+seals. NIST does not endorse GRC Lake or its control evaluations.
 
 | Framework                              | Local asset                                  | Official source                                                                 | Terms                                                                         | Attribution          | Integrity                                    |
 | -------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------- | -------------------------------------------- |

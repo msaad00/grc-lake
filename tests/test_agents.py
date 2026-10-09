@@ -156,8 +156,8 @@ def test_data_readiness_reports_empty_lake_next_steps_without_path_leak(tmp_path
         "present": False,
     }
     commands = [step["command"] for step in readiness["recommended_next_steps"]]
-    assert "security-lakehouse connectors list --lake <lake>" in commands
-    assert "security-lakehouse pipeline run --raw <raw_events.jsonl> --out <lake>" in commands
+    assert "grc-lake connectors list --lake <lake>" in commands
+    assert "grc-lake pipeline run --raw <raw_events.jsonl> --out <lake>" in commands
     assert str(tmp_path) not in json.dumps(readiness, sort_keys=True)
 
 
@@ -184,7 +184,7 @@ def test_langgraph_builder_is_optional() -> None:
         assert build_posture_review_graph() is not None
         return
 
-    with pytest.raises(RuntimeError, match="install trustops-security-data-lake\\[agents\\]"):
+    with pytest.raises(RuntimeError, match="install grc-lake\\[agents\\]"):
         build_posture_review_graph()
 
 
@@ -192,7 +192,7 @@ def test_posture_review_langgraph_orchestrator_is_explicit(tmp_path: Path) -> No
     _seed_gap(tmp_path)
 
     if importlib.util.find_spec("langgraph") is None:
-        with pytest.raises(RuntimeError, match="install trustops-security-data-lake\\[agents\\]"):
+        with pytest.raises(RuntimeError, match="install grc-lake\\[agents\\]"):
             run_posture_review(tmp_path, role="read_only", orchestrator="langgraph")
         return
 
@@ -209,7 +209,7 @@ def test_posture_review_langgraph_skips_proposals_without_gaps(tmp_path: Path) -
     _seed_lake(tmp_path)
 
     if importlib.util.find_spec("langgraph") is None:
-        with pytest.raises(RuntimeError, match="install trustops-security-data-lake\\[agents\\]"):
+        with pytest.raises(RuntimeError, match="install grc-lake\\[agents\\]"):
             run_posture_review(tmp_path, role="read_only", orchestrator="langgraph")
         return
 
@@ -224,7 +224,7 @@ def test_soc_triage_langgraph_orchestrator_is_explicit(tmp_path: Path) -> None:
     _seed_soc_alerts(tmp_path)
 
     if importlib.util.find_spec("langgraph") is None:
-        with pytest.raises(RuntimeError, match="install trustops-security-data-lake\\[agents\\]"):
+        with pytest.raises(RuntimeError, match="install grc-lake\\[agents\\]"):
             run_soc_triage(tmp_path, role="read_only", orchestrator="langgraph")
         return
 
@@ -245,7 +245,7 @@ def test_provider_configured_without_use_model_stays_deterministic(tmp_path: Pat
     assert state["mode"] == "rules_only"
     assert state["model_provider"]["configured"] is True
     assert state["model_provider"]["use_model"] is False
-    assert state["model_context"]["policy"]["compliance_truth"].startswith("TrustOps deterministic")
+    assert state["model_context"]["policy"]["compliance_truth"].startswith("GRC Lake deterministic")
     assert "model_output" not in state
     assert state["errors"] == []
 
@@ -342,12 +342,12 @@ def test_openai_compatible_choice_without_message_is_a_model_error(monkeypatch: 
 
     monkeypatch.setattr(agent_model_client, "_post_json", fake_post_json)
     monkeypatch.setattr(agent_model_client.netguard, "assert_url_is_public", lambda *_a, **_k: None)
-    monkeypatch.setenv("TRUSTOPS_TEST_MODEL_KEY", "test-key")
+    monkeypatch.setenv("GRC_LAKE_TEST_MODEL_KEY", "test-key")
     provider = ModelProviderConfig(
         provider="openai_compatible",
         model="gpt-test",
         base_url="https://models.example.com/v1",
-        api_key_env="TRUSTOPS_TEST_MODEL_KEY",
+        api_key_env="GRC_LAKE_TEST_MODEL_KEY",
     )
 
     with pytest.raises(ModelClientError, match="non-JSON"):
@@ -521,9 +521,9 @@ def test_validate_model_output_rejects_unsupported_tools() -> None:
 
 
 def test_provider_env_requires_explicit_model_use(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AGENT_PROVIDER", "ollama")
-    monkeypatch.setenv("TRUSTOPS_AGENT_MODEL", "llama3.1")
-    monkeypatch.delenv("TRUSTOPS_AGENT_USE_MODEL", raising=False)
+    monkeypatch.setenv("GRC_LAKE_AGENT_PROVIDER", "ollama")
+    monkeypatch.setenv("GRC_LAKE_AGENT_MODEL", "llama3.1")
+    monkeypatch.delenv("GRC_LAKE_AGENT_USE_MODEL", raising=False)
 
     provider = provider_from_env()
 
@@ -533,10 +533,10 @@ def test_provider_env_requires_explicit_model_use(monkeypatch: pytest.MonkeyPatc
 
 
 def test_provider_public_metadata_does_not_expose_key_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_AGENT_PROVIDER", "openai")
-    monkeypatch.setenv("TRUSTOPS_AGENT_MODEL", "gpt-test")
-    monkeypatch.setenv("TRUSTOPS_AGENT_API_KEY_ENV", "TRUSTOPS_TEST_OPENAI_KEY")
-    monkeypatch.setenv("TRUSTOPS_TEST_OPENAI_KEY", "secret-test-value")
+    monkeypatch.setenv("GRC_LAKE_AGENT_PROVIDER", "openai")
+    monkeypatch.setenv("GRC_LAKE_AGENT_MODEL", "gpt-test")
+    monkeypatch.setenv("GRC_LAKE_AGENT_API_KEY_ENV", "GRC_LAKE_TEST_OPENAI_KEY")
+    monkeypatch.setenv("GRC_LAKE_TEST_OPENAI_KEY", "secret-test-value")
 
     provider = provider_from_env()
     metadata = provider.public_dict()
@@ -545,7 +545,7 @@ def test_provider_public_metadata_does_not_expose_key_env(monkeypatch: pytest.Mo
     assert metadata["credential_env_configured"] is True
     assert metadata["credential_present"] is True
     assert "api_key_env" not in metadata
-    assert "TRUSTOPS_TEST_OPENAI_KEY" not in json.dumps(metadata)
+    assert "GRC_LAKE_TEST_OPENAI_KEY" not in json.dumps(metadata)
     assert "secret-test-value" not in json.dumps(metadata)
 
 
@@ -568,7 +568,7 @@ def test_posture_review_cli_langgraph_orchestrator_requires_extra(tmp_path: Path
     _seed_gap(tmp_path)
 
     assert main(["agents", "posture-review", "--lake", str(tmp_path), "--orchestrator", "langgraph"]) == 1
-    assert "install trustops-security-data-lake[agents]" in capsys.readouterr().err
+    assert "install grc-lake[agents]" in capsys.readouterr().err
 
 
 def test_posture_review_cli_can_build_model_context_without_call(tmp_path: Path, capsys) -> None:
@@ -614,7 +614,7 @@ def test_posture_review_cli_does_not_print_model_key_env(
     tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _seed_gap(tmp_path)
-    monkeypatch.setenv("TRUSTOPS_TEST_OPENAI_KEY", "secret-test-value")
+    monkeypatch.setenv("GRC_LAKE_TEST_OPENAI_KEY", "secret-test-value")
 
     assert (
         main(
@@ -628,7 +628,7 @@ def test_posture_review_cli_does_not_print_model_key_env(
                 "--model",
                 "gpt-test",
                 "--api-key-env",
-                "TRUSTOPS_TEST_OPENAI_KEY",
+                "GRC_LAKE_TEST_OPENAI_KEY",
             ]
         )
         == 0
@@ -640,7 +640,7 @@ def test_posture_review_cli_does_not_print_model_key_env(
     assert out["model_provider"]["credential_present"] is True
     assert out["model_context"]["provider"]["credential_env_configured"] is True
     assert "api_key_env" not in output
-    assert "TRUSTOPS_TEST_OPENAI_KEY" not in output
+    assert "GRC_LAKE_TEST_OPENAI_KEY" not in output
     assert "secret-test-value" not in output
 
 

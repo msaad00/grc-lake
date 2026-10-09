@@ -7,13 +7,13 @@ live-provider qualification, or effectiveness of a real organization's controls.
 From a source checkout with dependencies installed:
 
 ```sh
-uv run security-lakehouse pipeline run \
+uv run grc-lake pipeline run \
   --raw examples/control-assurance/events.jsonl --out build/assurance-demo
-uv run security-lakehouse assessment workpaper --lake build/assurance-demo \
+uv run grc-lake assessment workpaper --lake build/assurance-demo \
   --plan examples/control-assurance/plan.json \
   --baseline examples/control-assurance/baseline.json \
   --out build/auditor-workpaper
-uv run security-lakehouse assessment verify-workpaper --dir build/auditor-workpaper
+uv run grc-lake assessment verify-workpaper --dir build/auditor-workpaper
 ```
 
 Open `build/auditor-workpaper/index.html`. The output directory must be new; use a
@@ -40,7 +40,7 @@ to the manifest; it is not an independently authenticated signature.
    and results to one verified generation. It records reviewed and proposed
    mapping states without converting proposed mappings into assurance.
 
-![Synthetic auditor workpaper](images/trustops-auditor-workpaper.png)
+![Synthetic auditor workpaper](images/grc-lake-auditor-workpaper.png)
 
 ## Authenticated review
 

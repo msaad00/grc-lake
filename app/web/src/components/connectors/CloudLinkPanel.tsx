@@ -42,7 +42,7 @@ import {
 import { getIntegrationPreset } from "@/lib/integration-presets";
 
 const CLOUD_LINK_IDS = new Set(["aws-posture", "azure-posture", "gcp-posture"]);
-const AWS_ROLE_NAME = "TrustOpsPostureReadOnlyRole";
+const AWS_ROLE_NAME = "GrcLakePostureReadOnlyRole";
 const AWS_ROLE_NAME_ALLOWED = /[^A-Za-z0-9+=,.@_-]/g;
 type AwsDeployMode = "console" | "cloudformation" | "terraform";
 type AwsAccountScope = "single" | "organization" | "selected";
@@ -75,10 +75,10 @@ function linkDescription(connectorId: string, hosted: boolean): string {
     return HOSTED_CLOUD_LINK_COPY.gcpSummary;
   }
   if (connectorId === "aws-posture") {
-    return "Deploy the customer-owned AWS role, then save the account target. TrustOps verifies STS assume-role after deployment.";
+    return "Deploy the customer-owned AWS role, then save the account target. GRC Lake verifies STS assume-role after deployment.";
   }
   if (connectorId === "azure-posture") {
-    return "Grant Reader to the TrustOps Entra app or workload identity, then confirm the subscription. Scheduled sync uses fresh Azure tokens; no passwords are stored.";
+    return "Grant Reader to the GRC Lake Entra app or workload identity, then confirm the subscription. Scheduled sync uses fresh Azure tokens; no passwords are stored.";
   }
   return "Apply the read-only Terraform reader identity in your GCP project, then enter the project ID to stage the connector.";
 }
@@ -171,7 +171,7 @@ function hostedAzureCloudShellCommand(clientId: string): string {
   return `subscription_id="$(az account show --query id -o tsv)"
 tenant_id="$(az account show --query tenantId -o tsv)"
 
-# Your own app registration: hosted TrustOps authenticates as this app.
+# Your own app registration: hosted GRC Lake authenticates as this app.
 app_id=${appId}
 principal_object_id="$(az ad sp show --id "$app_id" --query id -o tsv)"
 
@@ -187,21 +187,21 @@ printf "Tenant ID: %s\\nSubscription ID: %s\\n" "$tenant_id" "$subscription_id"`
 function azureCloudShellCommand(session: CloudLinkSession): string {
   const configuredAppId = session.azure_app_id
     ? shellQuote(session.azure_app_id)
-    : '"${TRUSTOPS_AZURE_APP_ID:-}"';
+    : '"${GRC_LAKE_AZURE_APP_ID:-}"';
   return `subscription_id="$(az account show --query id -o tsv)"
 tenant_id="$(az account show --query tenantId -o tsv)"
 
-# Hosted TrustOps: set TRUSTOPS_AZURE_APP_ID to the app id shown by TrustOps.
-# Self-hosted in Azure: set TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID to the managed identity object id.
+# Hosted GRC Lake: set GRC_LAKE_AZURE_APP_ID to the app id shown by GRC Lake.
+# Self-hosted in Azure: set GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID to the managed identity object id.
 trustops_app_id=${configuredAppId}
-principal_object_id="\${TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID:-}"
+principal_object_id="\${GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID:-}"
 
 if [ -n "$trustops_app_id" ] && [ -z "$principal_object_id" ]; then
   principal_object_id="$(az ad sp show --id "$trustops_app_id" --query id -o tsv)"
 fi
 
 if [ -z "$principal_object_id" ]; then
-  echo "Set TRUSTOPS_AZURE_APP_ID or TRUSTOPS_AZURE_PRINCIPAL_OBJECT_ID before running."
+  echo "Set GRC_LAKE_AZURE_APP_ID or GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID before running."
   exit 1
 fi
 
@@ -518,7 +518,7 @@ export function CloudLinkPanel({
           {headerLabel}
         </div>
         <Badge tone="ready">{isAwsPosture ? "STS" : "Read-only access"}</Badge>
-        {/* Azure can use a client secret; TrustOps stores only its env-var name. */}
+        {/* Azure can use a client secret; GRC Lake stores only its env-var name. */}
         <Badge>
           {isAzurePosture ? "No secrets stored" : "No long-lived keys"}
         </Badge>
@@ -636,7 +636,7 @@ export function CloudLinkPanel({
                       ? "Deploy the role with CloudFormation StackSets or Terraform workspaces to the organizational units you choose."
                       : awsAccountScope === "selected"
                         ? "Run the deployment in each selected account, or customize the script for your existing IaC workflow."
-                        : "Run this once in the AWS account you want TrustOps to assess."}
+                        : "Run this once in the AWS account you want GRC Lake to assess."}
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
@@ -839,7 +839,7 @@ export function CloudLinkPanel({
             !hosted &&
             !session.workload_identity_member && (
               <p className="text-xs text-muted">
-                Set <code>TRUSTOPS_GCP_WIF_MEMBER</code> to include Workload
+                Set <code>GRC_LAKE_GCP_WIF_MEMBER</code> to include Workload
                 Identity in the deploy command. Manual template:{" "}
                 <code>{session.manual_template_path}</code>
               </p>

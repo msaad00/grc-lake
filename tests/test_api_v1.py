@@ -317,15 +317,15 @@ def test_v1_ingestion_status_summarizes_live_runs_and_proof_pack(tmp_path: Path)
             connector_id="snowflake-evidence-lake",
             state="enabled",
             actor="test",
-            credentials={"account": "acct", "user": "TRUSTOPS_INGEST_SVC", "private_key_ref": "SNOWFLAKE_KEY"},
+            credentials={"account": "acct", "user": "GRC_LAKE_INGEST_SVC", "private_key_ref": "SNOWFLAKE_KEY"},
             options={
-                "warehouse": "TRUSTOPS_READ_WH",
-                "database": "TRUSTOPS_SECURITY_LAKE",
+                "warehouse": "GRC_LAKE_READ_WH",
+                "database": "GRC_LAKE_SECURITY_LAKE",
                 "schema": "EVIDENCE",
-                "audit_events": "TRUSTOPS_AUDIT_EVENTS",
-                "control_posture": "TRUSTOPS_CONTROL_POSTURE",
-                "asset_risk": "TRUSTOPS_ASSET_RISK",
-                "evidence_bundles": "TRUSTOPS_EVIDENCE_BUNDLES",
+                "audit_events": "GRC_LAKE_AUDIT_EVENTS",
+                "control_posture": "GRC_LAKE_CONTROL_POSTURE",
+                "asset_risk": "GRC_LAKE_ASSET_RISK",
+                "evidence_bundles": "GRC_LAKE_EVIDENCE_BUNDLES",
             },
         )
         append_run_event(
@@ -467,7 +467,7 @@ def test_v1_aws_connector_enable_reuses_verified_role_after_disable(tmp_path: Pa
         *, credentials: dict[str, object], options: dict[str, object], **_kwargs: object
     ) -> dict[str, object]:
         assert credentials["account_id"] == "123456789012"
-        assert credentials["role_arn"] == "arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole"
+        assert credentials["role_arn"] == "arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole"
         assert credentials["external_id"] == "external-demo"
         assert options["region"] == "us-east-1"
         return {"ok": True, "capabilities": ["sts:AssumeRole", "iam:ListUsers"], "principal_count": 4}
@@ -475,7 +475,7 @@ def test_v1_aws_connector_enable_reuses_verified_role_after_disable(tmp_path: Pa
     monkeypatch.setattr("security_lakehouse.connector_state.probe_aws_access", fake_probe_aws_access)
     credentials = {
         "account_id": "123456789012",
-        "role_arn": "arn:aws:iam::123456789012:role/TrustOpsPostureReadOnlyRole",
+        "role_arn": "arn:aws:iam::123456789012:role/GrcLakePostureReadOnlyRole",
         "external_id": "external-demo",
     }
     options = {"region": "us-east-1", "sync_schedule": "every 15m", "eval_schedule": "every 6h"}

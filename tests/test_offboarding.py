@@ -225,5 +225,5 @@ def test_syncs_refresh_offboarding_findings_in_either_order(tmp_path: Path) -> N
 def test_invalid_grace_env_falls_back_to_default(monkeypatch: pytest.MonkeyPatch, value: str) -> None:
     from security_lakehouse.offboarding import DEFAULT_GRACE_DAYS, grace_days_from_env
 
-    assert grace_days_from_env({"TRUSTOPS_OFFBOARDING_GRACE_DAYS": value}) == DEFAULT_GRACE_DAYS
-    assert grace_days_from_env({"TRUSTOPS_OFFBOARDING_GRACE_DAYS": "7"}) == 7
+    assert grace_days_from_env({"GRC_LAKE_OFFBOARDING_GRACE_DAYS": value}) == DEFAULT_GRACE_DAYS
+    assert grace_days_from_env({"GRC_LAKE_OFFBOARDING_GRACE_DAYS": "7"}) == 7

@@ -28,11 +28,12 @@ from typing import Any
 
 from security_lakehouse.hris import PERSONNEL_SENSITIVITY, parse_hr_date
 from security_lakehouse.models import utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 
 OFFBOARDING_CONNECTOR_ID = "hris-idp-offboarding"
 OFFBOARDING_SOURCE = "trustops-correlation"
 HRIS_EVENT_TYPE = "hris.personnel.employment"
-GRACE_DAYS_ENV = "TRUSTOPS_OFFBOARDING_GRACE_DAYS"
+GRACE_DAYS_ENV = "GRC_LAKE_OFFBOARDING_GRACE_DAYS"
 DEFAULT_GRACE_DAYS = 1
 MAX_GRACE_DAYS = 365
 
@@ -60,6 +61,7 @@ def is_offboarding_input(row: Mapping[str, Any]) -> bool:
 
 
 def grace_days_from_env(env: Mapping[str, str]) -> int:
+    env = runtime_env(env)
     try:
         value = int(env.get(GRACE_DAYS_ENV, DEFAULT_GRACE_DAYS))
     except ValueError:

@@ -1,13 +1,16 @@
 <p align="center">
-  <img src="docs/images/trustops-capability-header.svg" alt="TrustOps — collect, evaluate, resolve, and export: read-only evidence from cloud, identity, code, and data sources, evaluated through a common control framework and framework packs." width="100%">
+
+> Renamed from TrustOps. See the [upgrade guide](docs/REBRANDING.md) for command aliases, existing volumes and release availability.
+> <img src="docs/images/grc-lake-capability-header.svg" alt="GRC Lake — collect, evaluate, resolve, and export: read-only evidence from cloud, identity, code, and data sources, evaluated through a common control framework and framework packs." width="100%">
+
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/trustops-security-data-lake/"><img src="https://img.shields.io/pypi/v/trustops-security-data-lake?color=2b7bba&label=PyPI" alt="PyPI version"></a>
-  <a href="https://pypi.org/project/trustops-security-data-lake/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"></a>
-  <a href="https://github.com/msaad00/trustops-security-data-lake/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/msaad00/trustops-security-data-lake/ci.yml?branch=main&amp;label=CI" alt="CI status"></a>
+  <a href="https://pypi.org/project/grc-lake/"><img src="https://img.shields.io/pypi/v/grc-lake?color=2b7bba&label=PyPI" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/grc-lake/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"></a>
+  <a href="https://github.com/msaad00/grc-lake/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/msaad00/grc-lake/ci.yml?branch=main&amp;label=CI" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License: Apache 2.0"></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/msaad00/trustops-security-data-lake"><img src="https://api.scorecard.dev/projects/github.com/msaad00/trustops-security-data-lake/badge" alt="OpenSSF Scorecard"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/msaad00/grc-lake"><img src="https://api.scorecard.dev/projects/github.com/msaad00/grc-lake/badge" alt="OpenSSF Scorecard"></a>
 </p>
 
 **Open-source trust operations, on your evidence lake.** Self-hosted GRC
@@ -32,8 +35,8 @@ export snapshots, workpapers, and OSCAL.
 With Docker Compose v2:
 
 ```bash
-git clone https://github.com/msaad00/trustops-security-data-lake.git
-cd trustops-security-data-lake
+git clone https://github.com/msaad00/grc-lake.git
+cd grc-lake
 docker compose up
 ```
 
@@ -47,10 +50,10 @@ The demo binds to loopback and has authentication disabled. Follow the
 Python 3.11+:
 
 ```bash
-pip install "trustops-security-data-lake[server]"
-security-lakehouse fixtures load --company golden --out ./lake --rebase-times
-security-lakehouse assessment status --lake ./lake
-security-lakehouse serve --server --allow-insecure-no-auth --lake ./lake --port 8787
+pip install "grc-lake[server]"
+grc-lake fixtures load --company golden --out ./lake --rebase-times
+grc-lake assessment status --lake ./lake
+grc-lake serve --server --allow-insecure-no-auth --lake ./lake --port 8787
 ```
 
 From source, with [uv](https://docs.astral.sh/uv/) and Node 22+:
@@ -63,20 +66,20 @@ make demo-local
 For MCP over stdio:
 
 ```bash
-pip install 'trustops-security-data-lake[mcp]'
-TRUSTOPS_LAKE=./lake trustops-mcp
+pip install 'grc-lake[mcp]'
+GRC_LAKE_LAKE=./lake grc-lake-mcp
 ```
 
 Read [headless GRC](docs/HEADLESS_GRC.md) for agent credentials and authority.
 
 </details>
 
-The PyPI package is `trustops-security-data-lake`, the CLI is
-`security-lakehouse`, and the MCP server is `trustops-mcp`.
+The PyPI package is `grc-lake`, the CLI is
+`grc-lake`, and the MCP server is `grc-lake-mcp`.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-dashboard-dark.png">
-  <img src="docs/images/trustops-demo-dashboard.png" alt="TrustOps overview with framework coverage, priority actions, and evidence freshness" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/grc-lake-demo-dashboard-dark.png">
+  <img src="docs/images/grc-lake-demo-dashboard.png" alt="GRC Lake overview with framework coverage, priority actions, and evidence freshness" width="100%">
 </picture>
 
 _Screens show the bundled synthetic company. They demonstrate workflows, not a
@@ -124,7 +127,7 @@ Both modes feed the same evaluation engine, assessments, and review workflows.
 Lake mappings are experimental; preview and live-provider qualification vary by
 reader. See the [connector catalog](docs/CONNECTORS.md) for status. Existing-lake
 readers preserve the source system and materialize assessment evidence into the
-TrustOps lake; they do not move the TrustOps application into your warehouse.
+GRC Lake lake; they do not move the GRC Lake application into your warehouse.
 
 ## Product tour
 
@@ -141,8 +144,8 @@ Framework coverage separates assessed controls, missing evidence, and unreviewed
 mappings. A passing sample does not establish full framework compliance.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-frameworks-dark.png">
-  <img src="docs/images/trustops-demo-frameworks.png" alt="Framework roster showing evidence coverage and assessment results" width="100%" loading="lazy">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/grc-lake-demo-frameworks-dark.png">
+  <img src="docs/images/grc-lake-demo-frameworks.png" alt="Framework roster showing evidence coverage and assessment results" width="100%" loading="lazy">
 </picture>
 
 ### Follow evidence to a decision
@@ -152,16 +155,16 @@ Closing a task requires fresh verification; approval actions require an eligible
 human session. Agents can collect, explain, and propose work.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/trustops-demo-evidence-dark.png">
-  <img src="docs/images/trustops-demo-evidence.png" alt="Evidence workspace with freshness and source lineage" width="100%" loading="lazy">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/grc-lake-demo-evidence-dark.png">
+  <img src="docs/images/grc-lake-demo-evidence.png" alt="Evidence workspace with freshness and source lineage" width="100%" loading="lazy">
 </picture>
 
 <details>
 <summary>More screens: remediation, audit room, and mobile</summary>
 
-![Remediation workspace](docs/images/trustops-demo-remediation.png)
-![Auditor workpapers and exports](docs/images/trustops-demo-audit-room.png)
-<img src="docs/images/trustops-demo-overview-mobile.png" alt="TrustOps overview on a narrow screen" width="390" loading="lazy">
+![Remediation workspace](docs/images/grc-lake-demo-remediation.png)
+![Auditor workpapers and exports](docs/images/grc-lake-demo-audit-room.png)
+<img src="docs/images/grc-lake-demo-overview-mobile.png" alt="GRC Lake overview on a narrow screen" width="390" loading="lazy">
 
 </details>
 
@@ -189,8 +192,8 @@ Wheels and sdists carry SLSA build provenance, and each GitHub release attaches
 a CycloneDX SBOM of the locked runtime dependencies:
 
 ```bash
-gh release download v0.2.24 -R msaad00/trustops-security-data-lake -p '*.whl'
-gh attestation verify trustops_security_data_lake-0.2.24-py3-none-any.whl -R msaad00/trustops-security-data-lake
+gh release download v0.2.24 -R msaad00/grc-lake -p '*.whl'
+gh attestation verify grc_lake-0.2.24-py3-none-any.whl -R msaad00/grc-lake
 ```
 
 ## Frameworks
@@ -228,8 +231,8 @@ Control families by category:
 
 [Framework packs](docs/FRAMEWORK_PACKS.md) · [Coverage catalog](docs/FRAMEWORK_COVERAGE.md) ·
 [Common controls](docs/COMMON_CONTROL_FRAMEWORK.md) ·
-[Control families screen](docs/images/trustops-demo-control-families.png) ·
-[Crosswalk screen](docs/images/trustops-demo-crosswalk.png)
+[Control families screen](docs/images/grc-lake-demo-control-families.png) ·
+[Crosswalk screen](docs/images/grc-lake-demo-crosswalk.png)
 
 ## Evidence boundaries
 

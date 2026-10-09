@@ -16,6 +16,7 @@ from security_lakehouse.db.base import create_engine_for, session_factory
 from security_lakehouse.db.models import OperationJob
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import parse_event_time
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.tenancy import root_key
 
 ARCHIVE_MARKER = "trustops.operation_archive.v1"
@@ -170,7 +171,7 @@ def archive_operational_history(
     )
     durable_dirs: set[Path] = set()
     with chain_lock(lake / "server/operational-retention"):
-        if (lake / "server/app.db").is_file() or os.environ.get("TRUSTOPS_DATABASE_URL"):
+        if (lake / "server/app.db").is_file() or runtime_env().get("GRC_LAKE_DATABASE_URL"):
             engine = create_engine_for(lake)
             try:
                 with session_factory(engine).begin() as session:

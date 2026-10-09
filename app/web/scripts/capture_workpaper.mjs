@@ -10,7 +10,7 @@ const input = path.resolve(
   root,
   process.argv[2] || "build/auditor-workpaper/index.html",
 );
-const output = path.join(root, "docs/images/trustops-auditor-workpaper.png");
+const output = path.join(root, "docs/images/grc-lake-auditor-workpaper.png");
 const manifest = JSON.parse(
   await readFile(path.join(path.dirname(input), "manifest.json"), "utf8"),
 );
@@ -49,7 +49,7 @@ try {
     image_sha256: createHash("sha256").update(await readFile(output)).digest("hex"),
   };
   await writeFile(
-    path.join(root, "docs/images/trustops-auditor-workpaper.capture.json"),
+    path.join(root, "docs/images/grc-lake-auditor-workpaper.capture.json"),
     JSON.stringify(receipt, null, 2) + "\n",
   );
 } finally {

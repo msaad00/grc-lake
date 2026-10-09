@@ -33,9 +33,9 @@ def _bearer(token: str) -> dict[str, str]:
 
 @pytest.fixture
 def env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("TRUSTOPS_COMMERCIAL_HOSTED", "1")
-    monkeypatch.setenv("TRUSTOPS_SCIM_ENABLED", "1")
-    monkeypatch.delenv("TRUSTOPS_SCIM_BEARER_TOKEN", raising=False)
+    monkeypatch.setenv("GRC_LAKE_COMMERCIAL_HOSTED", "1")
+    monkeypatch.setenv("GRC_LAKE_SCIM_ENABLED", "1")
+    monkeypatch.delenv("GRC_LAKE_SCIM_BEARER_TOKEN", raising=False)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)
@@ -130,8 +130,8 @@ def test_bad_or_missing_bearer_is_a_scim_401(env) -> None:
 
 def test_deprecated_env_bearer_still_resolves_the_env_tenant(env, monkeypatch: pytest.MonkeyPatch) -> None:
     client, _keys, _app = env
-    monkeypatch.setenv("TRUSTOPS_SCIM_BEARER_TOKEN", "legacy-token")
-    monkeypatch.setenv("TRUSTOPS_SCIM_TENANT_SLUG", "acme")
+    monkeypatch.setenv("GRC_LAKE_SCIM_BEARER_TOKEN", "legacy-token")
+    monkeypatch.setenv("GRC_LAKE_SCIM_TENANT_SLUG", "acme")
     listed = client.get(f"{SCIM}/Users", headers=_bearer("legacy-token")).json()
     assert {r["userName"] for r in listed["Resources"]} >= {"admin@acme.test"}
 
@@ -238,7 +238,7 @@ def test_delete_is_a_soft_delete_that_hides_the_user_and_can_be_reprovisioned(en
 def test_group_membership_drives_role_through_the_role_map(env, monkeypatch: pytest.MonkeyPatch) -> None:
     client, keys, app = env
     monkeypatch.setenv(
-        "TRUSTOPS_SCIM_ROLE_MAP", json.dumps({"TrustOps Admins": "admin", "TrustOps Auditors": "auditor"})
+        "GRC_LAKE_SCIM_ROLE_MAP", json.dumps({"GRC Lake Admins": "admin", "GRC Lake Auditors": "auditor"})
     )
     token = _scim_token(client, keys["acme:admin"])
     user = _create_user(client, token, "ops@acme.test")
@@ -248,14 +248,14 @@ def test_group_membership_drives_role_through_the_role_map(env, monkeypatch: pyt
         headers=_bearer(token),
         json={
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
-            "displayName": "TrustOps Admins",
+            "displayName": "GRC Lake Admins",
             "members": [{"value": user["id"]}],
         },
     )
     assert group.status_code == HTTPStatus.CREATED
     group_id = group.json()["id"]
     assert client.get(f"{SCIM}/Users/{user['id']}", headers=_bearer(token)).json()["trustopsRole"] == "admin"
-    found = client.get(f'{SCIM}/Groups?filter=displayName eq "TrustOps Admins"', headers=_bearer(token)).json()
+    found = client.get(f'{SCIM}/Groups?filter=displayName eq "GRC Lake Admins"', headers=_bearer(token)).json()
     assert [g["id"] for g in found["Resources"]] == [group_id]
 
     removed = client.patch(
@@ -309,7 +309,7 @@ def test_group_members_must_belong_to_the_token_tenant(env) -> None:
 
 def test_disabled_returns_501(env, monkeypatch: pytest.MonkeyPatch) -> None:
     client, keys, _app = env
-    monkeypatch.setenv("TRUSTOPS_SCIM_ENABLED", "0")
+    monkeypatch.setenv("GRC_LAKE_SCIM_ENABLED", "0")
     assert client.get(f"{SCIM}/Users", headers=_bearer("x")).status_code == HTTPStatus.NOT_IMPLEMENTED
     assert client.get(f"{SCIM}/Groups", headers=_bearer("x")).status_code == HTTPStatus.NOT_IMPLEMENTED
     resp = client.post("/api/v1/platform/scim/tokens", json={"name": "x"}, headers=_bearer(keys["acme:admin"]))

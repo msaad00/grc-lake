@@ -10,7 +10,7 @@ Older versions could record an external snapshot filename without retaining a
 copy in the lake. Restore missing files from a directory you select:
 
 ```sh
-security-lakehouse assessment restore-snapshots --lake ./lake --source ./old-snapshot-exports
+grc-lake assessment restore-snapshots --lake ./lake --source ./old-snapshot-exports
 ```
 
 Every file must match its existing ledger hash, timestamp, and predecessor. The
@@ -26,9 +26,9 @@ an uncommitted file. Normal snapshot creation stays blocked; an operator can
 preview the orphaned files, then explicitly quarantine them:
 
 ```sh
-security-lakehouse assessment reconcile-snapshots --lake ./lake
-security-lakehouse assessment reconcile-snapshots --lake ./lake --apply
-security-lakehouse assessment verify-snapshots --lake ./lake
+grc-lake assessment reconcile-snapshots --lake ./lake
+grc-lake assessment reconcile-snapshots --lake ./lake --apply
+grc-lake assessment verify-snapshots --lake ./lake
 ```
 
 Preview leaves evidence unchanged. Apply validates committed history under the
@@ -49,7 +49,7 @@ not distributed transactions or an external integrity anchor.
 ## Legacy workpaper exports
 
 ```sh
-security-lakehouse assessment migrate-workpaper --source ./old-export --content ./original-workpaper.json --out ./recovered-export
+grc-lake assessment migrate-workpaper --source ./old-export --content ./original-workpaper.json --out ./recovered-export
 ```
 
 The original files must match their manifest, and the original JSON must match
@@ -67,8 +67,8 @@ and obtain a new review. Keep the old export as historical material.
 ## Independently retained checkpoints
 
 ```sh
-security-lakehouse assessment checkpoint --lake ./lake --out ./checkpoint.json
-security-lakehouse assessment verify-checkpoint --lake ./lake --checkpoint ./checkpoint.json
+grc-lake assessment checkpoint --lake ./lake --out ./checkpoint.json
+grc-lake assessment verify-checkpoint --lake ./lake --checkpoint ./checkpoint.json
 ```
 
 Retain the checkpoint outside the lake under separate access control, such as a

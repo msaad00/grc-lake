@@ -1,4 +1,4 @@
-# TrustOps with Docker Compose.
+# GRC Lake with Docker Compose.
 #
 # Local demo (default):
 #
@@ -6,32 +6,32 @@
 #   open http://127.0.0.1:8787/console/dashboard/
 #
 #   Loads the bundled "golden" sample company on first start into the
-#   `trustops-demo-lake` volume and serves it with AUTHENTICATION DISABLED.
+#   `grc-lake-demo-lake` volume and serves it with AUTHENTICATION DISABLED.
 #   The port is published on 127.0.0.1 only. Never expose this service to a
 #   network, and never load real evidence into it.
 #   Reset the demo: docker compose down -v
 #
 # Real use (profile "server"):
 #
-#   cp deploy/compose/trustops.env.example trustops.env   # fill in secrets
-#   docker compose up -d trustops-server
+#   cp deploy/compose/grc-lake.env.example grc-lake.env   # fill in secrets
+#   docker compose up -d grc-lake-server
 #   open http://127.0.0.1:8788/
 #
-#   Authentication on, no demo data, secrets from trustops.env (gitignored),
-#   its own `trustops-lake` volume. See docs/DEPLOYMENT.md for TLS and backups.
+#   Authentication on, no demo data, secrets from grc-lake.env (gitignored),
+#   its own `grc-lake-lake` volume. See docs/DEPLOYMENT.md for TLS and backups.
 #
-# Pin a different release with TRUSTOPS_VERSION, e.g.
-#   TRUSTOPS_VERSION=<release-version> docker compose up
+# Pin a different release with GRC_LAKE_VERSION, e.g.
+#   GRC_LAKE_VERSION=<release-version> docker compose up
 
-name: trustops
+name: grc-lake
 
 services:
-  trustops:
-    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.24}
+  grc-lake:
+    image: ghcr.io/msaad00/grc-lake:${GRC_LAKE_VERSION:-0.2.24}
     ports:
       - "127.0.0.1:8787:8787"
     volumes:
-      - trustops-demo-lake:/lake
+      - grc-lake-demo-lake:/lake
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -42,31 +42,31 @@ services:
       - |
         set -e
         echo "======================================================================"
-        echo " TrustOps LOCAL DEMO: NO AUTHENTICATION. Sample data only."
+        echo " GRC Lake LOCAL DEMO: NO AUTHENTICATION. Sample data only."
         echo " Published on 127.0.0.1:8787. Do not expose this port."
-        echo " For real use: docker compose up -d trustops-server"
+        echo " For real use: docker compose up -d grc-lake-server"
         echo "======================================================================"
-        if [ ! -e /lake/.trustops-demo-seeded ]; then
-          security-lakehouse fixtures load --company golden --out /lake --rebase-times
-          touch /lake/.trustops-demo-seeded
+        if [ ! -e /lake/.grc-lake-demo-seeded ] && [ ! -e /lake/.trustops-demo-seeded ]; then
+          grc-lake fixtures load --company golden --out /lake --rebase-times
+          touch /lake/.grc-lake-demo-seeded
         fi
-        exec security-lakehouse serve --server --allow-insecure-no-auth --lake /lake --host 0.0.0.0 --port 8787
+        exec grc-lake serve --server --allow-insecure-no-auth --lake /lake --host 0.0.0.0 --port 8787
 
-  trustops-server:
+  grc-lake-server:
     profiles: ["server"]
-    image: ghcr.io/msaad00/trustops:${TRUSTOPS_VERSION:-0.2.24}
+    image: ghcr.io/msaad00/grc-lake:${GRC_LAKE_VERSION:-0.2.24}
     # The image's default command serves with authentication required.
     env_file:
-      - trustops.env
+      - grc-lake.env
     environment:
-      # Refuses TRUSTOPS_ALLOW_INSECURE_NO_AUTH at startup.
-      TRUSTOPS_ENV: production
+      # Refuses GRC_LAKE_ALLOW_INSECURE_NO_AUTH at startup.
+      GRC_LAKE_ENV: production
     ports:
       # Loopback only: put a TLS-terminating reverse proxy in front before
       # publishing on another interface.
       - "127.0.0.1:8788:8787"
     volumes:
-      - trustops-lake:/lake
+      - grc-lake-lake:/lake
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -74,5 +74,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  trustops-demo-lake:
-  trustops-lake:
+  grc-lake-demo-lake:
+    name: ${GRC_LAKE_DEMO_VOLUME:-trustops_trustops-demo-lake}
+  grc-lake-lake:
+    name: ${GRC_LAKE_VOLUME:-trustops_trustops-lake}

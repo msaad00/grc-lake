@@ -36,7 +36,7 @@ For an authorized local fixture demonstration, build a separate fixture lake;
 do not replace the user's operational lake. Fixture results are illustrative:
 
 ```bash
-security-lakehouse pipeline run \
+grc-lake pipeline run \
   --raw data/raw/security_events.jsonl \
   --out build/fixture-lake
 ```
@@ -44,7 +44,7 @@ security-lakehouse pipeline run \
 For dashboard review:
 
 ```bash
-security-lakehouse dashboard \
+grc-lake dashboard \
   --lake build/fixture-lake \
   --out build/dashboard/index.html
 ```
@@ -52,7 +52,7 @@ security-lakehouse dashboard \
 For the human and agent API:
 
 ```bash
-security-lakehouse serve --lake build/fixture-lake --port 8787
+grc-lake serve --lake build/fixture-lake --port 8787
 ```
 
 Agent routes:
@@ -99,13 +99,13 @@ Backend architecture evidence:
 Current posture:
 
 ```bash
-security-lakehouse assessment status --lake build/fixture-lake
+grc-lake assessment status --lake build/fixture-lake
 ```
 
 Open violations:
 
 ```bash
-security-lakehouse assessment violations --lake build/fixture-lake
+grc-lake assessment violations --lake build/fixture-lake
 ```
 
 ## Response Rules

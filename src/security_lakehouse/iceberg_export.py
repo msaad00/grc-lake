@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 import tempfile
 from pathlib import Path
@@ -11,6 +10,7 @@ from urllib.parse import urlsplit
 from security_lakehouse import netguard
 from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.parquet_export import SCHEMA_VERSION, export_parquet
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_secret_ref
 
 TENANT_PROPERTY = "trustops.tenant_id"
@@ -19,7 +19,7 @@ FORMAT_VERSION = "trustops.iceberg_evidence.v1"
 
 # Storage schemes a remote catalog's metadata may point FileIO at. Everything
 # else -- file paths, bare paths, http(s), hdfs, other clouds -- is refused, so
-# table metadata cannot read the TrustOps host's disk or reach internal hosts.
+# table metadata cannot read the GRC Lake host's disk or reach internal hosts.
 OBJECT_STORE_SCHEMES = ("s3", "s3a", "s3n")
 # Local warehouses (file: and bare paths) are allowed only outside server mode.
 LOCAL_STORAGE_SCHEMES = ("file",)
@@ -127,7 +127,7 @@ def _identifier(value):
     return value
 
 
-def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_http_localhost=False, pin_public=False):
+def rest_catalog(uri, *, warehouse, token_env="GRC_LAKE_ICEBERG_TOKEN", allow_http_localhost=False, pin_public=False):
     """Connect with an externally supplied short-lived bearer token, held in memory.
 
     No client-secret argument, credential file, implicit named catalog, or OAuth
@@ -151,7 +151,7 @@ def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_ht
         )
     if not re.fullmatch(r"[A-Z_][A-Z0-9_]*", token_env):
         raise IcebergPublicationError("the configured bearer-token environment variable is missing or invalid")
-    token = resolve_secret_ref(token_env, dict(os.environ), field="credential_ref", file_first=False)
+    token = resolve_secret_ref(token_env, dict(runtime_env()), field="credential_ref", file_first=False)
     if not token:
         raise IcebergPublicationError("the configured bearer-token environment variable is missing or invalid")
     if any(character.isspace() for character in token):
@@ -203,9 +203,7 @@ def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_ht
     except IcebergPublicationError:
         raise
     except ImportError:
-        raise IcebergPublicationError(
-            "Iceberg publication requires pip install 'trustops-security-data-lake[iceberg]'"
-        ) from None
+        raise IcebergPublicationError("Iceberg publication requires pip install 'grc-lake[iceberg]'") from None
     except Exception:  # noqa: BLE001 - re-raised as a typed error; driver text may carry secrets
         raise IcebergPublicationError(
             "Iceberg REST connection failed; check endpoint, token lifetime, and catalog permissions"
@@ -231,7 +229,7 @@ def _check_table(table, tenant_id, arrow_schema):
     if props.get(TENANT_PROPERTY) != tenant_id:
         raise IcebergPublicationError("Iceberg table tenant does not match the evidence tenant")
     if props.get(FORMAT_PROPERTY) != FORMAT_VERSION:
-        raise IcebergPublicationError("target table is not a TrustOps evidence table")
+        raise IcebergPublicationError("target table is not a GRC Lake evidence table")
     if props.get("trustops.normalization_version") != SCHEMA_VERSION:
         raise IcebergPublicationError("Iceberg table normalization version does not match normalized evidence")
     if props.get("commit.retry.num-retries") != "0":
@@ -362,9 +360,7 @@ def publish_iceberg(lake_dir, catalog, *, namespace, table_name="evidence", tena
     except IcebergPublicationError:
         raise
     except ImportError:
-        raise IcebergPublicationError(
-            "Iceberg publication requires pip install 'trustops-security-data-lake[iceberg]'"
-        ) from None
+        raise IcebergPublicationError("Iceberg publication requires pip install 'grc-lake[iceberg]'") from None
     except Exception:  # noqa: BLE001 - re-raised as a typed error; driver text may carry secrets
         raise IcebergPublicationError(
             "Iceberg publication was not confirmed; check source integrity, catalog access, and retry the same generation"

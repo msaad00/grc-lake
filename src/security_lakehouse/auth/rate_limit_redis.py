@@ -6,6 +6,7 @@ import time
 from typing import Protocol
 
 from security_lakehouse.auth.rate_limit import RateLimitConfig
+from security_lakehouse.runtime_environment import runtime_env
 
 # Atomic token-bucket check/set across processes. Keys are prefixed per limiter.
 _TOKEN_BUCKET_LUA = """
@@ -101,7 +102,8 @@ class RedisRateLimiter:
 
 
 def build_rate_limiter(config: RateLimitConfig, env: dict[str, str]) -> RateLimiterBackend:
-    """Return in-memory or Redis limiter based on ``TRUSTOPS_API_RATE_LIMIT_REDIS_URL``."""
+    """Return in-memory or Redis limiter based on ``GRC_LAKE_API_RATE_LIMIT_REDIS_URL``."""
+    env = runtime_env(env)
     from security_lakehouse.auth.rate_limit import ENV_REDIS_URL, RateLimiter
 
     redis_url = (env.get(ENV_REDIS_URL) or "").strip()

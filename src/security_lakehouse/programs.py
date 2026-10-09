@@ -138,7 +138,7 @@ def build_control_tests(
             {
                 "test_id": str(config.get("test_id") or f"test-{control_id.lower()}"),
                 "program_id": str(program.get("program_id") or "trustops-framework-coverage"),
-                "program_name": str(program.get("name") or "TrustOps Framework Coverage"),
+                "program_name": str(program.get("name") or "GRC Lake Framework Coverage"),
                 "control_id": control_id,
                 "framework": str(control["framework"]),
                 "framework_id": str(control_catalog.get(control_id, {}).get("framework_id", "unknown")),

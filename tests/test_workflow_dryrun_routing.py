@@ -20,7 +20,7 @@ from pathlib import Path
 import security_lakehouse.workflows as wf
 from security_lakehouse.tracking import list_events
 
-ALLOWLIST_ENV = "TRUSTOPS_WORKFLOW_EGRESS_ALLOWLIST"
+ALLOWLIST_ENV = "GRC_LAKE_WORKFLOW_EGRESS_ALLOWLIST"
 
 
 def _bootstrap(lake: Path) -> None:

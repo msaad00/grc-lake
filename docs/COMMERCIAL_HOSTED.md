@@ -3,7 +3,7 @@
 Commercial hosted builds add managed-SaaS capabilities on top of OSS: pricing
 tiers, self-serve signup, usage limits, tenant email invites, outbound mail
 adapters, SCIM 2.0 provisioning, and Stripe billing. All of it stays off unless
-`TRUSTOPS_COMMERCIAL_HOSTED=1`.
+`GRC_LAKE_COMMERCIAL_HOSTED=1`.
 
 These application features do not establish managed-service availability or
 multi-writer support. The supported lake topology has one writable application
@@ -14,25 +14,25 @@ for the deployment boundary.
 ## Enable hosted mode
 
 ```bash
-export TRUSTOPS_COMMERCIAL_HOSTED=1
-export TRUSTOPS_PUBLIC_URL=https://trustops.example.com
-export TRUSTOPS_EMAIL_PROVIDER=log   # default: log-only (no SMTP)
+export GRC_LAKE_COMMERCIAL_HOSTED=1
+export GRC_LAKE_PUBLIC_URL=https://grc-lake.example.com
+export GRC_LAKE_EMAIL_PROVIDER=log   # default: log-only (no SMTP)
 ```
 
 Self-serve workspace creation:
 
 ```bash
-export TRUSTOPS_SELF_SERVE_SIGNUP=1
-export TRUSTOPS_SIGNUP_SECRET=<long-random-secret>   # callers send it as X-TrustOps-Signup-Secret
+export GRC_LAKE_SELF_SERVE_SIGNUP=1
+export GRC_LAKE_SIGNUP_SECRET=<long-random-secret>   # callers send it as X-GRC Lake-Signup-Secret
 ```
 
-Signup fails closed: with no `TRUSTOPS_SIGNUP_SECRET`, `POST /api/v1/signup`
-returns 403 unless you explicitly set `TRUSTOPS_ALLOW_OPEN_SIGNUP=1` to accept
+Signup fails closed: with no `GRC_LAKE_SIGNUP_SECRET`, `POST /api/v1/signup`
+returns 403 unless you explicitly set `GRC_LAKE_ALLOW_OPEN_SIGNUP=1` to accept
 unauthenticated workspace creation.
 
 SAML SSO for hosted tenants is configured as in
 [Server auth](SERVER_AUTH.md#saml). Only SP-initiated logins are accepted by
-default; set `TRUSTOPS_SAML_ALLOW_IDP_INITIATED=true` to accept IdP-initiated
+default; set `GRC_LAKE_SAML_ALLOW_IDP_INITIATED=true` to accept IdP-initiated
 logins. Consumed assertion IDs are stored in the shared application database,
 so a replay is rejected on subsequent requests and after application restarts.
 
@@ -40,13 +40,13 @@ Optional SCIM 2.0 provisioning (Enterprise tier). Enable it, then have a tenant
 admin issue a SCIM token (see [SCIM](#scim)):
 
 ```bash
-export TRUSTOPS_SCIM_ENABLED=1
-# Optional: map IdP groups to TrustOps roles (highest privilege wins).
-export TRUSTOPS_SCIM_ROLE_MAP='{"TrustOps Admins": "admin", "TrustOps Auditors": "auditor"}'
-export TRUSTOPS_SCIM_DEFAULT_ROLE=read_only   # role for users in no mapped group
+export GRC_LAKE_SCIM_ENABLED=1
+# Optional: map IdP groups to GRC Lake roles (highest privilege wins).
+export GRC_LAKE_SCIM_ROLE_MAP='{"GRC Lake Admins": "admin", "GRC Lake Auditors": "auditor"}'
+export GRC_LAKE_SCIM_DEFAULT_ROLE=read_only   # role for users in no mapped group
 ```
 
-`TRUSTOPS_SCIM_BEARER_TOKEN` + `TRUSTOPS_SCIM_TENANT_SLUG` still authenticate as a
+`GRC_LAKE_SCIM_BEARER_TOKEN` + `GRC_LAKE_SCIM_TENANT_SLUG` still authenticate as a
 deprecated single-tenant fallback; prefer per-tenant tokens.
 
 ## Invite API
@@ -69,17 +69,17 @@ Accept body:
 { "token": "<invite-token-from-email>", "display_name": "Alex" }
 ```
 
-When `TRUSTOPS_COMMERCIAL_HOSTED` is unset, invite routes return **501 Not Implemented**.
+When `GRC_LAKE_COMMERCIAL_HOSTED` is unset, invite routes return **501 Not Implemented**.
 
 ## Pricing and signup
 
 | Method | Path                       | Auth                                | Description                |
 | ------ | -------------------------- | ----------------------------------- | -------------------------- |
 | `GET`  | `/api/v1/platform/pricing` | none                                | Tier list + limits (gated) |
-| `POST` | `/api/v1/signup`           | optional `X-TrustOps-Signup-Secret` | Create tenant + admin user |
+| `POST` | `/api/v1/signup`           | optional `X-GRC Lake-Signup-Secret` | Create tenant + admin user |
 | `GET`  | `/api/v1/platform/usage`   | `auth_admin`                        | Plan tier, usage vs limits |
 
-These routes return **501 Not Implemented** unless `TRUSTOPS_COMMERCIAL_HOSTED=1`.
+These routes return **501 Not Implemented** unless `GRC_LAKE_COMMERCIAL_HOSTED=1`.
 `GET /api/v1/platform/features` (`read`) always answers 200 with which commercial
 surfaces are on (`commercial_hosted`, `plan_usage`, `billing`, `scim`), so a client
 can probe once and skip calls that would return 501. The console uses it to hide
@@ -89,21 +89,21 @@ OSS repository or console.
 
 ## Email delivery
 
-| `TRUSTOPS_EMAIL_PROVIDER` | Behavior                                                       |
+| `GRC_LAKE_EMAIL_PROVIDER` | Behavior                                                       |
 | ------------------------- | -------------------------------------------------------------- |
 | `log` (default)           | Log `{to, subject}` at INFO — safe for dev                     |
 | other                     | Extend `security_lakehouse.commercial.email` with SES/SendGrid |
 
 ## SCIM
 
-SCIM endpoints return raw SCIM JSON (`application/scim+json`, no TrustOps
+SCIM endpoints return raw SCIM JSON (`application/scim+json`, no GRC Lake
 envelope) and SCIM error objects (`urn:ietf:params:scim:api:messages:2.0:Error`
 with `status` and, where relevant, `scimType`), which is what Okta and Entra ID
 parse. Every `/api/v1/scim/v2/*` call except `ServiceProviderConfig` needs
 `Authorization: Bearer <tenant SCIM token>`; the token selects the tenant, so a
 token can never read or change another tenant's users or groups.
 
-### Tokens (tenant admin, TrustOps API)
+### Tokens (tenant admin, GRC Lake API)
 
 | Method   | Path                                | Description                                                 |
 | -------- | ----------------------------------- | ----------------------------------------------------------- |
@@ -128,27 +128,27 @@ provisioning**; the panel is hidden when SCIM is disabled (501).
 | `GET`/`POST`                 | `/api/v1/scim/v2/Groups`                | `filter=displayName eq "…"`; members must be users of the same tenant               |
 | `GET`/`PUT`/`PATCH`/`DELETE` | `/api/v1/scim/v2/Groups/{id}`           | PATCH add/remove/replace `members`, including `members[value eq "…"]`               |
 
-With `TRUSTOPS_SCIM_ROLE_MAP` set, every membership change recomputes the
+With `GRC_LAKE_SCIM_ROLE_MAP` set, every membership change recomputes the
 affected users' roles: the highest-privilege mapped group wins, and a user in no
-mapped group gets `TRUSTOPS_SCIM_DEFAULT_ROLE`. Without a role map, groups are
+mapped group gets `GRC_LAKE_SCIM_DEFAULT_ROLE`. Without a role map, groups are
 stored but never change roles. This has been tested against the RFC 7644 shapes
 Okta and Entra ID send, not yet against a live IdP tenant.
 
 ## Billing (Stripe)
 
 Self-serve plans are bought through Stripe Checkout and managed in the Stripe
-customer portal, so card data never reaches TrustOps. TrustOps calls the Stripe
+customer portal, so card data never reaches GRC Lake. GRC Lake calls the Stripe
 REST API directly (no SDK) and keeps no card or bank data.
 
 ```bash
-export TRUSTOPS_BILLING_ENABLED=1
-export TRUSTOPS_STRIPE_SECRET_KEY_FILE=/run/secrets/stripe_secret_key   # or TRUSTOPS_STRIPE_SECRET_KEY
-export TRUSTOPS_STRIPE_WEBHOOK_SECRET_FILE=/run/secrets/stripe_whsec     # comma-separated while rolling
-export TRUSTOPS_STRIPE_PRICE_STARTER=price_...
-export TRUSTOPS_STRIPE_PRICE_TEAM=price_...
-export TRUSTOPS_STRIPE_PRICE_BUSINESS=price_...
-export TRUSTOPS_PUBLIC_URL=https://trustops.example.com                 # Checkout/portal return URLs
-export TRUSTOPS_BILLING_GRACE_DAYS=7                                     # past-due grace before read-only
+export GRC_LAKE_BILLING_ENABLED=1
+export GRC_LAKE_STRIPE_SECRET_KEY_FILE=/run/secrets/stripe_secret_key   # or GRC_LAKE_STRIPE_SECRET_KEY
+export GRC_LAKE_STRIPE_WEBHOOK_SECRET_FILE=/run/secrets/stripe_whsec     # comma-separated while rolling
+export GRC_LAKE_STRIPE_PRICE_STARTER=price_...
+export GRC_LAKE_STRIPE_PRICE_TEAM=price_...
+export GRC_LAKE_STRIPE_PRICE_BUSINESS=price_...
+export GRC_LAKE_PUBLIC_URL=https://grc-lake.example.com                 # Checkout/portal return URLs
+export GRC_LAKE_BILLING_GRACE_DAYS=7                                     # past-due grace before read-only
 ```
 
 Enterprise stays sales-led: it has no self-serve price, and tenants that never
@@ -183,7 +183,7 @@ Webhook events handled: `checkout.session.completed`,
 | Subscription status                                  | Access                                                 |
 | ---------------------------------------------------- | ------------------------------------------------------ |
 | `active`, `trialing`, none                           | full                                                   |
-| `past_due`, `incomplete`                             | full for `TRUSTOPS_BILLING_GRACE_DAYS`, then read-only |
+| `past_due`, `incomplete`                             | full for `GRC_LAKE_BILLING_GRACE_DAYS`, then read-only |
 | `canceled`, `unpaid`, `incomplete_expired`, `paused` | read-only                                              |
 
 Read-only keeps every record and all reads; write scopes are removed at
@@ -200,7 +200,7 @@ Migration `0017_scim` adds `scim_tokens`, `scim_groups`, `scim_group_members`, a
 Migration `0018_billing` adds `tenant_billing` and `stripe_events`.
 
 ```bash
-security-lakehouse db upgrade --lake build/lakehouse
+grc-lake db upgrade --lake build/lakehouse
 ```
 
 ## Related docs

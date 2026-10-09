@@ -132,7 +132,7 @@ def test_aws_probe_fails_clearly_on_account_mismatch(fake_aws: type[_FakeAWSClie
 
 
 def test_aws_assume_role_probe_also_verifies_account(fake_aws: type[_FakeAWSClient]) -> None:
-    role_arn = f"arn:aws:iam::{ACCOUNT}:role/TrustOpsPostureReadOnlyRole"
+    role_arn = f"arn:aws:iam::{ACCOUNT}:role/GrcLakePostureReadOnlyRole"
     result = probe_aws_access(
         credentials={"account_id": ACCOUNT, "role_arn": role_arn, "external_id": "ext"},
         options={},

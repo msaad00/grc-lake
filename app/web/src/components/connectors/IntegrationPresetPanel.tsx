@@ -40,7 +40,7 @@ export function IntegrationPresetPanel({ connectorId }: Props) {
         </div>
         <div className="rounded-lg border border-line bg-surface px-2.5 py-2">
           <div className="text-xs font-semibold uppercase tracking-wide text-muted">
-            TrustOps needs
+            GRC Lake needs
           </div>
           <p className="mt-1 text-xs leading-5 text-muted">
             {preset.trustOpsInput}

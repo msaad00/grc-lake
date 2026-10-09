@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.error
 import urllib.request
 from typing import Any
@@ -11,6 +10,7 @@ from typing import Any
 from security_lakehouse import netguard
 from security_lakehouse.agents.model_contract import model_messages
 from security_lakehouse.agents.providers import ModelProviderConfig
+from security_lakehouse.runtime_environment import runtime_env
 
 
 class ModelClientError(RuntimeError):
@@ -20,7 +20,7 @@ class ModelClientError(RuntimeError):
 def call_model_json(context: dict[str, Any], provider: ModelProviderConfig) -> dict[str, Any]:
     """Call the configured provider and return parsed JSON.
 
-    This is deliberately optional and dependency-free. TrustOps remains useful
+    This is deliberately optional and dependency-free. GRC Lake remains useful
     when this function is never called.
     """
     if provider.provider == "ollama":
@@ -71,7 +71,7 @@ def _parse_json_content(content: str) -> dict[str, Any]:
 
 def _call_ollama(context: dict[str, Any], provider: ModelProviderConfig) -> dict[str, Any]:
     if not provider.model:
-        raise ModelClientError("TRUSTOPS_AGENT_MODEL is required for ollama")
+        raise ModelClientError("GRC_LAKE_AGENT_MODEL is required for ollama")
     url = provider.base_url.rstrip("/") + "/api/chat"
     payload = {
         "model": provider.model,
@@ -89,13 +89,13 @@ def _call_ollama(context: dict[str, Any], provider: ModelProviderConfig) -> dict
 
 def _call_openai_compatible(context: dict[str, Any], provider: ModelProviderConfig) -> dict[str, Any]:
     if not provider.model:
-        raise ModelClientError("TRUSTOPS_AGENT_MODEL is required for OpenAI-compatible providers")
-    api_key = os.environ.get(provider.api_key_env)
+        raise ModelClientError("GRC_LAKE_AGENT_MODEL is required for OpenAI-compatible providers")
+    api_key = runtime_env().get(provider.api_key_env)
     if not api_key:
         raise ModelClientError(f"{provider.api_key_env} is not set")
     base_url = provider.base_url.rstrip("/") if provider.base_url else "https://api.openai.com/v1"
     try:
-        netguard.assert_url_is_public(base_url, label="TRUSTOPS_AGENT_BASE_URL")
+        netguard.assert_url_is_public(base_url, label="GRC_LAKE_AGENT_BASE_URL")
     except ValueError as exc:
         raise ModelClientError(str(exc)) from exc
     payload = {
@@ -122,13 +122,13 @@ def _call_openai_compatible(context: dict[str, Any], provider: ModelProviderConf
 
 def _call_anthropic(context: dict[str, Any], provider: ModelProviderConfig) -> dict[str, Any]:
     if not provider.model:
-        raise ModelClientError("TRUSTOPS_AGENT_MODEL is required for anthropic")
-    api_key = os.environ.get(provider.api_key_env)
+        raise ModelClientError("GRC_LAKE_AGENT_MODEL is required for anthropic")
+    api_key = runtime_env().get(provider.api_key_env)
     if not api_key:
         raise ModelClientError(f"{provider.api_key_env} is not set")
     anthropic_base = provider.base_url.rstrip("/") if provider.base_url else "https://api.anthropic.com"
     try:
-        netguard.assert_url_is_public(anthropic_base, label="TRUSTOPS_AGENT_BASE_URL")
+        netguard.assert_url_is_public(anthropic_base, label="GRC_LAKE_AGENT_BASE_URL")
     except ValueError as exc:
         raise ModelClientError(str(exc)) from exc
     messages = model_messages(context)
@@ -168,14 +168,14 @@ def _call_bedrock(context: dict[str, Any], provider: ModelProviderConfig) -> dic
     """Call Amazon Bedrock through the model-agnostic Converse API.
 
     Credentials come from the ambient AWS chain (IAM role / IRSA / env), so no
-    API key is held by TrustOps. Converse normalizes the request across model
+    API key is held by GRC Lake. Converse normalizes the request across model
     families, so any Bedrock chat model works without a per-family schema.
     """
     if not provider.model:
-        raise ModelClientError("TRUSTOPS_AGENT_MODEL is required for bedrock")
-    region = provider.region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
+        raise ModelClientError("GRC_LAKE_AGENT_MODEL is required for bedrock")
+    region = provider.region or runtime_env().get("AWS_REGION") or runtime_env().get("AWS_DEFAULT_REGION")
     if not region:
-        raise ModelClientError("bedrock requires a region (TRUSTOPS_AGENT_REGION or AWS_REGION)")
+        raise ModelClientError("bedrock requires a region (GRC_LAKE_AGENT_REGION or AWS_REGION)")
     messages = model_messages(context)
     client = _bedrock_runtime_client(region)
     try:
@@ -210,9 +210,9 @@ def _vertex_access_token() -> str:
 def _call_vertex(context: dict[str, Any], provider: ModelProviderConfig) -> dict[str, Any]:
     """Call Vertex AI ``generateContent`` with an ADC-minted bearer token."""
     if not provider.model:
-        raise ModelClientError("TRUSTOPS_AGENT_MODEL is required for vertex")
+        raise ModelClientError("GRC_LAKE_AGENT_MODEL is required for vertex")
     if not provider.project:
-        raise ModelClientError("vertex requires a project (TRUSTOPS_AGENT_PROJECT)")
+        raise ModelClientError("vertex requires a project (GRC_LAKE_AGENT_PROJECT)")
     location = provider.location or "us-central1"
     token = _vertex_access_token()
     messages = model_messages(context)
@@ -251,10 +251,10 @@ def _call_cortex(context: dict[str, Any], provider: ModelProviderConfig) -> dict
     completion is generated next to the data.
     """
     if not provider.model:
-        raise ModelClientError("TRUSTOPS_AGENT_MODEL is required for snowflake_cortex")
+        raise ModelClientError("GRC_LAKE_AGENT_MODEL is required for snowflake_cortex")
     from security_lakehouse.sinks.snowflake_sink import SnowflakeSink, SnowflakeSinkConfig
 
-    config = SnowflakeSinkConfig.from_env(dict(os.environ))
+    config = SnowflakeSinkConfig.from_env(dict(runtime_env()))
     if config is None:
         raise ModelClientError(
             "snowflake_cortex requires SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, and SNOWFLAKE_PRIVATE_KEY_FILE"

@@ -139,9 +139,9 @@ READ_TOOLS = {
 
 
 def _remote_env(monkeypatch):
-    monkeypatch.setenv("TRUSTOPS_MCP_MODE", "remote")
-    monkeypatch.setenv("TRUSTOPS_API_URL", "https://example.test")
-    monkeypatch.setenv("TRUSTOPS_API_KEY", "fixture")
+    monkeypatch.setenv("GRC_LAKE_MCP_MODE", "remote")
+    monkeypatch.setenv("GRC_LAKE_API_URL", "https://example.test")
+    monkeypatch.setenv("GRC_LAKE_API_KEY", "fixture")
 
 
 def _call(server, name, **arguments):

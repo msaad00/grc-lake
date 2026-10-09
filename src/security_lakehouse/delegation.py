@@ -24,6 +24,7 @@ from typing import Any
 
 from security_lakehouse.connector_errors import ConnectorConfigError
 from security_lakehouse.execution_mode import in_server_mode
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_secret_ref
 
 GCP_IMPERSONATION_FIELD = "impersonate_service_account"
@@ -58,6 +59,7 @@ def azure_credential(credentials: dict[str, Any], env: dict[str, str], *, label:
     Locally, with none of these set, returns ``None`` so callers keep
     ``DefaultAzureCredential``. In server mode that is refused.
     """
+    env = runtime_env(env)
     delegated = azure_app_registration(credentials, label=label)
     if delegated is None:
         return None
@@ -113,7 +115,7 @@ def gcp_impersonation_target(credentials: dict[str, Any]) -> str | None:
         if in_server_mode():
             raise ConnectorConfigError(
                 f"GCP readers in hosted mode require {GCP_IMPERSONATION_FIELD}: a service account in the "
-                "customer project that grants the TrustOps identity the Service Account Token Creator role"
+                "customer project that grants the GRC Lake identity the Service Account Token Creator role"
             )
         return None
     if not _SERVICE_ACCOUNT_EMAIL.fullmatch(target):

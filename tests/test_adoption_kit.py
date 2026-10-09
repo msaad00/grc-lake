@@ -47,16 +47,16 @@ def test_server_profile_requires_auth_secrets_and_ships_no_demo_data() -> None:
     assert server["profiles"] == ["server"]
     assert "--allow-insecure-no-auth" not in command
     assert "fixtures" not in command
-    assert server["environment"]["TRUSTOPS_ENV"] == "production"
-    assert "TRUSTOPS_ALLOW_INSECURE_NO_AUTH" not in server["environment"]
+    assert server["environment"]["GRC_LAKE_ENV"] == "production"
+    assert "GRC_LAKE_ALLOW_INSECURE_NO_AUTH" not in server["environment"]
     assert server["env_file"] == ["trustops.env"]
     demo_volumes = set(compose["services"]["trustops"]["volumes"])
     assert not demo_volumes & set(server["volumes"]), "real lake must never share the demo volume"
 
 
 def test_server_env_example_lists_the_signing_key_without_a_value() -> None:
-    example = (ROOT / "deploy" / "compose" / "trustops.env.example").read_text(encoding="utf-8")
-    assert re.search(r"^TRUSTOPS_COOKIE_SIGNING_KEY=$", example, re.MULTILINE)
+    example = (ROOT / "deploy" / "compose" / "grc-lake.env.example").read_text(encoding="utf-8")
+    assert re.search(r"^GRC_LAKE_COOKIE_SIGNING_KEY=$", example, re.MULTILINE)
     assert "ALLOW_INSECURE" not in example
     gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
     assert re.search(r"^/?trustops\.env$", gitignore, re.MULTILINE)

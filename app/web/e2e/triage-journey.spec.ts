@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 
 test.use({
   timezoneId: "America/New_York",
-  extraHTTPHeaders: process.env.TRUSTOPS_TEST_TOKEN
-    ? { Authorization: `Bearer ${process.env.TRUSTOPS_TEST_TOKEN}` }
+  extraHTTPHeaders: process.env.GRC_LAKE_TEST_TOKEN
+    ? { Authorization: `Bearer ${process.env.GRC_LAKE_TEST_TOKEN}` }
     : {},
 });
 
@@ -102,7 +102,7 @@ test("authenticated evidence request persists in the local store", async ({
   request,
 }) => {
   test.skip(
-    !process.env.TRUSTOPS_TEST_TOKEN,
+    !process.env.GRC_LAKE_TEST_TOKEN,
     "Requires an ephemeral authenticated test session",
   );
   await page.goto("/console/remediation/?tab=evidence&control=SOC2-CC6.4");

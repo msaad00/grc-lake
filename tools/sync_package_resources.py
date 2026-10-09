@@ -8,9 +8,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DESTINATION = ROOT / "src/security_lakehouse/resources"
 SOURCES = {
-    "cloud/aws-role.yaml": ROOT / "deploy/aws/trustops-posture-readonly-role.yaml",
-    "cloud/aws-role.tf": ROOT / "deploy/aws/trustops-posture-readonly-role.tf",
-    "cloud/gcp-reader.tf": ROOT / "deploy/gcp/trustops-posture-reader.tf",
+    "cloud/aws-role.yaml": ROOT / "deploy/aws/grc-lake-posture-readonly-role.yaml",
+    "cloud/aws-role.tf": ROOT / "deploy/aws/grc-lake-posture-readonly-role.tf",
+    "cloud/gcp-reader.tf": ROOT / "deploy/gcp/grc-lake-posture-reader.tf",
     **{f"schemas/{path.name}": path for path in (ROOT / "data/schemas").glob("*.schema.json")},
 }
 

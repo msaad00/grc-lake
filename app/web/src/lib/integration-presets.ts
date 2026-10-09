@@ -17,7 +17,7 @@ const PRESETS: Record<string, IntegrationPreset> = {
     authLabel: "STS assume-role",
     badges: ["STS", "No long-lived keys"],
     summary:
-      "Deploy the customer-owned AWS role, then save the account target. TrustOps verifies STS assume-role after deployment.",
+      "Deploy the customer-owned AWS role, then save the account target. GRC Lake verifies STS assume-role after deployment.",
     providerSetup:
       "CloudFormation, Terraform, or StackSets creates a read-only IAM role in the target account.",
     trustOpsInput: "Account ID for the default role, or a full Role ARN.",
@@ -35,12 +35,12 @@ const PRESETS: Record<string, IntegrationPreset> = {
     summary:
       "Apply the read-only Terraform reader identity in your GCP project, then enter the project ID to stage the connector.",
     providerSetup:
-      "Terraform grants Cloud Asset and IAM read permissions to the TrustOps workload identity.",
+      "Terraform grants Cloud Asset and IAM read permissions to the GRC Lake workload identity.",
     trustOpsInput: "Project ID for the target project.",
     advancedTitle: "Folder or organization rollout",
     advancedDetails: [
       "Apply the same reader module across projects from Terraform or your platform workspace.",
-      "TrustOps probes the configured project before sync lands IAM and asset posture evidence.",
+      "GRC Lake probes the configured project before sync lands IAM and asset posture evidence.",
     ],
   },
   "azure-posture": {
@@ -49,15 +49,15 @@ const PRESETS: Record<string, IntegrationPreset> = {
     authLabel: "Reader role",
     badges: ["Reader role", "No secrets stored"],
     summary:
-      "Grant Reader to the TrustOps Entra app or workload identity, then confirm the subscription. Scheduled sync uses fresh Azure tokens; no passwords are stored.",
+      "Grant Reader to the GRC Lake Entra app or workload identity, then confirm the subscription. Scheduled sync uses fresh Azure tokens; no passwords are stored.",
     providerSetup:
       "Azure Cloud Shell grants Reader at subscription or management-group scope.",
     trustOpsInput:
       "Subscription ID printed by setup or returned after admin consent.",
     advancedTitle: "Management-group rollout",
     advancedDetails: [
-      "Use management-group scope when the same TrustOps identity should read many subscriptions.",
-      "No Azure password or client secret is stored in TrustOps.",
+      "Use management-group scope when the same GRC Lake identity should read many subscriptions.",
+      "No Azure password or client secret is stored in GRC Lake.",
     ],
   },
   "intune-devices": {
@@ -66,9 +66,9 @@ const PRESETS: Record<string, IntegrationPreset> = {
     authLabel: "Graph read-only permission",
     badges: ["DeviceManagementManagedDevices.Read.All", "No long-lived keys"],
     summary:
-      "Grant the TrustOps Entra app or managed identity the Graph application permission DeviceManagementManagedDevices.Read.All, then confirm the tenant. Sync reads encryption, compliance, and jailbreak state only.",
+      "Grant the GRC Lake Entra app or managed identity the Graph application permission DeviceManagementManagedDevices.Read.All, then confirm the tenant. Sync reads encryption, compliance, and jailbreak state only.",
     providerSetup:
-      "An Entra admin grants admin consent for DeviceManagementManagedDevices.Read.All on the TrustOps app registration.",
+      "An Entra admin grants admin consent for DeviceManagementManagedDevices.Read.All on the GRC Lake app registration.",
     trustOpsInput: "Microsoft Entra tenant ID.",
     advancedTitle: "What is collected",
     advancedDetails: [
@@ -114,7 +114,7 @@ const PRESETS: Record<string, IntegrationPreset> = {
     authLabel: "Integration system user",
     badges: ["RaaS report", "Secret reference only"],
     summary:
-      "Build a Workday custom report with the TrustOps column contract, share it with a read-only integration system user, and enter its JSON URL. Only the contract columns are stored.",
+      "Build a Workday custom report with the GRC Lake column contract, share it with a read-only integration system user, and enter its JSON URL. Only the contract columns are stored.",
     providerSetup:
       "A Workday admin creates the custom report, enables it as a web service, and grants the integration system user view access.",
     trustOpsInput:
@@ -167,7 +167,7 @@ const PRESETS: Record<string, IntegrationPreset> = {
     summary:
       "Bind a dedicated service account to a get/list-only ClusterRole, then name the cluster. Sync reads RBAC bindings, pod security settings, network policies, image sources, and API server audit flags where visible.",
     providerSetup:
-      "A cluster admin applies the trustops-config-reader ClusterRole and binding (docs/CONNECTORS.md), then issues a kubeconfig for that identity or runs TrustOps in-cluster.",
+      "A cluster admin applies the grc-lake-config-reader ClusterRole and binding (docs/CONNECTORS.md), then issues a kubeconfig for that identity or runs GRC Lake in-cluster.",
     trustOpsInput:
       "Cluster name, optional kubeconfig context and path reference, optional allowed registries.",
     advancedTitle: "What is collected",
@@ -198,7 +198,7 @@ const PRESETS: Record<string, IntegrationPreset> = {
     authLabel: "Service principal (OAuth M2M)",
     badges: ["Unity Catalog SELECT only", "Short-lived tokens"],
     summary:
-      "Run the Unity Catalog bootstrap to create the four TrustOps evidence views, grant a service principal CAN USE on one SQL warehouse and SELECT on the views, then enter the workspace, warehouse, and schema.",
+      "Run the Unity Catalog bootstrap to create the four GRC Lake evidence views, grant a service principal CAN USE on one SQL warehouse and SELECT on the views, then enter the workspace, warehouse, and schema.",
     providerSetup:
       "deploy/databricks/bootstrap_poc.sql creates the views over system.access.audit and the read grants; a workspace admin grants CAN USE on the SQL warehouse.",
     trustOpsInput:
@@ -232,7 +232,7 @@ const PRESETS: Record<string, IntegrationPreset> = {
     authLabel: "Read-only IAM role or catalog token",
     badges: ["Read-only scans", "OCSF presets"],
     summary:
-      "Point TrustOps at the Iceberg tables or Parquet data you already run. For Amazon Security Lake, choose Glue and the region; the OCSF presets map CloudTrail and Security Hub tables to evidence.",
+      "Point GRC Lake at the Iceberg tables or Parquet data you already run. For Amazon Security Lake, choose Glue and the region; the OCSF presets map CloudTrail and Security Hub tables to evidence.",
     providerSetup:
       "Grant a read-only role glue:GetDatabase and glue:GetTable on the lake database plus s3:GetObject and s3:ListBucket on the data prefix, or issue a short-lived REST catalog token.",
     trustOpsInput:
@@ -273,7 +273,7 @@ const PRESETS: Record<string, IntegrationPreset> = {
     advancedTitle: "System Log option",
     advancedDetails: [
       "Use Okta System Log as a separate event-stream connector when login events are needed.",
-      "TrustOps stores the reference name, not the token value.",
+      "GRC Lake stores the reference name, not the token value.",
     ],
   },
   "okta-system-log": {
@@ -322,8 +322,8 @@ const PRESETS: Record<string, IntegrationPreset> = {
     advancedTitle: "Directory scopes",
     advancedDetails: [
       "Use directory.users.readonly, directory.groups.readonly, and directory.user.security.readonly.",
-      "TrustOps stores the reference name, not the token value.",
-      "Unattended sync needs all three refresh fields; TrustOps mints access tokens on demand and never persists them.",
+      "GRC Lake stores the reference name, not the token value.",
+      "Unattended sync needs all three refresh fields; GRC Lake mints access tokens on demand and never persists them.",
     ],
   },
 };

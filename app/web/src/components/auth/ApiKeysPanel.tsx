@@ -43,11 +43,11 @@ function mcpConfigSnippet(apiUrl: string, token: string): string {
   return JSON.stringify(
     {
       mcpServers: {
-        trustops: {
-          command: "trustops-mcp",
+        "grc-lake": {
+          command: "grc-lake-mcp",
           env: {
-            TRUSTOPS_API_URL: apiUrl,
-            TRUSTOPS_API_KEY: token,
+            GRC_LAKE_API_URL: apiUrl,
+            GRC_LAKE_API_KEY: token,
           },
         },
       },

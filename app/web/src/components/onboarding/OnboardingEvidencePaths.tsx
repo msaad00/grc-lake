@@ -10,7 +10,7 @@ const PATHS = [
     icon: Plug,
     title: "Connect sources directly",
     description:
-      "Use a read-only cloud, identity, SIEM, or source connector. TrustOps probes access, syncs raw observations, normalizes them, and evaluates controls.",
+      "Use a read-only cloud, identity, SIEM, or source connector. GRC Lake probes access, syncs raw observations, normalizes them, and evaluates controls.",
     href: "/connectors/?onboarding=1",
     action: "Choose a connector",
   },
@@ -29,7 +29,7 @@ export function OnboardingEvidencePaths() {
     <Card className="overflow-hidden border-brand/20 bg-surfaceMuted">
       <CardHeader className="p-3 pb-2">
         <CardTitle className="text-base">
-          Choose how evidence enters TrustOps
+          Choose how evidence enters GRC Lake
         </CardTitle>
         <p className="text-sm text-muted">
           Both paths end in the same normalized evidence → control evaluation →

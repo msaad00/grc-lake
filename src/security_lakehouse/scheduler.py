@@ -12,15 +12,15 @@ only and a separate lake-wide ``eval_schedule`` (default ``every 6h``) runs
 ``run_lake_eval`` to materialize and evaluate.
 
 Retention (``lake retention`` / ``lake operational-retention``) becomes
-eligible when ``TRUSTOPS_RETENTION_SCHEDULE`` is set; see
+eligible when ``GRC_LAKE_RETENTION_SCHEDULE`` is set; see
 :mod:`security_lakehouse.scheduled_retention`. Generation retention runs per
 lake; operational retention runs once per deployment root because job rows and
 request-audit logs belong to the root, never to one tenant.
 
 Two execution surfaces:
-  * ``security-lakehouse scheduler tick --lake build/lakehouse`` runs the
+  * ``grc-lake scheduler tick --lake build/lakehouse`` runs the
     tick once and exits (intended for system cron / k8s CronJob).
-  * ``security-lakehouse scheduler run --lake build/lakehouse`` runs a
+  * ``grc-lake scheduler run --lake build/lakehouse`` runs a
     long-lived daemon ticking every N seconds.
 
 Schedule grammar (intentionally small):

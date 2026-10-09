@@ -218,7 +218,7 @@ def test_reader_during_a_write_waits_for_the_signed_tip(tmp_path: Path, monkeypa
     """
     import threading
 
-    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "k" * 48)
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "k" * 48)
     _decide(tmp_path, "approve", ISO)
     appended, release = threading.Event(), threading.Event()
     original = mapping_review._write_tip
@@ -498,7 +498,7 @@ def _first_proposed_item() -> dict[str, str]:
 
 @pytest.fixture
 def _no_signing_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("TRUSTOPS_COOKIE_SIGNING_KEY", raising=False)
+    monkeypatch.delenv("GRC_LAKE_COOKIE_SIGNING_KEY", raising=False)
 
 
 def _rewrite_first_decision(lake: Path, **changes: str) -> None:
@@ -570,7 +570,7 @@ def test_batch_is_written_with_a_single_append(tmp_path: Path, monkeypatch: pyte
 def test_signed_tip_detects_a_consistently_rewritten_chain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from security_lakehouse.ledger import canonical_record_hash
 
-    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "k" * 48)
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "k" * 48)
     _decide(tmp_path, "reject", SOC2_REVIEWED)
     log = verify_review_log(tmp_path)
     assert log["ok"] is True and log["tip_mac"] == "verified"
@@ -589,7 +589,7 @@ def test_signed_tip_detects_a_consistently_rewritten_chain(tmp_path: Path, monke
 
 
 def test_signed_tip_missing_sidecar_is_unverified(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TRUSTOPS_COOKIE_SIGNING_KEY", "k" * 48)
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "k" * 48)
     _decide(tmp_path, "approve", ISO)
     mapping_review.review_tip_path(tmp_path).unlink()
     log = verify_review_log(tmp_path)

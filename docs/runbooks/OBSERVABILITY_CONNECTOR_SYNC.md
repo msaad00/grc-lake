@@ -18,9 +18,9 @@ scheduler tick / manual sync
 
 | Source                 | Path / route                                                  | Use for                           |
 | ---------------------- | ------------------------------------------------------------- | --------------------------------- |
-| Connector run log      | `$TRUSTOPS_LAKE/gold/connector_runs.jsonl`                    | sync/probe/discover history       |
-| Connector config log   | `$TRUSTOPS_LAKE/gold/connector_config.jsonl`                  | enable/disable, scope changes     |
-| Scheduler state        | `$TRUSTOPS_LAKE/gold/scheduler_state.jsonl`                   | last cron fire times              |
+| Connector run log      | `$GRC_LAKE_LAKE/gold/connector_runs.jsonl`                    | sync/probe/discover history       |
+| Connector config log   | `$GRC_LAKE_LAKE/gold/connector_config.jsonl`                  | enable/disable, scope changes     |
+| Scheduler state        | `$GRC_LAKE_LAKE/gold/scheduler_state.jsonl`                   | last cron fire times              |
 | Per-connector runs API | `GET /api/v1/connectors/{connector_id}/runs`                  | paginated run history             |
 | Ingestion summary API  | `GET /api/v1/ingestion/status`                                | fleet health, recommended actions |
 | Evidence freshness API | `GET /api/v1/evidence/freshness?status=stale,expired,missing` | SLO breaches                      |
@@ -51,35 +51,35 @@ before persistence.
 **API (authenticated):**
 
 ```bash
-curl -s "$TRUSTOPS_URL/api/v1/ingestion/status" \
-  -H "authorization: Bearer $TRUSTOPS_API_KEY" | jq '.data.state, .data.summary'
+curl -s "$GRC_LAKE_URL/api/v1/ingestion/status" \
+  -H "authorization: Bearer $GRC_LAKE_API_KEY" | jq '.data.state, .data.summary'
 ```
 
 **Latest sync for one connector:**
 
 ```bash
-curl -s "$TRUSTOPS_URL/api/v1/connectors/snowflake-evidence-lake/runs?limit=5" \
-  -H "authorization: Bearer $TRUSTOPS_API_KEY" | jq '.data[] | {kind, result, occurred_at, duration_ms, evidence_count}'
+curl -s "$GRC_LAKE_URL/api/v1/connectors/snowflake-evidence-lake/runs?limit=5" \
+  -H "authorization: Bearer $GRC_LAKE_API_KEY" | jq '.data[] | {kind, result, occurred_at, duration_ms, evidence_count}'
 ```
 
 **Local lake tail:**
 
 ```bash
-tail -n 20 "$TRUSTOPS_LAKE/gold/connector_runs.jsonl" | jq -s '.'
+tail -n 20 "$GRC_LAKE_LAKE/gold/connector_runs.jsonl" | jq -s '.'
 ```
 
 **Helm scheduler CronJob:**
 
 ```bash
-NS=trustops
+NS=grc-lake
 kubectl -n "$NS" get cronjob
 kubectl -n "$NS" get jobs -l app.kubernetes.io/component=scheduler --sort-by=.metadata.creationTimestamp
-kubectl -n "$NS" logs job/trustops-scheduler-<timestamp>
+kubectl -n "$NS" logs job/grc-lake-scheduler-<timestamp>
 ```
 
-The chart runs `security-lakehouse scheduler tick --lake /lake` on
+The chart runs `grc-lake scheduler tick --lake /lake` on
 `scheduler.schedule` (default `*/5 * * * *`). Both the API Deployment and
-scheduler CronJob mount the same PVC (`{release}-lake`) at `TRUSTOPS_LAKE`.
+scheduler CronJob mount the same PVC (`{release}-lake`) at `GRC_LAKE_LAKE`.
 
 ## Recommended Dashboard Panels
 
@@ -116,21 +116,21 @@ but has no successful sync within its SLO.
 
 | Series                                   | Labels                   | Aggregation  |
 | ---------------------------------------- | ------------------------ | ------------ |
-| `trustops_connector_sync_total`          | `connector_id`, `result` | counter      |
-| `trustops_connector_sync_duration_ms`    | `connector_id`, `result` | histogram    |
-| `trustops_connector_sync_evidence_count` | `connector_id`           | gauge (last) |
-| `trustops_scheduler_tick_total`          | `result`                 | counter      |
+| `grc-lake_connector_sync_total`          | `connector_id`, `result` | counter      |
+| `grc-lake_connector_sync_duration_ms`    | `connector_id`, `result` | histogram    |
+| `grc-lake_connector_sync_evidence_count` | `connector_id`           | gauge (last) |
+| `grc-lake_scheduler_tick_total`          | `result`                 | counter      |
 
 Example PromQL-style queries once exported:
 
 ```promql
 # Sync error rate (5m)
-sum(rate(trustops_connector_sync_total{kind="sync",result="error"}[5m]))
-  / sum(rate(trustops_connector_sync_total{kind="sync"}[5m]))
+sum(rate(grc-lake_connector_sync_total{kind="sync",result="error"}[5m]))
+  / sum(rate(grc-lake_connector_sync_total{kind="sync"}[5m]))
 
 # p95 sync duration by connector
 histogram_quantile(0.95,
-  sum by (connector_id, le) (rate(trustops_connector_sync_duration_ms_bucket[1h])))
+  sum by (connector_id, le) (rate(grc-lake_connector_sync_duration_ms_bucket[1h])))
 ```
 
 ## Alert Rules
@@ -139,7 +139,7 @@ histogram_quantile(0.95,
 | -------------------------- | --------------------------------------------------- | ---------------------------------------------------- |
 | ConnectorSyncFailed        | latest `kind=sync` has `result=error`               | Inspect sanitized `error`; re-probe; check secrets   |
 | ConnectorSilent            | enabled + `freshness_state=stale` or `never_synced` | Run manual sync; verify scheduler CronJob            |
-| SchedulerJobFailed         | Kubernetes Job `Failed` for `{release}-scheduler`   | Check pod logs; verify PVC mount and `TRUSTOPS_LAKE` |
+| SchedulerJobFailed         | Kubernetes Job `Failed` for `{release}-scheduler`   | Check pod logs; verify PVC mount and `GRC_LAKE_LAKE` |
 | IngestionDegraded          | `ingestion.status.state` in `degraded`, `blocked`   | Follow `recommended_actions` in status payload       |
 | EvidenceFreshnessSLOBreach | `stale_evidence` count increases                    | Identify sources via `/api/v1/evidence/freshness`    |
 
@@ -150,14 +150,14 @@ Native OTel instrumentation is on the
 
 ### A. Sidecar / log shipper on `connector_runs.jsonl`
 
-Tail `$TRUSTOPS_LAKE/gold/connector_runs.jsonl` with Fluent Bit, Vector, or
+Tail `$GRC_LAKE_LAKE/gold/connector_runs.jsonl` with Fluent Bit, Vector, or
 Promtail. Parse JSON lines and emit:
 
 - log records with `connector_id`, `kind`, `result`, `duration_ms`
 - derived metrics via your collector's log-to-metrics processor
 
 Mount the lake PVC read-only on the shipper pod in the same namespace as
-TrustOps.
+GRC Lake.
 
 ### B. Synthetic checker CronJob
 
@@ -165,9 +165,9 @@ Poll `/api/v1/ingestion/status` every minute from a small CronJob. Export
 custom metrics to Prometheus Pushgateway or CloudWatch embedded metrics:
 
 ```bash
-STATE=$(curl -s "$TRUSTOPS_URL/api/v1/ingestion/status" -H "authorization: Bearer $KEY" \
+STATE=$(curl -s "$GRC_LAKE_URL/api/v1/ingestion/status" -H "authorization: Bearer $KEY" \
   | jq -r '.data.state')
-echo "trustops_ingestion_state{state=\"$STATE\"} 1"
+echo "grc-lake_ingestion_state{state=\"$STATE\"} 1"
 ```
 
 ### C. Future first-class OTel (recommended end state)
@@ -181,15 +181,15 @@ When instrumented, export from the API and scheduler processes:
 | `trustops.scheduler.tick` span                                      | each `scheduler tick`     |
 | Attributes: `connector_id`, `tenant_id`, `result`, `evidence_count` |                           |
 
-Use `TRUSTOPS_OTEL_EXPORTER_OTLP_ENDPOINT` (planned) or standard
+Use `GRC_LAKE_OTEL_EXPORTER_OTLP_ENDPOINT` (planned) or standard
 `OTEL_EXPORTER_OTLP_ENDPOINT` with resource attributes:
 
 ```yaml
 env:
   - name: OTEL_SERVICE_NAME
-    value: trustops
+    value: grc-lake
   - name: OTEL_RESOURCE_ATTRIBUTES
-    value: deployment.environment=prod,service.namespace=trustops
+    value: deployment.environment=prod,service.namespace=grc-lake
 ```
 
 Scrape `/api/healthz` for uptime; do **not** expose lake paths on public

@@ -1,4 +1,4 @@
-name: trustops-codeql
+name: grc-lake-codeql
 
 queries:
   - uses: security-and-quality
@@ -16,5 +16,5 @@ paths-ignore:
   # API-key browser login hashes bearer material before repository lookup
   # (tests/test_users_admin.py::test_session_from_key_sets_cookie).
   - src/security_lakehouse/auth/api_key_session.py
-  # Session cookies are always signed (TRUSTOPS_COOKIE_SIGNING_KEY required at startup).
+  # Session cookies are always signed (GRC_LAKE_COOKIE_SIGNING_KEY required at startup).
   - src/security_lakehouse/auth/sessions.py

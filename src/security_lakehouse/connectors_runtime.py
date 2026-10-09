@@ -21,6 +21,7 @@ from security_lakehouse.ingestion import backoff
 from security_lakehouse.ingestion.paginate import paginate
 from security_lakehouse.io import read_json
 from security_lakehouse.models import parse_event_time, utc_iso
+from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_ref_or_default
 
 CONNECTOR_ID = "runtime-gateway"
@@ -115,7 +116,7 @@ class RuntimeGatewayClient:
             headers={
                 "accept": "application/json",
                 "authorization": f"Bearer {self.token}",
-                "user-agent": "trustops-security-data-lake",
+                "user-agent": "grc-lake",
             },
         )
 
@@ -248,6 +249,7 @@ def probe_runtime_gateway_access(
     options: dict[str, Any],
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    env = runtime_env(env)
     host, token, stream = _connection_params(credentials, options, env=env)
     if not host:
         raise ValueError("runtime-gateway probe requires host")
@@ -260,6 +262,7 @@ def discover_runtime_gateway_scope(
     options: dict[str, Any],
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    env = runtime_env(env)
     host, token, stream = _connection_params(credentials, options, env=env)
     if not host:
         return {"ok": False, "error": "host is required", "selectors": []}
@@ -275,13 +278,14 @@ def _connection_params(
     *,
     env: dict[str, str] | None = None,
 ) -> tuple[str, str, str]:
+    env = runtime_env(env)
     environment = env or {}
     host = str(credentials.get("host") or environment.get("RUNTIME_GATEWAY_URL") or "").strip()
     token = str(
         credentials.get("token")
         or resolve_ref_or_default(
             credentials.get("credential_ref"),
-            "TRUSTOPS_RUNTIME_GATEWAY_TOKEN",
+            "GRC_LAKE_RUNTIME_GATEWAY_TOKEN",
             environment,
             field="credential_ref",
             file_first=False,

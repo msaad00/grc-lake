@@ -50,9 +50,29 @@ def test_failed_startup_still_collects_logs_removes_volume_and_deletes_secret(tm
     monkeypatch.setitem(qualify.__globals__, "run", run)
     output = tmp_path / "receipt"
     with pytest.raises(RuntimeError, match="injected startup failure"):
-        qualify("trustops:ci", output)
+        qualify("grc-lake:ci", output)
     assert any("logs" in call for call in calls)
     assert any(call[-2:] == ("down", "--volumes") for call in calls)
-    assert not (output / "trustops.env").exists()
+    assert not (output / "grc-lake.env").exists()
     assert '"ok": false' in (output / "result.json").read_text()
     assert (output / "container.log").read_text().strip() == "synthetic diagnostic"
+
+
+def test_smoke_volumes_are_isolated_from_operator_volumes(tmp_path, monkeypatch) -> None:
+    qualify = runpy.run_path(str(SCRIPT))["qualify"]
+
+    def run(*args, **kwargs):
+        if "up" in args:
+            raise RuntimeError("stop before starting")
+        return "diagnostic"
+
+    monkeypatch.setitem(qualify.__globals__, "run", run)
+    output = tmp_path / "receipt"
+    with pytest.raises(RuntimeError, match="stop before starting"):
+        qualify("grc-lake:ci", output)
+    import yaml
+
+    override = yaml.safe_load((output / "override.yaml").read_text().replace("!override", ""))
+    project = (output / "project-name.txt").read_text().strip()
+    assert override["volumes"]["grc-lake-demo-lake"]["name"] == project + "-demo"
+    assert override["volumes"]["grc-lake-lake"]["name"] == project + "-server"

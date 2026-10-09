@@ -22,10 +22,10 @@ Visual references for architecture, ingestion, auth, and deployment.
 
 | Asset                                                                                  | Use                          |
 | -------------------------------------------------------------------------------------- | ---------------------------- |
-| [trustops-assessment-architecture.svg](../images/trustops-assessment-architecture.svg) | Continuous assessment hero   |
-| [trustops-readonly-connections.svg](../images/trustops-readonly-connections.svg)       | Enterprise read-only connect |
-| [trustops-identity-boundary.svg](../images/trustops-identity-boundary.svg)             | SSO + API key boundary       |
-| [trustops-readme-banner.svg](../images/trustops-readme-banner.svg)                     | README banner                |
+| [grc-lake-assessment-architecture.svg](../images/grc-lake-assessment-architecture.svg) | Continuous assessment hero   |
+| [grc-lake-readonly-connections.svg](../images/grc-lake-readonly-connections.svg)       | Enterprise read-only connect |
+| [grc-lake-identity-boundary.svg](../images/grc-lake-identity-boundary.svg)             | SSO + API key boundary       |
+| [grc-lake-readme-banner.svg](../images/grc-lake-readme-banner.svg)                     | README banner                |
 
 ## Console diagrams
 

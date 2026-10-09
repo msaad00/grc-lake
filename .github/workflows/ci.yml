@@ -79,7 +79,7 @@ jobs:
           python -m venv "$install_root/venv"
           uv pip install --python "$install_root/venv/bin/python" "$wheel[server]"
           cd "$install_root"
-          unset PYTHONPATH TRUSTOPS_DATA_DIR
+          unset PYTHONPATH GRC_LAKE_DATA_DIR
           "$install_root/venv/bin/python" "$smoke" "$install_root/venv"
           export PYTHONUSERBASE="$install_root/user"
           python -m pip install --user --ignore-installed "$wheel[server]"
@@ -207,24 +207,24 @@ jobs:
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
       - name: Validate sample evidence
-        run: uv run security-lakehouse validate --raw data/raw/security_events.jsonl
+        run: uv run grc-lake validate --raw data/raw/security_events.jsonl
       - name: Validate catalog and mappings
         run: uv run python -c "from security_lakehouse.catalog import validate_catalog; from security_lakehouse.programs import validate_program_catalog; errors = validate_catalog() + validate_program_catalog(); assert not errors, errors"
       - name: Validate connector access contracts
-        run: uv run security-lakehouse connectors validate
+        run: uv run grc-lake connectors validate
       - name: Run pipeline smoke
-        run: uv run security-lakehouse pipeline run --raw data/raw/security_events.jsonl --out build/lakehouse
+        run: uv run grc-lake pipeline run --raw data/raw/security_events.jsonl --out build/lakehouse
       - name: Validate generated lake artifacts
         run: uv run python tools/validate_ci_artifacts.py --generated
       - name: Validate current posture API payload
-        run: uv run security-lakehouse assessment status --lake build/lakehouse
+        run: uv run grc-lake assessment status --lake build/lakehouse
       - name: Render dashboard
-        run: uv run security-lakehouse dashboard --lake build/lakehouse --out build/dashboard/index.html
+        run: uv run grc-lake dashboard --lake build/lakehouse --out build/dashboard/index.html
       - name: Verify dashboard artifact
         run: test -s build/dashboard/index.html && grep -q 'id="app-data"' build/dashboard/index.html
       - name: Run live API smoke
         env:
-          TRUSTOPS_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
         run: uv run python tools/api_smoke.py
 
   python-tests:
@@ -253,7 +253,7 @@ jobs:
         run: uv sync --frozen --all-extras
       - name: Run Python test shard
         env:
-          TRUSTOPS_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
           SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
           COVERAGE_FILE: build/coverage-shard-${{ matrix.shard }}.data
         run: >-
@@ -394,9 +394,9 @@ jobs:
         with:
           version: v3.16.0
       - name: helm lint
-        run: helm lint deploy/helm/trustops
+        run: helm lint deploy/helm/grc-lake
       - name: helm template
-        run: helm template trustops deploy/helm/trustops > /tmp/render.yaml
+        run: helm template grc-lake deploy/helm/grc-lake > /tmp/render.yaml
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.9.5
@@ -431,27 +431,27 @@ jobs:
           push: false
           load: true
           provenance: false
-          tags: trustops:ci
+          tags: grc-lake:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Scan image (fixable HIGH/CRITICAL fail the build)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: trustops:ci
+          image-ref: grc-lake:ci
           version: v0.70.0
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
       - name: Exercise Compose quickstart against the built image
-        run: python3 tools/compose_smoke.py --image trustops:ci
+        run: python3 tools/compose_smoke.py --image grc-lake:ci
       - name: Clean up Compose smoke resources
         if: always()
         run: |
           if [ -f build/compose-smoke/project-name.txt ]; then
-            touch build/compose-smoke/trustops.env
+            touch build/compose-smoke/grc-lake.env
             docker compose -p "$(cat build/compose-smoke/project-name.txt)" \
               -f build/compose-smoke/compose.yaml -f build/compose-smoke/override.yaml down --volumes
-            rm -f build/compose-smoke/trustops.env
+            rm -f build/compose-smoke/grc-lake.env
           fi
       - name: Retain Compose smoke diagnostics
         if: always()
@@ -497,5 +497,5 @@ jobs:
         run: npx playwright install chromium --with-deps
       - name: Console Playwright smoke
         env:
-          TRUSTOPS_COOKIE_SIGNING_KEY: ci-e2e-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: ci-e2e-cookie-signing-key
         run: bash tools/run_e2e_console.sh

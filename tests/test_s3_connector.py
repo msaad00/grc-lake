@@ -106,7 +106,7 @@ def test_s3_probe_and_discovery_with_role() -> None:
             "error": None,
         }
         probe = probe_s3_access(
-            credentials={"role_arn": "arn:aws:iam::123456789012:role/TrustOpsEvidenceRead"},
+            credentials={"role_arn": "arn:aws:iam::123456789012:role/GrcLakeEvidenceRead"},
             options={"bucket": "trustops-evidence", "prefix": "bundles/"},
         )
     assert probe["ok"] is True
@@ -120,7 +120,7 @@ def test_s3_probe_and_discovery_with_role() -> None:
             "recommended_options": {"bucket": "trustops-evidence", "prefix": "bundles/"},
         }
         scope = discover_s3_scope(
-            credentials={"role_arn": "arn:aws:iam::123456789012:role/TrustOpsEvidenceRead"},
+            credentials={"role_arn": "arn:aws:iam::123456789012:role/GrcLakeEvidenceRead"},
             options={"bucket": "trustops-evidence", "prefix": "bundles/"},
         )
     assert scope["ok"] is True

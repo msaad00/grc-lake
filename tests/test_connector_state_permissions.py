@@ -2,7 +2,7 @@
 
 `gold/connector_config.jsonl` holds the access path for every configured
 connector. Secret-shaped values are redacted before the write, but what remains
-still identifies how TrustOps reaches a customer account -- role ARNs, account
+still identifies how GRC Lake reaches a customer account -- role ARNs, account
 ids, hosts, usernames, and the AWS External ID, which `connector_runner` reads
 back from this file at sync time. At the default 0644 any local account on the
 host can read all of it.
@@ -71,7 +71,7 @@ def test_the_fingerprint_salt_is_per_install_and_owner_only(tmp_path: Path) -> N
     """The salt used to be a compile-time constant, identical on every install.
 
     `credential_fingerprint` is readable at `read` scope, so one rainbow table
-    over likely credential values worked against every TrustOps deployment at
+    over likely credential values worked against every GRC Lake deployment at
     once. A per-install salt makes that table worth nothing anywhere else.
     """
     from security_lakehouse.connector_state import _access_fingerprint, _fingerprint_salt

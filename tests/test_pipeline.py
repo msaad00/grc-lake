@@ -233,7 +233,7 @@ def test_dashboard_render_tolerates_empty_lake(tmp_path: Path) -> None:
     out = render_dashboard(empty_lake, tmp_path / "empty.html")
     html = out.read_text(encoding="utf-8")
     assert ">Overview<" in html
-    assert "TrustOps" in html
+    assert "GRC Lake" in html
 
 
 def test_dashboard_render_uses_gold_data(tmp_path: Path) -> None:
@@ -245,7 +245,7 @@ def test_dashboard_render_uses_gold_data(tmp_path: Path) -> None:
     # The frozen report renders its stable heading and embeds the current
     # assessment payload for the downstream auditor.
     assert ">Overview<" in html
-    assert "TrustOps" in html
+    assert "GRC Lake" in html
     assert "SOC2-CC6.1" in html
     assert "container:rag-api@sha256:91ab" in html
     # Data payload is retained for offline review.
@@ -312,7 +312,7 @@ def test_offline_fallback_uses_the_console_page_name() -> None:
 
     html = _fallback_html({})
     assert ">Overview<" in html
-    assert "TrustOps" in html
+    assert "GRC Lake" in html
 
 
 def test_empty_lake_is_not_evaluated_rather_than_ready(tmp_path: Path) -> None:

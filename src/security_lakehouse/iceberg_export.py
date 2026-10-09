@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from security_lakehouse import netguard
 from security_lakehouse.execution_mode import in_server_mode
 from security_lakehouse.parquet_export import SCHEMA_VERSION, export_parquet
 from security_lakehouse.secret_refs import resolve_secret_ref
@@ -126,7 +127,7 @@ def _identifier(value):
     return value
 
 
-def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_http_localhost=False):
+def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_http_localhost=False, pin_public=False):
     """Connect with an externally supplied short-lived bearer token, held in memory.
 
     No client-secret argument, credential file, implicit named catalog, or OAuth
@@ -173,6 +174,10 @@ def rest_catalog(uri, *, warehouse, token_env="TRUSTOPS_ICEBERG_TOKEN", allow_ht
             def _create_session(self):
                 session = super()._create_session()
                 session.trust_env = False
+                if pin_public:
+                    adapter = netguard.pinned_requests_adapter(label="iceberg rest catalog")
+                    session.mount("https://", adapter)
+                    session.mount("http://", adapter)
                 request = session.request
 
                 def bounded_request(method, url, **kwargs):

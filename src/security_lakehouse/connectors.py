@@ -26,7 +26,17 @@ VALID_PRODUCTION_STATUSES = {"primary_lake", "supported_connector", "local_demo"
 VALID_RELEASE_STAGES = {"ga", "preview"}
 DENIED_PERMISSION_WORDS = {"admin", "delete", "drop", "modify", "owner", "write all", "root"}
 EXPLICIT_READ_ONLY_PERMISSIONS = {"administration:read"}
-SENSITIVE_FIELD_NAMES = {"password", "secret", "token", "private_key", "client_secret", "api_key"}
+SENSITIVE_FIELD_NAMES = {
+    "password",
+    "passphrase",
+    "secret",
+    "token",
+    "private_key",
+    "client_secret",
+    "api_key",
+    "apikey",
+    "authorization",
+}
 
 
 def load_connector_catalog(path: str | Path | None = None) -> dict[str, dict[str, Any]]:

@@ -12,6 +12,47 @@ from security_lakehouse import netguard
 from security_lakehouse.netguard import assert_resolved_ip_is_public, assert_url_is_public
 
 
+@pytest.mark.parametrize("url", ["http://a%2eb.evil.test/", "https://evil%2Etest/x", "http://%31%32%37.0.0.1/"])
+def test_percent_encoded_hosts_are_rejected(url: str) -> None:
+    with pytest.raises(ValueError, match="percent-encoded"):
+        assert_url_is_public(url)
+
+
+def test_percent_encoded_host_cannot_bypass_the_pinned_connection(monkeypatch) -> None:
+    import http.server
+    import threading
+
+    real = socket.getaddrinfo
+    zone = {"a%2eb.evil.test": "93.184.216.34", "a.b.evil.test": "127.0.0.1"}
+
+    def fake(host, port, *args, **kwargs):
+        if host in zone:
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (zone[host], port or 0))]
+        return real(host, port, *args, **kwargs)
+
+    hits: list[str] = []
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802
+            hits.append(self.path)
+            self.send_response(200)
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    monkeypatch.setattr(socket, "getaddrinfo", fake)
+    try:
+        request = urllib.request.Request(f"http://a%2eb.evil.test:{server.server_address[1]}/meta")
+        with pytest.raises(ValueError):
+            netguard.open_public(request, timeout=3)
+    finally:
+        server.shutdown()
+    assert hits == []
+
+
 def test_assert_resolved_ip_is_public_blocks_localhost() -> None:
     with pytest.raises(ValueError, match="localhost"):
         assert_resolved_ip_is_public("localhost")

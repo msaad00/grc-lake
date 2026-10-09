@@ -34,7 +34,7 @@ import ssl
 import urllib.request
 from collections.abc import Callable
 from typing import Any
-from urllib.parse import urlparse, urlsplit
+from urllib.parse import unquote, urlparse, urlsplit
 
 ALLOWED_SCHEMES = {"http", "https"}
 
@@ -125,6 +125,10 @@ def assert_url_is_public(url: str, *, label: str = "target") -> str:
     host = parsed.hostname
     if not host:
         raise ValueError(f"{label} URL has no host: {url!r}")
+    # urllib unquotes the host it connects to, so an encoded name would be
+    # validated as one host and dialled as another, outside the pinned socket.
+    if "%" in host or unquote(host) != host:
+        raise ValueError(f"{label} URL host must not be percent-encoded")
     assert_resolved_ip_is_public(host, label=label)
     return host
 
@@ -288,3 +292,57 @@ def open_public(
         validate=lambda url: assert_url_is_public(url, label=label),
         label=label,
     )
+
+
+def pinned_requests_adapter(*, label: str = "target") -> Any:
+    """A ``requests`` adapter whose sockets go to an address validated as public.
+
+    Like ``PinnedHTTPSConnection``: the host is resolved once per connection,
+    every answer must be public, and TLS SNI/verification stay on the name.
+    Proxies are refused, so mount it on a session with ``trust_env = False``.
+    """
+    from requests.adapters import HTTPAdapter
+    from urllib3.connection import HTTPConnection, HTTPSConnection
+    from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
+    from urllib3.exceptions import NewConnectionError
+    from urllib3.util.connection import create_connection
+
+    def new_conn(conn: Any) -> socket.socket:
+        try:
+            addresses = assert_resolved_ip_is_public(conn._dns_host, label=label)
+        except ValueError as exc:
+            raise NewConnectionError(conn, str(exc)) from None
+        last_error: OSError | None = None
+        for raw_ip in addresses:
+            try:
+                return create_connection(
+                    (raw_ip.split("%", 1)[0], conn.port),
+                    conn.timeout,
+                    source_address=conn.source_address,
+                    socket_options=conn.socket_options,
+                )
+            except OSError as exc:
+                last_error = exc
+        raise NewConnectionError(conn, f"{label} host could not be reached: {last_error}")
+
+    class _HTTP(HTTPConnection):
+        _new_conn = new_conn
+
+    class _HTTPS(HTTPSConnection):
+        _new_conn = new_conn
+
+    class _HTTPPool(HTTPConnectionPool):
+        ConnectionCls = _HTTP
+
+    class _HTTPSPool(HTTPSConnectionPool):
+        ConnectionCls = _HTTPS
+
+    class _Adapter(HTTPAdapter):
+        def init_poolmanager(self, *args: Any, **kwargs: Any) -> None:
+            super().init_poolmanager(*args, **kwargs)
+            self.poolmanager.pool_classes_by_scheme = {"http": _HTTPPool, "https": _HTTPSPool}
+
+        def proxy_manager_for(self, *args: Any, **kwargs: Any) -> Any:
+            raise ValueError(f"{label} must not be reached through a proxy")
+
+    return _Adapter()

@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic test credentials, prefixed SEKRET_ so they can never be real"
+regexes = ['''SEKRET_[A-Z_]+_\d+''']

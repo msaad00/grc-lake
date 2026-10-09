@@ -4,6 +4,9 @@ import { Toaster } from "sonner";
 import { Providers } from "./providers";
 import { Shell } from "@/components/shell/Shell";
 import { BRAND } from "@/lib/brand";
+// Canvas styles load with the global sheet: imported per canvas, webpack split
+// them into a chunk that several routes preloaded without applying.
+import "@xyflow/react/dist/style.css";
 import "./globals.css";
 
 const metadataBase = new URL(

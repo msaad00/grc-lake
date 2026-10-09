@@ -4,14 +4,14 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createColumnHelper,
-  flexRender,
   useTable,
   type SortingState,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { FilterDisclosure } from "@/components/ui/filter-disclosure";
 import { PageHeader } from "@/components/PageHeader";
 import { SavedViewsBar } from "@/components/SavedViewsBar";
 import { QueryState } from "@/components/QueryState";
@@ -181,6 +181,7 @@ function ViolationsPageContent() {
   const columns: SortableColumnDefs<Violation> = [
     helper.accessor("control_id", {
       header: "Finding",
+      meta: { mobile: "title" },
       cell: (info) => (
         <div className="max-w-[320px]">
           <div
@@ -210,6 +211,7 @@ function ViolationsPageContent() {
     }),
     helper.accessor("severity_score", {
       header: "Severity",
+      meta: { mobile: "badge" },
       cell: (info) => (
         <div>
           <Badge tone={severityTone(info.row.original.severity)}>
@@ -233,6 +235,7 @@ function ViolationsPageContent() {
     helper.display({
       id: "review",
       header: "Action",
+      meta: { mobile: "hidden" },
       cell: (info) => (
         <Button
           size="sm"
@@ -257,6 +260,14 @@ function ViolationsPageContent() {
   });
 
   const tags = tagsQuery.data ?? [];
+  const activeFilters = [
+    Boolean(activeTagId),
+    filters.framework !== "all",
+    filters.severity !== "all",
+    Boolean(filters.query.trim()),
+    ownerFilter !== "all",
+    environment !== "all",
+  ].filter(Boolean).length;
 
   return (
     <div className="page-shell grid gap-5">
@@ -266,166 +277,104 @@ function ViolationsPageContent() {
       />
       <TrustPipelineStrip activeStage="findings" />
 
-      <TagFilterBar
-        tags={tags}
-        activeTagId={activeTagId}
-        onSelect={setActiveTagId}
-        onClear={() => setActiveTagId(null)}
-      />
+      <FilterDisclosure activeCount={activeFilters} className="gap-5">
+        <TagFilterBar
+          tags={tags}
+          activeTagId={activeTagId}
+          onSelect={setActiveTagId}
+          onClear={() => setActiveTagId(null)}
+        />
 
-      {/* Saved views */}
-      <SavedViewsBar
-        surface={SURFACE}
-        filters={{
-          framework: filters.framework,
-          severity: filters.severity,
-          query: filters.query,
-          environment,
-        }}
-        onApply={(viewFilters) => {
-          setEnvironment((viewFilters.environment as string) ?? "all");
-          setFilters({
-            framework: (viewFilters.framework as string) ?? "all",
-            severity: (viewFilters.severity as Severity | "all") ?? "all",
-            query: (viewFilters.query as string) ?? "",
-          });
-        }}
-      />
+        {/* Saved views */}
+        <SavedViewsBar
+          surface={SURFACE}
+          filters={{
+            framework: filters.framework,
+            severity: filters.severity,
+            query: filters.query,
+            environment,
+          }}
+          onApply={(viewFilters) => {
+            setEnvironment((viewFilters.environment as string) ?? "all");
+            setFilters({
+              framework: (viewFilters.framework as string) ?? "all",
+              severity: (viewFilters.severity as Severity | "all") ?? "all",
+              query: (viewFilters.query as string) ?? "",
+            });
+          }}
+        />
 
-      <Toolbar
-        filters={filters}
-        frameworks={frameworks}
-        onChange={setFilters}
-        placeholder="Search findings, assets, sources, owners…"
-      />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2 text-xs">
-          {summaryChips.map((chip) => (
-            <Badge key={chip.label} tone={chip.tone}>
-              {chip.count} {chip.label}
-            </Badge>
-          ))}
+        <Toolbar
+          filters={filters}
+          frameworks={frameworks}
+          onChange={setFilters}
+          placeholder="Search findings, assets, sources, owners…"
+        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2 text-xs">
+            {summaryChips.map((chip) => (
+              <Badge key={chip.label} tone={chip.tone}>
+                {chip.count} {chip.label}
+              </Badge>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-2 text-xs font-medium text-muted">
+              Owner
+              <select
+                aria-label="Filter by owner"
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                className="ui-input h-9 max-w-[12rem] text-ink"
+              >
+                <option value="all">All owners</option>
+                <option value={UNASSIGNED}>Unassigned</option>
+                {owners.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+                {ownerFilter !== "all" &&
+                  ownerFilter !== UNASSIGNED &&
+                  !owners.includes(ownerFilter) && (
+                    <option value={ownerFilter}>{ownerFilter}</option>
+                  )}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-xs font-medium text-muted">
+              Environment
+              <select
+                aria-label="Filter by environment"
+                value={environment}
+                onChange={(e) => setEnvironment(e.target.value)}
+                className="ui-input h-9 text-ink"
+              >
+                <option value="all">All environments</option>
+                {environments.map((value) => (
+                  <option key={value} value={value}>
+                    {value === "unknown" ? "Unknown" : value}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 text-xs font-medium text-muted">
-            Owner
-            <select
-              aria-label="Filter by owner"
-              value={ownerFilter}
-              onChange={(e) => setOwnerFilter(e.target.value)}
-              className="ui-input h-9 max-w-[12rem] text-ink"
-            >
-              <option value="all">All owners</option>
-              <option value={UNASSIGNED}>Unassigned</option>
-              {owners.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-              {ownerFilter !== "all" &&
-                ownerFilter !== UNASSIGNED &&
-                !owners.includes(ownerFilter) && (
-                  <option value={ownerFilter}>{ownerFilter}</option>
-                )}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-xs font-medium text-muted">
-            Environment
-            <select
-              aria-label="Filter by environment"
-              value={environment}
-              onChange={(e) => setEnvironment(e.target.value)}
-              className="ui-input h-9 text-ink"
-            >
-              <option value="all">All environments</option>
-              {environments.map((value) => (
-                <option key={value} value={value}>
-                  {value === "unknown" ? "Unknown" : value}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </div>
+      </FilterDisclosure>
       <QueryState queries={violations} label="violations">
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>{filtered.length} findings</CardTitle>
           </CardHeader>
-          <div
-            className="max-h-[640px] overflow-auto"
-            role="region"
-            aria-label="Findings queue"
-            tabIndex={0}
-          >
-            <table className="min-w-[820px] w-full text-sm">
-              <thead>
-                {table.getHeaderGroups().map((hg) => (
-                  <tr
-                    key={hg.id}
-                    className="border-y border-line bg-surfaceMuted"
-                  >
-                    {hg.headers.map((h) => (
-                      <th
-                        key={h.id}
-                        scope="col"
-                        className="cursor-pointer px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
-                      >
-                        <button
-                          type="button"
-                          onClick={h.column.getToggleSortingHandler()}
-                          disabled={!h.column.getCanSort()}
-                          className="inline-flex items-center gap-1 text-left"
-                        >
-                          {flexRender(
-                            h.column.columnDef.header,
-                            h.getContext(),
-                          )}
-                          {h.column.getCanSort() && (
-                            <ArrowUpDown className="h-3 w-3 opacity-40" />
-                          )}
-                        </button>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((r) => (
-                  <tr
-                    key={r.id}
-                    tabIndex={0}
-                    aria-label={`Open finding ${controlTitles.get(r.original.control_id) ?? r.original.event_type} on ${assetLabel(r.original) || "unknown asset"}`}
-                    onClick={() => selectFinding(r.original)}
-                    onKeyDown={(event) => {
-                      if (event.target !== event.currentTarget) return;
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        selectFinding(r.original);
-                      }
-                    }}
-                    className="cursor-pointer border-b border-line last:border-0 hover:bg-info-bg focus-visible:bg-info-bg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
-                  >
-                    {r.getVisibleCells().map((c) => (
-                      <td key={c.id} className="px-4 py-3 align-top">
-                        {flexRender(c.column.columnDef.cell, c.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td
-                      className="px-4 py-8 text-center text-sm text-muted"
-                      colSpan={columns.length}
-                    >
-                      No findings match the current filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            table={table}
+            label="Findings queue"
+            scrollClassName="max-h-[640px] overflow-auto"
+            emptyLabel="No findings match the current filters."
+            onRowSelect={selectFinding}
+            rowLabel={(row) =>
+              `Open finding ${controlTitles.get(row.control_id) ?? row.event_type} on ${assetLabel(row) || "unknown asset"}`
+            }
+          />
         </Card>
       </QueryState>
       <ViolationDrawer

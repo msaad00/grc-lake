@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -498,11 +499,12 @@ function SafeguardAssessment() {
   const passed = rows.filter((row) => row.status === "pass").length;
   const failed = rows.filter((row) => row.status === "fail").length;
   return (
-    <details className="rounded-lg border border-line bg-surface p-4 sm:p-5">
-      <summary className="cursor-pointer font-semibold text-ink">
-        Safeguard assessment · observed assets
-      </summary>
-      <p className="mt-3 text-sm text-muted">
+    <CollapsibleCard
+      title="Safeguard assessment · observed assets"
+      defaultOpen={false}
+      storageKey="frameworks:safeguard-assessment"
+    >
+      <p className="text-sm text-muted">
         Explicit safeguard evidence is evaluated against applicable observed
         assets. Mapping coverage alone does not establish a pass. Complete asset
         inventory is not established.
@@ -569,7 +571,7 @@ function SafeguardAssessment() {
           </div>
         </>
       )}
-    </details>
+    </CollapsibleCard>
   );
 }
 

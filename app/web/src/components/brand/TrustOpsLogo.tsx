@@ -36,7 +36,7 @@ export function TrustOpsLogo({
           <span
             className={cn(
               "block truncate font-semibold tracking-tight",
-              inverted ? "text-white" : "text-ink",
+              inverted ? "text-code-fg" : "text-ink",
               markSize === "sm" || markSize === "xs" ? "text-sm" : "text-lg",
             )}
           >
@@ -46,7 +46,7 @@ export function TrustOpsLogo({
             <span
               className={cn(
                 "block truncate text-[11px] font-semibold uppercase tracking-wide",
-                inverted ? "text-[#9aa9bc]" : "text-muted",
+                inverted ? "text-code-fg/70" : "text-muted",
               )}
             >
               {subtitle}

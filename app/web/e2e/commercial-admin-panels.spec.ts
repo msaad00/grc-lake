@@ -18,6 +18,25 @@ const ACTIVE_TOKEN = {
   revoked_at: null,
 };
 
+async function mockFeatures(
+  page: Page,
+  flags: { billing?: boolean; scim?: boolean; plan_usage?: boolean },
+) {
+  await page.route("**/api/v1/platform/features", (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          commercial_hosted: true,
+          plan_usage: false,
+          billing: false,
+          scim: false,
+          ...flags,
+        },
+      },
+    }),
+  );
+}
+
 async function mockAdmin(page: Page) {
   await page.route("**/api/v1/auth/whoami", (route) =>
     route.fulfill({ json: { data: ADMIN } }),
@@ -28,6 +47,7 @@ test("SCIM panel reveals a new token once and revokes through a confirm dialog",
   page,
 }) => {
   await mockAdmin(page);
+  await mockFeatures(page, { scim: true });
   await page.route("**/api/v1/billing", (route) =>
     route.fulfill({
       status: 501,
@@ -81,6 +101,7 @@ test("Billing panel shows grace state and sends admins to Stripe checkout", asyn
   page,
 }) => {
   await mockAdmin(page);
+  await mockFeatures(page, { billing: true });
   await page.route("**/api/v1/platform/scim/tokens", (route) =>
     route.fulfill({
       status: 501,
@@ -119,4 +140,52 @@ test("Billing panel shows grace state and sends admins to Stripe checkout", asyn
   await page.getByRole("button", { name: "Subscribe to Team" }).click();
   expect((await checkout).postDataJSON()).toEqual({ plan: "team" });
   await expect(page).toHaveURL(/billing=success/);
+});
+
+const GATED =
+  /\/api\/v1\/(platform\/usage|platform\/scim\/tokens|billing)(\?|$)/;
+
+test("an OSS server probes features once and never calls the gated routes", async ({
+  page,
+}) => {
+  const gated: string[] = [];
+  const errors: string[] = [];
+  page.on("request", (req) => {
+    if (GATED.test(req.url())) gated.push(req.url());
+  });
+  page.on("console", (msg) => {
+    if (msg.type() === "error") errors.push(msg.text());
+  });
+  const probe = page.waitForResponse(/\/api\/v1\/platform\/features$/);
+  await page.goto("/console/auth/");
+  expect((await probe).status()).toBe(200);
+  await expect(page.getByText("Current session")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(gated).toEqual([]);
+  expect(errors).toEqual([]);
+  await expect(page.getByText("Hosted plan usage")).toHaveCount(0);
+  await expect(page.getByText("SCIM provisioning")).toHaveCount(0);
+});
+
+test("a server without the feature probe still hides 501 panels", async ({
+  page,
+}) => {
+  await mockAdmin(page);
+  await page.route("**/api/v1/platform/features", (route) =>
+    route.fulfill({ status: 404, json: { detail: "Not Found" } }),
+  );
+  for (const path of ["platform/usage", "platform/scim/tokens", "billing"])
+    await page.route(`**/api/v1/${path}`, (route) =>
+      route.fulfill({ status: 501, json: { detail: "not enabled" } }),
+    );
+  await page.goto("/console/auth/");
+  await expect(page.getByText("Current session")).toBeVisible();
+  await expect(page.getByText("Hosted plan usage")).toHaveCount(0);
+  await expect(page.getByText("SCIM provisioning")).toHaveCount(0);
+  await expect(page.getByText("Billing", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText(
+      /Some requests were rejected|Can.t reach the assessment API/,
+    ),
+  ).toHaveCount(0);
 });

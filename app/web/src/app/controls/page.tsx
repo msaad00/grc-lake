@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FilterDisclosure } from "@/components/ui/filter-disclosure";
 import { PageHeader } from "@/components/PageHeader";
 import { SavedViewsBar } from "@/components/SavedViewsBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
@@ -215,6 +216,14 @@ function ControlsPageContent() {
       filters,
     ],
   );
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilters = [
+    Boolean(activeTagId),
+    ownerFilter !== "all",
+    resultFilter !== "all",
+    filters.framework !== "all",
+    Boolean(filters.query.trim()),
+  ].filter(Boolean).length;
   const filtersActive =
     Boolean(activeTagId) ||
     ownerFilter !== "all" ||
@@ -256,38 +265,50 @@ function ControlsPageContent() {
           ) : null}
         </p>
       ) : null}
-      <TagFilterBar
-        tags={tags}
-        activeTagId={activeTagId}
-        onSelect={setActiveTagId}
-        onClear={() => setActiveTagId(null)}
-      />
-      <SavedViewsBar
-        surface={SURFACE}
-        filters={{
-          framework: filters.framework,
-          query: filters.query,
-          result: resultFilter,
-          owner: ownerFilter,
-        }}
-        onApply={(viewFilters) => {
-          setFilters({
-            ...filters,
-            framework: (viewFilters.framework as string) ?? "all",
-            query: (viewFilters.query as string) ?? "",
-          });
-          setResultFilter((viewFilters.result as string) ?? "all");
-          setOwnerFilter((viewFilters.owner as string) ?? "all");
-        }}
-      />
-      <Toolbar
-        filters={filters}
-        frameworks={frameworks}
-        onChange={setFilters}
-        placeholder="Search by control id, title, framework, owner…"
-      />
+      <FilterDisclosure
+        activeCount={activeFilters}
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        className="gap-5"
+      >
+        <TagFilterBar
+          tags={tags}
+          activeTagId={activeTagId}
+          onSelect={setActiveTagId}
+          onClear={() => setActiveTagId(null)}
+        />
+        <SavedViewsBar
+          surface={SURFACE}
+          filters={{
+            framework: filters.framework,
+            query: filters.query,
+            result: resultFilter,
+            owner: ownerFilter,
+          }}
+          onApply={(viewFilters) => {
+            setFilters({
+              ...filters,
+              framework: (viewFilters.framework as string) ?? "all",
+              query: (viewFilters.query as string) ?? "",
+            });
+            setResultFilter((viewFilters.result as string) ?? "all");
+            setOwnerFilter((viewFilters.owner as string) ?? "all");
+          }}
+        />
+        <Toolbar
+          filters={filters}
+          frameworks={frameworks}
+          onChange={setFilters}
+          placeholder="Search by control id, title, framework, owner…"
+        />
+      </FilterDisclosure>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <div
+          className={cn(
+            "flex-wrap items-center gap-2",
+            filtersOpen ? "flex" : "hidden sm:flex",
+          )}
+        >
           <label className="flex items-center gap-2 text-xs font-medium text-muted">
             Result
             <select

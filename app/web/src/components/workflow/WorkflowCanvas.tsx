@@ -23,7 +23,6 @@ import {
   type ReactFlowInstance,
   type ReactFlowProps,
 } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
 import {
   AlertCircle,
   CheckCircle2,
@@ -55,50 +54,30 @@ export type FlowNode = Node<NodeData, "trustops">;
 interface KindStyle {
   border: string;
   borderSelected: string;
-  bg: string;
-  badgeBg: string;
   badgeFg: string;
   ring: string;
   Icon: React.ElementType;
 }
 
+/** Card width the layout reserves; the card renders at exactly this width. */
+export const WORKFLOW_NODE_WIDTH = 240;
+/** Tallest card (three parameter pills wrapping to two rows). */
+export const WORKFLOW_NODE_HEIGHT = 128;
+const EDGE_COLOR = "var(--color-line-strong)";
+
+const kindStyle = (token: string, Icon: React.ElementType): KindStyle => ({
+  border: `var(--color-${token})`,
+  borderSelected: `color-mix(in srgb, var(--color-${token}) 70%, var(--color-ink))`,
+  badgeFg: `var(--color-${token})`,
+  ring: `rgb(var(--rgb-${token}) / 0.35)`,
+  Icon,
+});
+
 const KIND_STYLE: Record<NonNullable<NodeData["kind"]>, KindStyle> = {
-  trigger: {
-    border: "#3b82f6",
-    borderSelected: "#1d4ed8",
-    bg: "#eff6ff",
-    badgeBg: "#dbeafe",
-    badgeFg: "#1e40af",
-    ring: "rgba(59,130,246,0.35)",
-    Icon: Zap,
-  },
-  check: {
-    border: "#f59e0b",
-    borderSelected: "#b45309",
-    bg: "#fffbeb",
-    badgeBg: "#fef3c7",
-    badgeFg: "#92400e",
-    ring: "rgba(245,158,11,0.35)",
-    Icon: GitFork,
-  },
-  gate: {
-    border: "#8b5cf6",
-    borderSelected: "#6d28d9",
-    bg: "#f5f3ff",
-    badgeBg: "#ede9fe",
-    badgeFg: "#5b21b6",
-    ring: "rgba(139,92,246,0.35)",
-    Icon: Shield,
-  },
-  action: {
-    border: "#10b981",
-    borderSelected: "#047857",
-    bg: "#ecfdf5",
-    badgeBg: "#d1fae5",
-    badgeFg: "#065f46",
-    ring: "rgba(16,185,129,0.35)",
-    Icon: Cpu,
-  },
+  trigger: kindStyle("info", Zap),
+  check: kindStyle("warning", GitFork),
+  gate: kindStyle("chart-7", Shield),
+  action: kindStyle("success", Cpu),
 };
 
 // ---------------------------------------------------------------------------
@@ -111,11 +90,11 @@ function NodeCard({ data, selected }: NodeProps<FlowNode>) {
 
   const runRingColor =
     data.runResult === "ok"
-      ? "rgba(16,185,129,0.6)"
+      ? "rgb(var(--rgb-success) / 0.6)"
       : data.runResult === "error"
-        ? "rgba(239,68,68,0.6)"
+        ? "rgb(var(--rgb-danger) / 0.6)"
         : data.runPending
-          ? "rgba(99,102,241,0.5)"
+          ? "rgb(var(--rgb-brand) / 0.5)"
           : selected
             ? tone.ring
             : "transparent";
@@ -134,10 +113,10 @@ function NodeCard({ data, selected }: NodeProps<FlowNode>) {
 
   const statusColor =
     data.runResult === "ok"
-      ? "#10b981"
+      ? "var(--color-success)"
       : data.runResult === "error"
-        ? "#ef4444"
-        : "#6366f1";
+        ? "var(--color-danger)"
+        : "var(--color-brand)";
 
   return (
     <div
@@ -145,16 +124,17 @@ function NodeCard({ data, selected }: NodeProps<FlowNode>) {
         borderColor,
         background: `color-mix(in srgb, ${tone.border} 10%, var(--color-surface))`,
         borderWidth,
-        boxShadow: `0 0 0 3px ${runRingColor}, 0 2px 8px rgba(15,23,42,0.08)`,
-        minWidth: 220,
+        boxShadow: `0 0 0 3px ${runRingColor}, var(--shadow-card)`,
+        width: WORKFLOW_NODE_WIDTH,
       }}
       className="rounded-xl border text-left transition-all"
     >
-      {/* Top handle */}
+      {/* Fixed handles: in on the left, out on the right, matching the
+          left-to-right arrangement so edges never loop over a node. */}
       <Handle
         type="target"
-        position={Position.Top}
-        className="!h-2.5 !w-2.5 !rounded-full !border-2 !border-white"
+        position={Position.Left}
+        className="!h-2.5 !w-2.5 !rounded-full !border-2 !border-surface"
         style={{ background: tone.border }}
       />
 
@@ -196,7 +176,7 @@ function NodeCard({ data, selected }: NodeProps<FlowNode>) {
               .map(([k, v]) => (
                 <span
                   key={k}
-                  className="inline-flex max-w-[160px] items-center truncate rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] text-muted"
+                  className="inline-flex max-w-[200px] items-center truncate rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] text-muted"
                   title={`${k}: ${String(v)}`}
                 >
                   <span className="mr-0.5 font-semibold text-ink">{k}</span>
@@ -217,11 +197,10 @@ function NodeCard({ data, selected }: NodeProps<FlowNode>) {
         )}
       </div>
 
-      {/* Bottom handle */}
       <Handle
         type="source"
-        position={Position.Bottom}
-        className="!h-2.5 !w-2.5 !rounded-full !border-2 !border-white"
+        position={Position.Right}
+        className="!h-2.5 !w-2.5 !rounded-full !border-2 !border-surface"
         style={{ background: tone.border }}
       />
     </div>
@@ -443,10 +422,10 @@ export function WorkflowCanvas({
         addEdge(
           {
             ...params,
-            animated: true,
+            type: "smoothstep",
             data: { condition: "always" },
-            markerEnd: { type: MarkerType.ArrowClosed, color: "#64748b" },
-            style: { stroke: "#64748b", strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: EDGE_COLOR },
+            style: { stroke: EDGE_COLOR, strokeWidth: 2 },
           },
           edges,
         ),
@@ -530,26 +509,19 @@ export function WorkflowCanvas({
         fitView
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
-          animated: true,
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#64748b" },
-          style: { stroke: "#64748b", strokeWidth: 2 },
+          type: "smoothstep",
+          markerEnd: { type: MarkerType.ArrowClosed, color: EDGE_COLOR },
+          style: { stroke: EDGE_COLOR, strokeWidth: 2 },
         }}
       >
         <Background gap={24} color="var(--color-line)" />
         <MiniMap
           pannable
           zoomable
-          maskColor="rgba(15,23,42,0.06)"
+          maskColor="rgb(var(--rgb-ink) / 0.06)"
           nodeColor={(n) => {
             const kind = (n.data as NodeData).kind ?? "action";
-            return (
-              {
-                trigger: "#3b82f6",
-                check: "#f59e0b",
-                gate: "#8b5cf6",
-                action: "#10b981",
-              }[kind] ?? "#94a3b8"
-            );
+            return KIND_STYLE[kind]?.border ?? "var(--color-line-strong)";
           }}
         />
         <Controls position="bottom-left" />

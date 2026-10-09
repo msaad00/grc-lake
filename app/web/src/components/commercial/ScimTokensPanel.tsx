@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { QueryState } from "@/components/QueryState";
 import {
   useAuthWhoami,
+  useCommercialFeature,
   useCreateScimTokenMutation,
   useRevokeScimTokenMutation,
   useScimTokens,
@@ -68,7 +69,11 @@ export function ScimTokensPanel() {
     () => Boolean(whoami.data?.scopes.includes("auth_admin")),
     [whoami.data],
   );
-  const tokens = useScimTokens({ enabled: isAdmin, retry: false });
+  const feature = useCommercialFeature("scim");
+  const tokens = useScimTokens({
+    enabled: isAdmin && feature.enabled,
+    retry: false,
+  });
   const createToken = useCreateScimTokenMutation();
   const revokeToken = useRevokeScimTokenMutation();
   const [createOpen, setCreateOpen] = useState(false);
@@ -76,7 +81,11 @@ export function ScimTokensPanel() {
   const [revealed, setRevealed] = useState<CreatedScimToken | null>(null);
   const [pendingRevoke, setPendingRevoke] = useState<ScimToken | null>(null);
 
-  if (!isAdmin || (tokens.isError && isNotImplemented(tokens.error))) {
+  if (
+    !isAdmin ||
+    !feature.enabled ||
+    (tokens.isError && isNotImplemented(tokens.error))
+  ) {
     return null;
   }
 

@@ -13,6 +13,21 @@ import type { AuthMethod } from "@/lib/api/types";
 import { notify } from "@/lib/toast";
 import { docsUrl } from "@/lib/format";
 
+const SESSION_GUARANTEES = [
+  {
+    label: "Tenant scoped",
+    detail: "A session reads and writes only its own workspace.",
+  },
+  {
+    label: "RBAC enforced",
+    detail: "Your role's scopes gate every page and API call.",
+  },
+  {
+    label: "Audit logged",
+    detail: "Sign-ins and changes land in the append-only request audit.",
+  },
+] as const;
+
 function BrowserMethodCard({ method }: { method: AuthMethod }) {
   return (
     <div className="grid gap-3 rounded-xl border border-line bg-surface p-4">
@@ -108,7 +123,7 @@ export default function LoginPage() {
   return (
     <section className="grid min-h-screen place-items-center p-4 sm:p-6">
       <div className="grid w-full max-w-[980px] gap-5 lg:grid-cols-[1fr_420px]">
-        <div className="order-last rounded-2xl border border-[#1e334a] bg-code p-8 text-white shadow-hero lg:order-none">
+        <div className="order-last flex flex-col rounded-2xl border border-code-fg/15 bg-code p-8 text-code-fg shadow-hero lg:order-none">
           <TrustOpsLogo
             href="/dashboard"
             inverted
@@ -117,31 +132,38 @@ export default function LoginPage() {
             className="mb-6"
             gradientId="trustops-login-gradient"
           />
-          <Badge
-            tone="info"
-            className="mb-5 bg-cyan-100 text-cyan-800 dark:bg-cyan-500/10 dark:text-cyan-300"
-          >
+          <Badge tone="info" className="mb-5 self-start">
             Server mode
           </Badge>
           <h1 className="max-w-[680px] text-4xl font-black leading-[1.04]">
             Sign in with your company identity provider.
           </h1>
-          <p className="mt-4 max-w-[620px] text-base leading-7 text-slate-300">
+          <p className="mt-4 max-w-[620px] text-base leading-7 text-code-fg/80">
             Browser sessions use the same tenant, RBAC scopes, and request audit
             trail as API keys. OIDC and SAML resolve to one local user record —
             no parallel auth silo.
           </p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {["Tenant scoped", "RBAC enforced", "Audit logged"].map((label) => (
-              <div
+          <ul className="mt-8 grid gap-3 lg:mt-auto lg:pt-8">
+            {SESSION_GUARANTEES.map(({ label, detail }) => (
+              <li
                 key={label}
-                className="rounded-lg border border-white/15 bg-white/5 p-3 text-sm font-extrabold text-slate-100"
+                className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg border border-code-fg/15 bg-code-fg/5 p-3"
               >
-                <ShieldCheck className="mb-2 h-4 w-4 text-cyan-300" />
-                {label}
-              </div>
+                <ShieldCheck
+                  aria-hidden="true"
+                  className="mt-0.5 h-4 w-4 text-info"
+                />
+                <span>
+                  <span className="block text-sm font-extrabold text-code-fg">
+                    {label}
+                  </span>
+                  <span className="mt-0.5 block text-sm leading-5 text-code-fg/75">
+                    {detail}
+                  </span>
+                </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         <Card className="self-stretch">
@@ -231,7 +253,7 @@ export default function LoginPage() {
             )}
 
             {auth.isError && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+              <div className="rounded-lg border border-warning/40 bg-warning-bg p-4 text-sm font-bold text-warning-fg">
                 Auth discovery is unavailable on this server.
               </div>
             )}

@@ -1595,6 +1595,14 @@ export interface PricingTierLimits {
   scim: boolean;
 }
 
+/** Which commercial surfaces the server serves; off surfaces answer 501. */
+export interface PlatformFeatures {
+  commercial_hosted: boolean;
+  plan_usage: boolean;
+  billing: boolean;
+  scim: boolean;
+}
+
 export interface PlatformUsage {
   tenant_id: string;
   plan_tier: string;

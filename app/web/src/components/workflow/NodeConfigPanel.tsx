@@ -66,7 +66,10 @@ export function NodeConfigPanel({
 
   if (!node || !spec) {
     return (
-      <aside className="grid min-h-[160px] w-full xl:col-span-2 2xl:col-span-1 place-items-center rounded-2xl border border-line bg-surface text-xs text-muted 2xl:min-h-[560px] 2xl:w-[340px] 2xl:rounded-none 2xl:border-y-0 2xl:border-r-0">
+      <aside
+        aria-label="Node settings"
+        className="grid min-h-[160px] w-full xl:col-span-2 2xl:col-span-1 place-items-center rounded-2xl border border-line bg-surface text-xs text-muted 2xl:min-h-[560px] 2xl:w-[340px] 2xl:rounded-none 2xl:border-y-0 2xl:border-r-0"
+      >
         <div className="px-6 text-center">
           <ChevronRight className="mx-auto mb-2 h-4 w-4 text-muted" />
           Select a node in the canvas to inspect and edit it here.
@@ -94,7 +97,10 @@ export function NodeConfigPanel({
   };
 
   return (
-    <aside className="grid max-h-[min(760px,calc(100dvh-245px))] min-h-[560px] w-full xl:col-span-2 2xl:col-span-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-2xl border border-line bg-surface 2xl:w-[340px] 2xl:rounded-none 2xl:border-y-0 2xl:border-r-0">
+    <aside
+      aria-label="Node settings"
+      className="grid max-h-[min(760px,calc(100dvh-245px))] min-h-[560px] w-full xl:col-span-2 2xl:col-span-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-2xl border border-line bg-surface 2xl:w-[340px] 2xl:rounded-none 2xl:border-y-0 2xl:border-r-0"
+    >
       <header className="flex items-start justify-between gap-3 border-b border-line p-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

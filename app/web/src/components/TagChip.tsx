@@ -9,17 +9,24 @@ interface TagChipProps {
   size?: "sm" | "md";
 }
 
-/** A coloured pill that displays a single tag. Pass ``onRemove`` to show an ×. */
+/**
+ * A neutral pill for a single tag. The tag's own colour is a dot, so the text
+ * stays AA-legible whatever colour a user picked. Pass `onRemove` to show an x.
+ */
 export function TagChip({ tag, onRemove, size = "sm" }: TagChipProps) {
-  const bg = tag.color || "#6366f1";
+  const dot = tag.color || "var(--color-brand)";
   const padding = size === "sm" ? "px-2 py-0.5" : "px-2.5 py-1";
   const textSize = size === "sm" ? "text-[11px]" : "text-xs";
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full font-medium text-white ${padding} ${textSize}`}
-      style={{ backgroundColor: bg }}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-line bg-neutral-bg font-medium text-neutral-fg ${padding} ${textSize}`}
     >
+      <span
+        aria-hidden="true"
+        className="h-2 w-2 shrink-0 rounded-full"
+        style={{ backgroundColor: dot }}
+      />
       {tag.name}
       {onRemove && (
         <button

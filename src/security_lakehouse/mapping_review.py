@@ -34,6 +34,7 @@ from typing import Any
 
 from security_lakehouse.catalog import load_control_catalog, load_framework_registry
 from security_lakehouse.io import canonical_sha256, read_jsonl, write_json
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.ledger import (
     append_chained_jsonl,
     append_chained_jsonl_batch,
@@ -59,7 +60,6 @@ logger = logging.getLogger(__name__)
 DECISION_LOG_UNPARSEABLE = "the decision log could not be parsed"
 DECISION_LOG_UNREADABLE = "the decision log could not be read"
 
-JsonObject = dict[str, Any]
 MappingKey = tuple[str, str]
 
 DECISIONS = ("approve", "reject", "needs_changes")

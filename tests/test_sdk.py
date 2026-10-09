@@ -25,13 +25,13 @@ pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 pytest.importorskip("uvicorn")
 
-import uvicorn  # noqa: E402
+import uvicorn
 
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.sdk import GrcLakeClient, GrcLakeError  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.sdk import GrcLakeClient, GrcLakeError
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def _free_port() -> int:

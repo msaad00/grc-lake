@@ -9,7 +9,7 @@ import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -20,14 +20,7 @@ from security_lakehouse.agents import AgentBudgetPolicy, AgentDecision, run_post
 from security_lakehouse.agents.providers import ModelProviderConfig, provider_from_env
 from security_lakehouse.agents.state import AgentOrchestrator
 from security_lakehouse.db.models import AGENT_RUN_HARNESSES, AGENT_RUN_STATUSES, AgentRun
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def _json_default(value: Any) -> Any:
@@ -169,7 +162,7 @@ def fail_decision_claim(
     decision = dict(decisions[decision_index])
     decision.update(
         status="failed",
-        failed_at=_now(None).isoformat(),
+        failed_at=utc_now().isoformat(),
         failure_code="outcome_unknown" if reconciled_by else "execution_failed",
     )
     if reconciled_by:
@@ -218,7 +211,7 @@ def claim_decision(
     ):
         raise DecisionConflict("decision is unavailable or needs reconciliation")
     decision = dict(decisions[decision_index])
-    moment = _now(None).isoformat()
+    moment = utc_now().isoformat()
     if rejection_reason is None:
         decision.update(status="executing", approved_by=actor, approved_at=moment)
     else:
@@ -258,7 +251,7 @@ def mark_decision_executed(
     decisions = agent_run_decisions(row)
     if decision_index < 0 or decision_index >= len(decisions):
         raise IndexError("decision not found")
-    moment = _now(now)
+    moment = utc_now(now)
     decision = dict(decisions[decision_index])
     decision.update(
         {
@@ -288,7 +281,7 @@ def mark_decision_rejected(
     decisions = agent_run_decisions(row)
     if decision_index < 0 or decision_index >= len(decisions):
         raise IndexError("decision not found")
-    moment = _now(now)
+    moment = utc_now(now)
     decision = dict(decisions[decision_index])
     decision.update(
         {
@@ -343,7 +336,7 @@ def run_and_persist_agent(
 
     provider = provider or provider_from_env()
     budget = budget or AgentBudgetPolicy.from_env()
-    moment = _now(now)
+    moment = utc_now(now)
     input_payload = {
         "harness": harness,
         "objective": objective,
@@ -448,8 +441,8 @@ def agent_run_to_dict(row: AgentRun, *, include_state: bool = False) -> dict[str
         "errors": _json_loads(row.errors_json, []),
         "created_by": row.created_by,
         "created_by_id": row.created_by_id,
-        "created_at": _iso(row.created_at),
-        "completed_at": _iso(row.completed_at),
+        "created_at": iso_offset(row.created_at),
+        "completed_at": iso_offset(row.completed_at),
     }
     if include_state:
         data["state"] = _json_loads(row.state_json, {})

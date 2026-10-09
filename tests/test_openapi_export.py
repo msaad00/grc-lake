@@ -9,7 +9,7 @@ import pytest
 
 pytest.importorskip("fastapi")
 
-from security_lakehouse.server_app import create_app  # noqa: E402
+from security_lakehouse.server_app import create_app
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMITTED = ROOT / "docs" / "api" / "openapi.v1.json"

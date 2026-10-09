@@ -31,7 +31,7 @@ class _Response:
 def captured(monkeypatch: pytest.MonkeyPatch) -> list[urllib.request.Request]:
     sent: list[urllib.request.Request] = []
 
-    def _open(request, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _open(request, timeout=None, validate=None):
         sent.append(request)
         return _Response()
 

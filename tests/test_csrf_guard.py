@@ -11,17 +11,17 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie  # noqa: E402
-from security_lakehouse.db.repository import (  # noqa: E402
+from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie
+from security_lakehouse.db.repository import (
     create_api_key,
     create_tenant,
     create_user,
     create_user_session,
 )
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 EVIL = "https://evil.example"
 BODY = json.dumps({"reason": "csrf"})

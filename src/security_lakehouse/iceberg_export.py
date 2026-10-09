@@ -185,7 +185,7 @@ def rest_catalog(uri, *, warehouse, token_env="GRC_LAKE_ICEBERG_TOKEN", allow_ht
                     kwargs["allow_redirects"] = False
                     return request(method, url, **kwargs)
 
-                session.request = bounded_request
+                session.request = bounded_request  # type: ignore[method-assign,assignment]
                 return session
 
             def _refresh_token(self):
@@ -204,7 +204,7 @@ def rest_catalog(uri, *, warehouse, token_env="GRC_LAKE_ICEBERG_TOKEN", allow_ht
         raise
     except ImportError:
         raise IcebergPublicationError("Iceberg publication requires pip install 'grc-lake[iceberg]'") from None
-    except Exception:
+    except Exception:  # noqa: BLE001 - re-raised as a typed error; driver text may carry secrets
         raise IcebergPublicationError(
             "Iceberg REST connection failed; check endpoint, token lifetime, and catalog permissions"
         ) from None
@@ -361,7 +361,7 @@ def publish_iceberg(lake_dir, catalog, *, namespace, table_name="evidence", tena
         raise
     except ImportError:
         raise IcebergPublicationError("Iceberg publication requires pip install 'grc-lake[iceberg]'") from None
-    except Exception:
+    except Exception:  # noqa: BLE001 - re-raised as a typed error; driver text may carry secrets
         raise IcebergPublicationError(
             "Iceberg publication was not confirmed; check source integrity, catalog access, and retry the same generation"
         ) from None

@@ -26,6 +26,7 @@ from security_lakehouse.io import read_json, write_jsonl
 from security_lakehouse.models import utc_iso
 from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.secret_refs import resolve_ref_or_default
+from security_lakehouse.vocabulary import SEVERITY_ORDER, EventStatus, Severity
 
 # Runaway guard for page-number pagination, matched to the shared paginator so a
 # repo with thousands of alerts is not silently truncated.
@@ -564,22 +565,25 @@ def _open_alerts(payload: dict[str, Any] | list[dict[str, Any]]) -> list[tuple[s
         for category in ("code_scanning", "secret_scanning", "dependabot")
         if isinstance(payload.get(category), list)
         for alert in payload[category]
-        if isinstance(alert, dict) and alert.get("state") == "open"
+        if isinstance(alert, dict) and alert.get("state") == EventStatus.OPEN
     ]
 
 
 def _findings_severity(payload: dict[str, Any] | list[dict[str, Any]]) -> str:
-    ranks = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
-    levels = [_alert_severity(category, alert) or "info" for category, alert in _open_alerts(payload)]
-    return max((level for level in levels if level in ranks), key=ranks.__getitem__, default="info")
+    levels = [_alert_severity(category, alert) or Severity.INFO.value for category, alert in _open_alerts(payload)]
+    return max(
+        (level for level in levels if level in SEVERITY_ORDER),
+        key=SEVERITY_ORDER.__getitem__,
+        default=Severity.INFO.value,
+    )
 
 
 def _status_for(payload: dict[str, Any] | list[dict[str, Any]], *, signal: str = "") -> str:
     if isinstance(payload, dict) and payload.get("available") is False:
         return "requires_authenticated_connector"
     if signal == "security_findings" and _open_alerts(payload):
-        return "open"
-    return "observed"
+        return EventStatus.OPEN.value
+    return EventStatus.OBSERVED.value
 
 
 def _event(

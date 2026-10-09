@@ -56,6 +56,7 @@ server = [
 dev = [
     "jsonschema>=4.23",
     "pytest>=8.0",
+    "pytest-cov>=7.1",
     "ruff>=0.8.0",
     "mypy>=2.3",
     # supply-chain scan + pre-commit driver
@@ -216,6 +217,11 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["."]
 
+[tool.coverage.run]
+source = ["security_lakehouse"]
+branch = true
+relative_files = true
+
 [tool.mypy]
 files = ["src/security_lakehouse"]
 python_version = "3.11"
@@ -223,6 +229,7 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 warn_unused_configs = true
 strict_equality = true
+check_untyped_defs = true
 
 # Optional third-party SDKs that ship neither inline types nor a stub package
 # in uv.lock. Listed by name so a new untyped import still fails the gate.
@@ -253,8 +260,13 @@ line-length = 120
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "I", "UP", "B", "SIM", "BLE", "RUF100"]
 ignore = ["E501"]
+# Lazy imports are the deliberate convention (optional SDK extras, cycle
+# breaking, CLI start-up cost), so PLC0415 is not selected. S310/S608 are not
+# enforced, but their noqa comments record reviewed URL-open and SQL-identifier
+# sites, so RUF100 keeps them.
+external = ["S310", "S608"]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's dependency-injection markers are evaluated once and used as defaults

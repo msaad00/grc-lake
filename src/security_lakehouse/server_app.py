@@ -98,6 +98,7 @@ from security_lakehouse.operation_execution import execute_operation, execute_st
 from security_lakehouse.operation_jobs import DEFAULT_WORKERS, MAX_WORKERS, JobConflict, JobQueue, JobWorker
 from security_lakehouse.public_url import normalize_public_url
 from security_lakehouse.runtime_environment import runtime_env
+from security_lakehouse.server_routes.deps import parse_dt as _parse_dt
 from security_lakehouse.server_routes.schemas.base import StrictModel as _StrictModel
 from security_lakehouse.services import NotFound, ValidationError
 from security_lakehouse.services import access_reviews as access_review_services
@@ -520,15 +521,6 @@ class MappingReviewDecisionRequest(_StrictModel):
     rationale: str = Field(max_length=4000)
     items: list[MappingRef] = Field(min_length=1, max_length=500)
     evidence_ref: str | None = Field(default=None, max_length=1000)
-
-
-def _parse_dt(value: str | None) -> datetime | None:
-    if value is None or value == "":
-        return None
-    try:
-        return datetime.fromisoformat(value)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"invalid datetime: {value!r}") from exc
 
 
 def _params(request: Request) -> dict[str, list[str]]:
@@ -3952,7 +3944,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.get("/console/trust/{token}", response_class=HTMLResponse)
     @app.get("/console/trust/{token}/", response_class=HTMLResponse, include_in_schema=False)
-    def public_trust_page(token: str) -> HTMLResponse:  # noqa: ARG001 - token read client-side
+    def public_trust_page(token: str) -> HTMLResponse:  # token read client-side
         if trust_page is None or not trust_page.is_file():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
         return HTMLResponse(trust_page.read_text(encoding="utf-8"))

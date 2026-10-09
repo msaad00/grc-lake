@@ -11,13 +11,13 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.audit_readiness import build_audit_readiness  # noqa: E402
-from security_lakehouse.db import vendor_assessments as vendor_assessment_db  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake, _write_jsonl  # noqa: E402
+from security_lakehouse.audit_readiness import build_audit_readiness
+from security_lakehouse.db import vendor_assessments as vendor_assessment_db
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake, _write_jsonl
 
 
 def _bearer(token: str) -> dict[str, str]:

@@ -138,7 +138,7 @@ def _default_credential_token(tenant_id: str) -> Callable[[], str]:
             "the server never collects with its own Azure identity"
         )
     try:
-        from azure.identity import DefaultAzureCredential  # noqa: PLC0415
+        from azure.identity import DefaultAzureCredential
     except ImportError as exc:  # pragma: no cover - exercised only with live Graph
         raise RuntimeError(
             "intune-devices live collection requires azure-identity; install the cloud extra or use --fixture-dir"

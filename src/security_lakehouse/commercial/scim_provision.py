@@ -23,7 +23,6 @@ from __future__ import annotations
 import hashlib
 import re
 import secrets
-from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import func, select
@@ -33,6 +32,7 @@ from security_lakehouse.auth.idp_roles import load_role_map, resolve_role_from_c
 from security_lakehouse.commercial.limits import assert_within_limit
 from security_lakehouse.db.models import USER_ROLES, ScimGroup, ScimGroupMember, ScimToken, Tenant, User
 from security_lakehouse.runtime_environment import runtime_env
+from security_lakehouse.timeutil import utc_now
 
 USER_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:User"
 GROUP_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:Group"
@@ -51,10 +51,6 @@ class ScimError(Exception):
         self.status = status
         self.detail = detail
         self.scim_type = scim_type
-
-
-def _now() -> datetime:
-    return datetime.now(UTC)
 
 
 def _hash(token: str) -> str:
@@ -104,7 +100,7 @@ def revoke_scim_token(session: Session, *, tenant_id: str, token_id: str) -> Non
     if row is None or row.tenant_id != tenant_id:
         raise ScimError(404, "token not found")
     if row.revoked_at is None:
-        row.revoked_at = _now()
+        row.revoked_at = utc_now()
     session.flush()
 
 
@@ -121,7 +117,7 @@ def authenticate_scim_request(session: Session, header_value: str | None) -> str
     if token:
         row = session.scalars(select(ScimToken).where(ScimToken.token_hash == _hash(token))).one_or_none()
         if row is not None and row.revoked_at is None:
-            row.last_used_at = _now()
+            row.last_used_at = utc_now()
             session.flush()
             return row.tenant_id
         legacy = runtime_env().get("GRC_LAKE_SCIM_BEARER_TOKEN", "").strip()
@@ -327,7 +323,7 @@ def delete_scim_user(session: Session, *, tenant_id: str, user_id: str) -> None:
     """Soft delete: deactivate and hide from SCIM; keep the row for audit history."""
     row = _visible_user(session, tenant_id, user_id)
     row.is_active = False
-    row.scim_deleted_at = _now()
+    row.scim_deleted_at = utc_now()
     for membership in session.scalars(select(ScimGroupMember).where(ScimGroupMember.user_id == row.id)):
         session.delete(membership)
     session.flush()

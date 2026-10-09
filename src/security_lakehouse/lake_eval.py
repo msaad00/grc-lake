@@ -126,7 +126,7 @@ def run_lake_eval(
         result = "error"
         error = str(exc)
         write_lake_scale_state(lake, {**strategy, "last_error": error})
-    except Exception:  # noqa: BLE001 - eval runs record sanitized errors
+    except Exception:  # eval runs record sanitized errors
         logging.getLogger(__name__).exception("Lake evaluation failed; see the private operator log for the cause")
         result = "error"
         error = (

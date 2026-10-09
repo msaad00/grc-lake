@@ -230,7 +230,7 @@ def test_okta_client_retries_on_429_then_succeeds(monkeypatch: pytest.MonkeyPatc
     headers = Message()
     headers["Retry-After"] = "1"
 
-    def fake_urlopen(_req, timeout=0, **_kwargs):  # noqa: ANN001, ARG001
+    def fake_urlopen(_req, timeout=0, **_kwargs):
         calls["n"] += 1
         if calls["n"] == 1:
             raise urllib.error.HTTPError("https://org.okta.com", 429, "rate", headers, None)

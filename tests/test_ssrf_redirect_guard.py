@@ -42,7 +42,7 @@ class _FakeResp:
 def _private_dns(monkeypatch: pytest.MonkeyPatch, mapping: dict[str, str]) -> None:
     """Resolve each host to a chosen IP so the SSRF check is deterministic."""
 
-    def _getaddrinfo(host, port, *args, **kwargs):  # noqa: ANN001, ARG001
+    def _getaddrinfo(host, port, *args, **kwargs):
         ip = mapping[host]
         family = 10 if ":" in ip else 2
         return [(family, 1, 6, "", (ip, 0))]
@@ -113,7 +113,7 @@ def test_okta_link_pivot_to_internal_is_blocked(monkeypatch: pytest.MonkeyPatch)
     page1 = _FakeResp(b"[]", link='<http://evil.internal/latest/meta-data/>; rel="next"')
 
     class _Opener:
-        def open(self, request, timeout=None):  # noqa: ANN001, ANN201, ARG002
+        def open(self, request, timeout=None):
             # Only ever reached for the first (public) page; the pivot is rejected
             # by open_guarded's validator before any opener call.
             return page1
@@ -177,24 +177,24 @@ def test_workflow_action_webhook_redirect_to_internal_blocked(monkeypatch: pytes
     reached = {"internal": False}
 
     class _Redirector(BaseHTTPRequestHandler):
-        def do_POST(self):  # noqa: N802
+        def do_POST(self):
             self.send_response(302)
             self.send_header("Location", f"http://127.0.0.1:{internal.server_address[1]}/x")
             self.end_headers()
 
-        def log_message(self, *a):  # noqa: ANN002, ANN202
+        def log_message(self, *a):
             pass
 
     class _Internal(BaseHTTPRequestHandler):
-        def do_POST(self):  # noqa: N802
+        def do_POST(self):
             reached["internal"] = True
             self.send_response(200)
             self.end_headers()
 
-        def do_GET(self):  # noqa: N802
+        def do_GET(self):
             self.do_POST()
 
-        def log_message(self, *a):  # noqa: ANN002, ANN202
+        def log_message(self, *a):
             pass
 
     allow = HTTPServer(("127.0.0.1", 0), _Redirector)

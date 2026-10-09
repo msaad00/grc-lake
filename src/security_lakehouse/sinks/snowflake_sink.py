@@ -227,7 +227,7 @@ class SnowflakeSink:
     def _key_der(self) -> bytes:
         if self._private_key_der is not None:
             return self._private_key_der
-        from cryptography.hazmat.primitives import serialization  # noqa: PLC0415
+        from cryptography.hazmat.primitives import serialization
 
         data = Path(self.config.private_key_file).read_bytes()
         private_key = serialization.load_pem_private_key(data, password=None)
@@ -240,7 +240,7 @@ class SnowflakeSink:
     def _connect(self) -> Any:
         connector = self._connector
         if connector is None:
-            import snowflake.connector as snowflake_connector  # noqa: PLC0415
+            import snowflake.connector as snowflake_connector
 
             connector = snowflake_connector
 
@@ -259,7 +259,7 @@ class SnowflakeSink:
     def _write_pandas(self) -> Any:
         if self._writer is not None:
             return self._writer
-        from snowflake.connector.pandas_tools import write_pandas  # noqa: PLC0415
+        from snowflake.connector.pandas_tools import write_pandas
 
         return write_pandas
 
@@ -289,7 +289,7 @@ class SnowflakeSink:
 
     def load(self, lake_dir: str | Path) -> dict[str, int]:
         """Land every configured medallion table; return rows landed per table."""
-        import pandas as pd  # noqa: PLC0415
+        import pandas as pd
 
         write_pandas = self._write_pandas()
         landed: dict[str, int] = {}

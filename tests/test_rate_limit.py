@@ -15,12 +15,12 @@ pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 class _Clock:
@@ -74,7 +74,7 @@ def test_lru_eviction_bounds_memory() -> None:
     limiter = RateLimiter(RateLimitConfig(rps=1.0, burst=1, max_keys=10), clock=clock)
     for i in range(100):
         limiter.check(f"key-{i}")
-    assert len(limiter._buckets) <= 10  # noqa: SLF001 - asserting the memory bound
+    assert len(limiter._buckets) <= 10  # asserting the memory bound
 
 
 def test_from_env_defaults_enabled() -> None:

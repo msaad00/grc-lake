@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from security_lakehouse.auth.idp_roles import (  # noqa: E402
+from security_lakehouse.auth.idp_roles import (
     extract_claim_values,
     resolve_role_from_claims,
 )

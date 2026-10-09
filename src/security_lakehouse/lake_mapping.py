@@ -210,7 +210,7 @@ def load_mapping_file(path: str | Path) -> MappingSpec:
     text = target.read_text(encoding="utf-8")
     if target.suffix.lower() in {".yaml", ".yml"}:
         try:
-            import yaml  # noqa: PLC0415
+            import yaml
         except ImportError as exc:
             raise MappingError("YAML mapping files require PyYAML; install it or use JSON") from exc
         try:

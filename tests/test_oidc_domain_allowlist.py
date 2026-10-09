@@ -10,11 +10,11 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("sqlalchemy")
 
-from security_lakehouse.auth.oidc import OIDCConfig, OIDCLoginError, complete_oidc_login, load_oidc_config  # noqa: E402
-from security_lakehouse.db import repository  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
+from security_lakehouse.auth.oidc import OIDCConfig, OIDCLoginError, complete_oidc_login, load_oidc_config
+from security_lakehouse.db import repository
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_tenant, create_user
+from security_lakehouse.server_app import create_app
 
 
 def _config(allowed: frozenset[str]) -> OIDCConfig:

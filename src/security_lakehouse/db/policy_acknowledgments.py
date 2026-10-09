@@ -2,21 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from security_lakehouse.db.models import PolicyAcknowledgment, PolicyDocument
-
-
-def _now(now: datetime | None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def acknowledgment_to_dict(row: PolicyAcknowledgment) -> dict[str, Any]:
@@ -25,7 +18,7 @@ def acknowledgment_to_dict(row: PolicyAcknowledgment) -> dict[str, Any]:
         "policy_document_id": row.policy_document_id,
         "user_email": row.user_email,
         "display_name": row.display_name,
-        "acknowledged_at": _iso(row.acknowledged_at),
+        "acknowledged_at": iso_offset(row.acknowledged_at),
     }
 
 
@@ -78,7 +71,7 @@ def record_acknowledgment(
         policy_document_id=policy_document_id,
         user_email=normalized,
         display_name=display_name.strip(),
-        acknowledged_at=_now(now),
+        acknowledged_at=utc_now(now),
     )
     session.add(row)
     session.flush()

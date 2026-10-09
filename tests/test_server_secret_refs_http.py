@@ -10,11 +10,11 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, in_server_mode  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _request, _seed_lake, _spin  # noqa: E402
+from security_lakehouse.execution_mode import COMMERCIAL_HOSTED_ENV, in_server_mode
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _request, _seed_lake, _spin
 
 CONFIGURE = "/api/v1/connectors/jamf-devices/configure"
 LEGACY_CONFIGURE = "/api/connectors/jamf-devices/configure"

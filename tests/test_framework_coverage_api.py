@@ -3,10 +3,10 @@ from __future__ import annotations
 import pytest
 
 pytest.importorskip("fastapi")
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.catalog import load_control_catalog  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
+from security_lakehouse.catalog import load_control_catalog
+from security_lakehouse.server_app import create_app
 
 
 def test_framework_coverage_api_separates_proof_states(tmp_path) -> None:

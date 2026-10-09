@@ -12,15 +12,15 @@ pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from fastapi import FastAPI  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
-from security_lakehouse.commercial.pricing import get_tier, list_pricing_tiers  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.models import Tenant  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.commercial.pricing import get_tier, list_pricing_tiers
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.models import Tenant
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def test_pricing_tiers_structure() -> None:

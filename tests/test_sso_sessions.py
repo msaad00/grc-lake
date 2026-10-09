@@ -17,10 +17,10 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.auth.oidc import OIDCConfig, OIDCLoginError, complete_oidc_login  # noqa: E402
-from security_lakehouse.auth.saml import (  # noqa: E402
+from security_lakehouse.auth.oidc import OIDCConfig, OIDCLoginError, complete_oidc_login
+from security_lakehouse.auth.saml import (
     SAML_REQUEST_COOKIE,
     AssertionReplayCache,
     SAMLConfig,
@@ -30,12 +30,12 @@ from security_lakehouse.auth.saml import (  # noqa: E402
     load_saml_config,
     saml_request_data,
 )
-from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie  # noqa: E402
-from security_lakehouse.db import repository  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_tenant, create_user, create_user_session  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse.auth.sessions import SESSION_COOKIE, encode_session_cookie
+from security_lakehouse.db import repository
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_tenant, create_user, create_user_session
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
 
 
 def _config(*, tenant_slug: str = "acme", auto_provision: bool = False) -> OIDCConfig:

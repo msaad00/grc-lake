@@ -69,7 +69,7 @@ class SnowflakeClient:
 
     def __init__(self, *, query_params: dict[str, Any], views: dict[str, str] | None = None) -> None:
         try:
-            import snowflake.connector  # noqa: PLC0415
+            import snowflake.connector
         except ImportError as exc:  # pragma: no cover - live Snowflake only
             raise RuntimeError(
                 "snowflake-evidence-lake live collection requires snowflake-connector-python; "
@@ -279,7 +279,7 @@ def probe_snowflake_access(
     views = {key: str(options.get(key) or default) for key, default in DEFAULT_VIEWS.items()}
     try:
         result = SnowflakeClient(query_params=query_params, views=views).probe()
-    except Exception as exc:  # pragma: no cover - exercised with the live driver
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - live driver; probe returns the error
         return {
             "ok": False,
             "context": {},
@@ -315,7 +315,7 @@ def discover_snowflake_scope(
         query_params = _probe_query_params(credentials=credentials, options=options, env=environment)
         views = {key: str(options.get(key) or default) for key, default in DEFAULT_VIEWS.items()}
         return SnowflakeClient(query_params=query_params, views=views).discover_scope()
-    except Exception as exc:  # pragma: no cover - exercised with the live driver
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - live driver; discovery returns the error
         return {
             "ok": False,
             "selection_mode": "live_snowflake_scope",
@@ -805,7 +805,7 @@ def _view_probe_check(cursor: Any, *, purpose: str, view: str) -> dict[str, Any]
             "row_count": int(row[0] or 0),
             "error": None,
         }
-    except Exception as exc:  # pragma: no cover - live Snowflake only
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - live Snowflake only; probe returns the error
         return {
             "purpose": purpose,
             "view": view,

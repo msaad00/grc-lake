@@ -12,10 +12,10 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_headless import _token_for_role  # noqa: E402
+from security_lakehouse.server_app import create_app
+from test_headless import _token_for_role
 
 
 def test_triage_actor_is_the_session_identity_not_the_body(tmp_path: Path) -> None:

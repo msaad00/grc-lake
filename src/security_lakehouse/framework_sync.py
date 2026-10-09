@@ -33,13 +33,13 @@ import urllib.request
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from importlib import metadata
 from pathlib import Path
 from typing import Any
 
 from security_lakehouse.catalog import DEFAULT_FRAMEWORK_REGISTRY
 from security_lakehouse.io import append_jsonl
+from security_lakehouse.timeutil import utc_now_iso_z
 
 PROJECT_URL = "https://github.com/msaad00/grc-lake"
 
@@ -92,10 +92,6 @@ def is_transient_fetch_error(exc: BaseException) -> bool:
         # reason such as "unknown url type" is a malformed registry URL.
         return isinstance(exc.reason, OSError)
     return isinstance(exc, (TimeoutError, ConnectionError, http.client.IncompleteRead))
-
-
-def _utc_iso() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _retry_delay(attempt: int, exc: BaseException) -> float:
@@ -209,7 +205,7 @@ def sync_frameworks(
         pulled_at = framework.get("pulled_at")
         if state == "updated":
             dirty = True
-            pulled_at = _utc_iso()
+            pulled_at = utc_now_iso_z()
             framework["pulled_at"] = pulled_at
             framework["source_sha256"] = new_sha
             # Append-only record of the source drift so the history of *what the

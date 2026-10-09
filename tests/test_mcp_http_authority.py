@@ -10,14 +10,14 @@ pytest.importorskip("fastapi")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from security_lakehouse import mcp_server, netguard  # noqa: E402
-from security_lakehouse.db.base import session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user, revoke_api_key  # noqa: E402
-from security_lakehouse.io import write_jsonl  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
-from test_async_sdk import _server  # noqa: E402
-from test_mcp_server import call_tool  # noqa: E402
+from security_lakehouse import mcp_server, netguard
+from security_lakehouse.db.base import session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user, revoke_api_key
+from security_lakehouse.io import write_jsonl
+from security_lakehouse.server_app import create_app
+from test_api_v1 import _seed_lake
+from test_async_sdk import _server
+from test_mcp_server import call_tool
 
 
 def _principal(app, slug, role):

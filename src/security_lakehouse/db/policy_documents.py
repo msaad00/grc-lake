@@ -11,14 +11,7 @@ from sqlalchemy.orm import Session
 
 from security_lakehouse.db.base import apply_pagination
 from security_lakehouse.db.models import POLICY_DOCUMENT_STATUSES, PolicyDocument
-
-
-def _now(now: datetime | None = None) -> datetime:
-    return now or datetime.now(UTC)
-
-
-def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() if value else None
+from security_lakehouse.timeutil import iso_offset, utc_now
 
 
 def _parse_json(raw: str, *, default: Any) -> Any:
@@ -40,10 +33,10 @@ def document_to_dict(row: PolicyDocument) -> dict[str, Any]:
         "related_control_ids": _parse_json(row.related_control_ids_json, default=[]),
         "owner": row.owner,
         "created_by": row.created_by,
-        "created_at": _iso(row.created_at),
-        "updated_at": _iso(row.updated_at),
-        "published_at": _iso(row.published_at),
-        "review_due_at": _iso(row.review_due_at),
+        "created_at": iso_offset(row.created_at),
+        "updated_at": iso_offset(row.updated_at),
+        "published_at": iso_offset(row.published_at),
+        "review_due_at": iso_offset(row.review_due_at),
     }
 
 
@@ -111,7 +104,7 @@ def update_document(
     row = get_document(session, tenant_id=tenant_id, document_id=document_id)
     if row is None:
         return None
-    moment = _now(now)
+    moment = utc_now(now)
     if "title" in changes and str(changes["title"]).strip():
         row.title = str(changes["title"]).strip()
     if "content" in changes:
@@ -140,7 +133,7 @@ def _is_current(review_due_at: datetime | None) -> bool:
     if review_due_at is None:
         return True
     due = review_due_at if review_due_at.tzinfo else review_due_at.replace(tzinfo=UTC)
-    return due > _now()
+    return due > utc_now()
 
 
 def published_control_ids(session: Session, *, tenant_id: str) -> dict[str, dict[str, Any]]:
@@ -165,7 +158,7 @@ def published_control_ids(session: Session, *, tenant_id: str) -> dict[str, dict
                     "document_id": row.id,
                     "title": row.title,
                     "published_at": published_at.isoformat(),
-                    "review_due_at": _iso(row.review_due_at),
+                    "review_due_at": iso_offset(row.review_due_at),
                     "current": _is_current(row.review_due_at),
                 }
     return coverage
@@ -175,4 +168,4 @@ def default_review_due_at(template: dict[str, Any], *, now: datetime | None = No
     days = int(template.get("review_cadence_days") or 0)
     if days <= 0:
         return None
-    return _now(now) + timedelta(days=days)
+    return utc_now(now) + timedelta(days=days)

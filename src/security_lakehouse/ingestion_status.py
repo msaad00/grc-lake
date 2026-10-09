@@ -5,13 +5,13 @@ from __future__ import annotations
 import json
 from collections import Counter
 from pathlib import Path
-from typing import Any
 
 from security_lakehouse.connector_health import build_connector_health
 from security_lakehouse.connector_state import build_catalog_view, connector_state_reader, list_runs
 from security_lakehouse.generations import generation_reader
 from security_lakehouse.ingestion_metrics import build_catalog_coverage, build_eval_accuracy
 from security_lakehouse.io import count_jsonl, jsonl_field_counts, read_json, read_jsonl
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.lake_scale import (
     DEFAULT_EVAL_SCHEDULE,
     DEFAULT_SYNC_SCHEDULE,
@@ -20,8 +20,6 @@ from security_lakehouse.lake_scale import (
     resolve_materialize_strategy,
 )
 from security_lakehouse.scheduler import eval_schedule_status
-
-JsonObject = dict[str, Any]
 
 
 @generation_reader

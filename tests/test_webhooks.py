@@ -17,20 +17,20 @@ pytest.importorskip("httpx")
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import inspect  # noqa: E402
+from fastapi.testclient import TestClient
+from sqlalchemy import inspect
 
-from security_lakehouse import netguard, webhook_delivery  # noqa: E402
-from security_lakehouse.assessment import verify_snapshot_chain, write_assessment_snapshot  # noqa: E402
-from security_lakehouse.db import migrate  # noqa: E402
-from security_lakehouse.db import webhooks as webhooks_db  # noqa: E402
-from security_lakehouse.db.base import create_engine_for, session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_api_key, create_tenant, create_user  # noqa: E402
-from security_lakehouse.scheduler import tick  # noqa: E402
-from security_lakehouse.server_app import create_app  # noqa: E402
-from security_lakehouse.services import webhooks as webhook_services  # noqa: E402
-from security_lakehouse.workflows import save_workflow  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse import netguard, webhook_delivery
+from security_lakehouse.assessment import verify_snapshot_chain, write_assessment_snapshot
+from security_lakehouse.db import migrate
+from security_lakehouse.db import webhooks as webhooks_db
+from security_lakehouse.db.base import create_engine_for, session_scope
+from security_lakehouse.db.repository import create_api_key, create_tenant, create_user
+from security_lakehouse.scheduler import tick
+from security_lakehouse.server_app import create_app
+from security_lakehouse.services import webhooks as webhook_services
+from security_lakehouse.workflows import save_workflow
+from test_api_v1 import _seed_lake
 
 
 def _bearer(token: str) -> dict[str, str]:
@@ -67,7 +67,7 @@ def env(tmp_path: Path):
 def _public_dns(monkeypatch: pytest.MonkeyPatch) -> None:
     """Default: every host resolves to a public IP unless a test overrides it."""
 
-    def _getaddrinfo(host, port, *args, **kwargs):  # noqa: ANN001, ARG001
+    def _getaddrinfo(host, port, *args, **kwargs):
         return [(2, 1, 6, "", ("93.184.216.34", 0))]
 
     monkeypatch.setattr(netguard.socket, "getaddrinfo", _getaddrinfo)
@@ -211,7 +211,7 @@ def test_sign_and_verify_signature_round_trip() -> None:
 def test_deliver_webhook_success_signs_and_posts(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: list[urllib.request.Request] = []
 
-    def _fake_open_guarded(request, *, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _fake_open_guarded(request, *, timeout=None, validate=None):
         captured.append(request)
         return _FakeResponse(200)
 
@@ -247,7 +247,7 @@ def test_deliver_webhook_non_2xx_is_a_failure(monkeypatch: pytest.MonkeyPatch) -
 def test_deliver_webhook_retries_and_succeeds_on_second_attempt(monkeypatch: pytest.MonkeyPatch) -> None:
     calls = {"n": 0}
 
-    def _flaky(request, *, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _flaky(request, *, timeout=None, validate=None):
         calls["n"] += 1
         if calls["n"] == 1:
             raise urllib.error.URLError("boom")
@@ -366,7 +366,7 @@ def test_dispatch_event_fans_out_to_matching_enabled_subscriptions_only(tmp_path
 
         calls: list[str] = []
 
-        def _deliver(url, *, secret, event_type, envelope):  # noqa: ANN001, ARG001
+        def _deliver(url, *, secret, event_type, envelope):
             calls.append(url)
             return {"ok": True, "status_code": 200, "attempts": 1, "error": None}
 
@@ -395,7 +395,7 @@ def test_dispatch_event_delivery_failure_is_recorded_not_raised(tmp_path: Path) 
         )
         session.commit()
 
-        def _deliver(url, *, secret, event_type, envelope):  # noqa: ANN001, ARG001
+        def _deliver(url, *, secret, event_type, envelope):
             raise RuntimeError("network exploded")
 
         results = webhook_services.dispatch_event(
@@ -513,7 +513,7 @@ def test_write_assessment_snapshot_succeeds_even_when_every_webhook_delivery_fai
         )
         session.commit()
 
-        def _always_fails(url, *, secret, event_type, envelope):  # noqa: ANN001, ARG001
+        def _always_fails(url, *, secret, event_type, envelope):
             raise TimeoutError("receiver did not respond")
 
         def _hook(snapshot_path, assessment, new_violations, newly_failing_controls) -> None:
@@ -659,7 +659,7 @@ def test_snapshot_creation_via_api_dispatches_assessment_completed(
 
     calls: list[dict] = []
 
-    def _fake_deliver(url, *, secret, event_type, envelope):  # noqa: ANN001, ARG001
+    def _fake_deliver(url, *, secret, event_type, envelope):
         calls.append({"url": url, "secret": secret, "event_type": event_type, "envelope": envelope})
         return {"ok": True, "status_code": 200, "attempts": 1, "error": None}
 
@@ -705,7 +705,7 @@ def test_snapshot_creation_via_api_does_not_fail_when_webhook_delivery_fails(
     client = TestClient(app)
     _tenant_id, admin_token = _provision(app, "acme", role="security_admin")
 
-    def _dead_receiver(url, *, secret, event_type, envelope):  # noqa: ANN001, ARG001
+    def _dead_receiver(url, *, secret, event_type, envelope):
         raise TimeoutError("receiver did not respond")
 
     monkeypatch.setattr(webhook_services, "deliver_webhook", _dead_receiver)
@@ -795,7 +795,7 @@ def test_scheduler_tick_via_api_dispatches_assessment_completed(
 
     calls: list[dict] = []
 
-    def _fake_deliver(url, *, secret, event_type, envelope):  # noqa: ANN001, ARG001
+    def _fake_deliver(url, *, secret, event_type, envelope):
         calls.append({"event_type": event_type, "envelope": envelope})
         return {"ok": True, "status_code": 200, "attempts": 1, "error": None}
 
@@ -990,7 +990,7 @@ def test_dispatch_event_does_not_commit_the_callers_session(tmp_path: Path) -> N
             tenant.id,
             event_type="assessment.completed",
             data={},
-            deliver=lambda *a, **k: {"ok": True, "status_code": 200, "attempts": 1, "error": None},  # noqa: ARG005
+            deliver=lambda *a, **k: {"ok": True, "status_code": 200, "attempts": 1, "error": None},
         )
         # Neither the risk nor the delivery has been committed by dispatch_event.
         session.rollback()
@@ -1016,7 +1016,7 @@ def test_dispatch_event_failed_subscription_lookup_does_not_poison_the_session(
 
     from security_lakehouse.db import risks as risks_db
 
-    def _boom(session, *, tenant_id, event_type):  # noqa: ANN001, ARG001
+    def _boom(session, *, tenant_id, event_type):
         raise RuntimeError("subscription lookup exploded")
 
     monkeypatch.setattr(webhooks_db, "list_subscriptions_for_event", _boom)
@@ -1050,7 +1050,7 @@ def test_ssrf_refusal_does_not_reveal_the_resolved_address(monkeypatch: pytest.M
 
 
 def test_redirect_to_a_private_address_does_not_reveal_it(monkeypatch: pytest.MonkeyPatch) -> None:
-    def _redirected(request, *, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _redirected(request, *, timeout=None, validate=None):
         raise ValueError("webhook resolves to non-public address 192.168.7.9 (SSRF blocked)")
 
     monkeypatch.setattr(webhook_delivery.netguard, "open_guarded", _redirected)
@@ -1063,7 +1063,7 @@ def test_redirect_to_a_private_address_does_not_reveal_it(monkeypatch: pytest.Mo
 
 
 def test_network_errors_report_the_error_class_only(monkeypatch: pytest.MonkeyPatch) -> None:
-    def _refused(request, *, timeout=None, validate=None):  # noqa: ANN001, ARG001
+    def _refused(request, *, timeout=None, validate=None):
         raise urllib.error.URLError("[Errno 111] Connection refused to 172.16.0.5:8443")
 
     monkeypatch.setattr(webhook_delivery.netguard, "open_guarded", _refused)

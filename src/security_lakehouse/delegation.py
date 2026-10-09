@@ -68,7 +68,7 @@ def azure_credential(credentials: dict[str, Any], env: dict[str, str], *, label:
     if not value:
         raise ConnectorConfigError(f"{label}: the variable named by {field} is not set")
     try:
-        import azure.identity as azure_identity  # noqa: PLC0415
+        import azure.identity as azure_identity
     except ImportError as exc:  # pragma: no cover - optional extra
         raise ConnectorConfigError(f"{label} requires azure-identity; install the cloud extra") from exc
     if field == "client_secret_ref":
@@ -151,8 +151,8 @@ def gcp_credentials(credentials: dict[str, Any]) -> Any:
     if target is None:
         return None
     try:
-        import google.auth  # noqa: PLC0415
-        from google.auth import impersonated_credentials  # noqa: PLC0415
+        import google.auth
+        from google.auth import impersonated_credentials
     except ImportError as exc:  # pragma: no cover - optional extra
         raise ConnectorConfigError("GCP impersonation requires google-auth; install the cloud extra") from exc
     source, _project = google.auth.default(scopes=GCP_SCOPES)

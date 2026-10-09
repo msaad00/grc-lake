@@ -218,7 +218,7 @@ class ClickHouseSink:
     def _connect(self) -> Any:
         if self._client is not None:
             return self._client
-        import clickhouse_connect  # noqa: PLC0415
+        import clickhouse_connect
 
         params: dict[str, Any] = {
             "host": self.config.host,

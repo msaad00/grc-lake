@@ -114,7 +114,7 @@ class _FakeClient:
     def command(self, sql: str) -> None:
         self.commands.append(sql)
 
-    def insert(self, table: str, data: list, *, column_names: list, database: str) -> None:  # noqa: ANN001
+    def insert(self, table: str, data: list, *, column_names: list, database: str) -> None:
         self.inserts.append((f"{database}.{table}", len(data)))
 
 

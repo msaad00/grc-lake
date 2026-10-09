@@ -213,7 +213,7 @@ def run():
                 denied.list_namespaces()
             except ForbiddenError:
                 report["catalog_permission_denial"] = True
-            except Exception:
+            except Exception:  # noqa: BLE001 - any non-REST denial fails the smoke
                 # Only a real REST denial is acceptable, not a local scope check.
                 raise RuntimeError("unexpected cross-catalog denial type") from None
             else:
@@ -242,7 +242,7 @@ def run():
 if __name__ == "__main__":
     try:
         print(json.dumps(run(), indent=2, sort_keys=True))
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - redacts provider errors before exit
         # Do not emit arbitrary HTTP/provider errors, request bodies, or tokens.
         causes = []
         cause = error

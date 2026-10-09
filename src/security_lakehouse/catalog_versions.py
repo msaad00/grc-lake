@@ -44,6 +44,7 @@ from security_lakehouse.catalog import (
 from security_lakehouse.io import append_jsonl, read_jsonl
 from security_lakehouse.models import instant_sort_key
 from security_lakehouse.safeguards import load_safeguards
+from security_lakehouse.timeutil import utc_now_iso_z
 
 CONTROL_SCHEMA_VERSION = "trustops.control.v2"
 BUNDLE_SCHEMA_VERSION = "trustops.catalog_bundle.v1"
@@ -63,10 +64,6 @@ VERSION_FIELDS = (
 DEFAULT_HISTORY_PATH = DEFAULT_CONTROL_CATALOG.parent / "history.jsonl"
 DEFAULT_CROSSWALK_PATH = DEFAULT_CONTROL_CATALOG.parent.parent / "mappings" / "control_articles.json"
 DEFAULT_BUNDLE_LOCK_PATH = DEFAULT_CONTROL_CATALOG.parent / "bundle.lock.json"
-
-
-def _utc_iso() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _parse_date(value: str | date | datetime | None) -> date | None:
@@ -226,7 +223,7 @@ def retire_control(
         retired["superseded_by"] = superseded_by
 
     history_row = OrderedDict(retired)
-    history_row["retired_at"] = _utc_iso()
+    history_row["retired_at"] = utc_now_iso_z()
     append_jsonl(Path(history_path or DEFAULT_HISTORY_PATH), dict(history_row))
 
     successor_row: dict[str, Any] | None = None

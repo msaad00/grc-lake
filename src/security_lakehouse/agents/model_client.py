@@ -158,7 +158,7 @@ def _call_anthropic(context: dict[str, Any], provider: ModelProviderConfig) -> d
 def _bedrock_runtime_client(region: str) -> Any:
     """Build a Bedrock runtime client. Split out so tests can inject a fake."""
     try:
-        import boto3  # noqa: PLC0415
+        import boto3
     except ImportError as exc:  # pragma: no cover - exercised only without the aws extra
         raise ModelClientError("install boto3 (the 'aws' extra) to use the bedrock provider") from exc
     return boto3.client("bedrock-runtime", region_name=region)
@@ -198,8 +198,8 @@ def _vertex_access_token() -> str:
     Split out so tests can inject a token without google-auth installed.
     """
     try:
-        import google.auth  # noqa: PLC0415
-        import google.auth.transport.requests  # noqa: PLC0415
+        import google.auth
+        import google.auth.transport.requests
     except ImportError as exc:  # pragma: no cover - exercised only without the gcp extra
         raise ModelClientError("install google-auth (the 'gcp' extra) to use the vertex provider") from exc
     credentials, _project = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
@@ -252,7 +252,7 @@ def _call_cortex(context: dict[str, Any], provider: ModelProviderConfig) -> dict
     """
     if not provider.model:
         raise ModelClientError("GRC_LAKE_AGENT_MODEL is required for snowflake_cortex")
-    from security_lakehouse.sinks.snowflake_sink import SnowflakeSink, SnowflakeSinkConfig  # noqa: PLC0415
+    from security_lakehouse.sinks.snowflake_sink import SnowflakeSink, SnowflakeSinkConfig
 
     config = SnowflakeSinkConfig.from_env(dict(runtime_env()))
     if config is None:

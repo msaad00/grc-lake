@@ -23,10 +23,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from security_lakehouse.jsontypes import JsonObject
+
 if TYPE_CHECKING:  # pragma: no cover - typing only
     import httpx
-
-JsonObject = dict[str, Any]
 
 
 class GrcLakeError(RuntimeError):

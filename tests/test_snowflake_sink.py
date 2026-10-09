@@ -170,7 +170,7 @@ def test_load_writes_staging_and_merges_each_table() -> None:
     connector = _FakeConnector()
     writes: list[tuple[str, str, int]] = []
 
-    def fake_write_pandas(conn, df, table_name, *, schema, **kwargs):  # noqa: ANN001, ANN003
+    def fake_write_pandas(conn, df, table_name, *, schema, **kwargs):
         writes.append((schema, table_name, len(df)))
         return True, 1, len(df), []
 

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Any
 
 from security_lakehouse.catalog import (
     DEFAULT_CONTROL_CATALOG,
@@ -19,13 +18,12 @@ from security_lakehouse.catalog import (
     load_framework_registry,
 )
 from security_lakehouse.framework_provenance import build_framework_view, framework_pack_counts, framework_pack_state
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.mappings import DEFAULT_MAPPINGS, article_mapping_reviewed, load_control_article_mappings
 from security_lakehouse.safeguards import (
     framework_mapping_coverage,
     load_safeguards,
 )
-
-JsonObject = dict[str, Any]
 
 
 def _source_policy(framework: JsonObject) -> str:

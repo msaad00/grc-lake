@@ -16,11 +16,11 @@ import pytest
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from security_lakehouse.cli import main  # noqa: E402
-from security_lakehouse.db import migrate  # noqa: E402
-from security_lakehouse.db.base import create_engine_for, session_factory, session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_tenant  # noqa: E402
-from security_lakehouse.workflows import save_workflow  # noqa: E402
+from security_lakehouse.cli import main
+from security_lakehouse.db import migrate
+from security_lakehouse.db.base import create_engine_for, session_factory, session_scope
+from security_lakehouse.db.repository import create_tenant
+from security_lakehouse.workflows import save_workflow
 
 
 def _provision_tenant(lake: Path, slug: str = "acme") -> str:

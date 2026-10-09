@@ -18,10 +18,10 @@ import pytest
 
 pytest.importorskip("mcp")
 
-import anyio  # noqa: E402
+import anyio
 
-from security_lakehouse import mcp_server, netguard  # noqa: E402
-from test_api_v1 import _seed_lake  # noqa: E402
+from security_lakehouse import mcp_server, netguard
+from test_api_v1 import _seed_lake
 
 
 def _no_ssrf_check(url: str, **_kw: object) -> str:

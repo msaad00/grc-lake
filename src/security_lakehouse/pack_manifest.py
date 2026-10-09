@@ -25,11 +25,9 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
+from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.pack_spec import PackControlSpec
-
-JsonObject = dict[str, Any]
 
 PACK_MANIFEST_SCHEMA = "trustops.framework_pack_manifest.v1"
 

@@ -13,12 +13,12 @@ import pytest
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("alembic")
 
-from sqlalchemy import inspect  # noqa: E402
+from sqlalchemy import inspect
 
-from security_lakehouse.db import access_reviews as ar  # noqa: E402
-from security_lakehouse.db import migrate  # noqa: E402
-from security_lakehouse.db.base import create_engine_for, session_factory, session_scope  # noqa: E402
-from security_lakehouse.db.repository import create_tenant  # noqa: E402
+from security_lakehouse.db import access_reviews as ar
+from security_lakehouse.db import migrate
+from security_lakehouse.db.base import create_engine_for, session_factory, session_scope
+from security_lakehouse.db.repository import create_tenant
 
 
 def _session_scope(tmp_path: Path):

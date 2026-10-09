@@ -68,7 +68,7 @@ class BigQueryClient:
         if not 1 <= int(maximum_bytes_billed) <= MAX_MAXIMUM_BYTES_BILLED:
             raise ValueError(f"maximum_bytes_billed must be between 1 and {MAX_MAXIMUM_BYTES_BILLED}")
         try:
-            from google.cloud import bigquery  # noqa: PLC0415
+            from google.cloud import bigquery
         except ImportError as exc:  # pragma: no cover - optional extra
             raise RuntimeError(
                 "bigquery-evidence-lake live reads need the 'bigquery' extra (google-cloud-bigquery)"

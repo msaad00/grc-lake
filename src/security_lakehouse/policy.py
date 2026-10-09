@@ -25,7 +25,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-SEVERITY_ORDER = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+from security_lakehouse.vocabulary import SEVERITY_ORDER, ControlVerdict, Severity
+
 STALE_EVIDENCE = ["stale", "expired", "missing"]
 
 # Named aliases map the catalog's string rules onto declarative specs.
@@ -62,7 +63,7 @@ class ControlContext:
     open_violation_count: int = 0
     event_count: int = 0
     evidence_count: int = 0
-    max_severity: str = "info"
+    max_severity: str = Severity.INFO.value
     evidence_status: str | None = None
 
     @property
@@ -104,7 +105,9 @@ def evaluate_control(context: ControlContext, rule: Any) -> RuleResult:
         raise PolicyError(f"control {context.control_id}: " + "; ".join(problems))
     spec, name = resolve_rule(rule)
     matched, reasons = _eval_predicate(spec["fail_if"], context)
-    return RuleResult(status="fail" if matched else "pass", rule=name, reasons=reasons)
+    return RuleResult(
+        status=ControlVerdict.FAIL.value if matched else ControlVerdict.PASS.value, rule=name, reasons=reasons
+    )
 
 
 def validate_rule(rule: Any) -> list[str]:

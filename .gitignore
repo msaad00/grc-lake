@@ -51,6 +51,7 @@ grc-review-standalone/
 .env
 .env.*
 .coverage
+.coverage.*
 coverage.xml
 htmlcov/
 .mypy_cache/

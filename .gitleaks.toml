@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Synthetic credentials in tests, prefixed SEKRET_ so they can never be real"
+paths = ['''^tests/''']
+regexes = ['''SEKRET_[A-Z_]+_\d+''']
+condition = "AND"

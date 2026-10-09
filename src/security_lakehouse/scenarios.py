@@ -15,6 +15,7 @@ from typing import Any
 from security_lakehouse.assessment import build_current_posture, verify_snapshot_chain, write_assessment_snapshot
 from security_lakehouse.connector_runner import ConnectorSyncError, run_connector_sync
 from security_lakehouse.connector_state import append_config_event
+from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.io import read_jsonl, write_json
 from security_lakehouse.verification import verify_lake_integrity
 from security_lakehouse.workflows import run_workflow, save_workflow
@@ -24,6 +25,10 @@ DEFAULT_LIVE_CONNECTORS = ("azure-posture", "aws-posture", "snowflake-evidence-l
 SCENARIO_REPORT = ("gold", "scenario_reports", "live-cloud-posture.json")
 SCENARIO_PROOF_PACK = ("gold", "scenario_reports", "live-cloud-posture.md")
 SCENARIO_WORKFLOW_ID = "live-cloud-posture-freeze"
+SYNTHETIC_NOTICE = "Contains synthetic demonstration evidence; synthetic rows are not production proof."
+UNVERIFIED_NOTICE = (
+    "No synthetic marker found; provider origin and tenant authorization require independent verification."
+)
 
 
 def parse_fixture_specs(values: list[str] | None) -> dict[str, str]:
@@ -128,6 +133,7 @@ def format_live_cloud_posture_summary(report: dict[str, Any]) -> str:
     lines = [
         f"GRC Lake scenario: {report.get('scenario', LIVE_CLOUD_SCENARIO)}",
         f"Status: {'ok' if summary.get('ok') else 'needs attention'}",
+        SYNTHETIC_NOTICE if summary.get("synthetic_fixture") else UNVERIFIED_NOTICE,
         (f"Evidence: {summary.get('evidence_count', 0)} normalized rows from {_format_counts(source_counts)}"),
         (
             "Posture: "
@@ -215,6 +221,7 @@ def _scenario_report(
     chain_ok = snapshot_chain is not None and snapshot_chain.get("ok") is True
     connector_results = [_connector_result_summary(sync) for sync in syncs]
     summary = {
+        "synthetic_fixture": contains_synthetic_evidence(lake, silver_rows),
         "ok": all(row.get("ok") for row in syncs)
         and bool(integrity and integrity.get("ok"))
         and chain_ok
@@ -440,6 +447,7 @@ def _format_proof_pack(report: dict[str, Any]) -> str:
         "",
         f"- Scenario: `{report.get('scenario', LIVE_CLOUD_SCENARIO)}`",
         f"- Status: `{'ok' if summary.get('ok') else 'needs_attention'}`",
+        f"- Evidence provenance: {SYNTHETIC_NOTICE if summary.get('synthetic_fixture') else UNVERIFIED_NOTICE}",
         f"- Proof state: `{summary.get('proof_state', 'unknown')}`",
         f"- Evidence: `{summary.get('evidence_count', 0)}` normalized rows across `{len(summary.get('sources') or [])}` source(s)",
         f"- Posture: `{summary.get('posture_state', 'unknown')}` score `{summary.get('posture_score', 'unknown')}`",

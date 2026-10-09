@@ -28,6 +28,13 @@ artifact paths.
 
 ### Fixture Proof
 
+Fixture collection (including a saved connector `fixture_dir`) marks raw evidence
+as synthetic before materialization. The marker follows snapshots and portable
+exports. Scenario JSON exposes `summary.synthetic_fixture`, and both the operator
+summary and proof pack label synthetic evidence as not production proof. An `ok`
+status means the scenario checks passed; it does not qualify a live tenant.
+Absence of a synthetic marker does not authenticate provider origin.
+
 Use this in CI or local demos without cloud credentials:
 
 ```bash

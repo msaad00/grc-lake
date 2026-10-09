@@ -706,7 +706,7 @@ function FrameworksPageContent() {
                 : "attention"
             }
           >
-            {portfolio.ready}/{portfolio.total} packs ready
+            {portfolio.ready} of {portfolio.total} framework packs ready
           </Badge>
         </div>
         <dl className="grid divide-line sm:grid-cols-2 sm:divide-x xl:grid-cols-4 [&>div]:border-line max-sm:divide-y">
@@ -764,7 +764,7 @@ function FrameworksPageContent() {
             </dd>
           </div>
           <div className="px-4 py-4 sm:px-5">
-            <dt className="ui-label">Review backlog</dt>
+            <dt className="ui-label">Requirements awaiting review</dt>
             <dd className="ui-kpi-value mt-1.5">
               {coverageSummary
                 ? formatCount(
@@ -774,7 +774,8 @@ function FrameworksPageContent() {
                 : "—"}
             </dd>
             <dd className="mt-1.5 text-xs text-muted">
-              Requirements with a proposed link awaiting review
+              Requirements whose only links are proposed. Mapping review counts
+              individual mappings; one requirement can have several.
               {coverageSummary?.rejected_mapping_count
                 ? ` · ${formatCount(coverageSummary.rejected_mapping_count)} mapping(s) rejected by your org`
                 : ""}

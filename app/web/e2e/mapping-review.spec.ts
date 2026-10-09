@@ -36,8 +36,19 @@ test.describe("mapping review", () => {
       ),
     ).toBeVisible();
     await expect(
-      progress.getByText(/org-reviewed \d[\d,]* of \d[\d,]* mapped/).first(),
+      progress.getByText(/org-reviewed \d[\d,]* of \d[\d,]* mappings/).first(),
     ).toBeVisible();
+    // The unit is mappings here; Frameworks counts requirements.
+    await expect(
+      progress.getByText(/^Of \d[\d,]* safeguard-to-requirement mappings:/),
+    ).toBeVisible();
+    await expect(
+      progress.getByText(/Counts are mappings, not requirements/),
+    ).toBeVisible();
+    // An empty decision log never reads as "verified · 0".
+    await expect(progress.getByText(/Decision log verified · 0/)).toHaveCount(
+      0,
+    );
   });
 
   test("insecure console cannot approve a pending mapping", async ({

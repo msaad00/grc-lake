@@ -210,6 +210,7 @@ def test_framework_ready_when_score_and_coverage_meet_floor(tmp_path: Path) -> N
 
     hipaa = next(row for row in data["frameworks"] if row["framework"] == "HIPAA Security Rule")
     assert hipaa["assessed_controls"] == 3
+    assert hipaa["observed_controls"] == 3
     assert hipaa["total_controls"] == 6
     assert hipaa["coverage_pct"] == 50.0
     assert hipaa["ready"] is True
@@ -295,3 +296,50 @@ def test_empty_lake_scores_zero_audit_readiness(tmp_path: Path) -> None:
     assert data["posture"]["score"] == 0
     assert data["audit_score"] == 0
     assert data["state"] == "needs_work"
+
+
+def test_controls_without_a_verdict_are_observed_not_assessed() -> None:
+    """Coverage counts only evaluated controls, the same rule the Overview uses."""
+    from security_lakehouse.audit_readiness import _framework_readiness
+
+    iso, soc2 = _framework_readiness(
+        [
+            {
+                "framework": "ISO 27001:2022",
+                "score": 0.0,
+                "state": "attention_required",
+                "control_count": 1,
+                "not_evaluated_control_count": 1,
+            },
+            {
+                "framework": "SOC 2",
+                "score": 24.0,
+                "state": "attention_required",
+                "control_count": 33,
+                "not_evaluated_control_count": 2,
+            },
+        ]
+    )
+    assert iso["observed_controls"] == 1
+    assert iso["assessed_controls"] == 0
+    assert iso["coverage_pct"] == 0.0
+    assert soc2["observed_controls"] == 33
+    assert soc2["assessed_controls"] == 31
+
+
+def test_golden_audit_framework_counts_match_overview_rule(tmp_path: Path) -> None:
+    from security_lakehouse.assessment import build_current_posture
+    from security_lakehouse.audit_readiness import _framework_readiness
+    from security_lakehouse.fixtures import find_fixture
+    from security_lakehouse.pipeline import run_pipeline
+
+    fixture = find_fixture("golden")
+    assert fixture is not None
+    lake = tmp_path / "lake"
+    run_pipeline(fixture.raw_path, lake, tenant_id="default")
+    frameworks = build_current_posture(lake)["frameworks"]
+    by_name = {row["framework"]: row for row in _framework_readiness(frameworks)}
+    assert by_name["ISO 27001:2022"]["assessed_controls"] == 0
+    for row in frameworks:
+        expected = int(row["control_count"]) - int(row.get("not_evaluated_control_count") or 0)
+        assert by_name[row["framework"]]["assessed_controls"] == expected

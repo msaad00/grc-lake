@@ -233,9 +233,11 @@ function EvidencePageContent() {
     helper.accessor("control_ids", {
       header: "Controls",
       cell: (info) => (
-        <div className="grid min-w-[130px] max-w-[190px] gap-0.5 font-mono text-xs text-ink">
+        <div className="grid min-w-[130px] gap-0.5 font-mono text-xs text-ink">
           {(info.getValue() as string[]).map((c) => (
-            <span key={c}>{c}</span>
+            <span key={c} className="whitespace-nowrap">
+              {c}
+            </span>
           ))}
         </div>
       ),
@@ -278,7 +280,7 @@ function EvidencePageContent() {
       cell: (info) => {
         const [file, location] = splitRef(info.getValue());
         return (
-          <div className="min-w-[140px] max-w-[220px]" title={info.getValue()}>
+          <div className="min-w-[120px] max-w-[180px]" title={info.getValue()}>
             <code className="block truncate text-xs text-ink">{file}</code>
             {location ? (
               <div className="truncate text-[11px] text-muted">{location}</div>

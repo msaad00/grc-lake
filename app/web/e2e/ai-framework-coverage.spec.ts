@@ -75,9 +75,19 @@ for (const [observed, evaluated, total] of [
     );
     await page.goto("/console/ai-governance/");
     const strip = page.getByTestId("ai-governance-strip");
-    await expect(strip.getByText(/55% inventory.*45%/)).toBeVisible();
     await expect(
-      strip.getByText(/1\/8 passing.*observed.*catalogued/),
+      strip.getByRole("button", {
+        name: /About AI governance indicator: .*55% AI evidence signals.*45%/,
+      }),
+    ).toBeVisible();
+    // One summary line, worded like the Overview framework rows.
+    await expect(
+      strip.getByText(
+        `${observed} of ${total ?? "unknown"} controls assessed${
+          evaluated && evaluated > 1 ? ` · ${evaluated - 1} failing` : ""
+        } · 1 passing`,
+        { exact: true },
+      ),
     ).toBeVisible();
     if (!sufficient) {
       await expect(strip.getByText(reason, { exact: true })).toBeVisible();
@@ -92,11 +102,13 @@ for (const [observed, evaluated, total] of [
         strip.getByText("12.5% passing", { exact: true }),
       ).toBeVisible();
     }
+    // Observed and currently evaluated stay distinct in the detail hint.
     await expect(
-      strip.getByText(
-        `${evaluated ?? "unknown"}/${total ?? "unknown"} currently evaluated / catalogued`,
-        { exact: true },
-      ),
+      strip.getByRole("button", {
+        name: new RegExp(
+          `About Test AI framework coverage: .*${evaluated ?? "unknown"}/${total ?? "unknown"} currently evaluated with fresh evidence`,
+        ),
+      }),
     ).toBeVisible();
   });
 }

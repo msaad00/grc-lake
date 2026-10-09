@@ -95,6 +95,8 @@ export interface ControlTest {
   status: string;
   owner: string;
   confidence_score: number;
+  /** 0-100 inputs the pipeline weights into confidence_score. */
+  confidence_inputs?: Record<string, number>;
   agent_skill: string;
   freshness_status: string;
   next_action: string;
@@ -511,7 +513,10 @@ export interface AuditReadiness {
 export interface AuditReadinessFramework {
   framework: string;
   score: number;
+  /** Controls with a verdict; observed controls without one are excluded. */
   assessed_controls: number;
+  /** Controls with any evidence, including ones not yet evaluated. */
+  observed_controls?: number;
   /** null when the framework is not in the control catalog (coverage unknown). */
   total_controls: number | null;
   coverage_pct: number | null;

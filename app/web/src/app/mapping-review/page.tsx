@@ -23,7 +23,7 @@ import type {
   MappingReviewSummary,
 } from "@/lib/api/types";
 import { MAPPING_REVIEW_GLOSSARY, ROUTE_LABELS } from "@/lib/console-copy";
-import { formatCount, formatDateTime } from "@/lib/format";
+import { formatCount, formatDateTime, plural } from "@/lib/format";
 import { notify } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
@@ -165,19 +165,29 @@ function ReviewProgress({
         <div className="min-w-0">
           <h2 className="ui-section-title">Review progress</h2>
           <p className="mt-0.5 text-xs text-muted">
+            Of {formatCount(totals.mapped)} safeguard-to-requirement mappings:{" "}
             {formatCount(totals.org_reviewed)}{" "}
             {MAPPING_REVIEW_GLOSSARY.org_reviewed.label.toLowerCase()} ·{" "}
             {formatCount(totals.maintainer_reviewed)}{" "}
             {MAPPING_REVIEW_GLOSSARY.maintainer_reviewed.label.toLowerCase()} ·{" "}
             {formatCount(totals.pending + totals.needs_changes)} awaiting a
-            decision, of {formatCount(totals.mapped)} mappings.
+            decision.
+          </p>
+          <p className="mt-0.5 text-xs text-muted">
+            Counts are mappings, not requirements: one requirement can have
+            several mappings, so Frameworks reports smaller requirement counts.
           </p>
         </div>
-        <Badge tone={summary.decision_log.ok ? "ready" : "critical"}>
-          {summary.decision_log.ok
-            ? `Decision log verified · ${formatCount(summary.decision_log.length ?? 0)}`
-            : "Decision log failed verification"}
-        </Badge>
+        {!summary.decision_log.ok ? (
+          <Badge tone="critical">Decision log failed verification</Badge>
+        ) : summary.decision_log.length ? (
+          <Badge tone="ready">
+            Decision log verified ·{" "}
+            {plural(summary.decision_log.length, "decision")}
+          </Badge>
+        ) : (
+          <Badge tone="default">No org decisions logged yet</Badge>
+        )}
       </div>
       <details className="group border-b border-line px-4 py-2 text-xs text-muted sm:px-5">
         <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand [&::-webkit-details-marker]:hidden">
@@ -213,20 +223,26 @@ function ReviewProgress({
               className="grid w-full min-w-0 gap-1.5 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               aria-label={`Show ${summary.framework_names[row.framework_id] ?? row.framework_id} mappings`}
             >
-              <span className="flex min-w-0 items-baseline justify-between gap-2">
-                <span className="truncate text-sm font-semibold text-ink">
+              <span className="flex min-w-0 items-start justify-between gap-2">
+                <span
+                  className="line-clamp-2 min-w-0 text-sm font-semibold text-ink"
+                  title={
+                    summary.framework_names[row.framework_id] ??
+                    row.framework_id
+                  }
+                >
                   {summary.framework_names[row.framework_id] ??
                     row.framework_id}
                 </span>
                 <span className="shrink-0 text-xs tabular-nums text-muted">
                   {MAPPING_REVIEW_GLOSSARY.org_reviewed.label.toLowerCase()}{" "}
                   {formatCount(row.org_reviewed)} of {formatCount(row.mapped)}{" "}
-                  mapped
+                  mappings
                 </span>
               </span>
               <ProgressBar row={row} />
               <span className="text-xs text-muted">
-                {formatCount(row.maintainer_reviewed)} maintainer ·{" "}
+                {formatCount(row.maintainer_reviewed)} maintainer-reviewed ·{" "}
                 {formatCount(row.pending)} pending
                 {row.needs_changes
                   ? ` · ${formatCount(row.needs_changes)} needs changes`

@@ -14,7 +14,9 @@ plaintext cannot be recovered from its stored hash.
 
 ## Quiesce Kubernetes writers
 
-The chart supports one writable application replica and one scheduler owner.
+Local mode supports one writable application replica and one scheduler owner.
+For PostgreSQL/S3 deployments, also follow the coordinated catalog/object recovery
+requirements in [distributed mode](../DISTRIBUTED.md).
 Pause external CLI/automation writers too. First prevent new scheduled jobs:
 
 ```bash

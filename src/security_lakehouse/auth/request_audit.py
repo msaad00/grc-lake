@@ -81,6 +81,8 @@ def append_request_audit(
     decision: str,
     correlation_id: str,
     identity: Identity | None = None,
+    factory=None,
+    cluster_id: str | None = None,
 ) -> dict[str, Any]:
     """Persist a single request authorization decision.
 
@@ -103,6 +105,21 @@ def append_request_audit(
         "correlation_id": correlation_id,
         "occurred_at": _now(),
     }
+    if factory is not None and cluster_id is not None:
+        import json
+
+        from security_lakehouse.db.models import DistributedRequestAudit
+
+        with factory.begin() as session:
+            session.add(
+                DistributedRequestAudit(
+                    event_id=event["event_id"],
+                    cluster_id=cluster_id,
+                    tenant_id=event["tenant_id"],
+                    event_json=json.dumps(event, sort_keys=True),
+                )
+            )
+        return event
     path = Path(lake_dir) / "gold" / REQUEST_AUDIT_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
     with chain_lock(path):

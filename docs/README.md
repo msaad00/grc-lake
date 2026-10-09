@@ -34,7 +34,8 @@ Every guide in `docs/`, grouped by task. New here? Start with the
 | [Commercial hosted](COMMERCIAL_HOSTED.md)                                | Gated hosted features: invites, limits, SCIM, billing   |
 | [Release readiness](RELEASE_READINESS.md)                                | Release gates and what they prove                       |
 | [Backup and restore](runbooks/BACKUP_RESTORE.md)                         | Backing up the lake and app database                    |
-| [HA and read replicas](runbooks/HA_READ_REPLICAS.md)                     | Deployment topology and the single-writer boundary      |
+| [Distributed PostgreSQL and S3](DISTRIBUTED.md)                          | Shards, partitions, replicas and operational boundaries |
+| [HA and read replicas](runbooks/HA_READ_REPLICAS.md)                     | Local and distributed deployment topology               |
 | [Connector sync observability](runbooks/OBSERVABILITY_CONNECTOR_SYNC.md) | Connector sync dashboards                               |
 | [Headless connector setup](playbooks/HEADLESS_CONNECTOR_SETUP.md)        | Configuring connectors without the console              |
 | [HRIS personnel audit](playbooks/HRIS_PERSONNEL_AUDIT.md)                | HR systems and offboarding checks                       |

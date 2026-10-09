@@ -90,3 +90,31 @@ true
 {{- if and (get $configured "GRC_LAKE_COOKIE_SIGNING_KEY") (or (not $oidc) (get $configured "GRC_LAKE_SESSION_SECRET")) -}}true{{- else -}}false{{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/* Durable cluster identity; every pod gets private scratch storage. */}}
+{{- define "grc-lake.distributedEnv" -}}
+{{- if .Values.distributed.enabled }}
+- name: GRC_LAKE_DEPLOYMENT_MODE
+  value: distributed
+- name: GRC_LAKE_CLUSTER_ID
+  value: {{ required "distributed.clusterId is required" .Values.distributed.clusterId | quote }}
+- name: GRC_LAKE_OBJECT_BUCKET
+  value: {{ required "distributed.bucket is required" .Values.distributed.bucket | quote }}
+- name: GRC_LAKE_OBJECT_ENDPOINT
+  value: {{ .Values.distributed.endpoint | quote }}
+- name: GRC_LAKE_OBJECT_REGION
+  value: {{ .Values.distributed.region | quote }}
+- name: GRC_LAKE_VIRTUAL_SHARDS
+  value: {{ .Values.distributed.virtualShards | quote }}
+- name: GRC_LAKE_REPLICA_ROLE
+  value: {{ .Values.distributed.role | quote }}
+- name: GRC_LAKE_WORKSPACE_BYTES
+  value: {{ .Values.distributed.workspaceBytes | quote }}
+- name: GRC_LAKE_DATABASE_URL
+  valueFrom:
+    secretKeyRef:
+      name: {{ required "distributed.databaseSecretName is required" .Values.distributed.databaseSecretName | quote }}
+      key: {{ .Values.distributed.databaseSecretKey | quote }}
+      optional: false
+{{- end }}
+{{- end -}}

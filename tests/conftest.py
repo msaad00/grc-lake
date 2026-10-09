@@ -80,3 +80,17 @@ def rest_stub():
         server.shutdown()
         server.server_close()
         thread.join()
+
+
+@pytest.fixture
+def catalog():
+    from distributed_fixtures import _create_distributed_catalog
+
+    yield from _create_distributed_catalog()
+
+
+@pytest.fixture
+def replicas(catalog, tmp_path, monkeypatch):
+    from distributed_fixtures import _create_distributed_replicas
+
+    yield from _create_distributed_replicas(catalog, tmp_path, monkeypatch)

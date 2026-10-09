@@ -1,0 +1,3 @@
+# Overlay api-values.yaml. Route read traffic to this release's separate Service.
+distributed:
+  role: reader

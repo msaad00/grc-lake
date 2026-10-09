@@ -92,6 +92,8 @@ def _remote_api_configured() -> bool:
     if mode not in {"auto", "local", "remote"}:
         raise ValueError("GRC_LAKE_MCP_MODE must be auto, local, or remote")
     if mode == "local":
+        if runtime_env().get("GRC_LAKE_DEPLOYMENT_MODE", "local") == "distributed":
+            raise ValueError("distributed deployments require remote MCP mode through the authenticated API")
         return False
     remote = mode == "remote" or bool(
         runtime_env().get("GRC_LAKE_API_URL", "").strip() or runtime_env().get("GRC_LAKE_API_KEY", "").strip()
@@ -100,6 +102,8 @@ def _remote_api_configured() -> bool:
         if not runtime_env().get("GRC_LAKE_API_URL", "").strip():
             raise ValueError("GRC_LAKE_API_URL is required in remote MCP mode")
         _api_key()
+    if not remote and runtime_env().get("GRC_LAKE_DEPLOYMENT_MODE", "local") == "distributed":
+        raise ValueError("distributed deployments require remote MCP mode through the authenticated API")
     return remote
 
 

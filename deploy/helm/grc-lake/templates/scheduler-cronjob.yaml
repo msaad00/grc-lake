@@ -21,7 +21,7 @@ spec:
           restartPolicy: Never
           serviceAccountName: {{ include "grc-lake.serviceAccountName" . }}
           automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
-          {{- if and .Values.lake.persistence.enabled (not .Values.lake.readOnly) (eq .Values.lake.persistence.accessMode "ReadWriteOnce") }}
+          {{- if and (not .Values.distributed.enabled) .Values.lake.persistence.enabled (not .Values.lake.readOnly) (eq .Values.lake.persistence.accessMode "ReadWriteOnce") }}
           # A ReadWriteOnce lake volume is mountable read-write from a single
           # node only. Pin the scheduler to the API pod's node so both can mount
           # it; otherwise the CronJob can be scheduled elsewhere and fail to
@@ -56,6 +56,7 @@ spec:
                 - --lake
                 - {{ .Values.lake.mountPath | quote }}
               env:
+                {{- include "grc-lake.distributedEnv" . | nindent 16 }}
                 - name: GRC_LAKE_LAKE
                   value: {{ .Values.lake.mountPath | quote }}
                 {{- with .Values.scheduler.retention }}
@@ -90,7 +91,10 @@ spec:
                 {{- end }}
           volumes:
             - name: lake
-              {{- if .Values.lake.persistence.enabled }}
+              {{- if .Values.distributed.enabled }}
+              emptyDir:
+                sizeLimit: {{ .Values.distributed.scratchSize }}
+              {{- else if .Values.lake.persistence.enabled }}
               persistentVolumeClaim:
                 claimName: {{ include "grc-lake.fullname" . }}-lake
               {{- else }}

@@ -1,4 +1,4 @@
-{{- if .Values.lake.persistence.enabled -}}
+{{- if and .Values.lake.persistence.enabled (not .Values.distributed.enabled) -}}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

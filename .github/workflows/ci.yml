@@ -322,19 +322,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: always()
-    needs: [pipeline-smoke, python-tests, pre-commit, security, e2e]
+    needs: [pipeline-smoke, python-tests, pre-commit, security, e2e, postgres-migrations]
     steps:
-      - name: Require smoke, all Python shards, hooks, security, and browser tests
+      - name: Require smoke, Python shards, hooks, security, browser and distributed contracts
         env:
           PIPELINE_RESULT: ${{ needs.pipeline-smoke.result }}
           TEST_RESULT: ${{ needs.python-tests.result }}
           HOOK_RESULT: ${{ needs.pre-commit.result }}
           SECURITY_RESULT: ${{ needs.security.result }}
           E2E_RESULT: ${{ needs.e2e.result }}
+          POSTGRES_RESULT: ${{ needs.postgres-migrations.result }}
         run: |
           test "$PIPELINE_RESULT" = success && test "$TEST_RESULT" = success && \
             test "$HOOK_RESULT" = success && test "$SECURITY_RESULT" = success && \
-            test "$E2E_RESULT" = success
+            test "$E2E_RESULT" = success && test "$POSTGRES_RESULT" = success
 
   postgres-migrations:
     runs-on: ubuntu-latest
@@ -367,6 +368,11 @@ jobs:
         env:
           TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable%40pass%25word@localhost:5432/postgres
         run: uv run pytest -q tests/test_migration_portability.py tests/test_agent_decision_authority.py tests/test_access_review_authority_state.py tests/test_authority_migration_data.py tests/test_operation_worker_fairness.py
+
+      - name: Distributed PostgreSQL and S3 protocol contracts
+        env:
+          TEST_POSTGRES_URL: postgresql+psycopg://postgres:ci-disposable%40pass%25word@localhost:5432/postgres
+        run: uv run --extra cloud --extra parquet --with 'moto[server,s3]==5.2.3' pytest -q tests/test_distributed_*.py
 
   iceberg-interop:
     runs-on: ubuntu-latest

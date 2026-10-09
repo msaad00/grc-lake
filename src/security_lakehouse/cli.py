@@ -28,6 +28,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
+        from security_lakehouse.distributed.config import ClusterConfig
+
+        if ClusterConfig.from_env() is not None and args.command not in {"cluster", "serve", "scheduler", "db"}:
+            raise ValueError(
+                "distributed mode uses cluster commands or the authenticated API; local lake commands require local mode"
+            )
         return int(args.func(args))
     except Exception as exc:  # noqa: BLE001
         print(f"error: {exc}", file=sys.stderr)
@@ -44,6 +50,9 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="grc-lake")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
+    from security_lakehouse.distributed.commands import register
+
+    register(sub)
 
     validate = sub.add_parser("validate", help="validate raw JSONL evidence")
     validate.add_argument("--raw", required=True, help="raw security events JSONL")
@@ -73,6 +82,9 @@ def _parser() -> argparse.ArgumentParser:
     export_parquet.add_argument("--out", required=True, help="new directory outside the lake; never overwritten")
     export_parquet.add_argument("--tenant-id", required=True, help="must match both assessment and evidence tenant")
     export_parquet.add_argument("--batch-size", type=int, default=8192, help="rows per Parquet write batch (1–65536)")
+    export_parquet.add_argument(
+        "--partitioned", action="store_true", help="partition by tenant, source and UTC event date"
+    )
     export_parquet.set_defaults(func=_export_parquet)
     publish_iceberg = pipeline_sub.add_parser(
         "publish-iceberg", help="publish verified evidence to a tenant-scoped Iceberg REST table"
@@ -2529,7 +2541,12 @@ def _openapi(args: argparse.Namespace) -> int:
 def _export_parquet(args: argparse.Namespace) -> int:
     from security_lakehouse.parquet_export import export_parquet
 
-    result = export_parquet(args.lake, args.out, tenant_id=args.tenant_id, batch_size=args.batch_size)
+    if args.partitioned:
+        from security_lakehouse.distributed.partitioning import export_partitions
+
+        result = export_partitions(args.lake, args.out, tenant_id=args.tenant_id, batch_size=args.batch_size)
+    else:
+        result = export_parquet(args.lake, args.out, tenant_id=args.tenant_id, batch_size=args.batch_size)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

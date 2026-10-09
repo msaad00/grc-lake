@@ -1196,6 +1196,11 @@ def _operation_worker_count() -> int:
 def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     """Build the server-mode ASGI app bound to a security data lake directory."""
     _assert_insecure_allowed(require_auth=require_auth)
+    from security_lakehouse.distributed.config import ClusterConfig
+
+    cluster = ClusterConfig.from_env()
+    if cluster is not None and (not require_auth or _insecure_requested()):
+        raise ValueError("distributed mode requires authenticated server mode")
     lake = resolve_path(lake_dir)
     web_dist = web_dist_dir() if web_dist_index() else None
 
@@ -1381,16 +1386,27 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         ):
             # Offload the synchronous append so the audit write never blocks the
             # event loop on every authenticated request.
-            await run_in_threadpool(
-                append_request_audit,
-                lake_for(identity) if identity is not None else lake / "server/security_audit",
+            from security_lakehouse.distributed.context import binding
+
+            audit_workspace = binding.get()
+            audit_details = dict(
                 method=request.method,
                 route=getattr(request.scope.get("route"), "path", "/api/{unmatched}"),
                 status_code=response.status_code,
                 decision="allow" if response.status_code < 400 else "deny",
                 correlation_id=correlation_id,
                 identity=identity,
+                factory=app.state.sessionmaker if cluster is not None else None,
+                cluster_id=cluster.cluster_id if cluster is not None else None,
             )
+            if audit_workspace is not None and audit_workspace.connection is not None:
+                request.state.distributed_audit = audit_details
+            else:
+                await run_in_threadpool(
+                    append_request_audit,
+                    lake_for(identity) if identity is not None else lake / "server/security_audit",
+                    **audit_details,
+                )
         response.headers["X-Correlation-ID"] = correlation_id
         return response
 
@@ -1481,6 +1497,11 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         from security_lakehouse.deployment_readiness import ready
 
         available = ready(lake, engine)
+        if available and cluster is not None:
+            try:
+                app.state.distributed_runtime.objects.client.head_bucket(Bucket=cluster.bucket)
+            except Exception:  # noqa: BLE001 - readiness never exposes storage credentials
+                available = False
         return JSONResponse(
             {"ok": available, "service": "trustops-assessment"},
             status_code=200 if available else 503,
@@ -2264,12 +2285,24 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         include_requests = (params.get("include_requests") or ["false"])[0].lower() in {"1", "true", "yes"}
         category = (params.get("category") or [""])[0] or None
         actor = (params.get("actor") or [""])[0] or None
+        shared_requests = None
+        if cluster is not None and (include_requests or category == "request"):
+            from security_lakehouse.distributed.audit import request_rows
+
+            shared_requests = request_rows(
+                app.state.sessionmaker,
+                cluster.cluster_id,
+                identity.tenant_id,
+                actor=actor,
+                limit=max(1, min(limit, 1000)),
+            )
         entries = build_audit_log(
             lake_for(identity),
             category=category,
             actor=actor,
             limit=max(1, min(limit, 1000)),
             include_requests=include_requests,
+            request_rows=shared_requests,
         )
         return JSONResponse(
             api_v1.envelope(
@@ -3963,6 +3996,33 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         return app.openapi_schema
 
     app.openapi = openapi_with_dispatch_routes  # type: ignore[method-assign]
+    if cluster is not None:
+        from security_lakehouse.distributed.catalog import Catalog
+        from security_lakehouse.distributed.http import DistributedMiddleware
+        from security_lakehouse.distributed.objects import ObjectStore
+        from security_lakehouse.distributed.workspace import Runtime
+
+        catalog = Catalog(engine, cluster)
+        catalog.initialize()
+        runtime = Runtime(catalog, ObjectStore(cluster), lake / "distributed-scratch")
+        app.state.distributed_runtime = runtime
+        app.state.job_worker_enabled = False
+        app.add_middleware(
+            DistributedMiddleware,
+            runtime=runtime,
+            factory=app.state.sessionmaker,
+            audit_sampler=app.state.anonymous_audit_sampler,
+            read_only=runtime_env().get("GRC_LAKE_REPLICA_ROLE", "api") == "reader",
+        )
+        # Rate limiting must remain outside workspace/authentication lookups.
+        # Request audit stays inside so it can join the publication transaction.
+        distributed_layer = app.user_middleware.pop(0)
+        rate_index = next(
+            i
+            for i, layer in enumerate(app.user_middleware)
+            if getattr(layer.kwargs.get("dispatch"), "__name__", "") == "_rate_limit"
+        )
+        app.user_middleware.insert(rate_index + 1, distributed_layer)
     return app
 
 

@@ -113,3 +113,6 @@ Existing Iceberg tables without the new column fail schema validation before
 publication. Provision a compatible table or explicitly evolve its schema before
 publishing v2-normalized generations. GRC Lake does not silently mutate that table
 schema. Historical snapshots and exports remain pinned to their source generation.
+
+For tenant/source/date partitioned bundles and selective S3 downloads, see
+[distributed partitions](DISTRIBUTED.md#query-a-partition-subset).

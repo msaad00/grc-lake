@@ -81,7 +81,23 @@ def create_engine_for(lake_dir: str | Path, *, url: str | None = None, echo: boo
 
 def session_factory(engine: Engine) -> sessionmaker[Session]:
     """Build a session factory bound to ``engine``."""
-    return sessionmaker(bind=engine, expire_on_commit=False, future=True)
+    return sessionmaker(bind=engine, class_=_WorkspaceSession, expire_on_commit=False, future=True)
+
+
+class _WorkspaceSession(Session):
+    """Domain commits join a distributed publication's outer transaction."""
+
+    def __init__(self, **kwargs):
+        from security_lakehouse.distributed.context import binding
+
+        workspace = binding.get()
+        if workspace is not None and workspace.connection is not None:
+            engine = kwargs.get("bind")
+            if engine is None or engine.url != workspace.connection.engine.url:
+                raise ValueError("distributed transaction cannot span different databases")
+            kwargs["bind"] = workspace.connection
+            kwargs["join_transaction_mode"] = "create_savepoint"
+        super().__init__(**kwargs)
 
 
 @contextmanager

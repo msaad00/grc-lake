@@ -185,9 +185,11 @@ def _state_key(target_kind: str, target_id: str) -> str:
 
 def _read_state(lake_dir: str | Path) -> dict[str, datetime]:
     path = _gold(lake_dir) / STATE_FILE
+    from security_lakehouse.distributed.schedules import read_state
+
+    latest: dict[str, datetime] = read_state()
     if not path.is_file():
-        return {}
-    latest: dict[str, datetime] = {}
+        return latest
     try:
         rows = read_jsonl(path)
     except (ValueError, UnicodeError) as exc:
@@ -229,6 +231,9 @@ def _write_state(lake_dir: str | Path, *, target_kind: str, target_id: str, fire
         record["workflow_id"] = target_id
     if target_kind == "connector":
         record["connector_id"] = target_id
+    from security_lakehouse.distributed.schedules import record_attempt
+
+    record_attempt(target_kind, target_id, fired_at)
     append_jsonl(gold / STATE_FILE, record)
 
 
@@ -339,6 +344,13 @@ def tick(
     double-fire. A tick that cannot acquire the lock is a no-op and returns a
     single ``{"skipped_locked": True}`` record instead of firing.
     """
+    from security_lakehouse.distributed.config import ClusterConfig
+    from security_lakehouse.distributed.context import binding
+
+    if ClusterConfig.from_env() is not None and binding.get() is None:
+        from security_lakehouse.distributed.schedules import tick_cluster
+
+        return tick_cluster(Path(lake_dir), now=now)
     if all_tenants and server_tenant_id(lake_dir) is not None:
         raise ValueError("all-tenants scheduling requires an unbound lake root")
     if all_tenants or (in_server_mode() and server_tenant_id(lake_dir) is None):

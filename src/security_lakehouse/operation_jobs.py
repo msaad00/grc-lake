@@ -98,13 +98,25 @@ class JobConflict(ValueError):
 
 
 class JobQueue:
-    def __init__(self, factory: sessionmaker, root: Path):
+    def __init__(self, factory: sessionmaker, root: Path, *, shards: Collection[int] | None = None):
         self.factory = factory
         self.root = root.resolve()
         self.root_key = root_key(root)
+        from security_lakehouse.distributed.config import ClusterConfig
+
+        self.cluster = ClusterConfig.from_env()
+        self.shards = None if shards is None else frozenset(shards)
+        if self.shards is not None and (
+            self.cluster is None
+            or not self.shards
+            or any(type(value) is not int or not 0 <= value < self.cluster.shards for value in self.shards)
+        ):
+            raise ValueError("worker shards must be a nonempty subset of the cluster virtual shards")
 
     def enqueue(self, identity: Identity, path: str, payload: dict[str, Any], key: str) -> dict[str, Any]:
         # Serialize count-and-insert across API processes sharing the writer lake.
+        if self.cluster is not None:
+            return self._enqueue(identity, path, payload, key)
         tenant_key = hashlib.sha256(identity.tenant_id.encode()).hexdigest()
         with chain_lock(self.root / "server/operation_admission" / tenant_key):
             return self._enqueue(identity, path, payload, key)
@@ -136,6 +148,10 @@ class JobQueue:
         digest = hashlib.sha256((path + "\n" + semantic).encode()).hexdigest()
         key_hash = hashlib.sha256(key.encode()).hexdigest()
         with self.factory() as session:
+            if self.cluster is not None:
+                from security_lakehouse.distributed.locks import transaction_lock
+
+                transaction_lock(session, "admission", self.root_key + identity.tenant_id)
             query = select(OperationJob).where(
                 OperationJob.root_key == self.root_key,
                 OperationJob.tenant_id == identity.tenant_id,
@@ -261,6 +277,10 @@ class JobQueue:
             ]
 
     def execution_lock(self, row: OperationJob):
+        if self.cluster is not None:
+            from security_lakehouse.distributed.locks import process_lock
+
+            return process_lock(self.factory.kw["bind"], "operation", self.root_key + row.id)
         return chain_lock(self.root / "server/operation_execution" / row.id, blocking=False)
 
     def owns_claim(self, row: OperationJob) -> bool:
@@ -314,6 +334,11 @@ class JobQueue:
         """
         self.recover()
         with self.factory() as session:
+            if self.cluster is not None:
+                from security_lakehouse.distributed.locks import transaction_lock
+
+                # Serialize only the short claim transaction, never execution.
+                transaction_lock(session, "claim", self.root_key)
             turns = (
                 select(OperationJob.tenant_id, func.max(OperationJob.started_at).label("last_started"))
                 .where(OperationJob.root_key == self.root_key)
@@ -328,6 +353,20 @@ class JobQueue:
                     OperationJob.status == "queued",
                 )
             )
+            if self.cluster is not None:
+                from security_lakehouse.db.models import DistributedTenantHead
+
+                active = select(OperationJob.tenant_id).where(
+                    OperationJob.root_key == self.root_key,
+                    OperationJob.status.in_(["running", "cancelling"]),
+                )
+                candidates = candidates.where(OperationJob.tenant_id.not_in(active))
+                if self.shards is not None:
+                    heads = select(DistributedTenantHead.tenant_id).where(
+                        DistributedTenantHead.cluster_id == self.cluster.cluster_id,
+                        DistributedTenantHead.shard_id.in_(sorted(self.shards)),
+                    )
+                    candidates = candidates.where(OperationJob.tenant_id.in_(heads))
             if exclude_tenants:
                 candidates = candidates.where(OperationJob.tenant_id.not_in(sorted(exclude_tenants)))
             job_id = session.scalar(

@@ -6,3 +6,5 @@ from security_lakehouse.sdk import (
 from security_lakehouse.sdk import (
     GrcLakeClient as GrcLakeClient,
 )
+
+__all__ = ["GrcLakeClient", "AsyncGrcLakeClient"]

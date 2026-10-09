@@ -883,6 +883,7 @@ class OperationJob(Base):
         UniqueConstraint("root_key", "tenant_id", "user_id", "idempotency_key", name="uq_operation_job_request"),
         Index("ix_operation_jobs_queue", "root_key", "status", "created_at"),
         Index("ix_operation_jobs_tenant", "root_key", "tenant_id", "created_at"),
+        Index("ix_operation_jobs_tenant_status", "root_key", "tenant_id", "status", "created_at", "id"),
     )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     root_key: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -917,6 +918,8 @@ class DistributedTenantHead(Base):
     """Atomic publication pointer and monotonically fenced tenant ownership."""
 
     __tablename__ = "distributed_tenant_heads"
+    __table_args__ = (Index("ix_distributed_heads_dispatch", "cluster_id", "shard_id", "last_job_started_at"),)
+    last_job_started_at: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     cluster_id: Mapped[str] = mapped_column(String(128), primary_key=True)
     tenant_id: Mapped[str] = mapped_column(String(128), primary_key=True)
     shard_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -931,6 +934,7 @@ class DistributedRevision(Base):
     """Retained immutable publication manifests for pinned historical readers."""
 
     __tablename__ = "distributed_revisions"
+    __table_args__ = {"postgresql_partition_by": "HASH (tenant_id)"}
     cluster_id: Mapped[str] = mapped_column(String(128), primary_key=True)
     tenant_id: Mapped[str] = mapped_column(String(128), primary_key=True)
     version: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -942,6 +946,7 @@ class DistributedRequestAudit(Base):
     """Shared audit sink: read replicas never append into a local lake."""
 
     __tablename__ = "distributed_request_audit"
+    __table_args__ = (Index("ix_distributed_audit_tenant_time", "cluster_id", "tenant_id", "occurred_at", "event_id"),)
     event_id: Mapped[str] = mapped_column(String(36), primary_key=True)
     cluster_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     tenant_id: Mapped[str | None] = mapped_column(String(128), index=True)

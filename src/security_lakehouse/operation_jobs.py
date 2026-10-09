@@ -299,13 +299,17 @@ class JobQueue:
 
     def recover(self) -> None:
         with self.factory() as session:
+            now = func.extract("epoch", func.clock_timestamp()) if self.cluster is not None else time.time()
             stale = list(
                 session.scalars(
-                    select(OperationJob).where(
+                    select(OperationJob)
+                    .where(
                         OperationJob.root_key == self.root_key,
                         OperationJob.status.in_(["running", "cancelling"]),
-                        OperationJob.heartbeat_at < time.time() - LEASE_SECONDS,
+                        OperationJob.heartbeat_at < now - LEASE_SECONDS,
                     )
+                    .order_by(OperationJob.heartbeat_at, OperationJob.id)
+                    .limit(128)
                 )
             )
             for row in stale:
@@ -316,9 +320,9 @@ class JobQueue:
                             .where(
                                 OperationJob.id == row.id,
                                 OperationJob.status.in_(["running", "cancelling"]),
-                                OperationJob.heartbeat_at < time.time() - LEASE_SECONDS,
+                                OperationJob.heartbeat_at < now - LEASE_SECONDS,
                             )
-                            .values(status="interrupted", finished_at=time.time())
+                            .values(status="interrupted", finished_at=now)
                         )
                         session.commit()
                 except BlockingIOError:
@@ -333,12 +337,9 @@ class JobQueue:
         the calling replica. The conditional UPDATE is the cross-replica fence.
         """
         self.recover()
+        if self.cluster is not None:
+            return self._claim_distributed(exclude_tenants=exclude_tenants)
         with self.factory() as session:
-            if self.cluster is not None:
-                from security_lakehouse.distributed.locks import transaction_lock
-
-                # Serialize only the short claim transaction, never execution.
-                transaction_lock(session, "claim", self.root_key)
             turns = (
                 select(OperationJob.tenant_id, func.max(OperationJob.started_at).label("last_started"))
                 .where(OperationJob.root_key == self.root_key)
@@ -353,20 +354,6 @@ class JobQueue:
                     OperationJob.status == "queued",
                 )
             )
-            if self.cluster is not None:
-                from security_lakehouse.db.models import DistributedTenantHead
-
-                active = select(OperationJob.tenant_id).where(
-                    OperationJob.root_key == self.root_key,
-                    OperationJob.status.in_(["running", "cancelling"]),
-                )
-                candidates = candidates.where(OperationJob.tenant_id.not_in(active))
-                if self.shards is not None:
-                    heads = select(DistributedTenantHead.tenant_id).where(
-                        DistributedTenantHead.cluster_id == self.cluster.cluster_id,
-                        DistributedTenantHead.shard_id.in_(sorted(self.shards)),
-                    )
-                    candidates = candidates.where(OperationJob.tenant_id.in_(heads))
             if exclude_tenants:
                 candidates = candidates.where(OperationJob.tenant_id.not_in(sorted(exclude_tenants)))
             job_id = session.scalar(
@@ -392,8 +379,95 @@ class JobQueue:
             session.expunge(row)
             return row
 
+    def _claim_distributed(self, *, exclude_tenants: Collection[str]) -> OperationJob | None:
+        from security_lakehouse.db.models import DistributedTenantHead
+        from security_lakehouse.distributed.locks import try_transaction_lock
+
+        assert self.cluster is not None
+        head = DistributedTenantHead
+        queued = (
+            select(OperationJob.id)
+            .where(
+                OperationJob.root_key == self.root_key,
+                OperationJob.tenant_id == head.tenant_id,
+                OperationJob.status == "queued",
+            )
+            .exists()
+        )
+        active = (
+            select(OperationJob.id)
+            .where(
+                OperationJob.root_key == self.root_key,
+                OperationJob.tenant_id == head.tenant_id,
+                OperationJob.status.in_(["running", "cancelling"]),
+            )
+            .exists()
+        )
+        candidates = select(head.tenant_id).where(head.cluster_id == self.cluster.cluster_id, queued, ~active)
+        if self.shards is not None:
+            candidates = candidates.where(head.shard_id.in_(sorted(self.shards)))
+        if exclude_tenants:
+            candidates = candidates.where(head.tenant_id.not_in(sorted(exclude_tenants)))
+        candidates = candidates.order_by(head.last_job_started_at, head.tenant_id).limit(64)
+        with self.factory() as session:
+            for tenant in session.scalars(candidates):
+                if not try_transaction_lock(session, "tenant-claim", self.root_key + tenant):
+                    continue
+                # Recheck after the per-tenant lock: another replica may have
+                # claimed between candidate selection and lock acquisition.
+                busy = session.scalar(
+                    select(OperationJob.id)
+                    .where(
+                        OperationJob.root_key == self.root_key,
+                        OperationJob.tenant_id == tenant,
+                        OperationJob.status.in_(["running", "cancelling"]),
+                    )
+                    .limit(1)
+                )
+                if busy is not None:
+                    continue
+                row = session.scalar(
+                    select(OperationJob)
+                    .where(
+                        OperationJob.root_key == self.root_key,
+                        OperationJob.tenant_id == tenant,
+                        OperationJob.status == "queued",
+                    )
+                    .order_by(OperationJob.created_at, OperationJob.id)
+                    .limit(1)
+                )
+                if row is None:
+                    continue
+                now = float(session.scalar(select(func.extract("epoch", func.clock_timestamp()))))
+                claimed = session.execute(
+                    update(OperationJob)
+                    .where(
+                        OperationJob.id == row.id,
+                        OperationJob.root_key == self.root_key,
+                        OperationJob.status == "queued",
+                    )
+                    .values(status="running", worker_token=str(uuid.uuid4()), started_at=now, heartbeat_at=now)
+                    .execution_options(synchronize_session=False)
+                )
+                if claimed.rowcount != 1:
+                    continue
+                session.execute(
+                    update(head)
+                    .where(
+                        head.cluster_id == self.cluster.cluster_id,
+                        head.tenant_id == tenant,
+                    )
+                    .values(last_job_started_at=now)
+                )
+                session.commit()
+                session.refresh(row)
+                session.expunge(row)
+                return row
+        return None
+
     def renew(self, row: OperationJob) -> bool:
         with self.factory.begin() as session:
+            now = func.extract("epoch", func.clock_timestamp()) if self.cluster is not None else time.time()
             result = session.execute(
                 update(OperationJob)
                 .where(
@@ -401,7 +475,7 @@ class JobQueue:
                     OperationJob.status == "running",
                     OperationJob.worker_token == row.worker_token,
                 )
-                .values(heartbeat_at=time.time())
+                .values(heartbeat_at=now)
             )
 
             return result.rowcount == 1

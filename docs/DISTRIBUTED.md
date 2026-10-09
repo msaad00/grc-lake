@@ -27,9 +27,14 @@ cluster; use `cluster` commands or the authenticated API. MCP uses remote API mo
   location; changing them on an existing cluster fails closed. Replica count does
   not change a tenant's shard or object keys. Shards route work, not PostgreSQL rows
   across multiple database servers. A tenant remains one consistency boundary.
+- **PostgreSQL history partitions:** retained publication manifests use 32 physical
+  hash partitions by tenant. A tenant/version lookup prunes to one partition.
+  These database partitions are separate from the configurable virtual worker
+  shards; they stay within one PostgreSQL cluster and do not add database servers.
 - **Worker placement:** workers may claim all shards or an explicit comma-separated
   list using `cluster worker --shards 0,1,2`. Overlapping assignments are safe;
-  database claims admit at most one running job per tenant. Reassign shard ranges
+  database claims admit at most one running job per tenant. Claims use nonblocking
+  per-tenant locks, so a busy tenant does not serialize unrelated workers. Reassign shard ranges
   by changing worker configuration. There is no automatic shard placement service.
 - **Evidence partitions:** each published assessment also produces typed Parquet
   partitions by owning tenant, source and UTC event date. Original source-account
@@ -189,7 +194,7 @@ your provider and tenant data before selecting production limits.
   configured. PostgreSQL/S3 alone do not turn them into cluster-wide quotas.
 - Historical manifests and immutable objects are retained. Do not apply bucket
   lifecycle deletion to referenced objects. Automatic object garbage collection
-  and automatic PostgreSQL table partition management are not implemented.
+  and automatic time-based partition rotation are not implemented.
 
 ## Recovery and validation
 
@@ -263,3 +268,29 @@ marker for bounded cleanup:
 ```bash
 python3 tools/qualify_distributed.py --cleanup --out /tmp/grc-qualification
 ```
+
+## Scaling and upgrade operations
+
+Workers select at most 64 eligible tenant candidates per claim, using a persisted
+last-start time rather than aggregating all historical jobs. Claims, fairness,
+heartbeat renewal and lease recovery use PostgreSQL time, avoiding host clock
+skew. Conditional updates preserve concurrent cancellation, and a
+per-tenant lock still prevents overlapping execution. Recovery inspects at most
+128 stale claims per poll; subsequent polls continue through the backlog. Audit
+reads and tenant queue lookups use compound indexes aligned with their filters.
+
+Migration `0029_distributed_scaling` converts retained PostgreSQL publication
+history into 32 tenant hash partitions and adds the dispatch/audit indexes. SQLite
+keeps ordinary tables. The conversion preserves rows, table ownership and effective
+table/column grants; replacement child tables receive no default public grants.
+Downgrading copies retained history back into an ordinary table without discarding
+rows. This is physical partitioning within one PostgreSQL cluster, not routing
+across independent databases.
+
+Schedule a maintenance window, quiesce writers, back up PostgreSQL, and reserve
+space for a second copy of retained history before this migration. It holds an
+exclusive history-table lock while copying. Nonstandard row-security policies,
+triggers, indexes or foreign-key/unique constraints on that table cause a
+transactional refusal so they are not silently discarded; reconcile those custom
+schema extensions with the partition layout before retrying. Application-role
+grants should be verified after an operator-managed schema upgrade.

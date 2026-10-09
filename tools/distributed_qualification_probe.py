@@ -58,6 +58,8 @@ def ready(services=("api-a", "api-b", "reader")):
                 if response.status_code == 200 and response.json().get("ok"):
                     break
             except httpx.HTTPError:
+                # Startup and deliberate service restarts can refuse/reset a
+                # connection. Retry only until the bounded readiness deadline.
                 pass
             if time.monotonic() >= deadline:
                 raise RuntimeError(f"{service} readiness deadline exceeded")

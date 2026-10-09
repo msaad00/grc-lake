@@ -50,20 +50,28 @@ def qualify(image: str, output: Path) -> None:
             }
         )
     )
-    config.chmod(0o600)
+    # SeaweedFS drops to UID 1000. The host directory is 0700 and only this
+    # file is mounted into that container; its service user must be able to read it.
+    config.chmod(0o644)
     command = ["docker", "compose", "--project-name", project, "-f", str(COMPOSE)]
 
     def compose(*args, timeout=180):
         result = subprocess.run([*command, *args], env=env, capture_output=True, text=True, timeout=timeout)
         if result.returncode:
-            diagnostics = result.stdout + result.stderr
+            state = subprocess.run(
+                [*command, "ps", "--all", "--format", "json"], env=env, capture_output=True, text=True, timeout=30
+            )
+            logs = subprocess.run(
+                [*command, "logs", "--no-color", "--tail", "80"], env=env, capture_output=True, text=True, timeout=30
+            )
+            diagnostics = result.stdout + result.stderr + "\n" + state.stdout + "\n" + logs.stdout + logs.stderr
             protected = [env["GRC_QUAL_PASSWORD"], env["GRC_QUAL_SIGNING_KEY"], env["GRC_QUAL_S3_SECRET"]]
             credentials = output / "credentials.json"
             if credentials.exists():
                 protected.extend(item["token"] for item in json.loads(credentials.read_text()))
             for secret in protected:
                 diagnostics = diagnostics.replace(secret, "[REDACTED]")
-            (output / "failure.log").write_text(diagnostics[-32768:])
+            (output / "failure.log").write_text(diagnostics[-65536:])
             raise RuntimeError(f"Compose {' '.join(args[:3])} failed with exit {result.returncode}")
         return result.stdout.strip()
 

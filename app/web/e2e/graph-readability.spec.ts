@@ -13,7 +13,11 @@ test("wide framework graphs fit at a readable zoom", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/console/graph/");
   await expect(page.locator(".react-flow__node").first()).toBeVisible();
-  expect(await page.locator(".react-flow__node").count()).toBeGreaterThan(60);
+  // The page opens on one control path; widen to the framework slice.
+  await page.getByRole("button", { name: "Show whole framework" }).click();
+  await expect
+    .poll(() => page.locator(".react-flow__node").count())
+    .toBeGreaterThan(60);
   expect(await fittedZoom(page)).toBeGreaterThanOrEqual(0.35);
   const boxes = await page
     .locator(".react-flow__node")

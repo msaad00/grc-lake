@@ -126,9 +126,12 @@ test.describe("console smoke", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Audit room" }),
     ).toBeVisible();
-    // Two scores, two names: each is defined once, then labels its tile.
+    // Distinct names: each is defined once, then labels its tile.
     await expect(
-      page.getByText("Audit readiness", { exact: true }),
+      page.getByText("Audit readiness index", { exact: true }),
+    ).toHaveCount(2);
+    await expect(
+      page.getByText("Evaluated frameworks ready", { exact: true }),
     ).toHaveCount(2);
     await expect(page.getByText(/^Assessment score \d+\/100$/)).toBeVisible();
     await expect(page.getByText("Audit score", { exact: true })).toHaveCount(0);

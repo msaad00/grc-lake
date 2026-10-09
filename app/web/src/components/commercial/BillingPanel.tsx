@@ -17,6 +17,7 @@ import {
   useBilling,
   useBillingCheckoutMutation,
   useBillingPortalMutation,
+  useCommercialFeature,
 } from "@/lib/api/hooks";
 import type { BillingStatus } from "@/lib/api/types";
 import { notify } from "@/lib/toast";
@@ -54,7 +55,10 @@ export function BillingPanel() {
     () => Boolean(whoami.data?.role === "admin"),
     [whoami.data],
   );
-  const billing = useBilling({ enabled: Boolean(whoami.data) });
+  const feature = useCommercialFeature("billing");
+  const billing = useBilling({
+    enabled: Boolean(whoami.data) && feature.enabled,
+  });
   const checkout = useBillingCheckoutMutation();
   const portal = useBillingPortalMutation();
 
@@ -68,7 +72,11 @@ export function BillingPanel() {
     }
   }, []);
 
-  if (!whoami.data || (billing.isError && isNotImplemented(billing.error))) {
+  if (
+    !whoami.data ||
+    !feature.enabled ||
+    (billing.isError && isNotImplemented(billing.error))
+  ) {
     return null;
   }
 

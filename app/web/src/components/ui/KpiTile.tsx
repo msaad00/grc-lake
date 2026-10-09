@@ -36,7 +36,7 @@ export function KpiTile({
       <div className="ui-label">{label}</div>
       <div className={cn("ui-kpi-value mt-1.5", TONE_VALUE[tone])}>{value}</div>
       {detail ? (
-        <div className="mt-1.5 truncate text-xs text-muted" title={detail}>
+        <div className="mt-1.5 line-clamp-2 text-xs text-muted" title={detail}>
           {detail}
         </div>
       ) : null}

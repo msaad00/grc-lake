@@ -50,9 +50,17 @@ def test_scores_have_one_name_and_definition_across_pages() -> None:
 
     assert "export const SCORE_COPY" in copy
     assert "SCORE_COPY.auditReadiness.label" in page
-    assert "SCORE_COPY.auditReadiness.definition" in page
+    assert "SCORE_COPY.frameworksReady.label" in page
+    # The audit room defines each score it shows from the shared copy.
+    for key in ("auditReadiness", "assessment", "frameworksReady"):
+        assert f"SCORE_COPY.{key}," in page, key
+    assert "{entry.definition}" in page
     assert "SCORE_COPY.assessment.label" in page
     assert "SCORE_COPY.assessment.label" in overview
+    assert "SCORE_COPY.assessment.definition" in overview
+    ai_strip = (web / "components/audit-room/AiGovernanceStrip.tsx").read_text(encoding="utf-8")
+    assert "SCORE_COPY.aiGovernance.label" in ai_strip
+    assert 'label="Governance indicator"' not in ai_strip
     for stale in ('label="Audit score"', "weighted posture", "% posture"):
         assert stale not in page, stale
 

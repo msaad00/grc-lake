@@ -16,15 +16,11 @@ test("the app shell shows the brand mark once, in the top bar", async ({
   await expect(page.locator('header svg[aria-label="TrustOps"]')).toHaveCount(
     1,
   );
-  await expect
-    .poll(() =>
-      marks.evaluateAll((nodes) =>
-        nodes.every(
-          (node) => node.querySelectorAll("g[transform]").length === 4,
-        ),
-      ),
-    )
-    .toBe(true);
+  // At 32px the source glyphs blur into specks: the bar mark is waves only.
+  const header = page.locator('header svg[aria-label="TrustOps"]');
+  await expect(header).toHaveAttribute("data-variant", "simple");
+  expect(await header.locator("circle, rect[rx='3']").count()).toBe(0);
+  expect(await header.locator("path").count()).toBe(1);
   await expect(
     page.getByRole("navigation", { name: "Breadcrumb" }),
   ).toHaveCount(0);
@@ -41,4 +37,22 @@ test("the app shell shows the brand mark once, in the top bar", async ({
   await drawer.getByRole("link", { name: "Graph" }).click();
   await expect(page).toHaveURL(/\/console\/graph\/?/);
   await expect(drawer).toBeHidden();
+});
+
+test("marks at 40px and below draw the waves only", async ({ page }) => {
+  await page.goto("/console/agents/");
+  const marks = page.locator('svg[aria-label="TrustOps"]');
+  await expect(marks.first()).toBeVisible({ timeout: 20_000 });
+  const sizes = await marks.evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      size: Math.round(node.getBoundingClientRect().width),
+      variant: node.getAttribute("data-variant"),
+      glyphs: node.querySelectorAll("circle").length,
+    })),
+  );
+  expect(sizes.length).toBeGreaterThan(1);
+  for (const mark of sizes.filter((m) => m.size > 0 && m.size <= 40)) {
+    expect(mark.variant).toBe("simple");
+    expect(mark.glyphs).toBe(0);
+  }
 });

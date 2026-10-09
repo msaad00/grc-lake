@@ -140,9 +140,14 @@ export default function PublicTrustView() {
             markSize="lg"
             gradientId="trustops-trust-gradient"
           />
-          <p className="min-w-0 flex-1 text-sm leading-6 text-muted">
-            Shared, read-only verification for external reviewers.
-          </p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-semibold leading-tight text-ink">
+              Shared trust report
+            </h1>
+            <p className="text-sm leading-6 text-muted">
+              Shared, read-only verification for external reviewers.
+            </p>
+          </div>
         </header>
 
         <div className="mb-6">

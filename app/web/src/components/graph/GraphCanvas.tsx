@@ -39,8 +39,7 @@ import {
   Workflow,
   type LucideIcon,
 } from "lucide-react";
-import "@xyflow/react/dist/style.css";
-import { GRAPH_LAYER } from "@/lib/graph-palette";
+import { GRAPH_KIND_COLOR } from "@/lib/graph-palette";
 import { FrameworkBadge } from "@/components/framework/FrameworkBadge";
 import type {
   ComplianceGraph,
@@ -63,32 +62,12 @@ type FlowGraphNode = Node<GraphNodeData, "trustops-graph">;
 
 const KIND_STYLE: Partial<
   Record<GraphNodeKind, { border: string; chip: string }>
-> = {
-  framework: { border: GRAPH_LAYER.framework, chip: GRAPH_LAYER.framework },
-  control: { border: GRAPH_LAYER.control, chip: GRAPH_LAYER.control },
-  evidence_type: {
-    border: GRAPH_LAYER.evidence_type,
-    chip: GRAPH_LAYER.evidence_type,
-  },
-  asset: { border: GRAPH_LAYER.asset, chip: GRAPH_LAYER.asset },
-  repository: { border: "#0ea5e9", chip: "#0369a1" },
-  directory: { border: "#64748b", chip: "#475569" },
-  language: { border: "#059669", chip: "#047857" },
-  evidence_signal: { border: "#ca8a04", chip: "#854d0e" },
-  governance_signal: { border: "#2563eb", chip: "#1d4ed8" },
-  signal_gap: { border: "#dc2626", chip: "#b91c1c" },
-  workflow: { border: "#9333ea", chip: "#7e22ce" },
-  dependency_manifest: { border: "#c2410c", chip: "#9a3412" },
-  ownership_file: { border: "#0891b2", chip: "#0e7490" },
-  security_file: { border: "#047857", chip: "#047857" },
-  file: { border: "#71717a", chip: "#52525b" },
-  principal: { border: "#be123c", chip: "#9f1239" },
-  team: { border: "#4338ca", chip: "#3730a3" },
-  review_rule: { border: "#65a30d", chip: "#4d7c0f" },
-  status_check: { border: "#15803d", chip: "#166534" },
-  workflow_permission: { border: "#ea580c", chip: "#c2410c" },
-  evidence: { border: "#475569", chip: "#334155" },
-};
+> = Object.fromEntries(
+  Object.entries(GRAPH_KIND_COLOR).map(([kind, color]) => [
+    kind,
+    { border: color, chip: color },
+  ]),
+);
 
 const KIND_ICON: Partial<Record<GraphNodeKind, LucideIcon>> = {
   framework: BookOpen,
@@ -119,11 +98,11 @@ function emphasisClass(emphasis: GraphNodeData["emphasis"]): string {
     case "dimmed":
       return "opacity-50 saturate-50";
     case "highlight":
-      return "opacity-100 shadow-[0_0_0_3px_rgba(15,23,42,0.18)]";
+      return "opacity-100 shadow-[0_0_0_3px_rgb(var(--rgb-ink)/0.18)]";
     case "path":
-      return "opacity-100 shadow-[0_0_0_3px_rgba(245,158,11,0.55)]";
+      return "opacity-100 shadow-[0_0_0_3px_rgb(var(--rgb-warning)/0.55)]";
     case "match":
-      return "opacity-100 shadow-[0_0_0_3px_rgba(34,197,94,0.55)]";
+      return "opacity-100 shadow-[0_0_0_3px_rgb(var(--rgb-success)/0.55)]";
     default:
       return "opacity-100";
   }
@@ -161,7 +140,8 @@ function GraphNodeCard({ data, selected }: NodeProps<FlowGraphNode>) {
               <FrameworkBadge
                 frameworkId={data.framework_id}
                 fallbackLabel={data.label}
-                size={24}
+                variant="mark-only"
+                size={20}
               />
             )}
           </div>
@@ -206,7 +186,7 @@ function GraphNodeCard({ data, selected }: NodeProps<FlowGraphNode>) {
               </div>
             )}
           </div>
-          <Tooltip.Arrow className="fill-white" />
+          <Tooltip.Arrow className="fill-surface" />
         </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>
@@ -221,6 +201,7 @@ function layoutGraph(
   rfNodes: FlowGraphNode[],
   rfEdges: Edge[],
   rankdir: LayoutDir,
+  rankLimit?: number,
 ): { nodes: FlowGraphNode[]; edges: Edge[] } {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
@@ -238,7 +219,7 @@ function layoutGraph(
       return [node.id, { x: pos.x - NODE_W / 2, y: pos.y - NODE_H / 2 }];
     }),
   );
-  wrapWideRanks(positions, rankdir);
+  wrapWideRanks(positions, rankdir, rankLimit);
   const laidOut = rfNodes.map((node) => ({
     ...node,
     position: positions.get(node.id) ?? { x: 0, y: 0 },
@@ -257,11 +238,15 @@ const NODE_H = 84;
 function wrapWideRanks(
   positions: Map<string, { x: number; y: number }>,
   rankdir: LayoutDir,
+  rankLimit?: number,
 ) {
   const horizontal = rankdir === "LR";
   const limit = Math.min(
-    16,
-    Math.max(6, Math.round(Math.sqrt(positions.size) * 1.2)),
+    rankLimit ?? 16,
+    Math.max(
+      Math.min(6, rankLimit ?? 6),
+      Math.round(Math.sqrt(positions.size) * 1.2),
+    ),
   );
   const ranks = new Map<number, string[]>();
   positions.forEach((pos, id) => {
@@ -310,6 +295,10 @@ interface Props {
   filterStaleOnly: boolean;
   searchQuery: string;
   focusId?: string | null;
+  /** Restrict the canvas to these node ids (a focused control path). */
+  scopeIds?: Set<string> | null;
+  /** Most nodes per row before a rank wraps; narrow canvases pass fewer. */
+  rankLimit?: number;
   pathFrom: string | null;
   pathTo: string | null;
   onSelectNode: (node: GraphNode | null) => void;
@@ -344,6 +333,8 @@ function InnerGraphCanvas({
   filterStaleOnly,
   searchQuery,
   focusId = null,
+  scopeIds = null,
+  rankLimit,
   pathFrom,
   pathTo,
   onSelectNode,
@@ -445,6 +436,7 @@ function InnerGraphCanvas({
       if (controlScopeIds && !controlScopeIds.has(n.id)) return false;
       if (workflowScopeIds && !workflowScopeIds.has(n.id)) return false;
       if (staleScopeIds && !staleScopeIds.has(n.id)) return false;
+      if (scopeIds && !scopeIds.has(n.id)) return false;
       return true;
     });
   }, [
@@ -456,6 +448,7 @@ function InnerGraphCanvas({
     controlScopeIds,
     workflowScopeIds,
     staleScopeIds,
+    scopeIds,
   ]);
 
   const allowedIds = useMemo(
@@ -575,7 +568,7 @@ function InnerGraphCanvas({
           animated: e.kind === "evidence_covers_asset" || onPath,
           style: {
             stroke: onPath
-              ? "#f59e0b"
+              ? "var(--color-warning)"
               : onHighlight
                 ? "var(--color-ink)"
                 : "var(--color-line-strong)",
@@ -584,8 +577,9 @@ function InnerGraphCanvas({
           },
         };
       });
-    return layoutGraph(list, edges, layout);
+    return layoutGraph(list, edges, layout, rankLimit);
   }, [
+    rankLimit,
     graph,
     filteredNodes,
     allowedIds,
@@ -603,10 +597,15 @@ function InnerGraphCanvas({
   useEffect(() => {
     if (rfNodes.length === 0) return;
     const frame = window.requestAnimationFrame(() => {
-      if (focusX !== null && focusY !== null) {
+      // A scoped path is small enough to fit whole at a readable zoom.
+      if (focusX !== null && focusY !== null && !scopeIds) {
         setCenter(focusX + 73, focusY + 29, { zoom: 0.9, duration: 300 });
       } else {
-        fitView({ maxZoom: 0.78, padding: 0.22, duration: 180 });
+        fitView({
+          maxZoom: scopeIds ? 1 : 0.78,
+          padding: scopeIds ? 0.15 : 0.22,
+          duration: 180,
+        });
       }
     });
     return () => window.cancelAnimationFrame(frame);
@@ -621,6 +620,7 @@ function InnerGraphCanvas({
     filterEnvironment,
     filterFramework,
     searchQuery,
+    scopeIds,
   ]);
 
   // When the search has exactly one match, recentre the viewport on it so the
@@ -705,7 +705,7 @@ function InnerGraphCanvas({
           zoomable
           className="!h-20 !w-28 !rounded-lg !border !border-line !bg-surface/90 !shadow-card"
           style={{ width: 112, height: 80 }}
-          maskColor="rgba(15,23,42,0.06)"
+          maskColor="rgb(var(--rgb-ink) / 0.06)"
         />
         <Controls position="bottom-left" />
       </ReactFlow>

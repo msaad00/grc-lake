@@ -7,13 +7,13 @@ lives in the [roadmap](../ROADMAP.md).
 
 ## First run
 
-| Step            | Command                                                                                         | Result                                                     |
-| --------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Install         | `uv sync --frozen --extra dev --extra server`                                                   | The `security-lakehouse` CLI and server dependencies.      |
-| Load the demo   | `uv run security-lakehouse fixtures load --company golden --out build/lakehouse --rebase-times` | Bronze, silver, and gold lake files plus the SQLite mart.  |
-| Check posture   | `uv run security-lakehouse assessment status --lake build/lakehouse`                            | Scores, failing controls, and findings in the terminal.    |
-| Freeze evidence | `uv run security-lakehouse assessment snapshot --lake build/lakehouse --reason vendor_review`   | An immutable `gold/snapshots/assessment-*.json`.           |
-| Open the app    | `make demo-local`                                                                               | The console at `http://127.0.0.1:8787/console/dashboard/`. |
+| Step            | Command                                                                                         | Result                                                                                                                                    |
+| --------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Install         | `uv sync --frozen --extra dev --extra server`                                                   | The `security-lakehouse` CLI and server dependencies.                                                                                     |
+| Load the demo   | `uv run security-lakehouse fixtures load --company golden --out build/lakehouse --rebase-times` | Bronze, silver, and gold lake files, the SQLite mart, and synthetic demo tasks, risks, a policy, vendor assessments, and metrics history. |
+| Check posture   | `uv run security-lakehouse assessment status --lake build/lakehouse`                            | Scores, failing controls, and findings in the terminal.                                                                                   |
+| Freeze evidence | `uv run security-lakehouse assessment snapshot --lake build/lakehouse --reason vendor_review`   | An immutable `gold/snapshots/assessment-*.json`.                                                                                          |
+| Open the app    | `make demo-local`                                                                               | The console at `http://127.0.0.1:8787/console/dashboard/`.                                                                                |
 
 The demo fixture is synthetic and includes failing controls on purpose, so the
 findings, evidence, and remediation pages have something to show. `make

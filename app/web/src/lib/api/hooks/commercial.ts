@@ -1,7 +1,50 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
-import type { BillingStatus, ScimToken } from "@/lib/api/types";
+import { ApiError, api } from "@/lib/api/client";
+import type {
+  BillingStatus,
+  PlatformFeatures,
+  ScimToken,
+} from "@/lib/api/types";
 import { STALE, type Opts } from "./shared";
+
+export function usePlatformFeatures() {
+  return useQuery({
+    queryKey: ["platform", "features"],
+    // A server that predates the probe is "unknown", not an API failure.
+    queryFn: async (): Promise<PlatformFeatures | null> => {
+      try {
+        return await api.platformFeatures();
+      } catch (error) {
+        if (error instanceof ApiError && [404, 501].includes(error.status))
+          return null;
+        throw error;
+      }
+    },
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
+export type CommercialFeature = Exclude<
+  keyof PlatformFeatures,
+  "commercial_hosted"
+>;
+
+/**
+ * Probe once, then call a commercial route only when the server serves it, so
+ * an off feature never produces a 501 (which browsers log as a console error).
+ * A server without the probe falls back to calling the route; panels still
+ * hide on 501 there.
+ */
+export function useCommercialFeature(feature: CommercialFeature): {
+  known: boolean;
+  enabled: boolean;
+} {
+  const features = usePlatformFeatures();
+  if (features.isPending) return { known: false, enabled: false };
+  if (features.isError || !features.data) return { known: true, enabled: true };
+  return { known: true, enabled: Boolean(features.data[feature]) };
+}
 
 export function useScimTokens(opts?: Opts<ScimToken[]>) {
   return useQuery({

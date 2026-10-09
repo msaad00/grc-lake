@@ -44,8 +44,8 @@ export function ConnectorEcosystemStrip({
                 Connect AWS, Azure, GCP, Snowflake, and identity sources
               </h2>
               <p className="mt-1 max-w-[720px] text-sm text-muted">
-                Same probe → discover → test → enable → sync flow as managed GRC
-                platforms. Evidence lands in your lake — not a vendor silo.
+                Every source follows the same probe → discover → test → enable →
+                sync flow, and its evidence lands in your own lake.
               </p>
             </div>
             {showLink && (

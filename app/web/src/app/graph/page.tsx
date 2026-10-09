@@ -33,7 +33,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { GRAPH_LAYER, tint } from "@/lib/graph-palette";
+import { KpiTile } from "@/components/ui/KpiTile";
+import { GRAPH_KIND_COLOR, tint } from "@/lib/graph-palette";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -53,7 +54,8 @@ import { GraphNodeDrawer } from "@/components/graph/GraphNodeDrawer";
 import { useComplianceGraph, useRepositoryGraph } from "@/lib/api/hooks";
 import type { GraphNode, GraphNodeKind } from "@/lib/api/types";
 import { ROUTE_LABELS } from "@/lib/console-copy";
-import { formatCount } from "@/lib/format";
+import { formatCount, plural } from "@/lib/format";
+import { SM_UP, useMediaQuery } from "@/lib/use-media-query";
 
 const COMPLIANCE_KINDS: GraphNodeKind[] = [
   "framework",
@@ -107,26 +109,7 @@ const KIND_LABEL: Record<GraphNodeKind, string> = {
   evidence: "Evidence refs",
 };
 
-const KIND_SWATCH: Record<GraphNodeKind, string> = {
-  ...GRAPH_LAYER,
-  repository: "#0ea5e9",
-  directory: "#64748b",
-  language: "#059669",
-  evidence_signal: "#ca8a04",
-  governance_signal: "#2563eb",
-  signal_gap: "#dc2626",
-  workflow: "#9333ea",
-  dependency_manifest: "#c2410c",
-  ownership_file: "#0891b2",
-  security_file: "#047857",
-  file: "#71717a",
-  principal: "#be123c",
-  team: "#4338ca",
-  review_rule: "#65a30d",
-  status_check: "#15803d",
-  workflow_permission: "#ea580c",
-  evidence: "#334155",
-};
+const KIND_SWATCH: Record<GraphNodeKind, string> = GRAPH_KIND_COLOR;
 
 const KIND_ICON: Record<GraphNodeKind, LucideIcon> = {
   framework: BookOpen,
@@ -225,7 +208,13 @@ function GraphPageContent() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [focusMissing, setFocusMissing] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  // The compliance graph opens on one control path (framework, control, its
+  // evidence types, their assets) so it is readable; the whole framework
+  // slice is one click away.
+  const [pathRoot, setPathRoot] = useState<string | null>(null);
+  const pathRootDefaulted = useRef(false);
   const canvasRef = useRef<ImperativeRef | null>(null);
+  const wide = useMediaQuery(SM_UP);
 
   useEffect(() => {
     setVisible(new Set(activeKinds));
@@ -235,6 +224,8 @@ function GraphPageContent() {
     setFilterWorkflow("");
     setFilterStaleOnly(false);
     setLayout(graphMode === "compliance" ? "TB" : "LR");
+    setPathRoot(null);
+    pathRootDefaulted.current = false;
     clearPath();
   }, [graphMode, activeKinds]);
 
@@ -325,13 +316,17 @@ function GraphPageContent() {
   const graphIndex = useMemo(() => {
     const nodesById = new Map<string, GraphNode>();
     const outgoing = new Map<string, string[]>();
+    const incoming = new Map<string, string[]>();
     for (const node of data?.nodes ?? []) nodesById.set(node.id, node);
     for (const edge of data?.edges ?? []) {
       const targets = outgoing.get(edge.source) ?? [];
       targets.push(edge.target);
       outgoing.set(edge.source, targets);
+      const sources = incoming.get(edge.target) ?? [];
+      sources.push(edge.source);
+      incoming.set(edge.target, sources);
     }
-    return { nodesById, outgoing };
+    return { nodesById, outgoing, incoming };
   }, [data]);
 
   const frameworkScopeIds = useMemo(() => {
@@ -352,6 +347,67 @@ function GraphPageContent() {
     }
     return ids;
   }, [data, filterFramework]);
+
+  // A control path: everything downstream of the root (evidence types, then
+  // assets) plus the chain upstream of it (control, framework). Upstream walks
+  // never turn back down, so sibling controls stay out.
+  const pathScopeIds = useMemo(() => {
+    if (graphMode !== "compliance" || !pathRoot) return null;
+    if (!graphIndex.nodesById.has(pathRoot)) return null;
+    const ids = new Set<string>([pathRoot]);
+    const walk = (edges: Map<string, string[]>) => {
+      let frontier = [pathRoot];
+      for (let depth = 0; depth < 3; depth += 1) {
+        const next: string[] = [];
+        for (const id of frontier)
+          for (const other of edges.get(id) ?? [])
+            if (!ids.has(other)) {
+              ids.add(other);
+              next.push(other);
+            }
+        frontier = next;
+      }
+    };
+    walk(graphIndex.outgoing);
+    walk(graphIndex.incoming);
+    return ids;
+  }, [graphIndex, graphMode, pathRoot]);
+
+  // The richest mapped control in the framework slice: most evidence types,
+  // then most covered assets. Ties go to the lower control id.
+  const defaultPathRoot = useMemo(() => {
+    if (graphMode !== "compliance" || !data || !filterFramework) return null;
+    let best: { id: string; label: string; score: number } | null = null;
+    for (const node of data.nodes) {
+      if (node.kind !== "control" || node.framework_id !== filterFramework)
+        continue;
+      const evidence = (graphIndex.outgoing.get(node.id) ?? []).filter(
+        (id) => graphIndex.nodesById.get(id)?.kind === "evidence_type",
+      );
+      if (evidence.length === 0) continue;
+      const assets = new Set(
+        evidence.flatMap((id) =>
+          (graphIndex.outgoing.get(id) ?? []).filter(
+            (assetId) => graphIndex.nodesById.get(assetId)?.kind === "asset",
+          ),
+        ),
+      );
+      const score = evidence.length * 1000 + assets.size;
+      if (
+        !best ||
+        score > best.score ||
+        (score === best.score && node.label < best.label)
+      )
+        best = { id: node.id, label: node.label, score };
+    }
+    return best?.id ?? null;
+  }, [data, filterFramework, graphIndex, graphMode]);
+
+  useEffect(() => {
+    if (pathRootDefaulted.current || focusParam || !defaultPathRoot) return;
+    pathRootDefaulted.current = true;
+    setPathRoot(defaultPathRoot);
+  }, [defaultPathRoot, focusParam]);
 
   // `?focus=<node id>` selects and centres a node. The node's framework slice
   // is chosen so the default single-framework view does not hide it.
@@ -392,6 +448,8 @@ function GraphPageContent() {
     setFilterEnvironment("");
     setVisible((prev) => new Set([...prev, node.kind]));
     setFocusId(node.id);
+    pathRootDefaulted.current = true;
+    setPathRoot(node.id);
   }, [focusParam, graphMode, data, graphIndex]);
 
   const searchResults = useMemo(() => {
@@ -413,6 +471,7 @@ function GraphPageContent() {
       if (filterEnvironment && (n.environment ?? "") !== filterEnvironment)
         return false;
       if (frameworkScopeIds && !frameworkScopeIds.has(n.id)) return false;
+      if (pathScopeIds && !pathScopeIds.has(n.id)) return false;
       return true;
     });
     const countKind = (kind: GraphNodeKind) =>
@@ -433,7 +492,14 @@ function GraphPageContent() {
         countKind("evidence_signal") +
         countKind("signal_gap"),
     };
-  }, [data, filterEnvironment, filterOwner, frameworkScopeIds, visible]);
+  }, [
+    data,
+    filterEnvironment,
+    filterOwner,
+    frameworkScopeIds,
+    pathScopeIds,
+    visible,
+  ]);
 
   const mappingRows = useMemo<MappingRow[]>(() => {
     if (graphMode !== "compliance" || !data) return [];
@@ -536,6 +602,7 @@ function GraphPageContent() {
       setPathMode(null);
     }
     setFocusId(node.id);
+    if (graphMode === "compliance") setPathRoot(node.id);
     setSearch("");
     setSearchOpen(false);
   };
@@ -574,6 +641,16 @@ function GraphPageContent() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [pathMode]);
+
+  const pathRootNode = pathScopeIds
+    ? graphIndex.nodesById.get(pathRoot ?? "")
+    : undefined;
+  const focusLabel =
+    graphMode !== "compliance"
+      ? "Repository"
+      : pathRootNode
+        ? pathRootNode.label
+        : filterFramework || "All frameworks";
 
   const repoGraphEmpty =
     graphMode === "repository" &&
@@ -750,62 +827,73 @@ function GraphPageContent() {
           </div>
         </Card>
 
-        <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <Card className="p-2.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-              Focus
-            </div>
-            <div className="mt-0.5 truncate text-lg font-semibold text-ink">
-              {graphMode === "compliance"
-                ? filterFramework || "All frameworks"
-                : "Repository"}
-            </div>
-            <div className="mt-0.5 text-[11px] text-muted">
-              {formatCount(visibleSummary.nodes)} nodes /{" "}
-              {formatCount(visibleSummary.edges)} edges
-            </div>
-          </Card>
-          <Card className="p-2.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-              {graphMode === "compliance" ? "Controls" : "Governance signals"}
-            </div>
-            <div className="mt-0.5 text-lg font-semibold text-ink">
-              {graphMode === "compliance"
+        {/* Phones get one summary line so the canvas is on the first screen. */}
+        <p
+          data-testid="graph-summary-line"
+          className="text-xs text-muted sm:hidden"
+        >
+          <b className="text-ink">{focusLabel}</b> ·{" "}
+          {graphMode === "compliance"
+            ? `${plural(visibleSummary.controls, "control")} · ${plural(visibleSummary.evidenceTypes, "evidence type")} · ${plural(visibleSummary.assets, "asset")} in view`
+            : `${plural(visibleSummary.signals, "signal")} · ${plural(visibleSummary.repositories, "repository", "repositories")} in view`}
+        </p>
+        <div className="hidden min-w-0 gap-2 sm:grid sm:grid-cols-2 xl:grid-cols-4">
+          <KpiTile
+            label="Focus"
+            value={focusLabel}
+            detail={`${formatCount(visibleSummary.nodes)} nodes / ${formatCount(visibleSummary.edges)} edges in view`}
+          />
+          <KpiTile
+            label={
+              graphMode === "compliance"
+                ? "Controls in view"
+                : "Governance signals in view"
+            }
+            value={
+              graphMode === "compliance"
                 ? visibleSummary.controls
-                : visibleSummary.signals}
-            </div>
-            <div className="mt-0.5 text-[11px] text-muted">
-              visible after filters
-            </div>
-          </Card>
-          <Card className="p-2.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-              {graphMode === "compliance" ? "Evidence types" : "Repositories"}
-            </div>
-            <div className="mt-0.5 text-lg font-semibold text-ink">
-              {graphMode === "compliance"
+                : visibleSummary.signals
+            }
+            detail={
+              graphMode === "compliance"
+                ? `of ${formatCount(counts.control ?? 0)} requirements in the catalog`
+                : "after filters"
+            }
+          />
+          <KpiTile
+            label={
+              graphMode === "compliance"
+                ? "Evidence types in view"
+                : "Repositories in view"
+            }
+            value={
+              graphMode === "compliance"
                 ? visibleSummary.evidenceTypes
-                : visibleSummary.repositories}
-            </div>
-            <div className="mt-0.5 text-[11px] text-muted">
-              mapped in this view
-            </div>
-          </Card>
-          <Card className="p-2.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-              {graphMode === "compliance" ? "Covered assets" : "Signal gaps"}
-            </div>
-            <div className="mt-0.5 text-lg font-semibold text-ink">
-              {graphMode === "compliance"
+                : visibleSummary.repositories
+            }
+            detail={
+              graphMode === "compliance"
+                ? `of ${formatCount(counts.evidence_type ?? 0)} in the catalog`
+                : "after filters"
+            }
+          />
+          <KpiTile
+            label={
+              graphMode === "compliance"
+                ? "Covered assets in view"
+                : "Signal gaps"
+            }
+            value={
+              graphMode === "compliance"
                 ? visibleSummary.assets
-                : (counts.signal_gap ?? 0)}
-            </div>
-            <div className="mt-0.5 text-[11px] text-muted">
-              {graphMode === "compliance"
+                : (counts.signal_gap ?? 0)
+            }
+            detail={
+              graphMode === "compliance"
                 ? "with evidence paths"
-                : "need authenticated sync"}
-            </div>
-          </Card>
+                : "need authenticated sync"
+            }
+          />
         </div>
 
         {repoGraphEmpty && (
@@ -819,7 +907,7 @@ function GraphPageContent() {
         )}
 
         <div className="grid min-w-0 gap-3 xl:grid-cols-[220px_minmax(0,1fr)]">
-          <Card className="max-h-[clamp(380px,calc(100dvh-260px),620px)] min-h-[340px] overflow-auto">
+          <Card className="order-last max-h-[clamp(380px,calc(100dvh-260px),620px)] min-h-[340px] overflow-auto xl:order-none">
             <CardHeader className="p-3 pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Filter className="h-4 w-4 text-muted" /> Layers + facets
@@ -830,8 +918,11 @@ function GraphPageContent() {
             </CardHeader>
             <div className="grid gap-2 p-3 pt-0">
               <section>
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                <div className="mb-2 flex items-baseline justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Layers
+                  <span className="font-medium normal-case tracking-normal">
+                    catalog totals
+                  </span>
                 </div>
                 <div className="grid gap-1">
                   {activeKinds.map((kind) => {
@@ -858,7 +949,11 @@ function GraphPageContent() {
                           <Icon className="h-3.5 w-3.5" />
                         </span>
                         <span className="truncate">{KIND_LABEL[kind]}</span>
-                        <Badge>{formatCount(counts[kind] ?? 0)}</Badge>
+                        <Badge
+                          title={`${formatCount(counts[kind] ?? 0)} ${kind === "control" ? "requirements" : KIND_LABEL[kind].toLowerCase()} in the catalog`}
+                        >
+                          {formatCount(counts[kind] ?? 0)}
+                        </Badge>
                       </button>
                     );
                   })}
@@ -872,7 +967,10 @@ function GraphPageContent() {
                 <select
                   aria-label="Filter graph by framework"
                   value={filterFramework}
-                  onChange={(e) => setFilterFramework(e.target.value)}
+                  onChange={(e) => {
+                    setFilterFramework(e.target.value);
+                    setPathRoot(null);
+                  }}
                   disabled={graphMode === "repository"}
                   className="w-full rounded-lg border border-line bg-surface px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand disabled:bg-surfaceMuted disabled:text-muted"
                 >
@@ -1039,6 +1137,53 @@ function GraphPageContent() {
                 </button>
               </div>
             )}
+            {graphMode === "compliance" &&
+              (pathRootNode || defaultPathRoot) && (
+                <div
+                  data-testid="graph-path-scope"
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-xs text-muted"
+                >
+                  <span className="min-w-0 [overflow-wrap:anywhere]">
+                    {pathRootNode ? (
+                      <>
+                        Showing the path through{" "}
+                        <b className="text-ink">{pathRootNode.label}</b>
+                        {pathRootNode.subtitle
+                          ? ` · ${pathRootNode.subtitle}`
+                          : ""}{" "}
+                        ({formatCount(visibleSummary.nodes)} nodes)
+                      </>
+                    ) : (
+                      <>
+                        Showing every node in{" "}
+                        <b className="text-ink">
+                          {filterFramework || "all frameworks"}
+                        </b>{" "}
+                        ({formatCount(visibleSummary.nodes)} nodes)
+                      </>
+                    )}
+                  </span>
+                  {pathRootNode ? (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => setPathRoot(null)}
+                    >
+                      {filterFramework
+                        ? "Show whole framework"
+                        : "Show all frameworks"}
+                    </Button>
+                  ) : defaultPathRoot ? (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => setPathRoot(defaultPathRoot)}
+                    >
+                      Focus one control path
+                    </Button>
+                  ) : null}
+                </div>
+              )}
             {pathMode && (
               <div className="rounded-xl border border-info/40 bg-info-bg p-3 text-xs text-info-fg">
                 {pathMode === "from"
@@ -1058,6 +1203,8 @@ function GraphPageContent() {
               filterStaleOnly={filterStaleOnly}
               searchQuery={search}
               focusId={focusId}
+              scopeIds={pathScopeIds}
+              rankLimit={wide ? undefined : 3}
               pathFrom={pathFrom}
               pathTo={pathTo}
               onSelectNode={handleSelect}
@@ -1085,7 +1232,10 @@ function GraphPageContent() {
                         <button
                           key={control.id}
                           type="button"
-                          onClick={() => handleSelect(control)}
+                          onClick={() => {
+                            setPathRoot(control.id);
+                            handleSelect(control);
+                          }}
                           className="min-w-0 rounded-lg border border-line bg-surfaceMuted p-3 text-left transition hover:border-brand hover:bg-surface"
                         >
                           <div className="flex min-w-0 items-start justify-between gap-2">

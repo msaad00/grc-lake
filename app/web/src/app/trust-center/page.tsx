@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -355,9 +356,9 @@ export default function TrustCenterPage() {
         <QueryState queries={shares} label="trust shares">
           <div className="grid gap-2 p-5 pt-0">
             {(shares.data ?? []).length === 0 && (
-              <div className="rounded-lg border border-dashed border-line p-3 text-xs text-muted">
-                No active shares. Issue one above to start.
-              </div>
+              <EmptyState icon={Share2}>
+                No active shares. Issue a link above to share this trust report.
+              </EmptyState>
             )}
             {(shares.data ?? []).map((share) => (
               <div

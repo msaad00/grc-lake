@@ -2,7 +2,9 @@
 
 import { formatDate, formatDateTime } from "@/lib/format";
 import { useMemo, useRef, useState } from "react";
+import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
@@ -365,7 +367,10 @@ export default function PoliciesPage() {
                 />
               ))
             ) : (
-              <p className="text-sm text-muted">No adopted policies yet.</p>
+              <EmptyState icon={FileText}>
+                No adopted policies yet. Adopt a template above to start your
+                policy set.
+              </EmptyState>
             )}
           </div>
           <div className="space-y-6">

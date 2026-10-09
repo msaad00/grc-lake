@@ -5,13 +5,11 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createColumnHelper,
-  flexRender,
   useTable,
   type SortingState,
 } from "@tanstack/react-table";
 import {
   AlertTriangle,
-  ArrowUpDown,
   Database,
   FileText,
   RefreshCw,
@@ -25,6 +23,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { FilterDisclosure } from "@/components/ui/filter-disclosure";
 import { PageHeader } from "@/components/PageHeader";
 import { SavedViewsBar } from "@/components/SavedViewsBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
@@ -188,6 +188,14 @@ function EvidencePageContent() {
     });
   }, [rows, filters, controlFramework, activeTagId, taggedIds, controlFilter]);
 
+  const activeFilters = [
+    Boolean(activeTagId),
+    filters.framework !== "all",
+    filters.severity !== "all",
+    (filters.freshness ?? "all") !== "all",
+    Boolean(filters.query.trim()),
+  ].filter(Boolean).length;
+
   const columns: SortableColumnDefs<EvidenceRow> = [
     helper.accessor("event_time", {
       header: "Time",
@@ -209,11 +217,12 @@ function EvidencePageContent() {
     }),
     helper.accessor("asset_id", {
       header: "Asset",
+      meta: { mobile: "title" },
       cell: (info) => {
         const [name, scope] = splitRef(info.getValue());
         const displayName = info.row.original.asset_name?.trim();
         return (
-          <div className="min-w-[140px] max-w-[220px]" title={info.getValue()}>
+          <div className="min-w-[120px] max-w-[220px]" title={info.getValue()}>
             {displayName ? (
               <div className="truncate text-xs font-semibold text-ink">
                 {displayName}
@@ -233,9 +242,11 @@ function EvidencePageContent() {
     helper.accessor("control_ids", {
       header: "Controls",
       cell: (info) => (
-        <div className="grid min-w-[130px] max-w-[190px] gap-0.5 font-mono text-xs text-ink">
+        <div className="grid min-w-[130px] gap-0.5 font-mono text-xs text-ink">
           {(info.getValue() as string[]).map((c) => (
-            <span key={c}>{c}</span>
+            <span key={c} className="whitespace-nowrap">
+              {c}
+            </span>
           ))}
         </div>
       ),
@@ -244,6 +255,7 @@ function EvidencePageContent() {
     // control result (that lives on Controls).
     helper.accessor("status", {
       header: "Check result",
+      meta: { mobile: "badge" },
       cell: (info) => {
         const v = info.getValue() as string;
         return <Badge tone={toneForStatus(v)}>{displayLabel(v)}</Badge>;
@@ -252,6 +264,7 @@ function EvidencePageContent() {
     helper.accessor((row) => row.freshness, {
       id: "freshness",
       header: "Freshness",
+      meta: { mobile: "badge" },
       cell: (info) => {
         const row = info.getValue();
         if (!row) return <Badge>Not scored</Badge>;
@@ -278,7 +291,7 @@ function EvidencePageContent() {
       cell: (info) => {
         const [file, location] = splitRef(info.getValue());
         return (
-          <div className="min-w-[140px] max-w-[220px]" title={info.getValue()}>
+          <div className="min-w-[100px] max-w-[180px]" title={info.getValue()}>
             <code className="block truncate text-xs text-ink">{file}</code>
             {location ? (
               <div className="truncate text-[11px] text-muted">{location}</div>
@@ -315,63 +328,73 @@ function EvidencePageContent() {
           </span>
         }
       />
-      <div className="grid gap-2 lg:grid-cols-3">
-        {handoffCards.map(({ title, detail, note, href, action, Icon }) => (
-          <div
-            key={title}
-            className="grid min-w-0 gap-2 rounded-xl border border-line bg-surface p-3 shadow-sm sm:grid-cols-[auto_minmax(0,1fr)]"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-brand">
-              <Icon className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-ink">{title}</div>
-              <p className="mt-1 text-sm leading-5 text-muted">{detail}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-muted">{note}</span>
-                {href && action ? (
-                  <Button asChild size="sm" variant="default">
-                    <Link href={href}>{action}</Link>
-                  </Button>
-                ) : null}
+      <FilterDisclosure
+        label="About evidence"
+        icon={Database}
+        className="gap-2"
+      >
+        <div className="grid gap-2 lg:grid-cols-3">
+          {handoffCards.map(({ title, detail, note, href, action, Icon }) => (
+            <div
+              key={title}
+              className="grid min-w-0 gap-2 rounded-xl border border-line bg-surface p-3 shadow-sm sm:grid-cols-[auto_minmax(0,1fr)]"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-brand">
+                <Icon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-ink">{title}</div>
+                <p className="mt-1 text-sm leading-5 text-muted">{detail}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-muted">
+                    {note}
+                  </span>
+                  {href && action ? (
+                    <Button asChild size="sm" variant="default">
+                      <Link href={href}>{action}</Link>
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <TagFilterBar
-        tags={tags}
-        activeTagId={activeTagId}
-        onSelect={setActiveTagId}
-        onClear={() => setActiveTagId(null)}
-      />
-      <SavedViewsBar
-        surface={SURFACE}
-        filters={{
-          framework: filters.framework,
-          severity: filters.severity,
-          freshness: filters.freshness ?? "all",
-          query: filters.query,
-        }}
-        onApply={(viewFilters) =>
-          setFilters({
-            ...filters,
-            framework: (viewFilters.framework as string) ?? "all",
-            severity: (viewFilters.severity as Severity | "all") ?? "all",
-            freshness:
-              (viewFilters.freshness as
-                EvidenceFreshnessStatus | "all" | undefined) ?? "all",
-            query: (viewFilters.query as string) ?? "",
-          })
-        }
-      />
-      <Toolbar
-        filters={filters}
-        frameworks={frameworks}
-        onChange={setFilters}
-        placeholder="Search by source, asset, evidence ref, control…"
-        showFreshness
-      />
+          ))}
+        </div>
+      </FilterDisclosure>
+      <FilterDisclosure activeCount={activeFilters}>
+        <TagFilterBar
+          tags={tags}
+          activeTagId={activeTagId}
+          onSelect={setActiveTagId}
+          onClear={() => setActiveTagId(null)}
+        />
+        <SavedViewsBar
+          surface={SURFACE}
+          filters={{
+            framework: filters.framework,
+            severity: filters.severity,
+            freshness: filters.freshness ?? "all",
+            query: filters.query,
+          }}
+          onApply={(viewFilters) =>
+            setFilters({
+              ...filters,
+              framework: (viewFilters.framework as string) ?? "all",
+              severity: (viewFilters.severity as Severity | "all") ?? "all",
+              freshness:
+                (viewFilters.freshness as
+                  EvidenceFreshnessStatus | "all" | undefined) ?? "all",
+              query: (viewFilters.query as string) ?? "",
+            })
+          }
+        />
+        <Toolbar
+          filters={filters}
+          frameworks={frameworks}
+          onChange={setFilters}
+          placeholder="Search by source, asset, evidence ref, control…"
+          showFreshness
+        />
+      </FilterDisclosure>
       {controlFilter && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surfaceMuted px-3 py-1 text-ink">
@@ -398,62 +421,17 @@ function EvidencePageContent() {
               source&apos;s refresh target.
             </CardDescription>
           </CardHeader>
-          {/* tabIndex makes the horizontal scroll reachable by keyboard;
-              without it the columns past the fold are mouse-only. */}
-          <div className="max-w-full overflow-x-auto" tabIndex={0}>
-            <table className="w-full min-w-[760px] text-sm">
-              <thead>
-                {table.getHeaderGroups().map((hg) => (
-                  <tr
-                    key={hg.id}
-                    className="border-y border-line bg-surfaceMuted"
-                  >
-                    {hg.headers.map((h) => (
-                      <th
-                        key={h.id}
-                        scope="col"
-                        onClick={h.column.getToggleSortingHandler()}
-                        className="cursor-pointer whitespace-nowrap px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted"
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          {flexRender(
-                            h.column.columnDef.header,
-                            h.getContext(),
-                          )}
-                          <ArrowUpDown className="h-3 w-3 opacity-40" />
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((r) => (
-                  <tr
-                    key={r.id}
-                    onClick={() => setSelected(r.original)}
-                    className="cursor-pointer border-b border-line last:border-0 hover:bg-info-bg"
-                  >
-                    {r.getVisibleCells().map((c) => (
-                      <td key={c.id} className="px-3 py-2.5 align-top">
-                        {flexRender(c.column.columnDef.cell, c.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={columns.length}
-                      className="px-3 py-7 text-center text-sm text-muted"
-                    >
-                      No evidence records match the current filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            table={table}
+            label="Evidence records"
+            density="compact"
+            minWidthClassName="min-w-[760px]"
+            emptyLabel="No evidence records match the current filters."
+            onRowSelect={setSelected}
+            rowLabel={(row) =>
+              `Open evidence ${row.event_id} from ${row.source}`
+            }
+          />
         </Card>
       </QueryState>
       <EvidenceDrawer evidence={selected} onClose={() => setSelected(null)} />

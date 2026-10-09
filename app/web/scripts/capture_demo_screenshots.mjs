@@ -149,59 +149,15 @@ async function api(method, route, body) {
   return response.json();
 }
 
-const daysFromNow = (days) =>
-  new Date(frozenNow.getTime() + days * 86_400_000).toISOString();
-
-/** Seed remediation work idempotently so the page shows a real queue. */
-async function seedRemediation() {
-  const violations = (await api("GET", "/v1/violations?limit=50")).data ?? [];
-  const pick = (controlId) =>
-    violations.find((v) => v.control_id === controlId) ?? violations[0];
-  const existing = new Set(
-    ((await api("GET", "/v1/remediation/tasks?limit=500")).data ?? []).map(
-      (task) => task.title,
-    ),
-  );
-  const tasks = [
-    {
-      title: "Remove stale admin grants after role change",
-      control_id: "SOC2-CC6.4",
-      owner: "identity-team",
-      priority: "critical",
-      due_at: daysFromNow(2),
-    },
-    {
-      title: "Patch internet-facing hosts with critical CVEs",
-      control_id: "SOC2-CC7.1",
-      owner: "platform-sre",
-      priority: "high",
-      due_at: daysFromNow(5),
-    },
-    {
-      title: "Require approvals on production change pipelines",
-      control_id: "SOC2-CC8.1",
-      owner: "devops",
-      priority: "high",
-      due_at: daysFromNow(9),
-    },
-    {
-      title: "Document AI model risk tolerances for GOVERN 1.2",
-      control_id: "NIST-AI-RMF-GOVERN-1.2",
-      owner: "ai-governance",
-      priority: "medium",
-      due_at: daysFromNow(14),
-    },
-  ];
-  for (const task of tasks) {
-    if (existing.has(task.title)) continue;
-    const violation = pick(task.control_id);
-    await api("POST", "/v1/remediation/tasks", {
-      ...task,
-      violation_id:
-        violation?.control_id === task.control_id
-          ? violation.violation_id
-          : undefined,
-    });
+/** `fixtures load --company golden` seeds the remediation queue, risks, a
+ * policy, vendor assessments, and metrics history. Fail loudly instead of
+ * capturing empty pages from a lake that skipped that step. */
+async function requireSeededDemo() {
+  const tasks = (await api("GET", "/v1/remediation/tasks?limit=1")).data ?? [];
+  if (tasks.length === 0) {
+    throw new Error(
+      "No remediation tasks: load the lake with `security-lakehouse fixtures load --company golden` (without --no-demo-records).",
+    );
   }
 }
 
@@ -365,7 +321,7 @@ const selected = requested.size
 if (requested.size && selected.length !== requested.size)
   throw new Error("Unknown screenshot filename");
 
-await seedRemediation();
+await requireSeededDemo();
 
 /** Freshness is evaluated live by the server, so a row can cross its SLO
  * between two captures. Each light/dark pair is taken back to back and
@@ -455,7 +411,10 @@ async function capture(shot, theme, frame) {
     // Narrow the mapping table to one control so the capture reaches the
     // bounded overlap matrix below it.
     await page.getByText(/^Showing 1–25 of [\d,]+ mappings$/).waitFor();
-    await page.getByPlaceholder(/search/i).first().fill("CC6.1");
+    await page
+      .getByPlaceholder(/search/i)
+      .first()
+      .fill("CC6.1");
     await page.getByText(/^Showing 1–\d+ of [\d,]+ mappings?$/).waitFor();
     await page.getByText("Reviewed framework overlap matrix").first().click();
     await page

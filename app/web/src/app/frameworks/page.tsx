@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -498,11 +499,12 @@ function SafeguardAssessment() {
   const passed = rows.filter((row) => row.status === "pass").length;
   const failed = rows.filter((row) => row.status === "fail").length;
   return (
-    <details className="rounded-lg border border-line bg-surface p-4 sm:p-5">
-      <summary className="cursor-pointer font-semibold text-ink">
-        Safeguard assessment · observed assets
-      </summary>
-      <p className="mt-3 text-sm text-muted">
+    <CollapsibleCard
+      title="Safeguard assessment · observed assets"
+      defaultOpen={false}
+      storageKey="frameworks:safeguard-assessment"
+    >
+      <p className="text-sm text-muted">
         Explicit safeguard evidence is evaluated against applicable observed
         assets. Mapping coverage alone does not establish a pass. Complete asset
         inventory is not established.
@@ -569,7 +571,7 @@ function SafeguardAssessment() {
           </div>
         </>
       )}
-    </details>
+    </CollapsibleCard>
   );
 }
 
@@ -706,7 +708,7 @@ function FrameworksPageContent() {
                 : "attention"
             }
           >
-            {portfolio.ready}/{portfolio.total} packs ready
+            {portfolio.ready} of {portfolio.total} framework packs ready
           </Badge>
         </div>
         <dl className="grid divide-line sm:grid-cols-2 sm:divide-x xl:grid-cols-4 [&>div]:border-line max-sm:divide-y">
@@ -764,7 +766,7 @@ function FrameworksPageContent() {
             </dd>
           </div>
           <div className="px-4 py-4 sm:px-5">
-            <dt className="ui-label">Review backlog</dt>
+            <dt className="ui-label">Requirements awaiting review</dt>
             <dd className="ui-kpi-value mt-1.5">
               {coverageSummary
                 ? formatCount(
@@ -774,7 +776,8 @@ function FrameworksPageContent() {
                 : "—"}
             </dd>
             <dd className="mt-1.5 text-xs text-muted">
-              Requirements with a proposed link awaiting review
+              Requirements whose only links are proposed. Mapping review counts
+              individual mappings; one requirement can have several.
               {coverageSummary?.rejected_mapping_count
                 ? ` · ${formatCount(coverageSummary.rejected_mapping_count)} mapping(s) rejected by your org`
                 : ""}

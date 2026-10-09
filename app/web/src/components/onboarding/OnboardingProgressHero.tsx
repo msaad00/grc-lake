@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TrustOpsMark } from "@/components/brand/TrustOpsMark";
+import { usePocReadiness } from "@/lib/api/hooks";
 import type { PocReadinessStep } from "@/lib/api/types";
 
 const STAGES = [
@@ -45,6 +46,12 @@ export function OnboardingProgressHero({
   currentStep,
   currentHref,
 }: Props) {
+  const readiness = usePocReadiness().data;
+  // A fixture-loaded local demo has posture but no live setup; say so rather
+  // than let "0% ready" read as a broken evaluation.
+  const fixtureDemo =
+    readiness?.access.require_auth === false &&
+    readiness.connectors.enabled === 0;
   const stageIndex = Math.min(
     STAGES.length - 1,
     Math.floor((progress / 100) * STAGES.length),
@@ -74,6 +81,19 @@ export function OnboardingProgressHero({
             {shareable ? "shareable" : `${progress}% ready`}
           </Badge>
         </div>
+
+        {fixtureDemo && !shareable ? (
+          <p
+            role="note"
+            data-testid="onboarding-demo-note"
+            className="rounded-lg border border-line bg-info-bg px-3 py-2 text-sm text-info-fg"
+          >
+            Setup readiness counts live setup only: a synced connector, a public
+            URL, and a trust share. This local demo&apos;s evidence was loaded
+            from a sample fixture, so it is evaluated but does not count here,
+            and browser sign-in is off, so the demo cannot become shareable.
+          </p>
+        ) : null}
 
         <div className="grid gap-3 sm:grid-cols-4">
           {STAGES.map((stage, index) => {

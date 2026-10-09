@@ -26,6 +26,7 @@ import type {
   ControlExceptionItem,
   EvidenceRequestItem,
   PostureMetricPoint,
+  PlatformFeatures,
   PlatformUsage,
   PoamItem,
   PoamSyncResult,
@@ -1045,6 +1046,10 @@ export const api = {
       "PATCH",
       payload,
     ).then((b) => b.data),
+  platformFeatures: () =>
+    get<{ data: PlatformFeatures }>("/v1/platform/features").then(
+      (b) => b.data,
+    ),
   platformUsage: () =>
     get<{ data: PlatformUsage }>("/v1/platform/usage").then((b) => b.data),
 };

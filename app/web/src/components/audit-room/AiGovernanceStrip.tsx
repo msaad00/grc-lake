@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { QueryState } from "@/components/QueryState";
 import { KpiTile } from "@/components/ui/KpiTile";
+import { InfoHint } from "@/components/ui/info-hint";
+import { SCORE_COPY } from "@/lib/console-copy";
 import { useAiGovernance, useAiInventory } from "@/lib/api/hooks";
-import type { AiInventoryItem } from "@/lib/api/types";
+import type { AiGovernanceFramework, AiInventoryItem } from "@/lib/api/types";
 import { assetLabel, plural } from "@/lib/format";
 import { displayLabel } from "@/lib/display";
 import { readinessCoverage } from "@/lib/readiness-coverage";
@@ -49,6 +51,42 @@ function hasAiSignal(item: AiInventoryItem): boolean {
     item.lineage_complete ||
     item.event_types.some((type) => AI_SIGNAL_EVENTS.has(type))
   );
+}
+
+/** One line, worded like the Overview framework rows. */
+export function aiFrameworkSummary(framework: AiGovernanceFramework): string {
+  const catalogued =
+    framework.requirements > 0 ? String(framework.requirements) : "unknown";
+  const parts = [
+    `${framework.controls_with_evidence} of ${catalogued} controls assessed`,
+  ];
+  if (!framework.controls_with_evidence) parts.push("no evidence yet");
+  if (framework.failing_controls)
+    parts.push(`${framework.failing_controls} failing`);
+  if (framework.passing_controls)
+    parts.push(`${framework.passing_controls} passing`);
+  return parts.join(" · ");
+}
+
+/** The full breakdown behind the one-line summary. */
+export function aiFrameworkDetail(framework: AiGovernanceFramework): string {
+  const catalogued =
+    framework.catalog_control_count && framework.catalog_control_count > 0
+      ? framework.catalog_control_count
+      : "unknown";
+  const notEvaluated =
+    framework.unevaluated_controls ??
+    Math.max(
+      0,
+      framework.controls_with_evidence -
+        framework.passing_controls -
+        framework.failing_controls,
+    );
+  return [
+    `${framework.controls_with_evidence} controls observed in evidence: ${framework.passing_controls} passing, ${framework.failing_controls} failing, ${notEvaluated} not evaluated.`,
+    `${framework.evaluated_control_count ?? "unknown"}/${catalogued} currently evaluated with fresh evidence; only these count toward framework coverage.`,
+    `${framework.mapped_requirements} of ${framework.requirements} requirements mapped to safeguards.`,
+  ].join(" ");
 }
 
 export function AiGovernanceStrip() {
@@ -100,20 +138,28 @@ export function AiGovernanceStrip() {
             ) : null}
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <KpiTile
-                label="Governance indicator"
-                value={`${governance.data.governance_score}/100`}
-                detail="55% inventory signals + 45% fresh pass rate over observed controls"
-                tone={
-                  governance.data.coverage_sufficient === false
-                    ? "attention"
-                    : governance.data.governance_score >= 85
-                      ? "ready"
-                      : governance.data.governance_score >= 60
-                        ? "attention"
-                        : "critical"
-                }
-              />
+              <div className="relative min-w-0">
+                <KpiTile
+                  label={SCORE_COPY.aiGovernance.label}
+                  value={`${governance.data.governance_score}/100`}
+                  detail="AI-only sub-indicator"
+                  tone={
+                    governance.data.coverage_sufficient === false
+                      ? "attention"
+                      : governance.data.governance_score >= 85
+                        ? "ready"
+                        : governance.data.governance_score >= 60
+                          ? "attention"
+                          : "critical"
+                  }
+                  className="h-full pr-8"
+                />
+                <InfoHint
+                  label={SCORE_COPY.aiGovernance.label}
+                  text={SCORE_COPY.aiGovernance.definition}
+                  className="absolute right-2 top-2"
+                />
+              </div>
               <KpiTile
                 label="Models in inventory"
                 value={String(governance.data.inventory.models)}
@@ -176,29 +222,17 @@ export function AiGovernanceStrip() {
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-muted">
-                    {framework.passing_controls}/
-                    {framework.controls_with_evidence} passing ·{" "}
-                    {framework.controls_with_evidence}/
-                    {framework.requirements > 0
-                      ? framework.requirements
-                      : "unknown"}{" "}
-                    observed / catalogued
+                  <p className="mt-1 flex items-start justify-between gap-1 text-xs text-muted">
+                    <span>{aiFrameworkSummary(framework)}</span>
+                    <InfoHint
+                      label={`${framework.label} coverage`}
+                      text={aiFrameworkDetail(framework)}
+                      className="-mt-0.5"
+                    />
                   </p>
                   <p className="mt-1 text-xs text-muted">
-                    {framework.evaluated_control_count ?? "unknown"}/
-                    {framework.catalog_control_count &&
-                    framework.catalog_control_count > 0
-                      ? framework.catalog_control_count
-                      : "unknown"}{" "}
-                    currently evaluated / catalogued
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    {framework.mapped_requirements}/{framework.requirements}{" "}
-                    requirements mapped ·{" "}
-                    {framework.controls_with_evidence
-                      ? `${framework.passing_controls} passing, ${framework.failing_controls} failing`
-                      : "no evidence yet"}
+                    {framework.mapped_requirements} of {framework.requirements}{" "}
+                    requirements mapped
                   </p>
                 </div>
               ))}

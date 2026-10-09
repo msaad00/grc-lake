@@ -8,11 +8,21 @@ import {
   type RowData,
 } from "@tanstack/react-table";
 
+/** Per-column hints for the shared `DataTable`. */
+export interface TableColumnMeta {
+  /**
+   * Where the column lands in the phone card below `sm`: the card title, the
+   * chip row, a labelled metadata line (default), or nowhere.
+   */
+  mobile?: "title" | "badge" | "meta" | "hidden";
+}
+
 export const sortableTableFeatures = tableFeatures({
   columnVisibilityFeature,
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
   sortFns,
+  columnMeta: {} as TableColumnMeta,
 });
 
 export type SortableTableFeatures = typeof sortableTableFeatures;

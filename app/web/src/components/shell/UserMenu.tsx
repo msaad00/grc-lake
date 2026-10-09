@@ -28,16 +28,19 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
   const whoami = useAuthWhoami();
   const { theme, setTheme } = useTheme();
 
+  const localDemo = whoami.data?.auth_method === "insecure";
   const sessionLabel =
-    (whoami.data?.auth_method === "insecure"
-      ? "Local demo"
-      : whoami.data?.email) ??
+    (localDemo ? "Local demo" : whoami.data?.email) ??
     (auditor
       ? `${workspaceIdentity.orgName} · auditor`
       : workspaceIdentity.primaryLabel);
-  const avatar = (
-    whoami.data?.email?.[0] ?? workspaceIdentity.avatar
-  ).toUpperCase();
+  // The synthetic no-auth identity has no person behind it: show an icon,
+  // not the first letter of its placeholder address.
+  const avatar = localDemo ? (
+    <User aria-hidden="true" className="h-3.5 w-3.5" />
+  ) : (
+    (whoami.data?.email?.[0] ?? workspaceIdentity.avatar).toUpperCase()
+  );
 
   const signOut = async () => {
     try {
@@ -57,7 +60,10 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
           aria-label={`${sessionLabel} — account menu`}
           className={`${compact ? "h-8 justify-center !border-transparent !bg-transparent !px-0" : ""} inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink hover:bg-rail-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-rail`}
         >
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-brand text-[11px] text-onBrand">
+          <span
+            data-testid="user-avatar"
+            className="grid h-6 w-6 place-items-center rounded-full bg-brand text-[11px] text-onBrand"
+          >
             {avatar}
           </span>
           <span

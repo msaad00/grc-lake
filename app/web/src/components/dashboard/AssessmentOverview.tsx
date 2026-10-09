@@ -5,6 +5,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { ChevronDown, CircleCheck, ShieldAlert } from "lucide-react";
 import type { Assessment, IngestionStatus } from "@/lib/api/types";
 import { Badge } from "@/components/ui/badge";
+import { InfoHint } from "@/components/ui/info-hint";
 import { SCORE_COPY } from "@/lib/console-copy";
 import { formatDateTime, formatRelative } from "@/lib/format";
 
@@ -227,21 +228,28 @@ export function AssessmentOverview({
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <Tile
-          href="/frameworks"
-          label={SCORE_COPY.assessment.label}
-          value={posture ? Math.round(posture.score) : "—"}
-          suffix={posture ? "/ 100" : undefined}
-          detail={`${assessed} of ${frameworkCount} framework packs assessed`}
-        >
-          {posture ? (
-            <Meter
-              label={SCORE_COPY.assessment.label}
-              value={Math.round(posture.score)}
-              tone={state ? STATE_BAR[state] : "bg-line-strong"}
-            />
-          ) : null}
-        </Tile>
+        <div className="relative flex min-w-0 flex-col [&>a]:flex-1">
+          <Tile
+            href="/frameworks"
+            label={SCORE_COPY.assessment.label}
+            value={posture ? Math.round(posture.score) : "—"}
+            suffix={posture ? "/ 100" : undefined}
+            detail={`Headline score · ${assessed} of ${frameworkCount} framework packs assessed`}
+          >
+            {posture ? (
+              <Meter
+                label={SCORE_COPY.assessment.label}
+                value={Math.round(posture.score)}
+                tone={state ? STATE_BAR[state] : "bg-line-strong"}
+              />
+            ) : null}
+          </Tile>
+          <InfoHint
+            label={SCORE_COPY.assessment.label}
+            text={`${SCORE_COPY.assessment.scope}. ${SCORE_COPY.assessment.definition}`}
+            className="absolute right-2 top-2"
+          />
+        </div>
         <Tile
           href="/controls"
           label="Control pass rate"

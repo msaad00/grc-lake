@@ -14,14 +14,21 @@ Edge kinds:
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.catalog import load_control_catalog, load_framework_registry
+from security_lakehouse.catalog import (
+    DEFAULT_CONTROL_CATALOG,
+    DEFAULT_FRAMEWORK_REGISTRY,
+    control_catalog_view,
+    framework_registry_view,
+)
 from security_lakehouse.framework_provenance import framework_pack_state
 from security_lakehouse.generations import generation_reader
-from security_lakehouse.io import read_jsonl
+from security_lakehouse.io import file_version, read_jsonl
 from security_lakehouse.projected_reads import read_projection
+from security_lakehouse.read_cache import DerivedCache, input_versions, json_copy
 
 
 def _escape_id_segment(value: str) -> str:
@@ -82,12 +89,41 @@ def _freshness_index(lake: Path) -> dict[str, dict[str, Any]]:
     return index
 
 
+_GRAPH_INPUTS = ("silver/normalized_events.jsonl", "gold/asset_risk.jsonl")
+_GRAPHS: DerivedCache[dict[str, Any]] = DerivedCache(max_entries=16, per_root=2)
+
+
+def _graph_version(lake: Path) -> tuple[Any, ...]:
+    return (
+        input_versions(lake, _GRAPH_INPUTS),
+        file_version(DEFAULT_FRAMEWORK_REGISTRY),
+        file_version(DEFAULT_CONTROL_CATALOG),
+    )
+
+
 @generation_reader
 def build_compliance_graph(lake_dir: str | Path) -> dict[str, Any]:
     """Return a serialisable graph spanning frameworks → controls → evidence → assets."""
+    return json_copy(compliance_graph_view(lake_dir))
+
+
+@generation_reader
+def compliance_graph_view(lake_dir: str | Path) -> dict[str, Any]:
+    """The compliance graph shared read-only per input version; copy what you hand out."""
     lake = Path(lake_dir)
-    frameworks = load_framework_registry()
-    controls = load_control_catalog()
+    return _GRAPHS.get(lake, "compliance", _graph_version(lake), lambda: _build_compliance_graph(lake))
+
+
+@generation_reader
+def coverage_view(lake_dir: str | Path) -> dict[str, Any]:
+    """Uncapped :func:`analyze_coverage` shared read-only per input version."""
+    lake = Path(lake_dir)
+    return _GRAPHS.get(lake, "coverage", _graph_version(lake), lambda: analyze_coverage(lake, detail_limit=None))
+
+
+def _build_compliance_graph(lake: Path) -> dict[str, Any]:
+    frameworks = framework_registry_view()
+    controls = control_catalog_view()
     events = _silver_event_rows(lake)
     assets = _gold_asset_rows(lake)
 
@@ -221,8 +257,8 @@ def build_compliance_graph(lake_dir: str | Path) -> dict[str, Any]:
 
 def _coverage_graph(lake_dir: str | Path) -> dict[str, Any]:
     """Attribute controls through actual event/asset bindings, not shared type nodes."""
-    controls = load_control_catalog()
-    frameworks = load_framework_registry()
+    controls = control_catalog_view()
+    frameworks = framework_registry_view()
     nodes = {
         f"control:{cid}": {
             "id": f"control:{cid}",
@@ -688,8 +724,8 @@ def build_framework_crosswalk(controls_path: str | Path | None = None) -> dict[s
     :func:`security_lakehouse.mappings.build_framework_equivalence` for curated
     control-equivalence groups (managed GRC-style answer-once mapping).
     """
-    controls = load_control_catalog(controls_path)
-    by_framework: dict[str, list[dict[str, Any]]] = {}
+    controls = control_catalog_view(controls_path)
+    by_framework: dict[str, list[Mapping[str, Any]]] = {}
     for control in controls.values():
         framework_id = str(control.get("framework_id") or "")
         by_framework.setdefault(framework_id, []).append(control)

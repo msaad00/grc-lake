@@ -7,6 +7,8 @@ Python package, Helm chart, and bundled web console.
 
 - Bulk-load the DuckDB mart through typed Arrow tables when available, with a staged NDJSON fallback. Preserve table schemas, views, row contents, and order. Strict JSON decoding avoids unnecessary depth and Unicode scans while retaining duplicate-key, finite-number, Unicode, and nesting checks.
 
+- Cache posture, violations, graph, coverage, and file-derived ingestion status per tenant lake and input version. Posture refreshes at evidence freshness boundaries. JSONL collection pages validate each file version and then seek directly to the requested rows. Callers receive independent results. Distributed request scratch directories remain isolated; reuse across those requests is limited.
+
 ## 0.3.0 - 2026-10-09
 
 - Rebrand the product, CLI, SDK, console, logo, repository links and deployment examples to GRC Lake. Legacy CLI commands, Python imports and runtime environment variables remain supported. See [upgrade instructions](docs/REBRANDING.md) before changing package or deployment names. The release targets the new `grc-lake` distribution and image; existing TrustOps releases remain under their original registry names.

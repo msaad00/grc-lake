@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from security_lakehouse.connectors import load_connector_catalog
 from security_lakehouse.io import jsonl_field_counts, read_jsonl
 from security_lakehouse.jsontypes import JsonObject
+from security_lakehouse.read_cache import DerivedCache, input_versions
 
 _PASS_RESULTS = frozenset({"pass", "ready"})
 _FAIL_RESULTS = frozenset({"fail"})
@@ -14,10 +16,33 @@ _WARN_RESULTS = frozenset({"warn", "warning"})
 _NEEDS_EVIDENCE_RESULTS = frozenset({"needs_evidence"})
 
 
+_DERIVED: DerivedCache[Any] = DerivedCache(max_entries=128, per_root=4)
+_SILVER = "silver/normalized_events.jsonl"
+_CONTROL_TESTS = "gold/control_tests.jsonl"
+
+
+def silver_source_counts(lake_dir: str | Path) -> dict[str, int]:
+    """Evidence rows per source, counted once per silver file version."""
+    lake = Path(lake_dir)
+
+    def build() -> dict[str, int]:
+        return dict(jsonl_field_counts(lake / _SILVER, "source", missing_ok=True, base_dir=lake))
+
+    return dict(_DERIVED.get(lake, "silver_source_counts", input_versions(lake, (_SILVER,)), build))
+
+
 def build_eval_accuracy(lake_dir: str | Path) -> JsonObject:
     """Summarize control-test accuracy after the latest lake evaluation."""
     lake = Path(lake_dir)
-    rows = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True, base_dir=lake)
+    return dict(
+        _DERIVED.get(
+            lake, "eval_accuracy", input_versions(lake, (_CONTROL_TESTS, _SILVER)), lambda: _eval_accuracy(lake)
+        )
+    )
+
+
+def _eval_accuracy(lake: Path) -> JsonObject:
+    rows = read_jsonl(lake / _CONTROL_TESTS, missing_ok=True, base_dir=lake)
     passing = sum(1 for row in rows if str(row.get("result", "")).lower() in _PASS_RESULTS)
     failing = sum(1 for row in rows if str(row.get("result", "")).lower() in _FAIL_RESULTS)
     warning = sum(1 for row in rows if str(row.get("result", "")).lower() in _WARN_RESULTS)
@@ -25,12 +50,7 @@ def build_eval_accuracy(lake_dir: str | Path) -> JsonObject:
     total = len(rows)
     frameworks = {str(row.get("framework_id") or "") for row in rows if row.get("framework_id")}
     frameworks.discard("")
-    source_counts = jsonl_field_counts(
-        lake / "silver" / "normalized_events.jsonl",
-        "source",
-        missing_ok=True,
-        base_dir=lake,
-    )
+    source_counts = silver_source_counts(lake)
     return {
         "total_tests": total,
         "passing": passing,

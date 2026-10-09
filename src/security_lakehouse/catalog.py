@@ -7,8 +7,10 @@ import json
 import sys
 import sysconfig
 from collections import Counter
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from security_lakehouse.policy import validate_rule
@@ -81,6 +83,44 @@ def load_control_catalog(path: str | Path | None = None) -> dict[str, dict[str, 
     if not isinstance(controls, list):
         raise ValueError("control catalog must contain a controls list")
     return {str(item["control_id"]): item for item in controls}
+
+
+def framework_registry_view(path: str | Path | None = None) -> Mapping[str, Mapping[str, Any]]:
+    """The framework registry as a shared, deeply read-only mapping (no copy per call)."""
+    return _frozen_index(path or DEFAULT_FRAMEWORK_REGISTRY, "frameworks", "framework_id")
+
+
+def control_catalog_view(path: str | Path | None = None) -> Mapping[str, Mapping[str, Any]]:
+    """The control catalog as a shared, deeply read-only mapping (no copy per call).
+
+    Use :func:`load_control_catalog` when the caller needs to modify rows.
+    """
+    return _frozen_index(path or DEFAULT_CONTROL_CATALOG, "controls", "control_id")
+
+
+def _frozen_index(path: str | Path, list_key: str, id_key: str) -> Mapping[str, Mapping[str, Any]]:
+    source = Path(path).resolve()
+    stat = source.stat()
+    fingerprint = (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+    return _cached_frozen_index(str(source), fingerprint, list_key, id_key)
+
+
+@lru_cache(maxsize=8)
+def _cached_frozen_index(
+    path: str, fingerprint: tuple[int, ...], list_key: str, id_key: str
+) -> Mapping[str, Mapping[str, Any]]:
+    rows = _cached_json(path, fingerprint).get(list_key)
+    if not isinstance(rows, list):
+        raise ValueError(f"{path} must contain a {list_key} list")
+    return MappingProxyType({str(item[id_key]): _freeze(item) for item in rows})
+
+
+def _freeze(value: Any) -> Any:
+    if isinstance(value, dict):
+        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return tuple(_freeze(item) for item in value)
+    return value
 
 
 def validate_catalog(

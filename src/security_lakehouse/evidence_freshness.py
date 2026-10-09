@@ -49,18 +49,64 @@ def build_evidence_freshness(
     connectors: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Return one freshness record per normalized evidence row."""
+    return [
+        record
+        for record, _row in freshness_records_with_sources(
+            rows, now=now, default_slo_minutes=default_slo_minutes, connectors=connectors
+        )
+    ]
+
+
+def freshness_records_with_sources(
+    rows: list[dict[str, Any]],
+    *,
+    now: datetime | None = None,
+    default_slo_minutes: int = 60 * 24 * 7,
+    connectors: dict[str, dict[str, Any]] | None = None,
+) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """Return ``(record, source row)`` pairs in :func:`build_evidence_freshness` order."""
     evaluated_at = (now or datetime.now(UTC)).astimezone(UTC)
     connectors = load_connector_catalog() if connectors is None else connectors
-    records = [
-        _freshness_record(
+    pairs = [
+        (
+            _freshness_record(
+                row,
+                connectors=connectors,
+                evaluated_at=evaluated_at,
+                default_slo_minutes=default_slo_minutes,
+            ),
             row,
-            connectors=connectors,
-            evaluated_at=evaluated_at,
-            default_slo_minutes=default_slo_minutes,
         )
         for row in rows
     ]
-    return sorted(records, key=lambda item: (item["status"], item["source"], item["event_id"]))
+    return sorted(pairs, key=lambda pair: (pair[0]["status"], pair[0]["source"], pair[0]["event_id"]))
+
+
+def freshness_status_interval(
+    records: list[dict[str, Any]], evaluated_at: datetime
+) -> tuple[datetime | None, datetime | None]:
+    """Return ``[since, until)`` around ``evaluated_at`` in which no record changes status.
+
+    A record is ``missing`` before its collection time, ``fresh`` until its
+    age passes the SLO in whole minutes, ``stale`` until it passes twice the
+    SLO, then ``expired``; those instants are its only status changes. A bound
+    is ``None`` when no change lies on that side.
+    """
+    evaluated_at = evaluated_at.astimezone(UTC)
+    since: datetime | None = None
+    until: datetime | None = None
+    for record in records:
+        collected_raw = record.get("evidence_collected_at")
+        if not collected_raw:
+            continue
+        collected = parse_event_time(str(collected_raw)).astimezone(UTC)
+        slo = int(record["freshness_slo_minutes"])
+        for change in (collected, collected + timedelta(minutes=slo + 1), collected + timedelta(minutes=2 * slo + 1)):
+            if change <= evaluated_at:
+                since = change if since is None or change > since else since
+            elif until is None or change < until:
+                until = change
+    return since, until
 
 
 def summarize_source_freshness(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -402,6 +448,8 @@ __all__ = [
     "STALE_STATUSES",
     "build_evidence_freshness",
     "build_freshness_summary",
+    "freshness_records_with_sources",
+    "freshness_status_interval",
     "stale_control_ids",
     "summarize_control_freshness",
     "summarize_source_freshness",

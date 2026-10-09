@@ -34,6 +34,7 @@ from security_lakehouse.assessment import (
     SnapshotIntegrityError,
     SnapshotWrittenHook,
     build_current_posture,
+    build_violations,
     load_snapshot,
     posture_as_of,
     verify_snapshot_chain,
@@ -65,15 +66,16 @@ from security_lakehouse.graph import (
     build_compliance_graph,
     build_framework_crosswalk,
     build_repository_graph,
+    compliance_graph_view,
+    coverage_view,
 )
 from security_lakehouse.ingestion_status import build_ingestion_status
 from security_lakehouse.io import (
     iter_jsonl,
-    iter_jsonl_slice,
+    jsonl_page,
     read_json,
     read_jsonl,
     resolve_path,
-    validated_jsonl_count,
 )
 from security_lakehouse.jsontypes import JsonObject
 from security_lakehouse.lake_eval import list_eval_runs, run_lake_eval
@@ -94,6 +96,7 @@ from security_lakehouse.mappings import (
 )
 from security_lakehouse.oscal import build_assessment_results, build_component_definition
 from security_lakehouse.projected_reads import read_projection
+from security_lakehouse.read_cache import DerivedCache, copy_rows, input_versions, json_copy
 from security_lakehouse.readiness import build_readiness_view
 from security_lakehouse.safeguards import (
     PENDING_STATES,
@@ -231,19 +234,32 @@ SINGLETON_LOADERS: dict[str, tuple[str, Callable[[Path], Any]]] = {
 # Without those params a DEFAULT_PAGED route serves its first default-size page
 # (meta.default_page); any other route serves the singleton payload unchanged.
 PAGED_SINGLETONS: dict[str, tuple[tuple[str, ...], Callable[[Path], JsonObject]]] = {
-    "/api/v1/graph": (("nodes", "edges"), build_compliance_graph),
+    "/api/v1/graph": (("nodes", "edges"), compliance_graph_view),
     "/api/v1/repo-graph": (("nodes", "edges"), build_repository_graph),
     "/api/v1/graph/coverage": (
         ("assets", "orphans.controls", "orphans.frameworks", "orphans.assets"),
-        lambda lake: analyze_coverage(lake, detail_limit=None),
+        coverage_view,
     ),
 }
 DEFAULT_PAGED: frozenset[str] = frozenset({"/api/v1/graph", "/api/v1/repo-graph"})
 
 
 # Route -> (resource name, loader) for endpoints returning a row collection.
+_VIOLATION_INPUTS = ("silver/normalized_events.jsonl", "gold/asset_risk.jsonl", "gold/control_posture.jsonl")
+_VIOLATION_ROWS: DerivedCache[list[JsonObject]] = DerivedCache(max_entries=8, per_root=1)
+
+
 def _violations_with_framework(lake: Path) -> list[JsonObject]:
-    rows = build_current_posture(lake)["violations"]
+    """Open violations joined to their framework, shared read-only per input version."""
+    return _VIOLATION_ROWS.get(
+        lake, "violations", input_versions(lake, _VIOLATION_INPUTS), lambda: _build_violations_with_framework(lake)
+    )
+
+
+def _build_violations_with_framework(lake: Path) -> list[JsonObject]:
+    rows, _summary = build_violations(
+        iter_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True), asset_names=load_asset_names(lake)
+    )
     controls = {
         r["control_id"]: r for r in read_jsonl(lake / "gold/control_posture.jsonl", missing_ok=True, base_dir=lake)
     }
@@ -1547,6 +1563,7 @@ def paged_object_response(resource: str, data: JsonObject, parts: tuple[str, ...
         rows = target[child_key]
         target[child_key] = rows[offset : offset + limit]
         part_meta[part] = {"count": len(rows), "returned": len(target[child_key])}
+    page = json_copy(page)
     return collection_page_response(
         resource,
         page,
@@ -1562,33 +1579,42 @@ def paged_object_response(resource: str, data: JsonObject, parts: tuple[str, ...
 
 EVIDENCE_PATH = Path("silver") / "normalized_events.jsonl"
 
+# Collections served straight from one pinned JSONL artifact, in file order.
+STREAMED_COLLECTIONS: dict[str, tuple[str, Path]] = {
+    "/api/v1/evidence": ("evidence", EVIDENCE_PATH),
+    "/api/v1/evidence/freshness": ("evidence.freshness", Path("gold") / "evidence_freshness.jsonl"),
+    "/api/v1/assets": ("assets", Path("gold") / "asset_risk.jsonl"),
+    "/api/v1/control-tests": ("control-tests", Path("gold") / "control_tests.jsonl"),
+}
+
 
 def evidence_page_response(lake: Path, params: Params) -> JsonObject:
-    """Page ``/api/v1/evidence`` by streaming the pinned silver file.
+    """Page ``/api/v1/evidence``; see :func:`streamed_page_response`."""
+    return streamed_page_response(lake, "/api/v1/evidence", params)
 
-    Without filters, rows before the page are skipped unparsed and reading
-    stops at the end of the page, so a page parses at most ``limit`` events.
-    ``count`` comes from :func:`validated_jsonl_count`, which parses the whole
-    file once per file version, keeping nothing, so an invalid row anywhere
-    still fails the request as the materialized path did. With filters, one
-    streaming pass counts matches and keeps only the page. A ``sort`` needs
-    every row, so it falls back to the materialized collection path. Rows come
-    in file order either way, matching the materialized path.
+
+def streamed_page_response(lake: Path, path: str, params: Params) -> JsonObject:
+    """Page a :data:`STREAMED_COLLECTIONS` route without materializing its file.
+
+    Without filters, ``count`` and the page come from :func:`jsonl_page`, which
+    validates the whole file once per file version, keeping only row offsets,
+    so an invalid row anywhere still fails the request as the materialized path
+    did, and a page parses only its own rows. With filters, one streaming pass
+    counts matches and keeps only the page. A ``sort`` needs every row, so it
+    falls back to the materialized collection path. Rows come in file order
+    either way, matching the materialized path.
     """
+    resource, relative = STREAMED_COLLECTIONS[path]
     if first_param(params, "sort"):
-        rows = with_asset_names(
-            read_projection(lake / EVIDENCE_PATH, None, missing_ok=True, base_dir=lake), load_asset_names(lake)
-        )
-        return collection_response("evidence", rows, params)
+        return collection_response(resource, COLLECTION_LOADERS[path][1](lake), params)
     _, limit, offset = paginate_collection([], params)
     filters = _collection_filters(params)
-    names = load_asset_names(lake)
-    path = lake / EVIDENCE_PATH
+    names = load_asset_names(lake) if path == "/api/v1/evidence" else {}
+    source = lake / relative
     if not filters:
-        count = validated_jsonl_count(path, missing_ok=True, base_dir=lake)
-        window = list(iter_jsonl_slice(path, offset, offset + limit, missing_ok=True, base_dir=lake))
+        count, window = jsonl_page(source, offset, offset + limit, missing_ok=True, base_dir=lake)
         return collection_page_response(
-            "evidence",
+            resource,
             with_asset_names(window, names),
             count=count,
             limit=limit,
@@ -1599,7 +1625,7 @@ def evidence_page_response(lake: Path, params: Params) -> JsonObject:
     page: list[JsonObject] = []
     fields: set[str] = set()
     count = 0
-    for raw in iter_jsonl(path, missing_ok=True, base_dir=lake):
+    for raw in iter_jsonl(source, missing_ok=True, base_dir=lake):
         (row,) = with_asset_names([raw], names)
         fields.update(row)
         if not _row_matches(row, filters):
@@ -1609,9 +1635,7 @@ def evidence_page_response(lake: Path, params: Params) -> JsonObject:
         count += 1
     if fields:
         _reject_unknown_filters(filters, fields)
-    return collection_page_response(
-        "evidence", page, count=count, limit=limit, offset=offset, sort=None, filters=filters
-    )
+    return collection_page_response(resource, page, count=count, limit=limit, offset=offset, sort=None, filters=filters)
 
 
 @generation_reader
@@ -1854,22 +1878,24 @@ def _handle_get(
     if singleton is not None:
         resource, loader = singleton
         return HTTPStatus.OK, envelope(resource, loader(lake))
-    if path == "/api/v1/evidence":
+    if path in STREAMED_COLLECTIONS:
         try:
-            return HTTPStatus.OK, evidence_page_response(lake, params)
+            return HTTPStatus.OK, streamed_page_response(lake, path, params)
         except ValueError:
             return HTTPStatus.BAD_REQUEST, error_envelope(
-                "bad_request", "invalid request parameters", resource="evidence"
+                "bad_request", "invalid request parameters", resource=STREAMED_COLLECTIONS[path][0]
             )
     collection = COLLECTION_LOADERS.get(path)
     if collection is not None:
         resource, loader = collection
         try:
-            return HTTPStatus.OK, collection_response(resource, loader(lake), params)
+            body = collection_response(resource, loader(lake), params)
         except ValueError:
             return HTTPStatus.BAD_REQUEST, error_envelope(
                 "bad_request", "invalid request parameters", resource=resource
             )
+        body["data"] = copy_rows(body["data"])
+        return HTTPStatus.OK, body
     return HTTPStatus.NOT_FOUND, error_envelope("not_found", "unknown route")
 
 

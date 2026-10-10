@@ -36,6 +36,34 @@ def upgrade(lake_dir: str | Path, *, url: str | None = None, revision: str = "he
     return target_url
 
 
+def require_head(lake_dir: str | Path, *, url: str | None = None) -> None:
+    """Raise ``ValueError`` unless the application database is at the packaged head.
+
+    Commands that only read or reconcile application state call this instead
+    of migrating: upgrading the schema stays an explicit operator step.
+    """
+    from alembic.runtime.migration import MigrationContext
+    from alembic.script import ScriptDirectory
+
+    from security_lakehouse.db.base import create_engine_for
+
+    target_url = url or database_url(lake_dir)
+    expected = set(ScriptDirectory.from_config(_config(target_url)).get_heads())
+    engine = create_engine_for(lake_dir, url=target_url)
+    try:
+        with engine.connect() as connection:
+            found = set(MigrationContext.configure(connection).get_current_heads())
+    finally:
+        engine.dispose()
+    if found == expected:
+        return
+    state = f"is at revision {', '.join(sorted(found))}" if found else "has no schema revision"
+    raise ValueError(
+        f"the application database {state}; this release expects {', '.join(sorted(expected))}. "
+        f"Run `grc-lake db upgrade --lake {lake_dir}` and retry."
+    )
+
+
 def current(lake_dir: str | Path, *, url: str | None = None) -> str:
     """Return the current revision string of the application-state database."""
     from alembic import command

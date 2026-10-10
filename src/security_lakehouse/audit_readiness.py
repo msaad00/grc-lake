@@ -392,7 +392,7 @@ def build_audit_readiness(
         "evaluated_at": datetime.now(UTC).isoformat(),
         "posture": {
             "score": posture_score,
-            "open_violations": len(violations),
+            "open_violations": int(posture.get("open_violation_count", len(violations))),
             "frameworks_ready": frameworks_ready,
             "frameworks_total": framework_total,
         },

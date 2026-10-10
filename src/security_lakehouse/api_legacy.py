@@ -118,7 +118,7 @@ def handle_get(
     if path == "/api/posture/current":
         return HTTPStatus.OK, build_current_posture(lake)
     if path == "/api/violations":
-        posture = build_current_posture(lake)
+        posture = build_current_posture(lake, inline_violation_cap=None)
         framework = _first(query, "framework")
         control_id = _first(query, "control_id")
         violations = posture["violations"]

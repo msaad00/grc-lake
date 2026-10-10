@@ -175,7 +175,16 @@ def run_pipeline_incremental(
 
 
 def _materialize_from_rows(**kwargs) -> PipelineResult:
+    from security_lakehouse.remediation_verification import application_database_configured
+
     lake = Path(kwargs["out_dir"]).resolve()
+    root = lake.parent.parent if lake.parent.name == "tenants" else lake
+    if application_database_configured(root):
+        # Publication reconciles remediation tasks; refuse a stale schema
+        # before anything is published rather than after.
+        from security_lakehouse.db.migrate import require_head
+
+        require_head(root)
     generation = new_generation(lake)
     result = _write_generation(**{**kwargs, "out_dir": generation})
     from security_lakehouse.verification import verify_lake_integrity
@@ -190,7 +199,6 @@ def _materialize_from_rows(**kwargs) -> PipelineResult:
     publish_generation(lake, generation)
     from security_lakehouse.execution_mode import in_server_mode
 
-    root = lake.parent.parent if lake.parent.name == "tenants" else lake
     if (root / "server/app.db").is_file() or in_server_mode():
         from security_lakehouse.remediation_verification import reconcile_published_tasks
 

@@ -21,7 +21,7 @@ jobs:
         working-directory: app/web
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: "npm"
@@ -37,7 +37,7 @@ jobs:
       - name: Build static export
         run: npm run build
       - name: Upload built React bundle
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: web-dist
           path: src/security_lakehouse/web/dist
@@ -54,7 +54,7 @@ jobs:
         python: ["3.11", "3.13"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-dist
           path: src/security_lakehouse/web/dist
@@ -63,7 +63,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23"
+          version: "0.13.0"
           enable-cache: true
       - name: Build and verify fresh wheel
         run: |
@@ -100,7 +100,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen lockfile)
         run: uv sync --frozen --all-extras
@@ -125,12 +125,12 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --extra dev
@@ -157,7 +157,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -167,7 +167,7 @@ jobs:
         run: |
           uv export --all-extras --no-emit-project --format requirements-txt --no-hashes > /tmp/reqs.txt
           uv run pip-audit --strict -r /tmp/reqs.txt
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: "npm"
@@ -180,16 +180,26 @@ jobs:
         run: npm audit --audit-level=high --json > "${{ runner.temp }}/npm-audit-full.json"
       - name: Retain full dependency audit
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: npm-audit-full
           path: ${{ runner.temp }}/npm-audit-full.json
           if-no-files-found: warn
           retention-days: 14
       - name: gitleaks (secret scan)
-        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        # Run the open-source CLI directly; the wrapper action requires an org license.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: "8.30.1"
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          archive="$RUNNER_TEMP/gitleaks.tar.gz"
+          curl --fail --silent --show-error --location \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            --output "$archive"
+          echo "$GITLEAKS_SHA256  $archive" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --redact --log-opts="--all" .
 
   pipeline-smoke:
     runs-on: ubuntu-latest
@@ -198,7 +208,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download React bundle
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-dist
           path: src/security_lakehouse/web/dist
@@ -207,7 +217,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -243,7 +253,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download React bundle
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-dist
           path: src/security_lakehouse/web/dist
@@ -252,7 +262,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -268,7 +278,7 @@ jobs:
           --cov-report=xml:build/coverage-shard-${{ matrix.shard }}.xml
       - name: Retain test results and timings
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pytest-${{ matrix.shard }}
           path: build/pytest-results.xml
@@ -276,7 +286,7 @@ jobs:
           retention-days: 14
       - name: Retain shard coverage
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.shard }}
           path: |
@@ -297,12 +307,12 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --extra dev
       - name: Download shard coverage
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: coverage-*
           merge-multiple: true
@@ -314,7 +324,7 @@ jobs:
           uv run coverage xml -o build/coverage.xml
           echo "Combined line+branch coverage: $(uv run coverage report --format=total)%" >> "$GITHUB_STEP_SUMMARY"
       - name: Retain combined coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-combined
           path: build/coverage.xml
@@ -365,7 +375,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install
         run: uv sync --frozen --extra server --extra dev
@@ -389,7 +399,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
       - name: Install (frozen)
         run: uv sync --frozen --all-extras
@@ -416,7 +426,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23"
+          version: "0.13.0"
       - name: Helm security and runtime contracts
         run: uv run --locked --extra dev pytest -q tests/test_helm_security.py tests/test_helm_runtime.py
       - name: terraform fmt
@@ -466,7 +476,7 @@ jobs:
           fi
       - name: Retain Compose smoke diagnostics
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: compose-smoke
           path: |
@@ -482,7 +492,7 @@ jobs:
         run: python3 tools/qualify_distributed.py --cleanup --out build/distributed-qualification
       - name: Retain sanitized distributed qualification report
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: distributed-qualification
           path: |
@@ -499,7 +509,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download React bundle
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-dist
           path: src/security_lakehouse/web/dist
@@ -508,9 +518,9 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.23" # keep in step with the Dockerfile uv image
+          version: "0.13.0" # keep in step with the Dockerfile uv image
           enable-cache: true
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: "npm"

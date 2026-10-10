@@ -37,12 +37,36 @@ class Runtime:
         parent = self.scratch / "read-cache" / tenant_id
         target = parent / f"{head.version}-{digest}"
         if (target / ".distributed-ready").exists():
+            (target / ".distributed-ready").touch()
             return target
-        # The cache owns at most one full tenant revision. Readers get private
-        # copies under the same lock, so eviction cannot remove an in-use view.
+        # Keep one revision per tenant, within replica-wide entry/byte bounds.
+        # Readers copy under this same process-shared lock, so eviction never
+        # removes an in-use private view. Marker mtimes track cross-process LRU.
         cache = self.scratch / "read-cache"
-        if cache.exists():
-            shutil.rmtree(cache)
+        if parent.exists():
+            shutil.rmtree(parent)
+        needed = sum(entry["size"] for entry in head.manifest.get("files", {}).values())
+        if needed > self.catalog.config.read_cache_limit:
+            raise ValueError("tenant revision exceeds read cache byte limit")
+        # A killed downloader may leave an incomplete directory; no other
+        # materialization runs while this lock is held. Reclaim it on a miss.
+        for candidate in cache.glob("*/*"):
+            if candidate.is_dir() and not (candidate / ".distributed-ready").exists():
+                shutil.rmtree(candidate)
+        entries = []
+        for marker in cache.glob("*/*/.distributed-ready"):
+            size = sum(p.stat().st_size for p in marker.parent.rglob("*") if p.is_file() and not p.is_symlink())
+            entries.append((marker.stat().st_mtime_ns, marker.parent.parent, size))
+        entries.sort()
+        retained = sum(entry[2] for entry in entries)
+        while entries and (
+            len(entries) >= self.catalog.config.read_cache_entries
+            or retained + needed > self.catalog.config.read_cache_limit
+            or shutil.disk_usage(self.scratch).free < needed + 256 * 1024**2
+        ):
+            _, stale, size = entries.pop(0)
+            shutil.rmtree(stale)
+            retained -= size
         parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         temporary = Path(tempfile.mkdtemp(prefix="download-", dir=parent))
         try:

@@ -14,7 +14,7 @@ uv run grc-lake fixtures load --company golden --out "$LAKE" --rebase-times
 uv run grc-lake db upgrade --lake "$LAKE"
 
 echo "==> Start server on ${BASE}"
-export GRC_LAKE_COOKIE_SIGNING_KEY="${GRC_LAKE_COOKIE_SIGNING_KEY:-e2e-test-cookie-signing-key}"
+export GRC_LAKE_COOKIE_SIGNING_KEY="${GRC_LAKE_COOKIE_SIGNING_KEY:-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}"
 uv run grc-lake serve \
   --lake "$LAKE" \
   --server \

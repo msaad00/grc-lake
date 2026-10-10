@@ -17,6 +17,7 @@ import secrets
 
 from itsdangerous import BadData, URLSafeTimedSerializer
 
+from security_lakehouse.auth.signing import validate_signing_secret
 from security_lakehouse.runtime_environment import runtime_env
 
 SESSION_COOKIE = "trustops_session"
@@ -69,12 +70,15 @@ def ensure_cookie_signing_configured() -> None:
             "(generate with: openssl rand -hex 32)"
         )
 
+    validate_signing_secret(cookie_signing_key(), name="GRC_LAKE_COOKIE_SIGNING_KEY")
+
 
 def _serializer() -> URLSafeTimedSerializer:
     key = cookie_signing_key()
     if not key:
         raise RuntimeError("GRC_LAKE_COOKIE_SIGNING_KEY is required for signed session cookies")
-    return URLSafeTimedSerializer(key, salt=_COOKIE_SIGNING_SALT)
+    key = validate_signing_secret(key, name="GRC_LAKE_COOKIE_SIGNING_KEY")
+    return URLSafeTimedSerializer(key, salt=_COOKIE_SIGNING_SALT, signer_kwargs={"digest_method": hashlib.sha256})
 
 
 def encode_session_cookie(token: str) -> str:

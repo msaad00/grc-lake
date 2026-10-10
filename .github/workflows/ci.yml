@@ -239,7 +239,7 @@ jobs:
         run: test -s build/dashboard/index.html && grep -q 'id="app-data"' build/dashboard/index.html
       - name: Run live API smoke
         env:
-          GRC_LAKE_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         run: uv run python tools/api_smoke.py
 
   python-tests:
@@ -268,7 +268,7 @@ jobs:
         run: uv sync --frozen --all-extras
       - name: Run Python test shard
         env:
-          GRC_LAKE_COOKIE_SIGNING_KEY: ci-test-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
           COVERAGE_FILE: build/coverage-shard-${{ matrix.shard }}.data
         run: >-
@@ -541,5 +541,5 @@ jobs:
         run: npx playwright install chromium --with-deps
       - name: Console Playwright smoke
         env:
-          GRC_LAKE_COOKIE_SIGNING_KEY: ci-e2e-cookie-signing-key
+          GRC_LAKE_COOKIE_SIGNING_KEY: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         run: bash tools/run_e2e_console.sh

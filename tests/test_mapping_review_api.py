@@ -245,7 +245,7 @@ def _bearer(token: str) -> dict[str, str]:
 
 @pytest.fixture
 def server(tmp_path: Path, monkeypatch):
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key-32-bytes")
     _seed_lake(tmp_path)  # a flat single-tenant lake, so decisions land at the root
     app = create_app(tmp_path)
     tokens: dict[str, str] = {}
@@ -362,7 +362,7 @@ def test_invalid_decision_is_a_400_and_writes_nothing(server) -> None:
 
 
 def test_tenants_see_only_their_own_decisions(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "mapping-review-test-signing-key-32-bytes")
     _seed_lake(tmp_path)  # two tenants: the flat root is bound to nobody
     app = create_app(tmp_path)
     tokens = {}

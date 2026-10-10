@@ -28,7 +28,7 @@ def _bearer(token: str) -> dict[str, str]:
 
 @pytest.fixture
 def env(tmp_path: Path, monkeypatch):
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "local-test-grc-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "x" * 48)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     client = TestClient(app)

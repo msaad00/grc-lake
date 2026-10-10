@@ -8,6 +8,7 @@ same hashed browser session token used by all human SSO flows.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import threading
 import time
@@ -251,9 +252,16 @@ def complete_saml_login(
 
 def _request_serializer() -> URLSafeTimedSerializer | None:
     from security_lakehouse.auth.sessions import cookie_signing_key
+    from security_lakehouse.auth.signing import validate_signing_secret
 
     key = cookie_signing_key()
-    return URLSafeTimedSerializer(key, salt=_SAML_REQUEST_SALT) if key else None
+    if key:
+        key = validate_signing_secret(key, name="GRC_LAKE_COOKIE_SIGNING_KEY")
+    return (
+        URLSafeTimedSerializer(key, salt=_SAML_REQUEST_SALT, signer_kwargs={"digest_method": hashlib.sha256})
+        if key
+        else None
+    )
 
 
 def encode_saml_request_id(request_id: str) -> str:

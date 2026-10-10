@@ -129,7 +129,7 @@ sdk = [
 # Optional human/headless agent orchestration harness. The core assessment
 # engine must not depend on LangGraph or an LLM.
 agents = [
-    "langgraph>=0.2.0",
+    "langgraph>=1.2.14",
 ]
 
 # Conventional commits — used by the pre-commit `commitizen` hook to

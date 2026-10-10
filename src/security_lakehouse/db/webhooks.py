@@ -15,7 +15,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from security_lakehouse.db.base import apply_pagination, clamp_limit
+from security_lakehouse.db.base import apply_pagination, clamp_limit, count_rows
 from security_lakehouse.db.models import (
     WEBHOOK_DELIVERY_STATUSES,
     WEBHOOK_EVENT_TYPES,
@@ -107,6 +107,22 @@ def list_subscriptions(
         return rows[start:end]
     stmt = apply_pagination(stmt, limit=limit, offset=offset)
     return list(session.scalars(stmt))
+
+
+def count_subscriptions(
+    session: Session,
+    *,
+    tenant_id: str,
+    enabled: bool | None = None,
+    event_type: str | None = None,
+) -> int:
+    stmt = select(WebhookSubscription).where(WebhookSubscription.tenant_id == tenant_id)
+    if enabled is not None:
+        stmt = stmt.where(WebhookSubscription.enabled == enabled)
+    if event_type:
+        # Same Python-side membership test as list_subscriptions; see there.
+        return sum(1 for row in session.scalars(stmt) if event_type in json.loads(row.event_types_json or "[]"))
+    return count_rows(session, stmt)
 
 
 def list_subscriptions_for_event(session: Session, *, tenant_id: str, event_type: str) -> list[WebhookSubscription]:

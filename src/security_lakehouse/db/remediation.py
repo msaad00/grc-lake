@@ -11,10 +11,10 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import Select, select, update
 from sqlalchemy.orm import Session
 
-from security_lakehouse.db.base import apply_pagination
+from security_lakehouse.db.base import apply_pagination, count_rows
 from security_lakehouse.db.identity_aliases import identity_aliases
 from security_lakehouse.db.models import (
     EVIDENCE_REQUEST_STATUSES,
@@ -90,6 +90,38 @@ def list_tasks(
     limit: int | None = None,
     offset: int | None = None,
 ) -> list[RemediationTask]:
+    stmt = _tasks_query(
+        tenant_id=tenant_id, status=status, owner=owner, control_id=control_id, overdue=overdue, now=now
+    )
+    stmt = apply_pagination(stmt.order_by(RemediationTask.created_at.desc()), limit=limit, offset=offset)
+    return list(session.scalars(stmt))
+
+
+def count_tasks(
+    session: Session,
+    *,
+    tenant_id: str,
+    status: str | None = None,
+    owner: str | None = None,
+    control_id: str | None = None,
+    overdue: bool | None = None,
+    now: datetime | None = None,
+) -> int:
+    return count_rows(
+        session,
+        _tasks_query(tenant_id=tenant_id, status=status, owner=owner, control_id=control_id, overdue=overdue, now=now),
+    )
+
+
+def _tasks_query(
+    *,
+    tenant_id: str,
+    status: str | None,
+    owner: str | None,
+    control_id: str | None,
+    overdue: bool | None,
+    now: datetime | None,
+) -> Select:
     stmt = select(RemediationTask).where(RemediationTask.tenant_id == tenant_id)
     if status:
         stmt = stmt.where(RemediationTask.status == status)
@@ -114,8 +146,7 @@ def list_tasks(
                 | (RemediationTask.due_at >= moment)
                 | (RemediationTask.status.in_(closed))
             )
-    stmt = apply_pagination(stmt.order_by(RemediationTask.created_at.desc()), limit=limit, offset=offset)
-    return list(session.scalars(stmt))
+    return stmt
 
 
 def update_task(

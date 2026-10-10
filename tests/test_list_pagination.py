@@ -81,7 +81,10 @@ def test_risks_endpoint_defaults_to_one_page(env) -> None:
     assert resp.status_code == HTTPStatus.OK
     body = resp.json()
     assert len(body["data"]) == DEFAULT_PAGE_LIMIT
-    assert {"count": DEFAULT_PAGE_LIMIT, "limit": DEFAULT_PAGE_LIMIT, "offset": 0}.items() <= body["meta"].items()
+    # `count` is the filtered total (the evidence/controls contract), not the page size.
+    expected = {"count": 150, "returned": DEFAULT_PAGE_LIMIT, "limit": DEFAULT_PAGE_LIMIT, "offset": 0}
+    assert expected.items() <= body["meta"].items()
+    assert body["meta"]["next_cursor"]
 
 
 def test_risks_endpoint_honours_limit_and_offset(env) -> None:
@@ -95,10 +98,15 @@ def test_risks_endpoint_honours_limit_and_offset(env) -> None:
 
 def test_oversized_limit_is_capped(env) -> None:
     _app, client, token, _tenant_id = env
-    resp = client.get("/api/v1/risks?limit=10000000", headers=_bearer(token))
+    resp = client.get("/api/v1/risks?limit=800", headers=_bearer(token))
     body = resp.json()
-    assert body["meta"]["limit"] == MAX_PAGE_LIMIT
+    assert body["meta"]["limit"] == MAX_PAGE_LIMIT  # the applied page size, not the requested one
     assert len(body["data"]) == 150  # capped page is larger than the row count
+
+
+def test_out_of_contract_limit_is_rejected(env) -> None:
+    _app, client, token, _tenant_id = env
+    assert client.get("/api/v1/risks?limit=10000000", headers=_bearer(token)).status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.parametrize(

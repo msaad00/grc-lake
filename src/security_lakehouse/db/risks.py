@@ -9,10 +9,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from security_lakehouse.db.base import apply_pagination
+from security_lakehouse.db.base import apply_pagination, count_rows
 from security_lakehouse.db.models import RISK_LEVELS, RISK_STATUSES, Risk
 from security_lakehouse.timeutil import iso_offset, utc_now
 
@@ -71,6 +71,17 @@ def get_risk(session: Session, *, tenant_id: str, risk_id: str) -> Risk | None:
     return risk if risk is not None and risk.tenant_id == tenant_id else None
 
 
+def _risks_query(*, tenant_id: str, status: str | None, severity: str | None, owner: str | None) -> Select:
+    stmt = select(Risk).where(Risk.tenant_id == tenant_id)
+    if status:
+        stmt = stmt.where(Risk.status == status)
+    if severity:
+        stmt = stmt.where(Risk.severity == severity)
+    if owner:
+        stmt = stmt.where(Risk.owner == owner)
+    return stmt
+
+
 def list_risks(
     session: Session,
     *,
@@ -81,15 +92,20 @@ def list_risks(
     limit: int | None = None,
     offset: int | None = None,
 ) -> list[Risk]:
-    stmt = select(Risk).where(Risk.tenant_id == tenant_id)
-    if status:
-        stmt = stmt.where(Risk.status == status)
-    if severity:
-        stmt = stmt.where(Risk.severity == severity)
-    if owner:
-        stmt = stmt.where(Risk.owner == owner)
+    stmt = _risks_query(tenant_id=tenant_id, status=status, severity=severity, owner=owner)
     stmt = apply_pagination(stmt.order_by(Risk.created_at.desc()), limit=limit, offset=offset)
     return list(session.scalars(stmt))
+
+
+def count_risks(
+    session: Session,
+    *,
+    tenant_id: str,
+    status: str | None = None,
+    severity: str | None = None,
+    owner: str | None = None,
+) -> int:
+    return count_rows(session, _risks_query(tenant_id=tenant_id, status=status, severity=severity, owner=owner))
 
 
 def update_risk(

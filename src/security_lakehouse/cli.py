@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sqlite3
 import sys
@@ -2526,8 +2527,16 @@ def _openapi(args: argparse.Namespace) -> int:
         raise SystemExit("the openapi command requires the 'server' extra: pip install 'grc-lake[server]'") from exc
     from security_lakehouse import api_v1
 
-    with tempfile.TemporaryDirectory() as tmp:
-        spec = create_app(tmp, require_auth=False).openapi()
+    # Building the schema needs an app, not a server: nothing binds or serves
+    # requests, so the no-auth startup warning would only mislead.
+    guard_log = logging.getLogger("security_lakehouse.auth.server_mode")
+    previously_disabled = guard_log.disabled
+    guard_log.disabled = True
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = create_app(tmp, require_auth=False).openapi()
+    finally:
+        guard_log.disabled = previously_disabled
     spec = api_v1.merge_openapi(spec)
     text = json.dumps(spec, indent=2, sort_keys=True)
     if args.out:

@@ -48,6 +48,17 @@ def list_risks(
     return [risks_db.risk_to_dict(row) for row in rows]
 
 
+def count_risks(
+    session: Session,
+    tenant_id: str,
+    *,
+    status: str | None = None,
+    severity: str | None = None,
+    owner: str | None = None,
+) -> int:
+    return risks_db.count_risks(session, tenant_id=tenant_id, status=status, severity=severity, owner=owner)
+
+
 def create_risk(
     session: Session,
     tenant_id: str,
@@ -145,6 +156,20 @@ def list_tasks(
         offset=offset,
     )
     return [remediation.task_to_dict(task) for task in tasks]
+
+
+def count_tasks(
+    session: Session,
+    tenant_id: str,
+    *,
+    status: str | None = None,
+    owner: str | None = None,
+    control_id: str | None = None,
+    overdue: bool | None = None,
+) -> int:
+    return remediation.count_tasks(
+        session, tenant_id=tenant_id, status=status, owner=owner, control_id=control_id, overdue=overdue
+    )
 
 
 def create_task(

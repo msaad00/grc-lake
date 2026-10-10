@@ -32,7 +32,7 @@ def test_flat_share_remains_revocable_after_second_tenant(tmp_path):
     with session_scope(app.state.sessionmaker) as session:
         create_tenant(session, slug="second", name="Second")
     revoke = client.post(f"/api/v1/trust-shares/{share['share_id']}/revoke", headers=headers, json={})
-    assert revoke.status_code == 201
+    assert revoke.status_code == 200
     assert client.get("/api/public/trust/" + share["token"]).status_code == 404
 
 
@@ -377,7 +377,7 @@ def test_flat_share_management_survives_owner_scoped_directory(tmp_path, prefix,
     assert new_share["share_id"] in listing.text
     for share in (original, new_share):
         response = client.post(prefix + "/trust-shares/" + share["share_id"] + "/revoke", headers=headers, json={})
-        assert response.status_code == 201
+        assert response.status_code == 200
         assert client.get("/api/public/trust/" + share["token"]).status_code == 404
     # Share management must not change the selected evidence lake.
     assert tenancy.tenant_lake(tmp_path, owner.id, bound_tenant=owner.id) == scoped

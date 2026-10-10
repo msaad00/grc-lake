@@ -57,6 +57,38 @@ function ErrorState({
   );
 }
 
+/**
+ * Inline, non-blocking notice for a secondary query that failed while the
+ * page's main data loaded: the page keeps rendering and says what is missing.
+ */
+export function QueryWarning({
+  query,
+  message,
+}: {
+  query: QueryLike;
+  message: string;
+}) {
+  return (
+    <div
+      role="alert"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning-bg px-4 py-2.5 text-sm text-warning-fg"
+    >
+      <span className="flex items-center gap-2">
+        <AlertTriangle aria-hidden="true" className="h-4 w-4 flex-none" />
+        {message}
+      </span>
+      <button
+        type="button"
+        onClick={() => query.refetch()}
+        className="inline-flex items-center gap-1.5 rounded-md border border-warning/40 bg-surface px-2.5 py-1 font-semibold text-warning-fg outline-none hover:bg-warning-bg focus-visible:ring-2 focus-visible:ring-warning"
+      >
+        <RefreshCw aria-hidden="true" className="h-3.5 w-3.5" />
+        Retry
+      </button>
+    </div>
+  );
+}
+
 function DefaultSkeleton({ label }: { label: string }) {
   return (
     <div className="grid gap-3 p-5" role="status" aria-live="polite">
@@ -65,8 +97,7 @@ function DefaultSkeleton({ label }: { label: string }) {
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink">Loading {label}…</p>
           <p className="text-xs text-muted">
-            Connecting to the security data lake and checking the latest trust
-            state.
+            Reading GRC Lake evidence and checking the latest trust state.
           </p>
         </div>
         <span className="ml-auto h-2 w-2 shrink-0 animate-pulse rounded-full bg-brand" />

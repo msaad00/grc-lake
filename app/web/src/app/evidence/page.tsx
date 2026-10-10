@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createColumnHelper,
@@ -28,9 +28,12 @@ import { FilterDisclosure } from "@/components/ui/filter-disclosure";
 import { PageHeader } from "@/components/PageHeader";
 import { SavedViewsBar } from "@/components/SavedViewsBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
-import { QueryState } from "@/components/QueryState";
+import { QueryState, QueryWarning } from "@/components/QueryState";
 import { Toolbar, matchesQuery } from "@/components/Toolbar";
-import { EvidenceDrawer } from "@/components/drawers/EvidenceDrawer";
+import {
+  EvidenceDrawer,
+  freshnessTone,
+} from "@/components/drawers/EvidenceDrawer";
 import {
   useControls,
   useEvidence,
@@ -91,15 +94,6 @@ const toneForStatus = (status: string) =>
       ? "critical"
       : "attention";
 
-const toneForFreshness = (status?: string) =>
-  status === "fresh"
-    ? "ready"
-    : status === "stale"
-      ? "attention"
-      : status === "expired" || status === "missing"
-        ? "critical"
-        : "default";
-
 function EvidencePageContent() {
   const evidence = useEvidence();
   const freshness = useEvidenceFreshness();
@@ -119,16 +113,20 @@ function EvidencePageContent() {
       scroll: false,
     });
   };
-  const [selected, setSelected] = useState<EvidenceRow | null>(null);
   const [activeTagId, setActiveTagId] = useState<string | null>(null);
   const taggedEvidence = useTagEntityIds(activeTagId, "evidence");
 
-  const deepLinkId = searchParams.get("id");
-  useEffect(() => {
-    if (!deepLinkId || !evidence.data) return;
-    const match = evidence.data.find((e) => e.event_id === deepLinkId);
-    if (match) setSelected({ ...match, freshness: undefined });
-  }, [deepLinkId, evidence.data]);
+  // The open record lives in `?id=` so a drawer is shareable and closing it
+  // leaves a clean URL, the same contract as the findings queue.
+  const selectedId = searchParams.get("id");
+  const selectRecord = (record: EvidenceRow | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (record) params.set("id", record.event_id);
+    else params.delete("id");
+    router.replace(`/evidence/${params.size ? `?${params}` : ""}`, {
+      scroll: false,
+    });
+  };
   const taggedIds = useMemo(
     () => new Set(taggedEvidence.data ?? []),
     [taggedEvidence.data],
@@ -159,6 +157,14 @@ function EvidencePageContent() {
         freshness: freshnessByEvent.get(row.event_id),
       })),
     [evidence.data, freshnessByEvent],
+  );
+
+  const selected = useMemo(
+    () =>
+      selectedId
+        ? (rows.find((row) => row.event_id === selectedId) ?? null)
+        : null,
+    [rows, selectedId],
   );
 
   const staleCount = useMemo(
@@ -194,6 +200,7 @@ function EvidencePageContent() {
     filters.severity !== "all",
     (filters.freshness ?? "all") !== "all",
     Boolean(filters.query.trim()),
+    Boolean(controlFilter),
   ].filter(Boolean).length;
 
   const columns: SortableColumnDefs<EvidenceRow> = [
@@ -270,7 +277,10 @@ function EvidencePageContent() {
       meta: { mobile: "badge" },
       cell: (info) => {
         const row = info.getValue();
-        if (!row) return <Badge>Not scored</Badge>;
+        if (!row)
+          return (
+            <Badge>{freshness.isError ? "Unavailable" : "Not scored"}</Badge>
+          );
         const age =
           row.age_minutes === null
             ? "no age"
@@ -279,7 +289,7 @@ function EvidencePageContent() {
               : `${Math.round(row.age_minutes)}m old`;
         return (
           <div className="min-w-[120px] space-y-1">
-            <Badge tone={toneForFreshness(row.status)}>
+            <Badge tone={freshnessTone(row.status)}>
               {displayLabel(row.status)}
             </Badge>
             <div className="whitespace-nowrap text-xs text-muted">
@@ -323,14 +333,22 @@ function EvidencePageContent() {
         description="These rows are evidence facts, not reports. Click a row to verify its SHA-256 hash against the original, unaltered record."
         actions={
           <span className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-muted">
-            {staleCount > 0 ? (
-              <AlertTriangle className="mr-1 inline h-3 w-3 text-warning-fg" />
+            {staleCount > 0 || freshness.isError ? (
+              <AlertTriangle
+                aria-hidden="true"
+                className="mr-1 inline h-3 w-3 text-warning-fg"
+              />
             ) : (
-              <ShieldCheck className="mr-1 inline h-3 w-3 text-success-fg" />
+              <ShieldCheck
+                aria-hidden="true"
+                className="mr-1 inline h-3 w-3 text-success-fg"
+              />
             )}
-            {staleCount > 0
-              ? `${staleCount} freshness issues`
-              : `${(evidence.data ?? []).length} normalized`}
+            {freshness.isError
+              ? "Freshness unavailable"
+              : staleCount > 0
+                ? `${staleCount} freshness issues`
+                : `${(evidence.data ?? []).length} normalized`}
           </span>
         }
       />
@@ -380,8 +398,10 @@ function EvidencePageContent() {
             severity: filters.severity,
             freshness: filters.freshness ?? "all",
             query: filters.query,
+            tag: activeTagId,
           }}
-          onApply={(viewFilters) =>
+          onApply={(viewFilters) => {
+            setActiveTagId((viewFilters.tag as string) || null);
             setFilters({
               ...filters,
               framework: (viewFilters.framework as string) ?? "all",
@@ -390,8 +410,8 @@ function EvidencePageContent() {
                 (viewFilters.freshness as
                   EvidenceFreshnessStatus | "all" | undefined) ?? "all",
               query: (viewFilters.query as string) ?? "",
-            })
-          }
+            });
+          }}
         />
         <Toolbar
           filters={filters}
@@ -417,7 +437,15 @@ function EvidencePageContent() {
           </span>
         </div>
       )}
-      <QueryState queries={[evidence, freshness]} label="evidence freshness">
+      {/* Freshness is an overlay on the records: if it fails, the records
+          still show and the gap is stated, not hidden. */}
+      <QueryState queries={evidence} label="evidence">
+        {freshness.isError ? (
+          <QueryWarning
+            query={freshness}
+            message="Couldn’t load evidence freshness. Records are shown without freshness status."
+          />
+        ) : null}
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>{filtered.length} matching records</CardTitle>
@@ -433,14 +461,19 @@ function EvidencePageContent() {
             density="compact"
             minWidthClassName="min-w-[760px]"
             emptyLabel="No evidence records match the current filters."
-            onRowSelect={setSelected}
+            onRowSelect={selectRecord}
             rowLabel={(row) =>
               `Open evidence ${row.event_id} from ${row.source}`
             }
           />
         </Card>
       </QueryState>
-      <EvidenceDrawer evidence={selected} onClose={() => setSelected(null)} />
+      <EvidenceDrawer
+        evidence={selected}
+        freshness={selected?.freshness}
+        freshnessUnavailable={freshness.isError}
+        onClose={() => selectRecord(null)}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { workspaceCoverage } from "../src/lib/readiness-coverage";
 
 test("header reflects healthy and unavailable API responses", async ({
   page,
@@ -33,7 +34,7 @@ test("assessment overview links to workspaces and discloses provenance", async (
     overview.getByRole("link", { name: /Open findings/ }),
   ).toHaveAttribute("href", "/console/violations/");
   await expect(
-    overview.getByRole("link", { name: /Control pass rate/ }),
+    overview.getByRole("link", { name: /Assessed coverage/ }),
   ).toHaveAttribute("href", "/console/controls/");
   await expect(
     overview.getByRole("link", { name: /Assessment export/ }),
@@ -75,7 +76,7 @@ test("every overview KPI is a label, one number, one line, no icon", async ({
   });
   const tiles = overview.getByRole("link").filter({
     hasText:
-      /^(Assessment score|Control pass rate|Open findings|Evidence to refresh)/,
+      /^(Assessment score|Assessed coverage|Open findings|Evidence to refresh)/,
   });
   await expect(tiles).toHaveCount(4);
   for (const tile of await tiles.all()) {
@@ -123,13 +124,16 @@ test("compact app header keeps search and account actions usable on mobile", asy
   ).toBe(true);
 });
 
-test("overview leads with overall posture and distinguishes score from test pass rate", async ({
+test("overview leads with overall posture and distinguishes score from coverage", async ({
   page,
 }) => {
   const postureResponse = await page.request.get("/api/v1/posture/current");
   const { data: assessment } = await postureResponse.json();
   const ingestionResponse = await page.request.get("/api/v1/ingestion/status");
   const { data: ingestion } = await ingestionResponse.json();
+  const catalogResponse = await page.request.get("/api/v1/frameworks?limit=500");
+  const { data: catalog } = await catalogResponse.json();
+  const coverage = workspaceCoverage(assessment.frameworks, catalog);
   await page.goto("/console/dashboard/");
   const overview = page.getByRole("region", {
     name: "Latest lake assessment",
@@ -144,53 +148,48 @@ test("overview leads with overall posture and distinguishes score from test pass
     "aria-valuenow",
     String(Math.round(assessment.posture.score)),
   );
+  expect(coverage.percent).not.toBeNull();
   await expect(
     overview.getByRole("progressbar", {
-      name: "Control pass rate",
+      name: "Assessed coverage",
       exact: true,
     }),
-  ).toHaveAttribute(
-    "aria-valuenow",
-    String(Math.round(ingestion.eval_accuracy.pass_rate * 100)),
-  );
+  ).toHaveAttribute("aria-valuenow", String(coverage.percent));
+  // The two headline tiles answer different questions, so on the golden
+  // fixture they must not print the same number.
+  expect(coverage.percent).not.toBe(Math.round(assessment.posture.score));
   const accuracy = ingestion.eval_accuracy;
-  // Unevaluated tests are named for what they need, not lumped into "Other".
   await expect(
     overview
-      .getByRole("link", { name: /Control pass rate/ })
+      .getByRole("link", { name: /Assessed coverage/ })
       .getByText(
-        `${accuracy.passing} of ${accuracy.total_tests} tests passing · ${accuracy.needs_evidence} need evidence`,
+        `${coverage.assessed.toLocaleString()} of ${coverage.total.toLocaleString()} requirements assessed · ${accuracy.needs_evidence} need evidence`,
         { exact: true },
       ),
   ).toBeVisible();
-  expect(accuracy.needs_evidence).toBeGreaterThan(0);
+  await expect(
+    overview.getByText("Control pass rate", { exact: true }),
+  ).toHaveCount(0);
 });
 
-test("unevaluated controls do not appear as a zero-percent result", async ({
+test("assessed coverage is not shown as zero before anything is evaluated", async ({
   page,
 }) => {
-  await page.route("**/api/v1/ingestion/status", async (route) => {
+  await page.route("**/api/v1/posture/current", async (route) => {
     const response = await route.fetch();
     const body = await response.json();
-    body.data.eval_accuracy = {
-      has_tests: false,
-      total_tests: 0,
-      passing: 0,
-      failing: 0,
-      warning: 0,
-      pass_rate: 0,
-    };
+    body.data.posture.state = "not_evaluated";
     await route.fulfill({ response, json: body });
   });
+  // The live stream would replace the mocked posture with the real one.
+  await page.route("**/api/v1/stream**", (route) => route.abort());
   await page.goto("/console/dashboard/");
-  const passRate = page
+  const tile = page
     .getByRole("region", { name: "Latest lake assessment", exact: true })
-    .getByRole("link", { name: /Control pass rate/ });
-  await expect(
-    passRate.getByText("Not evaluated", { exact: true }),
-  ).toBeVisible();
-  await expect(passRate.getByRole("progressbar")).toHaveCount(0);
-  await expect(passRate.getByText("0%", { exact: true })).toHaveCount(0);
+    .getByRole("link", { name: /Assessed coverage/ });
+  await expect(tile.getByText("Not evaluated", { exact: true })).toBeVisible();
+  await expect(tile.getByRole("progressbar")).toHaveCount(0);
+  await expect(tile.getByText("0%", { exact: true })).toHaveCount(0);
 });
 
 test("overview shows actual finding severity and stays compact at tablet width", async ({

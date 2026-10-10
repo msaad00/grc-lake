@@ -7,16 +7,38 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { EntityTagsEditor } from "@/components/EntityTagsEditor";
 import { useVerifyMutation } from "@/lib/api/hooks";
-import type { NormalizedEvent, VerifyResult } from "@/lib/api/types";
+import type {
+  EvidenceFreshness,
+  NormalizedEvent,
+  VerifyResult,
+} from "@/lib/api/types";
 import { assetLabel } from "@/lib/format";
 import { displayLabel } from "@/lib/display";
 
+export const freshnessTone = (status?: string) =>
+  status === "fresh"
+    ? "ready"
+    : status === "stale"
+      ? "attention"
+      : status === "expired" || status === "missing"
+        ? "critical"
+        : "default";
+
 interface Props {
   evidence: NormalizedEvent | null;
+  /** Freshness for this record; omitted when it was not scored. */
+  freshness?: EvidenceFreshness;
+  /** The freshness check could not be loaded, so absence is not "not scored". */
+  freshnessUnavailable?: boolean;
   onClose: () => void;
 }
 
-export function EvidenceDrawer({ evidence, onClose }: Props) {
+export function EvidenceDrawer({
+  evidence,
+  freshness,
+  freshnessUnavailable = false,
+  onClose,
+}: Props) {
   const verify = useVerifyMutation();
   const [result, setResult] = useState<VerifyResult | null>(null);
 
@@ -90,6 +112,23 @@ export function EvidenceDrawer({ evidence, onClose }: Props) {
               >
                 {displayLabel(evidence.severity)}
               </Badge>
+            </dd>
+            <dt className="text-muted">Freshness</dt>
+            <dd data-testid="evidence-drawer-freshness">
+              {freshness ? (
+                <span className="inline-flex flex-wrap items-center gap-2">
+                  <Badge tone={freshnessTone(freshness.status)}>
+                    {displayLabel(freshness.status)}
+                  </Badge>
+                  <span className="text-xs text-muted">
+                    SLO {freshness.freshness_slo_minutes}m
+                  </span>
+                </span>
+              ) : (
+                <Badge>
+                  {freshnessUnavailable ? "Unavailable" : "Not scored"}
+                </Badge>
+              )}
             </dd>
             <dt className="text-muted">Controls</dt>
             <dd className="flex flex-wrap gap-1">

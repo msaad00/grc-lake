@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import {
-  readinessCoverage,
+  frameworkCoverage,
+  postureFrameworkId,
   type ReadinessCoverage as Coverage,
 } from "@/lib/readiness-coverage";
 import Link from "next/link";
@@ -10,30 +11,12 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import type { FrameworkPosture, FrameworkView } from "@/lib/api/types";
 import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { FrameworkBadge } from "@/components/framework/FrameworkBadge";
-import { resolveFrameworkId } from "@/lib/framework-visuals";
 import { frameworkDetailHref } from "@/lib/framework-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SCORE_COPY } from "@/lib/console-copy";
 import { splitFrameworkPacks, stubCountLabel } from "@/lib/framework-packs";
-
-const FRAMEWORK_IDS: Record<string, string> = {
-  "SOC 2": "soc2",
-  "NIST AI RMF": "nist-ai-rmf",
-  "ISO 27001": "iso-27001-2022",
-  "ISO 42001": "iso-42001-2023",
-  HIPAA: "hipaa-security-rule",
-  "PCI DSS": "pci-dss-v4",
-  GDPR: "gdpr-2016-679",
-  "EU AI Act": "eu-ai-act-2024-1689",
-  FedRAMP: "fedramp-moderate",
-  "CIS AWS": "cis_aws",
-};
-
-function frameworkIdFor(label: string) {
-  return resolveFrameworkId(FRAMEWORK_IDS[label] ?? label);
-}
 
 function frameworkLabel(framework: FrameworkView) {
   if (framework.framework_id === "soc2") return "SOC 2";
@@ -45,17 +28,6 @@ function frameworkLabel(framework: FrameworkView) {
   if (framework.framework_id === "gdpr-2016-679") return "GDPR";
   if (framework.framework_id === "eu-ai-act-2024-1689") return "EU AI Act";
   return framework.name;
-}
-
-function coverageFor(
-  framework: FrameworkPosture,
-  catalogById: Map<string, FrameworkView>,
-): Coverage {
-  const total =
-    catalogById.get(frameworkIdFor(framework.framework))?.control_count ?? null;
-  const assessed =
-    framework.control_count - (framework.not_evaluated_control_count ?? 0);
-  return readinessCoverage(assessed, total);
 }
 
 function statusFor(framework: FrameworkPosture, coverage: Coverage) {
@@ -95,7 +67,8 @@ function FrameworkRow({
   unmonitored?: FrameworkView;
 }) {
   if (!framework && !unmonitored) return null;
-  const id = unmonitored?.framework_id ?? frameworkIdFor(framework!.framework);
+  const id =
+    unmonitored?.framework_id ?? postureFrameworkId(framework!.framework);
   const label = unmonitored
     ? frameworkLabel(unmonitored)
     : framework!.framework;
@@ -188,14 +161,16 @@ export function ReadinessGrid({
       new Map(
         sorted.map((framework) => [
           framework.framework,
-          coverageFor(framework, catalogById),
+          frameworkCoverage(framework, catalogById),
         ]),
       ),
     [sorted, catalogById],
   );
   const monitoredIds = useMemo(
     () =>
-      new Set(sorted.map((framework) => frameworkIdFor(framework.framework))),
+      new Set(
+        sorted.map((framework) => postureFrameworkId(framework.framework)),
+      ),
     [sorted],
   );
   const { packs, stubs } = useMemo(

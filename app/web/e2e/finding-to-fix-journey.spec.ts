@@ -58,7 +58,8 @@ test("finding drawer says what is wrong and how to fix it", async ({
   await drawer.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
-  await row.focus();
+  // Keyboard users open the row through its one real control.
+  await row.getByRole("button", { name: /Review finding/ }).focus();
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("dialog").getByRole("heading", { name: CONTROL_TITLE }),

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createColumnHelper,
@@ -14,7 +14,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { FilterDisclosure } from "@/components/ui/filter-disclosure";
 import { PageHeader } from "@/components/PageHeader";
 import { SavedViewsBar } from "@/components/SavedViewsBar";
-import { QueryState } from "@/components/QueryState";
+import { QueryState, QueryWarning } from "@/components/QueryState";
 import { TrustPipelineStrip } from "@/components/TrustPipelineStrip";
 import { notify } from "@/lib/toast";
 import { Toolbar, matchesQuery } from "@/components/Toolbar";
@@ -76,15 +76,18 @@ function ViolationsPageContent() {
     const match = violations.data.find((v) => v.violation_id === deepLinkId);
     setSelected(match ?? null);
   }, [deepLinkId, violations.data]);
-  function selectFinding(finding: Violation | null) {
-    setSelected(finding);
-    const params = new URLSearchParams(searchParams.toString());
-    if (finding) params.set("id", finding.violation_id);
-    else params.delete("id");
-    router.replace(`/violations${params.size ? `?${params}` : ""}`, {
-      scroll: false,
-    });
-  }
+  const selectFinding = useCallback(
+    (finding: Violation | null) => {
+      setSelected(finding);
+      const params = new URLSearchParams(searchParams.toString());
+      if (finding) params.set("id", finding.violation_id);
+      else params.delete("id");
+      router.replace(`/violations${params.size ? `?${params}` : ""}`, {
+        scroll: false,
+      });
+    },
+    [router, searchParams],
+  );
   const environmentFor = (value: string) =>
     value?.trim().toLowerCase() || "unknown";
   const environments = [
@@ -178,78 +181,81 @@ function ViolationsPageContent() {
     },
   ].filter((chip) => chip.count > 0);
 
-  const columns: SortableColumnDefs<Violation> = [
-    helper.accessor("control_id", {
-      header: "Finding",
-      meta: { mobile: "title" },
-      cell: (info) => (
-        <div className="max-w-[320px]">
-          <div
-            className="line-clamp-2 font-semibold leading-5 text-ink"
-            title={
-              controlTitles.get(info.getValue()) ?? info.row.original.event_type
-            }
+  const columns = useMemo<SortableColumnDefs<Violation>>(
+    () => [
+      helper.accessor("control_id", {
+        header: "Finding",
+        meta: { mobile: "title" },
+        cell: (info) => (
+          <div className="max-w-[320px]">
+            <div
+              className="line-clamp-2 font-semibold leading-5 text-ink"
+              title={
+                controlTitles.get(info.getValue()) ?? info.row.original.event_type
+              }
+            >
+              {controlTitles.get(info.getValue()) ?? info.row.original.event_type}
+            </div>
+            <div className="mt-1 text-xs text-muted">{info.getValue()}</div>
+          </div>
+        ),
+      }),
+      helper.accessor("asset_id", {
+        header: "Asset & environment",
+        cell: (info) => (
+          <div className="max-w-[280px]" title={info.getValue() || undefined}>
+            <div className="break-words text-xs leading-5 text-ink [overflow-wrap:anywhere]">
+              {assetLabel(info.row.original) || "Unknown asset"}
+            </div>
+            <div className="mt-0.5 text-xs text-muted">
+              {info.row.original.environment?.trim() || "Unknown environment"}
+            </div>
+          </div>
+        ),
+      }),
+      helper.accessor("severity_score", {
+        header: "Severity",
+        meta: { mobile: "badge" },
+        cell: (info) => (
+          <div>
+            <Badge tone={severityTone(info.row.original.severity)}>
+              {displayLabel(info.row.original.severity)}
+            </Badge>
+            <div className="mt-1 text-xs text-muted">Score {info.getValue()}</div>
+          </div>
+        ),
+      }),
+      helper.accessor("asset_owner", {
+        header: "Owner & source",
+        cell: (info) => (
+          <div className="max-w-[190px] break-words text-xs leading-5">
+            <div className="font-medium text-ink">
+              {info.getValue()?.trim() || "Unassigned"}
+            </div>
+            <div className="text-muted">{info.row.original.source}</div>
+          </div>
+        ),
+      }),
+      helper.display({
+        id: "review",
+        header: "Action",
+        meta: { mobile: "hidden", rowAction: true },
+        cell: (info) => (
+          <Button
+            size="sm"
+            aria-label={`Review finding ${info.row.original.violation_id}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              selectFinding(info.row.original);
+            }}
           >
-            {controlTitles.get(info.getValue()) ?? info.row.original.event_type}
-          </div>
-          <div className="mt-1 text-xs text-muted">{info.getValue()}</div>
-        </div>
-      ),
-    }),
-    helper.accessor("asset_id", {
-      header: "Asset & environment",
-      cell: (info) => (
-        <div className="max-w-[280px]" title={info.getValue() || undefined}>
-          <div className="break-words text-xs leading-5 text-ink [overflow-wrap:anywhere]">
-            {assetLabel(info.row.original) || "Unknown asset"}
-          </div>
-          <div className="mt-0.5 text-xs text-muted">
-            {info.row.original.environment?.trim() || "Unknown environment"}
-          </div>
-        </div>
-      ),
-    }),
-    helper.accessor("severity_score", {
-      header: "Severity",
-      meta: { mobile: "badge" },
-      cell: (info) => (
-        <div>
-          <Badge tone={severityTone(info.row.original.severity)}>
-            {displayLabel(info.row.original.severity)}
-          </Badge>
-          <div className="mt-1 text-xs text-muted">Score {info.getValue()}</div>
-        </div>
-      ),
-    }),
-    helper.accessor("asset_owner", {
-      header: "Owner & source",
-      cell: (info) => (
-        <div className="max-w-[190px] break-words text-xs leading-5">
-          <div className="font-medium text-ink">
-            {info.getValue()?.trim() || "Unassigned"}
-          </div>
-          <div className="text-muted">{info.row.original.source}</div>
-        </div>
-      ),
-    }),
-    helper.display({
-      id: "review",
-      header: "Action",
-      meta: { mobile: "hidden" },
-      cell: (info) => (
-        <Button
-          size="sm"
-          aria-label={`Review finding ${info.row.original.violation_id}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            selectFinding(info.row.original);
-          }}
-        >
-          Review
-        </Button>
-      ),
-    }),
-  ];
+            Review
+          </Button>
+        ),
+      }),
+    ],
+    [controlTitles, selectFinding],
+  );
 
   const table = useTable({
     features: sortableTableFeatures,
@@ -293,9 +299,15 @@ function ViolationsPageContent() {
             severity: filters.severity,
             query: filters.query,
             environment,
+            owner: ownerFilter,
+            tag: activeTagId,
           }}
           onApply={(viewFilters) => {
+            // A view written before owner/tag were saved resets them, so no
+            // filter from the previous view lingers.
             setEnvironment((viewFilters.environment as string) ?? "all");
+            setOwnerFilter((viewFilters.owner as string) || "all");
+            setActiveTagId((viewFilters.tag as string) || null);
             setFilters({
               framework: (viewFilters.framework as string) ?? "all",
               severity: (viewFilters.severity as Severity | "all") ?? "all",
@@ -361,6 +373,12 @@ function ViolationsPageContent() {
         </div>
       </FilterDisclosure>
       <QueryState queries={violations} label="violations">
+        {controls.isError ? (
+          <QueryWarning
+            query={controls}
+            message="Couldn’t load control titles. Findings show control IDs, and the framework filter is empty until controls load."
+          />
+        ) : null}
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>{filtered.length} findings</CardTitle>

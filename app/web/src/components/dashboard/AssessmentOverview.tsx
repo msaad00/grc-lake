@@ -3,11 +3,16 @@
 import Link from "next/link";
 import { useEffect, useRef, type ReactNode } from "react";
 import { ChevronDown, CircleCheck, ShieldAlert } from "lucide-react";
-import type { Assessment, IngestionStatus } from "@/lib/api/types";
+import type {
+  Assessment,
+  FrameworkView,
+  IngestionStatus,
+} from "@/lib/api/types";
 import { Badge } from "@/components/ui/badge";
 import { InfoHint } from "@/components/ui/info-hint";
 import { SCORE_COPY } from "@/lib/console-copy";
-import { formatDateTime, formatRelative } from "@/lib/format";
+import { formatCount, formatDateTime, formatRelative } from "@/lib/format";
+import { workspaceCoverage } from "@/lib/readiness-coverage";
 
 const TILE_SURFACE =
   "flex min-w-0 flex-col gap-1.5 rounded-lg border border-line bg-surface px-4 py-4 transition-colors hover:border-line-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-5";
@@ -151,11 +156,14 @@ export function AssessmentOverview({
   assessment,
   ingestion,
   frameworkCount,
+  catalog,
 }: {
   assessment?: Assessment;
   ingestion?: IngestionStatus;
   /** Framework packs with catalogued requirements; registry stubs excluded. */
   frameworkCount: number;
+  /** Framework registry with catalog sizes; undefined while it loads. */
+  catalog?: FrameworkView[];
 }) {
   // A lake with no evaluated controls has a posture block but no score.
   const posture =
@@ -163,13 +171,11 @@ export function AssessmentOverview({
       ? undefined
       : assessment?.posture;
   const state = assessment?.posture.state;
-  const accuracy = ingestion?.eval_accuracy;
-  const evaluated = Boolean(accuracy?.has_tests);
-  const rate = accuracy?.pass_rate;
-  const passPercent =
-    evaluated && rate != null && Number.isFinite(rate)
-      ? Math.round(rate * 100)
+  const coverage =
+    posture && catalog
+      ? workspaceCoverage(assessment?.frameworks ?? [], catalog)
       : null;
+  const coveragePercent = coverage?.percent ?? null;
   const status = !posture
     ? "Not assessed"
     : state === "ready"
@@ -180,9 +186,7 @@ export function AssessmentOverview({
   const StatusIcon = state === "ready" ? CircleCheck : ShieldAlert;
   const exportReady = Boolean(ingestion?.proof.proof_pack_exists);
 
-  const total = accuracy?.total_tests ?? 0;
-  const passing = accuracy?.passing ?? 0;
-  const needsEvidence = accuracy?.needs_evidence ?? 0;
+  const needsEvidence = ingestion?.eval_accuracy?.needs_evidence ?? 0;
 
   const findings = posture?.open_violation_count ?? 0;
   const critical = posture?.critical_violation_count ?? 0;
@@ -250,26 +254,37 @@ export function AssessmentOverview({
             className="absolute right-2 top-2"
           />
         </div>
-        <Tile
-          href="/controls"
-          label="Control pass rate"
-          value={passPercent ?? "—"}
-          suffix={passPercent != null ? "%" : undefined}
-          detail={
-            passPercent != null
-              ? `${passing} of ${total} tests passing${needsEvidence ? ` · ${needsEvidence} need evidence` : ""}`
-              : "Not evaluated"
-          }
-        >
-          {passPercent != null ? (
-            <Meter
-              label="Control pass rate"
-              value={passPercent}
-              tone="bg-success"
-              valueText={`${passing} of ${total} tests passing`}
-            />
-          ) : null}
-        </Tile>
+        <div className="relative flex min-w-0 flex-col [&>a]:flex-1">
+          <Tile
+            href="/controls"
+            label={SCORE_COPY.assessedCoverage.label}
+            value={coveragePercent ?? "—"}
+            suffix={coveragePercent != null ? "%" : undefined}
+            detail={
+              coverage && coveragePercent != null
+                ? `${formatCount(coverage.assessed)} of ${formatCount(coverage.total)} requirements assessed${needsEvidence ? ` · ${needsEvidence} need evidence` : ""}`
+                : !posture
+                  ? "Not evaluated"
+                  : catalog
+                    ? "Catalog size unknown for evaluated packs"
+                    : "Loading framework catalog"
+            }
+          >
+            {coverage && coveragePercent != null ? (
+              <Meter
+                label={SCORE_COPY.assessedCoverage.label}
+                value={coveragePercent}
+                tone="bg-brand"
+                valueText={`${coverage.assessed} of ${coverage.total} requirements assessed`}
+              />
+            ) : null}
+          </Tile>
+          <InfoHint
+            label={SCORE_COPY.assessedCoverage.label}
+            text={`${SCORE_COPY.assessedCoverage.scope}. ${SCORE_COPY.assessedCoverage.definition}`}
+            className="absolute right-2 top-2"
+          />
+        </div>
         <Tile
           href="/violations"
           label="Open findings"

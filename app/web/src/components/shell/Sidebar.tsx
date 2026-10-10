@@ -26,7 +26,7 @@ function NavLinks({
   >("trustops:sidebar:closed-groups", {});
 
   const toggleGroup = (group: NavGroup) => {
-    setClosedGroups({ ...closedGroups, [group]: !closedGroups[group] });
+    setClosedGroups((prev) => ({ ...prev, [group]: !prev[group] }));
   };
 
   // Keep the current page in view, and fade whichever edge has more links

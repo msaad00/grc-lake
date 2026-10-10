@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowDownToLine,
@@ -182,11 +182,14 @@ export default function GraphPage() {
 function GraphPageContent() {
   const searchParams = useSearchParams();
   const focusParam = searchParams.get("focus");
-  const complianceGraph = useComplianceGraph();
-  const repoGraph = useRepositoryGraph();
   const [graphMode, setGraphMode] = useState<"compliance" | "repository">(
     "compliance",
   );
+  // Only the active mode's graph is fetched; the other loads on first switch.
+  const complianceGraph = useComplianceGraph({
+    enabled: graphMode === "compliance",
+  });
+  const repoGraph = useRepositoryGraph({ enabled: graphMode === "repository" });
   const activeKinds =
     graphMode === "compliance" ? COMPLIANCE_KINDS : REPO_KINDS;
   const graph = graphMode === "compliance" ? complianceGraph : repoGraph;
@@ -208,11 +211,17 @@ function GraphPageContent() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [focusMissing, setFocusMissing] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [rawActiveResult, setActiveResult] = useState(0);
+  const searchListId = useId();
   // The compliance graph opens on one control path (framework, control, its
   // evidence types, their assets) so it is readable; the whole framework
   // slice is one click away.
   const [pathRoot, setPathRoot] = useState<string | null>(null);
   const pathRootDefaulted = useRef(false);
+  const frameworkDefaulted = useRef(false);
+  // The `?focus=` value already applied, so a refetch or a return to the
+  // compliance view does not override filters the user changed since.
+  const appliedFocus = useRef<string | null>(null);
   const canvasRef = useRef<ImperativeRef | null>(null);
   const wide = useMediaQuery(SM_UP);
 
@@ -226,7 +235,10 @@ function GraphPageContent() {
     setLayout(graphMode === "compliance" ? "TB" : "LR");
     setPathRoot(null);
     pathRootDefaulted.current = false;
-    clearPath();
+    frameworkDefaulted.current = false;
+    setPathFrom(null);
+    setPathTo(null);
+    setPathMode(null);
   }, [graphMode, activeKinds]);
 
   const data = graph.data;
@@ -297,8 +309,8 @@ function GraphPageContent() {
     [data],
   );
 
-  // Default to one framework on first load only; "All frameworks" is a real choice.
-  const frameworkDefaulted = useRef(false);
+  // Default to one framework each time the compliance view opens; "All
+  // frameworks" stays a real choice until the mode changes.
   useEffect(() => {
     if (
       frameworkDefaulted.current ||
@@ -404,7 +416,8 @@ function GraphPageContent() {
   }, [data, filterFramework, graphIndex, graphMode]);
 
   useEffect(() => {
-    if (pathRootDefaulted.current || focusParam || !defaultPathRoot) return;
+    if (pathRootDefaulted.current || !defaultPathRoot) return;
+    if (focusParam && appliedFocus.current !== focusParam) return;
     pathRootDefaulted.current = true;
     setPathRoot(defaultPathRoot);
   }, [defaultPathRoot, focusParam]);
@@ -413,6 +426,7 @@ function GraphPageContent() {
   // is chosen so the default single-framework view does not hide it.
   useEffect(() => {
     if (!focusParam || graphMode !== "compliance" || !data) return;
+    if (appliedFocus.current === focusParam) return;
     const node = graphIndex.nodesById.get(focusParam);
     if (!node) {
       setFocusMissing(true);
@@ -448,6 +462,7 @@ function GraphPageContent() {
     setFilterEnvironment("");
     setVisible((prev) => new Set([...prev, node.kind]));
     setFocusId(node.id);
+    appliedFocus.current = focusParam;
     pathRootDefaulted.current = true;
     setPathRoot(node.id);
   }, [focusParam, graphMode, data, graphIndex]);
@@ -463,6 +478,10 @@ function GraphPageContent() {
       )
       .slice(0, SEARCH_RESULT_LIMIT);
   }, [data, search]);
+  const activeResult =
+    rawActiveResult < searchResults.length ? rawActiveResult : 0;
+  const listboxOpen = searchOpen && searchResults.length > 0;
+  const optionId = (index: number) => `${searchListId}-option-${index}`;
 
   const visibleSummary = useMemo(() => {
     const nodes = (data?.nodes ?? []).filter((n) => {
@@ -669,164 +688,210 @@ function GraphPageContent() {
         }
         actions={
           <Badge tone="info">
-            <Network className="mr-1 h-3 w-3" />{" "}
+            <Network aria-hidden="true" className="mr-1 h-3 w-3" />{" "}
             {data
               ? `${formatCount(data.nodes.length)} nodes / ${formatCount(data.edges.length)} edges`
-              : "loading"}
+              : graph.isError
+                ? "unavailable"
+                : "loading"}
           </Badge>
         }
       />
 
-      <QueryState queries={graph} label="compliance graph">
-        <Card className="relative z-10">
-          <div className="flex flex-wrap items-center gap-2 p-2">
-            <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-0.5">
-              {(["compliance", "repository"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setGraphMode(mode)}
-                  className={[
-                    "inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold",
-                    graphMode === mode
-                      ? "bg-ink text-surface"
-                      : "text-muted hover:bg-surfaceMuted",
-                  ].join(" ")}
-                >
-                  {mode === "repository" ? (
-                    <GitBranch className="h-3.5 w-3.5" />
-                  ) : (
-                    <Network className="h-3.5 w-3.5" />
-                  )}
-                  {mode === "repository" ? "Repository" : "Compliance"}
-                </button>
-              ))}
-            </div>
-            <div className="relative min-w-[180px] flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
-              <input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setSearchOpen(true);
-                }}
-                onFocus={() => setSearchOpen(true)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setSearchOpen(false);
-                  if (e.key === "Enter" && searchResults[0]) {
-                    e.preventDefault();
-                    pickSearchResult(searchResults[0]);
+      <Card className="relative z-10">
+        <div className="flex flex-wrap items-center gap-2 p-2">
+          <div
+            role="group"
+            aria-label="Graph mode"
+            className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-0.5"
+          >
+            {(["compliance", "repository"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={graphMode === mode}
+                onClick={() => setGraphMode(mode)}
+                className={[
+                  "inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold",
+                  graphMode === mode
+                    ? "bg-ink text-surface"
+                    : "text-muted hover:bg-surfaceMuted",
+                ].join(" ")}
+              >
+                {mode === "repository" ? (
+                  <GitBranch aria-hidden="true" className="h-3.5 w-3.5" />
+                ) : (
+                  <Network aria-hidden="true" className="h-3.5 w-3.5" />
+                )}
+                {mode === "repository" ? "Repository" : "Compliance"}
+              </button>
+            ))}
+          </div>
+          <div className="relative min-w-[180px] flex-1">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted"
+            />
+            <input
+              type="text"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={listboxOpen}
+              aria-controls={searchListId}
+              aria-activedescendant={
+                listboxOpen ? optionId(activeResult) : undefined
+              }
+              autoComplete="off"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setSearchOpen(true);
+                setActiveResult(0);
+              }}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => setSearchOpen(false)}
+              onKeyDown={(e) => {
+                const count = searchResults.length;
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                  if (count === 0) return;
+                  e.preventDefault();
+                  if (!searchOpen) {
+                    setSearchOpen(true);
+                    return;
                   }
-                }}
-                aria-label="Search graph nodes"
-                placeholder={
-                  pathMode
-                    ? `Search to pick the path ${pathMode === "from" ? "start" : "end"}…`
-                    : "Search nodes (label, subtitle, owner)…"
-                }
-                className="w-full rounded-lg border border-line bg-surface py-2 pl-9 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
-              />
-              {searchOpen && searchResults.length > 0 && (
-                <ul
-                  role="listbox"
-                  aria-label="Matching nodes"
-                  className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-lg border border-line bg-surface p-1 shadow-card"
-                >
-                  {searchResults.map((node) => (
-                    <li
-                      key={node.id}
-                      role="option"
-                      aria-selected={false}
-                      tabIndex={0}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => pickSearchResult(node)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          pickSearchResult(node);
-                        }
-                      }}
-                      className="flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-surfaceMuted focus:bg-surfaceMuted focus:outline-none"
-                    >
-                      <span className="min-w-0 truncate font-semibold text-ink">
-                        {node.label}
-                        {node.subtitle && (
-                          <span className="ml-1 font-normal text-muted">
-                            {node.subtitle}
-                          </span>
-                        )}
-                      </span>
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted">
-                        {pathMode === "from"
-                          ? "set start"
-                          : pathMode === "to"
-                            ? "set end"
-                            : node.kind.replaceAll("_", " ")}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  aria-label="Clear search"
-                  className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-muted hover:bg-surfaceMuted"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-            <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-0.5">
-              <Layout className="ml-1.5 h-3.5 w-3.5 text-muted" />
-              {(["LR", "TB", "BT"] as LayoutDir[]).map((dir) => (
-                <button
-                  key={dir}
-                  type="button"
-                  onClick={() => setLayout(dir)}
-                  className={[
-                    "rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide",
-                    layout === dir
-                      ? "bg-ink text-surface"
-                      : "text-muted hover:bg-surfaceMuted",
-                  ].join(" ")}
-                  title={LAYOUT_LABEL[dir]}
-                >
-                  {dir}
-                </button>
-              ))}
-            </div>
-            <Button
-              variant={pathMode ? "primary" : "default"}
-              size="sm"
-              onClick={() => {
-                if (pathFrom || pathTo) {
-                  clearPath();
-                } else {
-                  setPathMode("from");
+                  const step = e.key === "ArrowDown" ? 1 : -1;
+                  setActiveResult((i) => (i + step + count) % count);
+                } else if (e.key === "Home" && listboxOpen) {
+                  e.preventDefault();
+                  setActiveResult(0);
+                } else if (e.key === "End" && listboxOpen) {
+                  e.preventDefault();
+                  setActiveResult(count - 1);
+                } else if (e.key === "Escape") {
+                  if (listboxOpen) setSearchOpen(false);
+                  else setSearch("");
+                } else if (e.key === "Enter" && listboxOpen) {
+                  e.preventDefault();
+                  const node = searchResults[activeResult];
+                  if (node) pickSearchResult(node);
                 }
               }}
-              title="Click two nodes to highlight the shortest path between them"
-            >
-              <Route className="h-3.5 w-3.5" />
-              {pathFrom && pathTo
-                ? "Clear path"
-                : pathMode === "from"
-                  ? "Pick start node"
-                  : pathMode === "to"
-                    ? "Pick end node"
-                    : "Trace path"}
-            </Button>
-            <Button variant="default" size="sm" onClick={exportSVG}>
-              <ArrowDownToLine className="h-3.5 w-3.5" /> SVG
-            </Button>
-            <Button variant="default" size="sm" onClick={exportJSON}>
-              <Download className="h-3.5 w-3.5" /> JSON
-            </Button>
+              aria-label="Search graph nodes"
+              placeholder={
+                pathMode
+                  ? `Search to pick the path ${pathMode === "from" ? "start" : "end"}…`
+                  : "Search nodes (label, subtitle, owner)…"
+              }
+              className="w-full rounded-lg border border-line bg-surface py-2 pl-9 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
+            />
+            {listboxOpen && (
+              <ul
+                id={searchListId}
+                role="listbox"
+                aria-label="Matching nodes"
+                className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-lg border border-line bg-surface p-1 shadow-card"
+              >
+                {searchResults.map((node, index) => (
+                  <li
+                    key={node.id}
+                    id={optionId(index)}
+                    role="option"
+                    aria-selected={index === activeResult}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onMouseMove={() => setActiveResult(index)}
+                    onClick={() => pickSearchResult(node)}
+                    className={[
+                      "flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-surfaceMuted",
+                      index === activeResult
+                        ? "bg-surfaceMuted outline outline-1 outline-brand"
+                        : "",
+                    ].join(" ")}
+                  >
+                    <span className="min-w-0 truncate font-semibold text-ink">
+                      {node.label}
+                      {node.subtitle && (
+                        <span className="ml-1 font-normal text-muted">
+                          {node.subtitle}
+                        </span>
+                      )}
+                    </span>
+                    <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                      {pathMode === "from"
+                        ? "set start"
+                        : pathMode === "to"
+                          ? "set end"
+                          : node.kind.replaceAll("_", " ")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-muted hover:bg-surfaceMuted"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
-        </Card>
+          <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-0.5">
+            <Layout className="ml-1.5 h-3.5 w-3.5 text-muted" />
+            {(["LR", "TB", "BT"] as LayoutDir[]).map((dir) => (
+              <button
+                key={dir}
+                type="button"
+                onClick={() => setLayout(dir)}
+                className={[
+                  "rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide",
+                  layout === dir
+                    ? "bg-ink text-surface"
+                    : "text-muted hover:bg-surfaceMuted",
+                ].join(" ")}
+                title={LAYOUT_LABEL[dir]}
+              >
+                {dir}
+              </button>
+            ))}
+          </div>
+          <Button
+            variant={pathMode ? "primary" : "default"}
+            size="sm"
+            onClick={() => {
+              if (pathFrom || pathTo) {
+                clearPath();
+              } else {
+                setPathMode("from");
+              }
+            }}
+            title="Click two nodes to highlight the shortest path between them"
+          >
+            <Route className="h-3.5 w-3.5" />
+            {pathFrom && pathTo
+              ? "Clear path"
+              : pathMode === "from"
+                ? "Pick start node"
+                : pathMode === "to"
+                  ? "Pick end node"
+                  : "Trace path"}
+          </Button>
+          <Button variant="default" size="sm" onClick={exportSVG}>
+            <ArrowDownToLine className="h-3.5 w-3.5" /> SVG
+          </Button>
+          <Button variant="default" size="sm" onClick={exportJSON}>
+            <Download className="h-3.5 w-3.5" /> JSON
+          </Button>
+        </div>
+      </Card>
 
+      <QueryState
+        queries={graph}
+        label={
+          graphMode === "compliance" ? "compliance graph" : "repository graph"
+        }
+      >
         {/* Phones get one summary line so the canvas is on the first screen. */}
         <p
           data-testid="graph-summary-line"

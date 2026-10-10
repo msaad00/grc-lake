@@ -12,7 +12,7 @@ test.describe("dashboard product polish", () => {
       commandCenter.getByRole("heading", { level: 2 }).first(),
     ).toBeVisible();
     for (const metric of [
-      "Control pass rate",
+      "Assessed coverage",
       "Open findings",
       "Assessment export",
     ]) {

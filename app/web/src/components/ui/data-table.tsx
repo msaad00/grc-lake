@@ -1,6 +1,6 @@
 "use client";
 
-import type { KeyboardEvent, ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import {
   flexRender,
   type Cell,
@@ -35,28 +35,53 @@ interface Props<TData extends RowData> {
   scrollClassName?: string;
 }
 
-function selectHandlers<TData>(
+const INTERACTIVE = "a, button, input, select, textarea, summary, [role=button]";
+
+/**
+ * Clicking anywhere on a row is a mouse convenience only: keyboard and
+ * assistive tech reach the row through its one real control, so the row
+ * itself carries no role or tab stop.
+ */
+function rowClick<TData>(
   row: TData,
   onRowSelect: ((row: TData) => void) | undefined,
-  label: string | undefined,
 ) {
   if (!onRowSelect) return {};
   return {
-    tabIndex: 0,
-    "aria-label": label,
-    onClick: () => onRowSelect(row),
-    onKeyDown: (event: KeyboardEvent) => {
-      if (event.target !== event.currentTarget) return;
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        onRowSelect(row);
-      }
+    onClick: (event: MouseEvent<HTMLElement>) => {
+      const hit = (event.target as Element).closest(INTERACTIVE);
+      if (hit && event.currentTarget.contains(hit)) return;
+      onRowSelect(row);
     },
   };
 }
 
-const SELECTABLE =
-  "cursor-pointer hover:bg-info-bg focus-visible:bg-info-bg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand";
+const SELECTABLE = "cursor-pointer hover:bg-info-bg focus-within:bg-info-bg";
+
+function RowButton({
+  label,
+  onSelect,
+  children,
+}: {
+  label: string | undefined;
+  onSelect: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      data-testid="row-open"
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect();
+      }}
+      className="block w-full min-w-0 rounded-sm text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    >
+      {children}
+    </button>
+  );
+}
 
 /**
  * The console's one sortable data table. From `sm` up it is the dense table;
@@ -76,6 +101,20 @@ export function DataTable<TData extends RowData>({
 }: Props<TData>) {
   const wide = useMediaQuery(SM_UP);
   const rows = table.getRowModel().rows;
+  const leafColumns = table.getVisibleLeafColumns();
+  // A shown row-action column is the row's one control; otherwise the primary
+  // (title, else first) cell becomes a real button.
+  const actionShown = (phone: boolean) =>
+    leafColumns.some(
+      (column) =>
+        column.columnDef.meta?.rowAction &&
+        !(phone && column.columnDef.meta?.mobile === "hidden"),
+    );
+  const primaryColumnId =
+    leafColumns.find((column) => column.columnDef.meta?.mobile === "title")
+      ?.id ?? leafColumns[0]?.id;
+  const wrapPrimary = (phone: boolean) =>
+    Boolean(onRowSelect) && !actionShown(phone);
 
   if (!wide) {
     return (
@@ -95,18 +134,29 @@ export function DataTable<TData extends RowData>({
           const render = (cell: Cell<SortableTableFeatures, TData, unknown>) =>
             flexRender(cell.column.columnDef.cell, cell.getContext());
           const titles = cells.filter((cell) => place(cell) === "title");
+          const openCellId = wrapPrimary(true)
+            ? (titles[0] ?? cells[0])?.id
+            : undefined;
+          const content = (
+            cell: Cell<SortableTableFeatures, TData, unknown>,
+          ) =>
+            cell.id === openCellId ? (
+              <RowButton
+                label={rowLabel?.(row.original)}
+                onSelect={() => onRowSelect?.(row.original)}
+              >
+                {render(cell)}
+              </RowButton>
+            ) : (
+              render(cell)
+            );
           const badges = cells.filter((cell) => place(cell) === "badge");
           const meta = cells.filter((cell) => place(cell) === "meta");
           return (
             <li
               key={row.id}
               data-testid="data-card"
-              {...selectHandlers(
-                row.original,
-                onRowSelect,
-                rowLabel?.(row.original),
-              )}
-              role={onRowSelect ? "button" : undefined}
+              {...rowClick(row.original, onRowSelect)}
               className={cn(
                 "grid min-w-0 gap-2 px-4 py-3",
                 onRowSelect && SELECTABLE,
@@ -114,14 +164,14 @@ export function DataTable<TData extends RowData>({
             >
               {titles.map((cell) => (
                 <div key={cell.id} className="min-w-0 [overflow-wrap:anywhere]">
-                  {render(cell)}
+                  {content(cell)}
                 </div>
               ))}
               {badges.length > 0 ? (
                 <div className="flex min-w-0 flex-wrap items-start gap-2">
                   {badges.map((cell) => (
                     <div key={cell.id} className="min-w-0">
-                      {render(cell)}
+                      {content(cell)}
                     </div>
                   ))}
                 </div>
@@ -136,7 +186,7 @@ export function DataTable<TData extends RowData>({
                           {typeof header === "string" ? header : cell.column.id}
                         </dt>
                         <dd className="min-w-0 [overflow-wrap:anywhere] [&_*]:max-w-full">
-                          {render(cell)}
+                          {content(cell)}
                         </dd>
                       </div>
                     );
@@ -151,6 +201,7 @@ export function DataTable<TData extends RowData>({
   }
 
   const cellPadding = CELL[density];
+  const wrapDesktop = wrapPrimary(false);
   return (
     <div
       className={cn("max-w-full overflow-x-auto", scrollClassName)}
@@ -178,20 +229,15 @@ export function DataTable<TData extends RowData>({
                           ? "descending"
                           : undefined
                     }
-                    onClick={sortable ? toggle : undefined}
                     className={cn(
                       "whitespace-nowrap text-left text-[11px] font-semibold uppercase tracking-wide text-muted",
                       cellPadding,
-                      sortable && "cursor-pointer",
                     )}
                   >
                     {sortable ? (
                       <button
                         type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          toggle?.(event);
-                        }}
+                        onClick={toggle}
                         className="inline-flex items-center gap-1 text-left uppercase"
                       >
                         {flexRender(h.column.columnDef.header, h.getContext())}
@@ -213,11 +259,7 @@ export function DataTable<TData extends RowData>({
           {rows.map((r) => (
             <tr
               key={r.id}
-              {...selectHandlers(
-                r.original,
-                onRowSelect,
-                rowLabel?.(r.original),
-              )}
+              {...rowClick(r.original, onRowSelect)}
               className={cn(
                 "border-b border-line last:border-0",
                 onRowSelect ? SELECTABLE : "hover:bg-info-bg",
@@ -225,7 +267,16 @@ export function DataTable<TData extends RowData>({
             >
               {r.getVisibleCells().map((c) => (
                 <td key={c.id} className={cn(cellPadding, "align-top")}>
-                  {flexRender(c.column.columnDef.cell, c.getContext())}
+                  {wrapDesktop && c.column.id === primaryColumnId ? (
+                    <RowButton
+                      label={rowLabel?.(r.original)}
+                      onSelect={() => onRowSelect?.(r.original)}
+                    >
+                      {flexRender(c.column.columnDef.cell, c.getContext())}
+                    </RowButton>
+                  ) : (
+                    flexRender(c.column.columnDef.cell, c.getContext())
+                  )}
                 </td>
               ))}
             </tr>
@@ -234,7 +285,7 @@ export function DataTable<TData extends RowData>({
             <tr>
               <td
                 className="px-4 py-8 text-center text-sm text-muted"
-                colSpan={table.getVisibleLeafColumns().length}
+                colSpan={leafColumns.length}
               >
                 {emptyLabel}
               </td>

@@ -84,6 +84,12 @@ export const SCORE_COPY = {
     definition:
       "Percentage of observed controls with fresh passing evidence, across every evaluated framework. Missing, unknown, stale, and failing controls receive no credit; catalog coverage is shown separately.",
   },
+  assessedCoverage: {
+    label: "Assessed coverage",
+    scope: "Catalogued requirements in the evaluated framework packs",
+    definition:
+      "Share of those requirements that have a pass, fail, or stale verdict. It says how much of the catalog the assessment score covers, not how much passed; controls observed without a verdict are not counted.",
+  },
   framework: {
     label: "Framework score",
     definition:

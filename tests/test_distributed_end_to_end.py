@@ -35,7 +35,7 @@ def test_spawned_worker_publishes_evidence_visible_to_another_replica(catalog, t
             "GRC_LAKE_OBJECT_ENDPOINT": f"http://{host}:{port}",
             "GRC_LAKE_OBJECT_ALLOW_HTTP": "1",
             "GRC_LAKE_DATABASE_URL": catalog.engine.url.render_as_string(hide_password=False),
-            "GRC_LAKE_COOKIE_SIGNING_KEY": "protocol-signing-key",
+            "GRC_LAKE_COOKIE_SIGNING_KEY": "x" * 48,
             "GRC_LAKE_API_RATE_LIMIT_RPS": "0",
         }.items():
             monkeypatch.setenv(key, value)

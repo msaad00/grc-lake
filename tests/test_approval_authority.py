@@ -20,7 +20,7 @@ from test_workflows import _bootstrap_silver
 
 @pytest.fixture
 def credentials(tmp_path, monkeypatch):
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "local-test-approval-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "x" * 48)
     _seed_lake(tmp_path)
     app = create_app(tmp_path)
     with session_scope(app.state.sessionmaker) as session:

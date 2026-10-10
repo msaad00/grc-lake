@@ -45,7 +45,7 @@ def _create_distributed_replicas(catalog, tmp_path, monkeypatch):
     monkeypatch.setenv("GRC_LAKE_CLUSTER_ID", "test-cluster")
     monkeypatch.setenv("GRC_LAKE_OBJECT_BUCKET", "test-bucket")
     monkeypatch.setenv("GRC_LAKE_DATABASE_URL", catalog.engine.url.render_as_string(hide_password=False))
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "distributed-test-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "x" * 48)
     monkeypatch.setenv("GRC_LAKE_API_RATE_LIMIT_RPS", "0")
     objects = MemoryObjects()
     object_store = module.ObjectStore

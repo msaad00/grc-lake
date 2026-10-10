@@ -15,6 +15,8 @@ import base64
 import binascii
 import copy
 import json
+import re
+from collections import Counter
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
 from pathlib import Path
@@ -108,7 +110,7 @@ from security_lakehouse.safeguards import (
 )
 from security_lakehouse.tracking import ALLOWED_STATES, append_event, latest_state, list_events, verify_tracking_chain
 from security_lakehouse.trust_share import create_share, list_shares, revoke_share
-from security_lakehouse.verification import verify_event
+from security_lakehouse.verification import NO_SILVER_RECORD, verify_event
 from security_lakehouse.workflows import (
     ApprovalConflict,
     action_catalog,
@@ -133,6 +135,7 @@ Params = Mapping[str, list[str]]
 # Compatibility exports used by legacy routes and external v1 callers.
 required_post_scope = api_contract.required_post_scope
 _UNMAPPED_POST_SCOPE = api_contract._UNMAPPED_POST_SCOPE
+scope_denied_detail = api_contract.scope_denied_detail
 
 
 def first_param(params: Params, key: str) -> str | None:
@@ -493,7 +496,7 @@ EXTENDED_RESOURCES: list[JsonObject] = [
         "path": "/api/v1/evidence/{event_id}/verify",
         "kind": "singleton",
         "methods": ["POST"],
-        "scopes": ["write"],
+        "scopes": ["read"],
         "path_params": ["event_id"],
     },
     {
@@ -1221,6 +1224,30 @@ _ENVELOPE_SCHEMA: JsonObject = {
 }
 
 
+_PATH_TEMPLATE = re.compile(r"{([^}]+)}")
+
+
+def _unique_operation_ids(catalog: list[JsonObject]) -> dict[tuple[str, str], str]:
+    """``{method}_{resource}`` where that is unique, else a name spelled from the path.
+
+    Several paths share one resource name (a collection and its item, or the
+    workflow run actions), and OpenAPI requires every operationId to be unique.
+    """
+    by_resource: dict[tuple[str, str], str] = {}
+    for row in catalog:
+        resource = str(row["resource"]).replace(".", "_").replace("-", "_")
+        for method in row.get("methods", ["GET"]):
+            by_resource[(str(row["path"]), method)] = f"{method.lower()}_{resource}"
+    taken = Counter(by_resource.values())
+    unique: dict[tuple[str, str], str] = {}
+    for (path, method), operation_id in by_resource.items():
+        if taken[operation_id] > 1:
+            spelled = re.sub(r"[^a-z0-9]+", "_", path.removeprefix("/api/v1/").lower()).strip("_")
+            operation_id = f"{method.lower()}_{spelled}"
+        unique[(path, method)] = operation_id
+    return unique
+
+
 def openapi_paths() -> JsonObject:
     """OpenAPI path items for routes served through the ``/api/v1/{rest}`` catch-all.
 
@@ -1232,20 +1259,25 @@ def openapi_paths() -> JsonObject:
     from, so the two cannot drift apart.
     """
     paths: JsonObject = {}
-    for row in resource_catalog():
+    catalog = resource_catalog()
+    operation_ids = _unique_operation_ids(catalog)
+    for row in catalog:
         path = str(row["path"])
         resource = str(row["resource"])
         collection = row.get("kind") == "collection"
 
-        parameters: list[JsonObject] = [
+        # Every templated segment is a required path parameter on every method;
+        # query parameters are documented for reads only.
+        path_parameters: list[JsonObject] = [
             {
                 "name": name,
                 "in": "path",
                 "required": True,
                 "schema": {"type": "string"},
             }
-            for name in row.get("path_params", [])
+            for name in _PATH_TEMPLATE.findall(path)
         ]
+        parameters = list(path_parameters)
         for name in row.get("query", []):
             if name.startswith("<"):  # `<field>=<value>` documents ad-hoc filters
                 continue
@@ -1256,7 +1288,7 @@ def openapi_paths() -> JsonObject:
         for method in row.get("methods", ["GET"]):
             operation: JsonObject = {
                 "summary": f"{'List' if collection and method == 'GET' else method.title()} {resource}",
-                "operationId": f"{method.lower()}_{resource.replace('.', '_').replace('-', '_')}",
+                "operationId": operation_ids[(path, method)],
                 "tags": [resource.split(".")[0]],
                 "responses": {
                     "200": {
@@ -1271,8 +1303,15 @@ def openapi_paths() -> JsonObject:
                     "description": "Stored scheduler state failed validation",
                     "content": {"application/json": {"schema": {"$ref": "#/components/schemas/V1Envelope"}}},
                 }
-            if parameters and method == "GET":
+            if path == "/api/v1/evidence/{event_id}/verify" and method == "POST":
+                operation["responses"]["404"] = {
+                    "description": "No evidence event with this id",
+                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/V1Envelope"}}},
+                }
+            if method == "GET" and parameters:
                 operation["parameters"] = parameters
+            elif path_parameters:
+                operation["parameters"] = path_parameters
             if scopes := row.get("scopes"):
                 operation["description"] = f"Requires scope: {', '.join(scopes)}."
             if row.get("default_paged") and method == "GET":
@@ -2105,7 +2144,12 @@ def handle_post(
         return HTTPStatus.CREATED, envelope("violations.triage", record)
     verify = _suffix_match(path, "/api/v1/evidence/", "/verify")
     if verify is not None:
-        return HTTPStatus.CREATED, envelope("evidence.verify", verify_event(lake, verify))
+        result = verify_event(lake, verify)
+        if result["reason"] == NO_SILVER_RECORD:
+            return HTTPStatus.NOT_FOUND, error_envelope(
+                "not_found", f"unknown evidence event {verify}", resource="evidence.verify"
+            )
+        return HTTPStatus.OK, envelope("evidence.verify", result)
     if path == "/api/v1/workflows":
         try:
             record = save_workflow(
@@ -2227,7 +2271,7 @@ def handle_post(
         revoked = revoke_share(lake, revoke, additional_lakes=share_lakes)
         if revoked is None:
             return HTTPStatus.NOT_FOUND, error_envelope("not_found", f"unknown share {revoke}", resource="trust-shares")
-        return HTTPStatus.CREATED, envelope("trust-shares", revoked)
+        return HTTPStatus.OK, envelope("trust-shares", revoked)
     configure = _connector_action(path, "configure")
     if configure is not None:
         if payload.get("credentials") is not None and not isinstance(payload["credentials"], dict):

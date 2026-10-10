@@ -88,7 +88,13 @@ from security_lakehouse.db import agent_runs as agent_runs_db
 from security_lakehouse.db import metrics as metrics_db
 from security_lakehouse.db import migrate, remediation, repository
 from security_lakehouse.db import tags as tags_db
-from security_lakehouse.db.base import DEFAULT_PAGE_LIMIT, clamp_limit, create_engine_for, session_factory
+from security_lakehouse.db.base import (
+    DEFAULT_PAGE_LIMIT,
+    MAX_PAGE_LIMIT,
+    clamp_limit,
+    create_engine_for,
+    session_factory,
+)
 from security_lakehouse.db.models import REMEDIATION_PRIORITIES, USER_ROLES, AgentRun, User
 from security_lakehouse.demo_links import build_demo_kit
 from security_lakehouse.execution_mode import run_in_server_mode, server_execution
@@ -99,6 +105,18 @@ from security_lakehouse.operation_jobs import DEFAULT_WORKERS, MAX_WORKERS, JobC
 from security_lakehouse.public_url import normalize_public_url
 from security_lakehouse.runtime_environment import runtime_env
 from security_lakehouse.server_routes.deps import parse_dt as _parse_dt
+from security_lakehouse.server_routes.schemas.base import (
+    MAX_LIST_ITEMS,
+    BoundedObject,
+    DocumentStr,
+    EmailStr,
+    IdStr,
+    NameStr,
+    SecretStr,
+    TextStr,
+    TitleStr,
+    TokenStr,
+)
 from security_lakehouse.server_routes.schemas.base import StrictModel as _StrictModel
 from security_lakehouse.services import NotFound, ValidationError
 from security_lakehouse.services import access_reviews as access_review_services
@@ -220,6 +238,8 @@ def _cookie_csrf_rejection(request: Request, trusted_origin: str | None) -> tupl
         return None
     if SESSION_COOKIE not in request.cookies and path not in _COOKIELESS_CSRF_PATHS:
         return None
+    if request.headers.get("sec-fetch-site", "").strip().lower() == "cross-site":
+        return 403, "cross-origin request refused"
     origin = request.headers.get("origin")
     if origin is not None:
         presented = origin.strip().lower()
@@ -281,7 +301,7 @@ class CreateKeyRequest(_StrictModel):
 
 
 class UpdateUserRequest(_StrictModel):
-    role: str | None = None
+    role: TokenStr | None = None
     is_active: bool | None = None
     display_name: str | None = Field(default=None, max_length=120)
 
@@ -292,12 +312,12 @@ class SessionFromKeyRequest(_StrictModel):
 
 class EscalateFreshnessRequest(_StrictModel):
     limit: int = Field(default=10, ge=1, le=100)
-    statuses: list[str] = Field(default_factory=lambda: ["stale", "expired", "missing"])
+    statuses: list[TokenStr] = Field(default_factory=lambda: ["stale", "expired", "missing"], max_length=MAX_LIST_ITEMS)
 
 
 class CreateInviteRequest(_StrictModel):
-    email: str
-    role: str = "contributor"
+    email: EmailStr
+    role: TokenStr = "contributor"
 
     @field_validator("role")
     @classmethod
@@ -308,92 +328,92 @@ class CreateInviteRequest(_StrictModel):
 
 
 class AcceptInviteRequest(_StrictModel):
-    token: str
-    display_name: str = ""
+    token: SecretStr
+    display_name: NameStr = ""
 
 
 class SignupRequest(_StrictModel):
-    org_slug: str
-    org_name: str
-    admin_email: str
-    admin_name: str = ""
-    plan_tier: str = "starter"
+    org_slug: IdStr
+    org_name: NameStr
+    admin_email: EmailStr
+    admin_name: NameStr = ""
+    plan_tier: TokenStr = "starter"
 
 
 class CreateTaskRequest(_StrictModel):
-    title: str
-    description: str = ""
-    control_id: str | None = None
-    violation_id: str | None = None
-    owner: str = ""
-    priority: str = "medium"
-    due_at: str | None = None
+    title: TitleStr
+    description: TextStr = ""
+    control_id: IdStr | None = None
+    violation_id: IdStr | None = None
+    owner: NameStr = ""
+    priority: TokenStr = "medium"
+    due_at: TokenStr | None = None
 
 
 class UpdateTaskRequest(_StrictModel):
-    title: str | None = None
-    description: str | None = None
-    owner: str | None = None
-    status: str | None = None
-    priority: str | None = None
-    due_at: str | None = None
-    resolution_note: str | None = None
+    title: TitleStr | None = None
+    description: TextStr | None = None
+    owner: NameStr | None = None
+    status: TokenStr | None = None
+    priority: TokenStr | None = None
+    due_at: TokenStr | None = None
+    resolution_note: TextStr | None = None
 
 
 class VerifyTaskRequest(_StrictModel):
-    resolution_note: str = ""
+    resolution_note: TextStr = ""
 
 
 class CreateEvidenceRequestRequest(_StrictModel):
-    control_id: str
-    requested_from: str = ""
-    note: str = ""
-    due_at: str | None = None
+    control_id: IdStr
+    requested_from: EmailStr = ""
+    note: TextStr = ""
+    due_at: TokenStr | None = None
 
 
 class EvidenceRequestStatusRequest(_StrictModel):
-    status: str
+    status: TokenStr
 
 
 class CreateExceptionRequest(_StrictModel):
-    control_id: str
-    reason: str = ""
-    expires_at: str | None = None
+    control_id: IdStr
+    reason: TextStr = ""
+    expires_at: TokenStr | None = None
 
 
 class CreateRiskRequest(_StrictModel):
-    title: str
-    description: str = ""
-    category: str = ""
-    severity: str = "medium"
-    likelihood: str = "medium"
-    impact: str = "medium"
-    status: str = "open"
-    treatment: str = ""
-    owner: str = ""
-    control_id: str | None = None
-    asset_id: str | None = None
-    due_at: str | None = None
+    title: TitleStr
+    description: TextStr = ""
+    category: NameStr = ""
+    severity: TokenStr = "medium"
+    likelihood: TokenStr = "medium"
+    impact: TokenStr = "medium"
+    status: TokenStr = "open"
+    treatment: TextStr = ""
+    owner: NameStr = ""
+    control_id: IdStr | None = None
+    asset_id: IdStr | None = None
+    due_at: TokenStr | None = None
 
 
 class UpdateRiskRequest(_StrictModel):
-    title: str | None = None
-    description: str | None = None
-    category: str | None = None
-    severity: str | None = None
-    likelihood: str | None = None
-    impact: str | None = None
-    status: str | None = None
-    treatment: str | None = None
-    owner: str | None = None
-    control_id: str | None = None
-    asset_id: str | None = None
-    due_at: str | None = None
+    title: TitleStr | None = None
+    description: TextStr | None = None
+    category: NameStr | None = None
+    severity: TokenStr | None = None
+    likelihood: TokenStr | None = None
+    impact: TokenStr | None = None
+    status: TokenStr | None = None
+    treatment: TextStr | None = None
+    owner: NameStr | None = None
+    control_id: IdStr | None = None
+    asset_id: IdStr | None = None
+    due_at: TokenStr | None = None
 
 
 class CreateWebhookRequest(_StrictModel):
     url: str = Field(min_length=1, max_length=2048)
-    event_types: list[str] = Field(min_length=1)
+    event_types: list[TokenStr] = Field(min_length=1, max_length=MAX_LIST_ITEMS)
     secret: str | None = Field(default=None, min_length=16, max_length=255)
     description: str = Field(default="", max_length=255)
     enabled: bool = True
@@ -401,95 +421,95 @@ class CreateWebhookRequest(_StrictModel):
 
 class UpdateWebhookRequest(_StrictModel):
     url: str | None = Field(default=None, min_length=1, max_length=2048)
-    event_types: list[str] | None = Field(default=None, min_length=1)
+    event_types: list[TokenStr] | None = Field(default=None, min_length=1, max_length=MAX_LIST_ITEMS)
     secret: str | None = Field(default=None, min_length=16, max_length=255)
     description: str | None = Field(default=None, max_length=255)
     enabled: bool | None = None
 
 
 class AdoptPolicyTemplateRequest(_StrictModel):
-    template_id: str
-    variables: dict[str, Any] = {}
-    owner: str = ""
+    template_id: IdStr
+    variables: BoundedObject = {}
+    owner: NameStr = ""
 
 
 class UpdatePolicyDocumentRequest(_StrictModel):
-    title: str | None = None
-    content: str | None = None
-    owner: str | None = None
-    variables: dict[str, Any] | None = None
-    status: str | None = None
+    title: TitleStr | None = None
+    content: DocumentStr | None = None
+    owner: NameStr | None = None
+    variables: BoundedObject | None = None
+    status: TokenStr | None = None
 
 
 class RecordPolicyAcknowledgmentRequest(_StrictModel):
-    user_email: str | None = None
-    display_name: str = ""
+    user_email: EmailStr | None = None
+    display_name: NameStr = ""
 
 
 class CreateCampaignRequest(_StrictModel):
-    name: str
-    description: str = ""
-    scope: str = "all"
-    control_id: str | None = None
-    due_at: str | None = None
+    name: NameStr
+    description: TextStr = ""
+    scope: TokenStr = "all"
+    control_id: IdStr | None = None
+    due_at: TokenStr | None = None
 
 
 class CampaignStatusRequest(_StrictModel):
-    status: str
+    status: TokenStr
 
 
 class CreateVendorAssessmentRequest(_StrictModel):
-    vendor_name: str
-    template_id: str
-    owner: str = ""
-    control_id: str | None = None
-    due_at: str | None = None
+    vendor_name: NameStr
+    template_id: IdStr
+    owner: NameStr = ""
+    control_id: IdStr | None = None
+    due_at: TokenStr | None = None
 
 
 class UpdateVendorAssessmentRequest(_StrictModel):
-    vendor_name: str | None = None
-    owner: str | None = None
-    control_id: str | None = None
-    due_at: str | None = None
-    responses: dict[str, Any] | None = None
-    status: str | None = None
+    vendor_name: NameStr | None = None
+    owner: NameStr | None = None
+    control_id: IdStr | None = None
+    due_at: TokenStr | None = None
+    responses: BoundedObject | None = None
+    status: TokenStr | None = None
 
 
 class AddReviewItemRequest(_StrictModel):
-    subject_id: str
-    subject_name: str = ""
-    source: str = ""
-    access_summary: str = ""
+    subject_id: IdStr
+    subject_name: NameStr = ""
+    source: NameStr = ""
+    access_summary: TextStr = ""
 
 
 class ReviewDecisionRequest(_StrictModel):
-    decision: str
-    note: str = ""
+    decision: TokenStr
+    note: TextStr = ""
 
 
 class CreateTagRequest(_StrictModel):
-    name: str
-    color: str = ""
+    name: NameStr
+    color: TokenStr = ""
 
 
 class AttachTagRequest(_StrictModel):
-    tag_id: str
-    entity_type: str
-    entity_id: str
+    tag_id: IdStr
+    entity_type: TokenStr
+    entity_id: IdStr
 
 
 class CreateSavedViewRequest(_StrictModel):
-    surface: str
-    name: str
-    filters: dict = {}
+    surface: TokenStr
+    name: NameStr
+    filters: BoundedObject = {}
 
 
 class CreateAgentRunRequest(_StrictModel):
-    harness: str
-    objective: str = ""
-    role: str | None = None
-    idempotency_key: str | None = None
-    orchestrator: str = "sequential"
+    harness: NameStr
+    objective: TextStr = ""
+    role: TokenStr | None = None
+    idempotency_key: IdStr | None = None
+    orchestrator: TokenStr = "sequential"
     use_model: bool = False
     max_context_chars: int | None = None
     max_fact_items: int | None = None
@@ -501,7 +521,7 @@ class RejectAgentDecisionRequest(_StrictModel):
 
 
 class ApproveAgentDecisionRequest(_StrictModel):
-    note: str = ""
+    note: TextStr = ""
 
 
 class MappingRef(_StrictModel):
@@ -542,6 +562,24 @@ def _pagination(params: dict[str, list[str]]) -> tuple[int, int]:
     limit = clamp_limit(int(limit_raw)) if limit_raw and limit_raw.lstrip("-").isdigit() else DEFAULT_PAGE_LIMIT
     offset = int(offset_raw) if offset_raw and offset_raw.isdigit() else 0
     return limit, max(0, offset)
+
+
+def _page_window(params: dict[str, list[str]], *, maximum: int = 1000) -> tuple[int, int]:
+    """Read ``limit``/``offset``/``cursor`` with the evidence/controls contract.
+
+    A malformed or out-of-range value is a 400 rather than a silent default.
+    ``maximum`` lowers the served page size for database-backed lists; the
+    applied value is what ``meta.limit`` reports.
+    """
+    try:
+        _rows, limit, offset = api_v1.paginate_collection([], params)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return min(limit, maximum), offset
+
+
+def _applied_filters(**values: str | None) -> dict[str, list[str]]:
+    return {name: [value] for name, value in values.items() if value}
 
 
 def _page_meta(limit: int, offset: int, count: int) -> dict[str, int]:
@@ -1902,14 +1940,25 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
 
     @app.get("/api/v1/auth/users")
     def list_users(
+        request: Request,
         identity: Identity = Depends(_require_admin),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
         from security_lakehouse.auth.users_admin import list_tenant_users, user_to_dict
 
-        rows = list_tenant_users(session, tenant_id=identity.tenant_id)
-        data = [user_to_dict(row) for row in rows]
-        return JSONResponse(api_v1.envelope("auth.users", data, meta={"count": len(data)}))
+        limit, offset = _page_window(_params(request))
+        data = [user_to_dict(row) for row in list_tenant_users(session, tenant_id=identity.tenant_id)]
+        return JSONResponse(
+            api_v1.collection_page_response(
+                "auth.users",
+                data[offset : offset + limit],
+                count=len(data),
+                limit=limit,
+                offset=offset,
+                sort=None,
+                filters={},
+            )
+        )
 
     @app.patch("/api/v1/auth/users/{user_id}")
     def update_user(
@@ -1918,7 +1967,12 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         identity: Identity = Depends(_require_admin),
         session: Session = Depends(get_session),
     ) -> JSONResponse:
-        from security_lakehouse.auth.users_admin import UserAdminError, update_tenant_user, user_to_dict
+        from security_lakehouse.auth.users_admin import (
+            UserAdminError,
+            UserNotFoundError,
+            update_tenant_user,
+            user_to_dict,
+        )
 
         try:
             row = update_tenant_user(
@@ -1930,6 +1984,8 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
                 is_active=body.is_active,
                 display_name=body.display_name,
             )
+        except UserNotFoundError as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
         except UserAdminError as exc:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
         session.commit()
@@ -2277,43 +2333,51 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         from security_lakehouse.audit_log import build_audit_log
 
         params = _params(request)
-        limit_raw = (params.get("limit") or ["200"])[0]
-        try:
-            limit = int(limit_raw)
-        except ValueError:
-            limit = 200
+        # The audit log has always served 200 rows by default.
+        limit, offset = _page_window({"limit": ["200"], **params})
         include_requests = (params.get("include_requests") or ["false"])[0].lower() in {"1", "true", "yes"}
         category = (params.get("category") or [""])[0] or None
         actor = (params.get("actor") or [""])[0] or None
         shared_requests = None
+        unread_requests = 0
         if cluster is not None and (include_requests or category == "request"):
-            from security_lakehouse.distributed.audit import request_rows
+            from security_lakehouse.distributed.audit import request_count, request_rows
 
+            # Only the newest offset+limit shared rows can land on this page;
+            # the rest still count toward the total.
             shared_requests = request_rows(
                 app.state.sessionmaker,
                 cluster.cluster_id,
                 identity.tenant_id,
                 actor=actor,
-                limit=max(1, min(limit, 1000)),
+                limit=offset + limit,
             )
+            if category in {None, "request"}:
+                unread_requests = request_count(
+                    app.state.sessionmaker, cluster.cluster_id, identity.tenant_id, actor=actor
+                ) - len(shared_requests)
         entries = build_audit_log(
             lake_for(identity),
             category=category,
             actor=actor,
-            limit=max(1, min(limit, 1000)),
+            limit=None,
             include_requests=include_requests,
             request_rows=shared_requests,
         )
         return JSONResponse(
-            api_v1.envelope(
+            api_v1.collection_page_response(
                 "audit-log",
                 # The audit log replays other surfaces' payloads verbatim, so it
                 # inherits their sensitivity without inheriting their redaction.
                 # `credentials`, `actor`, `assignee`, and `note` are all in
                 # AUDITOR_REDACTED_FIELDS; without this an auditor reads here what
                 # every other route withholds.
-                _redact_payload(entries, identity),
-                meta={"count": len(entries), "limit": limit},
+                _redact_payload(entries[offset : offset + limit], identity),  # type: ignore[arg-type]
+                count=len(entries) + unread_requests,
+                limit=limit,
+                offset=offset,
+                sort=None,
+                filters=_applied_filters(category=category, actor=actor),
             )
         )
 
@@ -2588,22 +2652,27 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         request: Request, identity: Identity = Depends(_require_read), session: Session = Depends(get_session)
     ) -> JSONResponse:
         params = _params(request)
-        limit, offset = _pagination(params)
+        limit, offset = _page_window(params, maximum=MAX_PAGE_LIMIT)
         overdue_raw = api_v1.first_param(params, "overdue")
         overdue = None if overdue_raw is None else overdue_raw.lower() in {"1", "true", "yes"}
+        filters = {
+            "status": api_v1.first_param(params, "status"),
+            "owner": api_v1.first_param(params, "owner"),
+            "control_id": next(iter(params.get("control_id") or []), None),
+        }
         rows = grc_services.list_tasks(
-            session,
-            identity.tenant_id,
-            status=api_v1.first_param(params, "status"),
-            owner=api_v1.first_param(params, "owner"),
-            control_id=next(iter(params.get("control_id") or []), None),
-            overdue=overdue,
-            limit=limit,
-            offset=offset,
+            session, identity.tenant_id, **filters, overdue=overdue, limit=limit, offset=offset
         )
+        total = grc_services.count_tasks(session, identity.tenant_id, **filters, overdue=overdue)
         return JSONResponse(
-            api_v1.envelope(
-                "remediation.tasks", _redact_payload(rows, identity), meta=_page_meta(limit, offset, len(rows))
+            api_v1.collection_page_response(
+                "remediation.tasks",
+                _redact_payload(rows, identity),  # type: ignore[arg-type]
+                count=total,
+                limit=limit,
+                offset=offset,
+                sort=None,
+                filters=_applied_filters(**filters, overdue=overdue_raw),
             )
         )
 
@@ -2834,18 +2903,20 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         request: Request, identity: Identity = Depends(_require_read), session: Session = Depends(get_session)
     ) -> JSONResponse:
         params = _params(request)
-        limit, offset = _pagination(params)
-        data = grc_services.list_risks(
-            session,
-            identity.tenant_id,
-            status=api_v1.first_param(params, "status"),
-            severity=api_v1.first_param(params, "severity"),
-            owner=api_v1.first_param(params, "owner"),
-            limit=limit,
-            offset=offset,
-        )
+        limit, offset = _page_window(params, maximum=MAX_PAGE_LIMIT)
+        filters = {name: api_v1.first_param(params, name) for name in ("status", "severity", "owner")}
+        data = grc_services.list_risks(session, identity.tenant_id, **filters, limit=limit, offset=offset)
+        total = grc_services.count_risks(session, identity.tenant_id, **filters)
         return JSONResponse(
-            api_v1.envelope("risks", _redact_payload(data, identity), meta=_page_meta(limit, offset, len(data)))
+            api_v1.collection_page_response(
+                "risks",
+                _redact_payload(data, identity),  # type: ignore[arg-type]
+                count=total,
+                limit=limit,
+                offset=offset,
+                sort=None,
+                filters=_applied_filters(**filters),
+            )
         )
 
     @app.post("/api/v1/risks", status_code=status.HTTP_201_CREATED)
@@ -2911,18 +2982,27 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         request: Request, identity: Identity = Depends(_require_read), session: Session = Depends(get_session)
     ) -> JSONResponse:
         params = _params(request)
-        limit, offset = _pagination(params)
+        limit, offset = _page_window(params, maximum=MAX_PAGE_LIMIT)
         enabled_raw = api_v1.first_param(params, "enabled")
         enabled = {"true": True, "false": False}.get((enabled_raw or "").lower())
+        event_type = api_v1.first_param(params, "event_type")
         data = webhook_services.list_subscriptions(
-            session,
-            identity.tenant_id,
-            enabled=enabled,
-            event_type=api_v1.first_param(params, "event_type"),
-            limit=limit,
-            offset=offset,
+            session, identity.tenant_id, enabled=enabled, event_type=event_type, limit=limit, offset=offset
         )
-        return JSONResponse(api_v1.envelope("webhooks", data, meta=_page_meta(limit, offset, len(data))))
+        total = webhook_services.count_subscriptions(
+            session, identity.tenant_id, enabled=enabled, event_type=event_type
+        )
+        return JSONResponse(
+            api_v1.collection_page_response(
+                "webhooks",
+                data,
+                count=total,
+                limit=limit,
+                offset=offset,
+                sort=None,
+                filters=_applied_filters(enabled=enabled_raw if enabled is not None else None, event_type=event_type),
+            )
+        )
 
     @app.post("/api/v1/webhooks", status_code=status.HTTP_201_CREATED, tags=["webhooks"])
     def create_webhook(
@@ -3850,7 +3930,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if not identity.has_scope(required_scope):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"requires scope: {required_scope}",
+                detail=api_v1.scope_denied_detail(required_scope),
             )
         from security_lakehouse.operation_jobs import supported
 
@@ -3917,7 +3997,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
         if not identity.has_scope(required_scope):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"requires scope: {required_scope}",
+                detail=api_v1.scope_denied_detail(required_scope),
             )
         if request.headers.get("Idempotency-Key") and "idempotency_key" not in body:
             body = {**body, "idempotency_key": request.headers["Idempotency-Key"]}
@@ -3952,7 +4032,7 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     brand_mark = Path(__file__).resolve().parent / "static" / "grc-lake-mark.svg"
 
     @app.get("/brand/grc-lake-mark.svg", include_in_schema=False)
-    @app.get("/brand/grc-lake-mark.svg", include_in_schema=False)
+    @app.get("/brand/trustops-mark.svg", include_in_schema=False)
     def trustops_brand_mark() -> Response:
         """Public GRC Lake monogram for MCP clients and link previews."""
         if not brand_mark.is_file():
@@ -4030,4 +4110,5 @@ def serve(lake_dir: str | Path, *, host: str = "127.0.0.1", port: int = 8787, re
     """Run the server-mode app under uvicorn."""
     import uvicorn
 
+    _assert_insecure_allowed(require_auth=require_auth, host=host)
     uvicorn.run(create_app(lake_dir, require_auth=require_auth), host=host, port=port)

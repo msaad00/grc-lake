@@ -54,6 +54,13 @@ def _connector_link_action(path: str, suffix: str) -> str | None:
 _UNMAPPED_POST_SCOPE = "__unmapped_post__"
 
 
+def scope_denied_detail(scope: str) -> str:
+    """Caller-facing 403 detail; the fail-closed sentinel is not a real scope name."""
+    if scope == _UNMAPPED_POST_SCOPE:
+        return "this path is not a supported operation"
+    return f"requires scope: {scope}"
+
+
 def required_post_scope(path: str) -> str:
     """Return the RBAC scope required to mutate a v1 route (fail-closed default)."""
     if path == "/api/v1/snapshots":
@@ -70,8 +77,9 @@ def required_post_scope(path: str) -> str:
     # runner approve its own run.
     if _suffix_match(path, "/api/v1/violations/", "/triage") is not None:
         return "write"
+    # Verification re-hashes stored evidence and records nothing.
     if _suffix_match(path, "/api/v1/evidence/", "/verify") is not None:
-        return "write"
+        return "read"
     if path == "/api/v1/workflows":
         return "workflow_manage"
     if path == "/api/v1/workflows/actions/run":

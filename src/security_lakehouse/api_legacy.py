@@ -422,5 +422,5 @@ def handle_post(
         revoked = revoke_share(lake, revoke, additional_lakes=share_lakes)
         if revoked is None:
             return HTTPStatus.NOT_FOUND, {"error": "not_found"}
-        return HTTPStatus.CREATED, {"share": revoked}
+        return HTTPStatus.OK, {"share": revoked}
     return HTTPStatus.NOT_FOUND, {"error": "not_found"}

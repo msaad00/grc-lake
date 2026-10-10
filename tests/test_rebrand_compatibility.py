@@ -17,9 +17,13 @@ def test_new_environment_names_take_precedence_without_mutating_input() -> None:
     assert original["TRUSTOPS_DATABASE_URL"] == "sqlite:///old.db"
 
 
-def test_legacy_environment_and_explicit_empty_values_remain_supported() -> None:
+def test_legacy_environment_survives_an_empty_new_spelling() -> None:
+    # An empty GRC_LAKE_ value is unset, not an override: otherwise
+    # GRC_LAKE_ENV= would erase TRUSTOPS_ENV=production and unlock no-auth mode.
     assert runtime_env({"TRUSTOPS_ENV": "production"})["GRC_LAKE_ENV"] == "production"
-    assert runtime_env({"TRUSTOPS_API_KEY": "legacy", "GRC_LAKE_API_KEY": ""})["TRUSTOPS_API_KEY"] == ""
+    assert runtime_env({"TRUSTOPS_API_KEY": "legacy", "GRC_LAKE_API_KEY": ""})["GRC_LAKE_API_KEY"] == "legacy"
+    assert runtime_env({"TRUSTOPS_API_KEY": "legacy", "GRC_LAKE_API_KEY": ""})["TRUSTOPS_API_KEY"] == "legacy"
+    assert runtime_env({"TRUSTOPS_API_KEY": "", "GRC_LAKE_API_KEY": ""})["GRC_LAKE_API_KEY"] == ""
     assert runtime_env({}) == {}
 
 

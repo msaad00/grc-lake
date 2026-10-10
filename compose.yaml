@@ -28,6 +28,10 @@ name: grc-lake
 services:
   grc-lake:
     image: ghcr.io/msaad00/grc-lake:${GRC_LAKE_VERSION:-0.3.1}
+    environment:
+      # The container binds 0.0.0.0 internally, so no-auth mode must be named
+      # explicitly; the host side below stays on loopback.
+      GRC_LAKE_ENV: demo
     ports:
       - "127.0.0.1:8787:8787"
     volumes:

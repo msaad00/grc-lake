@@ -628,7 +628,7 @@ def test_v1_trust_shares_round_trip_create_list_and_revoke(tmp_path: Path) -> No
         assert [row["share_id"] for row in listed["data"]] == [row["share_id"] for row in legacy_listed["shares"]]
 
         status, revoked = _request(server, "POST", f"/api/v1/trust-shares/{share_id}/revoke", {})
-        assert status == HTTPStatus.CREATED
+        assert status == HTTPStatus.OK
         assert revoked["data"]["revoked_at"] is not None
 
         status, missing = _request(server, "POST", "/api/v1/trust-shares/no-such-share/revoke", {})

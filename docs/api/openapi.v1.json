@@ -6,10 +6,12 @@
         "properties": {
           "display_name": {
             "default": "",
+            "maxLength": 200,
             "title": "Display Name",
             "type": "string"
           },
           "token": {
+            "maxLength": 512,
             "title": "Token",
             "type": "string"
           }
@@ -23,20 +25,24 @@
         "properties": {
           "access_summary": {
             "default": "",
+            "maxLength": 20000,
             "title": "Access Summary",
             "type": "string"
           },
           "source": {
             "default": "",
+            "maxLength": 200,
             "title": "Source",
             "type": "string"
           },
           "subject_id": {
+            "maxLength": 200,
             "title": "Subject Id",
             "type": "string"
           },
           "subject_name": {
             "default": "",
+            "maxLength": 200,
             "title": "Subject Name",
             "type": "string"
           }
@@ -50,16 +56,19 @@
         "properties": {
           "owner": {
             "default": "",
+            "maxLength": 200,
             "title": "Owner",
             "type": "string"
           },
           "template_id": {
+            "maxLength": 200,
             "title": "Template Id",
             "type": "string"
           },
           "variables": {
             "additionalProperties": true,
             "default": {},
+            "maxProperties": 200,
             "title": "Variables",
             "type": "object"
           }
@@ -73,6 +82,7 @@
         "properties": {
           "note": {
             "default": "",
+            "maxLength": 20000,
             "title": "Note",
             "type": "string"
           }
@@ -84,14 +94,17 @@
         "additionalProperties": false,
         "properties": {
           "entity_id": {
+            "maxLength": 200,
             "title": "Entity Id",
             "type": "string"
           },
           "entity_type": {
+            "maxLength": 64,
             "title": "Entity Type",
             "type": "string"
           },
           "tag_id": {
+            "maxLength": 200,
             "title": "Tag Id",
             "type": "string"
           }
@@ -104,6 +117,7 @@
         "additionalProperties": false,
         "properties": {
           "status": {
+            "maxLength": 64,
             "title": "Status",
             "type": "string"
           }
@@ -116,12 +130,14 @@
         "additionalProperties": false,
         "properties": {
           "harness": {
+            "maxLength": 200,
             "title": "Harness",
             "type": "string"
           },
           "idempotency_key": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -165,17 +181,20 @@
           },
           "objective": {
             "default": "",
+            "maxLength": 20000,
             "title": "Objective",
             "type": "string"
           },
           "orchestrator": {
             "default": "sequential",
+            "maxLength": 64,
             "title": "Orchestrator",
             "type": "string"
           },
           "role": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -200,6 +219,7 @@
           "control_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -210,12 +230,14 @@
           },
           "description": {
             "default": "",
+            "maxLength": 20000,
             "title": "Description",
             "type": "string"
           },
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -225,11 +247,13 @@
             "title": "Due At"
           },
           "name": {
+            "maxLength": 200,
             "title": "Name",
             "type": "string"
           },
           "scope": {
             "default": "all",
+            "maxLength": 64,
             "title": "Scope",
             "type": "string"
           }
@@ -242,12 +266,14 @@
         "additionalProperties": false,
         "properties": {
           "control_id": {
+            "maxLength": 200,
             "title": "Control Id",
             "type": "string"
           },
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -258,11 +284,13 @@
           },
           "note": {
             "default": "",
+            "maxLength": 20000,
             "title": "Note",
             "type": "string"
           },
           "requested_from": {
             "default": "",
+            "maxLength": 320,
             "title": "Requested From",
             "type": "string"
           }
@@ -275,12 +303,14 @@
         "additionalProperties": false,
         "properties": {
           "control_id": {
+            "maxLength": 200,
             "title": "Control Id",
             "type": "string"
           },
           "expires_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -291,6 +321,7 @@
           },
           "reason": {
             "default": "",
+            "maxLength": 20000,
             "title": "Reason",
             "type": "string"
           }
@@ -303,11 +334,13 @@
         "additionalProperties": false,
         "properties": {
           "email": {
+            "maxLength": 320,
             "title": "Email",
             "type": "string"
           },
           "role": {
             "default": "contributor",
+            "maxLength": 64,
             "title": "Role",
             "type": "string"
           }
@@ -427,6 +460,7 @@
           "asset_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -437,12 +471,14 @@
           },
           "category": {
             "default": "",
+            "maxLength": 200,
             "title": "Category",
             "type": "string"
           },
           "control_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -453,12 +489,14 @@
           },
           "description": {
             "default": "",
+            "maxLength": 20000,
             "title": "Description",
             "type": "string"
           },
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -469,35 +507,42 @@
           },
           "impact": {
             "default": "medium",
+            "maxLength": 64,
             "title": "Impact",
             "type": "string"
           },
           "likelihood": {
             "default": "medium",
+            "maxLength": 64,
             "title": "Likelihood",
             "type": "string"
           },
           "owner": {
             "default": "",
+            "maxLength": 200,
             "title": "Owner",
             "type": "string"
           },
           "severity": {
             "default": "medium",
+            "maxLength": 64,
             "title": "Severity",
             "type": "string"
           },
           "status": {
             "default": "open",
+            "maxLength": 64,
             "title": "Status",
             "type": "string"
           },
           "title": {
+            "maxLength": 500,
             "title": "Title",
             "type": "string"
           },
           "treatment": {
             "default": "",
+            "maxLength": 20000,
             "title": "Treatment",
             "type": "string"
           }
@@ -512,14 +557,17 @@
           "filters": {
             "additionalProperties": true,
             "default": {},
+            "maxProperties": 200,
             "title": "Filters",
             "type": "object"
           },
           "name": {
+            "maxLength": 200,
             "title": "Name",
             "type": "string"
           },
           "surface": {
+            "maxLength": 64,
             "title": "Surface",
             "type": "string"
           }
@@ -533,10 +581,12 @@
         "properties": {
           "color": {
             "default": "",
+            "maxLength": 64,
             "title": "Color",
             "type": "string"
           },
           "name": {
+            "maxLength": 200,
             "title": "Name",
             "type": "string"
           }
@@ -551,6 +601,7 @@
           "control_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -561,12 +612,14 @@
           },
           "description": {
             "default": "",
+            "maxLength": 20000,
             "title": "Description",
             "type": "string"
           },
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -577,21 +630,25 @@
           },
           "owner": {
             "default": "",
+            "maxLength": 200,
             "title": "Owner",
             "type": "string"
           },
           "priority": {
             "default": "medium",
+            "maxLength": 64,
             "title": "Priority",
             "type": "string"
           },
           "title": {
+            "maxLength": 500,
             "title": "Title",
             "type": "string"
           },
           "violation_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -611,6 +668,7 @@
           "control_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -622,6 +680,7 @@
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -632,14 +691,17 @@
           },
           "owner": {
             "default": "",
+            "maxLength": 200,
             "title": "Owner",
             "type": "string"
           },
           "template_id": {
+            "maxLength": 200,
             "title": "Template Id",
             "type": "string"
           },
           "vendor_name": {
+            "maxLength": 200,
             "title": "Vendor Name",
             "type": "string"
           }
@@ -664,8 +726,10 @@
           },
           "event_types": {
             "items": {
+              "maxLength": 64,
               "type": "string"
             },
+            "maxItems": 100,
             "minItems": 1,
             "title": "Event Types",
             "type": "array"
@@ -738,8 +802,10 @@
           },
           "statuses": {
             "items": {
+              "maxLength": 64,
               "type": "string"
             },
+            "maxItems": 100,
             "title": "Statuses",
             "type": "array"
           }
@@ -751,6 +817,7 @@
         "additionalProperties": false,
         "properties": {
           "status": {
+            "maxLength": 64,
             "title": "Status",
             "type": "string"
           }
@@ -843,12 +910,14 @@
         "properties": {
           "display_name": {
             "default": "",
+            "maxLength": 200,
             "title": "Display Name",
             "type": "string"
           },
           "user_email": {
             "anyOf": [
               {
+                "maxLength": 320,
                 "type": "string"
               },
               {
@@ -878,11 +947,13 @@
         "additionalProperties": false,
         "properties": {
           "decision": {
+            "maxLength": 64,
             "title": "Decision",
             "type": "string"
           },
           "note": {
             "default": "",
+            "maxLength": 20000,
             "title": "Note",
             "type": "string"
           }
@@ -933,24 +1004,29 @@
         "additionalProperties": false,
         "properties": {
           "admin_email": {
+            "maxLength": 320,
             "title": "Admin Email",
             "type": "string"
           },
           "admin_name": {
             "default": "",
+            "maxLength": 200,
             "title": "Admin Name",
             "type": "string"
           },
           "org_name": {
+            "maxLength": 200,
             "title": "Org Name",
             "type": "string"
           },
           "org_slug": {
+            "maxLength": 200,
             "title": "Org Slug",
             "type": "string"
           },
           "plan_tier": {
             "default": "starter",
+            "maxLength": 64,
             "title": "Plan Tier",
             "type": "string"
           }
@@ -1038,6 +1114,7 @@
           "content": {
             "anyOf": [
               {
+                "maxLength": 200000,
                 "type": "string"
               },
               {
@@ -1049,6 +1126,7 @@
           "owner": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1060,6 +1138,7 @@
           "status": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1071,6 +1150,7 @@
           "title": {
             "anyOf": [
               {
+                "maxLength": 500,
                 "type": "string"
               },
               {
@@ -1083,6 +1163,7 @@
             "anyOf": [
               {
                 "additionalProperties": true,
+                "maxProperties": 200,
                 "type": "object"
               },
               {
@@ -1101,6 +1182,7 @@
           "asset_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1112,6 +1194,7 @@
           "category": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1123,6 +1206,7 @@
           "control_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1134,6 +1218,7 @@
           "description": {
             "anyOf": [
               {
+                "maxLength": 20000,
                 "type": "string"
               },
               {
@@ -1145,6 +1230,7 @@
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1156,6 +1242,7 @@
           "impact": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1167,6 +1254,7 @@
           "likelihood": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1178,6 +1266,7 @@
           "owner": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1189,6 +1278,7 @@
           "severity": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1200,6 +1290,7 @@
           "status": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1211,6 +1302,7 @@
           "title": {
             "anyOf": [
               {
+                "maxLength": 500,
                 "type": "string"
               },
               {
@@ -1222,6 +1314,7 @@
           "treatment": {
             "anyOf": [
               {
+                "maxLength": 20000,
                 "type": "string"
               },
               {
@@ -1240,6 +1333,7 @@
           "description": {
             "anyOf": [
               {
+                "maxLength": 20000,
                 "type": "string"
               },
               {
@@ -1251,6 +1345,7 @@
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1262,6 +1357,7 @@
           "owner": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1273,6 +1369,7 @@
           "priority": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1284,6 +1381,7 @@
           "resolution_note": {
             "anyOf": [
               {
+                "maxLength": 20000,
                 "type": "string"
               },
               {
@@ -1295,6 +1393,7 @@
           "status": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1306,6 +1405,7 @@
           "title": {
             "anyOf": [
               {
+                "maxLength": 500,
                 "type": "string"
               },
               {
@@ -1347,6 +1447,7 @@
           "role": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1365,6 +1466,7 @@
           "control_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1376,6 +1478,7 @@
           "due_at": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1387,6 +1490,7 @@
           "owner": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1399,6 +1503,7 @@
             "anyOf": [
               {
                 "additionalProperties": true,
+                "maxProperties": 200,
                 "type": "object"
               },
               {
@@ -1410,6 +1515,7 @@
           "status": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -1421,6 +1527,7 @@
           "vendor_name": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1463,8 +1570,10 @@
             "anyOf": [
               {
                 "items": {
+                  "maxLength": 64,
                   "type": "string"
                 },
+                "maxItems": 100,
                 "minItems": 1,
                 "type": "array"
               },
@@ -1605,6 +1714,7 @@
         "properties": {
           "resolution_note": {
             "default": "",
+            "maxLength": 20000,
             "title": "Resolution Note",
             "type": "string"
           }
@@ -3489,6 +3599,16 @@
       "post": {
         "description": "Requires scope: connector_manage.",
         "operationId": "post_connector_configure",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3509,6 +3629,16 @@
       "post": {
         "description": "Requires scope: connector_manage.",
         "operationId": "post_connector_discover",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3529,6 +3659,16 @@
       "post": {
         "description": "Requires scope: connector_manage.",
         "operationId": "post_connector_link_complete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3549,6 +3689,16 @@
       "post": {
         "description": "Requires scope: connector_manage.",
         "operationId": "post_connector_link_start",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3569,6 +3719,16 @@
       "post": {
         "description": "Requires scope: connector_manage.",
         "operationId": "post_connector_probe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3588,7 +3748,7 @@
     "/api/v1/connectors/{connector_id}/runs": {
       "get": {
         "description": "Requires scope: read.",
-        "operationId": "get_connector_runs",
+        "operationId": "get_connectors_connector_id_runs",
         "parameters": [
           {
             "in": "path",
@@ -3620,6 +3780,14 @@
         "description": "Requires scope: connector_manage.",
         "operationId": "post_connector_sync",
         "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "header",
             "name": "Prefer",
@@ -4144,8 +4312,18 @@
     },
     "/api/v1/evidence/{event_id}/verify": {
       "post": {
-        "description": "Requires scope: write.",
+        "description": "Requires scope: read.",
         "operationId": "post_evidence_verify",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4156,6 +4334,16 @@
               }
             },
             "description": "v1 envelope"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Envelope"
+                }
+              }
+            },
+            "description": "No evidence event with this id"
           }
         },
         "summary": "Post evidence.verify",
@@ -8199,7 +8387,17 @@
     "/api/v1/trust-shares/{share_id}/revoke": {
       "post": {
         "description": "Requires scope: snapshot.",
-        "operationId": "post_trust_shares",
+        "operationId": "post_trust_shares_share_id_revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "share_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8574,6 +8772,16 @@
       "post": {
         "description": "Requires scope: write.",
         "operationId": "post_violations_triage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "violation_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9018,7 +9226,17 @@
     "/api/v1/workflows/runs/{run_id}/approve": {
       "post": {
         "description": "Requires scope: workflow_manage.",
-        "operationId": "post_workflows_run",
+        "operationId": "post_workflows_runs_run_id_approve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9038,7 +9256,17 @@
     "/api/v1/workflows/runs/{run_id}/reconcile": {
       "post": {
         "description": "Requires scope: workflow_manage.",
-        "operationId": "post_workflows_run",
+        "operationId": "post_workflows_runs_run_id_reconcile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9058,7 +9286,17 @@
     "/api/v1/workflows/runs/{run_id}/reject": {
       "post": {
         "description": "Requires scope: workflow_manage.",
-        "operationId": "post_workflows_run",
+        "operationId": "post_workflows_runs_run_id_reject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9078,7 +9316,17 @@
     "/api/v1/workflows/runs/{run_id}/retry": {
       "post": {
         "description": "Requires scope: workflow_run.",
-        "operationId": "post_workflows_run",
+        "operationId": "post_workflows_runs_run_id_retry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9098,7 +9346,7 @@
     "/api/v1/workflows/{workflow_id}": {
       "get": {
         "description": "Requires scope: read.",
-        "operationId": "get_workflows",
+        "operationId": "get_workflows_workflow_id",
         "parameters": [
           {
             "in": "path",
@@ -9128,7 +9376,17 @@
     "/api/v1/workflows/{workflow_id}/run": {
       "post": {
         "description": "Requires scope: workflow_run.",
-        "operationId": "post_workflows_run",
+        "operationId": "post_workflows_workflow_id_run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workflow_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

@@ -12,6 +12,10 @@ class UserAdminError(ValueError):
     """Raised when a user admin mutation is rejected."""
 
 
+class UserNotFoundError(UserAdminError):
+    """Raised when the user does not exist in the caller's tenant."""
+
+
 def list_tenant_users(session: Session, *, tenant_id: str) -> list[User]:
     stmt = select(User).where(User.tenant_id == tenant_id).order_by(User.created_at, User.email)
     return list(session.scalars(stmt))
@@ -44,7 +48,7 @@ def update_tenant_user(
 ) -> User:
     user = session.get(User, user_id)
     if user is None or user.tenant_id != tenant_id:
-        raise UserAdminError("user not found")
+        raise UserNotFoundError("user not found")
     if role is not None:
         if role not in USER_ROLES:
             raise UserAdminError(f"role must be one of {USER_ROLES}")

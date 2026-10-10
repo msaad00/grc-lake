@@ -502,7 +502,7 @@ def test_trust_share_endpoints(tmp_path: Path) -> None:
         assert body["count"] == 1
 
         status, body = _request(server, "POST", f"/api/trust-shares/{share_id}/revoke", body={})
-        assert status == HTTPStatus.CREATED
+        assert status == HTTPStatus.OK
         assert body["share"]["revoked_at"]
     finally:
         server.shutdown()

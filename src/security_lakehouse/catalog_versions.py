@@ -89,7 +89,7 @@ def _with_version_defaults(control: dict[str, Any]) -> dict[str, Any]:
     """Return a copy of ``control`` with version fields filled to defaults."""
     out = dict(control)
     out.setdefault("version", "1.0.0")
-    out.setdefault("valid_from", out.get("reviewed_date"))
+    out.setdefault("valid_from", out.get("reviewed_date") or out.get("source_reconciled_date"))
     out.setdefault("valid_to", None)
     out.setdefault("supersedes", None)
     out.setdefault("superseded_by", None)

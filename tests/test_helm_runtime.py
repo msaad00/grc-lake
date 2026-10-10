@@ -45,7 +45,7 @@ def test_published_profiles_boot_authenticated_server(profile, monkeypatch, tmp_
             continue
         # The chart references customer Secrets. Resolve only synthetic values
         # here; this exercises server configuration, never a cloud connection.
-        monkeypatch.setenv(item["name"], str(item.get("value", "synthetic-deployment-secret")))
+        monkeypatch.setenv(item["name"], str(item.get("value", "x" * 48)))
     app = create_app(tmp_path / "lake", require_auth=True)
     assert app.state.require_auth is True
     assert (app.state.oidc_config is not None) is (profile == "aws-snowflake-poc-values.yaml")

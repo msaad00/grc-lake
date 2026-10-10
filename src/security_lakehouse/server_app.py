@@ -1349,12 +1349,14 @@ def create_app(lake_dir: str | Path, *, require_auth: bool = True) -> FastAPI:
     app.state.saml_auth_factory = build_saml_auth
     app.state.saml_replay_cache = DatabaseAssertionReplayCache(app.state.sessionmaker)
     if app.state.oidc_config is not None:
-        from starlette.middleware.sessions import SessionMiddleware
+        from security_lakehouse.auth.session_middleware import SHA256SessionMiddleware
+        from security_lakehouse.auth.signing import validate_signing_secret
 
         secret = runtime_env().get("GRC_LAKE_SESSION_SECRET", "").strip()
         if not secret:
             raise RuntimeError("GRC_LAKE_SESSION_SECRET is required when OIDC SSO is configured")
-        app.add_middleware(SessionMiddleware, secret_key=secret, same_site="lax", https_only=_COOKIE_SECURE)
+        secret = validate_signing_secret(secret, name="GRC_LAKE_SESSION_SECRET")
+        app.add_middleware(SHA256SessionMiddleware, secret_key=secret, same_site="lax", https_only=_COOKIE_SECURE)
         app.state.oauth = build_oauth(app.state.oidc_config)
 
     app.add_middleware(StrictJSONMiddleware)

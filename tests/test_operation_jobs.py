@@ -13,7 +13,7 @@ def test_revoked_browser_session_cannot_execute_queued_work(tmp_path, monkeypatc
     from security_lakehouse.db.models import ApiKey, OperationJob
     from security_lakehouse.db.repository import create_user_session
 
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "local-test-operation-signing")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "local-test-operation-signing-32-bytes")
     app, key_id, _, _ = _authenticated(tmp_path)
     with app.state.sessionmaker.begin() as session:
         key = session.get(ApiKey, key_id)

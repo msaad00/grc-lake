@@ -116,7 +116,7 @@ def test_only_fresh_passing_owned_evidence_can_resolve(tmp_path, failure):
 def test_authenticated_http_retest_binds_reviewer_and_rejects_claims(tmp_path, monkeypatch):
     from test_agent_decision_authority import human
 
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "local-test-retest-signing-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "local-test-retest-signing-key-32-bytes")
     from fastapi.testclient import TestClient
 
     from security_lakehouse.db.models import RemediationTask

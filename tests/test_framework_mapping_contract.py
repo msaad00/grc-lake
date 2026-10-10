@@ -26,7 +26,7 @@ PAYLOAD = {
 
 
 def _install_payload(monkeypatch, payload):
-    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "framework-contract-test-key")
+    monkeypatch.setenv("GRC_LAKE_COOKIE_SIGNING_KEY", "framework-contract-test-key-32-bytes")
     for module in (safeguards, framework_coverage, mapping_review):
         monkeypatch.setattr(module, "load_safeguards", lambda: copy.deepcopy(payload))
 

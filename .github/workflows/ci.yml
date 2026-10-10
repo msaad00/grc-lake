@@ -465,15 +465,19 @@ jobs:
           exit-code: "1"
       - name: Exercise Compose quickstart against the built image
         run: python3 tools/compose_smoke.py --image grc-lake:ci
+      - name: Exercise authenticated tenants against the built image
+        run: python3 tools/authenticated_smoke.py --image grc-lake:ci --platform linux/amd64 --output build/authenticated-smoke
       - name: Clean up Compose smoke resources
         if: always()
         run: |
-          if [ -f build/compose-smoke/project-name.txt ]; then
-            touch build/compose-smoke/grc-lake.env
-            docker compose -p "$(cat build/compose-smoke/project-name.txt)" \
-              -f build/compose-smoke/compose.yaml -f build/compose-smoke/override.yaml down --volumes
-            rm -f build/compose-smoke/grc-lake.env
-          fi
+          for smoke in build/compose-smoke build/authenticated-smoke; do
+            if [ -f "${smoke}/project-name.txt" ]; then
+              touch "${smoke}/grc-lake.env"
+              docker compose -p "$(cat "${smoke}/project-name.txt")" \
+                -f "${smoke}/compose.yaml" -f "${smoke}/override.yaml" --profile server down --volumes
+              rm -f "${smoke}/grc-lake.env"
+            fi
+          done
       - name: Retain Compose smoke diagnostics
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -482,6 +486,8 @@ jobs:
           path: |
             build/compose-smoke/result.json
             build/compose-smoke/container.log
+            build/authenticated-smoke/result.json
+            build/authenticated-smoke/container.log
           if-no-files-found: warn
           retention-days: 14
 

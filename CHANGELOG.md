@@ -21,6 +21,8 @@ Python package, Helm chart, and bundled web console.
 
 - SPDX 3.0.1 and CycloneDX AI-BOM exports validate against the official schemas. `grc-lake query` accepts `WITH` queries and opens both marts read-only.
 
+- Add a disposable authenticated image probe for API-key authorization, tenant isolation, revocation, snapshot integrity, and persistence after container recreation. Document publisher and provenance verification across the repository ownership transfer while retaining working historical image references. Allow the exact repository-owner identifier in technical copy without allowing retired product names or visual wordmarks.
+
 ## 0.3.1 - 2026-10-09
 
 - Bulk-load the DuckDB mart through typed Arrow tables when available, with a staged NDJSON fallback. Preserve table schemas, views, row contents, and order. Strict JSON decoding avoids unnecessary depth and Unicode scans while retaining duplicate-key, finite-number, Unicode, and nesting checks.

@@ -27,6 +27,10 @@ FORBIDDEN = re.compile(
 # from drifting back into UI, documentation, actions, or metadata.
 RETIRED_BRAND = re.compile(r"\bko" r"da\b", re.IGNORECASE)
 
+# The current GitHub/GHCR owner is a technical identifier, not a product name.
+# Match the whole owner so look-alike namespaces do not gain an exemption.
+REPOSITORY_OWNER = re.compile(r"(?<![\w-])ko" r"da-ai-studio(?![\w-])", re.IGNORECASE)
+
 RETIRED_VISUAL_BRAND = re.compile(r"\b(?:trust\s*ops|ko" r"da)\b", re.IGNORECASE)
 
 SCAN_ROOTS = (
@@ -97,7 +101,10 @@ def main() -> int:
         for match in FORBIDDEN.finditer(text):
             line = text.count("\n", 0, match.start()) + 1
             violations.append(f"{path.relative_to(ROOT)}:{line}: {match.group(0)!r}")
+        owner_starts = {match.start() for match in REPOSITORY_OWNER.finditer(text)}
         for match in RETIRED_BRAND.finditer(text):
+            if match.start() in owner_starts:
+                continue
             line = text.count("\n", 0, match.start()) + 1
             violations.append(f"{path.relative_to(ROOT)}:{line}: retired brand {match.group(0)!r}")
 

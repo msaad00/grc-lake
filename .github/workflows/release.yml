@@ -193,8 +193,23 @@ jobs:
       # SLSA build provenance for the exact wheel and sdist bytes, verifiable
       # with `gh attestation verify <file> --repo <owner>/<repo>`.
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        id: python-attestation
         with:
           subject-path: dist/*
+      # Retain the signed bytes independently of the attestation API. Keep the
+      # bundle outside dist/ so PyPI receives only wheel and sdist files.
+      - name: Stage Python provenance bundle
+        env:
+          BUNDLE_PATH: ${{ steps.python-attestation.outputs.bundle-path }}
+        run: |
+          test -s "$BUNDLE_PATH"
+          mkdir -p provenance
+          cp "$BUNDLE_PATH" provenance/python-provenance.sigstore.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-provenance
+          path: provenance/python-provenance.sigstore.json
+          if-no-files-found: error
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
 
   image:
@@ -308,11 +323,17 @@ jobs:
         with:
           name: sbom
           path: sbom
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: python-provenance
+          path: provenance
       - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           body_path: release-notes.md
+          fail_on_unmatched_files: true
           # Appended after body_path: the PR list and contributors.
           generate_release_notes: true
           files: |
             dist/*
             sbom/*.cdx.json
+            provenance/python-provenance.sigstore.json

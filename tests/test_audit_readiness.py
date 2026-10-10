@@ -183,19 +183,26 @@ def test_framework_with_one_assessed_control_is_not_ready(tmp_path: Path) -> Non
 
 
 def test_framework_ready_when_score_and_coverage_meet_floor(tmp_path: Path) -> None:
+    from datetime import UTC, datetime
+
+    from security_lakehouse.catalog import load_control_catalog
+
+    hipaa_ids = sorted(
+        cid for cid, row in load_control_catalog().items() if row["framework_id"] == "hipaa-security-rule"
+    )
+    observed = hipaa_ids[: len(hipaa_ids) // 2]
     _seed_lake(tmp_path)
     _write_jsonl(
         tmp_path / "gold" / "control_posture.jsonl",
-        [_passing_control(f"HIPAA-SR-{idx}", "HIPAA Security Rule") for idx in range(3)],
+        [_passing_control(control_id, "HIPAA Security Rule") for control_id in observed],
     )
-    from datetime import UTC, datetime
 
     _write_jsonl(
         tmp_path / "silver/normalized_events.jsonl",
         [
             {
                 "event_id": f"hipaa-{idx}",
-                "control_ids": [f"HIPAA-SR-{idx}"],
+                "control_ids": [control_id],
                 "event_time": datetime.now(UTC).isoformat(),
                 "status": "pass",
                 "severity": "info",
@@ -203,15 +210,15 @@ def test_framework_ready_when_score_and_coverage_meet_floor(tmp_path: Path) -> N
                 "asset_id": f"asset-{idx}",
                 "source": "fixture",
             }
-            for idx in range(3)
+            for idx, control_id in enumerate(observed)
         ],
     )
     data = _readiness(tmp_path, "coverage-ready")
 
     hipaa = next(row for row in data["frameworks"] if row["framework"] == "HIPAA Security Rule")
-    assert hipaa["assessed_controls"] == 3
-    assert hipaa["observed_controls"] == 3
-    assert hipaa["total_controls"] == 6
+    assert hipaa["assessed_controls"] == len(observed)
+    assert hipaa["observed_controls"] == len(observed)
+    assert hipaa["total_controls"] == len(hipaa_ids) == 24
     assert hipaa["coverage_pct"] == 50.0
     assert hipaa["ready"] is True
     assert data["posture"]["frameworks_ready"] == 1

@@ -4300,14 +4300,14 @@
     },
     {
       "control_id": "HIPAA-164.308(a)(2)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Assigned security responsibility documented",
       "risk_domain": "governance",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.308(a)(3)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Workforce security procedures evidenced",
       "risk_domain": "identity",
       "owner": "security-operations"
@@ -4321,70 +4321,70 @@
     },
     {
       "control_id": "HIPAA-164.308(a)(5)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Security awareness training completed",
       "risk_domain": "governance",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.308(a)(6)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Security incident procedures tested",
       "risk_domain": "incident-response",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.308(a)(7)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Contingency plan and backups evidenced",
       "risk_domain": "availability",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.308(a)(8)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Periodic evaluation performed",
       "risk_domain": "risk-management",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.308(b)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Business associate agreements current",
       "risk_domain": "third-party-risk",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.310(a)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Facility access controls documented",
       "risk_domain": "physical-security",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.310(b)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Workstation use",
       "risk_domain": "physical-security",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.310(c)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Workstation security",
       "risk_domain": "physical-security",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.310(d)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Device and media controls",
       "risk_domain": "data-protection",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.312(a)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Access control mechanisms enforced",
       "risk_domain": "identity",
       "owner": "security-operations"
@@ -4405,14 +4405,14 @@
     },
     {
       "control_id": "HIPAA-164.312(c)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Integrity controls for ePHI evidenced",
       "risk_domain": "data-protection",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.312(d)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Person or entity authentication",
       "risk_domain": "identity",
       "owner": "security-operations"
@@ -4426,28 +4426,28 @@
     },
     {
       "control_id": "HIPAA-164.314(a)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Business associate requirements enforced",
       "risk_domain": "third-party-risk",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.314(b)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Group health plan requirements met",
       "risk_domain": "governance",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.316(a)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Policies and procedures",
       "risk_domain": "governance",
       "owner": "security-operations"
     },
     {
       "control_id": "HIPAA-164.316(b)",
-      "framework": "HIPAA",
+      "framework": "HIPAA Security Rule",
       "title": "Documentation",
       "risk_domain": "governance",
       "owner": "security-operations"

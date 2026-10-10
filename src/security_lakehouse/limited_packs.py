@@ -97,7 +97,7 @@ def hipaa_limited_pack_specs() -> Iterable[PackControlSpec]:
         transform=lambda row: _limited_row_transform(
             row,
             framework_id="hipaa-security-rule",
-            framework="HIPAA",
+            framework="HIPAA Security Rule",
             control_id_prefix="HIPAA",
             framework_ref=lambda ref: f"45 CFR §{ref}",
             source_url=str(row.extra.get("source_url", HIPAA_SOURCE)),

@@ -19,7 +19,7 @@ from security_lakehouse.pipeline import run_pipeline
 
 EXPECTED_SHA256 = {
     "gold/asset_risk.jsonl": "dba5fdaf83c3738723bf2b68e2c513ef843841e5c54615953b0faa3060a4f3fd",
-    "gold/ccf_assessment.json": "88f95e6ec24053bdc40a91690ee64e2362a01771f1e76cd6760ac0e24615b9e2",
+    "gold/ccf_assessment.json": "a360d71021ba1e7a2b3a8bdeb7e549de4823b947bec9ad3e909bde2377dbc1ca",
     "gold/control_posture.jsonl": "96cc35c09febafa9e0b1aeb13f4cbd78354f326724a7dba020ca6595491b9948",
     "gold/metrics.json": "fa1eb6e1311ca8f6e6b45fbf2b4b250e77fedafc4908feff6c9157470d5a2b00",
     "silver/normalized_events.jsonl": "1620e702198c4df792ef16201bbebfa748f89733f50a60f646ac0d902700b220",

@@ -7,7 +7,7 @@ retain `evaluatable` and `attestable` names for compatibility.
 
 Framework packs: 20 with catalogued requirements (2 more registry entries planned or superseded)
 Requirements catalogued: 2252 (all source-cited)
-Mapped (touched by a safeguard): 1417 (62.9%)
+Mapped (touched by a safeguard): 1418 (63.0%)
 **Reviewed safeguard mappings: 340 (15.1%)**
 Asset types modeled: 20
 
@@ -22,7 +22,7 @@ Asset types modeled: 20
 | EU AI Act - Regulation (EU) 2024/1689 | [EUR-Lex - Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) | implemented_limited_mapping | 16 | 16 | 16 | 1 | 6.2% | never pulled |
 | NIST SP 800-53B Moderate baseline (FedRAMP foundation only) | [NIST SP 800-53 Rev 5 Moderate baseline (FedRAMP Moderate foundation)](https://csrc.nist.gov/publications/detail/sp/800-53b/final) | implemented_full_pack | 287 | 287 | 262 | 96 | 33.4% | never pulled |
 | GDPR - EU General Data Protection Regulation (2016/679) | [EUR-Lex - Regulation (EU) 2016/679](https://eur-lex.europa.eu/eli/reg/2016/679/oj) | implemented_limited_mapping | 20 | 20 | 20 | 3 | 15.0% | never pulled |
-| HIPAA Security Rule (45 CFR Parts 160, 162, 164) | [U.S. HHS HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) | implemented_limited_mapping | 24 | 24 | 18 | 4 | 16.7% | never pulled |
+| HIPAA Security Rule (45 CFR Parts 160, 162, 164) | [U.S. HHS HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) | implemented_limited_mapping | 24 | 24 | 19 | 4 | 16.7% | never pulled |
 | ISO/IEC 27001:2022 Information security management systems | [ISO/IEC 27001:2022](https://www.iso.org/standard/27001) | implemented_full_pack | 93 | 93 | 81 | 10 | 10.8% | never pulled |
 | ISO/IEC 27017:2015 Cloud security controls | [ISO/IEC 27017:2015](https://www.iso.org/standard/43757.html) | implemented_full_pack | 47 | 47 | 44 | 18 | 38.3% | never pulled |
 | ISO/IEC 27701:2019 Privacy information management | [ISO/IEC 27701:2019](https://www.iso.org/standard/71670.html) | planned | 0 | 0 | 0 | 0 | 0.0% | never pulled |

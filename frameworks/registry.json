@@ -358,7 +358,7 @@
       "framework_id": "soc1",
       "family": "assurance",
       "name": "SOC 1 Type II (ICFR)",
-      "version": "2017 TSC with revised points of focus 2022",
+      "version": "SSAE 18 (AT-C 320)",
       "effective_date": "2022-12-15",
       "superseded_by": null,
       "official_source_name": "AICPA SOC 1 Reporting on Controls at a Service Organization",

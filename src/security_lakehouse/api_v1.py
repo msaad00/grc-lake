@@ -25,9 +25,6 @@ from typing import Any
 from security_lakehouse import api_contract, strict_json
 from security_lakehouse.ai_governance import build_ai_governance_status, list_ai_inventory
 from security_lakehouse.api_contract import (
-    _UNMAPPED_POST_SCOPE as _UNMAPPED_POST_SCOPE,
-)
-from security_lakehouse.api_contract import (
     API_VERSION,
     _connector_action,
     _connector_link_action,

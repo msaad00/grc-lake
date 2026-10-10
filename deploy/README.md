@@ -161,3 +161,24 @@ production API/scheduler contract.
 - ECR repo + image push pipeline (use `ghcr.io/msaad00/grc-lake` from a public release for now).
 - Cross-account bucket policies or additional role-assumption permissions.
 - GKE / AKS reference IaC — same chart works; pull-requests welcome.
+
+### Startup and voluntary disruption protection
+
+HTTP deployments have a startup probe on `/api/healthz` with a five-minute
+initialization budget (`probes.startup`). Liveness and readiness begin after
+startup succeeds; readiness continues to check dependencies through `/api/readyz`.
+Tune the startup budget for measured migration/startup time. Workers do not expose
+HTTP and do not receive HTTP probes. `terminationGracePeriodSeconds` defaults to
+60 seconds; it is a shutdown deadline, not a guarantee that longer jobs finish.
+
+Distributed API and reader releases with two or more replicas receive a
+`policy/v1` PodDisruptionBudget with `maxUnavailable: 1`, scoped to that release's
+pod selector. This limits voluntary evictions such as node drains. It does not
+control Deployment rolling updates, protect against node failure, or prove
+cross-zone availability. Place replicas across failure domains using `affinity`
+and test drains on the target cluster. A single replica and worker releases do
+not receive this API budget. Operators can set `disruptionBudget.enabled=false`
+when another controller owns disruption policy.
+
+See Kubernetes' [probe guidance](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)
+and [disruption semantics](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/).

@@ -1,0 +1,13 @@
+{{- if and .Values.disruptionBudget.enabled .Values.distributed.enabled (ne .Values.distributed.role "worker") (gt (int .Values.replicaCount) 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "grc-lake.fullname" . }}
+  labels:
+    {{- include "grc-lake.labels" . | nindent 4 }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      {{- include "grc-lake.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -6,8 +6,8 @@ evidence into **your** lake, the pipeline materializes gold posture, and the
 
 There is no runtime plugin marketplace. Extensions are **code**: registries in
 the OSS tree (connectors, workflow actions, framework packs), plus connectors
-that a separate Python package registers under the `trustops.connectors`
-entry-point group ([Adding connectors](ADDING_CONNECTORS.md)).
+that a separate Python package registers under the `grc_lake.connectors`
+entry-point group (legacy `trustops.connectors` is still loaded) ([Adding connectors](ADDING_CONNECTORS.md)).
 
 ## Architecture
 
@@ -23,7 +23,7 @@ Sources (AWS, Azure, GCP, Snowflake, GitHub, Okta, Jira, …)
 | Layer           | Path / module                                               | Role                                                  |
 | --------------- | ----------------------------------------------------------- | ----------------------------------------------------- |
 | **Contracts**   | `connectors/catalog.json`                                   | 28 connector access contracts (25 executable)         |
-| **Registry**    | `connector_runner.REGISTRY`                                 | Built-ins plus `trustops.connectors` entry points     |
+| **Registry**    | `connector_runner.REGISTRY`                                 | Built-ins plus `grc_lake.connectors` entry points     |
 | **State**       | `connector_state.py`                                        | Probe-gated enablement, run history JSONL             |
 | **Incremental** | `ingestion/watermark.py`                                    | Cursors in `gold/watermarks.jsonl`                    |
 | **Dedupe**      | `ingestion/merge.py`, `connector_runner._upsert_raw_events` | Newest instant per `(connector_id, event_id)`         |

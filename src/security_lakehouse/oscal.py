@@ -167,7 +167,7 @@ def build_component_definition(
         for framework_id in sorted(by_framework):
             members = sorted(by_framework[framework_id], key=lambda m: str(m.get("control_id")))
             framework = registry.get(framework_id, {})
-            source = str(framework.get("official_source_url") or f"urn:trustops:framework:{framework_id}")
+            source = str(framework.get("official_source_url") or f"urn:grc-lake:framework:{framework_id}")
             implemented_requirements = []
             for member in members:
                 control_id = str(member["control_id"])
@@ -260,16 +260,16 @@ def _import_ap_href(posture_payload: JsonObject) -> str:
     """
     bundle = posture_payload.get("catalog_bundle")
     if isinstance(bundle, dict) and bundle.get("bundle_sha256"):
-        return f"urn:trustops:catalog-bundle:{bundle['bundle_sha256']}"
+        return f"urn:grc-lake:catalog-bundle:{bundle['bundle_sha256']}"
     try:
         from security_lakehouse.catalog_versions import bundle_summary
 
         bundle = bundle_summary()
         if isinstance(bundle, dict) and bundle.get("bundle_sha256"):
-            return f"urn:trustops:catalog-bundle:{bundle['bundle_sha256']}"
+            return f"urn:grc-lake:catalog-bundle:{bundle['bundle_sha256']}"
     except (OSError, ValueError, KeyError):
-        return "urn:trustops:catalog-bundle:unknown"
-    return "urn:trustops:catalog-bundle:unknown"
+        return "urn:grc-lake:catalog-bundle:unknown"
+    return "urn:grc-lake:catalog-bundle:unknown"
 
 
 @generation_reader

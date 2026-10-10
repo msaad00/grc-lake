@@ -169,11 +169,12 @@ history. Frameworks and Crosswalk link to it and show the same split.
 API:
 
 ```bash
+GRC_LAKE=https://grc-lake.example.com  # your server's base URL; KEY is an API key
 # Pending queue (proposed + needs changes), paginated
-curl -s "$TRUSTOPS/api/v1/mapping-reviews/queue?framework_id=fedramp-moderate&limit=50" -H "Authorization: Bearer $KEY"
+curl -s "$GRC_LAKE/api/v1/mapping-reviews/queue?framework_id=fedramp-moderate&limit=50" -H "Authorization: Bearer $KEY"
 # status=all | maintainer_reviewed | org_reviewed | needs_changes | rejected ; family=<ccf family> ; safeguard_id= ; q=
-curl -s "$TRUSTOPS/api/v1/mapping-reviews/decisions?safeguard_id=SG-IDENTITY-001&control_id=SOC2-CC6.1" -H "Authorization: Bearer $KEY"
-curl -s "$TRUSTOPS/api/v1/mapping-reviews/summary" -H "Authorization: Bearer $KEY"
+curl -s "$GRC_LAKE/api/v1/mapping-reviews/decisions?safeguard_id=SG-IDENTITY-001&control_id=SOC2-CC6.1" -H "Authorization: Bearer $KEY"
+curl -s "$GRC_LAKE/api/v1/mapping-reviews/summary" -H "Authorization: Bearer $KEY"
 ```
 
 `POST /api/v1/mapping-reviews/decisions` takes

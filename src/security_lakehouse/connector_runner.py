@@ -9,7 +9,6 @@ and optionally materialize bronze/silver/gold outputs.
 from __future__ import annotations
 
 import fcntl
-import importlib.metadata
 import logging
 import sys
 import time
@@ -22,7 +21,12 @@ from typing import Any
 from security_lakehouse import netguard
 from security_lakehouse.connector_errors import ConnectorConfigError, collection_gaps
 from security_lakehouse.connector_state import _safe_run_error, append_run_event, latest_config
-from security_lakehouse.connectors import load_connector_catalog
+from security_lakehouse.connectors import (
+    CONNECTOR_BUILDER_ENTRY_POINT_GROUP,
+    LEGACY_CONNECTOR_BUILDER_ENTRY_POINT_GROUP,
+    connector_entry_points,
+    load_connector_catalog,
+)
 from security_lakehouse.connectors_aws import (
     AWSClient,
     AWSFixtureClient,
@@ -180,7 +184,8 @@ CONNECTOR_RAW_FILE = "raw/connector_events.jsonl"
 # ``entry_points`` group a third-party package registers connectors under (see
 # ``effective_registry`` below and the "Ship a connector as a package" section
 # of docs/ADDING_CONNECTORS.md).
-CONNECTOR_ENTRY_POINT_GROUP = "trustops.connectors"
+CONNECTOR_ENTRY_POINT_GROUP = CONNECTOR_BUILDER_ENTRY_POINT_GROUP
+LEGACY_CONNECTOR_ENTRY_POINT_GROUP = LEGACY_CONNECTOR_BUILDER_ENTRY_POINT_GROUP
 
 # Default ``token_env`` for the CLI sync entrypoint. Provider-specific
 # installation or OAuth token environment variables are used unless an operator
@@ -829,7 +834,8 @@ def _load_entry_point_connectors() -> dict[str, ConnectorBuilder]:
     """Discover connectors registered by installed packages.
 
     A third-party package declares connectors under the
-    ``trustops.connectors`` entry-point group in its own ``pyproject.toml``
+    ``grc_lake.connectors`` entry-point group (or the legacy
+    ``trustops.connectors`` group) in its own ``pyproject.toml``
     (see docs/ADDING_CONNECTORS.md). Each entry point's name is the
     connector_id; loading it must yield a callable implementing the
     :data:`ConnectorBuilder` contract exactly (``Callable[[SyncInputs],
@@ -842,7 +848,7 @@ def _load_entry_point_connectors() -> dict[str, ConnectorBuilder]:
     """
     discovered: dict[str, ConnectorBuilder] = {}
     try:
-        entry_points = importlib.metadata.entry_points(group=CONNECTOR_ENTRY_POINT_GROUP)
+        entry_points = connector_entry_points(CONNECTOR_ENTRY_POINT_GROUP)
     except Exception:  # noqa: BLE001 - broken plugin metadata must not stop startup; logged
         logger.warning("failed to enumerate %s entry points", CONNECTOR_ENTRY_POINT_GROUP, exc_info=True)
         return discovered

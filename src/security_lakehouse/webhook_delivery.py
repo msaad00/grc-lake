@@ -46,6 +46,9 @@ DEFAULT_BACKOFF_SECONDS = 0.5
 SIGNATURE_HEADER = "X-GRC-Lake-Signature"
 EVENT_HEADER = "X-GRC-Lake-Event"
 DELIVERY_HEADER = "X-GRC-Lake-Delivery"
+TIMESTAMP_HEADER = "X-GRC-Lake-Timestamp"
+TIMESTAMP_SIGNATURE_HEADER = "X-GRC-Lake-Timestamp-Signature"
+DEFAULT_TIMESTAMP_TOLERANCE_SECONDS = 300
 
 # Optional, opt-in destination allowlist for webhook subscription deliveries.
 #
@@ -141,6 +144,35 @@ def verify_signature(secret: str, body: bytes, signature: str) -> bool:
     return hmac.compare_digest(expected, signature)
 
 
+def _unix_now() -> int:
+    return int(time.time())
+
+
+def sign_timestamped_payload(secret: str, timestamp: int, body: bytes) -> str:
+    """Sign ``<timestamp>.<raw body>`` so a receiver can bound replay of a captured delivery."""
+    return sign_payload(secret, f"{int(timestamp)}.".encode() + body)
+
+
+def verify_timestamped_signature(
+    secret: str,
+    body: bytes,
+    timestamp: str,
+    signature: str,
+    *,
+    tolerance_seconds: int = DEFAULT_TIMESTAMP_TOLERANCE_SECONDS,
+    now: int | None = None,
+) -> bool:
+    """Check a timestamped signature and that ``timestamp`` is within ``tolerance_seconds`` of now."""
+    try:
+        sent_at = int(timestamp)
+    except (TypeError, ValueError):
+        return False
+    current = _unix_now() if now is None else now
+    if abs(current - sent_at) > tolerance_seconds:
+        return False
+    return hmac.compare_digest(sign_timestamped_payload(secret, sent_at, body), signature)
+
+
 def build_envelope(*, event_type: str, tenant_id: str, occurred_at: str, data: dict[str, Any]) -> dict[str, Any]:
     """The event envelope every delivery carries; ``event_id`` is the delivery's idempotency key."""
     return {
@@ -193,7 +225,13 @@ def deliver_webhook(
     max_retries = max(0, int(max_retries))
     for attempt in range(max_retries + 1):
         attempts = attempt + 1
-        request = urllib.request.Request(url, data=body, headers=headers, method="POST")  # noqa: S310 (scheme + egress guarded above)
+        sent_at = _unix_now()
+        attempt_headers = {
+            **headers,
+            TIMESTAMP_HEADER: str(sent_at),
+            TIMESTAMP_SIGNATURE_HEADER: sign_timestamped_payload(secret, sent_at, body),
+        }
+        request = urllib.request.Request(url, data=body, headers=attempt_headers, method="POST")  # noqa: S310 (scheme + egress guarded above)
         try:
             # Re-validated on every redirect hop too, so an allowlisted target
             # cannot 302 a delivery to a non-allowlisted or non-public one.
@@ -223,8 +261,12 @@ __all__ = [
     "EGRESS_ALLOWLIST_ENV",
     "EVENT_HEADER",
     "SIGNATURE_HEADER",
+    "TIMESTAMP_HEADER",
+    "TIMESTAMP_SIGNATURE_HEADER",
     "build_envelope",
     "deliver_webhook",
     "sign_payload",
+    "sign_timestamped_payload",
     "verify_signature",
+    "verify_timestamped_signature",
 ]

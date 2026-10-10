@@ -3,10 +3,10 @@
 This module stands in for what an external, separately-installed Python
 package would ship: a single function implementing the
 :data:`security_lakehouse.connector_runner.ConnectorBuilder` contract, which
-its own ``pyproject.toml`` would register under the ``trustops.connectors``
+its own ``pyproject.toml`` would register under the ``grc_lake.connectors``
 entry-point group as::
 
-    [project.entry-points."trustops.connectors"]
+    [project.entry-points."grc_lake.connectors"]
     demo-vendor-evidence = "demo_vendor_connector:build_demo_vendor"
 
 It is not installed as a package; tests import it directly and monkeypatch
@@ -60,9 +60,9 @@ def build_demo_vendor(inputs: SyncInputs) -> list[dict[str, Any]]:
     ]
 
 
-# Registered under the ``trustops.connector_catalog`` entry-point group as::
+# Registered under the ``grc_lake.connector_catalog`` entry-point group as::
 #
-#     [project.entry-points."trustops.connector_catalog"]
+#     [project.entry-points."grc_lake.connector_catalog"]
 #     demo-vendor-evidence = "demo_vendor_connector:CATALOG_ENTRY"
 CATALOG_ENTRY: dict[str, Any] = {
     "connector_id": CONNECTOR_ID,

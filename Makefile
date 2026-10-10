@@ -1,61 +1,65 @@
 .DEFAULT_GOAL := help
 
+# Python tools run from the locked uv environment so local results match CI.
+# Override with PYTHON=python to use the active interpreter instead.
+PYTHON ?= uv run --frozen python
+
 .PHONY: help demo-screenshots demo-screenshots-full demo-local framework-packs coverage-doc release-build compile lint format-check typecheck diff-check test validate validate-json validate-generated validate-brand validate-doc-images pipeline dashboard api-smoke smoke ci web-install web-dev web-typecheck web-build web-clean web-ci docker-build helm-lint helm-template terraform-fmt terraform-validate terraform-test deploy-check uv-sync uv-lock pre-commit-install pre-commit-run pip-audit npm-audit security openapi-export readme-header
 
 help: ## List available commands without running builds or tests.
 	@awk -F ':.*## ' 'BEGIN { printf "Usage: make <target>\n\n" } /^[a-zA-Z][a-zA-Z0-9_-]*:.*## / { printf "  %-24s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 test: ## Run the Python test suite.
-	PYTHONPATH=src python -m pytest -q
+	PYTHONPATH=src $(PYTHON) -m pytest -q
 
 compile: ## Compile Python source, tests and tools to check syntax.
-	PYTHONPATH=src python -m compileall -q src tests tools
+	PYTHONPATH=src $(PYTHON) -m compileall -q src tests tools
 
 lint: ## Run Ruff checks on Python source, tests and tools.
-	PYTHONPATH=src python -m ruff check src tests tools
+	PYTHONPATH=src $(PYTHON) -m ruff check src tests tools
 
 format-check: ## Check Python formatting without changing files.
-	PYTHONPATH=src python -m ruff format --check src tests tools
+	PYTHONPATH=src $(PYTHON) -m ruff format --check src tests tools
 
 typecheck: ## Type-check the Python package with mypy.
-	python -m mypy
+	$(PYTHON) -m mypy
 
 diff-check: ## Check the current diff for whitespace errors.
 	git diff --check
 
 validate: ## Validate sample evidence, connector contracts and catalogs.
-	PYTHONPATH=src python -m security_lakehouse.cli validate --raw data/raw/security_events.jsonl
-	PYTHONPATH=src python -m security_lakehouse.cli connectors validate
-	PYTHONPATH=src python -c "from security_lakehouse.catalog import validate_catalog; from security_lakehouse.programs import validate_program_catalog; from security_lakehouse.policy_templates import validate_policy_template_catalog; errors = validate_catalog() + validate_program_catalog() + validate_policy_template_catalog(); assert not errors, errors"
-	PYTHONPATH=src python -m security_lakehouse.cli catalog verify
+	PYTHONPATH=src $(PYTHON) -m security_lakehouse.cli validate --raw data/raw/security_events.jsonl
+	PYTHONPATH=src $(PYTHON) -m security_lakehouse.cli connectors validate
+	PYTHONPATH=src $(PYTHON) -c "from security_lakehouse.catalog import validate_catalog; from security_lakehouse.programs import validate_program_catalog; from security_lakehouse.policy_templates import validate_policy_template_catalog; errors = validate_catalog() + validate_program_catalog() + validate_policy_template_catalog(); assert not errors, errors"
+	PYTHONPATH=src $(PYTHON) -m security_lakehouse.cli catalog verify
 
 validate-json: ## Validate checked-in schemas and JSON artifacts.
-	PYTHONPATH=src python tools/validate_ci_artifacts.py
+	PYTHONPATH=src $(PYTHON) tools/validate_ci_artifacts.py
 
 validate-generated: ## Validate generated lake artifacts.
-	PYTHONPATH=src python tools/validate_ci_artifacts.py --generated
+	PYTHONPATH=src $(PYTHON) tools/validate_ci_artifacts.py --generated
 
 validate-doc-images: ## Check documentation image references and assets.
-	PYTHONPATH=src python tools/validate_doc_images.py
+	PYTHONPATH=src $(PYTHON) tools/validate_doc_images.py
 
 validate-brand: ## Check public documentation and images for brand consistency.
-	PYTHONPATH=src python tools/check_brand_compliance.py
+	PYTHONPATH=src $(PYTHON) tools/check_brand_compliance.py
 
 pipeline: ## Evaluate sample evidence into build/lakehouse.
-	PYTHONPATH=src python -m security_lakehouse.cli pipeline run --raw data/raw/security_events.jsonl --out build/lakehouse
+	PYTHONPATH=src $(PYTHON) -m security_lakehouse.cli pipeline run --raw data/raw/security_events.jsonl --out build/lakehouse
 
 dashboard: ## Render the sample lake dashboard into build/dashboard.
-	PYTHONPATH=src python -m security_lakehouse.cli dashboard --lake build/lakehouse --out build/dashboard/index.html
+	PYTHONPATH=src $(PYTHON) -m security_lakehouse.cli dashboard --lake build/lakehouse --out build/dashboard/index.html
 
 api-smoke: ## Start a temporary API server and check sample lake responses.
-	PYTHONPATH=src python tools/api_smoke.py
+	PYTHONPATH=src $(PYTHON) tools/api_smoke.py
 
 # Clean first: a stale wheel left in dist/ would otherwise be verified (and
 # could be uploaded) alongside the fresh one.
 release-build: web-install web-build ## Build the console, wheel and source archive; verify wheel contents.
 	rm -rf dist
 	uv build --out-dir dist
-	python tools/verify_wheel.py dist/*.whl
+	$(PYTHON) tools/verify_wheel.py dist/*.whl
 
 openapi-export: ## Regenerate OpenAPI and API resource catalog documents.
 	uv run grc-lake openapi --out docs/api/openapi.v1.json
@@ -110,10 +114,10 @@ docker-build: ## Build the local grc-lake:dev container image.
 	docker build -t grc-lake:dev .
 
 helm-lint: ## Lint the GRC Lake Helm chart.
-	helm lint deploy/helm/grc-lake
+	helm lint deploy/helm/grc-lake -f deploy/examples/self-hosted-values.yaml
 
 helm-template: ## Render the Helm chart to /tmp/grc-lake-helm-render.yaml.
-	helm template grc-lake deploy/helm/grc-lake > /tmp/grc-lake-helm-render.yaml
+	helm template grc-lake deploy/helm/grc-lake -f deploy/examples/self-hosted-values.yaml > /tmp/grc-lake-helm-render.yaml
 	@echo "wrote /tmp/grc-lake-helm-render.yaml ($$(wc -l < /tmp/grc-lake-helm-render.yaml) lines)"
 
 terraform-fmt: ## Check formatting of the EKS Terraform reference.
@@ -139,7 +143,7 @@ uv-lock: ## Refresh the Python dependency lockfile.
 	uv lock
 
 framework-packs: ## Synchronize framework packs from their source manifests.
-	PYTHONPATH=src python -m security_lakehouse.cli frameworks sync-packs
+	PYTHONPATH=src $(PYTHON) -m security_lakehouse.cli frameworks sync-packs
 
 pre-commit-install: ## Install pre-commit and commit-message hooks.
 	uv run pre-commit install

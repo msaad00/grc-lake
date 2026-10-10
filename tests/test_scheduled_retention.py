@@ -284,6 +284,7 @@ def test_unverifiable_partial_archive_still_fails_closed(tmp_path):
 def test_helm_scheduler_retention_values_reach_only_the_cronjob():
     def render(*overrides: str) -> dict:
         args = ["helm", "template", "trustops", str(ROOT / "deploy/helm/grc-lake")]
+        args += ["--set", "env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY", "--set", "env[0].value=test-only-signing-key"]
         for item in overrides:
             args += ["--set", item]
         output = subprocess.run(args, capture_output=True, text=True, check=True).stdout

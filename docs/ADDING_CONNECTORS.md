@@ -54,9 +54,14 @@ Registered connectors can be synced from workflows via `action.connector_sync`
 The registration mechanism the in-repo registry uses is also open to
 third-party packages, so a connector does not have to live in this repo's
 source tree. On first access, `connector_runner.effective_registry()` scans
-installed packages for connectors registered under the `trustops.connectors`
+installed packages for connectors registered under the `grc_lake.connectors`
 [entry-point group](https://packaging.python.org/en/latest/specifications/entry-points/)
 and merges them with the in-repo `REGISTRY`.
+
+Packages published before the rename may keep using the legacy
+`trustops.connectors` and `trustops.connector_catalog` groups; both are still
+loaded. When the same name is registered in a `grc_lake.*` group and its legacy
+group, the `grc_lake.*` entry point wins and the legacy one is not imported.
 
 An entry point's name is the `connector_id`; it must resolve to a callable
 implementing the same `ConnectorBuilder` contract an in-repo adapter uses —
@@ -65,11 +70,11 @@ implementing the same `ConnectorBuilder` contract an in-repo adapter uses —
 ```
 my-grc-lake-connector/
 ├── pyproject.toml
-└── my_grc-lake_connector.py
+└── my_grc_lake_connector.py
 ```
 
 ```python
-# my_grc-lake_connector.py
+# my_grc_lake_connector.py
 from security_lakehouse.connector_runner import SyncInputs
 
 
@@ -87,8 +92,8 @@ name = "my-grc-lake-connector"
 version = "0.1.0"
 dependencies = ["grc-lake"]
 
-[project.entry-points."trustops.connectors"]
-my-vendor-evidence = "my_grc-lake_connector:build"
+[project.entry-points."grc_lake.connectors"]
+my-vendor-evidence = "my_grc_lake_connector:build"
 ```
 
 Once the package is installed (`pip install my-grc-lake-connector`), its
@@ -108,11 +113,11 @@ package never breaks the rest of the registry or the app.
 
 A builder alone wires sync _dispatch_. To make the connector configurable,
 enable-able, and visible in the console and `/api/v1/connectors`, the package
-also registers its catalog row under `trustops.connector_catalog`, using the
+also registers its catalog row under `grc_lake.connector_catalog`, using the
 same entry-point name:
 
 ```python
-# my_grc-lake_connector.py
+# my_grc_lake_connector.py
 CATALOG_ENTRY = {
     "connector_id": "my-vendor-evidence",
     "name": "My Vendor Evidence",
@@ -130,8 +135,8 @@ CATALOG_ENTRY = {
 ```
 
 ```toml
-[project.entry-points."trustops.connector_catalog"]
-my-vendor-evidence = "my_grc-lake_connector:CATALOG_ENTRY"
+[project.entry-points."grc_lake.connector_catalog"]
+my-vendor-evidence = "my_grc_lake_connector:CATALOG_ENTRY"
 ```
 
 The value may be the row itself or a zero-argument callable returning it.
@@ -143,7 +148,8 @@ The value may be the row itself or a zero-argument callable returning it.
 - its `connector_id` matches the entry-point name and does not collide with a
   built-in connector;
 - a callable builder with the same name is registered under
-  `trustops.connectors` — the catalog never lists a connector that cannot sync;
+  `grc_lake.connectors` (or legacy `trustops.connectors`) — the catalog never
+  lists a connector that cannot sync;
 - it does not claim `production_status: primary_lake`.
 
 A rejected row is logged and excluded, never raised. Admitted rows get

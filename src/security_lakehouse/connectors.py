@@ -14,8 +14,15 @@ logger = logging.getLogger(__name__)
 
 ROOT = _data_root()
 DEFAULT_CONNECTOR_CATALOG = ROOT / "connectors" / "catalog.json"
-CONNECTOR_BUILDER_ENTRY_POINT_GROUP = "trustops.connectors"
-CONNECTOR_CATALOG_ENTRY_POINT_GROUP = "trustops.connector_catalog"
+CONNECTOR_BUILDER_ENTRY_POINT_GROUP = "grc_lake.connectors"
+CONNECTOR_CATALOG_ENTRY_POINT_GROUP = "grc_lake.connector_catalog"
+# Packages published before the rename still register under these groups.
+LEGACY_CONNECTOR_BUILDER_ENTRY_POINT_GROUP = "trustops.connectors"
+LEGACY_CONNECTOR_CATALOG_ENTRY_POINT_GROUP = "trustops.connector_catalog"
+_LEGACY_ENTRY_POINT_GROUPS = {
+    CONNECTOR_BUILDER_ENTRY_POINT_GROUP: LEGACY_CONNECTOR_BUILDER_ENTRY_POINT_GROUP,
+    CONNECTOR_CATALOG_ENTRY_POINT_GROUP: LEGACY_CONNECTOR_CATALOG_ENTRY_POINT_GROUP,
+}
 
 VALID_COLLECTION_MODES = {"existing_lake_read", "direct_api_read", "managed_evidence_object"}
 VALID_ACCESS_BOUNDARIES = {"read_only_role", "scoped_token", "dedicated_schema"}
@@ -62,7 +69,7 @@ def _read_catalog_file(path: str | Path) -> dict[str, dict[str, Any]]:
 
 def installed_connector_rows(builtin_ids: frozenset[str]) -> dict[str, dict[str, Any]]:
     """Catalog rows registered by installed packages under
-    ``trustops.connector_catalog``.
+    ``grc_lake.connector_catalog`` (or the legacy ``trustops.connector_catalog``).
 
     Each entry point's name is the connector_id and must resolve to a mapping
     (or a zero-argument callable returning one) shaped like a
@@ -70,7 +77,7 @@ def installed_connector_rows(builtin_ids: frozenset[str]) -> dict[str, dict[str,
     :func:`validate_connector_row`, its ``connector_id`` matches the entry
     point name, it does not collide with a built-in connector_id, and a
     callable builder of the same name is registered under
-    ``trustops.connectors`` — the catalog never advertises a connector that
+    ``grc_lake.connectors`` or ``trustops.connectors`` — the catalog never advertises a connector that
     cannot sync. Rejected rows are logged and excluded, never raised.
     """
     rows = _load_entry_points(CONNECTOR_CATALOG_ENTRY_POINT_GROUP)
@@ -118,9 +125,25 @@ def _reject_reason(connector_id: str, row: Any, builtin_ids: frozenset[str], bui
     return "; ".join(errors) or None
 
 
+def connector_entry_points(group: str) -> list[importlib.metadata.EntryPoint]:
+    """Entry points in ``group`` plus its legacy group, one per name.
+
+    A name registered under both groups resolves to the current group's entry
+    point; the shadowed legacy entry point is never loaded. Enumeration
+    failures propagate so callers can log and fall back to built-ins.
+    """
+    selected: dict[str, importlib.metadata.EntryPoint] = {}
+    for name in (group, _LEGACY_ENTRY_POINT_GROUPS.get(group)):
+        if not name:
+            continue
+        for entry_point in importlib.metadata.entry_points(group=name):
+            selected.setdefault(entry_point.name, entry_point)
+    return list(selected.values())
+
+
 def _load_entry_points(group: str) -> dict[str, tuple[str, Any]]:
     try:
-        entry_points = importlib.metadata.entry_points(group=group)
+        entry_points = connector_entry_points(group)
     except Exception:  # noqa: BLE001 - broken plugin metadata must not stop startup; logged
         logger.warning("failed to enumerate %s entry points", group, exc_info=True)
         return {}

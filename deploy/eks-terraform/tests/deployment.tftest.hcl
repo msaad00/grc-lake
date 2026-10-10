@@ -75,3 +75,32 @@ run "operator_profile_with_enforced_auth" {
     error_message = "Operator overrides must not disable EKS authentication."
   }
 }
+
+run "cluster_endpoint_private_by_default" {
+  command = plan
+  assert {
+    condition     = local.cluster_endpoint_public_access == false && length(var.cluster_endpoint_public_access_cidrs) == 0
+    error_message = "The EKS API endpoint must not be public unless the operator names allowed CIDRs."
+  }
+}
+
+run "cluster_endpoint_public_only_for_named_cidrs" {
+  command = plan
+  variables { cluster_endpoint_public_access_cidrs = ["203.0.113.0/24"] }
+  assert {
+    condition     = local.cluster_endpoint_public_access
+    error_message = "Operator-named CIDRs must enable the public endpoint for exactly those ranges."
+  }
+}
+
+run "cluster_endpoint_rejects_open_world_cidr" {
+  command = plan
+  variables { cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"] }
+  expect_failures = [var.cluster_endpoint_public_access_cidrs]
+}
+
+run "cluster_endpoint_rejects_invalid_cidr" {
+  command = plan
+  variables { cluster_endpoint_public_access_cidrs = ["not-a-cidr"] }
+  expect_failures = [var.cluster_endpoint_public_access_cidrs]
+}

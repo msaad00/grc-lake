@@ -150,9 +150,11 @@ rateLimit:
 
 # Production guard: never enable insecure no-auth on a shareable hosted URL.
 # Override only for local `helm template` experiments with an explicit token.
+# Rendering fails unless GRC_LAKE_COOKIE_SIGNING_KEY is configured in env[]
+# (OIDC also needs GRC_LAKE_SESSION_SECRET) or the acknowledged no-auth override
+# below is set. See deploy/examples/self-hosted-values.yaml.
 security:
-  # Set true for shareable/hosted installs. Requires GRC_LAKE_COOKIE_SIGNING_KEY;
-  # OIDC also needs GRC_LAKE_SESSION_SECRET (direct values or required Secret refs).
+  # Retained for existing values files; authentication is always required.
   requireAuthentication: false
   allowInsecureNoAuth: false
   allowInsecureOverride: ""

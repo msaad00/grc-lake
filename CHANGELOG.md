@@ -3,6 +3,18 @@
 All notable GRC Lake changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- The Helm chart refuses to render without authentication. Set `GRC_LAKE_COOKIE_SIGNING_KEY` (and `GRC_LAKE_SESSION_SECRET` for OIDC) through `env[]`, or acknowledge a local-only insecure install. The container is now named `grc-lake`, so update `kubectl logs -c` and similar selectors, and the writable home volume mounts at `/home/grc-lake`.
+
+- The EKS reference keeps the cluster API endpoint private unless `cluster_endpoint_public_access_cidrs` names the networks allowed to reach it. Open-world CIDRs are rejected. Existing clusters become private on their next apply unless the variable is set.
+
+- Connector plugins register under the `grc_lake.connectors` and `grc_lake.connector_catalog` entry-point groups. The `trustops.*` groups still load; when both define a name, the `grc_lake` entry wins.
+
+- Webhook deliveries add `X-GRC-Lake-Timestamp` and `X-GRC-Lake-Timestamp-Signature` so receivers can reject replays. Existing signature headers are unchanged.
+
+- SPDX 3.0.1 and CycloneDX AI-BOM exports validate against the official schemas. `grc-lake query` accepts `WITH` queries and opens both marts read-only.
+
 ## 0.3.1 - 2026-10-09
 
 - Bulk-load the DuckDB mart through typed Arrow tables when available, with a staged NDJSON fallback. Preserve table schemas, views, row contents, and order. Strict JSON decoding avoids unnecessary depth and Unicode scans while retaining duplicate-key, finite-number, Unicode, and nesting checks.

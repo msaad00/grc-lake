@@ -1,8 +1,8 @@
 apiVersion: v2
 name: grc-lake
 description: |
-  GRC Lake Security Data Lake — continuous compliance assessment workbench.
-  Ships the API + React workbench in one OCI image with a persistent local
+  GRC Lake — open, self-hosted GRC for cloud and AI.
+  Ships the API and GRC Lake Console in one OCI image with a persistent local
   JSONL evidence lake and SQLite mart. Includes optional DuckDB, Parquet, and
   Iceberg REST export commands. Catalogs and remote storage require separate provisioning;
   egress depends on configured connectors and sinks.
@@ -11,6 +11,7 @@ version: 0.3.1
 appVersion: "0.3.1"
 kubeVersion: ">=1.27.0"
 home: https://github.com/msaad00/grc-lake
+icon: https://raw.githubusercontent.com/msaad00/grc-lake/main/docs/images/grc-lake-mark.svg
 sources:
   - https://github.com/msaad00/grc-lake
 maintainers:
@@ -27,4 +28,3 @@ keywords:
   - iso42001
   - security
   - data-lake
-  - workbench

@@ -47,6 +47,28 @@ def test_help_lists_each_target_once_without_project_dependencies(tmp_path) -> N
     assert len(rows) == len(documented)
 
 
+def test_python_recipes_use_the_locked_environment() -> None:
+    source = MAKEFILE.read_text()
+    assert re.search(r"^PYTHON \?= uv run --frozen python$", source, re.MULTILINE)
+    recipes = [line.strip() for line in source.splitlines() if line.startswith("\t")]
+    bare = [line for line in recipes if re.search(r"(?:^|\s)python3?\s", line) and not line.startswith("uv run")]
+    assert bare == [], f"recipes bypass $(PYTHON): {bare}"
+
+
+def test_lint_dry_run_uses_locked_ruff(tmp_path) -> None:
+    result = subprocess.run(
+        ["make", "--no-print-directory", "-n", "-f", str(MAKEFILE), "lint", "typecheck"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=10,
+        env={**os.environ, "MAKEFLAGS": "", "MFLAGS": ""},
+    )
+    assert result.returncode == 0, result.stderr
+    assert "uv run --frozen python -m ruff check" in result.stdout
+    assert "uv run --frozen python -m mypy" in result.stdout
+
+
 def test_bare_make_shows_help_without_starting_work(tmp_path) -> None:
     assert re.search(r"^\.DEFAULT_GOAL\s*:=\s*help$", MAKEFILE.read_text(), re.MULTILINE)
     command = ["make", "--no-print-directory", "-f", str(MAKEFILE)]

@@ -64,7 +64,7 @@ RUN python -m venv /opt/grc-lake-venv \
 
 # --- 3. Slim runtime ------------------------------------------------------
 FROM python:3.12-slim@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016 AS runtime
-LABEL org.opencontainers.image.title="GRC Lake Security Data Lake"
+LABEL org.opencontainers.image.title="GRC Lake"
 LABEL org.opencontainers.image.source="https://github.com/msaad00/grc-lake"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 

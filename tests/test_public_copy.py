@@ -32,8 +32,8 @@ INTERNAL_LANGUAGE = re.compile(
 def test_package_description_is_factual() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     assert project["description"] == (
-        "Open-source, self-hosted trust operations: read-only evidence collection, deterministic control "
-        "tests, and reproducible assessment exports via API, CLI, and MCP."
+        "Open-source, self-hosted GRC engineering on your evidence lake: read-only evidence collection, "
+        "deterministic control tests, and reproducible assessment exports via console, API, CLI, and MCP."
     )
 
 

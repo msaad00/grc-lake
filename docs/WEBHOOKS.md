@@ -157,11 +157,25 @@ more than this summary.
 
 Every delivery carries:
 
-| Header                 | Value                                              |
-| ---------------------- | -------------------------------------------------- |
-| `X-GRC-Lake-Signature` | `sha256=<hex hmac-sha256 of the raw request body>` |
-| `X-GRC-Lake-Event`     | the event type, e.g. `finding.created`             |
-| `X-GRC-Lake-Delivery`  | the delivery's `event_id`                          |
+| Header                           | Value                                                                 |
+| -------------------------------- | --------------------------------------------------------------------- |
+| `X-GRC-Lake-Signature`           | `sha256=<hex hmac-sha256 of the raw request body>`                    |
+| `X-GRC-Lake-Timestamp`           | Unix seconds when this attempt was sent                               |
+| `X-GRC-Lake-Timestamp-Signature` | `sha256=<hex hmac-sha256 of "<timestamp>." followed by the raw body>` |
+| `X-GRC-Lake-Event`               | the event type, e.g. `finding.created`                                |
+| `X-GRC-Lake-Delivery`            | the delivery's `event_id`                                             |
+
+`X-GRC-Lake-Signature` covers the body only. The body contains `event_id` and
+the event's `occurred_at`, but no send time, so a captured delivery verifies
+again if replayed later. Receivers should:
+
+- verify `X-GRC-Lake-Timestamp-Signature` and reject a timestamp more than five
+  minutes from their clock (each retry carries a fresh timestamp); and
+- de-duplicate on `event_id` for at least that window, because a retry after a
+  lost response legitimately repeats the same body.
+
+The `X-TrustOps-*` signature, event, and delivery headers are still sent with
+the same values for receivers built before the rename.
 
 Recompute the HMAC over the **raw bytes** of the body (before any JSON
 re-parsing/re-serialization, which can reorder keys or change whitespace) and
@@ -171,11 +185,20 @@ compare with a constant-time equality check:
 import hashlib
 import hmac
 
-def verify_grc-lake_webhook(secret: str, raw_body: bytes, signature_header: str) -> bool:
+import time
+
+TOLERANCE_SECONDS = 300
+
+
+def verify_grc_lake_webhook(secret: str, raw_body: bytes, timestamp: str, signature_header: str) -> bool:
+    """Check X-GRC-Lake-Timestamp-Signature and reject stale deliveries."""
     algo, _, digest = signature_header.partition("=")
-    if algo != "sha256":
+    if algo != "sha256" or not timestamp.isdigit():
         return False
-    expected = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+    if abs(time.time() - int(timestamp)) > TOLERANCE_SECONDS:
+        return False
+    signed = timestamp.encode("ascii") + b"." + raw_body
+    expected = hmac.new(secret.encode("utf-8"), signed, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, digest)
 ```
 
@@ -183,13 +206,18 @@ def verify_grc-lake_webhook(secret: str, raw_body: bytes, signature_header: str)
 // Node.js
 const crypto = require("crypto");
 
-function verifyGrcLakeWebhook(secret, rawBody, signatureHeader) {
+const TOLERANCE_SECONDS = 300;
+
+function verifyGrcLakeWebhook(secret, rawBody, timestamp, signatureHeader) {
   const [algo, digest] = signatureHeader.split("=");
-  if (algo !== "sha256") return false;
+  if (algo !== "sha256" || !/^[0-9]+$/.test(timestamp)) return false;
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > TOLERANCE_SECONDS)
+    return false;
   const expected = crypto
     .createHmac("sha256", secret)
-    .update(rawBody)
+    .update(Buffer.concat([Buffer.from(`${timestamp}.`), rawBody]))
     .digest("hex");
+  if (!digest || digest.length !== expected.length) return false;
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(digest));
 }
 ```

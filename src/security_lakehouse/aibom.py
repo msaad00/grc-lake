@@ -8,15 +8,32 @@ from __future__ import annotations
 
 import hashlib
 import json
+import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
+from security_lakehouse import __version__
 from security_lakehouse.io import read_json, write_json
 
 STORE_RELATIVE_PATH = Path("aibom/inventory.json")
 MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
+MAX_MODEL_PARAMETERS_BYTES = 64 * 1024
 SUPPORTED_EXPORTS = ("cyclonedx-1.7", "spdx-3.0.1")
+SPDX_CONTEXT = "https://spdx.org/rdf/3.0.1/spdx-context.jsonld"
+_SPDX_PACKAGE_TYPES = {
+    "ai_aipackage": "machine-learning-model",
+    "ai.aipackage": "machine-learning-model",
+    "aipackage": "machine-learning-model",
+    "dataset_datasetpackage": "data",
+    "dataset.datasetpackage": "data",
+    "datasetpackage": "data",
+    "software_package": "library",
+    "software.package": "library",
+    "package": "library",
+}
+_SPDX_LICENSE_RELATIONSHIPS = {"hasDeclaredLicense", "hasConcludedLicense"}
 
 
 def _text(value: Any, *, limit: int = 4096) -> str:
@@ -43,6 +60,17 @@ def _licenses(value: Any) -> list[str]:
     return found
 
 
+def _model_parameters(value: Any) -> dict[str, Any] | None:
+    """Keep a CycloneDX ``modelParameters`` object only when it is small."""
+    if not isinstance(value, dict) or not value:
+        return None
+    encoded = json.dumps(value, sort_keys=True, ensure_ascii=False)
+    if len(encoded.encode("utf-8")) > MAX_MODEL_PARAMETERS_BYTES:
+        return None
+    parsed: dict[str, Any] = json.loads(encoded)
+    return parsed
+
+
 def _cyclonedx_items(document: dict[str, Any]) -> list[dict[str, Any]]:
     if document.get("bomFormat") != "CycloneDX":
         raise ValueError("expected a CycloneDX JSON document")
@@ -63,22 +91,65 @@ def _cyclonedx_items(document: dict[str, Any]) -> list[dict[str, Any]]:
         if not name:
             continue
         external_refs = component.get("externalReferences") or []
-        has_model_card = bool(component.get("modelCard")) or any(
+        model_card = component.get("modelCard")
+        has_model_card = bool(model_card) or any(
             isinstance(ref, dict) and ref.get("type") == "model-card" for ref in external_refs
         )
-        rows.append(
-            {
-                "id": _text(component.get("bom-ref"), limit=1024) or name,
-                "name": name,
-                "version": _text(component.get("version"), limit=1024),
-                "type": component_type,
-                "description": _text(component.get("description")),
-                "purl": _text(component.get("purl"), limit=2048),
-                "licenses": _licenses(component.get("licenses")),
-                "model_card": has_model_card,
-            }
-        )
+        row: dict[str, Any] = {
+            "id": _text(component.get("bom-ref"), limit=1024) or name,
+            "name": name,
+            "version": _text(component.get("version"), limit=1024),
+            "type": component_type,
+            "description": _text(component.get("description")),
+            "purl": _text(component.get("purl"), limit=2048),
+            "licenses": _licenses(component.get("licenses")),
+            "model_card": has_model_card,
+        }
+        if component_type == "machine-learning-model" and isinstance(model_card, dict):
+            parameters = _model_parameters(model_card.get("modelParameters"))
+            if parameters is not None:
+                row["model_parameters"] = parameters
+        rows.append(row)
     return rows
+
+
+def _spdx_node_type(node: dict[str, Any]) -> list[str]:
+    raw_type = node.get("type") or node.get("@type") or ""
+    types = raw_type if isinstance(raw_type, list) else [raw_type]
+    return [_text(item, limit=128) for item in types]
+
+
+def _spdx_item_type(element: dict[str, Any]) -> str:
+    for type_name in _spdx_node_type(element):
+        mapped = _SPDX_PACKAGE_TYPES.get(type_name.lower())
+        if mapped == "library" and _text(element.get("software_primaryPurpose"), limit=64) == "application":
+            return "application"
+        if mapped:
+            return mapped
+    return ""
+
+
+def _spdx_licenses(graph: list[Any]) -> dict[str, list[str]]:
+    expressions: dict[str, str] = {}
+    for node in graph:
+        if isinstance(node, dict) and "simplelicensing_LicenseExpression" in _spdx_node_type(node):
+            node_id = _text(node.get("spdxId") or node.get("@id"), limit=1024)
+            expression = _text(node.get("simplelicensing_licenseExpression"), limit=256)
+            if node_id and expression:
+                expressions[node_id] = expression
+    by_element: dict[str, list[str]] = {}
+    for node in graph:
+        if not isinstance(node, dict) or "Relationship" not in _spdx_node_type(node):
+            continue
+        if node.get("relationshipType") not in _SPDX_LICENSE_RELATIONSHIPS:
+            continue
+        targets = node.get("to")
+        found = by_element.setdefault(_text(node.get("from"), limit=1024), [])
+        for target in targets if isinstance(targets, list) else []:
+            resolved = expressions.get(_text(target, limit=1024))
+            if resolved and resolved not in found:
+                found.append(resolved)
+    return by_element
 
 
 def _spdx_items(document: dict[str, Any]) -> list[dict[str, Any]]:
@@ -90,28 +161,29 @@ def _spdx_items(document: dict[str, Any]) -> list[dict[str, Any]]:
         "spdx" in _text(item.get("spdxId") if isinstance(item, dict) else "").lower() for item in graph
     ):
         raise ValueError("expected an SPDX 3 JSON-LD document")
+    licenses = _spdx_licenses(graph)
     rows: list[dict[str, Any]] = []
     for element in graph:
         if not isinstance(element, dict):
             continue
-        raw_type = element.get("type") or element.get("@type") or ""
-        types = raw_type if isinstance(raw_type, list) else [raw_type]
-        type_text = " ".join(_text(item, limit=128).lower() for item in types)
-        if not any(token in type_text for token in ("ai", "package", "dataset", "software")):
+        item_type = _spdx_item_type(element)
+        if not item_type:
             continue
         name = _text(element.get("name"), limit=1024)
         if not name:
             continue
+        element_id = _text(element.get("spdxId") or element.get("@id"), limit=1024)
+        version = element.get("software_packageVersion") or element.get("packageVersion") or element.get("version")
         rows.append(
             {
-                "id": _text(element.get("spdxId") or element.get("@id"), limit=1024) or name,
+                "id": element_id or name,
                 "name": name,
-                "version": _text(element.get("packageVersion") or element.get("version"), limit=1024),
-                "type": "data" if "dataset" in type_text else "machine-learning-model",
+                "version": _text(version, limit=1024),
+                "type": item_type,
                 "description": _text(element.get("description") or element.get("comment")),
-                "purl": _text(element.get("packageUrl"), limit=2048),
-                "licenses": [],
-                "model_card": "ai" in type_text,
+                "purl": _text(element.get("software_packageUrl") or element.get("packageUrl"), limit=2048),
+                "licenses": licenses.get(element_id, []),
+                "model_card": item_type == "machine-learning-model",
             }
         )
     return rows
@@ -156,6 +228,10 @@ def import_aibom(*, input_path: Path, lake: Path) -> dict[str, Any]:
     }
 
 
+def _timestamp() -> str:
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _cyclonedx_export(items: list[dict[str, Any]]) -> dict[str, Any]:
     components = []
     for item in items:
@@ -170,42 +246,116 @@ def _cyclonedx_export(items: list[dict[str, Any]]) -> dict[str, Any]:
         if item.get("licenses"):
             component["licenses"] = [{"license": {"id": value}} for value in item["licenses"]]
         if item.get("model_card") and component["type"] == "machine-learning-model":
-            component["modelCard"] = {"bom-ref": f"{item['id']}:model-card"}
+            model_card: dict[str, Any] = {"bom-ref": f"{item['id']}:model-card"}
+            if isinstance(item.get("model_parameters"), dict):
+                model_card["modelParameters"] = item["model_parameters"]
+            component["modelCard"] = model_card
         components.append(component)
     return {
         "$schema": "https://cyclonedx.org/schema/bom-1.7.schema.json",
         "bomFormat": "CycloneDX",
         "specVersion": "1.7",
+        "serialNumber": uuid.uuid4().urn,
         "version": 1,
+        "metadata": {
+            "timestamp": _timestamp(),
+            "tools": {"components": [{"type": "application", "name": "grc-lake", "version": __version__}]},
+        },
         "components": components,
     }
 
 
+def _spdx_iri(value: str, *, namespace: str) -> str:
+    if value.startswith(("urn:", "https://", "http://")) and not any(char.isspace() for char in value):
+        return value
+    return f"{namespace}{quote(value, safe='')}"
+
+
+def _spdx_package(item: dict[str, Any], *, spdx_id: str, creation_id: str) -> dict[str, Any]:
+    item_type = item.get("type") or "machine-learning-model"
+    element: dict[str, Any] = {"spdxId": spdx_id, "creationInfo": creation_id, "name": item["name"]}
+    if item_type == "machine-learning-model":
+        element["type"] = "ai_AIPackage"
+    elif item_type == "data":
+        element["type"] = "dataset_DatasetPackage"
+        element["dataset_datasetType"] = ["noAssertion"]
+    else:
+        element["type"] = "software_Package"
+        element["software_primaryPurpose"] = "application" if item_type == "application" else "library"
+    if item.get("version"):
+        element["software_packageVersion"] = item["version"]
+    if item.get("description"):
+        element["description"] = item["description"]
+    if item.get("purl"):
+        element["software_packageUrl"] = item["purl"]
+    return element
+
+
 def _spdx_export(items: list[dict[str, Any]]) -> dict[str, Any]:
-    graph = []
+    """Project the inventory to an SPDX 3.0.1 JSON-LD document."""
+    namespace = f"urn:grc-lake:aibom:{uuid.uuid4()}:"
+    creation_id = "_:creationinfo"
+    agent_id = f"{namespace}agent"
+    tool_id = f"{namespace}tool"
+    graph: list[dict[str, Any]] = [
+        {
+            "type": "CreationInfo",
+            "@id": creation_id,
+            "specVersion": "3.0.1",
+            "created": _timestamp(),
+            "createdBy": [agent_id],
+            "createdUsing": [tool_id],
+        },
+        {"type": "SoftwareAgent", "spdxId": agent_id, "creationInfo": creation_id, "name": "grc-lake"},
+        {"type": "Tool", "spdxId": tool_id, "creationInfo": creation_id, "name": f"grc-lake {__version__}"},
+    ]
+    roots: list[str] = []
     for index, item in enumerate(items, start=1):
-        element: dict[str, Any] = {
-            "@id": item.get("id") or f"urn:trustops:aibom:{index}",
-            "@type": "AI.AIPackage" if item.get("type") != "data" else "Dataset.DatasetPackage",
-            "name": item["name"],
+        spdx_id = _spdx_iri(str(item.get("id") or index), namespace=f"{namespace}element:")
+        if spdx_id in roots:
+            spdx_id = f"{namespace}element:{index}"
+        roots.append(spdx_id)
+        graph.append(_spdx_package(item, spdx_id=spdx_id, creation_id=creation_id))
+        license_ids: list[str] = []
+        for license_index, expression in enumerate(item.get("licenses") or [], start=1):
+            license_id = f"{namespace}license:{index}:{license_index}"
+            license_ids.append(license_id)
+            graph.append(
+                {
+                    "type": "simplelicensing_LicenseExpression",
+                    "spdxId": license_id,
+                    "creationInfo": creation_id,
+                    "simplelicensing_licenseExpression": expression,
+                }
+            )
+        if license_ids:
+            graph.append(
+                {
+                    "type": "Relationship",
+                    "spdxId": f"{namespace}relationship:{index}:declared-license",
+                    "creationInfo": creation_id,
+                    "from": spdx_id,
+                    "relationshipType": "hasDeclaredLicense",
+                    "to": license_ids,
+                }
+            )
+    elements = [node["spdxId"] for node in graph if "spdxId" in node]
+    graph.append(
+        {
+            "type": "SpdxDocument",
+            "spdxId": f"{namespace}document",
+            "creationInfo": creation_id,
+            "name": "GRC Lake AI bill of materials",
+            "profileConformance": ["core", "software", "ai", "dataset", "simpleLicensing"],
+            "rootElement": roots,
+            "element": elements,
         }
-        if item.get("version"):
-            element["packageVersion"] = item["version"]
-        if item.get("description"):
-            element["description"] = item["description"]
-        if item.get("purl"):
-            element["packageUrl"] = item["purl"]
-        graph.append(element)
-    return {
-        "@context": "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
-        "@graph": graph,
-        "profileConformance": ["core", "ai", "dataset"],
-        "specVersion": "3.0.1",
-    }
+    )
+    return {"@context": SPDX_CONTEXT, "@graph": graph}
 
 
 def export_aibom(*, lake: Path, output_path: Path, output_format: str) -> dict[str, Any]:
-    """Export the canonical inventory to a stable machine-readable format."""
+    """Export the canonical inventory to a machine-readable format."""
     if output_format not in SUPPORTED_EXPORTS:
         raise ValueError(f"format must be one of: {', '.join(SUPPORTED_EXPORTS)}")
     store_path = lake / STORE_RELATIVE_PATH

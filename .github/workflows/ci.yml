@@ -415,9 +415,9 @@ jobs:
         with:
           version: v3.16.0
       - name: helm lint
-        run: helm lint deploy/helm/grc-lake
+        run: helm lint deploy/helm/grc-lake -f deploy/examples/self-hosted-values.yaml
       - name: helm template
-        run: helm template grc-lake deploy/helm/grc-lake > /tmp/render.yaml
+        run: helm template grc-lake deploy/helm/grc-lake -f deploy/examples/self-hosted-values.yaml > /tmp/render.yaml
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.9.5

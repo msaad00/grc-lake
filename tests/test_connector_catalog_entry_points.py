@@ -125,6 +125,56 @@ def test_rejected_package_rows_are_logged_and_excluded(
     assert log_fragment in caplog.text
 
 
+def _install_groups(monkeypatch: pytest.MonkeyPatch, groups: dict[str, list[tuple[str, str]]]) -> None:
+    def fake(**kwargs: str) -> list[importlib.metadata.EntryPoint]:
+        group = kwargs["group"]
+        return [importlib.metadata.EntryPoint(name=n, value=v, group=group) for n, v in groups.get(group, [])]
+
+    monkeypatch.setattr(importlib.metadata, "entry_points", fake)
+
+
+def test_grc_lake_groups_are_primary() -> None:
+    assert connectors.CONNECTOR_BUILDER_ENTRY_POINT_GROUP == "grc_lake.connectors"
+    assert connectors.CONNECTOR_CATALOG_ENTRY_POINT_GROUP == "grc_lake.connector_catalog"
+    assert connectors.LEGACY_CONNECTOR_BUILDER_ENTRY_POINT_GROUP == "trustops.connectors"
+    assert connectors.LEGACY_CONNECTOR_CATALOG_ENTRY_POINT_GROUP == "trustops.connector_catalog"
+
+
+@pytest.mark.parametrize(
+    ("builder_group", "catalog_group"),
+    [
+        ("grc_lake.connectors", "grc_lake.connector_catalog"),
+        ("trustops.connectors", "trustops.connector_catalog"),
+        ("trustops.connectors", "grc_lake.connector_catalog"),
+        ("grc_lake.connectors", "trustops.connector_catalog"),
+    ],
+)
+def test_row_is_admitted_from_either_group(
+    monkeypatch: pytest.MonkeyPatch, builder_group: str, catalog_group: str
+) -> None:
+    _install_groups(
+        monkeypatch,
+        {builder_group: [DEMO_BUILDER], catalog_group: [(DEMO_ID, "demo_vendor_connector:CATALOG_ENTRY")]},
+    )
+
+    assert connectors.load_connector_catalog()[DEMO_ID]["is_implemented"] is True
+
+
+def test_grc_lake_catalog_row_wins_over_legacy_row(monkeypatch: pytest.MonkeyPatch) -> None:
+    _install_groups(
+        monkeypatch,
+        {
+            "grc_lake.connectors": [DEMO_BUILDER],
+            "grc_lake.connector_catalog": [(DEMO_ID, "demo_vendor_connector:CATALOG_ENTRY")],
+            "trustops.connector_catalog": [(DEMO_ID, "demo_vendor_connector:OVERBROAD_CATALOG_ENTRY")],
+        },
+    )
+
+    row = connectors.load_connector_catalog()[DEMO_ID]
+
+    assert row["provenance"]["entry_point"] == "demo_vendor_connector:CATALOG_ENTRY"
+
+
 def test_entry_point_enumeration_failure_keeps_builtin_catalog(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:

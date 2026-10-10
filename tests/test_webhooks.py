@@ -233,6 +233,50 @@ def test_deliver_webhook_success_signs_and_posts(monkeypatch: pytest.MonkeyPatch
     assert sent.get_header("X-trustops-event") == "assessment.completed"
 
 
+def test_timestamped_signature_round_trip_and_replay_window() -> None:
+    body = b'{"event_id":"e1"}'
+    signature = webhook_delivery.sign_timestamped_payload("s3cr3t", 1_800_000_000, body)
+    assert signature.startswith("sha256=")
+    verify = webhook_delivery.verify_timestamped_signature
+    assert verify("s3cr3t", body, "1800000000", signature, now=1_800_000_100) is True
+    # Outside the tolerance window: a captured delivery cannot be replayed later.
+    assert verify("s3cr3t", body, "1800000000", signature, now=1_800_000_301) is False
+    assert verify("s3cr3t", body, "1800000000", signature, now=1_799_999_699) is False
+    # The timestamp is bound to the signature: changing it invalidates the delivery.
+    assert verify("s3cr3t", body, "1800000100", signature, now=1_800_000_100) is False
+    assert verify("s3cr3t", body + b"x", "1800000000", signature, now=1_800_000_000) is False
+    assert verify("wrong", body, "1800000000", signature, now=1_800_000_000) is False
+    assert verify("s3cr3t", body, "not-a-number", signature, now=1_800_000_000) is False
+
+
+def test_deliver_webhook_sends_fresh_signed_timestamp_per_attempt(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: list[urllib.request.Request] = []
+    clock = iter([1_800_000_000, 1_800_000_007])
+
+    def _fake_open_guarded(request, *, timeout=None, validate=None):
+        captured.append(request)
+        return _FakeResponse(500 if len(captured) == 1 else 200)
+
+    monkeypatch.setattr(webhook_delivery.netguard, "open_guarded", _fake_open_guarded)
+    monkeypatch.setattr(webhook_delivery, "_unix_now", lambda: next(clock))
+    envelope = webhook_delivery.build_envelope(event_type="x", tenant_id="t", occurred_at="now", data={})
+    result = webhook_delivery.deliver_webhook(
+        "https://hooks.example.com/x", secret="s", event_type="x", envelope=envelope
+    )
+
+    assert result["ok"] is True
+    timestamps = [request.get_header("X-grc-lake-timestamp") for request in captured]
+    assert timestamps == ["1800000000", "1800000007"]
+    for request, timestamp in zip(captured, timestamps, strict=True):
+        signature = request.get_header("X-grc-lake-timestamp-signature")
+        assert webhook_delivery.verify_timestamped_signature(
+            "s", request.data, timestamp, signature, now=int(timestamp)
+        )
+        # The body-only signature is unchanged for existing receivers.
+        assert webhook_delivery.verify_signature("s", request.data, request.get_header("X-grc-lake-signature"))
+    assert captured[0].data == captured[1].data
+
+
 def test_deliver_webhook_non_2xx_is_a_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         webhook_delivery.netguard, "open_guarded", lambda request, *, timeout=None, validate=None: _FakeResponse(500)

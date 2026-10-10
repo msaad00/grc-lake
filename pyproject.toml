@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "grc-lake"
 version = "0.3.1"
-description = "Open-source, self-hosted trust operations: read-only evidence collection, deterministic control tests, and reproducible assessment exports via API, CLI, and MCP."
+description = "Open-source, self-hosted GRC engineering on your evidence lake: read-only evidence collection, deterministic control tests, and reproducible assessment exports via console, API, CLI, and MCP."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
@@ -143,7 +143,8 @@ tag_format = "v$version"
 [project.scripts]
 grc-lake = "security_lakehouse.cli:main"
 security-lakehouse = "security_lakehouse.cli:main"
-# Agent-native front door: stdio MCP server over the existing read surface.
+# Agent-native front door: stdio MCP server. Remote mode uses the API with its
+# scopes; local mode also exposes lake write tools (see docs/HEADLESS_GRC.md).
 # Requires the optional `mcp` extra (`pip install 'grc-lake[mcp]'`).
 grc-lake-mcp = "security_lakehouse.mcp_server:main"
 trustops-mcp = "security_lakehouse.mcp_server:main"

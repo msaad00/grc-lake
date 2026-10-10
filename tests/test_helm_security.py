@@ -13,11 +13,67 @@ pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm not i
 CHART = Path(__file__).resolve().parents[1] / "deploy" / "helm" / "grc-lake"
 
 
-def _helm_template(extra_sets: list[str] | None = None) -> subprocess.CompletedProcess[str]:
+TEST_SIGNING_KEY = ["env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY", "env[0].value=test-only-signing-key"]
+
+
+def _helm_template(
+    extra_sets: list[str] | None = None, *, signing_key: bool = True
+) -> subprocess.CompletedProcess[str]:
+    """Render the chart; adds a test signing key unless the caller configures env[] itself."""
+    sets = list(extra_sets or [])
+    if signing_key and not any(item.startswith("env[") for item in sets):
+        sets = [*TEST_SIGNING_KEY, *sets]
     cmd = ["helm", "template", "trustops", str(CHART)]
-    for item in extra_sets or []:
+    for item in sets:
         cmd.extend(["--set", item])
     return subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+
+def test_default_values_fail_at_render_time_instead_of_crash_looping() -> None:
+    result = _helm_template(signing_key=False)
+    assert result.returncode != 0
+    assert "GRC_LAKE_COOKIE_SIGNING_KEY" in result.stderr
+    assert "allowInsecureNoAuth" in result.stderr
+
+
+def test_lint_passes_with_the_documented_profile() -> None:
+    profile = CHART.parents[1] / "examples" / "self-hosted-values.yaml"
+    linted = subprocess.run(
+        ["helm", "lint", str(CHART), "-f", str(profile)], capture_output=True, text=True, check=False
+    )
+    assert linted.returncode == 0, linted.stdout + linted.stderr
+
+
+def test_writable_home_matches_the_image_user_home() -> None:
+    import re
+
+    dockerfile = (CHART.parents[2] / "Dockerfile").read_text()
+    home = re.search(r"useradd [^\n]*--home (\S+)", dockerfile).group(1)
+    workdir = re.findall(r"^WORKDIR (\S+)$", dockerfile, re.M)[-1]
+    assert home == workdir == "/home/grc-lake"
+    result = _helm_template()
+    assert result.returncode == 0, result.stderr
+    specs = _pod_specs(result.stdout)
+    assert len(specs) == 2
+    for spec in specs:
+        container = spec["containers"][0]
+        assert container["securityContext"]["readOnlyRootFilesystem"] is True
+        mounts = {mount["name"]: mount["mountPath"] for mount in container["volumeMounts"]}
+        assert mounts["home"] == home
+        assert "emptyDir" in next(volume for volume in spec["volumes"] if volume["name"] == "home")
+    deployment = next(spec for spec in specs if spec["containers"][0]["name"] != "scheduler")
+    assert deployment["containers"][0]["name"] == "grc-lake"
+
+
+def test_chart_metadata_follows_brand() -> None:
+    import yaml
+
+    chart = yaml.safe_load((CHART / "Chart.yaml").read_text())
+    assert "Security Data Lake" not in chart["description"]
+    assert "workbench" not in chart["description"].lower()
+    assert "workbench" not in chart["keywords"]
+    assert chart["icon"].endswith("/docs/images/grc-lake-mark.svg")
+    assert (CHART.parents[2] / "docs" / "images" / "grc-lake-mark.svg").exists()
 
 
 def test_insecure_no_auth_requires_acknowledged_override() -> None:
@@ -38,7 +94,7 @@ def test_insecure_no_auth_passes_with_acknowledged_override() -> None:
 
 
 def test_ingress_requires_auth_configuration() -> None:
-    result = _helm_template(["ingress.enabled=true"])
+    result = _helm_template(["ingress.enabled=true"], signing_key=False)
     assert result.returncode != 0
     assert "ingress.enabled requires authentication" in result.stderr
 

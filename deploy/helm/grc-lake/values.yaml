@@ -11,6 +11,14 @@ image:
 # PostgreSQL and S3 with private scratch space on every replica.
 replicaCount: 1
 
+# Allow in-flight HTTP work to finish after Kubernetes removes the endpoint.
+terminationGracePeriodSeconds: 60
+
+# Applies only to distributed API/reader releases with at least two replicas.
+# Protects voluntary evictions, not node failures or Deployment rollouts.
+disruptionBudget:
+  enabled: true
+
 serviceAccount:
   # Set to false to use the namespace default. With OIDC + IRSA on EKS,
   # leave this true and set `annotations` to bind the IAM role that has
@@ -90,6 +98,12 @@ resources:
 
 # Liveness targets /api/healthz; readiness checks DB/storage at /api/readyz.
 probes:
+  # Defer liveness/readiness during initialization (up to five minutes).
+  startup:
+    enabled: true
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 60
   liveness:
     enabled: true
     initialDelaySeconds: 15

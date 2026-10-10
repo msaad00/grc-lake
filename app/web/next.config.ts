@@ -4,14 +4,9 @@ import type { NextConfig } from "next";
 // src/security_lakehouse/web/dist/ — Python wheel ships it, no Node in prod.
 // basePath '/console' matches the Python server route.
 //
-// Build/dev run with `--webpack` (see package.json scripts): Next 16 defaults
-// to Turbopack, which rejects a `distDir` that escapes the project root
-// ("distDirRoot should not navigate out of the projectPath"). The console must
-// emit straight into the Python package tree (../../src/.../web/dist), so we
-// stay on the Webpack builder, which supports the out-of-project distDir.
-// During `next dev`, keep the build output inside app/web/. Next resolves
-// server-only runtime chunks relative to that output directory; an external
-// dev distDir makes those chunks unable to resolve app/web/node_modules.
+// Next.js requires output inside the web workspace. The build script copies
+// the completed static export into the Python package after Next succeeds.
+// Keep development chunks in .next so their runtime imports resolve locally.
 const isDev = process.env.NODE_ENV === "development";
 
 const config: NextConfig = {
@@ -19,7 +14,7 @@ const config: NextConfig = {
   basePath: "/console",
   assetPrefix: "/console",
   trailingSlash: true,
-  distDir: isDev ? ".next" : "../../src/security_lakehouse/web/dist",
+  distDir: isDev ? ".next" : "out",
   cleanDistDir: true,
   images: { unoptimized: true },
   reactStrictMode: true,

@@ -181,8 +181,14 @@ your provider and tenant data before selecting production limits.
   `GRC_LAKE_WORKSPACE_CONCURRENCY` (1–64). Excess requests receive 503/Retry-After.
   Queue admission, polling and cancellation avoid downloading the tenant lake.
 - Compatibility API reads materialize a tenant revision and make a private local
-  copy. One full revision is cached per replica. This prevents read-side projections
-  from poisoning shared data, but cold reads and large tenants are expensive.
+  copy. Each replica caches up to four tenant revisions with least-recently-used
+  eviction; a new publication replaces only that tenant's cached revision.
+  `GRC_LAKE_READ_CACHE_ENTRIES` sets the entry bound (1–64), and
+  `GRC_LAKE_READ_CACHE_BYTES` sets the total cached payload-byte bound (defaults
+  to `GRC_LAKE_WORKSPACE_BYTES` and cannot be smaller). Active readers retain
+  private copies across eviction. This avoids repeated downloads when tenants
+  alternate, but does not eliminate private-copy cost or reuse derived in-memory
+  caches across requests. Cold reads and large tenants remain expensive.
   Partition downloads bypass full-lake hydration and prune objects by source/date.
 - Evaluation still materializes rows in memory. More tenant shards increase
   concurrency across tenants; they do not make one evaluation distributed or

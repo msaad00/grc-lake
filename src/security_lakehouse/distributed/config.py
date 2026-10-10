@@ -25,6 +25,8 @@ class ClusterConfig:
     region: str = "us-east-1"
     workspace_limit: int = 20 * 1024**3
     file_limit: int = 100_000
+    read_cache_entries: int = 4
+    read_cache_limit: int = 20 * 1024**3
 
     def __post_init__(self):
         identifier(self.cluster_id)
@@ -34,6 +36,10 @@ class ClusterConfig:
             raise ValueError("virtual shard count must be between 1 and 4096")
         if self.workspace_limit < 1 or self.file_limit < 1:
             raise ValueError("workspace limits must be positive")
+        if type(self.read_cache_entries) is not int or not 1 <= self.read_cache_entries <= 64:
+            raise ValueError("read cache entries must be between 1 and 64")
+        if self.read_cache_limit < self.workspace_limit:
+            raise ValueError("read cache bytes must be at least the workspace limit")
 
     @property
     def root_key(self) -> str:
@@ -76,4 +82,8 @@ class ClusterConfig:
             endpoint=env.get("GRC_LAKE_OBJECT_ENDPOINT") or None,
             region=env.get("GRC_LAKE_OBJECT_REGION", "us-east-1"),
             workspace_limit=int(env.get("GRC_LAKE_WORKSPACE_BYTES", str(20 * 1024**3))),
+            read_cache_entries=int(env.get("GRC_LAKE_READ_CACHE_ENTRIES", "4")),
+            read_cache_limit=int(
+                env.get("GRC_LAKE_READ_CACHE_BYTES", env.get("GRC_LAKE_WORKSPACE_BYTES", str(20 * 1024**3)))
+            ),
         )

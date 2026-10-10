@@ -2,7 +2,7 @@
 # Override per-environment via `helm install --values prod.yaml` or `--set`.
 
 image:
-  repository: ghcr.io/msaad00/grc-lake
+  repository: ghcr.io/koda-ai-studio/grc-lake
   tag: "" # defaults to .Chart.appVersion when empty
   pullPolicy: IfNotPresent
   pullSecrets: []

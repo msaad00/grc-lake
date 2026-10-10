@@ -1,6 +1,6 @@
 # GRC Lake Roadmap
 
-Status as of v0.3.1 source preparation; publication is verified separately. Remaining gaps come first. Track work in GitHub issues.
+Status as of v0.3.2 source preparation; publication is verified separately. Remaining gaps come first. Track work in GitHub issues.
 
 ## Remaining gaps
 
@@ -32,7 +32,16 @@ Cross-database sharding, automated shard placement, provider HA/failover testing
 and production capacity qualification remain future work. Storage replication,
 erasure coding and RAID belong to the selected infrastructure.
 
-## Prepared for v0.3.1
+## Prepared for v0.3.2
+
+- CCF title/mapping accuracy, source-reconciliation attribution and coverage labels.
+- Streaming gold writes, bounded dashboard detail and faster cold posture reads.
+- Auth/API/interop corrections, deployment hardening and signature/parser fuzzing.
+- Release references aligned to the current repository namespace.
+
+This remains a candidate until final-main CI, publication and artifact verification pass.
+
+## Published in v0.3.1
 
 - Generation-aware read caches and seek-based JSONL collection pages.
 - Bulk DuckDB mart loading and faster strict JSON decoding, preserving validation.

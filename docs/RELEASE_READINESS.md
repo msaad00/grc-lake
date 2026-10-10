@@ -1,12 +1,11 @@
 # Release readiness
 
-GRC Lake **0.3.1** prepares generation-aware read caching, seek-based collection
-pages, bulk mart loading, and refreshed documentation listed in the
-[changelog](../CHANGELOG.md). The rebrand and opt-in PostgreSQL/S3 runtime shipped
-in 0.3.0. Local deployment remains supported. Distributed mode requires explicit
-configuration and the [migration and recovery procedures](DISTRIBUTED.md); it is
-not enabled by a package upgrade. Cache reuse across distributed request scratch
-directories remains limited; local timings do not establish distributed capacity.
+GRC Lake **0.3.2 is a source candidate, not a published release**. It prepares
+CCF mapping corrections, bounded gold/dashboard output, posture-read improvements,
+auth/API/interop fixes, deployment hardening, and parser/signature fuzzing listed
+in the [changelog](../CHANGELOG.md). Local deployment remains supported.
+Distributed mode remains opt-in and requires the [migration and recovery
+procedures](DISTRIBUTED.md); local timings do not establish distributed capacity.
 
 Version 0.3.1 is published. Changes merged after its release commit are not
 in those artifacts; qualify them as a subsequent version before tagging. A new
@@ -142,10 +141,11 @@ so the next release targets `ghcr.io/koda-ai-studio/grc-lake`. Before tagging:
 2. Preserve `ghcr.io/msaad00/grc-lake` for historical releases. GHCR uses granular
    permissions: a [repository transfer does not transfer package ownership](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages#about-repository-transfers)
    and can remove repository linkage and Actions access.
-3. Align the next candidate's Compose, Helm, Terraform, and example image settings
-   with its intended namespace and version. Current 0.3.1 defaults deliberately
-   retain the working historical image. Do not replace those defaults with an
-   unpublished destination or assume an old version tag exists in the new namespace.
+3. The 0.3.2 candidate aligns Compose, Helm, Terraform and example image settings
+   to `ghcr.io/koda-ai-studio/grc-lake:0.3.2`. These references are not available
+   until publication succeeds. For a current published deployment, use the
+   v0.3.1 release templates and historical namespace; do not assume the old
+   version exists in the new namespace.
 4. After user-authorized publication, verify anonymous pulls (if public delivery
    is intended), both architecture digests, signed provenance, and runtime smoke
    checks against the newly published bytes. Registry visibility may need explicit

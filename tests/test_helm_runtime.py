@@ -36,7 +36,7 @@ def test_published_profiles_boot_authenticated_server(profile, monkeypatch, tmp_
     documents = {doc["kind"]: doc for doc in yaml.safe_load_all(rendered.stdout) if doc}
     container = documents["Deployment"]["spec"]["template"]["spec"]["containers"][0]
     version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
-    assert container["image"] == f"ghcr.io/msaad00/grc-lake:{version}"
+    assert container["image"] == f"ghcr.io/koda-ai-studio/grc-lake:{version}"
     for key in os.environ:
         if key.startswith("GRC_LAKE_"):
             monkeypatch.delenv(key)

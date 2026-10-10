@@ -63,10 +63,8 @@ UNMAPPED = {
     "03.01.22": "no-home",
     "03.04.08": "lane",
     "03.07.06": "no-home",
-    "03.09.01": "no-home",
     "03.09.02": "lane",
     "03.10.06": "lane",
-    "03.12.05": "no-home",
     "03.13.04": "lane",
     "03.13.12": "no-home",
     "03.13.13": "no-home",
@@ -203,7 +201,10 @@ def test_safeguard_mappings_are_proposed_cited_and_leave_lanes_alone() -> None:
     for sid, member in _members():
         assert sid not in lanes, (sid, member["control_id"])
         assert member["review_status"] == "proposed"
-        assert member["role"] == "equivalent"
+        expected_role = (
+            "primary" if sid in {"SG-INFORMATIONEXCHANGE-001", "SG-PERSONNELSCREENING-001"} else "equivalent"
+        )
+        assert member["role"] == expected_role
         assert "review_basis" not in member
         source = member["mapping_source"]
         requirement = member["control_id"].removeprefix(PREFIX)

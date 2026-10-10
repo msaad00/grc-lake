@@ -284,3 +284,17 @@ def test_readme_glance_matches_the_generator_and_the_catalogs() -> None:
     )
     assert coverage["reviewed"] + coverage["proposed"] == coverage["covered"]
     assert f"{len(runnable)} read-only source adapters ({len(preview)} in preview)" in block
+
+
+def test_readme_counts_baseline_restatements_once() -> None:
+    from tools.render_readme_header import restated_requirement_count
+
+    catalog = json.loads((ROOT / "controls" / "catalog.json").read_text(encoding="utf-8"))["controls"]
+    ids = {row["control_id"] for row in catalog}
+    fedramp = [row["control_id"] for row in catalog if row["framework_id"] == "fedramp-moderate"]
+    assert fedramp and all(f"NIST-800-53-{cid.removeprefix('FEDRAMP-')}" in ids for cid in fedramp)
+    restated = restated_requirement_count()
+    assert restated == len(fedramp)
+    distinct = f"{len(catalog) - restated:,} distinct"
+    assert distinct in render_readme_glance()
+    assert distinct in render_readme_summary()

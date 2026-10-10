@@ -106,6 +106,32 @@ def _coverage_summary() -> tuple[int, int, int]:
     )
 
 
+def restated_requirement_count() -> int:
+    """Catalog rows that restate another catalogued framework's control.
+
+    FedRAMP Moderate is the NIST SP 800-53B Moderate baseline, so each of its
+    rows repeats a NIST SP 800-53 control already in the catalog.
+    """
+    catalog = json.loads((ROOT / "controls" / "catalog.json").read_text(encoding="utf-8"))["controls"]
+    ids = {row["control_id"] for row in catalog}
+    return sum(
+        1
+        for row in catalog
+        if row["framework_id"] == "fedramp-moderate"
+        and f"NIST-800-53-{row['control_id'].removeprefix('FEDRAMP-')}" in ids
+    )
+
+
+def _requirement_phrase(requirement_count: int) -> str:
+    restated = restated_requirement_count()
+    if not restated:
+        return f"{requirement_count:,} catalogued requirements"
+    return (
+        f"{requirement_count:,} catalogued requirements ({requirement_count - restated:,} distinct; "
+        f"FedRAMP Moderate's {restated:,} rows restate NIST SP 800-53 controls)"
+    )
+
+
 def _read_only_source_counts() -> tuple[int, int]:
     """(standard, preview) implemented read-only sources."""
     catalog = json.loads((ROOT / "connectors" / "catalog.json").read_text(encoding="utf-8"))
@@ -261,7 +287,7 @@ def render_readme_summary() -> str:
     return (
         f"**{framework_count} framework packs · {safeguard_count} reusable safeguards · "
         f"{len(families)} control families in {len(categories)} categories · "
-        f"{requirement_count:,} catalogued requirements.**{stub_note}\n\n"
+        f"{_requirement_phrase(requirement_count)}.**{stub_note}\n\n"
         f"{coverage['covered']:,} requirements have safeguard mappings; **{coverage['reviewed']:,} have reviewed mappings**. "
         "Catalog coverage and evaluated customer posture are separate measures.\n\n"
         f"Control families by category:\n\n{grouped}"
@@ -273,7 +299,7 @@ def render_readme_glance() -> str:
     safeguard_count, requirement_count, framework_count = _coverage_summary()
     standard_sources, preview_sources = _read_only_source_counts()
     return (
-        f"- **{framework_count} framework packs, {requirement_count:,} catalogued requirements,** linked through "
+        f"- **{framework_count} framework packs, {_requirement_phrase(requirement_count)},** linked through "
         f"{safeguard_count} common safeguards. {coverage['covered']:,} requirements have safeguard mappings; "
         f"{coverage['reviewed']:,} have reviewed mappings and the other {coverage['proposed']:,} are proposed.\n"
         f"- **{standard_sources + preview_sources} read-only source adapters ({preview_sources} in preview)**, "

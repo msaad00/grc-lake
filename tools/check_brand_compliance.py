@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,6 +26,8 @@ FORBIDDEN = re.compile(
 # GRC Lake is the only customer-facing product name. Keep the retired alias
 # from drifting back into UI, documentation, actions, or metadata.
 RETIRED_BRAND = re.compile(r"\bko" r"da\b", re.IGNORECASE)
+
+RETIRED_VISUAL_BRAND = re.compile(r"\b(?:trust\s*ops|ko" r"da)\b", re.IGNORECASE)
 
 SCAN_ROOTS = (
     ROOT / "README.md",
@@ -79,6 +82,18 @@ def main() -> int:
             text = path.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue
+        if path.suffix.lower() == ".svg":
+            # Join text within each element: a wordmark can span styled tspans.
+            try:
+                root = ElementTree.fromstring(text)
+            except ElementTree.ParseError as exc:
+                violations.append(f"{path.relative_to(ROOT)}: invalid SVG: {exc}")
+                continue
+            for node in root.iter():
+                if node.tag.rsplit("}", 1)[-1] in {"text", "title", "desc"}:
+                    copy = "".join(node.itertext())
+                    for match in RETIRED_VISUAL_BRAND.finditer(copy):
+                        violations.append(f"{path.relative_to(ROOT)}: retired visual brand {match.group(0)!r}")
         for match in FORBIDDEN.finditer(text):
             line = text.count("\n", 0, match.start()) + 1
             violations.append(f"{path.relative_to(ROOT)}:{line}: {match.group(0)!r}")

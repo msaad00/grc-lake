@@ -1,5 +1,3 @@
-> Renamed from TrustOps. See the [upgrade guide](docs/REBRANDING.md) for command aliases, existing volumes and release availability.
-
 <p align="center">
   <img src="docs/images/grc-lake-capability-header.svg" alt="GRC Lake — collect, evaluate, resolve, and export: read-only evidence from cloud, identity, code, and data sources, evaluated through a common control framework and framework packs." width="100%">
 
@@ -73,6 +71,8 @@ GRC_LAKE_LAKE=./lake grc-lake-mcp
 Read [headless GRC](docs/HEADLESS_GRC.md) for agent credentials and authority.
 
 </details>
+
+> Renamed from TrustOps. See the [upgrade guide](docs/REBRANDING.md) for command aliases, existing volumes and release availability.
 
 The PyPI package is `grc-lake`, the CLI is
 `grc-lake`, and the MCP server is `grc-lake-mcp`.

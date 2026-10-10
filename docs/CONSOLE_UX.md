@@ -16,7 +16,7 @@ GRC Lake ships a Next.js console at `/console/*` backed by `/api/v1/*` and legac
 
 | Route                      | Shipped UI               | Primary API / hooks                                                                        | Notes                               |
 | -------------------------- | ------------------------ | ------------------------------------------------------------------------------------------ | ----------------------------------- |
-| `/console/dashboard/`      | Posture, proof, fix-next | `usePosture`, `useControlTests`, `useIngestionStatus`, `useFrameworks`, `usePostureStream` | Trust Home                          |
+| `/console/dashboard/`      | Posture, proof, fix-next | `usePosture`, `useControlTests`, `useIngestionStatus`, `useFrameworks`, `usePostureStream` | Dashboard                           |
 | `/console/onboarding/`     | First-run onboarding     | `usePocReadiness`                                                                          | Readiness deep-links                |
 | `/console/poc/`            | Launch checklist         | `usePocReadiness`                                                                          | Copyable invite URLs                |
 | `/console/demo/`           | Live demo landing        | `useAuthMethods`, `usePocReadiness`                                                        | Evaluator entry                     |

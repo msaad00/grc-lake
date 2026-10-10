@@ -1,7 +1,7 @@
 # Artifact hashing memory benchmark
 
 This experiment compares the former `sha256(path.read_bytes())` operation with
-TrustOps `file_sha256`, which reuses a 1 MiB buffer. Generation sealing and
+GRC Lake `file_sha256`, which reuses a 1 MiB buffer. Generation sealing and
 verification, evidence integrity creation and verification, and Parquet export
 use this helper. Hash formats and publication semantics are unchanged.
 

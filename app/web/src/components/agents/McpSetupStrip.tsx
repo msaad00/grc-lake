@@ -25,7 +25,7 @@ const MCP_TOOLS = [
 
 const CURSOR_CONFIG = `{
   "mcpServers": {
-    "trustops": {
+    "grc-lake": {
       "command": "grc-lake-mcp",
       "env": {
         "GRC_LAKE_API_URL": "http://127.0.0.1:8787",
@@ -40,7 +40,7 @@ const CURSOR_CONFIG = `{
 const CI_GATE_STEP = `- name: GRC Lake posture gate
   uses: ./.github/actions/posture-gate
   with:
-    trustops-url: \${{ secrets.GRC_LAKE_URL }}
+    grc-lake-url: \${{ secrets.GRC_LAKE_URL }}
     api-token: \${{ secrets.GRC_LAKE_API_TOKEN }}
     correlation-id: pr-\${{ github.event.pull_request.number }}-\${{ github.run_id }}
     min-score: "70"

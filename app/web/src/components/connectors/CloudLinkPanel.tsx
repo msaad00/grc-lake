@@ -143,7 +143,7 @@ function awsTerraformCommand(
   const trustedPrincipal = session.trusted_principal;
   const selectedRoleName = awsDeploymentRoleName(roleName || session.role_name);
   const templateSetup = session.terraform_url
-    ? `terraform_dir="$(mktemp -d /tmp/trustops-posture-role.XXXXXX)"
+    ? `terraform_dir="$(mktemp -d /tmp/grc-lake-posture-role.XXXXXX)"
 trap 'rm -rf "$terraform_dir"' EXIT
 curl -fsSL ${shellQuote(session.terraform_url)} -o "$terraform_dir/main.tf"
 `
@@ -193,11 +193,11 @@ tenant_id="$(az account show --query tenantId -o tsv)"
 
 # Hosted GRC Lake: set GRC_LAKE_AZURE_APP_ID to the app id shown by GRC Lake.
 # Self-hosted in Azure: set GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID to the managed identity object id.
-trustops_app_id=${configuredAppId}
+grc_lake_app_id=${configuredAppId}
 principal_object_id="\${GRC_LAKE_AZURE_PRINCIPAL_OBJECT_ID:-}"
 
-if [ -n "$trustops_app_id" ] && [ -z "$principal_object_id" ]; then
-  principal_object_id="$(az ad sp show --id "$trustops_app_id" --query id -o tsv)"
+if [ -n "$grc_lake_app_id" ] && [ -z "$principal_object_id" ]; then
+  principal_object_id="$(az ad sp show --id "$grc_lake_app_id" --query id -o tsv)"
 fi
 
 if [ -z "$principal_object_id" ]; then
@@ -1063,7 +1063,7 @@ export function CloudLinkPanel({
                 onBlur={() => setDelegationTouched(true)}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="trustops-reader@my-gcp-project.iam.gserviceaccount.com"
+                placeholder="grc-lake-reader@my-gcp-project.iam.gserviceaccount.com"
                 className="rounded-lg border border-line bg-surface px-3 py-2 text-sm normal-case tracking-normal text-ink focus:outline-none focus:ring-1 focus:ring-brand"
               />
               <span className="font-medium normal-case tracking-normal text-muted">

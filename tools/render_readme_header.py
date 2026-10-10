@@ -180,7 +180,7 @@ def _source_tiles() -> str:
 def _brand_lockup() -> str:
     return """    <g transform="translate(60 24)">
       <use width="44" height="44" href="#mark"/>
-      <text x="58" y="32" font-size="27" font-weight="830" letter-spacing="-1.1" fill="#f8fafc">Trust<tspan fill="url(#brand)">Ops</tspan></text>
+      <text x="58" y="32" font-size="27" font-weight="830" letter-spacing="-1.1" fill="#f8fafc">GRC <tspan fill="url(#brand)">Lake</tspan></text>
     </g>"""
 
 

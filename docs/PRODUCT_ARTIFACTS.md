@@ -6,13 +6,13 @@ This page is the product review index for the public repo.
 
 | Artifact                       | Path                                           |
 | ------------------------------ | ---------------------------------------------- |
-| Next.js GRC Lake workbench     | `app/web/src/app/`                             |
+| Next.js GRC Lake Console       | `app/web/src/app/`                             |
 | Local console/API server       | `src/security_lakehouse/server.py`             |
 | FastAPI server mode            | `src/security_lakehouse/server_app.py`         |
 | Continuous assessment engine   | `src/security_lakehouse/assessment.py`         |
 | CLI entry point                | `src/security_lakehouse/cli.py`                |
 | Vendor diligence use case      | `docs/USE_CASE_VENDOR_DILIGENCE.md`            |
-| Trust Home screenshot          | `docs/images/grc-lake-demo-dashboard.png`      |
+| Dashboard screenshot           | `docs/images/grc-lake-demo-dashboard.png`      |
 | Workflow canvas screenshot     | `docs/images/grc-lake-demo-workflows.png`      |
 | Graph workbench screenshot     | `docs/images/grc-lake-demo-graph.png`          |
 | Framework workbench screenshot | `docs/images/grc-lake-demo-frameworks.png`     |

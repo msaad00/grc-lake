@@ -6,6 +6,7 @@ what readers see; only a fenced PostgreSQL manifest publication does that.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import os
 import re
@@ -20,6 +21,11 @@ from security_lakehouse.io import file_sha256
 
 class IntegrityError(ValueError):
     """Object contents or a workspace boundary failed verification."""
+
+
+def _checksum(digest: bytes) -> str:
+    """The base64 SHA-256 form S3 expects in ``ChecksumSHA256``."""
+    return base64.b64encode(digest).decode("ascii")
 
 
 def _relative(value: str) -> PurePosixPath:
@@ -62,18 +68,27 @@ class ObjectStore:
         key = self.key(tenant_id, digest)
         try:
             if size <= 32 * 1024**2:
-                with path.open("rb") as body:
-                    self.client.put_object(
-                        Bucket=self.config.bucket,
-                        Key=key,
-                        Body=body,
-                        IfNoneMatch="*",
-                        Metadata={"sha256": digest},
-                        ContentLength=size,
-                    )
+                with path.open("rb") as source:
+                    data = source.read(size + 1)
+                # Send only bytes that hash to the key: a conditional write makes
+                # whatever lands under it permanent. The checksum lets S3 reject
+                # a body corrupted in transit as well.
+                if hashlib.sha256(data).hexdigest() != digest:
+                    raise IntegrityError("artifact changed during upload")
+                self.client.put_object(
+                    Bucket=self.config.bucket,
+                    Key=key,
+                    Body=data,
+                    IfNoneMatch="*",
+                    Metadata={"sha256": digest},
+                    ContentLength=size,
+                    ChecksumSHA256=_checksum(bytes.fromhex(digest)),
+                )
             else:
                 self._multipart(key, path, digest)
         except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") == "BadDigest":
+                raise IntegrityError("artifact changed during upload") from exc
             if exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode") != 412:
                 raise
             # Verify existing bytes; never trust a supplied metadata hash alone.
@@ -84,17 +99,29 @@ class ObjectStore:
         return {"sha256": digest, "size": size}
 
     def _multipart(self, key: str, path: Path, digest: str) -> None:
-        upload = self.client.create_multipart_upload(Bucket=self.config.bucket, Key=key, Metadata={"sha256": digest})[
-            "UploadId"
-        ]
+        upload = self.client.create_multipart_upload(
+            Bucket=self.config.bucket, Key=key, Metadata={"sha256": digest}, ChecksumAlgorithm="SHA256"
+        )["UploadId"]
         try:
             parts = []
+            whole = hashlib.sha256()
             with path.open("rb") as source:
                 for number, data in enumerate(iter(lambda: source.read(8 * 1024**2), b""), 1):
+                    whole.update(data)
+                    checksum = _checksum(hashlib.sha256(data).digest())
                     result = self.client.upload_part(
-                        Bucket=self.config.bucket, Key=key, UploadId=upload, PartNumber=number, Body=data
+                        Bucket=self.config.bucket,
+                        Key=key,
+                        UploadId=upload,
+                        PartNumber=number,
+                        Body=data,
+                        ChecksumSHA256=checksum,
                     )
-                    parts.append({"PartNumber": number, "ETag": result["ETag"]})
+                    parts.append({"PartNumber": number, "ETag": result["ETag"], "ChecksumSHA256": checksum})
+            # SHA-256 multipart checksums are per part, so S3 cannot check the
+            # whole object: compare the bytes actually sent before completing.
+            if whole.hexdigest() != digest:
+                raise IntegrityError("artifact changed during upload")
             self.client.complete_multipart_upload(
                 Bucket=self.config.bucket, Key=key, UploadId=upload, MultipartUpload={"Parts": parts}, IfNoneMatch="*"
             )
@@ -215,13 +242,26 @@ class ObjectStore:
         root.mkdir(parents=True, exist_ok=True, mode=0o700)
         for name, entry in files.items():
             self.get(tenant_id, entry, root / name)
-        for name, link in links.items():
-            target = root / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.symlink_to(link)
-            if not target.resolve().is_relative_to(root):
-                target.unlink()
-                raise IntegrityError("artifact symlink escapes the workspace")
+        created = []
+        try:
+            for name, link in links.items():
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.symlink_to(link)
+                created.append(target)
+            # A link can resolve differently once later links exist (a -> b/../z,
+            # then b -> .), so containment is checked only against the final tree.
+            for target in created:
+                try:
+                    resolved = target.resolve(strict=False)
+                except (OSError, RuntimeError) as exc:
+                    raise IntegrityError("artifact symlink cannot be resolved") from exc
+                if not resolved.is_relative_to(root):
+                    raise IntegrityError("artifact symlink escapes the workspace")
+        except BaseException:
+            for target in created:
+                target.unlink(missing_ok=True)
+            raise
 
     def verify_conditional_writes(self) -> None:
         """Preflight both single and multipart conditions before using a provider."""

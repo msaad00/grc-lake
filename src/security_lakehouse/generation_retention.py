@@ -37,8 +37,10 @@ def retained_generations(lake: Path) -> set[str]:
         from sqlalchemy import select
 
         from security_lakehouse.db.base import create_engine_for, session_factory
+        from security_lakehouse.db.migrate import require_head
         from security_lakehouse.db.models import AuditWorkpaper, RemediationTask
 
+        require_head(root)
         engine = create_engine_for(root)
         try:
             with session_factory(engine)() as session:

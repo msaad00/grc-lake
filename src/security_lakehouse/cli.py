@@ -1922,7 +1922,7 @@ def _assessment_posture_as_of(args: argparse.Namespace) -> int:
 def _assessment_violations(args: argparse.Namespace) -> int:
     from security_lakehouse.assessment import build_current_posture
 
-    posture = build_current_posture(args.lake)
+    posture = build_current_posture(args.lake, inline_violation_cap=None)
     framework_controls = {
         control["control_id"]: control["framework"]
         for control in read_jsonl(Path(args.lake) / "gold" / "control_posture.jsonl")

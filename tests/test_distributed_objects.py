@@ -8,9 +8,26 @@ from security_lakehouse.distributed.config import ClusterConfig
 from security_lakehouse.distributed.objects import IntegrityError, ObjectStore
 
 
+def _b64_sha256(data: bytes) -> str:
+    import base64
+    import hashlib
+
+    return base64.b64encode(hashlib.sha256(data).digest()).decode()
+
+
+def _bad_digest(operation: str):
+    from botocore.exceptions import ClientError
+
+    return ClientError({"Error": {"Code": "BadDigest"}, "ResponseMetadata": {"HTTPStatusCode": 400}}, operation)
+
+
 class MemoryObjects:
+    """In-memory S3 that, like S3, rejects a body whose supplied SHA-256 checksum differs."""
+
     def __init__(self):
         self.data = {}
+        self.uploads: dict[str, dict] = {}
+        self.aborted: list[str] = []
 
     def put_object(self, *, Bucket, Key, Body, IfNoneMatch, **kwargs):
         assert IfNoneMatch == "*"
@@ -20,8 +37,34 @@ class MemoryObjects:
             raise ClientError(
                 {"Error": {"Code": "PreconditionFailed"}, "ResponseMetadata": {"HTTPStatusCode": 412}}, "PutObject"
             )
-        self.data[Key] = Body.read() if hasattr(Body, "read") else Body
+        data = Body.read() if hasattr(Body, "read") else Body
+        if "ChecksumSHA256" in kwargs and kwargs["ChecksumSHA256"] != _b64_sha256(data):
+            raise _bad_digest("PutObject")
+        self.data[Key] = data
         return {}
+
+    def create_multipart_upload(self, *, Bucket, Key, **kwargs):
+        upload = f"upload-{len(self.uploads)}"
+        self.uploads[upload] = {"key": Key, "parts": {}, "algorithm": kwargs.get("ChecksumAlgorithm")}
+        return {"UploadId": upload}
+
+    def upload_part(self, *, Bucket, Key, UploadId, PartNumber, Body, **kwargs):
+        if "ChecksumSHA256" in kwargs and kwargs["ChecksumSHA256"] != _b64_sha256(Body):
+            raise _bad_digest("UploadPart")
+        self.uploads[UploadId]["parts"][PartNumber] = (Body, kwargs.get("ChecksumSHA256"))
+        return {"ETag": f'"{PartNumber}"'}
+
+    def complete_multipart_upload(self, *, Bucket, Key, UploadId, MultipartUpload, IfNoneMatch, **kwargs):
+        upload = self.uploads.pop(UploadId)
+        for part in MultipartUpload["Parts"]:
+            if upload["algorithm"] == "SHA256" and part.get("ChecksumSHA256") != upload["parts"][part["PartNumber"]][1]:
+                raise _bad_digest("CompleteMultipartUpload")
+        self.data[Key] = b"".join(upload["parts"][part["PartNumber"]][0] for part in MultipartUpload["Parts"])
+        return {}
+
+    def abort_multipart_upload(self, *, Bucket, Key, UploadId):
+        self.uploads.pop(UploadId, None)
+        self.aborted.append(UploadId)
 
     def get_object(self, *, Bucket, Key):
         import io
@@ -123,3 +166,108 @@ def test_failed_download_preserves_adjacent_artifacts(objects, tmp_path):
     assert adjacent.read_bytes() == b"must survive failed download"
     assert not target.exists()
     assert not list(tmp_path.glob(".grc-download-*"))
+
+
+def test_bytes_changed_after_hashing_are_never_stored_under_the_digest(objects, tmp_path, monkeypatch):
+    from security_lakehouse.distributed import objects as objects_module
+
+    source = tmp_path / "evidence"
+    source.write_bytes(b"right")
+    real = objects_module.file_sha256
+    calls = []
+
+    def hash_then_change(path):
+        digest = real(path)
+        if not calls:
+            source.write_bytes(b"wrong")
+        calls.append(path)
+        return digest
+
+    monkeypatch.setattr(objects_module, "file_sha256", hash_then_change)
+    with pytest.raises(IntegrityError, match="changed during upload"):
+        objects.put("tenant-a", source)
+    assert objects.client.data == {}
+
+    monkeypatch.setattr(objects_module, "file_sha256", real)
+    source.write_bytes(b"right")
+    entry = objects.put("tenant-a", source)
+    assert objects.client.data[objects.key("tenant-a", entry["sha256"])] == b"right"
+
+
+def test_body_corrupted_in_transit_is_rejected_by_its_checksum(objects, tmp_path, monkeypatch):
+    source = tmp_path / "evidence"
+    source.write_bytes(b"right")
+    original = objects.client.put_object
+
+    def corrupt_in_transit(**kwargs):
+        return original(**{**kwargs, "Body": b"wrong"})
+
+    monkeypatch.setattr(objects.client, "put_object", corrupt_in_transit)
+    with pytest.raises(IntegrityError, match="changed during upload"):
+        objects.put("tenant-a", source)
+    assert objects.client.data == {}
+
+
+def test_multipart_upload_sends_part_checksums_and_refuses_changed_bytes(objects, tmp_path):
+    import hashlib
+
+    source = tmp_path / "evidence"
+    source.write_bytes(b"multipart evidence")
+    digest = hashlib.sha256(b"multipart evidence").hexdigest()
+    key = objects.key("tenant-a", digest)
+    objects._multipart(key, source, digest)
+    assert objects.client.data[key] == b"multipart evidence"
+
+    other = objects.key("tenant-a", hashlib.sha256(b"expected bytes").hexdigest())
+    with pytest.raises(IntegrityError, match="changed during upload"):
+        objects._multipart(other, source, hashlib.sha256(b"expected bytes").hexdigest())
+    assert other not in objects.client.data
+    assert objects.client.aborted
+
+
+def test_part_checksum_mismatch_aborts_the_upload(objects, tmp_path, monkeypatch):
+    import hashlib
+
+    source = tmp_path / "evidence"
+    source.write_bytes(b"part bytes")
+    digest = hashlib.sha256(b"part bytes").hexdigest()
+    original = objects.client.upload_part
+
+    def corrupt_in_transit(**kwargs):
+        return original(**{**kwargs, "Body": b"flipped bit"})
+
+    monkeypatch.setattr(objects.client, "upload_part", corrupt_in_transit)
+    from botocore.exceptions import ClientError
+
+    with pytest.raises(ClientError):
+        objects._multipart(objects.key("tenant-a", digest), source, digest)
+    assert objects.client.data == {}
+    assert objects.client.aborted
+
+
+@pytest.mark.parametrize(
+    "links",
+    [
+        {"a": "b/../z", "b": "."},
+        {"b": ".", "a": "b/../z"},
+        {"a": "b/c/../../z", "b": "d", "d": "."},
+        {"a": "b/../escape", "b": "c", "c": "."},
+    ],
+)
+def test_restore_rejects_links_that_escape_once_other_links_exist(objects, tmp_path, links):
+    root = tmp_path / "reader"
+    with pytest.raises(IntegrityError, match="escapes the workspace"):
+        objects.restore("tenant-a", {"tenant_id": "tenant-a", "files": {}, "links": links}, root)
+    assert not [path for path in root.rglob("*") if path.is_symlink()]
+
+
+def test_restore_keeps_contained_links_that_traverse_other_links(objects, tmp_path):
+    source = tmp_path / "source"
+    (source / "generations/first").mkdir(parents=True)
+    (source / "generations/first/evidence").write_text("kept")
+    (source / ".active-generation").symlink_to("generations/first")
+    (source / "current").symlink_to(".active-generation/evidence")
+    manifest = objects.snapshot("tenant-a", source)
+    root = tmp_path / "reader"
+    objects.restore("tenant-a", manifest, root)
+    assert (root / "current").read_text() == "kept"

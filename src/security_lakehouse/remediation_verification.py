@@ -130,6 +130,13 @@ def verify_task(
     return task
 
 
+def application_database_configured(root: Path) -> bool:
+    """True when publication under ``root`` must reconcile application-database tasks."""
+    from security_lakehouse.execution_mode import in_server_mode
+
+    return (root / "server/app.db").is_file() or bool(in_server_mode() and runtime_env().get("GRC_LAKE_DATABASE_URL"))
+
+
 def reconcile_published_tasks(lake: Path, *, tenant_id: str) -> int:
     """Reopen verified tasks after a newly published failing control result.
 
@@ -140,14 +147,16 @@ def reconcile_published_tasks(lake: Path, *, tenant_id: str) -> int:
     from sqlalchemy import select
 
     from security_lakehouse.db.base import create_engine_for, session_factory, session_scope
-    from security_lakehouse.execution_mode import in_server_mode
 
     root = lake.parent.parent if lake.parent.name == "tenants" else lake
-    if not (root / "server/app.db").is_file() and not (in_server_mode() and runtime_env().get("GRC_LAKE_DATABASE_URL")):
+    if not application_database_configured(root):
         return 0
     failures = {r["control_id"] for r in read_jsonl(lake / "gold/control_posture.jsonl") if r.get("status") == "fail"}
     if not failures:
         return 0
+    from security_lakehouse.db.migrate import require_head
+
+    require_head(root)
     engine = create_engine_for(root)
     try:
         with session_scope(session_factory(engine)) as session:

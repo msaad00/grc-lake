@@ -165,7 +165,7 @@ def seed_golden_demo(
     moment = now or datetime.now(UTC)
     open_violations = {
         str(row["control_id"]): str(row["violation_id"])
-        for row in build_current_posture(lake, now=moment).get("violations") or []
+        for row in build_current_posture(lake, now=moment, inline_violation_cap=None).get("violations") or []
         if row.get("control_id") and row.get("violation_id")
     }
 

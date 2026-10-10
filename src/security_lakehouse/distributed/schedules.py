@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from typing import cast
 
 from security_lakehouse.distributed.config import ClusterConfig
 from security_lakehouse.distributed.context import binding
+
+_log = logging.getLogger(__name__)
 
 
 def read_state() -> dict:
@@ -116,8 +119,18 @@ def tick_cluster(root, *, tick_tenant, snapshot_hook_factory, now=None, shards=N
                     results.extend({**row, "tenant_id": tenant} for row in rows)
                 except Conflict:
                     results.append({"tenant_id": tenant, "skipped_locked": True})
-                except Exception:  # noqa: BLE001 - fail closed at a distributed ownership boundary
-                    results.append({"tenant_id": tenant, "result": "error", "error": "distributed scheduler failed"})
+                except Exception as exc:  # noqa: BLE001 - fail closed at a distributed ownership boundary
+                    # The class name is safe to return; the message and traceback
+                    # stay in the server log.
+                    _log.exception("distributed scheduler failed for tenant %s (%s)", tenant, type(exc).__name__)
+                    results.append(
+                        {
+                            "tenant_id": tenant,
+                            "result": "error",
+                            "error": "distributed scheduler failed",
+                            "error_type": type(exc).__name__,
+                        }
+                    )
             after = tenants[-1]
         return results
     finally:

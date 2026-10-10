@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from security_lakehouse import api_v1, server_app
 from security_lakehouse.db import migrate, repository
+from security_lakehouse.services import webhooks as webhook_services
 
 
 def test_spawned_executor_does_not_bootstrap_http_or_migrate(tmp_path, monkeypatch):
@@ -54,7 +55,7 @@ def test_spawned_executor_retains_tenant_binding_and_snapshot_hook(tmp_path, mon
         on_snapshot_written(lake / "snapshot.json", {}, [], [])
         return 201, api_v1.envelope("snapshot", {})
 
-    monkeypatch.setattr(server_app.webhook_services, "dispatch_snapshot_events", dispatch)
+    monkeypatch.setattr(webhook_services, "dispatch_snapshot_events", dispatch)
     monkeypatch.setattr(api_v1, "handle_post", handle)
     code, _ = app.state.operation_worker.subprocess_execute(tmp_path, row)
     assert code == 201

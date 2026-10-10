@@ -279,6 +279,7 @@ def test_every_string_request_field_is_bounded() -> None:
     from pydantic import BaseModel
 
     from security_lakehouse import server_app
+    from security_lakehouse.server_routes.schemas import workflows
 
     def unbounded(annotation, metadata) -> bool:
         if any(getattr(item, "max_length", None) for item in metadata):
@@ -287,8 +288,9 @@ def test_every_string_request_field_is_bounded() -> None:
 
     models = [
         value
-        for value in vars(server_app).values()
-        if isinstance(value, type) and issubclass(value, BaseModel) and value.__module__ == server_app.__name__
+        for module in (server_app, workflows)
+        for value in vars(module).values()
+        if isinstance(value, type) and issubclass(value, BaseModel) and value.__module__ == module.__name__
     ]
     assert models
     offenders = [

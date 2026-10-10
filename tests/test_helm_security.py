@@ -326,3 +326,38 @@ def test_legacy_no_auth_env_cannot_bypass_acknowledgement() -> None:
         ]
     )
     assert result.returncode != 0
+
+
+def _container_env_items(rendered: str) -> list[dict[str, str]]:
+    import yaml
+
+    deployment = next(d for d in yaml.safe_load_all(rendered) if d and d.get("kind") == "Deployment")
+    return deployment["spec"]["template"]["spec"]["containers"][0].get("env", [])
+
+
+def _container_env(rendered: str) -> dict[str, str]:
+    return {item["name"]: item.get("value", "") for item in _container_env_items(rendered)}
+
+
+def test_acknowledged_no_auth_names_a_non_production_environment() -> None:
+    # The server refuses no-auth without a named non-production GRC_LAKE_ENV off loopback.
+    result = _helm_template(
+        ["security.allowInsecureNoAuth=true", "security.allowInsecureOverride=acknowledged"], signing_key=False
+    )
+    assert result.returncode == 0, result.stderr
+    assert _container_env(result.stdout)["GRC_LAKE_ENV"] == "demo"
+
+
+def test_operator_environment_is_not_overridden_for_no_auth() -> None:
+    result = _helm_template(
+        [
+            "security.allowInsecureNoAuth=true",
+            "security.allowInsecureOverride=acknowledged",
+            "env[0].name=GRC_LAKE_ENV",
+            "env[0].value=dev",
+        ],
+        signing_key=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert [item["name"] for item in _container_env_items(result.stdout)].count("GRC_LAKE_ENV") == 1
+    assert _container_env(result.stdout)["GRC_LAKE_ENV"] == "dev"

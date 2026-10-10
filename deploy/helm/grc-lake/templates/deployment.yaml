@@ -1,6 +1,10 @@
 {{- $http := not (and .Values.distributed.enabled (eq .Values.distributed.role "worker")) }}
 {{- $distributed := .Values.distributed.enabled }}
+{{- $operatorEnv := false }}
 {{- range .Values.env }}
+{{- if has .name (list "GRC_LAKE_ENV" "TRUSTOPS_ENV") }}
+{{- $operatorEnv = true }}
+{{- end }}
 {{- if and $distributed (has .name (list "GRC_LAKE_DEPLOYMENT_MODE" "TRUSTOPS_DEPLOYMENT_MODE" "GRC_LAKE_CLUSTER_ID" "GRC_LAKE_OBJECT_BUCKET" "GRC_LAKE_OBJECT_ENDPOINT" "GRC_LAKE_VIRTUAL_SHARDS" "GRC_LAKE_REPLICA_ROLE" "GRC_LAKE_DATABASE_URL" "TRUSTOPS_DATABASE_URL")) }}
 {{- fail "configure cluster identity and database through distributed values, not env[]" }}
 {{- end }}
@@ -111,6 +115,10 @@ spec:
             {{- if .Values.security.allowInsecureNoAuth }}
             - name: GRC_LAKE_ALLOW_INSECURE_NO_AUTH
               value: "1"
+            {{- if not $operatorEnv }}
+            - name: GRC_LAKE_ENV
+              value: "demo"
+            {{- end }}
             {{- end }}
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}

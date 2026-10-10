@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev --webpack -p 5173",
-    "build": "next build --webpack",
+    "build": "next build --webpack && node scripts/copy_static_export.mjs",
     "start": "next start -p 5173",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",

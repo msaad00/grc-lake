@@ -126,4 +126,4 @@ def test_next_dev_keeps_runtime_output_inside_the_web_project() -> None:
     config = NEXT_CONFIG.read_text(encoding="utf-8")
 
     assert 'distDir: isDev ? ".next"' in config
-    assert '"../../src/security_lakehouse/web/dist"' in config
+    assert 'distDir: isDev ? ".next" : "out"' in config

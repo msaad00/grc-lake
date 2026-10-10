@@ -1528,6 +1528,7 @@ def _serve(args: argparse.Namespace) -> int:
         except ModuleNotFoundError as exc:
             raise SystemExit("server mode requires the 'server' extra: pip install 'grc-lake[server]'") from exc
         require_auth = not getattr(args, "allow_insecure_no_auth", False)
+        server_app._assert_insecure_allowed(require_auth=require_auth, host=args.host)
         # Build first so startup failures are reported before any "serving" line.
         app = server_app.create_app(args.lake, require_auth=require_auth)
         mode = "server mode" if app.state.require_auth else "server mode, INSECURE no-auth"

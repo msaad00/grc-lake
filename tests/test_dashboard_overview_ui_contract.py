@@ -24,7 +24,8 @@ def test_dashboard_overview_is_source_aligned_and_tabbed() -> None:
     assert "assessment={data}" in dashboard
     assert "ingestion={ingestion.data}" in dashboard
     assert "Latest lake assessment" in assessment
-    assert "Control pass rate" in assessment
+    assert "SCORE_COPY.assessedCoverage" in assessment
+    assert "Control pass rate" not in assessment
     assert "Open findings" in assessment
     assert "Assessment export" in assessment
     assert "Evidence loop" not in dashboard

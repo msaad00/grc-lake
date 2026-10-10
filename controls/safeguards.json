@@ -18238,6 +18238,150 @@
         "data_store",
         "service"
       ]
+    },
+    {
+      "safeguard_id": "SG-INFORMATIONEXCHANGE-001",
+      "title": "CUI information exchange agreements",
+      "risk_domain": "risk-management",
+      "objective": "Approve and manage exchanges of controlled unclassified information, document the participating interfaces and security responsibilities, and keep exchange agreements current.",
+      "evidence_requirement": "Explicitly bound assessment evidence identifies each CUI exchange and its approved agreement, interface characteristics, security requirements, responsible owners, organization-defined review frequency, and last review/update. Network connectivity alone does not demonstrate this safeguard.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "security-team",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-800-171R3-03.12.05",
+          "framework_id": "nist-800-171-rev3",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Section 3, requirement 03.12.05"
+          },
+          "control_version": "1.0.0"
+        },
+        {
+          "control_id": "NIST-800-53-CA-3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "supporting",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Section 3, requirement 03.12.05, source control CA-3; CUI scope supports but does not establish full control equivalence"
+          },
+          "control_version": "1.0.0"
+        },
+        {
+          "control_id": "FEDRAMP-CA-3",
+          "framework_id": "fedramp-moderate",
+          "role": "supporting",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Section 3, requirement 03.12.05, source control CA-3; CUI scope supports but does not establish full control equivalence"
+          },
+          "control_version": "1.0.0"
+        }
+      ],
+      "asset_types": ["audit_log", "service"]
+    },
+    {
+      "safeguard_id": "SG-PERSONNELSCREENING-001",
+      "title": "Personnel screening and rescreening",
+      "risk_domain": "people-security",
+      "objective": "Screen personnel before granting system access and rescreen under documented organization-defined conditions.",
+      "evidence_requirement": "Explicitly bound assessment evidence demonstrates screening before access authorization, documented rescreening conditions, and completed rescreening when those conditions apply. Retain assessment references and completion outcomes rather than sensitive personnel investigation details. An active user account alone is not screening evidence.",
+      "evaluation_rule": {
+        "fail_if": {
+          "any": [
+            {
+              "evidence_present": false
+            },
+            {
+              "evidence_status": {
+                "in": ["stale", "expired", "missing"]
+              }
+            },
+            {
+              "open_violations": {
+                "min": 1
+              }
+            }
+          ]
+        }
+      },
+      "frequency": "continuous",
+      "owner": "security-team",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "satisfies": [
+        {
+          "control_id": "NIST-800-171R3-03.09.01",
+          "framework_id": "nist-800-171-rev3",
+          "role": "primary",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Section 3, requirement 03.09.01"
+          },
+          "control_version": "1.0.0"
+        },
+        {
+          "control_id": "NIST-800-53-PS-3",
+          "framework_id": "nist-800-53-rev5",
+          "role": "supporting",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Section 3, requirement 03.09.01, source control PS-3; CUI scope supports but does not establish full control equivalence"
+          },
+          "control_version": "1.0.0"
+        },
+        {
+          "control_id": "FEDRAMP-PS-3",
+          "framework_id": "fedramp-moderate",
+          "role": "supporting",
+          "review_status": "proposed",
+          "mapping_source": {
+            "name": "NIST SP 800-171 Rev. 3",
+            "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-171r3.pdf",
+            "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
+            "locator": "Section 3, requirement 03.09.01, source control PS-3; CUI scope supports but does not establish full control equivalence"
+          },
+          "control_version": "1.0.0"
+        }
+      ],
+      "asset_types": ["audit_log", "service"]
     }
   ]
 }

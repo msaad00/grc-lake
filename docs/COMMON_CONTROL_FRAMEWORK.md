@@ -118,7 +118,7 @@ rest of that control.
 
 ```
 $ grc-lake frameworks safeguards --format table
-94 safeguards map 1415 of 2252 requirements (62.8%) — 340 maintainer-reviewed, 0 org-reviewed (15.1% attestable), 1075 proposed; 0 mapping(s) rejected by the org
+96 safeguards map 1417 of 2252 requirements (62.9%) — 340 maintainer-reviewed, 0 org-reviewed (15.1% attestable), 1077 proposed; 0 mapping(s) rejected by the org
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -154,7 +154,7 @@ cannot become a false certification claim.
 | iso-27017-2015      |           47 |     44 |  93.6% |
 | fedramp-moderate    |          287 |    262 |  91.3% |
 | iso-27001-2022      |           93 |     81 |  87.1% |
-| nist-800-171-rev3   |           97 |     83 |  85.6% |
+| nist-800-171-rev3   |           97 |     85 |  87.6% |
 | cis-controls-v8.1   |           18 |     15 |  83.3% |
 | cis_aws             |           62 |     51 |  82.3% |
 | iso-27701-2025      |           10 |      8 |  80.0% |
@@ -294,3 +294,21 @@ An inherited mapping alone does not establish provider control effectiveness.
 Period-bound workpapers can record explicit `not_applicable`, `inherited`, or
 `compensating` assessment context with evidence and an independent review. See
 [the workpaper contract](AUDITOR_WALKTHROUGH.md#assessment-context).
+
+### NIST SP 800-171 Rev. 3 operational safeguards
+
+`SG-INFORMATIONEXCHANGE-001` covers requirement 03.12.05 through explicitly
+assessed CUI exchange agreements, interface/security responsibilities, and an
+organization-defined review frequency. `SG-PERSONNELSCREENING-001` covers 03.09.01
+through screening before access and rescreening under defined conditions.
+Personnel evidence should retain assessment references and completion outcomes,
+not sensitive investigation details.
+
+Both mappings are proposed. Their 800-53/FedRAMP CA-3 and PS-3 source-control links
+are supporting context, not claims of full control equivalence. Observed
+connectivity or active accounts do not establish either safeguard, and passing
+safeguard evidence does not make a proposed requirement mapping attestable.
+Refresh the manifest's mapping-gap list with
+`python tools/sync_nist_800_171r3.py --refresh-coverage-only`; this preserves the
+pinned source data and hashes while deriving gaps from current implementation
+mappings. Source: [NIST SP 800-171 Rev. 3](https://csrc.nist.gov/pubs/sp/800/171/r3/final).

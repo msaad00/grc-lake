@@ -1567,20 +1567,12 @@
       "reason": "No CCF safeguard covers authorization and escort of maintenance personnel."
     },
     {
-      "id": "03.09.01",
-      "reason": "No CCF safeguard covers personnel screening before access."
-    },
-    {
       "id": "03.09.02",
       "reason": "the only CCF safeguard carrying its Rev 2 predecessor (3.9.2) is the test-pinned SP 800-171 Rev 2 crosswalk lane SG-PERSONNELSECURITY-001"
     },
     {
       "id": "03.10.06",
       "reason": "the only CCF safeguard carrying its Rev 2 predecessor (3.10.6) is the test-pinned SP 800-171 Rev 2 crosswalk lane SG-CHANGEMANAGEMENT-002"
-    },
-    {
-      "id": "03.12.05",
-      "reason": "No CCF safeguard covers interconnection or information exchange agreements."
     },
     {
       "id": "03.13.04",

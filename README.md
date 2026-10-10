@@ -18,7 +18,7 @@ export snapshots, workpapers, and OSCAL.
 
 <!-- BEGIN README AT A GLANCE -->
 
-- **20 framework packs, 2,252 catalogued requirements,** linked through 94 common safeguards. 1,415 requirements have safeguard mappings; 340 have reviewed mappings and the other 1,075 are proposed.
+- **20 framework packs, 2,252 catalogued requirements,** linked through 96 common safeguards. 1,417 requirements have safeguard mappings; 340 have reviewed mappings and the other 1,077 are proposed.
 - **25 read-only source adapters (7 in preview)**, plus OCSF presets for existing security lakes.
 - **Fails closed:** missing, stale, or partial evidence never produces a pass, and proposed mappings are not attestable.
 - **One engine, four surfaces:** console, REST API, CLI, and MCP server. Agents propose; humans approve.
@@ -214,9 +214,9 @@ NIST 800-53B Moderate foundation, not a complete FedRAMP authorization package.
 
 <!-- BEGIN README CCF SUMMARY -->
 
-**20 framework packs · 94 reusable safeguards · 21 control families in 10 categories · 2,252 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
+**20 framework packs · 96 reusable safeguards · 21 control families in 10 categories · 2,252 catalogued requirements.** 2 more registry entries are planned or superseded and hold no requirements.
 
-1,415 requirements have safeguard mappings; **340 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
+1,417 requirements have safeguard mappings; **340 have reviewed mappings**. Catalog coverage and evaluated customer posture are separate measures.
 
 Control families by category:
 

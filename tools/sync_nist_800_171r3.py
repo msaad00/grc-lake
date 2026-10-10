@@ -255,14 +255,39 @@ def build_manifest(files: dict[str, bytes], analysis_rows: list[list[str]], *, p
     }
 
 
+def refresh_coverage_gaps(manifest: dict[str, Any], safeguards: dict[str, Any]) -> list[dict[str, str]]:
+    """Derive current gaps from implementation mappings, preserving known reasons."""
+    covered = {
+        str(member.get("control_id", "")).removeprefix("NIST-800-171R3-")
+        for safeguard in safeguards.get("safeguards", [])
+        for member in safeguard.get("satisfies", [])
+        if member.get("framework_id") == "nist-800-171-rev3"
+        and member.get("role", "equivalent") in {"primary", "equivalent"}
+    }
+    previous = {row["id"]: row["reason"] for row in manifest.get("unmapped", [])}
+    return [
+        {"id": row["id"], "reason": previous.get(row["id"], "No implementation safeguard mapping is declared.")}
+        for row in sorted(manifest["rows"], key=lambda row: row["id"])
+        if row["id"] not in covered
+    ]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--source-dir", type=Path, help="read the three source files from this directory instead")
+    parser.add_argument(
+        "--refresh-coverage-only", action="store_true", help="refresh local mapping gaps without changing source data"
+    )
     args = parser.parse_args()
-    files = {name: _fetch(name, args.source_dir) for name in FILES}
-    analysis_rows = read_xlsx_rows(io.BytesIO(files["analysis"]))
     previous = json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.is_file() else {}
-    manifest = build_manifest(files, analysis_rows, previous=previous)
+    if args.refresh_coverage_only:
+        manifest = previous
+    else:
+        files = {name: _fetch(name, args.source_dir) for name in FILES}
+        analysis_rows = read_xlsx_rows(io.BytesIO(files["analysis"]))
+        manifest = build_manifest(files, analysis_rows, previous=previous)
+    safeguards = json.loads((ROOT / "controls/safeguards.json").read_text(encoding="utf-8"))
+    manifest["unmapped"] = refresh_coverage_gaps(manifest, safeguards)
     OUTPUT.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"wrote {OUTPUT.relative_to(ROOT)}: {len(manifest['rows'])} active requirements")
 

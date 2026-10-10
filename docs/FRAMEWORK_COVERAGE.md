@@ -7,7 +7,7 @@ retain `evaluatable` and `attestable` names for compatibility.
 
 Framework packs: 20 with catalogued requirements (2 more registry entries planned or superseded)
 Requirements catalogued: 2252 (all source-cited)
-Mapped (touched by a safeguard): 1415 (62.8%)
+Mapped (touched by a safeguard): 1417 (62.9%)
 **Reviewed safeguard mappings: 340 (15.1%)**
 Asset types modeled: 20
 
@@ -29,7 +29,7 @@ Asset types modeled: 20
 | ISO/IEC 27701:2025 Privacy information management | [ISO/IEC 27701:2025](https://www.iso.org/standard/27701) | implemented_limited_mapping | 10 | 10 | 8 | 0 | 0.0% | fresh |
 | ISO/IEC 42001:2023 AI management system | [ISO/IEC 42001:2023](https://www.iso.org/standard/42001) | implemented_full_pack | 40 | 40 | 37 | 9 | 22.5% | never pulled |
 | NIS2 Directive (EU) 2022/2555 | [EUR-Lex, Directive (EU) 2022/2555 (CELEX 32022L2555)](https://eur-lex.europa.eu/eli/dir/2022/2555/oj) | implemented_limited_mapping | 17 | 17 | 17 | 0 | 0.0% | fresh |
-| NIST SP 800-171 Rev 3 (Protecting CUI in Nonfederal Systems) | [NIST SP 800-171 Rev. 3 (OSCAL catalog, usnistgov/oscal-content)](https://csrc.nist.gov/pubs/sp/800/171/r3/final) | implemented_limited_mapping | 97 | 97 | 83 | 0 | 0.0% | fresh |
+| NIST SP 800-171 Rev 3 (Protecting CUI in Nonfederal Systems) | [NIST SP 800-171 Rev. 3 (OSCAL catalog, usnistgov/oscal-content)](https://csrc.nist.gov/pubs/sp/800/171/r3/final) | implemented_limited_mapping | 97 | 97 | 85 | 0 | 0.0% | fresh |
 | NIST SP 800-53 Rev 5 Security and Privacy Controls | [NIST SP 800-53 Rev 5 (OSCAL catalog, usnistgov/oscal-content)](https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final) | implemented_limited_mapping | 1014 | 1014 | 285 | 96 | 9.5% | fresh |
 | NIST AI Risk Management Framework | [NIST Artificial Intelligence Risk Management Framework (AI RMF 1.0)](https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-ai-rmf-10) | implemented_full_pack | 72 | 72 | 69 | 0 | 0.0% | never pulled |
 | NIST Cybersecurity Framework (CSF) 2.0 | [NIST Cybersecurity Framework 2.0](https://www.nist.gov/cyberframework) | implemented_limited_mapping | 106 | 106 | 101 | 0 | 0.0% | never pulled |

@@ -208,7 +208,7 @@ def test_catalog_rows_are_generated_from_the_builder(framework_id: str) -> None:
         assert mappings[s.control_id] == pack_mapping_row(s)
         assert controls[s.control_id]["framework_ref"] == f"{spec['act']} {article_ref(s.article_id)}"
         assert controls[s.control_id]["review_status"] == "proposed"
-        assert controls[s.control_id]["reviewed_by"] == "automated-source-reconciliation"
+        assert controls[s.control_id]["source_reconciled_by"] == "automated-source-reconciliation"
         assert _framework_from_control(s.control_id) == framework_id
     assert spec["pack"] in PACK_BUILDERS
     assert LIMITED_PACK_MINIMUMS[framework_id] == len(specs)

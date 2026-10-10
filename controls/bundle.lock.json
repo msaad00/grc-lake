@@ -5,10 +5,10 @@
   "control_count": 2252,
   "crosswalk_count": 2252,
   "components": {
-    "frameworks": "e72d257208a1a82d54f71a422152b1ca3afb65e4da4f37f3279bf4aef9b38793",
-    "controls": "37781bec19b12908510c997a433cc54ee7cc86ed73ac995320e70adcac7b5a04",
-    "crosswalk": "6d533d467b77e84d87b61a18bdb496e72bd362be75a8c981e725da077a8518a3",
-    "safeguards": "940ee1eac52abcdf19483c18fa54ddf374254dc605b044a48c2bdc8ee0904160"
+    "frameworks": "de1821e32b918a892cebfbc1c113508a3c5933069904f50f80fd2b7c34675c33",
+    "controls": "16549bbfe1a6603e14a99e4030023e7729afe0ae2157859ff2d7e80f0eb2ab6a",
+    "crosswalk": "f1158c6fc8cf14cecb3c9dd432c96f5bf690f26eb99c2f418ff164eb536178b0",
+    "safeguards": "a3f634af1c189990f73eb5b0dfee74dd86c9edeccc7f00bff7aa7b943145367e"
   },
   "framework_versions": [
     {
@@ -15932,5 +15932,5 @@
       "lifecycle_status": "active"
     }
   ],
-  "bundle_sha256": "6533481e6fe3ec51d9e8d4d407e9abc2a4a0ae840853a54ed4a584140dfd0ac7"
+  "bundle_sha256": "11374520fedd48c1f26d3161fde5476645c9b4fbf87bc29d6b83eef17c879690"
 }

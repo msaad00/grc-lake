@@ -22,7 +22,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.catalog import DEFAULT_CONTROL_CATALOG, ROOT
+from security_lakehouse.catalog import DEFAULT_CONTROL_CATALOG, ROOT, source_provenance
 from security_lakehouse.catalog_versions import (
     DEFAULT_BUNDLE_LOCK_PATH,
     write_bundle_lock,
@@ -370,7 +370,7 @@ def _iso_27001_row_transform(row: PackManifestRow) -> PackControlSpec:
     ref = row.id
     risk = iso_27001_theme_risk_domain(ref)
     owner = _soc2_owner(risk)
-    title = f"ISO 27001:2022 {ref} — assessed from ISMS and security operations evidence"
+    title = row.title
     return PackControlSpec(
         control_id=f"ISO27001-{ref}",
         framework_id="iso-27001-2022",
@@ -395,8 +395,7 @@ def iso_27001_2022_specs() -> list[PackControlSpec]:
     """All 93 ISO/IEC 27001:2022 Annex A controls.
 
     Manifest-driven: identifiers come from ``iso_27001_2022.json`` (``rows``,
-    plain ``{"id": ...}`` entries — no distinct per-ID title text exists at
-    this level, titles are fully formulaic); theme-prefix risk-domain lookup
+    short official control titles); theme-prefix risk-domain lookup
     and title/evidence wording stay in :func:`_iso_27001_row_transform`.
     """
     return pack_from_manifest(PACK_DATA_DIR / "iso_27001_2022.json", transform=_iso_27001_row_transform)
@@ -635,42 +634,44 @@ def _review_fields(spec: PackControlSpec) -> tuple[str | None, str, str | None]:
 def pack_control_row(spec: PackControlSpec) -> JsonObject:
     reconciled = spec.reconciled_at or SOURCE_RECONCILED_PACKS.get(spec.framework_id)
     reviewed_by, review_status, reviewed_date = _review_fields(spec)
-    return {
-        "control_id": spec.control_id,
-        "framework_id": spec.framework_id,
-        "framework": spec.framework,
-        "title": spec.title,
-        "risk_domain": spec.risk_domain,
-        "owner": spec.owner,
-        "evidence_requirement": spec.evidence_requirement,
-        "evaluation_rule": spec.evaluation_rule,
-        "frequency": "continuous",
-        "implementation_status": "implemented_limited_mapping"
-        if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS
-        else "implemented",
-        "version": "1.0.0",
-        "valid_from": reconciled or REVIEWED_DATE,
-        "valid_to": None,
-        "supersedes": None,
-        "superseded_by": None,
-        "change_reason": "Reconciled identifier and title with the pinned official source"
-        if reconciled
-        else "Framework pack sync",
-        "lifecycle_status": "active",
-        "official_source_ref": spec.official_source_ref,
-        "framework_ref": spec.framework_ref,
-        "source_url": spec.source_url,
-        "mapping_rationale": "Direct source identity; not a cross-framework equivalence or certification assertion."
-        if reconciled
-        else f"Pack mapping: control identifier matches {spec.framework_ref} verbatim.",
-        "reviewed_by": reviewed_by,
-        "review_status": review_status,
-        "reviewed_date": reviewed_date,
-        "signal_source": "silver/normalized_events.jsonl",
-        "asset_types": list(spec.asset_types),
-        **({"nist_baselines": list(spec.baselines)} if spec.framework_id == "nist-800-53-rev5" else {}),
-        **({"required_evidence_types": list(spec.required_evidence_types)} if spec.required_evidence_types else {}),
-    }
+    return source_provenance(
+        {
+            "control_id": spec.control_id,
+            "framework_id": spec.framework_id,
+            "framework": spec.framework,
+            "title": spec.title,
+            "risk_domain": spec.risk_domain,
+            "owner": spec.owner,
+            "evidence_requirement": spec.evidence_requirement,
+            "evaluation_rule": spec.evaluation_rule,
+            "frequency": "continuous",
+            "implementation_status": "implemented_limited_mapping"
+            if spec.framework_id in PROPOSED_SOURCE_FRAMEWORKS
+            else "implemented",
+            "version": "1.0.0",
+            "valid_from": reconciled or REVIEWED_DATE,
+            "valid_to": None,
+            "supersedes": None,
+            "superseded_by": None,
+            "change_reason": "Reconciled identifier and title with the pinned official source"
+            if reconciled
+            else "Framework pack sync",
+            "lifecycle_status": "active",
+            "official_source_ref": spec.official_source_ref,
+            "framework_ref": spec.framework_ref,
+            "source_url": spec.source_url,
+            "mapping_rationale": "Direct source identity; not a cross-framework equivalence or certification assertion."
+            if reconciled
+            else f"Pack mapping: control identifier matches {spec.framework_ref} verbatim.",
+            "reviewed_by": reviewed_by,
+            "review_status": review_status,
+            "reviewed_date": reviewed_date,
+            "signal_source": "silver/normalized_events.jsonl",
+            "asset_types": list(spec.asset_types),
+            **({"nist_baselines": list(spec.baselines)} if spec.framework_id == "nist-800-53-rev5" else {}),
+            **({"required_evidence_types": list(spec.required_evidence_types)} if spec.required_evidence_types else {}),
+        }
+    )
 
 
 def pack_mapping_row(spec: PackControlSpec) -> JsonObject:
@@ -679,15 +680,17 @@ def pack_mapping_row(spec: PackControlSpec) -> JsonObject:
         "control_id": spec.control_id,
         "framework_id": spec.framework_id,
         "articles": [
-            {
-                "article_id": spec.article_id,
-                "title": spec.title[:120],
-                "official_source_url": spec.source_url,
-                "reviewed_by": reviewed_by,
-                "review_status": review_status,
-                "reviewed_at": f"{reviewed_date}T00:00:00Z" if reviewed_date else None,
-                "rationale": f"Pack mapping to {spec.framework_ref}.",
-            }
+            source_provenance(
+                {
+                    "article_id": spec.article_id,
+                    "title": spec.title[:120],
+                    "official_source_url": spec.source_url,
+                    "reviewed_by": reviewed_by,
+                    "review_status": review_status,
+                    "reviewed_at": f"{reviewed_date}T00:00:00Z" if reviewed_date else None,
+                    "rationale": f"Pack mapping to {spec.framework_ref}.",
+                }
+            )
         ],
     }
 

@@ -118,7 +118,7 @@ rest of that control.
 
 ```
 $ grc-lake frameworks safeguards --format table
-96 safeguards map 1418 of 2252 requirements (63.0%) — 340 maintainer-reviewed, 0 org-reviewed (15.1% attestable), 1078 proposed; 0 mapping(s) rejected by the org
+96 safeguards map 1417 of 2252 requirements (62.9%) — 339 maintainer-reviewed, 0 org-reviewed (15.1% attestable), 1078 proposed; 0 mapping(s) rejected by the org
 ```
 
 A mapping is **reviewed** once a human has confirmed the requirements are the
@@ -145,7 +145,7 @@ cannot become a false certification claim.
 | gdpr-2016-679       |           20 |     20 | 100.0% |
 | hipaa-security-rule |           24 |     19 |  79.2% |
 | nis2-2022-2555      |           17 |     17 | 100.0% |
-| pci-dss-v4          |           12 |     12 | 100.0% |
+| pci-dss-v4          |           12 |     11 |  91.7% |
 | soc2                |           61 |     61 | 100.0% |
 | nist-rmf-800-37r2   |           47 |     46 |  97.9% |
 | nist-ai-rmf         |           72 |     69 |  95.8% |

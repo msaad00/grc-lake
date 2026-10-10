@@ -5,6 +5,12 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Correct personnel-screening, breach-notification, and broad PCI CCF mappings; use official ISO Annex A titles, label top-level coverage, and attribute proposed catalog rows to source reconciliation with legacy-field reads.
+
+- Stream atomic gold JSON writes and bound dashboard detail with explicit totals. Cold posture uses a source-hash-bound asset projection, with a streaming fallback for legacy lakes.
+
+- Use native NIST OSCAL catalog/profile references, return a JSON-RPC error for unknown MCP tools, and return 404 for unknown legacy evidence IDs. Clarify console mapping labels and guard batched Sidebar toggles.
+
 - The Helm chart refuses to render without authentication. Set `GRC_LAKE_COOKIE_SIGNING_KEY` (and `GRC_LAKE_SESSION_SECRET` for OIDC) through `env[]`, or acknowledge a local-only insecure install. The container is now named `grc-lake`, so update `kubectl logs -c` and similar selectors, and the writable home volume mounts at `/home/grc-lake`.
 
 - The EKS reference keeps the cluster API endpoint private unless `cluster_endpoint_public_access_cidrs` names the networks allowed to reach it. Open-world CIDRs are rejected. Existing clusters become private on their next apply unless the variable is set.

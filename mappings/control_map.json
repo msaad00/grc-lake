@@ -4455,651 +4455,651 @@
     {
       "control_id": "ISO27001-A.5.1",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.1 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Policies for information security",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.10",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.10 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Acceptable use of information and other associated assets",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.11",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.11 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Return of assets",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.12",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.12 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Classification of information",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.13",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.13 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Labelling of information",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.14",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.14 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information transfer",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.15",
       "framework": "ISO 27001:2022",
-      "title": "Access control policy is enforced from identity and authorization evidence",
+      "title": "Access control",
       "risk_domain": "identity",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.5.16",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.16 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Identity management",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.17",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.17 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Authentication information",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.18",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.18 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Access rights",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.19",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.19 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security in supplier relationships",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.2",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.2 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security roles and responsibilities",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.20",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.20 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Addressing information security within supplier agreements",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.21",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.21 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Managing information security in the ICT supply chain",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.22",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.22 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Monitoring, review and change management of supplier services",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.23",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.23 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security for use of cloud services",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.24",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.24 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security incident management planning and preparation",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.25",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.25 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Assessment and decision on information security events",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.26",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.26 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Response to information security incidents",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.27",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.27 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Learning from information security incidents",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.28",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.28 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Collection of evidence",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.29",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.29 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security during disruption",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.3",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.3 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Segregation of duties",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.30",
       "framework": "ISO 27001:2022",
-      "title": "ICT readiness for business continuity is exercised and evidenced",
+      "title": "ICT readiness for business continuity",
       "risk_domain": "resilience",
       "owner": "platform-resilience"
     },
     {
       "control_id": "ISO27001-A.5.31",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.31 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Legal, statutory, regulatory and contractual requirements",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.32",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.32 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Intellectual property rights",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.33",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.33 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Protection of records",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.34",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.34 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Privacy and protection of PII",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.35",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.35 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Independent review of information security",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.36",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.36 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Compliance with policies, rules and standards for information security",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.37",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.37 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Documented operating procedures",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.4",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.4 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Management responsibilities",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.5",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.5 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Contact with authorities",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.6",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.6 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Contact with special interest groups",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.7",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.7 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Threat intelligence",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.8",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.8 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security in project management",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.5.9",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.5.9 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Inventory of information and other associated assets",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.1",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.1 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Screening",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.2",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.2 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Terms and conditions of employment",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.3",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.3 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security awareness, education and training",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.4",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.4 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Disciplinary process",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.5",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.5 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Responsibilities after termination or change of employment",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.6",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.6 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Confidentiality or non-disclosure agreements",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.7",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.7 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Remote working",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.6.8",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.6.8 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information security event reporting",
       "risk_domain": "governance",
       "owner": "grc"
     },
     {
       "control_id": "ISO27001-A.7.1",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.1 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Physical security perimeters",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.10",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.10 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Storage media",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.11",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.11 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Supporting utilities",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.12",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.12 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Cabling security",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.13",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.13 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Equipment maintenance",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.14",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.14 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Secure disposal or re-use of equipment",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.2",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.2 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Physical entry",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.3",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.3 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Securing offices, rooms and facilities",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.4",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.4 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Physical security monitoring",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.5",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.5 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Protecting against physical and environmental threats",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.6",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.6 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Working in secure areas",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.7",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.7 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Clear desk and clear screen",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.8",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.8 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Equipment siting and protection",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.7.9",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.7.9 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Security of assets off-premises",
       "risk_domain": "change-management",
       "owner": "platform-engineering"
     },
     {
       "control_id": "ISO27001-A.8.1",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.1 \u2014 assessed from ISMS and security operations evidence",
+      "title": "User endpoint devices",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.10",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.10 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information deletion",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.11",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.11 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Data masking",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.12",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.12 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Data leakage prevention",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.13",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.13 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information backup",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.14",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.14 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Redundancy of information processing facilities",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.15",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.15 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Logging",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.16",
       "framework": "ISO 27001:2022",
-      "title": "Monitoring activities produce continuous detection evidence",
+      "title": "Monitoring activities",
       "risk_domain": "monitoring",
       "owner": "detection-engineering"
     },
     {
       "control_id": "ISO27001-A.8.17",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.17 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Clock synchronization",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.18",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.18 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Use of privileged utility programs",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.19",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.19 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Installation of software on operational systems",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.2",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.2 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Privileged access rights",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.20",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.20 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Networks security",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.21",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.21 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Security of network services",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.22",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.22 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Segregation of networks",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.23",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.23 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Web filtering",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.24",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.24 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Use of cryptography",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.25",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.25 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Secure development life cycle",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.26",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.26 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Application security requirements",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.27",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.27 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Secure system architecture and engineering principles",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.28",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.28 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Secure coding",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.29",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.29 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Security testing in development and acceptance",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.3",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.3 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Information access restriction",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.30",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.30 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Outsourced development",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.31",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.31 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Separation of development, test and production environments",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.32",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.32 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Change management",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.33",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.33 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Test information",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.34",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.34 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Protection of information systems during audit testing",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.4",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.4 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Access to source code",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.5",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.5 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Secure authentication",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.6",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.6 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Capacity management",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.7",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.7 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Protection against malware",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.8",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.8 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Management of technical vulnerabilities",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },
     {
       "control_id": "ISO27001-A.8.9",
       "framework": "ISO 27001:2022",
-      "title": "ISO 27001:2022 A.8.9 \u2014 assessed from ISMS and security operations evidence",
+      "title": "Configuration management",
       "risk_domain": "controls-operations",
       "owner": "security-platform"
     },

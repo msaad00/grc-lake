@@ -207,3 +207,22 @@ maintainer-reviewed mappings plus your org-reviewed ones. Each
 implemented requirement carries `grc-lake-review-state`. Org-reviewed ones also
 carry `grc-lake-reviewed-by`, `grc-lake-reviewed-at`, and
 `grc-lake-review-decision-id`. Rejected and proposed mappings are left out.
+
+## Coverage terminology
+
+- **Readiness `mapped` / Source article identity reviewed** checks that a local
+  control identifier has a reviewed mapping to its source article. It does not
+  establish that a safeguard satisfies the requirement.
+- **CCF mapped** means a requirement is claimed by a primary or equivalent
+  safeguard mapping, whether proposed or reviewed. Supporting and inherited
+  mappings are contextual and do not establish full coverage.
+- **Reviewed CCF mapping** records human review of the safeguard-to-requirement
+  relationship; it still needs scoped evidence and operating-effectiveness tests.
+- **Top-level coverage** applies to the 12 PCI DSS requirement headings and the
+  18 CIS v8.1 control headings in the catalog. A 100% source-citation percentage
+  at this level does not mean coverage of their sub-requirements or safeguards.
+- **Source reconciliation** attributes automated source matching through
+  `source_reconciled_by` and `source_reconciled_date` (catalog) or
+  `source_reconciled_at` (articles). Proposed rows stay proposed. Readers accept
+  the old `reviewed_*` fields on proposed rows as source provenance only; human
+  reviewed rows continue to use `reviewed_*`.

@@ -225,8 +225,11 @@ function ControlRow({
                           <Badge tone="attention">
                             {displayLabel(article.review_status)}
                           </Badge>{" "}
-                          Suggested by {article.reviewed_by}; awaiting human
-                          review
+                          Source reconciled by{" "}
+                          {article.source_reconciled_by ??
+                            article.reviewed_by ??
+                            "unknown"}
+                          ; awaiting human review
                         </>
                       ) : (
                         <>

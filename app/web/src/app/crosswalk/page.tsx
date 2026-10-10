@@ -135,6 +135,7 @@ export default function CrosswalkPage() {
         row.title,
         row.rationale,
         row.reviewed_by,
+        row.source_reconciled_by,
       ]
         .join(" ")
         .toLowerCase()
@@ -430,7 +431,10 @@ export default function CrosswalkPage() {
                           ) : (
                             <>
                               <b className="block text-ink">Awaiting review</b>
-                              Suggested by {row.reviewed_by}
+                              Source reconciled by{" "}
+                              {row.source_reconciled_by ??
+                                row.reviewed_by ??
+                                "unknown"}
                             </>
                           )}
                         </td>

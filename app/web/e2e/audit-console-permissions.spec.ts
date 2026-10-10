@@ -56,7 +56,7 @@ test("users role select has an accessible name", async ({ page }) => {
       },
     }),
   );
-  await page.route("**/api/v1/auth/users", (r) =>
+  await page.route("**/api/v1/auth/users?*", (r) =>
     r.fulfill({
       json: {
         data: [

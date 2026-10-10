@@ -115,3 +115,13 @@ Format reference: [OSCAL documentation](https://pages.nist.gov/OSCAL/) ·
 [usnistgov/OSCAL](https://github.com/usnistgov/OSCAL) ·
 [usnistgov/oscal-content](https://github.com/usnistgov/oscal-content) (example
 documents this export's shape was checked against).
+
+## Catalog and profile sources
+
+Component implementation sources use pinned, machine-readable NIST OSCAL URLs
+for SP 800-53 Rev. 5, the SP 800-53B Moderate profile, and SP 800-171 Rev. 3.
+Implemented requirement IDs use the target source's native identifiers (including
+case and prefixes); `trustops-control-id` retains the local identifier. The
+legacy `fedramp-moderate` pack points to the NIST Moderate foundation profile;
+it does not claim to include FedRAMP overlays. Frameworks without a configured
+OSCAL source retain their official source link or local URN fallback.

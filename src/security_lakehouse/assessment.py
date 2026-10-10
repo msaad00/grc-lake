@@ -35,7 +35,8 @@ from security_lakehouse.evidence_freshness import (
 )
 from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_identity, generation_reader
-from security_lakehouse.io import append_jsonl, file_version, iter_jsonl, read_json, read_jsonl, write_json
+from security_lakehouse.gold_io import write_gold_json as write_json
+from security_lakehouse.io import append_jsonl, file_sha256, file_version, iter_jsonl, read_json, read_jsonl
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import SEVERITY_SCORE, utc_iso
 from security_lakehouse.read_cache import DerivedCache, copy_rows, input_versions, json_copy, rows_are_flat
@@ -65,6 +66,7 @@ _POSTURE_INPUTS = (
     "gold/control_posture.jsonl",
     "gold/control_tests.jsonl",
     "gold/asset_risk.jsonl",
+    "gold/dashboard_data.json",
     "bronze/raw_events.jsonl",
 )
 _STALE_EVIDENCE_SAMPLE = 50
@@ -123,6 +125,30 @@ def build_current_posture(
     return window.render(evaluated_at)
 
 
+def _posture_assets(lake: Path) -> tuple[list[dict[str, Any]], int, dict[str, str]]:
+    """Use the compact generation projection, or stream legacy asset rows."""
+    from security_lakehouse.generations import pinned_path
+
+    source = pinned_path(lake / "gold/asset_risk.jsonl")
+    projection = pinned_path(lake / "gold/dashboard_data.json")
+    if projection.is_file() and projection.stat().st_size <= 16 * 1024 * 1024 and source.is_file():
+        data = read_json(projection).get("posture_assets", {})
+        if data.get("schema_version") == "trustops.posture_assets.v1" and data.get("source_sha256") == file_sha256(
+            source
+        ):
+            return data["top_risk_assets"], int(data["asset_count"]), data["asset_names"]
+    top: list[dict[str, Any]] = []
+    names: dict[str, str] = {}
+    count = 0
+    for row in iter_jsonl(source, missing_ok=True):
+        count += 1
+        if len(top) < 10:
+            top.append(row)
+        if row.get("asset_id") and row.get("asset_name"):
+            names[str(row["asset_id"])] = str(row["asset_name"])
+    return top, count, names
+
+
 class _PostureWindow:
     """Posture for one input version over an interval with no freshness status change."""
 
@@ -171,12 +197,7 @@ class _PostureWindow:
         events = read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True)
         controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True)
         control_tests = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True)
-        assets = read_jsonl(lake / "gold" / "asset_risk.jsonl", missing_ok=True)
-        asset_names = {
-            str(row["asset_id"]): str(row["asset_name"])
-            for row in assets
-            if row.get("asset_id") and row.get("asset_name")
-        }
+        assets, asset_count, asset_names = _posture_assets(lake)
         violations, violation_summary = build_violations(events, max_violations=max_violations, asset_names=asset_names)
         pairs = freshness_records_with_sources(
             events, now=evaluated_at, default_slo_minutes=default_slo_minutes, connectors=connectors
@@ -189,6 +210,7 @@ class _PostureWindow:
             controls=controls,
             control_tests=control_tests,
             assets=assets,
+            asset_count=asset_count,
             violations=violations,
             violation_summary=violation_summary,
             evidence_freshness=evidence_freshness,
@@ -249,6 +271,7 @@ def _assess_posture(
     controls: list[dict[str, Any]],
     control_tests: list[dict[str, Any]],
     assets: list[dict[str, Any]],
+    asset_count: int,
     violations: list[dict[str, Any]],
     violation_summary: dict[str, Any],
     evidence_freshness: list[dict[str, Any]],
@@ -307,7 +330,7 @@ def _assess_posture(
             ),
             "framework_count": len(framework_scores),
             "control_count": len(controls),
-            "asset_count": len(assets),
+            "asset_count": asset_count,
             "open_violation_count": open_violation_count,
             "critical_violation_count": critical_violation_count,
             "high_violation_count": high_violation_count,

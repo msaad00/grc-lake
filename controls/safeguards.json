@@ -213,7 +213,7 @@
         {
           "control_id": "PCI-DSS-8",
           "framework_id": "pci-dss-v4",
-          "role": "equivalent",
+          "role": "supporting",
           "review_status": "proposed",
           "control_version": "1.0.0"
         },
@@ -299,13 +299,6 @@
           "framework_id": "cmmc-2-level2",
           "role": "equivalent",
           "review_status": "reviewed",
-          "control_version": "1.0.0"
-        },
-        {
-          "control_id": "CMMC-3.9.1",
-          "framework_id": "cmmc-2-level2",
-          "role": "equivalent",
-          "review_status": "proposed",
           "control_version": "1.0.0"
         },
         {
@@ -6361,7 +6354,7 @@
         {
           "control_id": "GDPR-Art.33",
           "framework_id": "gdpr-2016-679",
-          "role": "primary",
+          "role": "supporting",
           "review_status": "reviewed",
           "control_version": "1.0.0"
         },
@@ -6529,7 +6522,7 @@
         {
           "control_id": "NIST-800-53-IR-6",
           "framework_id": "nist-800-53-rev5",
-          "role": "equivalent",
+          "role": "primary",
           "review_status": "proposed",
           "control_version": "1.0.0"
         },
@@ -18345,6 +18338,13 @@
             "sha256": "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08",
             "locator": "Section 3, requirement 03.09.01, source control PS-3; CUI scope supports but does not establish full control equivalence"
           },
+          "control_version": "1.0.0"
+        },
+        {
+          "control_id": "CMMC-3.9.1",
+          "framework_id": "cmmc-2-level2",
+          "role": "equivalent",
+          "review_status": "proposed",
           "control_version": "1.0.0"
         }
       ],

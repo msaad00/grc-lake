@@ -104,6 +104,11 @@ def build_framework_coverage(
                 "framework_id": framework_id,
                 "name": framework["name"],
                 "version": framework["version"],
+                "coverage_level": framework.get("coverage_level", "seeded_requirements"),
+                "coverage_label": "Top-level coverage"
+                if framework.get("coverage_level") == "top_level"
+                else "Seeded requirement coverage",
+                "coverage_boundary": framework.get("coverage_boundary"),
                 "official_source_name": framework["official_source_name"],
                 "official_source_url": framework["official_source_url"],
                 "effective_date": framework.get("effective_date"),
@@ -236,7 +241,8 @@ def render_framework_coverage_markdown(
     for row in rows:
         lines.append(
             "| {name} | [{source}]({url}) | {status} | {controls} | {mappings} | {evaluatable} | {attestable} | {attestable_pct}% | {freshness} |".format(
-                name=_markdown_text(row["name"]),
+                name=_markdown_text(row["name"])
+                + (" (top-level coverage)" if row.get("coverage_level") == "top_level" else ""),
                 source=_markdown_text(row["official_source_name"]),
                 url=_markdown_text(row["official_source_url"]),
                 status=_markdown_text(row.get("implementation_status") or "unknown"),

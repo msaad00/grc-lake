@@ -1,3 +1,4 @@
+{{- $http := not (and .Values.distributed.enabled (eq .Values.distributed.role "worker")) }}
 {{- $distributed := .Values.distributed.enabled }}
 {{- range .Values.env }}
 {{- if and $distributed (has .name (list "GRC_LAKE_DEPLOYMENT_MODE" "TRUSTOPS_DEPLOYMENT_MODE" "GRC_LAKE_CLUSTER_ID" "GRC_LAKE_OBJECT_BUCKET" "GRC_LAKE_OBJECT_ENDPOINT" "GRC_LAKE_VIRTUAL_SHARDS" "GRC_LAKE_REPLICA_ROLE" "GRC_LAKE_DATABASE_URL" "TRUSTOPS_DATABASE_URL")) }}
@@ -60,6 +61,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "grc-lake.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
       {{- with .Values.image.pullSecrets }}
@@ -113,7 +115,16 @@ spec:
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- if and .Values.probes.liveness.enabled (ne .Values.distributed.role "worker") }}
+          {{- if and .Values.probes.startup.enabled $http }}
+          startupProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          {{- end }}
+          {{- if and .Values.probes.liveness.enabled $http }}
           livenessProbe:
             httpGet:
               path: /api/healthz
@@ -122,7 +133,7 @@ spec:
             periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
           {{- end }}
-          {{- if and .Values.probes.readiness.enabled (ne .Values.distributed.role "worker") }}
+          {{- if and .Values.probes.readiness.enabled $http }}
           readinessProbe:
             httpGet:
               path: /api/readyz

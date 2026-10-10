@@ -9,6 +9,14 @@ recorded, and how the result shows up in coverage.
 
 ## What "reviewed" means
 
+A maintainer review inherited through `review_basis.inherited_from` remains valid
+only while its source mapping exists in the same safeguard, has an unambiguous
+current control, and retains a current maintainer review. Missing, demoted,
+version-stale, duplicate, or cyclic source chains make the inherited mapping
+proposed. This rule also follows multi-step inheritance. A tenant can still
+review that mapping independently through the existing approval workflow.
+Valid inherited mappings keep their existing decision fingerprints.
+
 Each mapping in `controls/safeguards.json` ships with a `review_status`:
 
 - **reviewed**: a GRC Lake maintainer confirmed the equivalence against the

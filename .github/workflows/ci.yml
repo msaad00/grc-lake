@@ -76,13 +76,18 @@ jobs:
           wheel=$(realpath dist/*.whl)
           smoke=$(realpath tools/smoke_installed_package.py)
           install_root=$(mktemp -d)
+          # Lock runtime dependencies and hash the wheel built by this job.
+          requirements="$install_root/requirements.txt"
+          uv export --frozen --no-dev --extra server --no-emit-project --output-file "$requirements"
+          wheel_hash=$(sha256sum "$wheel" | cut -d ' ' -f1)
+          printf '%s[server] --hash=sha256:%s\n' "$wheel" "$wheel_hash" >> "$requirements"
           python -m venv "$install_root/venv"
-          uv pip install --python "$install_root/venv/bin/python" "$wheel[server]"
+          uv pip install --python "$install_root/venv/bin/python" --require-hashes -r "$requirements"
           cd "$install_root"
           unset PYTHONPATH GRC_LAKE_DATA_DIR
           "$install_root/venv/bin/python" "$smoke" "$install_root/venv"
           export PYTHONUSERBASE="$install_root/user"
-          python -m pip install --user --ignore-installed "$wheel[server]"
+          python -m pip install --user --ignore-installed --require-hashes -r "$requirements"
           python "$smoke" "$install_root/user"
 
   quality:

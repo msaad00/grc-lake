@@ -106,6 +106,8 @@ class SAMLConfig:
                 "authnRequestsSigned": False,
                 "logoutRequestSigned": False,
                 "logoutResponseSigned": False,
+                # Outgoing algorithm choices do not restrict incoming assertions.
+                "rejectDeprecatedAlgorithm": True,
                 "signatureAlgorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
                 "digestAlgorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
             },

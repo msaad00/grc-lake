@@ -180,6 +180,11 @@ If any SAML environment variable is present, all required SAML variables must
 be present. The server fails closed instead of starting with a partial SSO
 boundary.
 
+Incoming SAML signatures and digests must use modern algorithms. The server
+rejects the toolkit's deprecated algorithms, including RSA-SHA1 signatures and
+SHA-1 digests. Configure the IdP to use RSA-SHA256 and SHA-256 (or stronger);
+legacy SHA-1 assertions fail login without a compatibility fallback.
+
 Login is SP-initiated by default. `/login` stores the AuthnRequest ID in a
 signed, ten-minute `SameSite=None; Secure` cookie, so the deployment must be
 served over HTTPS (or `localhost`). The ACS accepts only a response whose

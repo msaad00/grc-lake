@@ -84,7 +84,23 @@ gh attestation verify \
 
 # For a future release published from the current repository:
 gh attestation verify grc_lake-<version>-py3-none-any.whl --repo koda-ai-studio/grc-lake
+
+# Releases using bundle retention also attach python-provenance.sigstore.json.
+# Download it from the same release as the wheel/sdist, then verify each file:
+gh attestation verify grc_lake-<version>-py3-none-any.whl \
+  --bundle python-provenance.sigstore.json --repo koda-ai-studio/grc-lake \
+  --signer-workflow koda-ai-studio/grc-lake/.github/workflows/release.yml \
+  --source-digest <release-commit> --source-ref refs/tags/v<version>
 ```
+
+The workflow retains the original signed Python bundle as a `python-provenance`
+Actions artifact before publishing to PyPI, then attaches it to the GitHub
+release. Missing or empty bundle output stops publication. The bundle stays
+outside `dist/` and is not uploaded to PyPI as a distribution. It covers both the
+wheel and sdist; run verification for each. This provides an independent retrieval
+path for future releases, but does not restore missing bundles for older releases.
+The staging tests check byte preservation and missing-file failures; actual
+signature verification requires the signed release bundle.
 
 If the GitHub attestation API returns 404, retain the retrieval failure separately
 from artifact-integrity checks. For containers, `--bundle-from-oci` provides an

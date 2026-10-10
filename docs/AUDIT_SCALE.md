@@ -78,10 +78,10 @@ HTTP/API (same contract as UI, MCP, and agents):
 
 ```bash
 curl -X POST -H "Authorization: Bearer $TOKEN" \
-  https://trustops.example/api/v1/ingestion/eval -d '{"actor":"api"}'
+  https://grc-lake.example/api/v1/ingestion/eval -d '{"actor":"api"}'
 
 curl -X POST -H "Authorization: Bearer $TOKEN" \
-  https://trustops.example/api/v1/scheduler/tick -d '{}'
+  https://grc-lake.example/api/v1/scheduler/tick -d '{}'
 ```
 
 MCP tools: `get_ingestion_status`, `list_eval_runs`, `run_lake_eval`, `run_scheduler_tick`, `sync_connector`, `list_connector_runs`.

@@ -68,7 +68,7 @@ supports it.
 
 ```bash
 export GRC_LAKE_OIDC_ISSUER="https://idp.example.com"
-export GRC_LAKE_OIDC_CLIENT_ID="trustops"
+export GRC_LAKE_OIDC_CLIENT_ID="grc-lake"
 export GRC_LAKE_OIDC_CLIENT_SECRET="..."
 export GRC_LAKE_OIDC_TENANT_SLUG="acme"
 export GRC_LAKE_OIDC_AUTO_PROVISION="false"
@@ -159,8 +159,8 @@ to the GRC Lake deployment. It resolves into the same browser session and RBAC
 context as OIDC.
 
 ```bash
-export GRC_LAKE_SAML_SP_ENTITY_ID="https://trustops.example.com/api/v1/auth/saml/metadata"
-export GRC_LAKE_SAML_ACS_URL="https://trustops.example.com/api/v1/auth/saml/acs"
+export GRC_LAKE_SAML_SP_ENTITY_ID="https://grc-lake.example.com/api/v1/auth/saml/metadata"
+export GRC_LAKE_SAML_ACS_URL="https://grc-lake.example.com/api/v1/auth/saml/acs"
 export GRC_LAKE_SAML_IDP_ENTITY_ID="https://idp.example.com/saml"
 export GRC_LAKE_SAML_IDP_SSO_URL="https://idp.example.com/saml/sso"
 export GRC_LAKE_SAML_IDP_X509_CERT="-----BEGIN CERTIFICATE-----..."

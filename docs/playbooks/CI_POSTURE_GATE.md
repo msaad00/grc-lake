@@ -37,7 +37,7 @@ Example step:
 - name: GRC Lake posture gate
   uses: msaad00/grc-lake/.github/actions/posture-gate@v0.3.1
   with:
-    trustops-url: ${{ secrets.GRC_LAKE_URL }}
+    grc-lake-url: ${{ secrets.GRC_LAKE_URL }}
     api-token: ${{ secrets.GRC_LAKE_API_TOKEN }}
     correlation-id: pr-${{ github.event.pull_request.number }}-${{ github.run_id }}
     min-score: "70"

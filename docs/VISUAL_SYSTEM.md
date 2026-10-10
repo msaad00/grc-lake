@@ -23,7 +23,7 @@ FedRAMP, CIS AWS, etc.) without shipping official certification logos. See
 
 Shared KPI tiles use `KpiTile` with tone accents (default / ready / attention /
 critical / brand). Compliance rings and bar scoreboards summarize each
-program on the **Trust Command Center** (`/dashboard`) and
+program on the **Dashboard** (`/dashboard`) and
 **Continuous control monitoring** summary (`/controls`).
 
 ## Out-Of-Box Views

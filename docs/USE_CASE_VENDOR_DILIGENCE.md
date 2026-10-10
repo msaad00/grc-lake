@@ -50,4 +50,4 @@ sample evidence
 
 ## Screenshot
 
-![GRC Lake Trust Home screenshot](images/grc-lake-demo-dashboard.png)
+![GRC Lake dashboard screenshot](images/grc-lake-demo-dashboard.png)

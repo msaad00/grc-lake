@@ -9,10 +9,13 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
+TEST_SIGNING_KEY = ("env[0].name=GRC_LAKE_COOKIE_SIGNING_KEY", "env[0].value=test-only-signing-key")
 
 
 def render(*settings):
     command = ["helm", "template", "grc", str(ROOT / "deploy/helm/grc-lake")]
+    if not any(setting.startswith("env[") for setting in settings):
+        settings = (*TEST_SIGNING_KEY, *settings)
     for setting in settings:
         command += ["--set", setting]
     return subprocess.run(command, capture_output=True, text=True)

@@ -76,7 +76,7 @@ See [Human and Agent API](api/AGENT_API.md).
 | Control mapping             | `mappings/control_map.json`                   |
 | Framework coverage matrix   | `docs/FRAMEWORK_COVERAGE.md`                  |
 
-## Security Data Lake Backends
+## Security data lake backends
 
 | Backend    | Role                                      | Path                                         |
 | ---------- | ----------------------------------------- | -------------------------------------------- |

@@ -172,7 +172,7 @@ def test_review_state_is_honest() -> None:
     assert SOURCE_RECONCILED_PACKS[FRAMEWORK_ID] == MANIFEST["source"]["pulled_at"]
     for control in _controls().values():
         assert control["review_status"] == "proposed"
-        assert control["reviewed_by"] == "automated-source-reconciliation"
+        assert control["source_reconciled_by"] == "automated-source-reconciliation"
         assert control["framework_ref"].startswith("NIST SP 800-171 Rev 3 03.")
 
 

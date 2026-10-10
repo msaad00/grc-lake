@@ -308,3 +308,145 @@ def test_validate_depth_boundary_matches_reference(depth: int, leaf: Any) -> Non
         return "ok"
 
     assert outcome(strict_json.validate) == outcome(_reference_validate)
+
+
+_FULL_VALIDATE = strict_json.validate
+
+
+def _reference_dumps(value: Any, **kwargs: Any) -> str:
+    """The original dumps: a full validation pass, then the standard encoder."""
+    _FULL_VALIDATE(value)
+    return json.dumps(value, allow_nan=False, **kwargs)
+
+
+def _dumps_outcome(fn: Any, value: Any, kwargs: dict[str, Any]) -> tuple[str, str]:
+    try:
+        return ("ok", fn(value, **kwargs))
+    except InvalidJSON as exc:
+        return ("invalid", str(exc))
+    except TypeError:
+        return ("type", "")
+    except ValueError:
+        return ("value", "")
+
+
+_DUMPS_KWARGS: list[dict[str, Any]] = [
+    {},
+    {"sort_keys": True, "separators": (",", ":")},
+    {"sort_keys": True, "separators": (",", ":"), "ensure_ascii": False},
+    {"indent": 2, "sort_keys": True},
+    {"ensure_ascii": False},
+    {"default": str},
+    {"skipkeys": True},
+]
+
+
+class _Key(str):
+    pass
+
+
+def _deep(depth: int, leaf: Any, container: str = "list") -> Any:
+    value = leaf
+    for _ in range(depth):
+        value = [value] if container == "list" else {"k": value}
+    return value
+
+
+def _cyclic() -> Any:
+    loop: list[Any] = []
+    loop.append(loop)
+    return {"x": loop}
+
+
+_DUMPS_VALUES: list[Any] = [
+    None,
+    "plain",
+    1.5,
+    float("nan"),
+    "\ud800",
+    object(),
+    {"a": [1, {"b": "ok"}]},
+    {"a": (1, 2, [3])},
+    {"x": float("inf")},
+    {"x": [float("-inf")]},
+    {"x": "\ud800"},
+    {"x": "😀"},
+    {"x": "😀"},
+    {"x": "\\ud800 literal backslash"},
+    {"\udc00": 1},
+    {1: "int key"},
+    {None: "none key"},
+    {True: "bool key"},
+    {1.5: "float key"},
+    {(1, 2): "tuple key"},
+    {"a": 1, 2: "mixed keys"},
+    {_Key("sub"): "str subclass key"},
+    {"x": object()},
+    {"x": {1: object()}},
+    {"x": [object(), float("nan")]},
+    {"x": [float("nan"), object()]},
+    {"x": {"y": {2: 3}}},
+    _cyclic(),
+    _deep(63, 0),
+    _deep(64, 0),
+    _deep(65, 0),
+    _deep(64, []),
+    _deep(65, []),
+    _deep(64, {}),
+    _deep(64, {"k": 1}),
+    _deep(64, 0, "dict"),
+    _deep(65, 0, "dict"),
+    _deep(2000, 0),
+    [{"k": "v"}] * 200,
+]
+
+
+@pytest.mark.parametrize("kwargs", _DUMPS_KWARGS, ids=range(len(_DUMPS_KWARGS)))
+@pytest.mark.parametrize("value", _DUMPS_VALUES, ids=range(len(_DUMPS_VALUES)))
+def test_dumps_matches_reference(value: Any, kwargs: dict[str, Any]) -> None:
+    assert _dumps_outcome(strict_json.dumps, value, kwargs) == _dumps_outcome(_reference_dumps, value, kwargs)
+
+
+def _random_dump_value(rng: random.Random, depth: int) -> Any:
+    kind = rng.randint(0, 14 if depth < 6 else 8)
+    if kind < 8:
+        return _random_value(rng, 6)
+    if kind == 8:
+        return rng.choice([float("nan"), float("inf"), object(), "\ud800", (1, "t"), "😀", 7])
+    if kind in (9, 10, 11):
+        return [_random_dump_value(rng, depth + 1) for _ in range(rng.randint(0, 4))]
+    keys: list[Any] = [_random_string(rng) for _ in range(rng.randint(0, 4))]
+    if keys and rng.random() < 0.15:
+        keys[0] = rng.choice([1, None, True, 2.5, _Key("s")])
+    return {key: _random_dump_value(rng, depth + 1) for key in keys}
+
+
+def test_dumps_matches_reference_on_fuzzed_values() -> None:
+    rng = random.Random(20261010)
+    outcomes: dict[str, int] = {}
+    for _ in range(3000):
+        value = _random_dump_value(rng, 0)
+        for kwargs in _DUMPS_KWARGS[:5]:
+            outcome = _dumps_outcome(_reference_dumps, value, kwargs)
+            assert _dumps_outcome(strict_json.dumps, value, kwargs) == outcome, (value, kwargs)
+            outcomes[outcome[0]] = outcomes.get(outcome[0], 0) + 1
+    assert outcomes.get("ok", 0) > 1000
+    assert outcomes.get("invalid", 0) > 500
+    assert outcomes.get("type", 0) > 100
+
+
+def test_dumps_skips_full_validation_for_plain_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[Any] = []
+
+    def counted(value: Any) -> None:
+        calls.append(value)
+        _FULL_VALIDATE(value)
+
+    monkeypatch.setattr(strict_json, "validate", counted)
+    row = {"event_id": "e", "control_ids": ["A", "B"], "evidence": {"source": "s", "score": 1.5}, "n": None}
+    expected = json.dumps(row, sort_keys=True, separators=(",", ":"))
+    assert strict_json.dumps(row, sort_keys=True, separators=(",", ":")) == expected
+    assert calls == []
+    with pytest.raises(InvalidJSON):
+        strict_json.dumps({"x": float("nan")})
+    assert len(calls) == 1

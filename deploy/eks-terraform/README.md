@@ -7,12 +7,28 @@ It defaults to Kubernetes 1.35 and AL2023 x86-64 nodes. Check the
 before choosing another version; 1.30 is no longer supported.
 
 The creating operator receives cluster-admin access to bootstrap the cluster.
-Additional access entries, restricted API endpoint access, network policies,
-backup storage and production monitoring are operator-managed. EKS, EC2, NAT,
+Additional access entries, network policies, backup storage and production
+monitoring are operator-managed. EKS, EC2, NAT,
 load balancers and storage incur charges when you apply this configuration.
 
 The application still supports only one writable replica. Multiple cluster
 nodes do not enable multiple GRC Lake writers or automated application failover.
+
+## API endpoint access
+
+The EKS API endpoint is private by default: `cluster_endpoint_public_access_cidrs`
+is empty, so Terraform, Helm and `kubectl` must run from a network that can
+reach the VPC (VPN, bastion, or a runner inside the VPC). To manage the cluster
+from outside, list only your operator ranges:
+
+```hcl
+cluster_endpoint_public_access_cidrs = ["203.0.113.0/24"]
+```
+
+That enables the public endpoint for those ranges only; the private endpoint
+stays enabled for nodes. `0.0.0.0/0`, `::/0` and malformed CIDRs are rejected.
+An existing cluster created with the earlier open public endpoint switches to
+private access on the next apply unless you set this variable first.
 
 ## 1. Bootstrap infrastructure
 
@@ -34,7 +50,7 @@ aws eks update-kubeconfig --region "$(terraform output -raw region)" \
 `deploy_application` defaults to true to preserve existing installations.
 Use false only for initial bootstrap: changing an existing installation to
 false **uninstalls its Helm release**. The resource move to
-`helm_release.grc-lake[0]` preserves the existing release address during upgrade;
+`helm_release.trustops[0]` preserves the existing release address during upgrade;
 review every plan, including any node-group replacement when changing AMI type.
 For an existing cluster, pin its current `cluster_version` in `terraform.tfvars`
 and follow the supported EKS minor-version upgrade sequence before adopting the

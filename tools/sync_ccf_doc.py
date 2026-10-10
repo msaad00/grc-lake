@@ -3,7 +3,12 @@
 import re
 from pathlib import Path
 
-from security_lakehouse.safeguards import coverage_by_framework
+from security_lakehouse.safeguards import (
+    contributes_to_coverage,
+    coverage_by_framework,
+    effective_review_state,
+    load_safeguards,
+)
 
 
 def main():
@@ -28,6 +33,22 @@ def main():
     )
     text = re.sub(r"\d+ of \d+ titles still contain", "Some titles still contain", text)
     path.write_text(text)
+    states = [
+        effective_review_state(member)
+        for safeguard in load_safeguards()["safeguards"]
+        for member in safeguard["satisfies"]
+        if contributes_to_coverage(member)
+    ]
+    roadmap = path.parent.parent / "ROADMAP.md"
+    roadmap.write_text(
+        re.sub(
+            r"^[\d,]+ of [\d,]+ safeguard-to-requirement mapping rows are proposed, .*?$",
+            f"{states.count('proposed'):,} of {len(states):,} safeguard-to-requirement mapping rows are proposed, "
+            f"so {coverage['proposed']:,} of the {coverage['covered']:,} mapped requirements have no reviewed mapping.",
+            roadmap.read_text(),
+            flags=re.M,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -90,6 +90,13 @@ _STATUS_TO_OSCAL: dict[str, tuple[str, str]] = {
 }
 
 
+def _native_control_id(control_id: str, framework: dict[str, Any]) -> str:
+    native = control_id.removeprefix(str(framework.get("oscal_control_prefix") or ""))
+    if framework.get("oscal_control_case", "lower") == "lower":
+        native = native.lower()
+    return str(framework.get("oscal_native_prefix") or "") + native
+
+
 def _oscal_token(value: str) -> str:
     """Return a valid OSCAL token derived from ``value``.
 
@@ -167,7 +174,11 @@ def build_component_definition(
         for framework_id in sorted(by_framework):
             members = sorted(by_framework[framework_id], key=lambda m: str(m.get("control_id")))
             framework = registry.get(framework_id, {})
-            source = str(framework.get("official_source_url") or f"urn:trustops:framework:{framework_id}")
+            source = str(
+                framework.get("oscal_source_url")
+                or framework.get("official_source_url")
+                or f"urn:grc-lake:framework:{framework_id}"
+            )
             implemented_requirements = []
             for member in members:
                 control_id = str(member["control_id"])
@@ -191,7 +202,11 @@ def build_component_definition(
                 implemented_requirements.append(
                     {
                         "uuid": _uuid5("implemented-requirement", safeguard_id, control_id),
-                        "control-id": _oscal_token(control_id),
+                        "control-id": _oscal_token(
+                            _native_control_id(control_id, framework)
+                            if framework.get("oscal_source_url")
+                            else control_id
+                        ),
                         "description": str(
                             control.get("evidence_requirement")
                             or entry.get("evidence_requirement")
@@ -260,16 +275,16 @@ def _import_ap_href(posture_payload: JsonObject) -> str:
     """
     bundle = posture_payload.get("catalog_bundle")
     if isinstance(bundle, dict) and bundle.get("bundle_sha256"):
-        return f"urn:trustops:catalog-bundle:{bundle['bundle_sha256']}"
+        return f"urn:grc-lake:catalog-bundle:{bundle['bundle_sha256']}"
     try:
         from security_lakehouse.catalog_versions import bundle_summary
 
         bundle = bundle_summary()
         if isinstance(bundle, dict) and bundle.get("bundle_sha256"):
-            return f"urn:trustops:catalog-bundle:{bundle['bundle_sha256']}"
+            return f"urn:grc-lake:catalog-bundle:{bundle['bundle_sha256']}"
     except (OSError, ValueError, KeyError):
-        return "urn:trustops:catalog-bundle:unknown"
-    return "urn:trustops:catalog-bundle:unknown"
+        return "urn:grc-lake:catalog-bundle:unknown"
+    return "urn:grc-lake:catalog-bundle:unknown"
 
 
 @generation_reader

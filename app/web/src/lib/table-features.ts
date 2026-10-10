@@ -15,6 +15,11 @@ export interface TableColumnMeta {
    * chip row, a labelled metadata line (default), or nowhere.
    */
   mobile?: "title" | "badge" | "meta" | "hidden";
+  /**
+   * The column renders the row's own open control (e.g. a Review button).
+   * Where it is shown, `DataTable` adds no second control for the row.
+   */
+  rowAction?: boolean;
 }
 
 export const sortableTableFeatures = tableFeatures({

@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 export function usePersistentState<T>(
   key: string,
   initial: T,
-): [T, (next: T) => void] {
+): [T, (next: T | ((prev: T) => T)) => void] {
   const [value, setValue] = useState<T>(initial);
 
   useEffect(() => {
@@ -25,15 +25,21 @@ export function usePersistentState<T>(
   }, []);
 
   const update = useCallback(
-    (next: T) => {
-      setValue(next);
-      if (typeof window !== "undefined") {
-        try {
-          window.localStorage.setItem(key, JSON.stringify(next));
-        } catch {
-          /* storage full or disabled */
+    (next: T | ((prev: T) => T)) => {
+      // Functional updates read the latest committed value, so two quick
+      // toggles never overwrite each other with a stale snapshot.
+      setValue((prev) => {
+        const resolved =
+          typeof next === "function" ? (next as (prev: T) => T)(prev) : next;
+        if (typeof window !== "undefined") {
+          try {
+            window.localStorage.setItem(key, JSON.stringify(resolved));
+          } catch {
+            /* storage full or disabled */
+          }
         }
-      }
+        return resolved;
+      });
     },
     [key],
   );

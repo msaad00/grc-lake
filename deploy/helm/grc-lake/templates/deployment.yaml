@@ -1,6 +1,10 @@
 {{- $http := not (and .Values.distributed.enabled (eq .Values.distributed.role "worker")) }}
 {{- $distributed := .Values.distributed.enabled }}
+{{- $operatorEnv := false }}
 {{- range .Values.env }}
+{{- if has .name (list "GRC_LAKE_ENV" "TRUSTOPS_ENV") }}
+{{- $operatorEnv = true }}
+{{- end }}
 {{- if and $distributed (has .name (list "GRC_LAKE_DEPLOYMENT_MODE" "TRUSTOPS_DEPLOYMENT_MODE" "GRC_LAKE_CLUSTER_ID" "GRC_LAKE_OBJECT_BUCKET" "GRC_LAKE_OBJECT_ENDPOINT" "GRC_LAKE_VIRTUAL_SHARDS" "GRC_LAKE_REPLICA_ROLE" "GRC_LAKE_DATABASE_URL" "TRUSTOPS_DATABASE_URL")) }}
 {{- fail "configure cluster identity and database through distributed values, not env[]" }}
 {{- end }}
@@ -10,9 +14,6 @@
 {{- end }}
 {{- if and .Values.security.allowInsecureNoAuth (ne .Values.security.allowInsecureOverride "acknowledged") }}
 {{- fail "security.allowInsecureNoAuth requires security.allowInsecureOverride=acknowledged for hosted deployments" }}
-{{- end }}
-{{- if and .Values.security.requireAuthentication (not (eq (include "grc-lake.authConfigured" .) "true")) }}
-{{- fail "security.requireAuthentication: set a non-empty GRC_LAKE_COOKIE_SIGNING_KEY signing secret or required secretKeyRef in env[]; OIDC also needs GRC_LAKE_SESSION_SECRET, or use allowInsecureNoAuth with allowInsecureOverride=acknowledged" }}
 {{- end }}
 {{- if and .Values.ingress.enabled (not (eq (include "grc-lake.authConfigured" .) "true")) }}
 {{- fail "ingress.enabled requires authentication signing secret GRC_LAKE_COOKIE_SIGNING_KEY in env[]; OIDC also needs GRC_LAKE_SESSION_SECRET or documented allowInsecureNoAuth override" }}
@@ -34,6 +35,9 @@
 {{- end }}
 {{- if and .Values.distributed.enabled (eq .Values.distributed.role "worker") .Values.ingress.enabled }}
 {{- fail "worker deployments do not serve HTTP ingress" }}
+{{- end }}
+{{- if not (eq (include "grc-lake.authConfigured" .) "true") }}
+{{- fail "GRC Lake refuses to start without authentication: set GRC_LAKE_COOKIE_SIGNING_KEY in env[] as a non-empty signing value or a required secretKeyRef (OIDC also needs GRC_LAKE_SESSION_SECRET); for a local-only evaluation set security.allowInsecureNoAuth=true with security.allowInsecureOverride=acknowledged. See deploy/examples/self-hosted-values.yaml" }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment
@@ -71,7 +75,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: trustops
+        - name: grc-lake
           image: {{ include "grc-lake.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
@@ -111,6 +115,10 @@ spec:
             {{- if .Values.security.allowInsecureNoAuth }}
             - name: GRC_LAKE_ALLOW_INSECURE_NO_AUTH
               value: "1"
+            {{- if not $operatorEnv }}
+            - name: GRC_LAKE_ENV
+              value: "demo"
+            {{- end }}
             {{- end }}
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
@@ -151,7 +159,7 @@ spec:
             - name: tmp
               mountPath: /tmp
             - name: home
-              mountPath: /home/trustops
+              mountPath: /home/grc-lake
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

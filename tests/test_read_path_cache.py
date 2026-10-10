@@ -52,9 +52,9 @@ def window_builds(monkeypatch):
     calls: list[datetime] = []
     original = assessment._PostureWindow.build.__func__
 
-    def counted(cls, lake, freshness_days, max_violations, evaluated_at):
+    def counted(cls, lake, freshness_days, max_violations, evaluated_at, **kwargs):
         calls.append(evaluated_at)
-        return original(cls, lake, freshness_days, max_violations, evaluated_at)
+        return original(cls, lake, freshness_days, max_violations, evaluated_at, **kwargs)
 
     monkeypatch.setattr(assessment._PostureWindow, "build", classmethod(counted))
     return calls
@@ -463,3 +463,45 @@ def test_explicit_naive_time_keeps_existing_posture_contract(tmp_path):
     moment = datetime(2026, 5, 21, 9, 30)
     result = assessment.build_current_posture(lake, now=moment)
     assert result == assessment.build_current_posture(lake, now=moment.astimezone(UTC))
+
+
+def test_asset_names_are_cached_per_file_version(tmp_path, monkeypatch):
+    from security_lakehouse import asset_names
+
+    _settle_files(monkeypatch)
+    asset_names._ASSET_NAMES.clear()
+    path = tmp_path / "gold" / "asset_risk.jsonl"
+    write_jsonl(path, [{"asset_id": "a", "asset_name": "Alpha"}])
+    reads: list[Path] = []
+    original = asset_names.read_projection
+
+    def counted(target, *args, **kwargs):
+        reads.append(Path(target))
+        return original(target, *args, **kwargs)
+
+    monkeypatch.setattr(asset_names, "read_projection", counted)
+    first = asset_names.load_asset_names(tmp_path)
+    assert first == {"a": "Alpha"}
+    first["a"] = "mutated by a consumer"
+    assert asset_names.load_asset_names(tmp_path) == {"a": "Alpha"}
+    assert len(reads) == 1
+
+    write_jsonl(path, [{"asset_id": "a", "asset_name": "Alpha"}, {"asset_id": "b", "asset_name": "Beta"}])
+    assert asset_names.load_asset_names(tmp_path) == {"a": "Alpha", "b": "Beta"}
+    assert len(reads) == 2
+
+    path.unlink()
+    assert asset_names.load_asset_names(tmp_path) == {}
+    assert len(reads) == 3
+
+
+def test_asset_names_cache_is_isolated_per_lake(tmp_path, monkeypatch):
+    from security_lakehouse import asset_names
+
+    _settle_files(monkeypatch)
+    asset_names._ASSET_NAMES.clear()
+    for tenant, name in (("t1", "One"), ("t2", "Two")):
+        write_jsonl(tmp_path / tenant / "gold" / "asset_risk.jsonl", [{"asset_id": "shared", "asset_name": name}])
+    assert asset_names.load_asset_names(tmp_path / "t1") == {"shared": "One"}
+    assert asset_names.load_asset_names(tmp_path / "t2") == {"shared": "Two"}
+    assert asset_names.load_asset_names(tmp_path / "t1") == {"shared": "One"}

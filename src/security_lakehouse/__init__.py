@@ -1,4 +1,4 @@
-"""GRC Lake Security Data Lake package."""
+"""GRC Lake package."""
 
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version

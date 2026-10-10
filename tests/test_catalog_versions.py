@@ -232,3 +232,24 @@ def test_validate_flags_duplicate_control_ids(tmp_path: Path) -> None:
     catalog.write_text(json.dumps(payload), encoding="utf-8")
     errors = validate_catalog(registry_path=DEFAULT_FRAMEWORK_REGISTRY, catalog_path=catalog)
     assert any("duplicate control_id" in e for e in errors)
+
+
+@pytest.mark.parametrize("date_field", ["reviewed_date", "source_reconciled_date"])
+def test_proposed_legacy_version_defaults_keep_source_date(tmp_path, date_field):
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(
+        json.dumps(
+            {
+                "controls": [
+                    {
+                        "control_id": "PROPOSED",
+                        "review_status": "proposed",
+                        date_field: "2026-10-01",
+                    }
+                ]
+            }
+        )
+    )
+    assert cv.active_controls(catalog)["PROPOSED"]["valid_from"] == "2026-10-01"
+    assert cv.controls_as_of("2026-09-30", catalog_path=catalog, history_path=tmp_path / "history.jsonl") == {}
+    assert "PROPOSED" in cv.controls_as_of("2026-10-01", catalog_path=catalog, history_path=tmp_path / "history.jsonl")

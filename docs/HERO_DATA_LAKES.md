@@ -1,4 +1,4 @@
-# Hero Security Data Lakes
+# Hero security data lakes
 
 This project tells a customer-owned security data lake story:
 

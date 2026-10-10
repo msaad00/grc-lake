@@ -81,6 +81,9 @@ function Row({
   const evaluatablePct = coverage?.evaluatable_coverage_pct ?? 0;
   const attestableCount = coverage?.attestable_requirement_count ?? 0;
   const attestablePct = coverage?.attestable_coverage_pct ?? 0;
+  const topLevelCoverage =
+    coverage?.coverage_level === "top_level" ||
+    ["pci-dss-v4", "cis-controls-v8.1"].includes(framework.framework_id);
   const sourceMappingPct =
     coverage?.seeded_mapping_coverage_pct ?? framework.mapping_coverage_pct;
 
@@ -127,6 +130,12 @@ function Row({
       </div>
 
       <div className="grid gap-3">
+        {topLevelCoverage && (
+          <p className="text-xs text-muted">
+            Top-level coverage only; sub-requirements and safeguards are not
+            counted.
+          </p>
+        )}
         <div>
           <div className="flex items-center justify-between gap-3 text-xs">
             <span className="font-semibold text-ink">Mapped</span>
@@ -439,7 +448,7 @@ const STAGE_ORDER: ReadinessStage[] = [
 
 const STAGE_LABEL: Record<ReadinessStage, string> = {
   source_pulled: "Source pulled",
-  mapped: "Reviewed article mappings",
+  mapped: "Source article identity reviewed",
   evidence_defined: "Evidence defined",
   rule_versioned: "Rule versioned",
   coverage_verified: "Coverage gate passed",
@@ -469,8 +478,9 @@ function ReadinessRow({ row }: { row: FrameworkReadiness }) {
         </Badge>
       </div>
       <div className="mt-1 text-xs text-muted">
-        {row.mapped_control_count}/{row.control_count} controls with a reviewed
-        article mapping · {row.coverage_pct}%
+        {row.mapped_control_count}/{row.control_count} controls with reviewed
+        source article identity · {row.coverage_pct}% (not CCF safeguard
+        coverage)
       </div>
       <div className="mt-3 flex items-center gap-3">
         <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-surfaceMuted">

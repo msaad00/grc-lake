@@ -18,7 +18,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from sqlalchemy import Select, create_engine
+from sqlalchemy import Select, create_engine, func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -42,6 +42,11 @@ def clamp_limit(limit: int | None, *, default: int = DEFAULT_PAGE_LIMIT, maximum
     except (TypeError, ValueError):
         return default
     return max(1, min(value, maximum))
+
+
+def count_rows(session: Session, stmt: Select) -> int:
+    """Total rows ``stmt`` matches, ignoring its ordering and any page window."""
+    return int(session.scalar(select(func.count()).select_from(stmt.order_by(None).subquery())) or 0)
 
 
 def apply_pagination(stmt: Select, *, limit: int | None = None, offset: int | None = None) -> Select:

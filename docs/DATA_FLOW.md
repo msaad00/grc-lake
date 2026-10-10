@@ -11,7 +11,7 @@ collection, evaluation, snapshots, and API access, see
 
 ```mermaid
 flowchart LR
-  subgraph Existing["Existing Security Data Lake Mode"]
+  subgraph Existing["Existing security data lake mode"]
     Snowflake["Snowflake tables/views"]
     ClickHouse["ClickHouse tables/views"]
     SIEM["SIEM/export APIs"]
@@ -46,7 +46,7 @@ flowchart LR
   Posture --> Snapshots
 ```
 
-## Existing Security Data Lake Mode
+## Existing security data lake mode
 
 Use this when the company already has security evidence in Snowflake,
 ClickHouse, object storage, a SIEM, or scanner exports.

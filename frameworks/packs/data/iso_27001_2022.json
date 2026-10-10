@@ -2,287 +2,382 @@
   "schema": "trustops.framework_pack_manifest.v1",
   "source": {
     "url": "https://www.iso.org/standard/27001",
-    "name": "ISO/IEC 27001:2022 Annex A"
+    "name": "ISO/IEC 27001:2022 Annex A",
+    "title_source_url": "https://gso-sims-preview-doc-aws.s3-eu-west-1.amazonaws.com/iso-iec-27002-2022-en.html",
+    "title_source_sha256": "4cf3835802391d076d14cf49f79a4851af1b4fdbc71d59d27592eb4ec7b68ebf"
   },
   "rows": [
     {
-      "id": "A.5.1"
+      "id": "A.5.1",
+      "title": "Policies for information security"
     },
     {
-      "id": "A.5.2"
+      "id": "A.5.2",
+      "title": "Information security roles and responsibilities"
     },
     {
-      "id": "A.5.3"
+      "id": "A.5.3",
+      "title": "Segregation of duties"
     },
     {
-      "id": "A.5.4"
+      "id": "A.5.4",
+      "title": "Management responsibilities"
     },
     {
-      "id": "A.5.5"
+      "id": "A.5.5",
+      "title": "Contact with authorities"
     },
     {
-      "id": "A.5.6"
+      "id": "A.5.6",
+      "title": "Contact with special interest groups"
     },
     {
-      "id": "A.5.7"
+      "id": "A.5.7",
+      "title": "Threat intelligence"
     },
     {
-      "id": "A.5.8"
+      "id": "A.5.8",
+      "title": "Information security in project management"
     },
     {
-      "id": "A.5.9"
+      "id": "A.5.9",
+      "title": "Inventory of information and other associated assets"
     },
     {
-      "id": "A.5.10"
+      "id": "A.5.10",
+      "title": "Acceptable use of information and other associated assets"
     },
     {
-      "id": "A.5.11"
+      "id": "A.5.11",
+      "title": "Return of assets"
     },
     {
-      "id": "A.5.12"
+      "id": "A.5.12",
+      "title": "Classification of information"
     },
     {
-      "id": "A.5.13"
+      "id": "A.5.13",
+      "title": "Labelling of information"
     },
     {
-      "id": "A.5.14"
+      "id": "A.5.14",
+      "title": "Information transfer"
     },
     {
-      "id": "A.5.15"
+      "id": "A.5.15",
+      "title": "Access control"
     },
     {
-      "id": "A.5.16"
+      "id": "A.5.16",
+      "title": "Identity management"
     },
     {
-      "id": "A.5.17"
+      "id": "A.5.17",
+      "title": "Authentication information"
     },
     {
-      "id": "A.5.18"
+      "id": "A.5.18",
+      "title": "Access rights"
     },
     {
-      "id": "A.5.19"
+      "id": "A.5.19",
+      "title": "Information security in supplier relationships"
     },
     {
-      "id": "A.5.20"
+      "id": "A.5.20",
+      "title": "Addressing information security within supplier agreements"
     },
     {
-      "id": "A.5.21"
+      "id": "A.5.21",
+      "title": "Managing information security in the ICT supply chain"
     },
     {
-      "id": "A.5.22"
+      "id": "A.5.22",
+      "title": "Monitoring, review and change management of supplier services"
     },
     {
-      "id": "A.5.23"
+      "id": "A.5.23",
+      "title": "Information security for use of cloud services"
     },
     {
-      "id": "A.5.24"
+      "id": "A.5.24",
+      "title": "Information security incident management planning and preparation"
     },
     {
-      "id": "A.5.25"
+      "id": "A.5.25",
+      "title": "Assessment and decision on information security events"
     },
     {
-      "id": "A.5.26"
+      "id": "A.5.26",
+      "title": "Response to information security incidents"
     },
     {
-      "id": "A.5.27"
+      "id": "A.5.27",
+      "title": "Learning from information security incidents"
     },
     {
-      "id": "A.5.28"
+      "id": "A.5.28",
+      "title": "Collection of evidence"
     },
     {
-      "id": "A.5.29"
+      "id": "A.5.29",
+      "title": "Information security during disruption"
     },
     {
-      "id": "A.5.30"
+      "id": "A.5.30",
+      "title": "ICT readiness for business continuity"
     },
     {
-      "id": "A.5.31"
+      "id": "A.5.31",
+      "title": "Legal, statutory, regulatory and contractual requirements"
     },
     {
-      "id": "A.5.32"
+      "id": "A.5.32",
+      "title": "Intellectual property rights"
     },
     {
-      "id": "A.5.33"
+      "id": "A.5.33",
+      "title": "Protection of records"
     },
     {
-      "id": "A.5.34"
+      "id": "A.5.34",
+      "title": "Privacy and protection of PII"
     },
     {
-      "id": "A.5.35"
+      "id": "A.5.35",
+      "title": "Independent review of information security"
     },
     {
-      "id": "A.5.36"
+      "id": "A.5.36",
+      "title": "Compliance with policies, rules and standards for information security"
     },
     {
-      "id": "A.5.37"
+      "id": "A.5.37",
+      "title": "Documented operating procedures"
     },
     {
-      "id": "A.6.1"
+      "id": "A.6.1",
+      "title": "Screening"
     },
     {
-      "id": "A.6.2"
+      "id": "A.6.2",
+      "title": "Terms and conditions of employment"
     },
     {
-      "id": "A.6.3"
+      "id": "A.6.3",
+      "title": "Information security awareness, education and training"
     },
     {
-      "id": "A.6.4"
+      "id": "A.6.4",
+      "title": "Disciplinary process"
     },
     {
-      "id": "A.6.5"
+      "id": "A.6.5",
+      "title": "Responsibilities after termination or change of employment"
     },
     {
-      "id": "A.6.6"
+      "id": "A.6.6",
+      "title": "Confidentiality or non-disclosure agreements"
     },
     {
-      "id": "A.6.7"
+      "id": "A.6.7",
+      "title": "Remote working"
     },
     {
-      "id": "A.6.8"
+      "id": "A.6.8",
+      "title": "Information security event reporting"
     },
     {
-      "id": "A.7.1"
+      "id": "A.7.1",
+      "title": "Physical security perimeters"
     },
     {
-      "id": "A.7.2"
+      "id": "A.7.2",
+      "title": "Physical entry"
     },
     {
-      "id": "A.7.3"
+      "id": "A.7.3",
+      "title": "Securing offices, rooms and facilities"
     },
     {
-      "id": "A.7.4"
+      "id": "A.7.4",
+      "title": "Physical security monitoring"
     },
     {
-      "id": "A.7.5"
+      "id": "A.7.5",
+      "title": "Protecting against physical and environmental threats"
     },
     {
-      "id": "A.7.6"
+      "id": "A.7.6",
+      "title": "Working in secure areas"
     },
     {
-      "id": "A.7.7"
+      "id": "A.7.7",
+      "title": "Clear desk and clear screen"
     },
     {
-      "id": "A.7.8"
+      "id": "A.7.8",
+      "title": "Equipment siting and protection"
     },
     {
-      "id": "A.7.9"
+      "id": "A.7.9",
+      "title": "Security of assets off-premises"
     },
     {
-      "id": "A.7.10"
+      "id": "A.7.10",
+      "title": "Storage media"
     },
     {
-      "id": "A.7.11"
+      "id": "A.7.11",
+      "title": "Supporting utilities"
     },
     {
-      "id": "A.7.12"
+      "id": "A.7.12",
+      "title": "Cabling security"
     },
     {
-      "id": "A.7.13"
+      "id": "A.7.13",
+      "title": "Equipment maintenance"
     },
     {
-      "id": "A.7.14"
+      "id": "A.7.14",
+      "title": "Secure disposal or re-use of equipment"
     },
     {
-      "id": "A.8.1"
+      "id": "A.8.1",
+      "title": "User endpoint devices"
     },
     {
-      "id": "A.8.2"
+      "id": "A.8.2",
+      "title": "Privileged access rights"
     },
     {
-      "id": "A.8.3"
+      "id": "A.8.3",
+      "title": "Information access restriction"
     },
     {
-      "id": "A.8.4"
+      "id": "A.8.4",
+      "title": "Access to source code"
     },
     {
-      "id": "A.8.5"
+      "id": "A.8.5",
+      "title": "Secure authentication"
     },
     {
-      "id": "A.8.6"
+      "id": "A.8.6",
+      "title": "Capacity management"
     },
     {
-      "id": "A.8.7"
+      "id": "A.8.7",
+      "title": "Protection against malware"
     },
     {
-      "id": "A.8.8"
+      "id": "A.8.8",
+      "title": "Management of technical vulnerabilities"
     },
     {
-      "id": "A.8.9"
+      "id": "A.8.9",
+      "title": "Configuration management"
     },
     {
-      "id": "A.8.10"
+      "id": "A.8.10",
+      "title": "Information deletion"
     },
     {
-      "id": "A.8.11"
+      "id": "A.8.11",
+      "title": "Data masking"
     },
     {
-      "id": "A.8.12"
+      "id": "A.8.12",
+      "title": "Data leakage prevention"
     },
     {
-      "id": "A.8.13"
+      "id": "A.8.13",
+      "title": "Information backup"
     },
     {
-      "id": "A.8.14"
+      "id": "A.8.14",
+      "title": "Redundancy of information processing facilities"
     },
     {
-      "id": "A.8.15"
+      "id": "A.8.15",
+      "title": "Logging"
     },
     {
-      "id": "A.8.16"
+      "id": "A.8.16",
+      "title": "Monitoring activities"
     },
     {
-      "id": "A.8.17"
+      "id": "A.8.17",
+      "title": "Clock synchronization"
     },
     {
-      "id": "A.8.18"
+      "id": "A.8.18",
+      "title": "Use of privileged utility programs"
     },
     {
-      "id": "A.8.19"
+      "id": "A.8.19",
+      "title": "Installation of software on operational systems"
     },
     {
-      "id": "A.8.20"
+      "id": "A.8.20",
+      "title": "Networks security"
     },
     {
-      "id": "A.8.21"
+      "id": "A.8.21",
+      "title": "Security of network services"
     },
     {
-      "id": "A.8.22"
+      "id": "A.8.22",
+      "title": "Segregation of networks"
     },
     {
-      "id": "A.8.23"
+      "id": "A.8.23",
+      "title": "Web filtering"
     },
     {
-      "id": "A.8.24"
+      "id": "A.8.24",
+      "title": "Use of cryptography"
     },
     {
-      "id": "A.8.25"
+      "id": "A.8.25",
+      "title": "Secure development life cycle"
     },
     {
-      "id": "A.8.26"
+      "id": "A.8.26",
+      "title": "Application security requirements"
     },
     {
-      "id": "A.8.27"
+      "id": "A.8.27",
+      "title": "Secure system architecture and engineering principles"
     },
     {
-      "id": "A.8.28"
+      "id": "A.8.28",
+      "title": "Secure coding"
     },
     {
-      "id": "A.8.29"
+      "id": "A.8.29",
+      "title": "Security testing in development and acceptance"
     },
     {
-      "id": "A.8.30"
+      "id": "A.8.30",
+      "title": "Outsourced development"
     },
     {
-      "id": "A.8.31"
+      "id": "A.8.31",
+      "title": "Separation of development, test and production environments"
     },
     {
-      "id": "A.8.32"
+      "id": "A.8.32",
+      "title": "Change management"
     },
     {
-      "id": "A.8.33"
+      "id": "A.8.33",
+      "title": "Test information"
     },
     {
-      "id": "A.8.34"
+      "id": "A.8.34",
+      "title": "Protection of information systems during audit testing"
     }
   ]
 }

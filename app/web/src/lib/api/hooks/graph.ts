@@ -29,19 +29,25 @@ export function useRevokeTrustShare() {
   });
 }
 
-export function useComplianceGraph() {
+export function useComplianceGraph({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["graph"],
     queryFn: api.graph,
     staleTime: STALE,
+    enabled,
   });
 }
 
-export function useRepositoryGraph() {
+export function useRepositoryGraph({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["repo-graph"],
     queryFn: api.repoGraph,
     staleTime: STALE,
+    enabled,
   });
 }
 

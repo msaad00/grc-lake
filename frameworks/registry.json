@@ -58,7 +58,11 @@
       "pulled_at": null,
       "implementation_status": "implemented_full_pack",
       "copyright_guardrail": "NIST SP 800-53 is public-domain U.S. government work. Store control IDs and short internal titles only; FedRAMP overlays and parameter values are assessed separately.",
-      "sync_cadence_days": 90
+      "sync_cadence_days": 90,
+      "oscal_source_url": "https://raw.githubusercontent.com/usnistgov/oscal-content/78650f02ad9321bb7b817846f8fbd4f2bcd620de/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_MODERATE-baseline_profile.json",
+      "oscal_control_prefix": "FEDRAMP-",
+      "oscal_native_prefix": "",
+      "oscal_control_case": "lower"
     },
     {
       "framework_id": "nist-800-53-rev5",
@@ -74,7 +78,11 @@
       "implementation_status": "implemented_limited_mapping",
       "copyright_guardrail": "NIST SP 800-53 is a U.S. Government work not subject to copyright in the United States. Pack stores control IDs, official control titles, and baseline membership from the pinned OSCAL catalog.",
       "sync_cadence_days": 90,
-      "coverage_boundary": "All 1,014 active controls and enhancements (20 families) are catalogued with LOW/MODERATE/HIGH/PRIVACY baseline tags. Identifier mappings and safeguard mappings are proposed until reviewed; this is catalog coverage, not an authorization."
+      "coverage_boundary": "All 1,014 active controls and enhancements (20 families) are catalogued with LOW/MODERATE/HIGH/PRIVACY baseline tags. Identifier mappings and safeguard mappings are proposed until reviewed; this is catalog coverage, not an authorization.",
+      "oscal_source_url": "https://raw.githubusercontent.com/usnistgov/oscal-content/78650f02ad9321bb7b817846f8fbd4f2bcd620de/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+      "oscal_control_prefix": "NIST-800-53-",
+      "oscal_native_prefix": "",
+      "oscal_control_case": "lower"
     },
     {
       "framework_id": "nist-rmf-800-37r2",
@@ -120,7 +128,9 @@
       "pulled_at": null,
       "implementation_status": "implemented_limited_mapping",
       "copyright_guardrail": "PCI DSS document is licensed by PCI SSC. Store only requirement IDs and short internal titles; never reproduce normative text.",
-      "sync_cadence_days": 90
+      "sync_cadence_days": 90,
+      "coverage_level": "top_level",
+      "coverage_boundary": "Twelve top-level requirements are catalogued. Coverage percentages do not measure the underlying sub-requirements or testing procedures."
     },
     {
       "framework_id": "gdpr-2016-679",
@@ -196,7 +206,8 @@
       "implementation_status": "implemented_limited_mapping",
       "copyright_guardrail": "CIS Controls are published by the Center for Internet Security under CIS terms. Pack stores the 18 control numbers and names only and links the official source; safeguard text is not reproduced.",
       "sync_cadence_days": 180,
-      "coverage_boundary": "All 18 CIS Controls are catalogued at the control level. The 153 v8.1 safeguards (x.y) are not seeded because CIS distributes them only in the registration-gated download."
+      "coverage_boundary": "All 18 CIS Controls are catalogued at the control level. The 153 v8.1 safeguards (x.y) are not seeded because CIS distributes them only in the registration-gated download.",
+      "coverage_level": "top_level"
     },
     {
       "framework_id": "nist-csf-2.0",
@@ -249,7 +260,11 @@
         "Incident response, supply chain risk, and system security plan"
       ],
       "next_step": "Review the proposed mappings; add safeguards for the unmapped requirements listed in frameworks/packs/data/nist_800_171_rev3.json.",
-      "sync_cadence_days": 180
+      "sync_cadence_days": 180,
+      "oscal_source_url": "https://raw.githubusercontent.com/usnistgov/oscal-content/78650f02ad9321bb7b817846f8fbd4f2bcd620de/nist.gov/SP800-171/rev3/json/NIST_SP800-171_rev3_catalog.json",
+      "oscal_control_prefix": "NIST-800-171R3-",
+      "oscal_native_prefix": "SP_800_171_",
+      "oscal_control_case": "preserve"
     },
     {
       "framework_id": "iso-27017-2015",
@@ -358,7 +373,7 @@
       "framework_id": "soc1",
       "family": "assurance",
       "name": "SOC 1 Type II (ICFR)",
-      "version": "2017 TSC with revised points of focus 2022",
+      "version": "SSAE 18 (AT-C 320)",
       "effective_date": "2022-12-15",
       "superseded_by": null,
       "official_source_name": "AICPA SOC 1 Reporting on Controls at a Service Organization",

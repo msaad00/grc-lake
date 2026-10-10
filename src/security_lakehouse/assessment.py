@@ -35,7 +35,8 @@ from security_lakehouse.evidence_freshness import (
 )
 from security_lakehouse.evidence_provenance import contains_synthetic_evidence
 from security_lakehouse.generations import generation_identity, generation_reader
-from security_lakehouse.io import append_jsonl, file_version, iter_jsonl, read_json, read_jsonl, write_json
+from security_lakehouse.gold_io import write_gold_json as write_json
+from security_lakehouse.io import append_jsonl, file_sha256, file_version, iter_jsonl, read_json, read_jsonl
 from security_lakehouse.ledger import chain_lock
 from security_lakehouse.models import SEVERITY_SCORE, utc_iso
 from security_lakehouse.read_cache import DerivedCache, copy_rows, input_versions, json_copy, rows_are_flat
@@ -65,9 +66,13 @@ _POSTURE_INPUTS = (
     "gold/control_posture.jsonl",
     "gold/control_tests.jsonl",
     "gold/asset_risk.jsonl",
+    "gold/dashboard_data.json",
     "bronze/raw_events.jsonl",
 )
 _STALE_EVIDENCE_SAMPLE = 50
+# Highest-severity violations kept inline in a posture payload; counts, scores,
+# and ``violation_summary.total_count`` still cover every violation.
+INLINE_VIOLATION_CAP = 10_000
 _POSTURE_WINDOWS: DerivedCache[_PostureWindow] = DerivedCache(max_entries=8, per_root=2)
 
 
@@ -82,11 +87,15 @@ def build_current_posture(
     freshness_days: int = 7,
     now: datetime | None = None,
     max_violations: int | None = None,
+    inline_violation_cap: int | None = INLINE_VIOLATION_CAP,
 ) -> dict[str, Any]:
     """Build the continuously refreshed compliance posture from lake artifacts.
 
     When ``max_violations`` is set, only the highest-severity violations are
     retained in the payload while aggregate counts still reflect the full lake.
+    ``inline_violation_cap`` bounds the inline list the same way after scores
+    and counts are computed from every violation; ``None`` keeps all of them
+    for readers that list violations.
 
     A live read (no ``now``) reuses the posture computed from the same input
     file versions while no evidence row changes freshness status; only the
@@ -95,7 +104,9 @@ def build_current_posture(
     """
     lake = Path(lake_dir)
     if now is not None:
-        return _PostureWindow.build(lake, freshness_days, max_violations, now).render(now)
+        return _PostureWindow.build(
+            lake, freshness_days, max_violations, now, inline_violation_cap=inline_violation_cap
+        ).render(now)
     evaluated_at = _utcnow()
     version = (
         input_versions(lake, _POSTURE_INPUTS),
@@ -104,12 +115,38 @@ def build_current_posture(
     )
     window = _POSTURE_WINDOWS.get(
         lake,
-        ("current_posture", freshness_days, max_violations),
+        ("current_posture", freshness_days, max_violations, inline_violation_cap),
         version,
-        lambda: _PostureWindow.build(lake, freshness_days, max_violations, evaluated_at),
+        lambda: _PostureWindow.build(
+            lake, freshness_days, max_violations, evaluated_at, inline_violation_cap=inline_violation_cap
+        ),
         accept=lambda cached: cached.covers(evaluated_at),
     )
     return window.render(evaluated_at)
+
+
+def _posture_assets(lake: Path) -> tuple[list[dict[str, Any]], int, dict[str, str]]:
+    """Use the compact generation projection, or stream legacy asset rows."""
+    from security_lakehouse.generations import pinned_path
+
+    source = pinned_path(lake / "gold/asset_risk.jsonl")
+    projection = pinned_path(lake / "gold/dashboard_data.json")
+    if projection.is_file() and projection.stat().st_size <= 16 * 1024 * 1024 and source.is_file():
+        data = read_json(projection).get("posture_assets", {})
+        if data.get("schema_version") == "trustops.posture_assets.v1" and data.get("source_sha256") == file_sha256(
+            source
+        ):
+            return data["top_risk_assets"], int(data["asset_count"]), data["asset_names"]
+    top: list[dict[str, Any]] = []
+    names: dict[str, str] = {}
+    count = 0
+    for row in iter_jsonl(source, missing_ok=True):
+        count += 1
+        if len(top) < 10:
+            top.append(row)
+        if row.get("asset_id") and row.get("asset_name"):
+            names[str(row["asset_id"])] = str(row["asset_name"])
+    return top, count, names
 
 
 class _PostureWindow:
@@ -147,19 +184,20 @@ class _PostureWindow:
 
     @classmethod
     def build(
-        cls, lake: Path, freshness_days: int, max_violations: int | None, evaluated_at: datetime
+        cls,
+        lake: Path,
+        freshness_days: int,
+        max_violations: int | None,
+        evaluated_at: datetime,
+        *,
+        inline_violation_cap: int | None = INLINE_VIOLATION_CAP,
     ) -> _PostureWindow:
         default_slo_minutes = freshness_days * 24 * 60
         connectors = load_connector_catalog()
         events = read_jsonl(lake / "silver" / "normalized_events.jsonl", missing_ok=True)
         controls = read_jsonl(lake / "gold" / "control_posture.jsonl", missing_ok=True)
         control_tests = read_jsonl(lake / "gold" / "control_tests.jsonl", missing_ok=True)
-        assets = read_jsonl(lake / "gold" / "asset_risk.jsonl", missing_ok=True)
-        asset_names = {
-            str(row["asset_id"]): str(row["asset_name"])
-            for row in assets
-            if row.get("asset_id") and row.get("asset_name")
-        }
+        assets, asset_count, asset_names = _posture_assets(lake)
         violations, violation_summary = build_violations(events, max_violations=max_violations, asset_names=asset_names)
         pairs = freshness_records_with_sources(
             events, now=evaluated_at, default_slo_minutes=default_slo_minutes, connectors=connectors
@@ -172,11 +210,13 @@ class _PostureWindow:
             controls=controls,
             control_tests=control_tests,
             assets=assets,
+            asset_count=asset_count,
             violations=violations,
             violation_summary=violation_summary,
             evidence_freshness=evidence_freshness,
             freshness_days=freshness_days,
             evaluated_at=evaluated_at,
+            inline_violation_cap=inline_violation_cap,
         )
         stale_sources = [row for record, row in pairs if record["status"] in STALE_STATUSES]
         head_keys = ("schema_version", "assessment_type", "synthetic_fixture")
@@ -231,11 +271,13 @@ def _assess_posture(
     controls: list[dict[str, Any]],
     control_tests: list[dict[str, Any]],
     assets: list[dict[str, Any]],
+    asset_count: int,
     violations: list[dict[str, Any]],
     violation_summary: dict[str, Any],
     evidence_freshness: list[dict[str, Any]],
     freshness_days: int,
     evaluated_at: datetime,
+    inline_violation_cap: int | None = INLINE_VIOLATION_CAP,
 ) -> dict[str, Any]:
     stale_controls = stale_control_ids(
         evidence_freshness,
@@ -267,6 +309,10 @@ def _assess_posture(
     posture_score = _weighted_posture_score(framework_scores)
     critical_for_state = critical_violation_count > 0
     unevaluated = {str(row["control_id"]) for row in controls if row.get("status") == ControlVerdict.NOT_EVALUATED}
+    if inline_violation_cap is not None and len(open_violations) > inline_violation_cap:
+        open_violations, violation_summary = _cap_inline_violations(
+            open_violations, violation_summary, inline_violation_cap
+        )
     assessment = {
         "schema_version": "trustops.assessment.v1",
         "assessment_type": "current_posture",
@@ -284,7 +330,7 @@ def _assess_posture(
             ),
             "framework_count": len(framework_scores),
             "control_count": len(controls),
-            "asset_count": len(assets),
+            "asset_count": asset_count,
             "open_violation_count": open_violation_count,
             "critical_violation_count": critical_violation_count,
             "high_violation_count": high_violation_count,
@@ -481,7 +527,8 @@ def write_assessment_snapshot(
             raise SnapshotIntegrityError("snapshot integrity verification failed; history requires reconciliation")
         prev_hash = _chain_tip(lake)
         prior_payload = _prior_snapshot_payload(lake)
-        assessment = build_current_posture(lake, freshness_days=freshness_days)
+        # A snapshot is the audit record: freeze every violation, not the inline sample.
+        assessment = build_current_posture(lake, freshness_days=freshness_days, inline_violation_cap=None)
         assessment["assessment_type"] = "point_in_time_snapshot"
         assessment["snapshot_reason"] = reason
         # Legacy lakes have no retained generation to resolve later. Freeze
@@ -928,6 +975,25 @@ def _build_violations_capped(
     return sorted(
         retained, key=lambda item: (-int(item["severity_score"]), item["control_id"], item["event_id"])
     ), summary
+
+
+def _cap_inline_violations(
+    violations: list[dict[str, Any]], summary: dict[str, Any], cap: int
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Keep the ``cap`` highest-severity rows in their original order, with the same ranking as the streaming cap."""
+    keep = set(
+        heapq.nlargest(
+            cap,
+            range(len(violations)),
+            key=lambda i: (
+                int(violations[i]["severity_score"]),
+                violations[i]["control_id"],
+                violations[i]["event_id"],
+            ),
+        )
+    )
+    retained = [row for index, row in enumerate(violations) if index in keep]
+    return retained, {**summary, "returned_count": len(retained), "truncated": True, "max_violations": cap}
 
 
 def _framework_scores_from_controls(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import heapq
 import importlib.util
 import json
 import sqlite3
@@ -30,13 +31,16 @@ from security_lakehouse.generations import (
     seal_generation,
     serialized_publication,
 )
+from security_lakehouse.gold_io import write_gold_json as write_json
 from security_lakehouse.io import canonical_sha256 as _canonical_sha256
-from security_lakehouse.io import file_sha256, iter_jsonl, read_json, read_jsonl, write_json, write_jsonl
+from security_lakehouse.io import file_sha256, iter_jsonl, read_json, read_jsonl, write_jsonl
 from security_lakehouse.models import SEVERITY_SCORE, PipelineResult, parse_event_time, utc_iso
 from security_lakehouse.policy import RuleResult
 from security_lakehouse.programs import build_control_tests, with_program_requirements
 from security_lakehouse.validation import validate_raw_event, validate_raw_events
 from security_lakehouse.vocabulary import ControlVerdict
+
+DASHBOARD_DETAIL_CAP = 100
 
 RAW_EVENT_SCHEMA_VERSION = "trustops.raw_event.v1"
 NORMALIZED_EVENT_SCHEMA_VERSION = "trustops.normalized_event.v1"
@@ -175,7 +179,16 @@ def run_pipeline_incremental(
 
 
 def _materialize_from_rows(**kwargs) -> PipelineResult:
+    from security_lakehouse.remediation_verification import application_database_configured
+
     lake = Path(kwargs["out_dir"]).resolve()
+    root = lake.parent.parent if lake.parent.name == "tenants" else lake
+    if application_database_configured(root):
+        # Publication reconciles remediation tasks; refuse a stale schema
+        # before anything is published rather than after.
+        from security_lakehouse.db.migrate import require_head
+
+        require_head(root)
     generation = new_generation(lake)
     result = _write_generation(**{**kwargs, "out_dir": generation})
     from security_lakehouse.verification import verify_lake_integrity
@@ -190,7 +203,6 @@ def _materialize_from_rows(**kwargs) -> PipelineResult:
     publish_generation(lake, generation)
     from security_lakehouse.execution_mode import in_server_mode
 
-    root = lake.parent.parent if lake.parent.name == "tenants" else lake
     if (root / "server/app.db").is_file() or in_server_mode():
         from security_lakehouse.remediation_verification import reconcile_published_tasks
 
@@ -254,6 +266,12 @@ def _write_generation(
     metrics = _build_metrics(silver_rows, control_rows, asset_rows)
     metrics.update(_build_freshness_metrics(evidence_freshness_rows))
     metrics.update(_build_control_test_metrics(control_test_rows))
+    details = {
+        "evidence_freshness": evidence_freshness_rows,
+        "control_posture": control_rows,
+        "control_tests": control_test_rows,
+        "asset_risk": asset_rows,
+    }
     dashboard_data = {
         "generated_at": utc_iso(datetime.now(UTC)),
         "lake_backends": [
@@ -276,11 +294,12 @@ def _write_generation(
         "severity_mix": _build_severity_mix(silver_rows),
         "backend_routes": _build_backend_routes(silver_rows),
         "source_freshness": summarize_source_freshness(evidence_freshness_rows),
-        "evidence_freshness": evidence_freshness_rows,
-        "control_posture": control_rows,
-        "control_tests": control_test_rows,
-        "asset_risk": asset_rows,
-        "recent_events": sorted(silver_rows, key=lambda item: parse_event_time(item["event_time"]), reverse=True)[:10],
+        **{name: rows[:DASHBOARD_DETAIL_CAP] for name, rows in details.items()},
+        "detail_counts": {name: len(rows) for name, rows in details.items()},
+        "detail_truncated": {name: len(rows) > DASHBOARD_DETAIL_CAP for name, rows in details.items()},
+        "detail_limit": DASHBOARD_DETAIL_CAP,
+        "detail_source": "Complete rows are in gold JSONL artifacts and paginated APIs.",
+        "recent_events": heapq.nlargest(10, silver_rows, key=lambda item: parse_event_time(item["event_time"])),
     }
 
     write_jsonl(bronze_dir / "raw_events.jsonl", bronze_rows)
@@ -289,6 +308,20 @@ def _write_generation(
     write_jsonl(gold_dir / "control_tests.jsonl", control_test_rows)
     write_jsonl(gold_dir / "evidence_freshness.jsonl", evidence_freshness_rows)
     write_jsonl(gold_dir / "asset_risk.jsonl", asset_rows)
+    # The full applicability lists remain in asset_risk.jsonl. Cold posture only
+    # needs names, a count, and the first ten risk-ranked rows. The source digest
+    # prevents reusing this projection after a legacy lake's assets change.
+    dashboard_data["posture_assets"] = {
+        "schema_version": "trustops.posture_assets.v1",
+        "source_sha256": file_sha256(gold_dir / "asset_risk.jsonl"),
+        "asset_count": len(asset_rows),
+        "top_risk_assets": asset_rows[:10],
+        "asset_names": {
+            str(row["asset_id"]): str(row["asset_name"])
+            for row in asset_rows
+            if row.get("asset_id") and row.get("asset_name")
+        },
+    }
     write_json(gold_dir / "metrics.json", metrics)
     write_json(gold_dir / "dashboard_data.json", dashboard_data)
     integrity = build_evidence_integrity(

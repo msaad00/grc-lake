@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import logging
 import os
 import sqlite3
 import sys
@@ -1479,8 +1481,8 @@ def _dashboard(args: argparse.Namespace) -> int:
 
 def _query(args: argparse.Namespace) -> int:
     sql = args.sql.strip()
-    if not sql.lower().startswith("select"):
-        raise ValueError("query command only allows SELECT statements")
+    if not sql.lower().startswith(("select", "with")):
+        raise ValueError("query command only allows SELECT statements (optionally with a WITH clause)")
     if args.engine == "duckdb":
         rows = _query_duckdb(Path(args.lake) / "mart" / "security_data_lake.duckdb", sql)
         print(
@@ -1489,7 +1491,8 @@ def _query(args: argparse.Namespace) -> int:
         return 0
 
     mart = Path(args.lake) / "mart" / "security_lakehouse.sqlite"
-    with sqlite3.connect(mart) as conn:
+    # Read-only URI: SQLite accepts WITH ... DELETE/INSERT/UPDATE as one statement.
+    with contextlib.closing(sqlite3.connect(f"{mart.resolve().as_uri()}?mode=ro", uri=True)) as conn:
         conn.row_factory = sqlite3.Row
         rows = [dict(row) for row in conn.execute(sql).fetchall()]
     print(json.dumps({"count": len(rows), "engine": args.engine, "rows": rows}, indent=2, sort_keys=True))
@@ -1498,11 +1501,17 @@ def _query(args: argparse.Namespace) -> int:
 
 def _query_duckdb(mart: Path, sql: str) -> list[dict]:
     if not mart.exists():
-        raise ValueError("DuckDB mart not found. Install with `pip install -e '.[analytics]'` and rerun the pipeline.")
+        raise ValueError(
+            "DuckDB mart not found. Install with `pip install 'grc-lake[analytics]'` "
+            "(source checkout: `uv sync --extra analytics`) and rerun the pipeline."
+        )
     try:
         import duckdb
     except ImportError as exc:
-        raise ValueError("DuckDB is not installed. Install with `pip install -e '.[analytics]'`.") from exc
+        raise ValueError(
+            "DuckDB is not installed. Install with `pip install 'grc-lake[analytics]'` "
+            "(source checkout: `uv sync --extra analytics`)."
+        ) from exc
 
     with duckdb.connect(str(mart), read_only=True) as conn:
         cursor = conn.execute(sql)
@@ -1513,13 +1522,18 @@ def _query_duckdb(mart: Path, sql: str) -> list[dict]:
 def _serve(args: argparse.Namespace) -> int:
     if getattr(args, "server", False):
         try:
-            from security_lakehouse.server_app import serve
+            import uvicorn
+
+            from security_lakehouse import server_app
         except ModuleNotFoundError as exc:
             raise SystemExit("server mode requires the 'server' extra: pip install 'grc-lake[server]'") from exc
         require_auth = not getattr(args, "allow_insecure_no_auth", False)
-        mode = "server mode" if require_auth else "server mode, INSECURE no-auth"
+        server_app._assert_insecure_allowed(require_auth=require_auth, host=args.host)
+        # Build first so startup failures are reported before any "serving" line.
+        app = server_app.create_app(args.lake, require_auth=require_auth)
+        mode = "server mode" if app.state.require_auth else "server mode, INSECURE no-auth"
         print(f"serving GRC Lake console ({mode}): http://{args.host}:{args.port}/")
-        serve(args.lake, host=args.host, port=args.port, require_auth=require_auth)
+        uvicorn.run(app, host=args.host, port=args.port)
     else:
         from security_lakehouse.server import serve as serve_local
 
@@ -1922,7 +1936,7 @@ def _assessment_posture_as_of(args: argparse.Namespace) -> int:
 def _assessment_violations(args: argparse.Namespace) -> int:
     from security_lakehouse.assessment import build_current_posture
 
-    posture = build_current_posture(args.lake)
+    posture = build_current_posture(args.lake, inline_violation_cap=None)
     framework_controls = {
         control["control_id"]: control["framework"]
         for control in read_jsonl(Path(args.lake) / "gold" / "control_posture.jsonl")
@@ -2526,8 +2540,16 @@ def _openapi(args: argparse.Namespace) -> int:
         raise SystemExit("the openapi command requires the 'server' extra: pip install 'grc-lake[server]'") from exc
     from security_lakehouse import api_v1
 
-    with tempfile.TemporaryDirectory() as tmp:
-        spec = create_app(tmp, require_auth=False).openapi()
+    # Building the schema needs an app, not a server: nothing binds or serves
+    # requests, so the no-auth startup warning would only mislead.
+    guard_log = logging.getLogger("security_lakehouse.auth.server_mode")
+    previously_disabled = guard_log.disabled
+    guard_log.disabled = True
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = create_app(tmp, require_auth=False).openapi()
+    finally:
+        guard_log.disabled = previously_disabled
     spec = api_v1.merge_openapi(spec)
     text = json.dumps(spec, indent=2, sort_keys=True)
     if args.out:

@@ -7,6 +7,10 @@ namespace           = "grc-lake"
 # runs as gets read-only on this bucket — nothing else, no Put/Delete.
 evidence_bucket_name = "acme-grc-lake-evidence"
 
+# Public EKS API access. Empty (default) keeps the endpoint private; list
+# only operator ranges to reach it from outside the VPC.
+# cluster_endpoint_public_access_cidrs = ["203.0.113.0/24"]
+
 # Optional second bucket (Iceberg catalog, etc.) granted read-only.
 # evidence_bucket_arn_prefix = "arn:aws:s3:::acme-iceberg-catalog"
 

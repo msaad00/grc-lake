@@ -191,6 +191,22 @@ def test_component_definition_excludes_proposed_mappings(monkeypatch: pytest.Mon
     assert "control-implementations" not in proposed_only
 
 
+def test_component_definition_framework_without_source_url_uses_grc_lake_urn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "security_lakehouse.oscal.load_framework_registry",
+        lambda: {key: {"name": value["name"]} for key, value in _registry().items()},
+    )
+    doc = build_component_definition(_SAFEGUARDS_PAYLOAD, _CATALOG)
+    sources = {
+        impl["source"]
+        for component in doc["component-definition"]["components"]
+        for impl in component.get("control-implementations", [])
+    }
+    assert sources == {"urn:grc-lake:framework:soc2", "urn:grc-lake:framework:iso-27001-2022"}
+
+
 def test_component_definition_is_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:
     from datetime import UTC, datetime
 
@@ -292,7 +308,7 @@ def test_build_assessment_results_maps_every_status(tmp_path: Path) -> None:
     doc = build_assessment_results(lake)
     root = doc["assessment-results"]
     assert root["metadata"]["oscal-version"] == OSCAL_VERSION
-    assert root["import-ap"]["href"].startswith("urn:trustops:catalog-bundle:")
+    assert root["import-ap"]["href"].startswith("urn:grc-lake:catalog-bundle:")
 
     findings = {f["props"][0]["value"]: f for f in root["results"][0]["findings"]}
     assert findings["SOC2-CC6.1"]["target"]["status"] == {"state": "satisfied", "reason": "pass"}

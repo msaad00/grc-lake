@@ -98,7 +98,7 @@ def test_catalog_seeds_exactly_the_verified_rows() -> None:
         article_id = control_id.removeprefix("ISO27701-")
         assert control["framework_ref"] == f"ISO/IEC 27701:2025 {article_id}"
         assert control["review_status"] == "proposed"
-        assert control["reviewed_by"] == "automated-source-reconciliation"
+        assert control["source_reconciled_by"] == "automated-source-reconciliation"
         assert control["source_url"] == "https://www.iso.org/standard/27701"
         assert [a["article_id"] for a in mappings[control_id]["articles"]] == [article_id]
     assert validate_catalog() == []

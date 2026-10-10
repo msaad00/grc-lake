@@ -184,9 +184,9 @@ fixable HIGH/CRITICAL findings. A policy pass is not a vulnerability-free image.
 ## What the overview means
 
 - **Assessment score** is the percentage of observed controls with fresh passing evidence; catalog coverage is reported separately.
-- **Control pass rate** is passing test rows divided by total test rows. The chart
-  separates pass, fail, warning, and remaining **Other** results. Unevaluated
-  controls are not displayed as a zero-percent result.
+- **Assessed coverage** is the share of catalogued requirements with an assessment
+  result. It describes assessment scope, not the percentage passing. Requirements
+  still needing evidence remain visible separately.
 - **Open findings** and severity counts describe the current assessment. Other
   findings are those outside the critical and high groups.
 - **Frameworks assessed** describes assessed coverage, not certification or a

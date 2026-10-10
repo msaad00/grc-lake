@@ -5,10 +5,10 @@
   "control_count": 2252,
   "crosswalk_count": 2252,
   "components": {
-    "frameworks": "e5f970d598bdca1b5e349f66d02d82079ec66ddd21a22954d0e9db58a094aa05",
-    "controls": "02a177ec3bc211c8628fe2dabc1e34313017f4683bfa81afb37117b8e6bd69d4",
-    "crosswalk": "6d533d467b77e84d87b61a18bdb496e72bd362be75a8c981e725da077a8518a3",
-    "safeguards": "6f87db21092a95323af44c1545a9ac7e389463f0cc4717328c2e709c2b8def70"
+    "frameworks": "de1821e32b918a892cebfbc1c113508a3c5933069904f50f80fd2b7c34675c33",
+    "controls": "16549bbfe1a6603e14a99e4030023e7729afe0ae2157859ff2d7e80f0eb2ab6a",
+    "crosswalk": "f1158c6fc8cf14cecb3c9dd432c96f5bf690f26eb99c2f418ff164eb536178b0",
+    "safeguards": "a3f634af1c189990f73eb5b0dfee74dd86c9edeccc7f00bff7aa7b943145367e"
   },
   "framework_versions": [
     {
@@ -153,7 +153,7 @@
     },
     {
       "framework_id": "soc1",
-      "version": "2017 TSC with revised points of focus 2022",
+      "version": "SSAE 18 (AT-C 320)",
       "effective_date": "2022-12-15",
       "superseded_by": null,
       "source_sha256": null
@@ -15932,5 +15932,5 @@
       "lifecycle_status": "active"
     }
   ],
-  "bundle_sha256": "731dce5196a228827618397b05a6bf690e89d8634b54b9028d7bd803f0061f24"
+  "bundle_sha256": "11374520fedd48c1f26d3161fde5476645c9b4fbf87bc29d6b83eef17c879690"
 }

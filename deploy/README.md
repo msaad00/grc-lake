@@ -84,13 +84,13 @@ Key value groups:
 - `serviceAccount.annotations` — bind an IRSA role (EKS) or Workload Identity (GKE) here for read-only access to the customer evidence bucket.
 - `scheduler` — enabled-by-default CronJob that runs `grc-lake scheduler tick` to fire `trigger.cron` workflows. Disable with `scheduler.enabled=false` if you drive it from an external scheduler.
 - `defaultTrustRole` — set to `auditor` for the Trust Center deployment so it serves the redacted projection by default.
-- `security` — production guards: `requireAuthentication`, `allowInsecureNoAuth` (requires `allowInsecureOverride=acknowledged`), ingress auth enforcement, and rejection of every replica count except one and every read-only lake. See [topology limits](../docs/runbooks/HA_READ_REPLICAS.md).
+- `security` — production guards: rendering fails unless `GRC_LAKE_COOKIE_SIGNING_KEY` is set in `env[]` (a non-empty value or a required `secretKeyRef`; OIDC also needs `GRC_LAKE_SESSION_SECRET`) or `allowInsecureNoAuth` is set with `allowInsecureOverride=acknowledged`. The chart also enforces ingress auth and rejects every replica count except one and every read-only lake. `requireAuthentication` is accepted for existing values files; authentication is always required. See [topology limits](../docs/runbooks/HA_READ_REPLICAS.md).
 - `extraVolumes` / `extraVolumeMounts` — mount customer-managed secrets such as
   a Snowflake service-user private key into both the API pod and scheduler
   CronJob. GRC Lake should receive only a file path such as
   `SNOWFLAKE_PRIVATE_KEY_FILE=/var/run/secrets/grc-lake/snowflake_key.p8`.
 
-`helm lint deploy/helm/grc-lake` and `helm template grc-lake deploy/helm/grc-lake` both run in CI.
+`helm lint` and `helm template` run in CI with `-f deploy/examples/self-hosted-values.yaml`; the chart's default values intentionally fail to render until authentication is configured.
 
 ## EKS reference IaC
 

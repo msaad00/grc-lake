@@ -14,6 +14,10 @@ from pathlib import Path
 from typing import Any
 
 from security_lakehouse.projected_reads import read_projection
+from security_lakehouse.read_cache import DerivedCache, input_versions
+
+_ASSET_RISK = "gold/asset_risk.jsonl"
+_ASSET_NAMES: DerivedCache[dict[str, str]] = DerivedCache(max_entries=64, per_root=1)
 
 
 def entity_asset_id(entity: dict[str, Any]) -> str:
@@ -35,11 +39,17 @@ def asset_names_from_raw(raw_rows: Iterable[dict[str, Any]]) -> dict[str, str]:
 
 
 def load_asset_names(lake_dir: str | Path) -> dict[str, str]:
-    """Asset ID to name, from the gold asset rows of a lake."""
+    """Asset ID to name, from the gold asset rows of a lake.
+
+    Memoized per resolved lake root and asset file version; callers get a copy.
+    """
     lake = Path(lake_dir)
-    rows = read_projection(
-        lake / "gold" / "asset_risk.jsonl", ("asset_id", "asset_name"), missing_ok=True, base_dir=lake
-    )
+    names = _ASSET_NAMES.get(lake, "asset_names", input_versions(lake, (_ASSET_RISK,)), lambda: _build(lake))
+    return dict(names)
+
+
+def _build(lake: Path) -> dict[str, str]:
+    rows = read_projection(lake / _ASSET_RISK, ("asset_id", "asset_name"), missing_ok=True, base_dir=lake)
     return {
         str(row["asset_id"]): str(row["asset_name"]) for row in rows if row.get("asset_id") and row.get("asset_name")
     }

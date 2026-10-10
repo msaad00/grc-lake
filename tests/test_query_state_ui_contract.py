@@ -15,7 +15,7 @@ def test_loading_state_is_visible_and_branded() -> None:
     assert "GrcLakeMark" in source
     assert 'role="status"' in source
     assert "Loading" in source
-    assert "security data lake" in source
+    assert "Reading GRC Lake evidence" in source
 
 
 def test_shell_uses_current_product_identity() -> None:

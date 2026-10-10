@@ -21,6 +21,7 @@ locals {
     },
     var.tags,
   )
+  cluster_endpoint_public_access = length(var.cluster_endpoint_public_access_cidrs) > 0
 }
 
 provider "aws" {
@@ -63,7 +64,9 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
 
-  cluster_endpoint_public_access = true
+  cluster_endpoint_public_access       = local.cluster_endpoint_public_access
+  cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
+  cluster_endpoint_private_access      = true
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets

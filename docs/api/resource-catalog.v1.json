@@ -278,7 +278,7 @@
       "path": "/api/v1/evidence/{event_id}/verify",
       "path_params": ["event_id"],
       "resource": "evidence.verify",
-      "scopes": ["write"]
+      "scopes": ["read"]
     },
     {
       "kind": "collection",

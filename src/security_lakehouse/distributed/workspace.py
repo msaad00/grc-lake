@@ -18,6 +18,11 @@ from security_lakehouse.distributed.context import WorkspaceBinding, binding
 from security_lakehouse.distributed.objects import ObjectStore
 from security_lakehouse.ledger import chain_lock
 
+_log = logging.getLogger(__name__)
+LEASE_SECONDS = 90
+HEARTBEAT_SECONDS: float = 10
+HEARTBEAT_RETRY_SECONDS: float = 1
+
 
 class Runtime:
     def __init__(self, catalog: Catalog, objects: ObjectStore, scratch: Path):
@@ -114,7 +119,8 @@ class Runtime:
         deadline = time.monotonic() + wait_seconds
         while True:
             try:
-                lease = self.catalog.acquire(tenant_id, owner=uuid.uuid4().hex)
+                acquired_at = time.monotonic()
+                lease = self.catalog.acquire(tenant_id, owner=uuid.uuid4().hex, seconds=LEASE_SECONDS)
                 break
             except Conflict:
                 if time.monotonic() >= deadline:
@@ -124,16 +130,28 @@ class Runtime:
         lost = threading.Event()
 
         def renew():
-            while not stop.wait(10):
+            # The lease runs at least LEASE_SECONDS from the last confirmed
+            # renewal, so a failed heartbeat is retried until that window
+            # closes. Retrying never authorizes work: publication still
+            # requires the database to confirm the unexpired fence.
+            confirmed = acquired_at
+            interval = HEARTBEAT_SECONDS
+            while not stop.wait(interval):
+                attempted = time.monotonic()
                 try:
-                    if not self.catalog.renew(lease):
+                    renewed = self.catalog.renew(lease, seconds=LEASE_SECONDS)
+                except Exception as exc:  # noqa: BLE001 - fail closed at a distributed ownership boundary
+                    if time.monotonic() - confirmed >= LEASE_SECONDS:
                         lost.set()
                         return
-                except Exception:  # noqa: BLE001 - fail closed at a distributed ownership boundary
-                    # No commit is possible unless the database itself confirms
-                    # the unexpired fence. A failed heartbeat never authorizes work.
+                    _log.warning("writer lease renewal failed (%s); retrying", type(exc).__name__)
+                    interval = HEARTBEAT_RETRY_SECONDS
+                    continue
+                if not renewed:
                     lost.set()
                     return
+                confirmed = attempted
+                interval = HEARTBEAT_SECONDS
 
         heartbeat = threading.Thread(target=renew, name="grc-lake-writer-lease", daemon=True)
         heartbeat.start()
@@ -153,9 +171,14 @@ class Runtime:
                     manifest = self.objects.snapshot(tenant_id, path, previous=head.manifest)
                     if partitions is not None:
                         manifest["partitions"] = partitions
-                    self.catalog.publish(
-                        tenant_id, expected=head.version, manifest=manifest, lease=lease, connection=connection
-                    )
+                    if manifest == head.manifest:
+                        # Nothing visible changed: keep the revision (and every
+                        # reader cache) but still fence this transaction's writes.
+                        self.catalog.confirm(lease, expected=head.version, connection=connection)
+                    else:
+                        self.catalog.publish(
+                            tenant_id, expected=head.version, manifest=manifest, lease=lease, connection=connection
+                        )
         finally:
             stop.set()
             heartbeat.join(timeout=15)
@@ -164,7 +187,7 @@ class Runtime:
             except Exception:  # noqa: BLE001 - fail closed at a distributed ownership boundary
                 # A cleanup failure cannot undo a committed publication; the
                 # database-clock lease expires without granting another writer.
-                logging.getLogger(__name__).warning("writer lease cleanup failed; awaiting expiry")
+                _log.warning("writer lease cleanup failed; awaiting expiry")
 
     @contextmanager
     def write(self, tenant_id: str, *, wait_seconds: float = 0):

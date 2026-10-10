@@ -70,7 +70,7 @@ def test_new_packs_are_honest_about_review_state() -> None:
         assert registry[framework_id]["implementation_status"] == "implemented_limited_mapping"
         for control_id, control in _framework(framework_id).items():
             assert control["review_status"] == "proposed"
-            assert control["reviewed_by"] == "automated-source-reconciliation"
+            assert control["source_reconciled_by"] == "automated-source-reconciliation"
             assert control_id in mappings
     assert registry["nist-800-53-rev5"]["source_sha256"] == MANIFEST["source"]["catalog_sha256"]
     assert registry["nist-rmf-800-37r2"]["source_sha256"] == RMF["source"]["pdf_sha256"]

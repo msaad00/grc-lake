@@ -77,12 +77,26 @@ def load_framework_registry(path: str | Path | None = None) -> dict[str, dict[st
     return {str(item["framework_id"]): item for item in frameworks}
 
 
+def source_provenance(row: dict[str, Any]) -> dict[str, Any]:
+    """Read legacy proposed-row attribution without implying human review."""
+    if row.get("review_status") != "proposed":
+        return dict(row)
+    aliases = {
+        "reviewed_by": "source_reconciled_by",
+        "reviewed_date": "source_reconciled_date",
+        "reviewed_at": "source_reconciled_at",
+    }
+    return {
+        aliases.get(key, key): row.get(aliases[key], value) if key in aliases else value for key, value in row.items()
+    }
+
+
 def load_control_catalog(path: str | Path | None = None) -> dict[str, dict[str, Any]]:
     payload = _read_json(path or DEFAULT_CONTROL_CATALOG)
     controls = payload.get("controls")
     if not isinstance(controls, list):
         raise ValueError("control catalog must contain a controls list")
-    return {str(item["control_id"]): item for item in controls}
+    return {str(item["control_id"]): source_provenance(item) for item in controls}
 
 
 def framework_registry_view(path: str | Path | None = None) -> Mapping[str, Mapping[str, Any]]:
@@ -112,7 +126,9 @@ def _cached_frozen_index(
     rows = _cached_json(path, fingerprint).get(list_key)
     if not isinstance(rows, list):
         raise ValueError(f"{path} must contain a {list_key} list")
-    return MappingProxyType({str(item[id_key]): _freeze(item) for item in rows})
+    return MappingProxyType(
+        {str(item[id_key]): _freeze(source_provenance(item) if list_key == "controls" else item) for item in rows}
+    )
 
 
 def _freeze(value: Any) -> Any:
@@ -173,7 +189,9 @@ def validate_catalog(
             "official_source_ref",
             *PROVENANCE_FIELDS,
         ):
-            if not str(control.get(required, "")).strip():
+            if control.get("review_status") == "proposed":
+                required = required.replace("reviewed_", "source_reconciled_")
+            if not str(control.get(required) or "").strip():
                 errors.append(f"control {control_id} missing {required}")
         errors.extend(f"control {control_id}: {problem}" for problem in validate_rule(control.get("evaluation_rule")))
         control_status = str(control.get("implementation_status") or "")
@@ -267,7 +285,11 @@ def controls_missing_provenance(catalog_path: str | Path | None = None) -> dict[
     catalog = load_control_catalog(catalog_path)
     out: dict[str, list[str]] = {}
     for control_id, control in catalog.items():
-        missing = [f for f in PROVENANCE_FIELDS if not str(control.get(f, "")).strip()]
+        fields = tuple(
+            field.replace("reviewed_", "source_reconciled_") if control.get("review_status") == "proposed" else field
+            for field in PROVENANCE_FIELDS
+        )
+        missing = [f for f in fields if not str(control.get(f) or "").strip()]
         if missing:
             out[control_id] = missing
     return out

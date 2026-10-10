@@ -14,7 +14,7 @@ test.describe("console smoke", () => {
       page.getByRole("tab", { name: "Frameworks", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByText("Control pass rate", { exact: true }),
+      page.getByText("Assessed coverage", { exact: true }),
     ).toBeVisible();
     await expect(
       page.getByText("Open findings", { exact: true }),

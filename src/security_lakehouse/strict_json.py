@@ -136,7 +136,66 @@ def loads(raw: str | bytes) -> Any:
         raise InvalidJSON("invalid JSON document") from exc
 
 
+# Formatting options that cannot make the encoder accept a value validate()
+# rejects; any other option takes the full validation pass first.
+_FORMAT_ONLY = frozenset({"sort_keys", "separators", "indent", "ensure_ascii"})
+_SCALAR_TYPES = frozenset({str, int, float, bool, type(None)})
+_STR_ONLY = frozenset({str})
+_CONTAINERS = (dict, list, tuple)
+# A surrogate in the output came from a string in the value: raw when
+# ensure_ascii is off, escaped when on (valid astral pairs are escaped too,
+# and take the full check).
+_RAW_SURROGATE = re.compile("[\ud800-\udfff]")
+
+
+def _may_hold_surrogate(text: str) -> bool:
+    if "\\u" in text and _SURROGATE_ESCAPE.search(text) is not None:
+        return True
+    return not text.isascii() and _RAW_SURROGATE.search(text) is not None
+
+
+def _encoder_checks_suffice(value: Any) -> bool:
+    """True when every key is a str and no value nests past MAX_DEPTH.
+
+    These are the only validate() rules the standard encoder does not enforce
+    itself: it coerces int/float/bool/None keys and has no depth limit. A
+    False result is not a rejection, only a signal to run validate().
+    """
+    level = [value] if isinstance(value, _CONTAINERS) else []
+    depth = 0
+    while level:
+        if depth >= MAX_DEPTH and any(level):
+            return False
+        nested: list[Any] = []
+        for item in level:
+            if isinstance(item, dict):
+                if not _STR_ONLY.issuperset(map(type, item)) and not all(isinstance(key, str) for key in item):
+                    return False
+                children: Any = item.values()
+            else:
+                children = item
+            if not _SCALAR_TYPES.issuperset(map(type, children)):
+                nested += [child for child in children if isinstance(child, _CONTAINERS)]
+        level = nested
+        depth += 1
+    return True
+
+
 def dumps(value: Any, **kwargs: Any) -> str:
-    """Serialize only validated values; callers retain their existing formatting."""
-    validate(value)
-    return json.dumps(value, allow_nan=False, **kwargs)
+    """Serialize only values validate() accepts; callers retain their existing formatting.
+
+    The encoder itself rejects non-finite numbers and unsupported types, so
+    the full validate() walk runs only when the output or a key/depth check
+    shows the value may be invalid, and then raises exactly what it always did.
+    """
+    if not _FORMAT_ONLY.issuperset(kwargs) or not _encoder_checks_suffice(value):
+        validate(value)
+        return json.dumps(value, allow_nan=False, **kwargs)
+    try:
+        text = json.dumps(value, allow_nan=False, **kwargs)
+    except (ValueError, TypeError, RecursionError):
+        validate(value)
+        raise
+    if _may_hold_surrogate(text):
+        validate(value)
+    return text

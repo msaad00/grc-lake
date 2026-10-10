@@ -37,5 +37,5 @@ def test_generated_csf_rows_do_not_claim_human_review():
     article = pack_mapping_row(spec)["articles"][0]
     assert control["implementation_status"] == "implemented_limited_mapping"
     assert control["review_status"] == article["review_status"] == "proposed"
-    assert control["reviewed_by"] is None
-    assert article["reviewed_by"] is None
+    assert control["source_reconciled_by"] is None
+    assert article["source_reconciled_by"] is None

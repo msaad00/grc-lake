@@ -61,6 +61,12 @@ def list_subscriptions(
     return [webhooks_db.subscription_to_dict(row) for row in rows]
 
 
+def count_subscriptions(
+    session: Session, tenant_id: str, *, enabled: bool | None = None, event_type: str | None = None
+) -> int:
+    return webhooks_db.count_subscriptions(session, tenant_id=tenant_id, enabled=enabled, event_type=event_type)
+
+
 def create_subscription(
     session: Session,
     tenant_id: str,

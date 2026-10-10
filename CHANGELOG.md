@@ -5,6 +5,22 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Correct personnel-screening, breach-notification, and broad PCI CCF mappings; use official ISO Annex A titles, label top-level coverage, and attribute proposed catalog rows to source reconciliation with legacy-field reads.
+
+- Stream atomic gold JSON writes and bound dashboard detail with explicit totals. Cold posture uses a source-hash-bound asset projection, with a streaming fallback for legacy lakes.
+
+- Use native NIST OSCAL catalog/profile references, return a JSON-RPC error for unknown MCP tools, and return 404 for unknown legacy evidence IDs. Clarify console mapping labels and guard batched Sidebar toggles.
+
+- The Helm chart refuses to render without authentication. Set `GRC_LAKE_COOKIE_SIGNING_KEY` (and `GRC_LAKE_SESSION_SECRET` for OIDC) through `env[]`, or acknowledge a local-only insecure install. The container is now named `grc-lake`, so update `kubectl logs -c` and similar selectors, and the writable home volume mounts at `/home/grc-lake`.
+
+- The EKS reference keeps the cluster API endpoint private unless `cluster_endpoint_public_access_cidrs` names the networks allowed to reach it. Open-world CIDRs are rejected. Existing clusters become private on their next apply unless the variable is set.
+
+- Connector plugins register under the `grc_lake.connectors` and `grc_lake.connector_catalog` entry-point groups. The `trustops.*` groups still load; when both define a name, the `grc_lake` entry wins.
+
+- Webhook deliveries add `X-GRC-Lake-Timestamp` and `X-GRC-Lake-Timestamp-Signature` so receivers can reject replays. Existing signature headers are unchanged.
+
+- SPDX 3.0.1 and CycloneDX AI-BOM exports validate against the official schemas. `grc-lake query` accepts `WITH` queries and opens both marts read-only.
+
 - Add a disposable authenticated image probe for API-key authorization, tenant isolation, revocation, snapshot integrity, and persistence after container recreation. Document publisher and provenance verification across the repository ownership transfer while retaining working historical image references. Allow the exact repository-owner identifier in technical copy without allowing retired product names or visual wordmarks.
 
 ## 0.3.1 - 2026-10-09

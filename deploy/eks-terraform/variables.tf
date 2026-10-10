@@ -16,6 +16,22 @@ variable "cluster_version" {
   default     = "1.35"
 }
 
+variable "cluster_endpoint_public_access_cidrs" {
+  description = "CIDR blocks allowed to reach the public EKS API endpoint. Empty (default) keeps the endpoint private: run Terraform, Helm and kubectl from inside the VPC (VPN, bastion, or runner). Name your operator ranges to enable the public endpoint for those ranges only."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for cidr in var.cluster_endpoint_public_access_cidrs : can(cidrhost(cidr, 0))])
+    error_message = "cluster_endpoint_public_access_cidrs entries must be valid CIDR blocks, e.g. 203.0.113.0/24."
+  }
+
+  validation {
+    condition     = alltrue([for cidr in var.cluster_endpoint_public_access_cidrs : !endswith(cidr, "/0")])
+    error_message = "cluster_endpoint_public_access_cidrs must not allow the whole internet (0.0.0.0/0 or ::/0); name operator ranges instead."
+  }
+}
+
 variable "namespace" {
   description = "Kubernetes namespace the GRC Lake chart installs into."
   type        = string
@@ -40,7 +56,7 @@ variable "ingress_host" {
 }
 
 variable "image_repository" {
-  description = "OCI image repo for the GRC Lake workbench."
+  description = "OCI image repository for GRC Lake."
   type        = string
   default     = "ghcr.io/msaad00/grc-lake"
 }

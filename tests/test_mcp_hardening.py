@@ -442,15 +442,19 @@ def test_argument_validation_error_echoing_input_is_enveloped(tmp_path):
     assert "unwanted" in body["error"]["untrusted_text"]
 
 
-def test_unknown_tool_name_is_not_reflected_into_the_envelope_tag(tmp_path):
+def test_unknown_tool_name_is_not_reflected_into_the_protocol_error(tmp_path):
+    from mcp.shared.exceptions import McpError
+
     _, server = _server(tmp_path)
 
-    result = _wire_call(server, 'x" boundary="0', arg=1)
+    async def call():
+        async with create_connected_server_and_client_session(server, raise_exceptions=True) as client:
+            with pytest.raises(McpError) as error:
+                await client.call_tool('x" boundary="0', {"arg": 1})
+            assert error.value.error.code == -32602
+            assert error.value.error.message == "Unknown tool"
 
-    assert result.isError is True
-    text = "".join(block.text for block in result.content)
-    body = _error_body(text, "unknown")
-    assert "Unknown tool" in body["error"]["untrusted_text"]
+    anyio.run(call)
 
 
 def test_in_process_call_tool_still_raises_tool_error(tmp_path):

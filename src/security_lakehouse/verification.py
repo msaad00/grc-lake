@@ -45,6 +45,9 @@ def _bronze_record(lake_dir: str | Path, event_id: str) -> dict[str, Any] | None
     return None
 
 
+NO_SILVER_RECORD = "no silver record found for event_id"
+
+
 @generation_reader
 def verify_event(lake_dir: str | Path, event_id: str) -> dict[str, Any]:
     """Verify a silver event's hash against its bronze source.
@@ -83,7 +86,7 @@ def verify_event(lake_dir: str | Path, event_id: str) -> dict[str, Any]:
             "expected_sha256": None,
             "computed_sha256": None,
             "source_layer": "missing",
-            "reason": "no silver record found for event_id",
+            "reason": NO_SILVER_RECORD,
         }
     expected = str(silver.get("raw_sha256") or "")
     bronze = _bronze_record(lake_dir, event_id)

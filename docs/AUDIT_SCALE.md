@@ -116,3 +116,35 @@ After each pipeline run, `row_counts` records bronze/silver/gold cardinalities s
 - [CONTINUOUS_INGESTION.md](CONTINUOUS_INGESTION.md) — connector loop and watermarks
 - [HERO_DATA_LAKES.md](HERO_DATA_LAKES.md) — warehouse adapters and evidence readers
 - [FRAMEWORK_COVERAGE.md](FRAMEWORK_COVERAGE.md) — active control catalog size
+
+## Bounded dashboard and cold posture reads
+
+Gold JSON documents are encoded incrementally into atomic temporary files;
+JSONL artifacts retain every record. `gold/dashboard_data.json` keeps at most
+100 rows per detail collection, with `detail_counts`, `detail_truncated`, and
+`detail_limit`. Aggregates still cover the full input. Frozen HTML reports label
+sampled control detail explicitly.
+
+The dashboard also holds a compact asset projection (count, names, top ten) for
+cold posture reads. Its source digest must match `gold/asset_risk.jsonl` before
+reuse. Older lakes, changed source files, and dashboards over 16 MiB use a
+streaming asset fallback. Assessment freshness, violation totals, scores, and
+snapshot behavior retain their existing contracts.
+
+An October 10, 2026 synthetic run on macOS ARM64 / Python 3.12, using
+`fixtures synthesize-scale --count 100000 --seed 42` with two controls per event,
+measured the following in separate fresh processes:
+
+| Measurement           |    Before |     After |
+| --------------------- | --------: | --------: |
+| Pipeline wall time    |   60.07 s |   34.86 s |
+| Pipeline peak RSS     |   2.25 GB |   1.59 GB |
+| Total gold bytes      | 673.05 MB | 284.03 MB |
+| Dashboard JSON        | 389.81 MB |   0.80 MB |
+| Cold posture handler  |   10.75 s |    5.61 s |
+| Cold posture peak RSS |   1.34 GB |   0.71 GB |
+
+Sizes use decimal units. These are single local synthetic observations, not
+production capacity or native AMD64 measurements. Cold handler timing excludes
+HTTP transport; its response remains 5.33 MB with the existing inline violation
+limit. Full evaluation still keeps raw and normalized events in memory.

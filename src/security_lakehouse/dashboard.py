@@ -71,6 +71,8 @@ def _load_app_data(lake: Path) -> dict[str, Any]:
         "framework_catalog_counts": dict(Counter(str(row["framework"]) for row in load_control_catalog().values())),
         "generated_at": dashboard.get("generated_at"),
         "metrics": dashboard.get("metrics", {}),
+        "detail_counts": dashboard.get("detail_counts", {}),
+        "detail_truncated": dashboard.get("detail_truncated", {}),
         "controls": dashboard.get("control_posture", []),
         "control_tests": dashboard.get("control_tests", []),
         "assets": dashboard.get("asset_risk", []),
@@ -161,7 +163,13 @@ def _fallback_html(app_data: dict[str, Any]) -> str:
     controls = _table(
         ["Control", "Title", "Status", "Owner"],
         [[row.get(key) for key in ("control_id", "title", "status", "owner")] for row in app_data.get("controls", [])],
-        caption="Recorded control results",
+        caption=(
+            f"Sampled control results ({len(app_data.get('controls', []))} of "
+            f"{app_data.get('detail_counts', {}).get('control_posture', 0)}); "
+            "complete results are in gold/control_posture.jsonl"
+            if app_data.get("detail_truncated", {}).get("control_posture")
+            else "Recorded control results"
+        ),
         empty="No control results were recorded.",
     )
     notice = (

@@ -304,10 +304,7 @@ export const api = {
       `/v1/auth/keys/${encodeURIComponent(keyId)}`,
       "DELETE",
     ).then((body) => body.data),
-  authUsers: () =>
-    get<{ data: AuthUser[]; meta?: { count?: number } }>("/v1/auth/users").then(
-      (body) => body.data,
-    ),
+  authUsers: () => getAllV1<AuthUser>("/v1/auth/users").then((r) => r.items),
   updateAuthUser: (userId: string, payload: UpdateAuthUserPayload) =>
     mutate<{ data: AuthUser }>(
       `/v1/auth/users/${encodeURIComponent(userId)}`,

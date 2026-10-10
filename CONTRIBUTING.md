@@ -18,13 +18,15 @@ later, and `make`.
 git clone https://github.com/msaad00/grc-lake.git
 cd grc-lake
 make uv-sync               # uv sync --frozen --all-extras, same as CI
-source .venv/bin/activate  # make targets call `python`; or prefix them: uv run make test
 make pre-commit-install    # pre-commit and commit-message hooks
 make web-install           # console dependencies (npm ci)
 ```
 
 Run `make help` (or just `make`) to list commands and their descriptions. This
 does not require Python or Node dependencies and does not start builds or tests.
+Python targets run through `uv run --frozen python`, so Ruff, mypy and pytest
+come from the lockfile rather than whatever is first on `PATH`. Set
+`PYTHON=python` to use an already-activated interpreter instead.
 
 Run the console against the sample company:
 

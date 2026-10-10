@@ -453,8 +453,8 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
     the optional dependency installed.
     """
     from mcp.server.fastmcp import FastMCP
-    from mcp.shared.exceptions import UrlElicitationRequiredError
-    from mcp.types import CallToolResult, TextContent, ToolAnnotations
+    from mcp.shared.exceptions import McpError, UrlElicitationRequiredError
+    from mcp.types import INVALID_PARAMS, CallToolRequest, CallToolResult, ErrorData, TextContent, ToolAnnotations
     from mcp.types import Tool as MCPTool
     from pydantic_core import to_jsonable_python
 
@@ -493,6 +493,16 @@ def build_server(lake_dir: Path | None = None) -> FastMCP:
             )
 
     mcp._mcp_server.call_tool(validate_input=False)(call_tool_enveloping_errors)
+    registered_handler = mcp._mcp_server.request_handlers[CallToolRequest]
+
+    async def dispatch_known_tool(request: CallToolRequest) -> Any:
+        # Check outside the SDK's execution-error wrapper: unknown names are
+        # protocol errors, while registered tool failures retain safe envelopes.
+        if mcp._tool_manager.get_tool(request.params.name) is None:
+            raise McpError(ErrorData(code=INVALID_PARAMS, message="Unknown tool"))
+        return await registered_handler(request)
+
+    mcp._mcp_server.request_handlers[CallToolRequest] = dispatch_known_tool
 
     # Write tools: name -> (destructiveHint, idempotentHint, openWorldHint).
     # Every other tool is a closed-world, idempotent read. "Destructive" means

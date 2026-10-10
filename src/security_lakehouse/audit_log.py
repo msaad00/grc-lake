@@ -273,7 +273,7 @@ def build_audit_log(
     *,
     category: str | None = None,
     actor: str | None = None,
-    limit: int = 200,
+    limit: int | None = 200,
     include_requests: bool = False,
     request_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:

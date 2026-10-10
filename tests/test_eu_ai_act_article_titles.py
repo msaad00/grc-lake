@@ -67,14 +67,14 @@ def test_corrected_rows_are_versioned_and_unreviewed() -> None:
     assert art49["version"] == "1.1.0"
     assert art49["supersedes"] == "EU-AI-ACT-Art.49@1.0.0"
     assert art49["review_status"] == "proposed"
-    assert art49["reviewed_by"] == "automated-source-reconciliation"
+    assert art49["source_reconciled_by"] == "automated-source-reconciliation"
     before = controls_as_of("2026-09-01")["EU-AI-ACT-Art.49"]
     assert before["version"] == "1.0.0"
     assert "impact assessment" in before["title"].lower()
 
     art27 = catalog["EU-AI-ACT-Art.27"]
     assert art27["review_status"] == "proposed"
-    assert art27["reviewed_by"] == "automated-source-reconciliation"
+    assert art27["source_reconciled_by"] == "automated-source-reconciliation"
 
 
 def test_safeguard_mappings_follow_the_correct_meaning() -> None:

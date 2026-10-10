@@ -1053,6 +1053,9 @@ export interface FrameworkCoverageSummary {
 }
 
 export interface FrameworkCoverageRow {
+  coverage_level?: "top_level" | "seeded_requirements";
+  coverage_label?: string;
+  coverage_boundary?: string;
   framework_id: string;
   name: string;
   version: string;
@@ -1095,8 +1098,10 @@ export interface FrameworkControlArticle {
   article_id: string;
   title: string;
   official_source_url: string;
-  reviewed_by: string;
-  reviewed_at: string;
+  reviewed_by?: string;
+  source_reconciled_by?: string;
+  reviewed_at?: string;
+  source_reconciled_at?: string;
   rationale: string;
   /** Absent on legacy human-reviewed rows; "proposed" = not yet reviewed. */
   review_status?: string;
@@ -1387,8 +1392,10 @@ export interface ReviewedArticle {
   article_id: string;
   title: string;
   official_source_url: string;
-  reviewed_by: string;
-  reviewed_at: string;
+  reviewed_by?: string;
+  source_reconciled_by?: string;
+  reviewed_at?: string;
+  source_reconciled_at?: string;
   rationale: string;
   /** Absent on legacy human-reviewed rows; "proposed" = not yet reviewed. */
   review_status?: string;

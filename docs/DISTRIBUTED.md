@@ -300,3 +300,12 @@ triggers, indexes or foreign-key/unique constraints on that table or its partiti
 transactional refusal so they are not silently discarded; reconcile those custom
 schema extensions with the partition layout before retrying. Application-role
 grants should be verified after an operator-managed schema upgrade.
+
+## S3 checksum rejection
+
+Amazon S3 documents `BadDigest` (HTTP 400) when a supplied checksum differs from
+its calculated checksum. `InvalidDigest` is a malformed digest. The object-store
+adapter's `BadDigest` handling matches that documented error code; this source
+check is not a live AWS fault-injection result. See the official
+[S3 error responses](https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html)
+and [PutObject checksum contract](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html).

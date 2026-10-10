@@ -44,7 +44,7 @@ from security_lakehouse.readiness import build_readiness_view
 from security_lakehouse.scheduler import tick as scheduler_tick
 from security_lakehouse.tracking import ALLOWED_STATES, append_event, latest_state, list_events
 from security_lakehouse.trust_share import create_share, list_shares, revoke_share
-from security_lakehouse.verification import verify_event
+from security_lakehouse.verification import NO_SILVER_RECORD, verify_event
 from security_lakehouse.workflows import (
     action_catalog,
     approve_workflow_run,
@@ -118,7 +118,7 @@ def handle_get(
     if path == "/api/posture/current":
         return HTTPStatus.OK, build_current_posture(lake)
     if path == "/api/violations":
-        posture = build_current_posture(lake)
+        posture = build_current_posture(lake, inline_violation_cap=None)
         framework = _first(query, "framework")
         control_id = _first(query, "control_id")
         violations = posture["violations"]
@@ -280,7 +280,10 @@ def handle_post(
         return HTTPStatus.CREATED, {"event": record}
     verify = _suffix_match(path, "/api/evidence/", "/verify")
     if verify is not None:
-        return HTTPStatus.OK, verify_event(lake, verify)
+        result = verify_event(lake, verify)
+        if result["reason"] == NO_SILVER_RECORD:
+            return HTTPStatus.NOT_FOUND, {"error": "not_found", "reason": "unknown evidence event"}
+        return HTTPStatus.OK, result
     configure = _suffix_match(path, "/api/connectors/", "/configure")
     if configure is not None:
         state = str(body.get("state") or "enabled").lower()
@@ -422,5 +425,5 @@ def handle_post(
         revoked = revoke_share(lake, revoke, additional_lakes=share_lakes)
         if revoked is None:
             return HTTPStatus.NOT_FOUND, {"error": "not_found"}
-        return HTTPStatus.CREATED, {"share": revoked}
+        return HTTPStatus.OK, {"share": revoked}
     return HTTPStatus.NOT_FOUND, {"error": "not_found"}

@@ -164,6 +164,18 @@ class Catalog:
                 .values(owner=None, lease_until=None)
             )
 
+    def confirm(self, lease: Lease, *, expected: int, connection: Connection) -> None:
+        """Fence ``connection``'s writes to ``lease`` at revision ``expected`` without publishing.
+
+        The row lock holds until the transaction ends, so the check covers the commit.
+        """
+        table = cast(Table, DistributedTenantHead.__table__)
+        held = connection.scalar(
+            select(table.c.version).where(*self._owns(table, lease), table.c.version == expected).with_for_update()
+        )
+        if held is None:
+            raise Conflict("publication rejected: stale revision or expired writer fence")
+
     def publish(
         self,
         tenant_id: str,

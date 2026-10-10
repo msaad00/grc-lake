@@ -135,6 +135,8 @@ test("evidence table fits 1440px without splitting control IDs", async ({
   const table = page.locator("table").first();
   const id = table.getByText("NIST-AI-RMF-MANAGE-2.3", { exact: true }).first();
   await expect(id).toBeVisible({ timeout: 20_000 });
+  // The table renders before freshness arrives; measure once styles apply.
+  await expect(id).toHaveCSS("line-height", /px$/);
   const overflow = await table.evaluate((node) => {
     const scroller = node.parentElement!;
     return scroller.scrollWidth - scroller.clientWidth;

@@ -120,3 +120,49 @@ def test_broken_entry_point_does_not_break_the_rest_of_the_registry(
 
     warnings = [record for record in caplog.records if record.levelno == logging.WARNING]
     assert any("broken-vendor-evidence" in record.getMessage() for record in warnings)
+
+
+def _install_groups(monkeypatch: pytest.MonkeyPatch, groups: dict[str, list[tuple[str, str]]]) -> None:
+    def fake(**kwargs: str) -> list[importlib.metadata.EntryPoint]:
+        group = kwargs["group"]
+        return [importlib.metadata.EntryPoint(name=n, value=v, group=group) for n, v in groups.get(group, [])]
+
+    monkeypatch.setattr(importlib.metadata, "entry_points", fake)
+
+
+def test_grc_lake_group_is_primary_and_legacy_group_still_loads(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert GROUP == "grc_lake.connectors"
+    assert connector_runner.LEGACY_CONNECTOR_ENTRY_POINT_GROUP == "trustops.connectors"
+    _install_groups(
+        monkeypatch,
+        {
+            "grc_lake.connectors": [("demo-vendor-evidence", "demo_vendor_connector:build_demo_vendor")],
+            "trustops.connectors": [("legacy-vendor-evidence", "demo_vendor_connector:build_demo_vendor")],
+        },
+    )
+
+    registry = connector_runner.effective_registry()
+
+    assert "demo-vendor-evidence" in registry
+    assert "legacy-vendor-evidence" in registry
+
+
+def test_grc_lake_group_wins_a_name_registered_in_both_groups(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    _install_groups(
+        monkeypatch,
+        {
+            "grc_lake.connectors": [("demo-vendor-evidence", "demo_vendor_connector:build_demo_vendor")],
+            "trustops.connectors": [("demo-vendor-evidence", "broken_vendor_connector:whatever")],
+        },
+    )
+
+    with caplog.at_level(logging.WARNING, logger="security_lakehouse.connector_runner"):
+        registry = connector_runner.effective_registry()
+
+    import demo_vendor_connector
+
+    assert registry["demo-vendor-evidence"] is demo_vendor_connector.build_demo_vendor
+    # The shadowed legacy registration is never imported.
+    assert "broken_vendor_connector" not in caplog.text

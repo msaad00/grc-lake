@@ -14,7 +14,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from security_lakehouse.catalog import _data_root, load_control_catalog
+from security_lakehouse.catalog import _data_root, load_control_catalog, source_provenance
 
 ROOT = _data_root()
 DEFAULT_MAPPINGS = ROOT / "mappings" / "control_articles.json"
@@ -34,6 +34,7 @@ def load_control_article_mappings(
         cid = str(mapping.get("control_id") or "")
         if not cid:
             continue
+        mapping["articles"] = [source_provenance(article) for article in mapping.get("articles", [])]
         out[cid] = mapping
     return out
 
@@ -64,6 +65,8 @@ def validate_control_article_mappings(
             errors.append(f"mapping {cid} has no articles")
         for article in articles:
             for required in ("article_id", "title", "official_source_url", "reviewed_by", "reviewed_at", "rationale"):
+                if article.get("review_status") == "proposed":
+                    required = required.replace("reviewed_", "source_reconciled_")
                 if not str(article.get(required) or "").strip():
                     errors.append(f"mapping {cid} article missing {required}")
     return errors

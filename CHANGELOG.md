@@ -3,7 +3,13 @@
 All notable GRC Lake changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
-## Unreleased
+## 0.3.2 - 2026-10-10
+
+- Prepare package, console, chart, Compose and deployment examples for 0.3.2. New images target `ghcr.io/koda-ai-studio/grc-lake`; historical 0.3.1 images remain under `ghcr.io/msaad00/grc-lake`. Candidate references become usable only after publication.
+
+- Preserve synthetic fixture origin through collection and invalidate stale or cyclic inherited CCF mapping reviews. Tighten Helm startup and distributed availability behavior and refresh pinned dependencies and security gates.
+
+- Add bounded ClusterFuzzLite coverage for strict JSON, raw evidence, AI-BOM imports and webhook signatures. Reject malformed signature text without exceptions and tolerate malformed optional AI-BOM fields; replay minimized regressions in the unit suite.
 
 - Correct personnel-screening, breach-notification, and broad PCI CCF mappings; use official ISO Annex A titles, label top-level coverage, and attribute proposed catalog rows to source reconciliation with legacy-field reads.
 

@@ -5,7 +5,7 @@
 # Snowflake object names match the GRC Lake bootstrap scripts.
 
 image:
-  repository: ghcr.io/msaad00/grc-lake
+  repository: ghcr.io/koda-ai-studio/grc-lake
   tag: "" # inherit the checked-out release chart appVersion
   pullPolicy: IfNotPresent
 

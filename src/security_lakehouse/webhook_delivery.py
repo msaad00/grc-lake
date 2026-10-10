@@ -141,7 +141,7 @@ def sign_payload(secret: str, body: bytes) -> str:
 def verify_signature(secret: str, body: bytes, signature: str) -> bool:
     """Constant-time check that ``signature`` matches ``body`` signed with ``secret``."""
     expected = sign_payload(secret, body)
-    return hmac.compare_digest(expected, signature)
+    return signature.isascii() and hmac.compare_digest(expected, signature)
 
 
 def _unix_now() -> int:
@@ -170,7 +170,7 @@ def verify_timestamped_signature(
     current = _unix_now() if now is None else now
     if abs(current - sent_at) > tolerance_seconds:
         return False
-    return hmac.compare_digest(sign_timestamped_payload(secret, sent_at, body), signature)
+    return signature.isascii() and hmac.compare_digest(sign_timestamped_payload(secret, sent_at, body), signature)
 
 
 def build_envelope(*, event_type: str, tenant_id: str, occurred_at: str, data: dict[str, Any]) -> dict[str, Any]:

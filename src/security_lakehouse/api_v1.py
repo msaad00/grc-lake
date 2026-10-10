@@ -134,8 +134,14 @@ Params = Mapping[str, list[str]]
 
 # Compatibility exports used by legacy routes and external v1 callers.
 required_post_scope = api_contract.required_post_scope
-_UNMAPPED_POST_SCOPE = api_contract._UNMAPPED_POST_SCOPE
 scope_denied_detail = api_contract.scope_denied_detail
+
+
+def __getattr__(name: str) -> str:
+    """Preserve the historical private sentinel without an unused binding."""
+    if name == "_UNMAPPED_POST_SCOPE":
+        return api_contract._UNMAPPED_POST_SCOPE
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def first_param(params: Params, key: str) -> str | None:

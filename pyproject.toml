@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "grc-lake"
-version = "0.3.1"
+version = "0.3.2"
 description = "Open-source, self-hosted GRC engineering on your evidence lake: read-only evidence collection, deterministic control tests, and reproducible assessment exports via console, API, CLI, and MCP."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -136,7 +136,7 @@ agents = [
 # validate every commit message format.
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.1"
+version = "0.3.2"
 version_files = ["pyproject.toml:version"]
 tag_format = "v$version"
 

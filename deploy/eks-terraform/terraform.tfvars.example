@@ -29,5 +29,5 @@ evidence_bucket_name = "acme-grc-lake-evidence"
 # ingress_host = "grc-lake.acme.io"
 
 # Pin the image. Empty defaults to chart appVersion.
-# image_repository = "ghcr.io/msaad00/grc-lake"
+# image_repository = "ghcr.io/koda-ai-studio/grc-lake"
 # image_tag        = "" # use the versioned chart appVersion

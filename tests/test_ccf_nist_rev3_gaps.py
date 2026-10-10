@@ -17,6 +17,11 @@ def test_new_safeguards_are_source_pinned_proposed_and_scoped():
         for mapping in safeguard["satisfies"]:
             assert mapping["review_status"] == "proposed"
             assert "review_basis" not in mapping
+            if mapping["control_id"] == "CMMC-3.9.1":
+                # Existing proposed CMMC mapping was relocated to personnel screening.
+                assert sid == "SG-PERSONNELSCREENING-001"
+                assert mapping["role"] == "equivalent"
+                continue
             source = mapping["mapping_source"]
             assert source["sha256"] == "3e4631df8b5d61f40a6e542b52779ef30ddbbfff31e09214fa94ad6e6f5e6d08"
             assert requirement in source["locator"]
@@ -33,7 +38,12 @@ def test_two_new_requirements_remain_unattestable_until_review():
     before = coverage_by_framework(without)
     after = coverage_by_framework(payload)
     assert after["safeguards"] == before["safeguards"] + 2
-    assert after["covered"] == before["covered"] + 2
+    # The personnel safeguard also owns the relocated proposed CMMC requirement.
+    assert after["covered"] == before["covered"] + 3
+    assert (
+        after["frameworks"]["nist-800-171-rev3"]["covered"] == before["frameworks"]["nist-800-171-rev3"]["covered"] + 2
+    )
+    assert after["frameworks"]["cmmc-2-level2"]["covered"] == before["frameworks"]["cmmc-2-level2"]["covered"] + 1
     assert after["reviewed"] == before["reviewed"]
     assert after["frameworks"]["nist-800-171-rev3"]["covered"] == 85
 

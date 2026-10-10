@@ -14,7 +14,7 @@ The linked epics are closed on GitHub; each row names what is still left.
 | [#610](https://github.com/msaad00/grc-lake/issues/610) | Platform       | Billing and SCIM shipped (gated commercial features); live Stripe + IdP verification pending                                                                                                                                                              |
 | —                                                      | Mapping review | Mapping review remains incomplete, including all NIST RMF, ISO 27701, NIST 800-171 Rev 3, NIS2, and DORA mappings. See the generated [coverage ledger](docs/FRAMEWORK_COVERAGE.md) for current counts. Proposed mappings are evaluated but not attestable |
 
-1,358 of 1,699 safeguard-to-requirement mapping rows are proposed, so 1,078 of the 1,418 mapped requirements have no reviewed mapping.
+1,357 of 1,697 safeguard-to-requirement mapping rows are proposed, so 1,078 of the 1,417 mapped requirements have no reviewed mapping.
 
 Mapping counts are effective review states: a mapping marked reviewed against an
 older control version counts as proposed until it is re-reviewed.

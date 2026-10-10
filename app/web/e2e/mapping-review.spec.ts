@@ -140,9 +140,12 @@ test("contextual mappings are visibly separate from coverage", async ({
     await route.fulfill({ response, json: body });
   });
   const table = await openQueue(page);
-  await expect(
-    table.getByText("Context only · no coverage credit"),
-  ).toHaveCount(2);
-  await expect(table.getByText("supporting", { exact: true })).toBeVisible();
-  await expect(table.getByText("inherited", { exact: true })).toBeVisible();
+  // Assert the injected rows independently of other contextual catalog mappings.
+  for (const [index, role] of ["supporting", "inherited"].entries()) {
+    const row = table.getByRole("row").nth(index + 1);
+    await expect(
+      row.getByText("Context only · no coverage credit"),
+    ).toBeVisible();
+    await expect(row.getByText(role, { exact: true })).toBeVisible();
+  }
 });

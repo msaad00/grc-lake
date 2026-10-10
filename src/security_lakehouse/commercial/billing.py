@@ -140,7 +140,7 @@ def verify_stripe_signature(payload: bytes, header: str | None, secrets: list[st
             timestamp = value
         elif key == "v1":
             signatures.append(value)
-    if timestamp is None or not timestamp.isdigit() or not signatures:
+    if timestamp is None or not (timestamp.isascii() and timestamp.isdigit()) or not signatures:
         return False
     current = int(time.time()) if now is None else now
     if abs(current - int(timestamp)) > SIGNATURE_TOLERANCE_SECONDS:
@@ -148,7 +148,7 @@ def verify_stripe_signature(payload: bytes, header: str | None, secrets: list[st
     signed = timestamp.encode() + b"." + payload
     for secret in secrets:
         expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
-        if any(hmac.compare_digest(expected, candidate) for candidate in signatures):
+        if any(candidate.isascii() and hmac.compare_digest(expected, candidate) for candidate in signatures):
             return True
     return False
 

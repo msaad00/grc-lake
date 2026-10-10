@@ -1,0 +1,51 @@
+name: cflite-batch
+
+# Long-running fuzzing of every target in fuzz/. Crash reproducers are retained
+# by ClusterFuzzLite and available SARIF is uploaded to code scanning.
+on:
+  schedule:
+    # 05:17 UTC every Sunday
+    - cron: "17 5 * * 0"
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    name: Batch fuzzing (address)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      actions: read # read ClusterFuzzLite workflow artifacts
+      contents: read
+      security-events: write # upload SARIF to code scanning
+    steps:
+      - name: Build fuzzers
+        id: build
+        uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          language: python
+          sanitizer: address
+      - name: Run fuzzers
+        id: run
+        uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          language: python
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fuzz-seconds: 3600
+          mode: batch
+          sanitizer: address
+          output-sarif: true
+      # No persistent storage repo is configured; each run starts with the
+      # checked-in seeds. Add corpus pruning before enabling persistent storage.
+      - name: Upload SARIF
+        if: always() && steps.build.outcome == 'success' && hashFiles('cifuzz-sarif/results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: cifuzz-sarif/results.sarif
+          checkout_path: cifuzz-sarif
+          category: clusterfuzzlite

@@ -89,6 +89,28 @@ for each repeat so earlier failure evidence remains available. CI runs this chec
 inside the required `docker-build` job and retains its JSON result and container
 log for 14 days, including when the check fails.
 
+## Fuzzing
+
+ClusterFuzzLite exercises strict JSON, raw evidence records, CycloneDX/SPDX
+imports, and webhook signatures with Atheris. The pull-request workflow spends
+five minutes fuzzing changed code; a weekly or manually dispatched batch spends
+one hour across the targets. Failures retain crash reproducers, and batch runs
+upload available SARIF results to code scanning. This is bounded testing, not a
+claim that every input or native dependency is safe.
+
+Replay the checked-in regression seeds without Docker or Atheris:
+
+```bash
+uv run --frozen python -m pytest -q tests/test_fuzz_targets.py
+```
+
+For coverage-guided local runs, follow the [ClusterFuzzLite Python
+instructions](https://google.github.io/clusterfuzzlite/build-integration/python-lang/)
+using `.clusterfuzzlite/Dockerfile` and `.clusterfuzzlite/build.sh`. Use a disposable
+output directory and container; retain minimized crash inputs and remove the
+container/build output after testing. Add a deterministic regression test for
+any confirmed crash before fixing its parser or verifier.
+
 ## Commits and pull requests
 
 - Branch from `main`. One logical change per pull request.

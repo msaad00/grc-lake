@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Add bounded ClusterFuzzLite coverage for strict JSON, raw evidence, AI-BOM imports and webhook signatures. Reject malformed signature text without exceptions and tolerate malformed optional AI-BOM fields; replay minimized regressions in the unit suite.
+
 - Correct personnel-screening, breach-notification, and broad PCI CCF mappings; use official ISO Annex A titles, label top-level coverage, and attribute proposed catalog rows to source reconciliation with legacy-field reads.
 
 - Stream atomic gold JSON writes and bound dashboard detail with explicit totals. Cold posture uses a source-hash-bound asset projection, with a streaming fallback for legacy lakes.

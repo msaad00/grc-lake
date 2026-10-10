@@ -92,9 +92,9 @@ updates:
         applies-to: security-updates
         patterns: ["*"]
 
-  # Container base images (Dockerfile)
+  # Application and fuzz-builder base images
   - package-ecosystem: "docker"
-    directory: "/"
+    directories: ["/", "/.clusterfuzzlite"]
     schedule:
       interval: "weekly"
       day: "monday"

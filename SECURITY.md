@@ -3,7 +3,7 @@
 ## Report a vulnerability
 
 Please report security vulnerabilities privately through GitHub:
-**[Report a vulnerability](https://github.com/msaad00/grc-lake/security/advisories/new)**
+**[Report a vulnerability](https://github.com/koda-ai-studio/grc-lake/security/advisories/new)**
 (the repository's **Security** tab, then **Report a vulnerability**).
 
 Do not open a public issue, pull request, or discussion for a vulnerability.
@@ -27,7 +27,7 @@ as a new patch release. Upgrade to the newest patch to receive them.
 
 | Version                      | Supported |
 | ---------------------------- | --------- |
-| Latest `0.2.x` patch release | Yes       |
+| Latest `0.3.x` patch release | Yes       |
 | Earlier releases             | No        |
 
 ## Scope
@@ -49,7 +49,7 @@ evidence or review logs that goes undetected.
 Out of scope:
 
 - running with authentication disabled (`--allow-insecure-no-auth`, or the
-  default `trustops` service in `compose.yaml`). That mode is unauthenticated
+  default `grc-lake` service in `compose.yaml`). That mode is unauthenticated
   by design, for local demos only;
 - vulnerabilities in third-party dependencies with no GRC Lake-specific impact;
   report those upstream. Dependabot opens weekly version-update PRs;

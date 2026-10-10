@@ -90,7 +90,9 @@ def _cyclonedx_items(document: dict[str, Any]) -> list[dict[str, Any]]:
         name = _text(component.get("name"), limit=1024)
         if not name:
             continue
-        external_refs = component.get("externalReferences") or []
+        external_refs = component.get("externalReferences")
+        if not isinstance(external_refs, list):
+            external_refs = []
         model_card = component.get("modelCard")
         has_model_card = bool(model_card) or any(
             isinstance(ref, dict) and ref.get("type") == "model-card" for ref in external_refs
@@ -141,7 +143,8 @@ def _spdx_licenses(graph: list[Any]) -> dict[str, list[str]]:
     for node in graph:
         if not isinstance(node, dict) or "Relationship" not in _spdx_node_type(node):
             continue
-        if node.get("relationshipType") not in _SPDX_LICENSE_RELATIONSHIPS:
+        relationship = node.get("relationshipType")
+        if not isinstance(relationship, str) or relationship not in _SPDX_LICENSE_RELATIONSHIPS:
             continue
         targets = node.get("to")
         found = by_element.setdefault(_text(node.get("from"), limit=1024), [])

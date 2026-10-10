@@ -63,7 +63,8 @@ def test_every_workflow_action_is_pinned_to_a_commit_sha() -> None:
         f"{name}: {line.strip()}"
         for name, text in _workflow_texts().items()
         for line in text.splitlines()
-        if re.match(r"^\s*(-\s+)?uses:", line) and not re.search(r"uses: [\w./-]+@[0-9a-f]{40} # v\d+(\.\d+){2}$", line)
+        if re.match(r"^\s*(-\s+)?uses:", line)
+        and not re.search(r"uses: [\w./-]+@[0-9a-f]{40} # v\d+(\.\d+){0,2}$", line)
     ]
     assert not unpinned, unpinned
 

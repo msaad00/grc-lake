@@ -19,7 +19,7 @@ from security_lakehouse.pipeline import run_pipeline
 
 EXPECTED_SHA256 = {
     "gold/asset_risk.jsonl": "dba5fdaf83c3738723bf2b68e2c513ef843841e5c54615953b0faa3060a4f3fd",
-    "gold/ccf_assessment.json": "bce806ad72bc7073e1184c3b98195473d0a2b2d118c527c4602928c1d0ecd7e9",
+    "gold/ccf_assessment.json": "88f95e6ec24053bdc40a91690ee64e2362a01771f1e76cd6760ac0e24615b9e2",
     "gold/control_posture.jsonl": "96cc35c09febafa9e0b1aeb13f4cbd78354f326724a7dba020ca6595491b9948",
     "gold/metrics.json": "fa1eb6e1311ca8f6e6b45fbf2b4b250e77fedafc4908feff6c9157470d5a2b00",
     "silver/normalized_events.jsonl": "1620e702198c4df792ef16201bbebfa748f89733f50a60f646ac0d902700b220",
@@ -34,6 +34,13 @@ def test_golden_pipeline_artifacts_are_byte_identical(tmp_path: Path) -> None:
 
     actual = {rel: hashlib.sha256((lake / rel).read_bytes()).hexdigest() for rel in EXPECTED_SHA256}
     assert actual == EXPECTED_SHA256, json.dumps(actual, indent=2, sort_keys=True)
+
+    # Catalog additions establish proposed coverage, never evidence or passes.
+    assessment = json.loads((lake / "gold/ccf_assessment.json").read_text())
+    requirements = {row["control_id"]: row for row in assessment["requirements"]}
+    for control_id in ("NIST-800-171R3-03.09.01", "NIST-800-171R3-03.12.05"):
+        assert requirements[control_id]["status"] == "not_evaluated"
+        assert requirements[control_id]["pending_mapping_count"] == 1
 
     write_assessment_snapshot(lake, reason="stability")
     write_assessment_snapshot(lake, reason="stability-2")

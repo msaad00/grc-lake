@@ -81,7 +81,9 @@ def test_ccf_family_ledger_separates_reviewed_and_proposed_mappings() -> None:
     assert all(row["safeguard_count"] > 0 for row in families)
     assert all(row["frameworks"] == sorted(row["frameworks"]) for row in families)
     assert all(
-        row["reviewed_mapping_count"] + row["proposed_mapping_count"] == row["mapping_count"] for row in families
+        row["reviewed_mapping_count"] + row["proposed_mapping_count"] + row["contextual_mapping_count"]
+        == row["mapping_count"]
+        for row in families
     )
     assert {"identity", "data-protection", "ai-governance"} <= {row["family_id"] for row in families}
 

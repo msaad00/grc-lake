@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -141,7 +142,49 @@ def load_safeguards(path: str | Path | None = None) -> JsonObject:
         for member in entry.get("satisfies", []):
             if "control_version" in member:
                 member["current_control_version"] = catalog.get(member["control_id"], {}).get("version", "1.0.0")
+        _check_inherited_reviews(entry, catalog)
     return payload
+
+
+def _check_inherited_reviews(entry: JsonObject, catalog: dict[str, Any]) -> None:
+    """Invalidate inherited maintainer reviews when their cited chain is stale.
+
+    Sources must exist in this safeguard and retain a current maintainer review.
+    Do not annotate valid mappings: their existing org-decision fingerprints must
+    remain stable. Invalid mappings can still receive their own explicit review.
+    """
+    members = entry.get("satisfies", [])
+    by_id = {row.get("control_id"): row for row in members}
+    counts = Counter(row.get("control_id") for row in members)
+    for member in members:
+        if "review_basis" not in member:
+            continue
+        current = member
+        seen: set[str] = set()
+        valid = True
+        while True:
+            control_id = current.get("control_id")
+            if (
+                control_id in seen
+                or counts[control_id] != 1
+                or control_id not in catalog
+                or current.get("review_status", "reviewed") != "reviewed"
+                or current.get("control_version")
+                != current.get("current_control_version", current.get("control_version"))
+            ):
+                valid = False
+                break
+            seen.add(control_id)
+            if "review_basis" not in current:
+                break
+            basis = current["review_basis"]
+            source = basis.get("inherited_from") if isinstance(basis, dict) else None
+            if not isinstance(source, str) or source not in by_id:
+                valid = False
+                break
+            current = by_id[source]
+        if not valid:
+            member["inherited_review_valid"] = False
 
 
 def validate_safeguards(payload: JsonObject, *, catalog: dict[str, Any] | None = None) -> list[str]:
@@ -231,7 +274,11 @@ def effective_review_state(member: JsonObject, decision: str | None = None) -> s
     version_matches = member.get("control_version") == member.get(
         "current_control_version", member.get("control_version")
     )
-    if member.get("review_status", "reviewed") == "reviewed" and version_matches:
+    if (
+        member.get("review_status", "reviewed") == "reviewed"
+        and version_matches
+        and member.get("inherited_review_valid", True)
+    ):
         return "maintainer_reviewed"
     if decision == "approve":
         return "org_reviewed"

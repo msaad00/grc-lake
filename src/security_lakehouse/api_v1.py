@@ -137,6 +137,13 @@ required_post_scope = api_contract.required_post_scope
 scope_denied_detail = api_contract.scope_denied_detail
 
 
+def __getattr__(name: str) -> str:
+    """Preserve the historical private sentinel without an unused binding."""
+    if name == "_UNMAPPED_POST_SCOPE":
+        return api_contract._UNMAPPED_POST_SCOPE
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 def first_param(params: Params, key: str) -> str | None:
     """Return the first value of query parameter ``key``, or ``None`` when absent."""
     values = params.get(key)

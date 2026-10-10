@@ -706,6 +706,15 @@ def test_legacy_scope_lookup_does_not_accept_v1_paths() -> None:
     assert api_legacy.required_post_scope("/elsewhere/snapshots") == api_v1._UNMAPPED_POST_SCOPE
 
 
+def test_legacy_scope_sentinel_import_remains_compatible() -> None:
+    from security_lakehouse import api_contract
+    from security_lakehouse.api_v1 import _UNMAPPED_POST_SCOPE
+
+    assert _UNMAPPED_POST_SCOPE is api_contract._UNMAPPED_POST_SCOPE
+    with pytest.raises(AttributeError, match="has no attribute"):
+        _ = api_v1.missing_compatibility_export
+
+
 def test_v1_workflow_id_match_does_not_swallow_sibling_routes() -> None:
     """`actions` and `runs` are route segments, not workflow ids."""
     assert api_v1._workflow_id_match("/api/v1/workflows/wf-1") == "wf-1"

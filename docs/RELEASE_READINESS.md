@@ -8,8 +8,9 @@ configuration and the [migration and recovery procedures](DISTRIBUTED.md); it is
 not enabled by a package upgrade. Cache reuse across distributed request scratch
 directories remains limited; local timings do not establish distributed capacity.
 
-The source version is a release candidate until the publication gates below
-succeed. Existing `trustops-security-data-lake` releases remain available under
+Version 0.3.1 is published. Changes merged after its release commit are not
+in those artifacts; qualify them as a subsequent version before tagging. A new
+source version remains a candidate until the publication gates below succeed. Existing `trustops-security-data-lake` releases remain available under
 their original PyPI name. New releases target `grc-lake`; use a fresh Python
 environment when moving between distributions because they own overlapping
 module files. Legacy CLI aliases and Python imports remain supported.
@@ -67,35 +68,102 @@ What each release publishes:
 Image tags are the exact version, `<major>.<minor>`, and `sha-<short>`. `latest`
 moves only for a stable tag; a prerelease such as `v1.0.0-rc.1` never updates it.
 
-Verify a published artifact:
+Verify artifacts against the identity that signed that release. Releases through
+0.3.1 were published from `msaad00/grc-lake`; a repository redirect does not
+rewrite their signing certificates or move their GHCR package. For the next
+release from `koda-ai-studio/grc-lake`, use that repository and its published image
+digest after publication succeeds.
 
 ```bash
-gh attestation verify grc_lake-<version>-py3-none-any.whl --repo msaad00/grc-lake
-gh attestation verify oci://ghcr.io/msaad00/grc-lake:<version> --repo msaad00/grc-lake
+# Historical 0.3.1 image: fetch the signed bundle directly from the registry.
+gh attestation verify \
+  oci://ghcr.io/msaad00/grc-lake@sha256:d8cd294bbe5b761ab98f38931657711b1aa94edc08d7687b757d4973a89d7625 \
+  --repo msaad00/grc-lake --bundle-from-oci \
+  --signer-workflow msaad00/grc-lake/.github/workflows/release.yml \
+  --source-digest 62360213113726240b89c8e00769311768bcd3a8
+
+# For a future release published from the current repository:
+gh attestation verify grc_lake-<version>-py3-none-any.whl --repo koda-ai-studio/grc-lake
 ```
+
+If the GitHub attestation API returns 404, retain the retrieval failure separately
+from artifact-integrity checks. For containers, `--bundle-from-oci` provides an
+independent retrieval path for the signed GitHub bundle. It is not the same as
+merely inspecting unsigned BuildKit metadata. PyPI publishing attestations also
+provide distinct evidence for Python artifacts; they do not establish that a
+GitHub SLSA bundle is retrievable. Never change the expected signer just to make
+verification pass. See [GitHub attestation verification](https://cli.github.com/manual/gh_attestation_verify).
 
 All workflow actions are pinned to a full commit SHA with the release tag in a
 comment, and the Dockerfile pins its base images by digest. Dependabot's
 `github-actions` and `docker` ecosystems propose updates to both.
 
-## First publication under the GRC Lake name
+## Next publication after the repository transfer
 
-Before tagging the first `grc-lake` release, configure a GitHub Actions pending
-publisher under [PyPI account publishing](https://pypi.org/manage/account/publishing/):
+The `grc-lake` PyPI project already exists. A project owner must configure an
+[ordinary trusted publisher on that project](https://docs.pypi.org/trusted-publishers/adding-a-publisher/),
+not a pending publisher intended to create a new project:
 
-| Field             | Value         |
-| ----------------- | ------------- |
-| PyPI project name | `grc-lake`    |
-| GitHub owner      | `msaad00`     |
-| Repository        | `grc-lake`    |
-| Workflow filename | `release.yml` |
-| Environment       | `release`     |
+| Field             | Value            |
+| ----------------- | ---------------- |
+| PyPI project      | `grc-lake`       |
+| GitHub owner      | `koda-ai-studio` |
+| Repository        | `grc-lake`       |
+| Workflow filename | `release.yml`    |
+| Environment       | `release`        |
 
-A [pending publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)
-creates the project on its first successful upload; it does not reserve the name.
-Keep the old project's releases intact. The old project's publisher does not
-authorize publication of the new distribution. Do not treat a repository rename
-or a successful dry run as proof that PyPI publishing authorization is configured.
+Verify the `release` GitHub environment and its intended reviewer/tag restrictions
+as well. A successful dry run exercises builds, not PyPI authorization or registry
+write permissions. Historical provenance proves the earlier upload's identity;
+it does not show the project's current trusted-publisher settings.
+
+The release workflow derives its image destination from `github.repository_owner`,
+so the next release targets `ghcr.io/koda-ai-studio/grc-lake`. Before tagging:
+
+1. Confirm the organization permits package creation and that this repository's
+   Actions token has access to the intended package. The workflow already requests
+   `packages: write`; existing package grants and organization policy are separate.
+2. Preserve `ghcr.io/msaad00/grc-lake` for historical releases. GHCR uses granular
+   permissions: a [repository transfer does not transfer package ownership](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages#about-repository-transfers)
+   and can remove repository linkage and Actions access.
+3. Align the next candidate's Compose, Helm, Terraform, and example image settings
+   with its intended namespace and version. Current 0.3.1 defaults deliberately
+   retain the working historical image. Do not replace those defaults with an
+   unpublished destination or assume an old version tag exists in the new namespace.
+4. After user-authorized publication, verify anonymous pulls (if public delivery
+   is intended), both architecture digests, signed provenance, and runtime smoke
+   checks against the newly published bytes. Registry visibility may need explicit
+   configuration; a successful workflow alone is not anonymous-pull evidence.
+
+Keep the old distribution and its releases intact. Do not delete or replace a
+publisher until its replacement is confirmed and remaining workflows are accounted
+for. Merge, tag, publication, and deployment remain separate operator decisions.
+
+## Authenticated image qualification
+
+Use an already-pulled image and an explicit platform. The probe starts the
+Compose server profile with authentication required, creates two synthetic tenants
+and expiring admin/reader API keys, and checks authorization, evidence isolation,
+snapshot reads/exports, revocation, integrity, and persistence after container
+recreation. It reuses the image's installed application and never mounts source
+code into the server. It removes its containers, volume, and temporary signing key.
+Choose a fresh output directory for each run:
+
+```bash
+IMAGE=ghcr.io/msaad00/grc-lake@sha256:d8cd294bbe5b761ab98f38931657711b1aa94edc08d7687b757d4973a89d7625
+docker pull --platform linux/amd64 "$IMAGE"
+python tools/authenticated_smoke.py --image "$IMAGE" --platform linux/amd64 \
+  --output /tmp/grc-lake-auth-amd64
+```
+
+Repeat with `linux/arm64` and another output directory. Record native versus
+emulated execution. These are bounded local API-key checks; they do not establish
+OIDC/SAML, TLS, live-provider behavior, production deployment, or capacity.
+Use `tools/compose_smoke.py` separately when qualifying the unauthenticated demo.
+
+Scan each published architecture against a fresh vulnerability database. Retain
+all severities in the report, then separately evaluate the release policy of no
+fixable HIGH/CRITICAL findings. A policy pass is not a vulnerability-free image.
 
 ## What the overview means
 

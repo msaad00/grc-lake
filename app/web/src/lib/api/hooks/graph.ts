@@ -29,7 +29,9 @@ export function useRevokeTrustShare() {
   });
 }
 
-export function useComplianceGraph({ enabled = true }: { enabled?: boolean } = {}) {
+export function useComplianceGraph({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["graph"],
     queryFn: api.graph,
@@ -38,7 +40,9 @@ export function useComplianceGraph({ enabled = true }: { enabled?: boolean } = {
   });
 }
 
-export function useRepositoryGraph({ enabled = true }: { enabled?: boolean } = {}) {
+export function useRepositoryGraph({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["repo-graph"],
     queryFn: api.repoGraph,

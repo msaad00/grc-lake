@@ -27,7 +27,7 @@ variable "cluster_endpoint_public_access_cidrs" {
   }
 
   validation {
-    condition     = alltrue([for cidr in var.cluster_endpoint_public_access_cidrs : !can(cidrhost(cidr, 0)) || split("/", cidr)[1] != "0"])
+    condition     = alltrue([for cidr in var.cluster_endpoint_public_access_cidrs : !endswith(cidr, "/0")])
     error_message = "cluster_endpoint_public_access_cidrs must not allow the whole internet (0.0.0.0/0 or ::/0); name operator ranges instead."
   }
 }

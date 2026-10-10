@@ -191,10 +191,12 @@ function ViolationsPageContent() {
             <div
               className="line-clamp-2 font-semibold leading-5 text-ink"
               title={
-                controlTitles.get(info.getValue()) ?? info.row.original.event_type
+                controlTitles.get(info.getValue()) ??
+                info.row.original.event_type
               }
             >
-              {controlTitles.get(info.getValue()) ?? info.row.original.event_type}
+              {controlTitles.get(info.getValue()) ??
+                info.row.original.event_type}
             </div>
             <div className="mt-1 text-xs text-muted">{info.getValue()}</div>
           </div>
@@ -221,7 +223,9 @@ function ViolationsPageContent() {
             <Badge tone={severityTone(info.row.original.severity)}>
               {displayLabel(info.row.original.severity)}
             </Badge>
-            <div className="mt-1 text-xs text-muted">Score {info.getValue()}</div>
+            <div className="mt-1 text-xs text-muted">
+              Score {info.getValue()}
+            </div>
           </div>
         ),
       }),

@@ -131,7 +131,9 @@ test("overview leads with overall posture and distinguishes score from coverage"
   const { data: assessment } = await postureResponse.json();
   const ingestionResponse = await page.request.get("/api/v1/ingestion/status");
   const { data: ingestion } = await ingestionResponse.json();
-  const catalogResponse = await page.request.get("/api/v1/frameworks?limit=500");
+  const catalogResponse = await page.request.get(
+    "/api/v1/frameworks?limit=500",
+  );
   const { data: catalog } = await catalogResponse.json();
   const coverage = workspaceCoverage(assessment.frameworks, catalog);
   await page.goto("/console/dashboard/");

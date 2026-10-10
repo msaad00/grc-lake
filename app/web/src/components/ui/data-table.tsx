@@ -35,7 +35,8 @@ interface Props<TData extends RowData> {
   scrollClassName?: string;
 }
 
-const INTERACTIVE = "a, button, input, select, textarea, summary, [role=button]";
+const INTERACTIVE =
+  "a, button, input, select, textarea, summary, [role=button]";
 
 /**
  * Clicking anywhere on a row is a mouse convenience only: keyboard and

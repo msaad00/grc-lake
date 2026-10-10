@@ -109,9 +109,9 @@ test.describe("evidence page state", () => {
     await expect(page.getByText("Control: SOC2-CC6.1")).toBeVisible({
       timeout: 20_000,
     });
-    await expect(
-      page.getByRole("button", { name: /^Filters/ }),
-    ).toContainText("1 active");
+    await expect(page.getByRole("button", { name: /^Filters/ })).toContainText(
+      "1 active",
+    );
   });
 });
 

@@ -11,6 +11,10 @@
 | Operator CLI         | `grc-lake`                |
 | MCP command          | `grc-lake-mcp`            |
 
+The exact `koda-ai-studio` identifier is permitted for GitHub/GHCR ownership and
+publisher configuration. It is an organization identifier, not a product name
+or visual wordmark.
+
 Do not introduce alternate product names. Do not use “Workbench,” “Assessment Console,” or “Security Lakehouse” as a customer-facing brand.
 
 ## Positioning

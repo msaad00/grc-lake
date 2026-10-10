@@ -5,7 +5,7 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
-- Add a disposable authenticated image probe for API-key authorization, tenant isolation, revocation, snapshot integrity, and persistence after container recreation. Document publisher and provenance verification across the repository ownership transfer while retaining working historical image references.
+- Add a disposable authenticated image probe for API-key authorization, tenant isolation, revocation, snapshot integrity, and persistence after container recreation. Document publisher and provenance verification across the repository ownership transfer while retaining working historical image references. Allow the exact repository-owner identifier in technical copy without allowing retired product names or visual wordmarks.
 
 ## 0.3.1 - 2026-10-09
 

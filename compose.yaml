@@ -27,7 +27,7 @@ name: grc-lake
 
 services:
   grc-lake:
-    image: ghcr.io/msaad00/grc-lake:${GRC_LAKE_VERSION:-0.3.1}
+    image: ghcr.io/koda-ai-studio/grc-lake:${GRC_LAKE_VERSION:-0.3.2}
     environment:
       # The container binds 0.0.0.0 internally, so no-auth mode must be named
       # explicitly; the host side below stays on loopback.
@@ -58,7 +58,7 @@ services:
 
   grc-lake-server:
     profiles: ["server"]
-    image: ghcr.io/msaad00/grc-lake:${GRC_LAKE_VERSION:-0.3.1}
+    image: ghcr.io/koda-ai-studio/grc-lake:${GRC_LAKE_VERSION:-0.3.2}
     # The image's default command serves with authentication required.
     env_file:
       - grc-lake.env

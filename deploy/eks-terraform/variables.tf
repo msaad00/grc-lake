@@ -58,7 +58,7 @@ variable "ingress_host" {
 variable "image_repository" {
   description = "OCI image repository for GRC Lake."
   type        = string
-  default     = "ghcr.io/msaad00/grc-lake"
+  default     = "ghcr.io/koda-ai-studio/grc-lake"
 }
 
 variable "image_tag" {

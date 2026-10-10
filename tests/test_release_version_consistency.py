@@ -1,4 +1,4 @@
-"""Release 0.3.1 must present one version across every shipped surface."""
+"""Release 0.3.2 must present one version across every shipped surface."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.3.1"
-RELEASE_DATE = "2026-10-09"
+RELEASE_VERSION = "0.3.2"
+RELEASE_DATE = "2026-10-10"
 
 
 def test_release_version_is_consistent_across_package_chart_and_console() -> None:
@@ -28,7 +28,7 @@ def test_release_version_is_consistent_across_package_chart_and_console() -> Non
     assert f'version: "{RELEASE_VERSION}"' in brand
     assert f"## {RELEASE_VERSION} - {RELEASE_DATE}" in changelog
     compose = (ROOT / "compose.yaml").read_text(encoding="utf-8")
-    assert compose.count(f"ghcr.io/msaad00/grc-lake:${{GRC_LAKE_VERSION:-{RELEASE_VERSION}}}") == 2
+    assert compose.count(f"ghcr.io/koda-ai-studio/grc-lake:${{GRC_LAKE_VERSION:-{RELEASE_VERSION}}}") == 2
     for doc in (
         "docs/CI_GATE.md",
         "docs/playbooks/CI_POSTURE_GATE.md",

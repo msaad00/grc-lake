@@ -53,7 +53,7 @@ ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
 # The image binds 0.0.0.0, so it must be able to run the authenticated
 # server. Without the `server` extra the CMD below silently falls back to
 # local mode, which has no authentication at all.
-RUN python -m venv /opt/grc-lake-venv \
+RUN python -m venv --without-pip /opt/grc-lake-venv \
   && uv export --frozen --no-dev --no-emit-project \
        --extra server --extra analytics --extra cloud --extra mcp --extra iceberg \
        --output-file /tmp/grc-lake-requirements.txt \
@@ -65,7 +65,7 @@ RUN python -m venv /opt/grc-lake-venv \
 # --- 3. Slim runtime ------------------------------------------------------
 FROM python:3.12-slim@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016 AS runtime
 LABEL org.opencontainers.image.title="GRC Lake"
-LABEL org.opencontainers.image.source="https://github.com/msaad00/grc-lake"
+LABEL org.opencontainers.image.source="https://github.com/koda-ai-studio/grc-lake"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 ENV PATH="/opt/grc-lake-venv/bin:${PATH}" \
@@ -74,14 +74,19 @@ ENV PATH="/opt/grc-lake-venv/bin:${PATH}" \
     GRC_LAKE_LAKE=/lake \
     GRC_LAKE_DATA_DIR=/opt/grc-lake-data
 
-# Refresh PCRE2 from Debian security until the pinned base includes DSA-6530-1.
+# Refresh PCRE2 and liblzma from Debian security (DSA-6530-1, DSA-6549-1).
+# Dependencies are installed in the build stage by uv. The runtime needs no
+# pip or ensurepip, including the vulnerable copies inherited from Python.
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y tini libpcre2-8-0 \
-  && rm -rf /var/lib/apt/lists/* \
+  && apt-get install --no-install-recommends -y tini libpcre2-8-0 liblzma5 \
+  && python -m pip uninstall --yes pip \
+  && rm -rf /usr/local/lib/python3.12/ensurepip /var/lib/apt/lists/* \
+  && rm -f /usr/bin/infocmp \
   && groupadd --gid 1100 grc-lake \
   && useradd --uid 1100 --gid 1100 --home /home/grc-lake --create-home --shell /bin/bash grc-lake \
   && mkdir -p /lake \
-  && chown -R grc-lake:grc-lake /lake
+  && chown -R grc-lake:grc-lake /lake \
+  && find /usr -xdev -type f \( -perm -4000 -o -perm -2000 \) -exec chmod a-s {} +
 
 COPY --from=py-build /opt/grc-lake-venv /opt/grc-lake-venv
 # Ship the framework / control / connector / mapping catalogs inside the

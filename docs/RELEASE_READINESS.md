@@ -32,7 +32,7 @@ when its required CI checks pass.
 | Console               | `npm --prefix app/web run lint`, `npm --prefix app/web run typecheck`, `npm --prefix app/web run build` | A bundled static console with no lint or type errors                                                                        |
 | Browser interactions  | `bash tools/run_e2e_console.sh`                                                                         | Dashboard, links, disclosures, accessible interactions, and responsive layouts pass against synthetic fixtures              |
 | Dependency security   | `make pip-audit npm-audit`                                                                              | No audit-blocking vulnerabilities in the resolved dependencies                                                              |
-| Image vulnerabilities | CI `docker-build` job (Trivy)                                                                           | No fixable HIGH or CRITICAL vulnerability in the built image                                                                |
+| Image vulnerabilities | CI `docker-build` job (Trivy)                                                                           | No fixable MEDIUM, HIGH or CRITICAL vulnerability in the built image                                                        |
 | Packaging             | `make release-build`                                                                                    | A clean `dist/`; wheel verification confirms that the console and required runtime assets are included                      |
 | Deployment templates  | `make deploy-check`                                                                                     | Helm rendering and Terraform validation pass; no resources are provisioned                                                  |
 | Changelog             | A `## <version> - <date>` section in `CHANGELOG.md`                                                     | The section exists and becomes the GitHub release notes                                                                     |
@@ -53,7 +53,7 @@ workflow enforces these gates before anything is published:
    (uv pinned to the same version as the Dockerfile) and a bounded setuptools.
    `tools/verify_wheel.py` checks the wheel.
 4. **Image scan.** The image is built and scanned with Trivy before it is
-   pushed; a fixable HIGH or CRITICAL vulnerability blocks the release.
+   pushed; a fixable MEDIUM, HIGH or CRITICAL vulnerability blocks the release.
 
 What each release publishes:
 
@@ -179,7 +179,7 @@ Use `tools/compose_smoke.py` separately when qualifying the unauthenticated demo
 
 Scan each published architecture against a fresh vulnerability database. Retain
 all severities in the report, then separately evaluate the release policy of no
-fixable HIGH/CRITICAL findings. A policy pass is not a vulnerability-free image.
+fixable MEDIUM/HIGH/CRITICAL findings. A policy pass is not a vulnerability-free image.
 
 ## What the overview means
 

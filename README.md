@@ -6,9 +6,9 @@
 <p align="center">
   <a href="https://pypi.org/project/grc-lake/"><img src="https://img.shields.io/pypi/v/grc-lake?color=2b7bba&label=PyPI" alt="PyPI version"></a>
   <a href="https://pypi.org/project/grc-lake/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"></a>
-  <a href="https://github.com/msaad00/grc-lake/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/msaad00/grc-lake/ci.yml?branch=main&amp;label=CI" alt="CI status"></a>
+  <a href="https://github.com/koda-ai-studio/grc-lake/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/koda-ai-studio/grc-lake/ci.yml?branch=main&amp;label=CI" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License: Apache 2.0"></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/msaad00/grc-lake"><img src="https://api.scorecard.dev/projects/github.com/msaad00/grc-lake/badge" alt="OpenSSF Scorecard"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/koda-ai-studio/grc-lake"><img src="https://api.scorecard.dev/projects/github.com/koda-ai-studio/grc-lake/badge" alt="OpenSSF Scorecard"></a>
 </p>
 
 **Open-source trust operations, on your evidence lake.** Self-hosted GRC
@@ -30,33 +30,41 @@ export snapshots, workpapers, and OSCAL.
 
 ## Quick start
 
+Python 3.11+ on macOS or Linux:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install "grc-lake[server]"
+grc-lake fixtures load --company golden --out ./lake --rebase-times
+grc-lake assessment status --lake ./lake
+grc-lake serve --server --allow-insecure-no-auth --lake ./lake --host 127.0.0.1 --port 8787
+```
+
+Open [localhost:8787/console/dashboard/](http://127.0.0.1:8787/console/dashboard/).
+This local demo uses synthetic data and disables authentication. Use the
+[production setup](#self-host) before connecting real evidence. Follow the
+[5-minute tutorial](docs/TUTORIAL_5_MIN.md) for the workflow.
+
+<details>
+<summary>Docker, source development, or an agent connection</summary>
+
 With Docker Compose v2:
 
 ```bash
-git clone https://github.com/msaad00/grc-lake.git
+git clone https://github.com/koda-ai-studio/grc-lake.git
 cd grc-lake
 docker compose up
 ```
 
-Open [localhost:8787/console/dashboard/](http://127.0.0.1:8787/console/dashboard/).
-The demo binds to loopback and has authentication disabled. Follow the
-[5-minute tutorial](docs/TUTORIAL_5_MIN.md) to connect a source and export results.
-
-<details>
-<summary>Install with pip, run from source, or connect an agent</summary>
-
-Python 3.11+:
-
-```bash
-pip install "grc-lake[server]"
-grc-lake fixtures load --company golden --out ./lake --rebase-times
-grc-lake assessment status --lake ./lake
-grc-lake serve --server --allow-insecure-no-auth --lake ./lake --port 8787
-```
+Container pulls currently require registry access. Use the PyPI demo above for
+an anonymous install. Compose also binds the no-auth demo to loopback.
 
 From source, with [uv](https://docs.astral.sh/uv/) and Node 22+:
 
 ```bash
+git clone https://github.com/koda-ai-studio/grc-lake.git
+cd grc-lake
 uv sync --frozen --extra dev --extra server
 make demo-local
 ```
@@ -82,8 +90,9 @@ The PyPI package is `grc-lake`, the CLI is
   <img src="docs/images/grc-lake-demo-dashboard.png" alt="GRC Lake overview with framework coverage, priority actions, and evidence freshness" width="100%">
 </picture>
 
-_Screens show the bundled synthetic company. They demonstrate workflows, not a
-customer deployment or an audit opinion._
+_Screens show the bundled synthetic company, captured from main on 2026-10-10.
+Main can include changes newer than the published package. These screens
+demonstrate workflows, not a customer deployment or an audit opinion._
 
 ## Architecture
 
@@ -163,7 +172,7 @@ human session. Agents can collect, explain, and propose work.
 <summary>More screens: remediation, audit room, and mobile</summary>
 
 ![Remediation workspace](docs/images/grc-lake-demo-remediation.png)
-![Auditor workpapers and exports](docs/images/grc-lake-demo-audit-room.png)
+![Audit room readiness and evidence freshness](docs/images/grc-lake-demo-audit-room.png)
 <img src="docs/images/grc-lake-demo-overview-mobile.png" alt="GRC Lake overview on a narrow screen" width="390" loading="lazy">
 
 </details>
@@ -198,8 +207,8 @@ Wheels and sdists carry SLSA build provenance, and each GitHub release attaches
 a CycloneDX SBOM of the locked runtime dependencies:
 
 ```bash
-gh release download v0.3.1 -R msaad00/grc-lake -p '*.whl'
-gh attestation verify grc_lake-0.3.1-py3-none-any.whl -R msaad00/grc-lake
+gh release download v0.3.2 -R koda-ai-studio/grc-lake -p '*.whl'
+gh attestation verify grc_lake-0.3.2-py3-none-any.whl -R koda-ai-studio/grc-lake
 ```
 
 ## Frameworks
@@ -274,5 +283,6 @@ npm --prefix app/web ci
 npm --prefix app/web run build
 ```
 
-Regenerate documentation images from the running synthetic demo with
-`npm --prefix app/web run demo-screenshots`. License: [Apache 2.0](LICENSE).
+Regenerate the header and catalog counts with `make readme-header`. Rebuild the
+synthetic demo and recapture its light, dark, and mobile screens with
+`make demo-screenshots-full` (requires Playwright Chromium). License: [Apache 2.0](LICENSE).

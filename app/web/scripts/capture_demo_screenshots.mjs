@@ -80,7 +80,7 @@ const shots = [
     setup: "finding-drawer",
     crop: (page) => [page.getByRole("dialog")],
   },
-  { file: "grc-lake-demo-audit-room.png", route: "/audit-room/" },
+  { file: "grc-lake-demo-audit-room.png", route: "/audit-room/", viewport: TALL },
   {
     file: "grc-lake-demo-evidence.png",
     route: "/evidence/",

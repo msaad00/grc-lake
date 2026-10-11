@@ -3,6 +3,10 @@
 All notable GRC Lake changes are summarized here. Versions follow semver for the
 Python package, Helm chart, and bundled web console.
 
+## Unreleased
+
+- Security: reject incoming SAML signatures and digests that use deprecated algorithms, including SHA-1. Previously, selecting SHA-256 for outgoing signatures did not reject SHA-1 assertions from the IdP. Configure the IdP to use RSA-SHA256 and SHA-256 or stronger before upgrading.
+
 ## 0.3.2 - 2026-10-10
 
 - Prepare package, console, chart, Compose and deployment examples for 0.3.2. New images target `ghcr.io/koda-ai-studio/grc-lake`; historical 0.3.1 images remain under `ghcr.io/msaad00/grc-lake`. Candidate references become usable only after publication.

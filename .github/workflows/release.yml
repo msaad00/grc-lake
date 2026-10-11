@@ -244,12 +244,14 @@ jobs:
           tags: grc-lake:scan
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Scan image (fixable HIGH/CRITICAL block the release)
+      - name: Check installed runtime dependencies
+        run: bash tools/check_image_dependencies.sh grc-lake:scan
+      - name: Scan image (fixable MEDIUM/HIGH/CRITICAL block the release)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: grc-lake:scan
           version: v0.70.0
-          severity: CRITICAL,HIGH
+          severity: CRITICAL,HIGH,MEDIUM
           ignore-unfixed: true
           exit-code: "1"
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0

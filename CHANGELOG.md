@@ -5,6 +5,8 @@ Python package, Helm chart, and bundled web console.
 
 ## Unreleased
 
+- Security: refresh the container's liblzma package for DSA-6549-1, remove pip and ensurepip from both runtime Python environments, remove the unused vulnerable infocmp executable, and remove setuid/setgid bits from system utilities. CI and release builds now reject fixable MEDIUM findings as well as HIGH and CRITICAL findings. Unfixed distribution findings remain tracked; this does not certify a vulnerability-free image.
+
 - Security: reject incoming SAML signatures and digests that use deprecated algorithms, including SHA-1. Previously, selecting SHA-256 for outgoing signatures did not reject SHA-1 assertions from the IdP. Configure the IdP to use RSA-SHA256 and SHA-256 or stronger before upgrading.
 
 ## 0.3.2 - 2026-10-10

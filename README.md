@@ -57,8 +57,8 @@ cd grc-lake
 docker compose up
 ```
 
-Container pulls currently require registry access. Use the PyPI demo above for
-an anonymous install. Compose also binds the no-auth demo to loopback.
+The container is public; no registry login is required. Compose binds the
+no-auth demo to loopback.
 
 From source, with [uv](https://docs.astral.sh/uv/) and Node 22+:
 
